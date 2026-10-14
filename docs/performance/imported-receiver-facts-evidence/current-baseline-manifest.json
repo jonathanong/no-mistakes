@@ -1,0 +1,41 @@
+{
+  "revision": "b97b2cb3c4dc1b3040a9696e60839b8834f4e955",
+  "tree": "fc35e42f894c68cf51133eff4a7a555503ee847a",
+  "analyzer_tree": "0cd227e2569c8fb2e2246296601f451755c30c82",
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>current-baseline.rlib",
+  "sha256": "ba8e360bcf1835990895b5aa848955ad9565f9c640a3d9b0e168137dd733f989",
+  "release_profile": {
+    "lto": true,
+    "codegen_units": 1,
+    "opt_level": 3
+  },
+  "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+  "binary_sha256": "1b43e65bab2088a242f7e036c0d6c97c1cfa3fc915a5119d359b68b397cd294b",
+  "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+  "probe_rustc_flags": [
+    "--edition=2021",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "lto=true",
+    "-C",
+    "codegen-units=1"
+  ],
+  "compiled_crate_summary": {
+    "profile": {
+      "opt_level": "3",
+      "debuginfo": 0,
+      "debug_assertions": false,
+      "overflow_checks": false,
+      "test": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "fresh": false,
+    "crate": "no-mistakes 0.90.0"
+  }
+}

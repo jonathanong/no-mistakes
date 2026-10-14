@@ -1,0 +1,506 @@
+{
+  "scope": "Merged #1961 integration optimized b97b2cb to 917c9ea1; no later follow-up implementations",
+  "manifests": {
+    "baseline": {
+      "revision": "b97b2cb3c4dc1b3040a9696e60839b8834f4e955",
+      "tree": "fc35e42f894c68cf51133eff4a7a555503ee847a",
+      "analyzer_tree": "0cd227e2569c8fb2e2246296601f451755c30c82",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-1972-current-baseline/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-1972-current-baseline/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-1972-current-baseline/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>current-baseline.rlib",
+      "sha256": "ba8e360bcf1835990895b5aa848955ad9565f9c640a3d9b0e168137dd733f989",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "binary_sha256": "1b43e65bab2088a242f7e036c0d6c97c1cfa3fc915a5119d359b68b397cd294b",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    },
+    "candidate": {
+      "revision": "917c9ea1c2f2400e8a5d3d50c18c0a52fe21ad4a",
+      "tree": "c0280c1366e2a062e599eec7794593f9aa49ad54",
+      "analyzer_tree": "0e6eba31a9391269d9eda494b951316338f7aaa1",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-1972/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-1972/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-1972/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>current-candidate.rlib",
+      "sha256": "12e7985b067c65cec8dc2e201af0bcf352cb09776468bcb6f4fa907bcf78b93d",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "binary_sha256": "3f530dbdf4def1bf8a19b1db85e9bfaa37c90e65e6221e82ef18ecce368cc363",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    }
+  },
+  "rayon_workers": 4,
+  "batch_multiplier": 1,
+  "run_tag": "",
+  "binary_hashes": {
+    "baseline": "1b43e65bab2088a242f7e036c0d6c97c1cfa3fc915a5119d359b68b397cd294b",
+    "candidate": "3f530dbdf4def1bf8a19b1db85e9bfaa37c90e65e6221e82ef18ecce368cc363"
+  },
+  "cases": [
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.6097442699974636,
+        "cpu_s": 0.607654,
+        "rss_kib": 15932.0
+      },
+      "candidate": {
+        "wall_s": 0.6025552860010066,
+        "cpu_s": 0.5956575,
+        "rss_kib": 15444.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.4021139519973076,
+        "cpu_s": 0.400445,
+        "rss_kib": 15804.0
+      },
+      "candidate": {
+        "wall_s": 0.45416263149672886,
+        "cpu_s": 0.450681,
+        "rss_kib": 15284.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.33392306249879766,
+        "cpu_s": 0.33202699999999996,
+        "rss_kib": 13672.0
+      },
+      "candidate": {
+        "wall_s": 0.41121876450051786,
+        "cpu_s": 0.4090705,
+        "rss_kib": 13672.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.10173351550474763,
+        "cpu_s": 0.10090949999999999,
+        "rss_kib": 13672.0
+      },
+      "candidate": {
+        "wall_s": 0.10614934749901295,
+        "cpu_s": 0.10550499999999999,
+        "rss_kib": 13672.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "shared_histories",
+      "demand": "values",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.13337673449859722,
+        "cpu_s": 0.1330585,
+        "rss_kib": 14226.0
+      },
+      "candidate": {
+        "wall_s": 0.11355287399783265,
+        "cpu_s": 0.11347549999999999,
+        "rss_kib": 13952.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "shared_histories",
+      "demand": "imports",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.020771235998836346,
+        "cpu_s": 0.019694499999999997,
+        "rss_kib": 13800.0
+      },
+      "candidate": {
+        "wall_s": 0.02419277949957177,
+        "cpu_s": 0.021307,
+        "rss_kib": 13800.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "jsx",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.034647754502657335,
+        "cpu_s": 0.033279500000000004,
+        "rss_kib": 13800.0
+      },
+      "candidate": {
+        "wall_s": 0.029684346496651415,
+        "cpu_s": 0.030280999999999995,
+        "rss_kib": 13800.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "jsx",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.025979300007747952,
+        "cpu_s": 0.025608,
+        "rss_kib": 13800.0
+      },
+      "candidate": {
+        "wall_s": 0.024857690004864708,
+        "cpu_s": 0.027718,
+        "rss_kib": 13800.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.43650259699643357,
+        "cpu_s": 0.43592549999999997,
+        "rss_kib": 15998.0
+      },
+      "candidate": {
+        "wall_s": 0.45153180450142827,
+        "cpu_s": 0.44941949999999997,
+        "rss_kib": 15444.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.6342547975000343,
+        "cpu_s": 0.634467,
+        "rss_kib": 15738.0
+      },
+      "candidate": {
+        "wall_s": 0.4648958290053997,
+        "cpu_s": 0.46283949999999996,
+        "rss_kib": 15328.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.2356761245027883,
+        "cpu_s": 0.23540149999999999,
+        "rss_kib": 13928.0
+      },
+      "candidate": {
+        "wall_s": 0.1808068159953109,
+        "cpu_s": 0.1802115,
+        "rss_kib": 13928.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.10774791999574518,
+        "cpu_s": 0.107705,
+        "rss_kib": 13928.0
+      },
+      "candidate": {
+        "wall_s": 0.10359263751161052,
+        "cpu_s": 0.1032815,
+        "rss_kib": 13928.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "shared_histories",
+      "demand": "values",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.21559805249853525,
+        "cpu_s": 0.2143195,
+        "rss_kib": 14288.0
+      },
+      "candidate": {
+        "wall_s": 0.15798232700763037,
+        "cpu_s": 0.157295,
+        "rss_kib": 14056.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "shared_histories",
+      "demand": "imports",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.023738247000437696,
+        "cpu_s": 0.019799999999999998,
+        "rss_kib": 14056.0
+      },
+      "candidate": {
+        "wall_s": 0.024510279501555488,
+        "cpu_s": 0.020831,
+        "rss_kib": 14056.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "jsx",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.03826451149507193,
+        "cpu_s": 0.038114499999999996,
+        "rss_kib": 14056.0
+      },
+      "candidate": {
+        "wall_s": 0.030761198002437595,
+        "cpu_s": 0.026599499999999998,
+        "rss_kib": 14056.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "jsx",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.015668222498788964,
+        "cpu_s": 0.015491999999999999,
+        "rss_kib": 14056.0
+      },
+      "candidate": {
+        "wall_s": 0.018302666998351924,
+        "cpu_s": 0.017773,
+        "rss_kib": 14056.0
+      }
+    }
+  ]
+}

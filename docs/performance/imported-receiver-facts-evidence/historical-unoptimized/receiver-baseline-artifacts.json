@@ -1,0 +1,23 @@
+{
+  "revision": "57c927df4c09f450f67248277d49070f9576ba3b",
+  "source_artifact": "<WORKSPACE>/no-mistakes/target/debug<SYSTEM_LIB>no_mistakes.rlib",
+  "frozen_artifact": "<WORKSPACE>/receiver-57c-baseline-library<SYSTEM_LIB>no_mistakes.rlib",
+  "rlib_sha256": "d6b1429b1b7531ab411a4a686dcac184ba3c6776356a03db34984bd15831cbbb",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "profile": {
+    "opt_level": "0",
+    "debuginfo": 0,
+    "debug_assertions": true,
+    "overflow_checks": true,
+    "test": false
+  },
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "analyzer_source_tree": "4782db522d9821c49f126f735a8902dcc184808a",
+  "harness_hashes": {
+    "followups-perf-harness.rs": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+    "followups-graph-perf.rs": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135"
+  }
+}

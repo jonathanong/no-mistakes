@@ -1,0 +1,1189 @@
+--------------------------------------------------------------------------------
+Profile data file '<WORKSPACE>/performance-1972-evidence/profiles/values-0-baseline-collect10.callgrind' (creator: callgrind-3.24.0)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 65406938
+Trigger: Program termination
+Profiled target:  <WORKSPACE>/performance-1972-evidence/baseline-facts <WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts values 10 (PID 458665, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+301,112,557 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                   file:function
+--------------------------------------------------------------------------------
+44,629,413 (14.82%)  ???:0x00000000000a0fe0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+30,670,680 (10.19%)  ???:<hashbrown::map::HashMap<alloc::string::String, (), rustc_hash::FxBuildHasher>>::contains_key::<str> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+22,279,624 ( 7.40%)  ???:free [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+19,201,579 ( 6.38%)  ???:malloc [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+19,121,671 ( 6.35%)  ???:0x00000000000a02e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+18,800,532 ( 6.24%)  ???:0x000000000009ebd0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+17,159,300 ( 5.70%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::callee_binding_scope [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+16,499,200 ( 5.48%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::callee_shadows_import [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+16,490,421 ( 5.48%)  ???:0x0000000000162880 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+14,675,480 ( 4.87%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::push_value_symbol_reference [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 7,925,760 ( 2.63%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector as oxc_ast_visit::generated::visit::Visit>::visit_identifier_reference [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 7,867,951 ( 2.61%)  ???:0x0000000000162120 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+ 7,861,569 ( 2.61%)  ???:<alloc::raw_vec::RawVecInner>::finish_grow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 7,401,599 ( 2.46%)  ???:0x000000000009eaf0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+ 6,274,560 ( 2.08%)  ???:no_mistakes::codebase::dependencies::extract::visit_object_property_with_scope [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 6,057,212 ( 2.01%)  ???:<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 6,049,050 ( 2.01%)  ???:<alloc::string::String as core::fmt::Write>::write_str [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 4,751,360 ( 1.58%)  ???:no_mistakes::codebase::dependencies::extract::visit_binding_defaults_for_name'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 4,147,920 ( 1.38%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/fmt/mod.rs:<core::fmt::Formatter>::pad [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 4,128,000 ( 1.37%)  ???:oxc_ast_visit::generated::visit::walk::walk_expression::<no_mistakes::codebase::dependencies::extract::ImportCollector>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 2,804,880 ( 0.93%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<no_mistakes::codebase::dependencies::extract::FunctionCall>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 1,635,280 ( 0.54%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_callable_alias_from_pattern [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 1,526,070 ( 0.51%)  ???:oxc_ast_visit::generated::visit::walk::walk_expression::<no_mistakes::codebase::dependencies::extract::ImportCollector> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+ 1,375,496 ( 0.46%)  ???:0x000000000009e390 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+ 1,361,920 ( 0.45%)  ???:no_mistakes::codebase::dependencies::extract::visit_binding_defaults_for_name [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   922,976 ( 0.31%)  ???:0x000000000000e870 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+   690,610 ( 0.23%)  ???:<hashbrown::map::HashMap<alloc::string::String, (), rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   478,090 ( 0.16%)  ???:<hashbrown::raw::RawTable<(alloc::string::String, ())>>::reserve_rehash::<hashbrown::map::make_hasher<alloc::string::String, (), rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   376,240 ( 0.12%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::call_target_identity [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   305,440 ( 0.10%)  ???:no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   286,440 ( 0.10%)  ???:no_mistakes::codebase::dependencies::extract::extract_binding_names::binding_names [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   249,460 ( 0.08%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_value_pattern'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   217,600 ( 0.07%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_identifier_name [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   199,680 ( 0.07%)  ???:no_mistakes::codebase::dependencies::extract::extract_binding_names::binding_names'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   198,760 ( 0.07%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::push_function_scope_for_binding [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   197,750 ( 0.07%)  ???:core::slice::sort::stable::quicksort::quicksort::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   186,890 ( 0.06%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_object_binding_pattern [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   184,320 ( 0.06%)  ???:<<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_object_expression_property as core::ops::function::FnMut<(&mut oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>,)>>::call_mut [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   181,430 ( 0.06%)  ???:<hashbrown::raw::RawTable<(alloc::string::String, no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression)>>::reserve_rehash::<hashbrown::map::make_hasher<alloc::string::String, no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   174,520 ( 0.06%)  ???:<hashbrown::raw::RawTable<((no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), ())>>::reserve_rehash::<hashbrown::map::make_hasher<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), (), rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   170,510 ( 0.06%)  ???:<hashbrown::raw::RawTable<(alloc::string::String, alloc::vec::Vec<usize>)>>::reserve_rehash::<hashbrown::map::make_hasher<alloc::string::String, alloc::vec::Vec<usize>, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   168,890 ( 0.06%)  ???:<hashbrown::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression, rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   161,630 ( 0.05%)  ???:<hashbrown::raw::RawTable<(alloc::string::String, usize)>>::reserve_rehash::<hashbrown::map::make_hasher<alloc::string::String, usize, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   157,820 ( 0.05%)  ???:core::slice::sort::stable::quicksort::quicksort::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   146,530 ( 0.05%)  ???:<hashbrown::map::HashMap<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), (), rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   145,430 ( 0.05%)  ???:<hashbrown::map::HashMap<alloc::string::String, usize, rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   141,370 ( 0.05%)  ???:<oxc_parser::lexer::Lexer<oxc_parser::config::NoTokensLexerConfig>>::identifier_name_handler [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   135,210 ( 0.04%)  ???:core::slice::sort::stable::quicksort::quicksort::<(usize, core::option::Option<usize>), <[(usize, core::option::Option<usize>)]>::sort_by_key<usize, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#3}>::{closure#0}>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   133,833 ( 0.04%)  ???:0x000000000000a220 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+   128,000 ( 0.04%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_identifier_reference [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   122,880 ( 0.04%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_property_name [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   112,910 ( 0.04%)  ???:core::slice::sort::stable::quicksort::quicksort::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   110,940 ( 0.04%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::pop_function_scope [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   110,910 ( 0.04%)  ???:<hashbrown::map::HashMap<alloc::string::String, alloc::vec::Vec<usize>, rustc_hash::FxBuildHasher>>::rustc_entry [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   104,000 ( 0.03%)  ???:<hashbrown::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>>::get::<str> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   102,400 ( 0.03%)  ???:<str>::replace::<char> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+   101,020 ( 0.03%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::add_binding_names [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    93,830 ( 0.03%)  ???:<hashbrown::raw::RawTable<(usize, core::option::Option<usize>)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, core::option::Option<usize>, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    92,160 ( 0.03%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_callable_alias_from_pattern'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    91,370 ( 0.03%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::insert_callable_alias [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    90,780 ( 0.03%)  ???:<hashbrown::map::HashMap<usize, core::option::Option<usize>, rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    90,330 ( 0.03%)  ???:<hashbrown::map::HashMap<alloc::string::String, usize, rustc_hash::FxBuildHasher>>::get::<str> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    87,370 ( 0.03%)  ???:core::slice::sort::stable::quicksort::quicksort::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    87,190 ( 0.03%)  ???:no_mistakes::codebase::dependencies::extract::simple_callee_name [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    83,200 ( 0.03%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_assignment_expression_or_higher_impl'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    81,150 ( 0.03%)  ???:oxc_str::ident_hasher::ident_hash [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    76,800 ( 0.03%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::value_expression'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    76,450 ( 0.03%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector as oxc_ast_visit::generated::visit::Visit>::visit_variable_declarator [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    71,680 ( 0.02%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::push_callable_alias [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    68,000 ( 0.02%)  ???:no_mistakes::codebase::dependencies::extract::scope_set_insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    66,040 ( 0.02%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::advance [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    65,790 ( 0.02%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_member_expression_rest [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    64,000 ( 0.02%)  ???:<std::collections::hash::set::Iter<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String)> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::any::check<&(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <no_mistakes::codebase::dependencies::extract::ImportCollector>::has_local_function_scope::{closure#2}>::{closure#0}, core::ops::control_flow::ControlFlow<()>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    62,640 ( 0.02%)  ???:0x000000000000ae90 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    61,440 ( 0.02%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_primary_expression'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    59,780 ( 0.02%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::ts_source::facts::TsFactSlot> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    58,880 ( 0.02%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_binary_expression_or_higher'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    58,684 ( 0.02%)  ???:0x0000000000064ff0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    58,250 ( 0.02%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::value_expression [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    56,960 ( 0.02%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_value_pattern [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    52,890 ( 0.02%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::callable_scope_name_for_binding [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    51,200 ( 0.02%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_update_expression'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    48,640 ( 0.02%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_lhs_expression_or_higher_impl'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    48,160 ( 0.02%)  ???:<hashbrown::raw::RawTableInner>::fallible_with_capacity::<alloc::alloc::Global> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    47,510 ( 0.02%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    40,522 ( 0.01%)  ???:0x000000000009ed80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    39,680 ( 0.01%)  ???:no_mistakes::codebase::dependencies::extract::extract_value_flow::write_targets::property_key [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    38,463 ( 0.01%)  ???:0x00000000000a20c0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    37,040 ( 0.01%)  ???:<alloc::vec::Vec<alloc::string::String> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<alloc::string::String, std::collections::hash::set::IntoIter<alloc::string::String>>>::from_iter [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    35,840 ( 0.01%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_modifiers [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    35,550 ( 0.01%)  ???:core::slice::sort::stable::quicksort::quicksort::<(usize, core::option::Option<usize>), <[(usize, core::option::Option<usize>)]>::sort_by_key<usize, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#3}>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    35,025 ( 0.01%)  ???:0x0000000000024740 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    34,596 ( 0.01%)  ???:realloc [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    32,250 ( 0.01%)  ???:oxc_parser::lexer::byte_handlers::L_T::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    32,140 ( 0.01%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_primary_expression [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    31,699 ( 0.01%)  ???:0x00000000000a01a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    31,200 ( 0.01%)  ???:<alloc::raw_vec::RawVec<core::option::Option<core::num::nonzero::NonZero<usize>>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    30,720 ( 0.01%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_unary_expression_or_higher'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    29,440 ( 0.01%)  ???:<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector as oxc_ast_visit::generated::visit::Visit>::visit_expression'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    29,030 ( 0.01%)  ???:<oxc_allocator::vec2::Vec<oxc_ast::ast::js::ObjectPropertyKind, oxc_allocator::arena::Arena>>::push [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    28,908 ( 0.01%)  ???:__strtoul_internal [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    28,350 ( 0.01%)  ???:core::ptr::drop_glue::<(usize, std::collections::hash::map::HashMap<alloc::string::String, alloc::vec::Vec<usize>, rustc_hash::FxBuildHasher>)> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    28,340 ( 0.01%)  ???:<hashbrown::raw::RawTable<(alloc::string::String, no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression)> as core::ops::drop::Drop>::drop [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    28,160 ( 0.01%)  ???:oxc_parser::lexer::byte_handlers::L_P::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    27,090 ( 0.01%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_conditional_expression_rest [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    26,910 ( 0.01%)  ???:<std::path::Path as core::hash::Hash>::hash::<rustc_hash::FxHasher> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    25,810 ( 0.01%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    24,320 ( 0.01%)  ???:<oxc_parser::lexer::kind::Kind>::is_identifier_reference [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    21,381 ( 0.01%)  ???:0x0000000000013780 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    20,740 ( 0.01%)  ???:0x000000000000a0a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    20,480 ( 0.01%)  ???:<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector as oxc_ast_visit::generated::visit::Visit>::visit_binding_pattern'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    19,883 ( 0.01%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::Components as core::iter::traits::iterator::Iterator>::next [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    19,510 ( 0.01%)  ???:<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector as oxc_ast_visit::generated::visit::Visit>::visit_expression [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    17,920 ( 0.01%)  ???:core::slice::sort::shared::smallsort::sort4_stable::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    17,880 ( 0.01%)  ???:core::slice::sort::shared::smallsort::sort4_stable::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    15,750 ( 0.01%)  ???:oxc_ast_visit::generated::visit::walk::walk_binding_pattern::<no_mistakes::codebase::dependencies::extract::ImportCollector> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    13,415 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/str/validations.rs:core::str::converts::from_utf8
+    13,377 ( 0.00%)  ???:0x0000000000013e00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    13,155 ( 0.00%)  ???:0x00000000000a2be0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    13,080 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector as oxc_ast_visit::generated::visit::Visit>::visit_binding_pattern [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    12,800 ( 0.00%)  ???:no_mistakes::codebase::ts_resolver::normalize_path [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+    11,937 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/iter/macros.rs:<std::path::Components as core::iter::traits::iterator::Iterator>::next
+    11,621 ( 0.00%)  ???:0x00000000000a2520 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+    10,543 ( 0.00%)  ???:0x0000000000163280 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     7,752 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::source_store::SourceStore>::new_observed [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     7,620 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::COM::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     6,390 ( 0.00%)  ???:core::slice::sort::shared::pivot::median3_rec::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     6,336 ( 0.00%)  ???:0x0000000000007cb0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     5,970 ( 0.00%)  ???:oxc_parser::parser_parse::parse_with_no_tokens_config [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     5,766 ( 0.00%)  ???:posix_memalign [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     5,720 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::PathBuf>::_push [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     5,366 ( 0.00%)  ???:0x0000000000015f00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     5,120 ( 0.00%)  ???:<hashbrown::map::HashMap<alloc::string::String, (), rustc_hash::FxBuildHasher>>::contains_key::<alloc::string::String> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     5,120 ( 0.00%)  ???:<oxc_parser::lexer::kind::Kind>::is_binding_identifier [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     4,840 ( 0.00%)  ???:_IO_sputbackc [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     4,562 ( 0.00%)  ???:getdelim [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     4,434 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/iter/macros.rs:<std::path::Components>::parse_next_component_back
+     4,410 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::facts::TsFactMap as core::default::Default>::default [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     4,320 ( 0.00%)  ???:<oxc_allocator::vec2::raw_vec::RawVec<_, _>>::finish_grow::grow::<oxc_allocator::arena::Arena> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     4,085 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/path/mod.rs:<std::path::Components as core::iter::traits::iterator::Iterator>::next
+     3,900 ( 0.00%)  ???:core::slice::sort::stable::drift::sort::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,840 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::COL::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,838 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:<std::path::Components as core::iter::traits::iterator::Iterator>::next
+     3,830 ( 0.00%)  ???:core::slice::sort::stable::drift::sort::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,780 ( 0.00%)  ???:<no_mistakes::codebase::analysis_session::AnalysisSession>::new [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,760 ( 0.00%)  ???:core::slice::sort::shared::pivot::median3_rec::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,630 ( 0.00%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::ts_source::source_store::SourceStore> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,410 ( 0.00%)  ???:no_mistakes::codebase::ts_source::facts::collect::file::collect_file_facts_from_program [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,407 ( 0.00%)  ???:napi::bindgen_runtime::module_register::register_module_export [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,360 ( 0.00%)  ???:<alloc::raw_vec::RawVec<no_mistakes::playwright::playwright_tests::occurrence::TestOccurrence<no_mistakes::playwright::selectors::types::PlaywrightSelector>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     3,348 ( 0.00%)  ???:0x00000000000147c0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     3,080 ( 0.00%)  ???:core::slice::sort::stable::drift::sort::<(usize, core::option::Option<usize>), <[(usize, core::option::Option<usize>)]>::sort_by_key<usize, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#3}>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,924 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::Components as core::iter::traits::double_ended::DoubleEndedIterator>::next_back [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,870 ( 0.00%)  ???:<oxc_parser::lexer::Lexer<oxc_parser::config::NoTokensLexerConfig>>::skip_single_line_comment [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,870 ( 0.00%)  ???:no_mistakes::codebase::ts_source::facts::collect::file::collect_file_facts_with_sources_and_session [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,794 ( 0.00%)  ???:0x000000000000bf50 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     2,730 ( 0.00%)  ???:core::slice::sort::shared::pivot::median3_rec::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,695 ( 0.00%)  ???:__isoc23_sscanf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     2,670 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::file_inventory::FileInventory>::from_classified_paths_counted [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,660 ( 0.00%)  ???:no_mistakes::codebase::ts_source::facts::collect::collect_ts_facts_with_context_sources_and_session_serializing_paths [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,590 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_function [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,585 ( 0.00%)  ???:0x000000000008e140 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     2,490 ( 0.00%)  ???:no_mistakes::codebase::ts_source::source_store::read::read_utf8_arc [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,349 ( 0.00%)  ???:0x0000000000161e80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     2,330 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_directives_and_statements [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,319 ( 0.00%)  ???:0x0000000000003680 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     2,273 ( 0.00%)  ???:0x00000000000093a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     2,102 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:<std::path::Components>::parse_next_component_back
+     2,060 ( 0.00%)  ???:<hashbrown::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     2,040 ( 0.00%)  ???:core::slice::sort::shared::pivot::median3_rec::<(usize, core::option::Option<usize>), <[(usize, core::option::Option<usize>)]>::sort_by_key<usize, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#3}>::{closure#0}>'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,920 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<std::path::PathBuf>::_push
+     1,900 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector as oxc_ast_visit::generated::visit::Visit>::visit_function [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,853 ( 0.00%)  ???:0x000000000001e600 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     1,843 ( 0.00%)  ???:0x00000000001655c0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,840 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:<std::path::PathBuf>::_push
+     1,750 ( 0.00%)  ???:no_mistakes::codebase::ts_source::file_inventory::classify::inventory_paths::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,730 ( 0.00%)  ???:rayon::iter::plumbing::bridge_producer_consumer::helper::<rayon::slice::IterProducer<std::path::PathBuf>, rayon::iter::filter_map::FilterMapConsumer<rayon::iter::extend::ListVecConsumer, no_mistakes::codebase::ts_source::file_inventory::classify::inventory_paths::{closure#0}::{closure#0}>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,728 ( 0.00%)  ???:0x00000000000a0530 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,710 ( 0.00%)  ???:<oxc_parser::lexer::trivia_builder::TriviaBuilder>::add_comment [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,690 ( 0.00%)  ???:core::iter::adapters::flatten::and_then_or_clear::<core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_scope_map<no_mistakes::codebase::dependencies::extract::CallableId>::{closure#0}::{closure#0}>, (usize, alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId), <core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_scope_map<no_mistakes::codebase::dependencies::extract::CallableId>::{closure#0}::{closure#0}> as core::iter::traits::iterator::Iterator>::next> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,610 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_formal_parameters [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,580 ( 0.00%)  ???:<oxc_span::source_type::SourceType>::from_path::<&std::path::Path> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,580 ( 0.00%)  ???:core::slice::sort::shared::pivot::median3_rec::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,556 ( 0.00%)  ???:pthread_getattr_np [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,550 ( 0.00%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::analysis_session::AnalysisSession> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,544 ( 0.00%)  ???:_IO_setb [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,540 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::facts::TsFactMap>::from_iter_with_plan_and_inventory::<alloc::vec::Vec<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,533 ( 0.00%)  ???:<rayon_core::registry::WorkerThread>::wait_until_cold [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,530 ( 0.00%)  ???:<no_mistakes::codebase::analysis_session::intern::PathInterner>::new [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,520 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:<std::path::PathBuf>::_push
+     1,510 ( 0.00%)  ???:<core::iter::adapters::flatten::FlatMap<core::iter::adapters::enumerate::Enumerate<alloc::vec::into_iter::IntoIter<std::collections::hash::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>>>, core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_scope_map<no_mistakes::codebase::dependencies::extract::CallableId>::{closure#0}::{closure#0}>, no_mistakes::codebase::dependencies::extract::flatten_scope_map<no_mistakes::codebase::dependencies::extract::CallableId>::{closure#0}> as core::iter::traits::iterator::Iterator>::next [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,500 ( 0.00%)  ???:no_mistakes::codebase::dependencies::extract::flatten_owner_members [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,460 ( 0.00%)  ???:<oxc_allocator::arena::Arena>::try_alloc_layout_slow_impl [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,460 ( 0.00%)  ???:no_mistakes::codebase::dependencies::extract::is_indexable [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,440 ( 0.00%)  ???:<alloc::raw_vec::RawVec<no_mistakes::edge_index::CanonicalEdge<no_mistakes::codebase::dependencies::graph::NodeId, no_mistakes::codebase::dependencies::graph::EdgeKind>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,440 ( 0.00%)  ???:<alloc::raw_vec::RawVec<no_mistakes::effects_query::EffectCallSite>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,440 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<((std::path::PathBuf, std::path::PathBuf), dashmap::util::SharedValue<alloc::sync::Arc<std::sync::once_lock::OnceLock<core::option::Option<std::path::PathBuf>>>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,440 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<(std::path::PathBuf, dashmap::util::SharedValue<alloc::sync::Arc<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<serde_json::value::Value>, no_mistakes::codebase::ts_source::source_store::json::JsonLoadError>>>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,440 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<(std::path::PathBuf, dashmap::util::SharedValue<alloc::sync::Arc<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<str>, alloc::sync::Arc<core::io::error::Error>>>>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,428 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::Components>::parse_next_component_back [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,390 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:std::sys::fs::symlink_metadata
+     1,343 ( 0.00%)  ???:0x000000000008f340 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,340 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:<std::path::Components as core::iter::traits::iterator::Iterator>::next
+     1,333 ( 0.00%)  ???:facts_probe::main [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,320 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_statement_list_item [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,290 ( 0.00%)  ???:0x000000000008cd80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,290 ( 0.00%)  ???:<hashbrown::set::HashSet<alloc::string::String, rustc_hash::FxBuildHasher> as core::iter::traits::collect::Extend<alloc::string::String>>::extend::<alloc::vec::Vec<alloc::string::String>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,272 ( 0.00%)  ???:rayon::iter::plumbing::bridge_producer_consumer::helper::<rayon::slice::IterProducer<std::path::PathBuf>, rayon::iter::map::MapConsumer<rayon::iter::while_some::WhileSomeConsumer<rayon::iter::flatten::FlattenConsumer<rayon::iter::extend::ListVecConsumer>>, no_mistakes::codebase::ts_source::facts::collect::collect_ts_facts_with_context_sources_and_session_serializing_paths::{closure#1}>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,270 ( 0.00%)  ???:no_mistakes::codebase::dependencies::extract::extract_visit_hoist::predeclare_hoisted_var_bindings [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,260 ( 0.00%)  ???:core::iter::adapters::flatten::and_then_or_clear::<core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_owner_members::{closure#0}::{closure#0}>, (no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId), <core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_owner_members::{closure#0}::{closure#0}> as core::iter::traits::iterator::Iterator>::next> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,239 ( 0.00%)  ???:0x000000000008cdf0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+     1,220 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_callable_binding_id [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,220 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_variable_declarator [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,194 ( 0.00%)  ???:0x000000000000c2a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     1,184 ( 0.00%)  ???:0x00000000000148b0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     1,180 ( 0.00%)  ???:core::slice::sort::shared::pivot::median3_rec::<(usize, core::option::Option<usize>), <[(usize, core::option::Option<usize>)]>::sort_by_key<usize, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#3}>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,170 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::file_id_map::FileIdMap<no_mistakes::codebase::ts_source::facts::TsFactSlot>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,158 ( 0.00%)  ???:<crossbeam_deque::deque::Stealer<rayon_core::job::JobRef>>::steal [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,130 ( 0.00%)  ???:<alloc::vec::Vec<std::path::PathBuf> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<std::path::PathBuf, alloc::collections::btree::map::IntoValues<std::path::PathBuf, std::path::PathBuf>>>::from_iter [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,120 ( 0.00%)  ???:<hashbrown::map::HashMap<(alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode), core::result::Result<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>, alloc::string::String>, rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,120 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_function_id [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,110 ( 0.00%)  ???:<alloc::collections::btree::map::IntoIter<alloc::vec::Vec<alloc::string::String>, alloc::vec::Vec<(alloc::string::String, alloc::string::String)>>>::dying_next [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,090 ( 0.00%)  ???:crossbeam_epoch::default::with_handle::<crossbeam_epoch::default::pin::{closure#0}, crossbeam_epoch::guard::Guard> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+     1,051 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/path/mod.rs:<std::path::Components>::parse_next_component_back
+     1,000 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_function_declaration [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       990 ( 0.00%)  ???:<core::iter::adapters::flatten::FlatMap<std::collections::hash::map::IntoIter<no_mistakes::codebase::dependencies::extract::CallableId, std::collections::hash::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>>, core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_owner_members::{closure#0}::{closure#0}>, no_mistakes::codebase::dependencies::extract::flatten_owner_members::{closure#0}> as core::iter::traits::iterator::Iterator>::next [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       980 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_variable_declaration [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       980 ( 0.00%)  ???:no_mistakes::codebase::dependencies::extract::extract_visit_hoist::walk_function_with_body_bindings [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       978 ( 0.00%)  ???:no_mistakes::diagnostics::context::with_timing_kind::<core::option::Option<core::option::Option<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>>, no_mistakes::codebase::ts_source::facts::collect::collect_ts_facts_with_context_sources_and_session_serializing_paths::{closure#4}::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       960 ( 0.00%)  ???:<alloc::raw_vec::RawVec<core::option::Option<(bool, alloc::string::String)>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       960 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::file_inventory::FileInventory>::id_for_path [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       960 ( 0.00%)  ???:no_mistakes::ast::parsed_cache::parse::parse_program [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       947 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::file_inventory::FileInventory>::from_paths [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       947 ( 0.00%)  ???:calloc [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       945 ( 0.00%)  ???:<rayon_core::registry::WorkerThread>::take_local_job [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       930 ( 0.00%)  ???:core::ptr::drop_glue::<core::iter::adapters::flatten::FlatMap<std::collections::hash::map::IntoIter<no_mistakes::codebase::dependencies::extract::CallableId, std::collections::hash::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>>, core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_owner_members::{closure#0}::{closure#0}>, no_mistakes::codebase::dependencies::extract::flatten_owner_members::{closure#0}>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       900 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::insert_callable_binding_at [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       890 ( 0.00%)  ???:<hashbrown::map::HashMap<alloc::sync::Arc<std::path::Path>, (), rustc_hash::FxBuildHasher>>::insert [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       880 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:<std::path::PathBuf>::_push
+       880 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/path/mod.rs:<std::path::PathBuf>::_push
+       880 ( 0.00%)  ???:<dashmap::DashMap<no_mistakes::codebase::ts_resolver::ResolverCacheScopeKey, alloc::sync::Arc<dashmap::DashMap<no_mistakes::codebase::ts_resolver::ResolveKey, core::option::Option<std::path::PathBuf>, rustc_hash::FxBuildHasher>>>>::with_capacity_and_hasher [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       874 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/unix.rs:std::sys::fs::unix::try_statx [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       858 ( 0.00%)  ???:0x000000000009eea0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       857 ( 0.00%)  ???:0x000000000009f380 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       852 ( 0.00%)  ???:0x0000000000025d60 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       840 ( 0.00%)  ???:<alloc::vec::Vec<oxc_diagnostics::OxcDiagnostic>>::extend_trusted::<core::iter::adapters::map::Map<alloc::vec::drain::Drain<oxc_parser::diagnostics::ParserDiagnostic>, <oxc_parser::diagnostics::ParserDiagnostic>::into_diagnostic>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       820 ( 0.00%)  ???:<alloc::sync::Arc<alloc::vec::Vec<std::path::PathBuf>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       815 ( 0.00%)  ???:__tunable_get_val [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       800 ( 0.00%)  ???:<std::path::Components as core::cmp::PartialEq>::eq [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       780 ( 0.00%)  ???:<alloc::vec::Vec<alloc::string::String> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<alloc::string::String, alloc::collections::btree::set::IntoIter<alloc::string::String>>>::from_iter [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       761 ( 0.00%)  ???:no_mistakes::invocation::deadline::check_timeout [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       755 ( 0.00%)  ???:0x0000000000024520 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       730 ( 0.00%)  ???:core::ptr::drop_glue::<[crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<(no_mistakes::codebase::ts_resolver::ResolverCacheScopeKey, dashmap::util::SharedValue<alloc::sync::Arc<dashmap::DashMap<no_mistakes::codebase::ts_resolver::ResolveKey, core::option::Option<std::path::PathBuf>, rustc_hash::FxBuildHasher>>>)>>>]> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       730 ( 0.00%)  ???:core::ptr::drop_glue::<core::iter::adapters::flatten::FlatMap<core::iter::adapters::enumerate::Enumerate<alloc::vec::into_iter::IntoIter<std::collections::hash::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>>>, core::iter::adapters::map::Map<std::collections::hash::map::IntoIter<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId>, no_mistakes::codebase::dependencies::extract::flatten_scope_map<no_mistakes::codebase::dependencies::extract::CallableId>::{closure#0}::{closure#0}>, no_mistakes::codebase::dependencies::extract::flatten_scope_map<no_mistakes::codebase::dependencies::extract::CallableId>::{closure#0}>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       730 ( 0.00%)  ???:oxc_ast_visit::generated::visit::walk::walk_declaration::<no_mistakes::codebase::dependencies::extract::ImportCollector> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       728 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/str/converts.rs:core::str::converts::from_utf8 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       720 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<((u64, no_mistakes::codebase::check_facts::playwright_plan::PlaywrightSettingsKey), dashmap::util::SharedValue<core::result::Result<alloc::sync::Arc<alloc::collections::btree::map::BTreeMap<alloc::sync::Arc<alloc::string::String>, alloc::collections::btree::set::BTreeSet<alloc::sync::Arc<alloc::string::String>>>>, alloc::string::String>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       720 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<(no_mistakes::codebase::analysis_session::registry_extension::RegistryExtensionKey, dashmap::util::SharedValue<alloc::sync::Arc<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<no_mistakes::registry_extension_query::RegistryExtensionReport>, alloc::sync::Arc<str>>>>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       720 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<(std::path::PathBuf, dashmap::util::SharedValue<alloc::sync::Arc<std::sync::once_lock::OnceLock<alloc::sync::Arc<no_mistakes::codebase::analysis_dataset::AnalysisDataset>>>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       720 ( 0.00%)  ???:core::ptr::drop_glue::<crossbeam_utils::cache_padded::CachePadded<lock_api::rwlock::RwLock<dashmap::lock::RawRwLock, hashbrown::raw::inner::RawTable<(std::path::PathBuf, dashmap::util::SharedValue<alloc::sync::Arc<std::sync::once_lock::OnceLock<alloc::sync::Arc<no_mistakes::codebase::test_filter::TestFileFilter>>>>)>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       710 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<str>, alloc::sync::Arc<core::io::error::Error>>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       708 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/unix.rs:<std::sys::fs::unix::File>::open_c [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       708 ( 0.00%)  ???:0x000000000008fa80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       705 ( 0.00%)  ???:0x000000000001de30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       700 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/read.rs:alloc::io::read::default_read_to_end::<std::fs::File> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       700 ( 0.00%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::dependencies::extract::NamespaceFacts> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       690 ( 0.00%)  ???:core::ptr::drop_glue::<core::iter::adapters::flatten::FlatMap<core::iter::adapters::filter::Filter<core::slice::iter::Iter<no_mistakes::config::v2::schema::ci_checks::CheckCommandDef>, no_mistakes::codebase::rules::tsconfig_gate_coverage::local_typechecked_projects::{closure#0}>, alloc::vec::Vec<alloc::string::String>, no_mistakes::codebase::rules::tsconfig_gate_coverage::local_typechecked_projects::{closure#1}>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       686 ( 0.00%)  ???:0x000000000009a700 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       681 ( 0.00%)  ???:getenv [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       674 ( 0.00%)  ???:0x000000000009fd20 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       670 ( 0.00%)  ???:<alloc::sync::Arc<no_mistakes::codebase::analysis_session::intern::PathInterner>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       670 ( 0.00%)  ???:<no_mistakes::ast::parsed_cache::ParsedProgramCache>::intern_path [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       667 ( 0.00%)  ???:(below main) [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       650 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::add_binding_name [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       650 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_assignment_expression_or_higher_impl [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       650 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_directives_and_statements'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       642 ( 0.00%)  ???:0x0000000000023da0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       640 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::file_id_map::FileIdMap<no_mistakes::codebase::ts_source::facts::TsFactSlot>>::get [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       630 ( 0.00%)  ???:<hashbrown::raw::RawTable<((alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode), core::result::Result<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>, alloc::string::String>)>>::reserve_rehash::<hashbrown::map::make_hasher<(alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode), core::result::Result<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>, alloc::string::String>, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       630 ( 0.00%)  ???:<hashbrown::raw::RawTable<(alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId)>>::reserve_rehash::<hashbrown::map::make_hasher<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       630 ( 0.00%)  ???:core::slice::sort::stable::driftsort_main::<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String), <(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String) as core::cmp::PartialOrd>::lt, alloc::vec::Vec<(no_mistakes::codebase::dependencies::extract::CallableId, alloc::string::String)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       625 ( 0.00%)  ???:0x000000000000bc70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       624 ( 0.00%)  ???:0x00000000000062f0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       620 ( 0.00%)  ???:<alloc::sync::Arc<dashmap::DashMap<((u64, no_mistakes::codebase::check_facts::playwright_plan::PlaywrightSettingsKey), bool), core::result::Result<alloc::sync::Arc<alloc::vec::Vec<no_mistakes::playwright::selectors::types::AppSelector>>, alloc::string::String>>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       620 ( 0.00%)  ???:<alloc::sync::Arc<dashmap::DashMap<(u64, no_mistakes::codebase::check_facts::playwright_plan::PlaywrightSettingsKey), alloc::sync::Arc<alloc::vec::Vec<no_mistakes::routes::Route>>>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       620 ( 0.00%)  ???:<alloc::sync::Arc<dashmap::DashMap<(u64, no_mistakes::codebase::check_facts::playwright_plan::PlaywrightSettingsKey), core::result::Result<alloc::sync::Arc<alloc::vec::Vec<no_mistakes::playwright::analysis::text_types::AppTextTarget>>, alloc::string::String>>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       618 ( 0.00%)  ???:0x0000000000006660 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       610 ( 0.00%)  ???:<hashbrown::raw::RawTable<(alloc::sync::Arc<std::path::Path>, ())>>::reserve_rehash::<hashbrown::map::make_hasher<alloc::sync::Arc<std::path::Path>, (), rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       600 ( 0.00%)  ???:<alloc::sync::Arc<dashmap::DashMap<(u64, no_mistakes::codebase::check_facts::playwright_plan::PlaywrightSettingsKey), core::result::Result<alloc::sync::Arc<alloc::collections::btree::map::BTreeMap<alloc::sync::Arc<alloc::string::String>, alloc::collections::btree::set::BTreeSet<alloc::sync::Arc<alloc::string::String>>>>, alloc::string::String>>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       592 ( 0.00%)  ???:0x0000000000023bb0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       590 ( 0.00%)  ???:<alloc::collections::btree::map::entry::VacantEntry<std::path::PathBuf, std::path::PathBuf>>::insert_entry [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       590 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_callable_declaration_bindings [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       590 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_value_declaration [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       590 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::source_store::SourceStore>::read [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       580 ( 0.00%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::ts_source::facts::TsFactMap> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       579 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/sync/once/futex.rs:<std::sys::sync::once::futex::Once>::call [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       575 ( 0.00%)  ???:0x0000000000011840 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       570 ( 0.00%)  ???:<alloc::sync::Arc<no_mistakes::codebase::ts_source::file_inventory::FileInventory>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       570 ( 0.00%)  ???:<hashbrown::raw::RawTable<(usize, std::collections::hash::map::HashMap<alloc::string::String, alloc::vec::Vec<no_mistakes::codebase::dependencies::extract::extract_value_flow::default_origins::ReceiverOrigin>, rustc_hash::FxBuildHasher>)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, std::collections::hash::map::HashMap<alloc::string::String, alloc::vec::Vec<no_mistakes::codebase::dependencies::extract::extract_value_flow::default_origins::ReceiverOrigin>, rustc_hash::FxBuildHasher>, rustc_hash::FxBuildHasher>::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       570 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::source_store::SourceStore>::read_path [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       560 ( 0.00%)  ???:<alloc::rc::Rc<core::cell::RefCell<std::collections::hash::map::HashMap<alloc::sync::Arc<std::path::Path>, (), rustc_hash::FxBuildHasher>>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       552 ( 0.00%)  /rust/deps<SYSTEM_LIB>c-0.2.189/src/unix/linux_like/linux_l4re_shared.rs:std::sys::fs::unix::try_statx
+       550 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::record_const_callable_aliases [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       547 ( 0.00%)  ???:rayon_core::registry::global_registry [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       540 ( 0.00%)  ???:<alloc::collections::btree::map::IntoIter<alloc::vec::Vec<usize>, alloc::collections::btree::set_val::SetValZST>>::dying_next [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       540 ( 0.00%)  ???:<hashbrown::raw::RawTableInner>::drop_elements::<((alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode), core::result::Result<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>, alloc::string::String>)> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       535 ( 0.00%)  ???:<rayon_core::registry::Registry>::new::<rayon_core::registry::DefaultSpawn> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       531 ( 0.00%)  ???:0x000000000008fad0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       530 ( 0.00%)  ???:0x000000000000bda0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       530 ( 0.00%)  ???:core::ptr::drop_glue::<dashmap::DashMap<alloc::sync::Arc<std::path::Path>, (), rustc_hash::FxBuildHasher>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       520 ( 0.00%)  ???:oxc_ast_visit::generated::visit::walk::walk_statement::<no_mistakes::codebase::dependencies::extract::ImportCollector> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       520 ( 0.00%)  ???:oxc_ast_visit::generated::visit::walk::walk_statement::<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       515 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::Path>::_starts_with [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       513 ( 0.00%)  ???:0x000000000001be40 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       510 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::asi [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       504 ( 0.00%)  ???:0x0000000000016170 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       500 ( 0.00%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::ts_source::facts::domain::domain_types::TsFactContext> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       490 ( 0.00%)  ???:<rayon::iter::flatten::FlattenFolder<rayon::iter::extend::ListVecConsumer, alloc::collections::linked_list::LinkedList<alloc::vec::Vec<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>>> as rayon::iter::plumbing::Folder<core::option::Option<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>>>::consume [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       482 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::facts::domain::domain_types::TsFactContext as core::default::Default>::default [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       480 ( 0.00%)  ???:0x0000000000022ff0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       480 ( 0.00%)  ???:memchr::arch::x86_64::memchr::memchr_raw::find_avx2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       470 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::LIN::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       468 ( 0.00%)  ???:_dl_catch_exception [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       460 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::fs::unix::try_statx
+       460 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_binary_expression_or_higher [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       459 ( 0.00%)  ???:0x000000000008f3c0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       450 ( 0.00%)  ???:__rustc::__rust_alloc [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       441 ( 0.00%)  ???:0x0000000000017e70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       440 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<alloc::raw_vec::RawVecInner>::finish_grow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       440 ( 0.00%)  ???:<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       435 ( 0.00%)  ???:0x000000000001a800 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       421 ( 0.00%)  ???:_dl_allocate_tls_init [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       421 ( 0.00%)  ???:sbrk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       420 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<alloc::raw_vec::RawVec<alloc::string::String>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       414 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/profiling.rs:std::sys::fs::unix::try_statx
+       413 ( 0.00%)  ???:0x0000000000004c80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       408 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:core::str::converts::from_utf8
+       407 ( 0.00%)  ???:0x0000000000025b80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       406 ( 0.00%)  ???:0x0000000000005d00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       405 ( 0.00%)  ???:0x000000000001ade0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       400 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_update_expression [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       390 ( 0.00%)  ???:core::slice::sort::stable::driftsort_main::<alloc::string::String, <alloc::string::String as core::cmp::PartialOrd>::lt, alloc::vec::Vec<alloc::string::String>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       380 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_lhs_expression_or_higher_impl [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       380 ( 0.00%)  ???:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<str>, alloc::sync::Arc<core::io::error::Error>>>>::initialize<<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<str>, alloc::sync::Arc<core::io::error::Error>>>>::get_or_init<<no_mistakes::codebase::ts_source::source_store::SourceStore>::read::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       380 ( 0.00%)  ???:core::ptr::drop_glue::<oxc_parser::lexer::Lexer<oxc_parser::config::NoTokensLexerConfig>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       370 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector as oxc_ast_visit::generated::visit::Visit>::visit_declaration [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       370 ( 0.00%)  ???:<rayon::iter::extend::ListVecFolder<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)> as rayon::iter::plumbing::Folder<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>>::complete [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       370 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<core::option::Option<no_mistakes::codebase::ts_source::facts::TsFactSlot>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       370 ( 0.00%)  ???:core::slice::sort::stable::driftsort_main::<(usize, core::option::Option<usize>), <[(usize, core::option::Option<usize>)]>::sort_by_key<usize, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#3}>::{closure#0}, alloc::vec::Vec<(usize, core::option::Option<usize>)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       368 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:<std::path::Components>::parse_next_component_back
+       361 ( 0.00%)  ???:__cpu_indicator_init [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>gcc_s.so.1]
+       360 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::extract_visit_hoist::HoistedVarBindingCollector as oxc_ast_visit::generated::visit::Visit>::visit_variable_declaration [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       360 ( 0.00%)  ???:core::ptr::drop_glue::<std::collections::hash::map::HashMap<no_mistakes::codebase::dependencies::extract::CallableId, std::collections::hash::set::HashSet<alloc::string::String, rustc_hash::FxBuildHasher>, rustc_hash::FxBuildHasher>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       358 ( 0.00%)  ???:0x0000000000011940 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       351 ( 0.00%)  ???:pthread_mutex_lock [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       350 ( 0.00%)  ???:<alloc::sync::Arc<alloc::vec::Vec<merman_core::detect::Detector>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       347 ( 0.00%)  ???:no_mistakes::ast::current_request_parse_cache [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       342 ( 0.00%)  ???:pthread_mutex_unlock [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       340 ( 0.00%)  ???:no_mistakes::codebase::dependencies::extract::visit_variable_declaration_with_bindings [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       334 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:<std::path::Components as core::iter::traits::iterator::Iterator>::next
+       334 ( 0.00%)  ???:0x0000000000012670 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       325 ( 0.00%)  ???:_IO_file_underflow [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       324 ( 0.00%)  ???:open [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       322 ( 0.00%)  ???:0x0000000000004dd0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       320 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:<std::path::PathBuf>::_push
+       317 ( 0.00%)  ???:0x0000000000023bc0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       312 ( 0.00%)  ???:__libc_sigaction [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       311 ( 0.00%)  ???:0x0000000000005aa0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       310 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::add_formal_parameters [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       308 ( 0.00%)  ???:0x00000000000076e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       305 ( 0.00%)  ???:pthread_create [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       290 ( 0.00%)  ???:<alloc::rc::Rc<core::cell::RefCell<std::collections::hash::map::HashMap<(alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode), core::result::Result<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>, alloc::string::String>, rustc_hash::FxBuildHasher>>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       290 ( 0.00%)  ???:getauxval [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       290 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::SLH::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       288 ( 0.00%)  ???:__cxa_thread_atexit_impl [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       280 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:<std::path::PathBuf>::_push
+       280 ( 0.00%)  ???:<oxc_parser::lexer::trivia_builder::TriviaBuilder>::attach_pending_comments_to_token [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       280 ( 0.00%)  ???:__cxa_finalize [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       280 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<no_mistakes::codebase::ts_source::facts::domain::domain_types::BackendRouteExtractor>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       277 ( 0.00%)  ???:0x000000000000c200 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       270 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       270 ( 0.00%)  ???:core::ptr::drop_glue::<oxc_parser::state::ParserState> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       264 ( 0.00%)  ???:0x0000000000013760 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       260 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/read.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       260 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_unary_expression_or_higher [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       260 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::into_iter::IntoIter<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       258 ( 0.00%)  ???:0x0000000000005250 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       251 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:std::thread::functions::available_parallelism
+       250 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<no_mistakes::codebase::ts_routes::refs::RouteHelper>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       246 ( 0.00%)  ???:0x000000000001b390 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       240 ( 0.00%)  ???:<alloc::collections::btree::map::BTreeMap<std::path::PathBuf, std::path::PathBuf>>::entry [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       240 ( 0.00%)  ???:<alloc::raw_vec::RawVec<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFileFacts)>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       240 ( 0.00%)  ???:<alloc::raw_vec::RawVec<core::option::Option<(serde_core::private::content::Content, serde_core::private::content::Content)>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       240 ( 0.00%)  ???:<alloc::raw_vec::RawVec<no_mistakes::codebase::dependencies::extract::CallableId>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       240 ( 0.00%)  ???:<alloc::raw_vec::RawVec<u32>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       240 ( 0.00%)  ???:<no_mistakes::codebase::analysis_session::AnalysisSession>::record_parse [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:<alloc::sync::Arc<alloc::vec::Vec<no_mistakes::react_traits::report::types::ComponentFacts>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:<core::iter::adapters::filter::Filter<std::collections::hash::set::IntoIter<alloc::string::String>, no_mistakes::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands::{closure#5}> as core::iter::traits::iterator::Iterator>::next [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_binding_pattern_kind [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_ts_type_parameters_impl [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:<oxc_parser::lexer::Lexer<oxc_parser::config::NoTokensLexerConfig>>::read_next_token_at_end [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueCall>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       230 ( 0.00%)  ???:statx [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       228 ( 0.00%)  ???:0x0000000000015a30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       228 ( 0.00%)  ???:0x00000000000232a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       228 ( 0.00%)  ???:0x00000000000a1f90 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       227 ( 0.00%)  ???:<crossbeam_epoch::collector::Collector>::register [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       220 ( 0.00%)  ???:<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<str>, alloc::sync::Arc<core::io::error::Error>>>>::initialize::<<std::sync::once_lock::OnceLock<core::result::Result<alloc::sync::Arc<str>, alloc::sync::Arc<core::io::error::Error>>>>::get_or_init<<no_mistakes::codebase::ts_source::source_store::SourceStore>::read::{closure#0}>::{closure#0}, !> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       216 ( 0.00%)  ???:read [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       215 ( 0.00%)  ???:0x000000000001a9a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       212 ( 0.00%)  ???:0x0000000000016260 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       212 ( 0.00%)  ???:0x000000000001af30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       210 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std_detect/src/detect/os/x86.rs:std_detect::detect::cache::detect_and_initialize
+       210 ( 0.00%)  ???:0x0000000000022e60 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       209 ( 0.00%)  ???:0x0000000000001f70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       208 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::Component as core::cmp::PartialEq>::eq [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       204 ( 0.00%)  ???:0x0000000000006e50 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       204 ( 0.00%)  ???:0x0000000000062580 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       203 ( 0.00%)  ???:_dl_find_dso_for_object [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       202 ( 0.00%)  ???:main [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       200 ( 0.00%)  ???:<no_mistakes::codebase::ts_source::source_store::SourceStore>::record_source_read [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       200 ( 0.00%)  ???:core::ptr::drop_glue::<no_mistakes::codebase::ts_source::file_id_map::FileIdMap<no_mistakes::codebase::ts_source::facts::TsFactSlot>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       200 ( 0.00%)  ???:no_mistakes::ast::evict_request_parse_cache_path [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       197 ( 0.00%)  ???:0x0000000000014f40 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       192 ( 0.00%)  ???:0x00000000000110a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       191 ( 0.00%)  ???:__underflow [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       190 ( 0.00%)  ???:<alloc::vec::Vec<alloc::string::String>>::dedup_by::<<alloc::vec::Vec<alloc::string::String>>::dedup::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       190 ( 0.00%)  ???:<no_mistakes::diagnostics::context::with_observer::DisabledGuard as core::ops::drop::Drop>::drop [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       190 ( 0.00%)  ???:__rustc::__rust_realloc [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       189 ( 0.00%)  ???:0x0000000000011770 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       186 ( 0.00%)  ???:0x0000000000012470 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       184 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/weak<SYS>call.rs:std::sys::fs::unix::try_statx
+       184 ( 0.00%)  ???:0x000000000008d710 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       183 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sys::sync::once::futex::Once>::call
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<[core::option::Option<no_mistakes::codebase::ts_source::facts::TsFactSlot>]> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<alloc::vec::Vec<no_mistakes::codebase::ts_source::facts::call_sites::CallSiteFact>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<core::option::Option<no_mistakes::codebase::ts_queues::usage::QueueUsage>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<core::option::Option<no_mistakes::queue::extract_model::FileFacts>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<core::option::Option<no_mistakes::server_routes::model::FileFacts>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<hashbrown::raw::RawTable<((alloc::string::String, alloc::string::String), ())>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<hashbrown::raw::RawTable<(alloc::string::String, core::option::Option<alloc::string::String>)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<hashbrown::raw::RawTable<(no_mistakes::codebase::dependencies::extract::CallableId, std::collections::hash::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::CallableId, rustc_hash::FxBuildHasher>)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<hashbrown::raw::RawTable<(std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFactSlot)>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<std::collections::hash::map::HashMap<core::option::Option<no_mistakes::codebase::dependencies::extract::CallableId>, alloc::vec::Vec<no_mistakes::codebase::dependencies::extract::PerItemRange>, rustc_hash::FxBuildHasher>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:core::ptr::drop_glue::<std::collections::hash::map::HashMap<std::path::PathBuf, no_mistakes::codebase::ts_source::facts::TsFactSlot, rustc_hash::FxBuildHasher>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:no_mistakes::codebase::dependencies::extract::extract_visit_hoist::predeclare_function_declarations [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       180 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::L_F::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       175 ( 0.00%)  ???:0x0000000000006240 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       175 ( 0.00%)  ???:<rayon_core::registry::DefaultSpawn as rayon_core::registry::ThreadSpawn>::spawn [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       171 ( 0.00%)  ???:_IO_flush_all [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       170 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+       170 ( 0.00%)  ???:0x0000000000003640 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       170 ( 0.00%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::add_type_parameter_names [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       170 ( 0.00%)  ???:core::ptr::drop_glue::<core::option::Option<dashmap::DashMap<std::path::PathBuf, core::sync::atomic::Atomic<u64>, rustc_hash::FxBuildHasher>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       169 ( 0.00%)  ???:0x000000000000bad0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       168 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::Components>::as_path [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       165 ( 0.00%)  ???:getline [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       165 ( 0.00%)  ???:sched_yield [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       164 ( 0.00%)  ???:0x000000000001b140 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       160 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:<alloc::raw_vec::RawVecInner>::finish_grow
+       160 ( 0.00%)  ???:<alloc::sync::Arc<std::path::Path>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       160 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::L_C::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       156 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/mod.rs:std::thread::functions::available_parallelism
+       153 ( 0.00%)  ???:0x000000000000ba00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       150 ( 0.00%)  ???:<alloc::sync::Arc<no_mistakes::codebase::analysis_session::AnalysisSession>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       150 ( 0.00%)  ???:<alloc::sync::Arc<no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       150 ( 0.00%)  ???:<alloc::sync::Arc<no_mistakes::codebase::ts_source::source_store::SourceStore>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       150 ( 0.00%)  ???:<alloc::sync::Arc<std::collections::hash::map::HashMap<alloc::string::String, no_mistakes::codebase::dependencies::extract::extract_value_flow::ValueExpression, rustc_hash::FxBuildHasher>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       145 ( 0.00%)  ???:__default_morecore [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       144 ( 0.00%)  ???:_IO_switch_to_get_mode [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       143 ( 0.00%)  ???:0x0000000000007190 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       140 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/mod.rs:std::sys::fs::symlink_metadata [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       140 ( 0.00%)  ???:<oxc_parser::ParserImpl<oxc_parser::config::NoTokensParserConfig>>::parse_variable_statement [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       138 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:<std::path::Components>::parse_next_component_back
+       137 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/read.rs:alloc::io::read::default_read_to_end::<&std::fs::File> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       136 ( 0.00%)  ???:<rayon_core::registry::WorkerThread as core::convert::From<rayon_core::registry::ThreadBuilder>>::from [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       132 ( 0.00%)  ???:close [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       132 ( 0.00%)  ???:mmap [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       130 ( 0.00%)  ???:brk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       130 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::EQL::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       126 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:std::thread::functions::available_parallelism
+       126 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/stack_overflow.rs:std::sys::pal::unix::stack_overflow::imp::make_handler [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       126 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/destructors/linux_like.rs:std::sys::thread_local::destructors::linux_like::register [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       120 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<alloc::raw_vec::RawVecInner>::finish_grow
+       116 ( 0.00%)  ???:0x0000000000025d00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       111 ( 0.00%)  ???:0x000000000001b220 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       111 ( 0.00%)  ???:0x00000000001666a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       110 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+       108 ( 0.00%)  ???:0x0000000000007ab0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       108 ( 0.00%)  ???:_IO_file_fopen [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       106 ( 0.00%)  ???:0x0000000000007090 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+       105 ( 0.00%)  ???:<alloc::raw_vec::RawVec<(core::option::Option<&str>, (&str, unsafe fn(*mut napi_sys::types::napi_env__) -> core::result::Result<*mut napi_sys::types::napi_value__, napi::error::Error>))>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+       100 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+       100 ( 0.00%)  ???:mremap [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+       100 ( 0.00%)  ???:sigaction [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        99 ( 0.00%)  ???:0x0000000000005e20 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        98 ( 0.00%)  ???:0x0000000000058880 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        96 ( 0.00%)  ???:0x0000000000007670 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        95 ( 0.00%)  ???:0x0000000000022f40 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        93 ( 0.00%)  ???:0x000000000009f320 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        92 ( 0.00%)  ???:0x000000000001a900 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        92 ( 0.00%)  ???:<rayon_core::sleep::Sleep>::sleep::<<rayon_core::registry::WorkerThread>::wait_until_cold::{closure#0}> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        92 ( 0.00%)  ???:bcmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        91 ( 0.00%)  ???:0x000000000005a230 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        91 ( 0.00%)  ???:__libc_early_init [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        90 ( 0.00%)  ???:0x0000000000012d50 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        90 ( 0.00%)  ???:_IO_link_in [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        90 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::BEC::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        90 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::BEO::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        89 ( 0.00%)  ???:0x0000000000014740 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        86 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::path::Components as core::iter::traits::double_ended::DoubleEndedIterator>::next_back
+        84 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:<std::path::PathBuf>::pop [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        83 ( 0.00%)  ???:0x0000000000042050 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        81 ( 0.00%)  ???:0x0000000000110e00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        80 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/alloc.rs:<alloc::raw_vec::RawVecInner>::finish_grow
+        75 ( 0.00%)  ???:0x00000000000f7e70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        74 ( 0.00%)  ???:0x000000000015fa30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        72 ( 0.00%)  ???:pthread_attr_setaffinity_np [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        72 ( 0.00%)  ???:strlen [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        72 ( 0.00%)  ???:strnlen [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        71 ( 0.00%)  ???:0x0000000000015890 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        70 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File>
+        68 ( 0.00%)  ???:_IO_un_link [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        68 ( 0.00%)  ???:__call_tls_dtors [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        66 ( 0.00%)  ???:memset [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        63 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread/unix.rs:std::thread::functions::available_parallelism
+        63 ( 0.00%)  ???:memcpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        63 ( 0.00%)  ???:memmove [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        62 ( 0.00%)  ???:0x0000000000013070 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        61 ( 0.00%)  ???:0x0000000000092620 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:<alloc::raw_vec::RawVec<alloc::string::String>>::grow_one
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/intrinsics/mod.rs:<alloc::raw_vec::RawVecInner>::finish_grow
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::fs::symlink_metadata
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<alloc::raw_vec::RawVec<alloc::string::String>>::grow_one
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:<alloc::raw_vec::RawVecInner>::finish_grow
+        60 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/unix.rs:std::sys::fs::symlink_metadata
+        60 ( 0.00%)  ???:<oxc_allocator::arena::Arena>::alloc_layout_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        60 ( 0.00%)  ???:strncmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        59 ( 0.00%)  ???:<std::sync::once::Once>::call_once::<rayon_core::registry::set_global_registry<rayon_core::registry::default_global_registry>::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        59 ( 0.00%)  ???:fclose [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        58 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/fmt/mod.rs:core::fmt::write [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        58 ( 0.00%)  ???:0x000000000009fad0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        57 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/buffered/bufwriter.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        55 ( 0.00%)  ???:0x0000000000092370 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        54 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:std::sys::fs::metadata
+        54 ( 0.00%)  ???:strcmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        53 ( 0.00%)  ???:0x000000000001e500 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        52 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/read.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        52 ( 0.00%)  ???:0x000000000009f9e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        52 ( 0.00%)  ???:__sigsetjmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        52 ( 0.00%)  ???:once_cell::imp::initialize_or_wait [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        50 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/fmt/mod.rs:<core::fmt::Formatter>::pad_integral [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        50 ( 0.00%)  ???:<alloc::sync::Arc<core::sync::atomic::Atomic<bool>>>::drop_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        50 ( 0.00%)  ???:_IO_file_close_it [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        48 ( 0.00%)  ???:0x000000000001ad20 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        48 ( 0.00%)  ???:<crossbeam_deque::deque::Worker<rayon_core::job::JobRef>>::new_fifo [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        48 ( 0.00%)  ???:<std::thread::lifecycle::spawn_unchecked<<rayon_core::registry::DefaultSpawn as rayon_core::registry::ThreadSpawn>::spawn::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        48 ( 0.00%)  ???:rindex [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        48 ( 0.00%)  ???:wcschr [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        47 ( 0.00%)  ???:<crossbeam_epoch::internal::Global>::try_advance [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        47 ( 0.00%)  ???:_IO_file_doallocate [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        47 ( 0.00%)  ???:sysconf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        46 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:std::sys::fs::unix::try_statx
+        45 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread/unix.rs:<std::sys::thread::unix::Thread>::new [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        45 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/spawnhook.rs:<std::thread::spawnhook::SpawnHooks as core::ops::drop::Drop>::drop [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        45 ( 0.00%)  ???:<crossbeam_epoch::collector::Collector as core::default::Default>::default [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        45 ( 0.00%)  ???:std::sys::backtrace::__rust_begin_short_backtrace::<<rayon_core::registry::DefaultSpawn as rayon_core::registry::ThreadSpawn>::spawn::{closure#0}, ()> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        44 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:core::slice::memchr::memrchr_aligned [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        44 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/stack_overflow/thread_info.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        44 ( 0.00%)  ???:0x00000000000024a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        44 ( 0.00%)  ???:fopen [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        44 ( 0.00%)  ???:memchr [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        44 ( 0.00%)  ???:wmemchr [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        43 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:<std::path::Components as core::iter::traits::double_ended::DoubleEndedIterator>::next_back
+        43 ( 0.00%)  ???:0x0000000000029a20 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        43 ( 0.00%)  ???:getrandom [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        43 ( 0.00%)  ???:pthread_key_create [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        42 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/../../stdarch/crates/core_arch/src/x86/cpuid.rs:std_detect::detect::cache::detect_and_initialize
+        42 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/env/unix.rs:std::sys::env::unix::getenv::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        42 ( 0.00%)  ???:0x0000000000012d00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        41 ( 0.00%)  ???:0x000000000000bec0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        41 ( 0.00%)  ???:0x000000000001b3f0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        40 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ffi/c_str.rs:std::sys::fs::symlink_metadata
+        40 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fd/unix.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File>
+        40 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/helpers/small_c_string.rs:std::sys::fs::symlink_metadata
+        40 ( 0.00%)  ???:0x000000000001dd60 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        40 ( 0.00%)  ???:0x0000000000022d50 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        40 ( 0.00%)  ???:<hashbrown::map::HashMap<(alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode), core::result::Result<alloc::rc::Rc<no_mistakes::ast::parsed_cache::CachedProgram>, alloc::string::String>, rustc_hash::FxBuildHasher>>::get::<(alloc::sync::Arc<std::path::Path>, no_mistakes::ast::parsed_cache::ParseMode)> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        40 ( 0.00%)  ???:<hashbrown::map::HashMap<alloc::sync::Arc<std::path::Path>, (), rustc_hash::FxBuildHasher>>::get_key_value::<std::path::Path> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        40 ( 0.00%)  ???:<rayon_core::latch::LockLatch as rayon_core::latch::Latch>::set [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        40 ( 0.00%)  ???:pthread_getaffinity_np [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        40 ( 0.00%)  ???:strcasecmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        40 ( 0.00%)  ???:strncasecmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        39 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/fmt/num.rs:<u64 as core::fmt::Display>::fmt [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        39 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:std::sys::env::unix::getenv
+        39 ( 0.00%)  ???:__cxa_atexit [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        39 ( 0.00%)  ???:pthread_attr_init [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        38 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::thread::functions::available_parallelism
+        38 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/io/stdio.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        38 ( 0.00%)  ???:0x0000000000005310 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        38 ( 0.00%)  ???:0x0000000000011f40 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        38 ( 0.00%)  ???:0x000000000008e9e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        38 ( 0.00%)  ???:_IO_enable_locks [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        37 ( 0.00%)  ???:0x0000000000092560 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        36 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:std::thread::functions::available_parallelism
+        36 ( 0.00%)  ???:0x00000000000034a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        36 ( 0.00%)  ???:0x0000000000012270 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        36 ( 0.00%)  ???:0x0000000000110440 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        36 ( 0.00%)  ???:0x0000000000164c40 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        36 ( 0.00%)  ???:index [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        36 ( 0.00%)  ???:strncpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        36 ( 0.00%)  ???:wmemset [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        35 ( 0.00%)  ???:0x0000000000023090 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        34 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/io/write.rs:<core::io::write::default_write_fmt::Adapter<std::io::stdio::StdoutLock> as core::fmt::Write>::write_str [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        34 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/iter/macros.rs:std::thread::functions::available_parallelism
+        34 ( 0.00%)  ???:0x000000000001cc10 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        34 ( 0.00%)  ???:0x00000000000aaa10 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        34 ( 0.00%)  ???:<crossbeam_epoch::internal::Global>::collect [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        33 ( 0.00%)  ???:0x0000000000087a70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        33 ( 0.00%)  ???:_IO_file_open [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        33 ( 0.00%)  ???:pthread_setspecific [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        32 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+        32 ( 0.00%)  ???:__ctype_init [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        32 ( 0.00%)  ???:dlsym [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        32 ( 0.00%)  ???:signal [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        31 ( 0.00%)  ???:0x00000000000230d0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        31 ( 0.00%)  ???:0x0000000000025f00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        31 ( 0.00%)  ???:0x0000000000041980 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        30 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File>
+        30 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File>
+        30 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/profiling.rs:std::sys::fs::symlink_metadata
+        30 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fd/unix.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        30 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/random/linux.rs:std::sys::random::linux::hashmap_random_keys [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        30 ( 0.00%)  ???:0x0000000000004510 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>gcc_s.so.1]
+        30 ( 0.00%)  ???:0x0000000000022c50 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        30 ( 0.00%)  ???:0x0000000000022d70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        30 ( 0.00%)  ???:__read_nocancel [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        30 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::PNC::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        30 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::PNO::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        30 ( 0.00%)  ???:oxc_parser::lexer::byte_handlers::SEM::<oxc_parser::config::NoTokensLexerConfig> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        29 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::path::Path>::_starts_with
+        29 ( 0.00%)  ???:0x000000000009e3b0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        29 ( 0.00%)  ???:0x00000000000bb6a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        29 ( 0.00%)  ???:pthread_attr_destroy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        28 ( 0.00%)  ???:0x0000000000018730 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        28 ( 0.00%)  ???:0x000000000001d8d0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        28 ( 0.00%)  ???:0x00000000000909d0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        28 ( 0.00%)  ???:0x0000000000167470 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        28 ( 0.00%)  ???:<std::sys::thread_local::native::lazy::Storage<crossbeam_epoch::collector::LocalHandle, ()>>::get_or_init_slow::<crossbeam_epoch::default::HANDLE::__rust_std_internal_init_fn> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        27 ( 0.00%)  ???:0x0000000000003420 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        26 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+        26 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/unix.rs:std::fs::buffer_capacity_required
+        26 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std_detect/src/detect/cache.rs:std_detect::detect::cache::detect_and_initialize [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        25 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/spawnhook.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        25 ( 0.00%)  ???:0x0000000000022f00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        25 ( 0.00%)  ???:0x0000000000095190 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        25 ( 0.00%)  ???:clone [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        25 ( 0.00%)  ???:getpagesize [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        24 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/char/methods.rs:std::thread::functions::available_parallelism
+        24 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std::sys::fs::unix::try_statx
+        24 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/fs.rs:std::fs::buffer_capacity_required [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        24 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:<std::sys::fs::unix::File>::open_c
+        24 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/spawnhook.rs:std::thread::spawnhook::run_spawn_hooks [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        24 ( 0.00%)  ???:0x0000000000018570 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        24 ( 0.00%)  ???:0x000000000001ae80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        24 ( 0.00%)  ???:0x0000000000029c30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        24 ( 0.00%)  ???:<alloc::raw_vec::RawVec<alloc::rc::Rc<no_mistakes::codebase::workflow_topology::artifact_resolution_types::ArtifactOccurrence>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        24 ( 0.00%)  ???:<alloc::raw_vec::RawVec<core::option::Option<no_mistakes::codebase::postgres::function_calls::clause::SqlFunctionClause>>>::grow_one [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        24 ( 0.00%)  ???:_IO_file_read [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        24 ( 0.00%)  ???:core::ptr::drop_glue::<rayon_core::ThreadPoolBuilder> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        24 ( 0.00%)  ???:memrchr [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        24 ( 0.00%)  ???:strchrnul [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        24 ( 0.00%)  ???:wcscmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        23 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/iter/macros.rs:core::slice::memchr::memrchr_aligned
+        23 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/fs.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        23 ( 0.00%)  ???:0x0000000000001f00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        23 ( 0.00%)  ???:0x000000000000e710 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        23 ( 0.00%)  ???:_IO_doallocbuf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        23 ( 0.00%)  ???:__open_nocancel [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        23 ( 0.00%)  ???:core::ptr::drop_glue::<core::iter::adapters::enumerate::Enumerate<core::iter::adapters::zip::Zip<alloc::vec::into_iter::IntoIter<crossbeam_deque::deque::Worker<rayon_core::job::JobRef>>, alloc::vec::into_iter::IntoIter<crossbeam_deque::deque::Stealer<rayon_core::job::JobRef>>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        23 ( 0.00%)  ???:snprintf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        23 ( 0.00%)  ???:std::sys::thread_local::native::eager::destroy::<core::cell::RefCell<alloc::vec::Vec<no_mistakes::ast::parsed_cache::ParsedProgramCache>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        23 ( 0.00%)  ???:wmemcmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        22 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+        22 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:std::thread::functions::available_parallelism
+        22 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/str/pattern.rs:std::thread::functions::available_parallelism
+        22 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/fs.rs:std::thread::functions::available_parallelism
+        22 ( 0.00%)  ???:0x0000000000029b00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        22 ( 0.00%)  ???:__memset_chk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        22 ( 0.00%)  ???:memchr::arch::x86_64::memchr::memchr_raw::detect [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        22 ( 0.00%)  ???:sched_getaffinity [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        21 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:std::thread::functions::available_parallelism
+        21 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:<std::path::Path>::_starts_with
+        21 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/fmt/mod.rs:<core::fmt::Formatter>::pad_integral::write_prefix [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        21 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::path::PathBuf>::pop
+        21 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+        21 ( 0.00%)  ???:__memcpy_chk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        21 ( 0.00%)  ???:__memmove_chk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        21 ( 0.00%)  ???:__mempcpy_chk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        21 ( 0.00%)  ???:mempcpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File>
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        20 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<std::fs::File>
+        20 ( 0.00%)  ???:0x0000000000002290 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        20 ( 0.00%)  ???:0x0000000000003510 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        20 ( 0.00%)  ???:0x00000000000184e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        20 ( 0.00%)  ???:0x0000000000164a00 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        20 ( 0.00%)  ???:<std::sync::once::Once>::call_once_force::<<std::sync::lazy_lock::LazyLock<std::sync::poison::rwlock::RwLock<alloc::vec::Vec<(core::option::Option<&str>, (&str, unsafe fn(*mut napi_sys::types::napi_env__) -> core::result::Result<*mut napi_sys::types::napi_value__, napi::error::Error>))>>>>::force::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        20 ( 0.00%)  ???:mprotect [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        20 ( 0.00%)  ???:sigaltstack [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        20 ( 0.00%)  ???:std::sys::thread_local::native::eager::destroy::<core::cell::RefCell<alloc::vec::Vec<core::option::Option<alloc::sync::Arc<no_mistakes::diagnostics::observer::InvocationObserver>>>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        20 ( 0.00%)  ???:strcasecmp_l [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        20 ( 0.00%)  ???:strncasecmp_l [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        19 ( 0.00%)  ???:0x00000000001103d0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        19 ( 0.00%)  ???:<std::sync::once_lock::OnceLock<std::sync::poison::rwlock::RwLock<core::option::Option<no_mistakes::invocation::deadline::Deadline>>>>::initialize::<<std::sync::once_lock::OnceLock<std::sync::poison::rwlock::RwLock<core::option::Option<no_mistakes::invocation::deadline::Deadline>>>>::get_or_init<no_mistakes::invocation::deadline::active_deadline::{closure#0}>::{closure#0}, !> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        18 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/maybe_uninit.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+        18 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/os_str/bytes.rs:<std::path::PathBuf>::pop
+        18 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/sync/rwlock/futex.rs:std::sys::env::unix::getenv::{closure#0}
+        18 ( 0.00%)  ???:0x0000000000012300 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        18 ( 0.00%)  ???:0x00000000000238e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        18 ( 0.00%)  ???:<crossbeam_epoch::sync::once_lock::OnceLock<crossbeam_epoch::collector::Collector>>::initialize::<<crossbeam_epoch::collector::Collector>::new> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        18 ( 0.00%)  ???:getrlimit [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        18 ( 0.00%)  ???:stpncpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        18 ( 0.00%)  ???:wcslen [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        18 ( 0.00%)  ???:wcsnlen [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        17 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/key/racy.rs:<std::sys::thread_local::key::racy::LazyKey>::lazy_init [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        17 ( 0.00%)  ???:0x00000000000435a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        17 ( 0.00%)  ???:0x0000000000059d20 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        17 ( 0.00%)  ???:<once_cell::imp::Guard as core::ops::drop::Drop>::drop [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        17 ( 0.00%)  ???:wcpncpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        17 ( 0.00%)  ???:wcscat [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        17 ( 0.00%)  ???:wcsncpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        16 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:<std::sys::sync::once::futex::Once>::call
+        16 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/path.rs:std::thread::functions::available_parallelism
+        16 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/once.rs:<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>
+        16 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/key/unix.rs:<std::sys::thread_local::key::racy::LazyKey>::lazy_init
+        16 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/functions.rs:std::thread::functions::available_parallelism [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        16 ( 0.00%)  ???:0x00000000000034e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        16 ( 0.00%)  ???:0x0000000000013000 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        16 ( 0.00%)  ???:0x0000000000013010 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        16 ( 0.00%)  ???:pthread_attr_getstack [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        16 ( 0.00%)  ???:stpcpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        16 ( 0.00%)  ???:strcat [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        16 ( 0.00%)  ???:strcpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        15 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/buffered/bufwriter.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+        15 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+        15 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::pal::unix::stack_overflow::imp::make_handler
+        15 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/iter.rs:std::thread::functions::available_parallelism
+        15 ( 0.00%)  ???:0x000000000001d2c0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        15 ( 0.00%)  ???:0x0000000000110510 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        15 ( 0.00%)  ???:_IO_default_finish [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        15 ( 0.00%)  ???:munmap [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        15 ( 0.00%)  ???:pthread_key_delete [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        15 ( 0.00%)  ???:wcscpy [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        14 ( 0.00%)  /rust/deps<SYSTEM_LIB>c-0.2.189/src/unix/linux_like/linux_l4re_shared.rs:std::thread::functions::available_parallelism
+        14 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/env/unix.rs:std::sys::env::unix::getenv [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        14 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/mod.rs:std::sys::fs::exists [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        14 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/mod.rs:std::sys::fs::metadata [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        14 ( 0.00%)  ???:0x000000000001d3c0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        14 ( 0.00%)  ???:0x0000000000022710 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        14 ( 0.00%)  ???:0x000000000097c2a0 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        14 ( 0.00%)  ???:<once_cell::imp::OnceCell<usize>>::initialize::<<once_cell::sync::OnceCell<usize>>::get_or_init<dashmap::default_shard_amount::{closure#0}>::{closure#0}, <once_cell::sync::OnceCell<_>>::get_or_init::Void> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        13 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/collections/btree/node.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+        13 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/thread.rs:<std::thread::thread::Thread>::new [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        13 ( 0.00%)  ???:0x00000000000010c0 [<WORKSPACE>/performance-1972-profile-tools<HOME><SYSTEM><SYSTEM_LIB>exec/valgrind/vgpreload_core-amd64-linux.so]
+        13 ( 0.00%)  ???:0x00000000000033b0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>z.so.1.3.1]
+        13 ( 0.00%)  ???:0x00000000000056f0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>gcc_s.so.1]
+        13 ( 0.00%)  ???:0x0000000000011360 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+        13 ( 0.00%)  ???:0x000000000008fc70 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        13 ( 0.00%)  ???:0x00000000049c73d0 [???]
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::path::Components>::as_path
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<std::sys::fs::unix::File>::open_c
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:std::thread::functions::available_parallelism
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sys::fs::unix::File>::open_c
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:std::fs::buffer_capacity_required
+        12 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std_detect/src/detect/bit.rs:std_detect::detect::cache::detect_and_initialize
+        12 ( 0.00%)  ???:0x0000000000001100 [<WORKSPACE>/performance-1972-profile-tools<HOME><SYSTEM><SYSTEM_LIB>exec/valgrind/vgpreload_core-amd64-linux.so]
+        12 ( 0.00%)  ???:0x00000000000033f0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>z.so.1.3.1]
+        12 ( 0.00%)  ???:0x0000000000004c10 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        12 ( 0.00%)  ???:0x0000000000005730 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>gcc_s.so.1]
+        12 ( 0.00%)  ???:0x00000000000113a0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+        12 ( 0.00%)  ???:0x0000000000022ed0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        12 ( 0.00%)  ???:0x000000000097c2e0 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        12 ( 0.00%)  ???:_IO_file_finish [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        12 ( 0.00%)  ???:__pthread_get_minstack [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        12 ( 0.00%)  ???:pthread_detach [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        12 ( 0.00%)  ???:strcspn [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        11 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+        11 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+        11 ( 0.00%)  ???:0x0000000000011910 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        11 ( 0.00%)  ???:0x0000000000015260 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        11 ( 0.00%)  ???:0x0000000000029a90 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        11 ( 0.00%)  ???:<std::sync::once::Once>::call_once::<<crossbeam_epoch::sync::once_lock::OnceLock<crossbeam_epoch::collector::Collector>>::initialize<<crossbeam_epoch::collector::Collector>::new>::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        11 ( 0.00%)  ???:syscall [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/intrinsics/mod.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:core::slice::memchr::memrchr_aligned
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:core::slice::memchr::memrchr_aligned
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYSTEM_LIB>.rs:alloc::io::read::default_read_to_end::<std::fs::File>
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYSTEM_LIB>.rs:std::sys::fs::symlink_metadata
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/path/mod.rs:<std::path::Path>::_starts_with
+        10 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/current.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+        10 ( 0.00%)  ???:0x000000000001db20 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+        10 ( 0.00%)  ???:<oxc_allocator::arena::Arena>::try_alloc_layout_slow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+        10 ( 0.00%)  ???:lseek [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/collections/btree/search.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:std::thread::spawnhook::run_spawn_hooks
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:std::thread::functions::available_parallelism
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/ffi/os_str.rs:<std::path::PathBuf>::pop
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/once.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/once.rs:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:std::thread::functions::available_parallelism
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/unix.rs:std::thread::functions::available_parallelism
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/helpers/small_c_string.rs:std::thread::functions::available_parallelism
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/weak/dlsym.rs:<std::sys::thread::unix::Thread>::new
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/path/mod.rs:<std::path::PathBuf>::pop
+         9 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/native/eager.rs:std::sys::thread_local::native::eager::destroy::<core::cell::Cell<std::thread::spawnhook::SpawnHooks>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         9 ( 0.00%)  ???:0x0000000000004560 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>gcc_s.so.1]
+         9 ( 0.00%)  ???:0x000000000001af80 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         9 ( 0.00%)  ???:0x000000000008f050 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         9 ( 0.00%)  ???:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::poison::rwlock::RwLock<core::option::Option<no_mistakes::invocation::deadline::Deadline>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::poison::rwlock::RwLock<core::option::Option<no_mistakes::invocation::deadline::Deadline>>>>::get_or_init<no_mistakes::invocation::deadline::active_deadline::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0} [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         9 ( 0.00%)  ???:__errno_location [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         9 ( 0.00%)  ???:poll [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         9 ( 0.00%)  ???:write [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/collections/btree/map.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/collections/btree/map/entry.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/read.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:std::thread::functions::available_parallelism
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:std::fs::buffer_capacity_required
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std::sys::env::unix::getenv::{closure#0}
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/panicking.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/weak<SYS>call.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         8 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread/unix.rs:<std::sys::thread::unix::Thread>::new::thread_start [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         8 ( 0.00%)  ???:0x0000000000022c30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         8 ( 0.00%)  ???:0x000000000005b3b0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:0x0000000000089ad0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         8 ( 0.00%)  ???:_IO_unsave_markers [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         8 ( 0.00%)  ???:__atan2_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:__atanh_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:__exp_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:__log_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:__sinh_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:_dl_allocate_tls [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         8 ( 0.00%)  ???:atan [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:cos [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:cosf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:exp2f [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:expf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:expm1 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:log2 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:log2f [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:logf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:powf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:sin [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:sincosf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:sinf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         8 ( 0.00%)  ???:tan [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         7 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/maybe_uninit.rs:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0}
+         7 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:std::sys::env::unix::getenv
+         7 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:std::thread::functions::available_parallelism
+         7 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std::sys::random::linux::hashmap_random_keys
+         7 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/io/stdio.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         7 ( 0.00%)  ???:0x0000000000021f30 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         7 ( 0.00%)  ???:<std::sync::poison::rwlock::RwLock<alloc::vec::Vec<(core::option::Option<&str>, (&str, unsafe fn(*mut napi_sys::types::napi_env__) -> core::result::Result<*mut napi_sys::types::napi_value__, napi::error::Error>))>> as core::default::Default>::default [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:__acos_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         7 ( 0.00%)  ???:__asin_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         7 ( 0.00%)  ???:__pow_finite [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__acquire_planning_artifact_lock_16::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__analyze_project_json_21::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__check_json_25::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__ci_env_json_59::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__ci_impact_json_58::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__ci_topology_impact_json_61::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__ci_topology_json_60::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__data_pw_json_53::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__dependencies_json_18::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__dependents_json_19::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__effects_json_54::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__fetches_json_24::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__flow_json_48::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__generate_postgres_catalog_json_63::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__impacted_checks_json_62::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__import_usages_json_23::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__lockfile_diff_json_57::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__playwright_check_json_35::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__playwright_edges_json_36::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__playwright_related_json_37::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__playwright_tests_json_38::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__queue_check_json_42::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__queue_edges_json_40::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__queue_related_json_41::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__queues_json_39::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__react_analyze_json_50::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__react_check_json_51::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__react_usages_json_52::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__registry_extension_json_56::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__related_json_20::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__release_planning_artifact_lock_17::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__rename_no_replace_15::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__resolve_config_json_26::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__rsc_callers_json_55::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__server_contracts_json_47::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__server_route_edges_json_45::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__server_route_list_json_44::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__server_route_related_json_46::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__server_routes_json_43::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__symbols_json_22::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_audit_json_49::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_comment_markdown_30::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_graph_json_31::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_graph_mermaid_32::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_impact_json_33::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_plan_json_28::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_targets_json_34::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__tests_why_json_29::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__validate_mermaid_markdown_json_27::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::__napi_register__version_14::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::diagnostics::__napi_register__diagnostics_snapshot_json_0::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::infra_swift::__napi_register__infra_outputs_json_2::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::infra_swift::__napi_register__infra_resource_refs_json_1::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::infra_swift::__napi_register__infra_test_for_json_3::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::infra_swift::__napi_register__swift_importers_json_4::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::infra_swift::__napi_register__swift_test_targets_json_5::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::postgres_source::__napi_register__extract_executed_postgres_sql_json_7::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::postgres_source::__napi_register__parse_postgres_sql_json_6::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::queries::__napi_register__call_sites_json_12::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::queries::__napi_register__dead_exports_json_11::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::queries::__napi_register__exports_of_json_10::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::queries::__napi_register__importers_json_9::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::queries::__napi_register__resolve_check_json_13::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:no_mistakes::napi_api::typescript_modules::__napi_register__analyze_typescript_modules_json_8::_::__CTOR_PRIVATE_REF::__ctor_private [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         7 ( 0.00%)  ???:sincos [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:<std::path::PathBuf>::pop
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:std::sys::pal::unix::stack_overflow::imp::make_handler
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::thread::spawnhook::SpawnHooks as core::ops::drop::Drop>::drop
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::thread::spawnhook::SpawnHooks as core::ops::drop::Drop>::drop
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:<std::thread::thread::Thread>::new
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::env::unix::getenv
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::fs::metadata
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:std::thread::functions::available_parallelism
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:core::fmt::write
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:core::slice::memchr::memrchr_aligned
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/cmp.rs:std::thread::functions::available_parallelism
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std::sys::pal::unix::stack_overflow::imp::make_handler
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/poison.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/reentrant_lock.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fd/unix.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fd/unix.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/unix.rs:std::sys::fs::metadata
+         6 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/sync/mutex/futex.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         6 ( 0.00%)  ???:0x0000000003960228 [???]
+         6 ( 0.00%)  ???:0x000000000483b000 [???]
+         6 ( 0.00%)  ???:0x0000000004865000 [???]
+         6 ( 0.00%)  ???:0x0000000004886000 [???]
+         6 ( 0.00%)  ???:0x00000000048c0000 [???]
+         6 ( 0.00%)  ???:gettid [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         6 ( 0.00%)  ???:gettimeofday [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         6 ( 0.00%)  ???:pthread_attr_setstacksize [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         6 ( 0.00%)  ???:roundeven [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         6 ( 0.00%)  ???:strpbrk [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         6 ( 0.00%)  ???:strspn [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         6 ( 0.00%)  ???:strstr [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         6 ( 0.00%)  ???:time [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/buffered/linewritershim.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/../../stdarch/crates/core_arch/src/x86/xsave.rs:core::core_arch::x86::xsave::_xgetbv [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/array/equality.rs:std_detect::detect::cache::detect_and_initialize
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/mod.rs:core::slice::memchr::memrchr_aligned
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:std::thread::spawnhook::run_spawn_hooks
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:core::fmt::write
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::env::unix::getenv::{closure#0}
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:core::fmt::write
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:std::sys::random::linux::hashmap_random_keys
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/helpers/small_c_string.rs:std::sys::env::unix::getenv
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/native/eager.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/native/eager.rs:std::thread::spawnhook::run_spawn_hooks
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/current.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         5 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/thread.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         5 ( 0.00%)  ???:0x0000000000001050 [<WORKSPACE>/performance-1972-profile-tools<HOME><SYSTEM><SYSTEM_LIB>exec/valgrind/vgpreload_core-amd64-linux.so]
+         5 ( 0.00%)  ???:0x0000000000003340 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>z.so.1.3.1]
+         5 ( 0.00%)  ???:0x0000000000005680 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>gcc_s.so.1]
+         5 ( 0.00%)  ???:0x00000000000112f0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         5 ( 0.00%)  ???:0x00000000000123f0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         5 ( 0.00%)  ???:0x0000000000017e50 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         5 ( 0.00%)  ???:0x00000000000230b0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         5 ( 0.00%)  ???:0x000000000097c230 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         5 ( 0.00%)  ???:__close_nocancel [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         5 ( 0.00%)  ???:exit [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         5 ( 0.00%)  ???:fma [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         5 ( 0.00%)  ???:fmaf [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>m.so.6]
+         5 ( 0.00%)  ???:fstat [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         5 ( 0.00%)  ???:std::sys::thread_local::native::eager::destroy::<core::cell::RefCell<alloc::vec::Vec<no_mistakes::diagnostics::observer::TimingKind>>> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/buffered/bufwriter.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/io/buffered/linewriter.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:std::sys::env::unix::getenv::{closure#0}
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/sync.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ffi/c_str.rs:std::sys::env::unix::getenv
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ffi/c_str.rs:std::sys::fs::metadata
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::thread::thread::Thread>::new
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/const_ptr.rs:core::slice::memchr::memrchr_aligned
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::sys::thread_local::native::eager::destroy::<core::cell::Cell<std::thread::spawnhook::SpawnHooks>>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:std::thread::spawnhook::run_spawn_hooks
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:std::fs::buffer_capacity_required
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:<u64 as core::fmt::Display>::fmt
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/index.rs:core::slice::memchr::memrchr_aligned
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:<std::path::Path>::_starts_with
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/os/fd/owned.rs:std::thread::functions::available_parallelism
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/once_lock.rs:<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/helpers/small_c_string.rs:std::sys::fs::metadata
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/weak<SYS>call.rs:std::sys::random::linux::hashmap_random_keys
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/key/racy.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/key/unix.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         4 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/thread.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         4 ( 0.00%)  ???:0x000000000000bde0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         4 ( 0.00%)  ???:_dl_audit_preinit [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         4 ( 0.00%)  ???:_setjmp [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         4 ( 0.00%)  ???:pthread_attr_getguardsize [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         4 ( 0.00%)  ???:pthread_self [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         4 ( 0.00%)  ???:std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         4 ( 0.00%)  ???:std::sys::backtrace::__rust_begin_short_backtrace::<std::thread::lifecycle::spawn_unchecked<<no_mistakes::napi_api::async_task::independent::Executor<no_mistakes::napi_api::async_task::independent::promise::Job>>::start<no_mistakes::napi_api::async_task::independent::promise::executor::{closure#0}::{closure#0}>::{closure#0}, ()>::{closure#1}::{closure#0}::{closure#0}, ()> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/boxed.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<std::path::PathBuf>::pop
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:std::thread::spawnhook::run_spawn_hooks
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/string.rs:std::thread::functions::available_parallelism
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/mod.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:<std::sys::thread::unix::Thread>::new
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ffi/c_str.rs:std::sys::env::unix::getenv::{closure#0}
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/fmt/rt.rs:core::fmt::write
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/mod.rs:<std::path::PathBuf>::pop
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:std::thread::functions::available_parallelism
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/profiling.rs:std::sys::fs::metadata
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:<std::path::PathBuf>::pop
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sys::thread::unix::Thread>::new
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fd/unix.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         3 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/lifecycle.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         3 ( 0.00%)  ???:0x0000000003960240 [???]
+         3 ( 0.00%)  ???:0x000000000483b284 [???]
+         3 ( 0.00%)  ???:0x0000000004878114 [???]
+         3 ( 0.00%)  ???:0x00000000048a8f98 [???]
+         3 ( 0.00%)  ???:0x000000000493cdc8 [???]
+         3 ( 0.00%)  ???:0x00000000049c73d8 [???]
+         3 ( 0.00%)  ???:_Exit [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/boxed.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/raw_vec/mod.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:std::thread::spawnhook::run_spawn_hooks
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ffi/c_str.rs:std::thread::functions::available_parallelism
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/internal_macros.rs:std::thread::functions::available_parallelism
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/intrinsics/mod.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/iter/traits/iterator.rs:std::thread::functions::available_parallelism
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/maybe_uninit.rs:<u64 as core::fmt::Display>::fmt
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/num/uint_macros.rs:core::slice::memchr::memrchr_aligned
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/const_ptr.rs:std::sys::env::unix::getenv::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mod.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:std::sys::pal::unix::stack_overflow::imp::make_handler
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<core::fmt::Formatter>::pad_integral
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:<std::thread::thread::Thread>::new
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:std::sys::fs::exists
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/result.rs:std::sys::random::linux::hashmap_random_keys
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/iter/macros.rs:std::sys::pal::unix::stack_overflow::thread_info::set_current_info
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/mod.rs:<std::io::stdio::StdoutLock as core::io::write::Write>::write_all
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sys::thread_local::key::racy::LazyKey>::lazy_init
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std::sys::args::unix::imp::ARGV_INIT_ARRAY::init_wrapper
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYSTEM_LIB>.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/os/fd/owned.rs:alloc::io::read::default_read_to_end::<&std::fs::File>
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/os/fd/owned.rs:alloc::io::read::default_read_to_end::small_probe_read::<&std::fs::File>
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:<std::sync::once::Once>::call_once_force::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>::{closure#0}>::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:<std::thread::thread::Thread>::new
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:std::sys::env::unix::getenv::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/args/unix.rs:std::sys::args::unix::imp::ARGV_INIT_ARRAY::init_wrapper [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/fs/common.rs:std::sys::fs::exists
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/mod.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/pal/unix/stack_overflow.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/path/mod.rs:std::thread::functions::available_parallelism
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/sync/mutex/futex.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/native/mod.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/thread_local/native/mod.rs:std::thread::spawnhook::run_spawn_hooks
+         2 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/thread/local.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         2 ( 0.00%)  ???:_IO_file_close [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         2 ( 0.00%)  ???:_IO_file_stat [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+         2 ( 0.00%)  ???:_dl_debug_state [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/slice.rs:std::sys::env::unix::getenv::{closure#0}
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/alloc/src/vec/into_iter.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cell.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/cmp.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/macros/mod.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/macros/mod.rs:std::thread::functions::available_parallelism
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:<std::sys::thread::unix::Thread>::new
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/mem/mod.rs:std::sys::thread_local::native::eager::destroy::<core::cell::Cell<std::thread::spawnhook::SpawnHooks>>
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src<TOOLS>ion.rs:std::sys::env::unix::getenv
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/metadata.rs:std::sys::pal::unix::stack_overflow::imp::make_handler
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/mut_ptr.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:<std::sys::thread::unix::Thread>::new::thread_start
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/ptr/non_null.rs:<std::thread::spawnhook::ChildSpawnHooks>::inherit_and_run
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/slice/memchr.rs:<std::thread::thread::Thread>::new
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/str/mod.rs:<&std::fs::File as alloc::io::read::Read>::read_to_string
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/str/mod.rs:std::thread::functions::available_parallelism
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<alloc::io::buffered::bufwriter::BufWriter<std::io::stdio::StdoutRaw>>::flush_buf
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/core/src/sync/atomic.rs:std_detect::detect::cache::detect_and_initialize
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/fs.rs:std::sys::fs::exists
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYSTEM_LIB>.rs:std::sys::fs::metadata
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src/sync/once_lock.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/alloc/unix.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/sync/once/futex.rs:<std::sync::once::Once>::call_once::<std::rt::cleanup::{closure#0}>::{closure#0}
+         1 ( 0.00%)  <RUST_SOURCE>/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4<SYSTEM_LIB>rary/std/src<SYS>/sync/once/futex.rs:<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::initialize::<<std::sync::once_lock::OnceLock<std::sync::reentrant_lock::ReentrantLock<core::cell::RefCell<alloc::io::buffered::linewriter::LineWriter<std::io::stdio::StdoutRaw>>>>>::get_or_init<std::io::stdio::stdout::{closure#0}>::{closure#0}, !>
+         1 ( 0.00%)  ???:0x000000000001ccd0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         1 ( 0.00%)  ???:0x000000000483b030 [???]
+         1 ( 0.00%)  ???:0x0000000004865330 [???]
+         1 ( 0.00%)  ???:0x00000000048863b0 [???]
+         1 ( 0.00%)  ???:0x00000000048c0280 [???]
+

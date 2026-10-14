@@ -1,0 +1,241 @@
+{
+  "scope": "Historical optimized 57c927df to 8d81aa1; not current-main measurements",
+  "manifests": {
+    "baseline": {
+      "revision": "57c927df4c09f450f67248277d49070f9576ba3b",
+      "tree": "4deecf0efbb9c9c2478025434e4dbfb0ba2fc47f",
+      "analyzer_tree": "4782db522d9821c49f126f735a8902dcc184808a",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>baseline.rlib",
+      "sha256": "5c895c3dd890572782ee16432a4cb8deebcdb65a666226a94cb6ebcbed39d858",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "binary_sha256": "448bc02da0902614bf2d7815001adba950ace5af71c9d952b6046163b982f934",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    },
+    "candidate": {
+      "revision": "8d81aa148eb2e62773919a290dd21439a1616f42",
+      "tree": "0a768383587495ce34a587073758dbee0e747604",
+      "analyzer_tree": "e9e30f71cf4efbded15d813953c3629787ab5624",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>candidate.rlib",
+      "sha256": "53bef3abd88669513bb45c4acbf5669cebd6056925df58ebcf39ceb0a6a70f55",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "toolchain_recording_correction": "Initial metadata command ran from <WORKSPACE> and reported its default1.96; builds and probe links ran from stable-pinned historical worktree using1.99. ELF .comment in BOTH executables and dedicated Cargo rustc cache independently confirm1.99. Corrected before any sampling; initial metadata preserved separately.",
+      "binary_sha256": "e909fe312d46c398616e2a0f64e4be08e4eba9e99380624d2e6208b5b54489ff",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    }
+  },
+  "rayon_workers": 1,
+  "parent_cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "child_cpu_affinity": [
+    0
+  ],
+  "batch_multiplier": 1,
+  "run_tag": "serial-cpu0-no-writes1000",
+  "binary_hashes": {
+    "baseline": "448bc02da0902614bf2d7815001adba950ace5af71c9d952b6046163b982f934",
+    "candidate": "e909fe312d46c398616e2a0f64e4be08e4eba9e99380624d2e6208b5b54489ff"
+  },
+  "cases": [
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 4.26664304350561,
+        "cpu_s": 4.260374,
+        "rss_kib": 15572.0
+      },
+      "candidate": {
+        "wall_s": 3.9817950005017337,
+        "cpu_s": 3.9740655,
+        "rss_kib": 15710.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 3.615725866999128,
+        "cpu_s": 3.6121084999999997,
+        "rss_kib": 15282.0
+      },
+      "candidate": {
+        "wall_s": 3.7863832549992367,
+        "cpu_s": 3.782513,
+        "rss_kib": 15406.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 3.829240489496442,
+        "cpu_s": 3.8251235,
+        "rss_kib": 15506.0
+      },
+      "candidate": {
+        "wall_s": 3.8477187950047664,
+        "cpu_s": 3.8432395,
+        "rss_kib": 15774.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 4.065183117003471,
+        "cpu_s": 4.060642,
+        "rss_kib": 15320.0
+      },
+      "candidate": {
+        "wall_s": 3.800414132500009,
+        "cpu_s": 3.7977115,
+        "rss_kib": 15558.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "official_index_url": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz",
+  "index_sha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498",
+  "global_install": false,
+  "packages": {
+    "valgrind": {
+      "Package": "valgrind",
+      "Version": "1:3.24.0-3",
+      "Filename": "pool/main/v/valgrind/valgrind_3.24.0-3_amd64.deb",
+      "Size": "15380104",
+      "Installed-Size": "83577",
+      "SHA256": "0359e30820ccee7ee5c8d4c951ca276e3978b18f157d71bd77981de05b344907",
+      "Depends": "libc6 (>= 2.38), libc6-dbg"
+    },
+    "libc6-dbg": {
+      "Package": "libc6-dbg",
+      "Version": "2.41-12+deb13u4",
+      "Filename": "pool/main/g/glibc<SYSTEM_LIB>c6-dbg_2.41-12+deb13u4_amd64.deb",
+      "Size": "7373052",
+      "Installed-Size": "17048",
+      "SHA256": "0123a767a462c59d75e1bd56c4a0f7192c389f600e4743e807d3d33c679dbcf7",
+      "Depends": "libc6 (= 2.41-12+deb13u4)"
+    }
+  },
+  "valgrind_version": "valgrind-3.24.0",
+  "callgrind_tool_sha256": "340065228e4a322aacbc4e11fcd39162a3e20fba4b4aa965708e50012175a8c5",
+  "installed_libc6_version": "2.41-12+deb13u4",
+  "scope": "Userland instrumented guest instructions; not native retired hardware instructions or native CPU throughput"
+}

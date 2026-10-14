@@ -1,0 +1,45 @@
+--------------------------------------------------------------------------------
+Profile data file '<WORKSPACE>/performance-1972-evidence/profiles/smoke-baseline-values1.callgrind' (creator: callgrind-3.24.0)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 6573901
+Trigger: Program termination
+Profiled target:  <WORKSPACE>/performance-1972-evidence/baseline-facts <WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts values 1 (PID 457304, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       90
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+Ir                  
+--------------------------------------------------------------------------------
+31,241,713 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                  file:function
+--------------------------------------------------------------------------------
+4,859,315 (15.55%)  ???:0x00000000000a0fe0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+3,067,068 ( 9.82%)  ???:<hashbrown::map::HashMap<alloc::string::String, (), rustc_hash::FxBuildHasher>>::contains_key::<str> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+2,229,763 ( 7.14%)  ???:free [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+1,922,262 ( 6.15%)  ???:malloc [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+1,911,635 ( 6.12%)  ???:0x00000000000a02e0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+1,849,569 ( 5.92%)  ???:0x000000000009ebd0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+1,715,930 ( 5.49%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::callee_binding_scope [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+1,649,920 ( 5.28%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::callee_shadows_import [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+1,467,548 ( 4.70%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector>::push_value_symbol_reference [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+1,171,701 ( 3.75%)  ???:0x0000000000162880 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+  922,976 ( 2.95%)  ???:0x000000000000e870 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+  796,834 ( 2.55%)  ???:0x0000000000162120 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+  792,576 ( 2.54%)  ???:<no_mistakes::codebase::dependencies::extract::ImportCollector as oxc_ast_visit::generated::visit::Visit>::visit_identifier_reference [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+  786,570 ( 2.52%)  ???:<alloc::raw_vec::RawVecInner>::finish_grow [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+  697,824 ( 2.23%)  ???:0x000000000009eaf0 [<SYSTEM><SYSTEM_LIB>/x86_64-linux-gnu<SYSTEM_LIB>c.so.6]
+  627,456 ( 2.01%)  ???:no_mistakes::codebase::dependencies::extract::visit_object_property_with_scope [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+  605,822 ( 1.94%)  ???:<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+  604,905 ( 1.94%)  ???:<alloc::string::String as core::fmt::Write>::write_str [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+  475,136 ( 1.52%)  ???:no_mistakes::codebase::dependencies::extract::visit_binding_defaults_for_name'2 [<WORKSPACE>/performance-1972-evidence/baseline-facts]
+

@@ -1,0 +1,38 @@
+[
+  {
+    "demand": "values",
+    "iterations": 100,
+    "samples_per_binary": 8,
+    "order": "BAAB",
+    "baseline": {
+      "cpu_s": 1.4928475,
+      "wall_s": 1.4959193729991966,
+      "rss_kib": 67168.0,
+      "report": "128"
+    },
+    "candidate": {
+      "cpu_s": 1.6090665,
+      "wall_s": 1.611430447002931,
+      "rss_kib": 67278.0,
+      "report": "128"
+    }
+  },
+  {
+    "demand": "imports",
+    "iterations": 100,
+    "samples_per_binary": 8,
+    "order": "BAAB",
+    "baseline": {
+      "cpu_s": 1.3992719999999998,
+      "wall_s": 1.403038235996064,
+      "rss_kib": 66996.0,
+      "report": "0"
+    },
+    "candidate": {
+      "cpu_s": 1.487117,
+      "wall_s": 1.4887645819981117,
+      "rss_kib": 66712.0,
+      "report": "0"
+    }
+  }
+]

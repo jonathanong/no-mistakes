@@ -1,0 +1,240 @@
+{
+  "scope": "Merged #1961 integration optimized b97b2cb to 917c9ea1; no later follow-up implementations",
+  "manifests": {
+    "baseline": {
+      "revision": "b97b2cb3c4dc1b3040a9696e60839b8834f4e955",
+      "tree": "fc35e42f894c68cf51133eff4a7a555503ee847a",
+      "analyzer_tree": "0cd227e2569c8fb2e2246296601f451755c30c82",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-1972-current-baseline/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-1972-current-baseline/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-1972-current-baseline/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>current-baseline.rlib",
+      "sha256": "ba8e360bcf1835990895b5aa848955ad9565f9c640a3d9b0e168137dd733f989",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "binary_sha256": "1b43e65bab2088a242f7e036c0d6c97c1cfa3fc915a5119d359b68b397cd294b",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    },
+    "candidate": {
+      "revision": "917c9ea1c2f2400e8a5d3d50c18c0a52fe21ad4a",
+      "tree": "c0280c1366e2a062e599eec7794593f9aa49ad54",
+      "analyzer_tree": "0e6eba31a9391269d9eda494b951316338f7aaa1",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-1972/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-1972/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-1972/crates/no-mistakes/src<SYSTEM_LIB>.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release<SYSTEM_LIB>no_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps<SYSTEM_LIB>no_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence<SYSTEM_LIB>current-candidate.rlib",
+      "sha256": "12e7985b067c65cec8dc2e201af0bcf352cb09776468bcb6f4fa907bcf78b93d",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "binary_sha256": "3f530dbdf4def1bf8a19b1db85e9bfaa37c90e65e6221e82ef18ecce368cc363",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    }
+  },
+  "rayon_workers": 1,
+  "parent_cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "child_cpu_affinity": [
+    0
+  ],
+  "batch_multiplier": 1,
+  "run_tag": "serial-cpu0-no-writes1000",
+  "binary_hashes": {
+    "baseline": "1b43e65bab2088a242f7e036c0d6c97c1cfa3fc915a5119d359b68b397cd294b",
+    "candidate": "3f530dbdf4def1bf8a19b1db85e9bfaa37c90e65e6221e82ef18ecce368cc363"
+  },
+  "cases": [
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 3.1160827330022585,
+        "cpu_s": 3.112688,
+        "rss_kib": 15900.0
+      },
+      "candidate": {
+        "wall_s": 3.106433566499618,
+        "cpu_s": 3.0996085,
+        "rss_kib": 15556.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 3.014132085496385,
+        "cpu_s": 3.011559,
+        "rss_kib": 15828.0
+      },
+      "candidate": {
+        "wall_s": 3.0309450825006934,
+        "cpu_s": 3.0280009999999997,
+        "rss_kib": 15236.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 3.1054699055021047,
+        "cpu_s": 3.1021015000000003,
+        "rss_kib": 16050.0
+      },
+      "candidate": {
+        "wall_s": 3.091032736498164,
+        "cpu_s": 3.0884925,
+        "rss_kib": 15556.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 1000,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 3.0111290224958793,
+        "cpu_s": 3.008077,
+        "rss_kib": 15912.0
+      },
+      "candidate": {
+        "wall_s": 2.9832331740035443,
+        "cpu_s": 2.9778455,
+        "rss_kib": 15364.0
+      }
+    }
+  ]
+}
