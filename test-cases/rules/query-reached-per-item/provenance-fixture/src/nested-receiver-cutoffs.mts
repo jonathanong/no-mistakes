@@ -245,3 +245,31 @@ compoundBox.client += {};
 compoundBox.client.get = replacement;
 function compoundUncertain(value) { value.get('key'); }
 for (const item of items) { compoundUncertain(client27); }
+
+import { primary as client35 } from '@vendor/valkey';
+const instanceFieldBox = { client: client35 };
+void class { field = (instanceFieldBox.client = {}); };
+instanceFieldBox.client.get = replacement;
+function deferredInstanceField(value) { value.get('key'); }
+for (const item of items) { deferredInstanceField(client35); }
+
+import { primary as client36 } from '@vendor/valkey';
+const instanceAccessorBox = { client: client36 };
+void class { accessor field = (instanceAccessorBox.client = {}); };
+instanceAccessorBox.client.get = replacement;
+function deferredInstanceAccessor(value) { value.get('key'); }
+for (const item of items) { deferredInstanceAccessor(client36); }
+
+import { primary as client37 } from '@vendor/valkey';
+const staticFieldBox = { client: client37 };
+void class { static field = (staticFieldBox.client = {}); };
+staticFieldBox.client.get = replacement;
+function eagerStaticField(value) { value.get('key'); }
+for (const item of items) { eagerStaticField(client37); }
+
+import { primary as client38 } from '@vendor/valkey';
+const staticAccessorFieldBox = { client: client38 };
+void class { static accessor field = (staticAccessorFieldBox.client = {}); };
+staticAccessorFieldBox.client.get = replacement;
+function eagerStaticAccessor(value) { value.get('key'); }
+for (const item of items) { eagerStaticAccessor(client38); }

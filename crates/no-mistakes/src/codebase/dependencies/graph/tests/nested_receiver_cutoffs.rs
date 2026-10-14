@@ -27,6 +27,8 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         "whileBody",
         "doBody",
         "conditional",
+        "deferredInstanceField",
+        "deferredInstanceAccessor",
         "shortCircuit",
         "logicalAssignment",
         "loop",
@@ -73,6 +75,8 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         "savedBeforeDynamicRestoration",
         "unlabeledFresh",
         "logicalFreshPreserved",
+        "eagerStaticField",
+        "eagerStaticAccessor",
     ] {
         let site = sites
             .iter()

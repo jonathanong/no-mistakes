@@ -131,6 +131,12 @@ fn deferred_receiver_certainty_belongs_to_the_callable() {
         ("logicalBox", true),
         ("guardedBox", false),
         ("defaultBox", false),
+        ("instanceBox", false),
+        ("accessorBox", false),
+        ("namedInstanceBox", false),
+        ("staticBox", true),
+        ("staticAccessorBox", true),
+        ("computedKeyBox", true),
     ] {
         let write = &histories[&0][name].assigned.as_ref().unwrap().members["client"];
         assert_eq!(

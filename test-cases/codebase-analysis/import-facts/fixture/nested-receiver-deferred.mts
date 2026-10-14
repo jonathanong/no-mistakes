@@ -38,3 +38,22 @@ flag && (holder = function resetLogical() {
   logicalBox.client = {};
   logicalBox.client.get = replacement;
 });
+
+const instanceBox = { client: primary };
+void class { field = (instanceBox.client = {}); };
+instanceBox.client.get = replacement;
+const accessorBox = { client: primary };
+void class { accessor field = (accessorBox.client = {}); };
+accessorBox.client.get = replacement;
+const staticBox = { client: primary };
+void class { static field = (staticBox.client = {}); };
+staticBox.client.get = replacement;
+const staticAccessorBox = { client: primary };
+void class { static accessor field = (staticAccessorBox.client = {}); };
+staticAccessorBox.client.get = replacement;
+const namedInstanceBox = { client: primary };
+class Deferred { field = (namedInstanceBox.client = {}); }
+namedInstanceBox.client.get = replacement;
+const computedKeyBox = { client: primary };
+void class { [(computedKeyBox.client = {}, 'field')] = 0; };
+computedKeyBox.client.get = replacement;

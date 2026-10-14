@@ -191,3 +191,36 @@ receiver summaries. Canonical components normalize early assignments once before
 sharing their histories; borrowed component lookups replace upstream map access
 without adding per-read name allocation or another alias traversal. This is a
 conflict resolution, with fresh combined semantic CI still required.
+
+
+The next review correction marks non-static class field and accessor initializer
+expressions receiver-conditional. Merely defining a class cannot establish a
+fresh-reference cutoff. Static initializers and computed keys retain eager
+certainty; decorators and computed keys remain outside the new wrapper. The
+named-instance-field custom walker uses the same initializer helper. Saved facts
+cover anonymous/named instances, accessors, static counterparts and computed
+keys. Graph/rule controls require Unknown after the two unconstructed anonymous
+instance cases and retain static imported targets at lines 268 and 275. The
+verified 917 baseline graph proves primary.get in all four cases; its raw output
+is preserved in `class-initializer-baseline.txt` using the same frozen graph
+provenance above. The new nested-write semantics require those instance cases
+to become Unknown rather than retain a stale imported target. Candidate semantic
+validation is pending; no class execution model or generic import-fact flags
+are changed.
+
+
+The ed1d14d run passed semantic tests, documentation tests, coverage generation and lint checks.
+The diagnostic artifact identifies one weighted-gate offender:
+ValueAssignedMutations::merge, CC 9, coverage 0%, CRAP 90. The unchanged threshold
+is 30. Its text summary/provenance is saved in `weighted-crap-ed1-summary.txt`;
+the full report and LCOV remain in CI artifact 11932317069 and locally under
+`/workspace/quality-1959-evidence/ed1-ci`. The ZIP hash matches GitHub's artifact
+digest. The defensive populated-component merge path was not exercised by prior
+late-union controls, which contained only prefix writes.
+
+A saved late-union fixture now supplies real extracted exact histories for
+populated components. Its test checks retained restoration/dynamic evidence,
+disjoint properties, early destructuring invalidation and aggregate/writer
+propagation when those components are joined. This tests the defensive contract
+instead of changing the gate or rearranging complexity. Root reviewed the test
+and instance-initializer correction; fresh CI remains required.
