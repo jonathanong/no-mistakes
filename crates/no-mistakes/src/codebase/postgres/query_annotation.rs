@@ -66,6 +66,11 @@ pub(super) enum Expr {
     Flow(Vec<Step>),
     Binary(String, Box<Expr>, Box<Expr>),
     Opaque(Vec<Expr>),
+    // Preserve annotation-only opaque children beside the precise call summary.
+    OptionalCall {
+        call: Box<Expr>,
+        children: Vec<Expr>,
+    },
     OpaqueWrite {
         children: Vec<Expr>,
         targets: Vec<String>,

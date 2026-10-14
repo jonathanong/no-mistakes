@@ -27,6 +27,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             )
         }
         Expression::CallExpression(value) => calls::calls(value, source),
+        Expression::ChainExpression(value) => calls::optional(value, expr, source),
         Expression::ImportExpression(value) => {
             crate::codebase::dependencies::extract::static_import_specifier(&value.source)
                 .map(Expr::ModuleLoad)

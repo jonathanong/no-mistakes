@@ -67,6 +67,9 @@ fn expression(expr: &Expr, names: &mut Reads) {
         | Expr::Sequence(values)
         | Expr::Alternatives(values)
         | Expr::Opaque(values)
+        | Expr::OptionalCall {
+            children: values, ..
+        }
         | Expr::Delete(values, _)
         | Expr::OpaqueWrite {
             children: values, ..

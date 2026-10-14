@@ -164,6 +164,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn contains_access
         | Expr::Sequence(parts)
         | Expr::Alternatives(parts)
         | Expr::Opaque(parts)
+        | Expr::OptionalCall {
+            children: parts, ..
+        }
         | Expr::Template(parts) => parts.iter().any(contains_accessor_read),
         _ => false,
     }

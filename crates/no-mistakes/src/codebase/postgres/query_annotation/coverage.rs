@@ -43,6 +43,10 @@ pub(super) fn collect(
             | Expr::Record(parts, _)
             | Expr::Sequence(parts)
             | Expr::Opaque(parts)
+            // Precise execution supplies optional events; retain legacy coverage.
+            | Expr::OptionalCall {
+                children: parts, ..
+            }
             | Expr::OpaqueWrite {
                 children: parts, ..
             }

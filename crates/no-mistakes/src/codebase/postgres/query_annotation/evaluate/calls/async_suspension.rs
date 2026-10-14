@@ -65,6 +65,9 @@ fn contains_await(expr: &Expr) -> bool {
         | Expr::Sequence(parts)
         | Expr::Alternatives(parts)
         | Expr::Opaque(parts)
+        | Expr::OptionalCall {
+            children: parts, ..
+        }
         | Expr::OpaqueWrite {
             children: parts, ..
         }

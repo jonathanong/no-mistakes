@@ -2,6 +2,21 @@ use super::{expression, Expr};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 
+pub(super) fn optional(
+    value: &oxc_ast::ast::ChainExpression<'_>,
+    expr: &Expression<'_>,
+    source: &str,
+) -> Expr {
+    let children = super::children::collect(expr, source);
+    match &value.expression {
+        oxc_ast::ast::ChainElement::CallExpression(call) => Expr::OptionalCall {
+            call: Box::new(calls(call, source)),
+            children,
+        },
+        _ => Expr::Opaque(children),
+    }
+}
+
 pub(super) fn calls(value: &CallExpression<'_>, source: &str) -> Expr {
     let args = value
         .arguments

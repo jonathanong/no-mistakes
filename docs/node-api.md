@@ -145,6 +145,9 @@ unmodeled calls, accessors, constructors, tags, setters, and deletion/coercion
 hooks. This uncertainty stays within each execution;
 independent entrypoints and immutable strings computed before the effect retain
 their existing results.
+Opaque executor receiver or callee effects also make the site incomplete,
+including optional calls. Ordinary optional calls retain their existing literal
+SQL results, and annotation-only analysis retains its existing behavior.
 
 `incompleteReason` is additive evaluator metadata: `null` for complete statements
 or proven generated value binds, otherwise a blocker such as `variant-limit`,

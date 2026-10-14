@@ -126,6 +126,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.deleted(children, *index, path, env, (depth, generic))
                 }
                 Expr::Opaque(children) => self.opaque(children, &[], path, env, (depth, generic)),
+                Expr::OptionalCall { call, children } => {
+                    self.optional_call(call, children, path, env, (depth, generic))
+                }
                 Expr::OpaqueWrite { children, targets } => {
                     self.opaque(children, targets, path, env, (depth, generic))
                 }

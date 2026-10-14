@@ -363,3 +363,53 @@ fn mapped_builder_slots_include_later_iteration_mutations() {
         "{rows:?}"
     );
 }
+
+#[test]
+fn executor_receiver_effects_cannot_certify_exported_builders() {
+    let rows = extract("control-flow-executor-callee-effects.ts");
+    assert_eq!(rows.len(), 13, "{rows:?}");
+    assert_eq!(
+        rows.iter().filter(|row| row.complete).count(),
+        6,
+        "{rows:?}"
+    );
+    for row in rows {
+        let pure = matches!(row.line, 21 | 25 | 28 | 31 | 40 | 43);
+        assert_eq!(row.complete, pure, "{row:?}");
+        if pure {
+            assert!(!row.only_value_placeholders, "{row:?}");
+            assert!(row.incomplete_reason.is_none(), "{row:?}");
+            let (kind, text, annotation) = match row.line {
+                31 => (
+                    no_mistakes::codebase::postgres::EmbeddedSqlKind::Inline,
+                    "/* callees/optional */ SELECT 1",
+                    Some("callees/optional"),
+                ),
+                40 => (
+                    no_mistakes::codebase::postgres::EmbeddedSqlKind::Inline,
+                    "/* callees/optional-call */ SELECT 1",
+                    Some("callees/optional-call"),
+                ),
+                43 => (
+                    no_mistakes::codebase::postgres::EmbeddedSqlKind::Inline,
+                    "/* callees/combined */ SELECT 1",
+                    Some("callees/combined"),
+                ),
+                _ => (
+                    no_mistakes::codebase::postgres::EmbeddedSqlKind::Composed,
+                    "SELECT 1",
+                    None,
+                ),
+            };
+            assert_eq!(row.kind, kind);
+            assert_eq!(row.sql_text.as_deref(), Some(text));
+            assert_eq!(row.annotation.as_deref(), annotation);
+        } else {
+            assert!(!row.only_value_placeholders, "{row:?}");
+            assert_eq!(
+                row.incomplete_reason.as_deref(),
+                Some("opaque-executor-operand-effect")
+            );
+        }
+    }
+}

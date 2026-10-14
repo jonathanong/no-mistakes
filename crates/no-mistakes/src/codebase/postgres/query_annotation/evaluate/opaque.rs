@@ -3,6 +3,22 @@ use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn optional_call(
+        &mut self,
+        call: &Expr,
+        children: &[Expr],
+        path: &Path,
+        env: &Environment,
+        context: (u8, bool),
+    ) -> Value {
+        let children = if self.files[path].facts.precise_records {
+            std::slice::from_ref(call)
+        } else {
+            children
+        };
+        self.opaque(children, &[], path, env, context)
+    }
+
     pub(super) fn opaque(
         &mut self,
         children: &[Expr],
