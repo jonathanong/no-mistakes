@@ -42,6 +42,15 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             .iter()
             .map(|arg| self.expr(arg, path, env, depth, generic))
             .collect::<Vec<_>>();
+        // Later arguments run before the executor. A getter or opaque call can
+        // mutate the SQL builder already evaluated as the first argument.
+        if args
+            .iter()
+            .skip(1)
+            .any(|arg| self.effect_can_mutate(arg, path, *env))
+        {
+            self.invalidate_live_builders();
+        }
         // Later operands can mutate the object an earlier operand returned.
         self.refresh_arguments(&mut raw_arguments);
         let handled_projection = matches!(callee, Expr::Name(_))

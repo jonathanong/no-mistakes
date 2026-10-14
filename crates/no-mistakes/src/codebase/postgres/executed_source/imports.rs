@@ -22,12 +22,12 @@ pub(super) fn resolve_supplied_relative(
             "cjs" => &["cts"],
             _ => &[],
         };
-        let mut found = source_extensions
+        if let Some(source) = source_extensions
             .iter()
             .map(|extension| base.with_extension(extension))
-            .filter(|path| supplied.contains(path));
-        if let Some(first) = found.next() {
-            return found.next().is_none().then_some(first);
+            .find(|path| supplied.contains(path))
+        {
+            return Some(source);
         }
         if supplied.contains(&base) {
             return Some(base);
@@ -37,16 +37,22 @@ pub(super) fn resolve_supplied_relative(
             .filter(|path| supplied.contains(path));
     }
     let path = base.to_string_lossy();
-    let mut candidates = vec![base.clone()];
-    for extension in [".mts", ".ts", ".tsx", ".cts", ".mjs", ".js", ".jsx", ".cjs"] {
-        candidates.push(PathBuf::from(format!("{path}{extension}")));
-        candidates.push(base.join(format!("index{extension}")));
+    if supplied.contains(&base) {
+        return Some(base);
     }
-    let mut found = candidates
-        .into_iter()
-        .filter(|path| supplied.contains(path));
-    let first = found.next()?;
-    found.next().is_none().then_some(first)
+    for extension in [".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts"] {
+        let candidate = PathBuf::from(format!("{path}{extension}"));
+        if supplied.contains(&candidate) {
+            return Some(candidate);
+        }
+    }
+    for extension in [".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts"] {
+        let candidate = base.join(format!("index{extension}"));
+        if supplied.contains(&candidate) {
+            return Some(candidate);
+        }
+    }
+    None
 }
 
 pub(super) fn extract_source_with_imports(

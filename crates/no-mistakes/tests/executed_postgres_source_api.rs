@@ -210,6 +210,47 @@ fn source_api_observes_side_effect_only_module_before_imported_read() {
 }
 
 #[test]
+fn source_api_fails_closed_when_an_eager_relative_module_is_not_supplied() {
+    let sources = [source("eager-consumer.ts"), source("eager-builder.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "eager-consumer.ts")
+        .unwrap();
+    assert!(!statement.complete, "{statement:?}");
+}
+
+#[test]
+fn source_api_does_not_record_sql_before_a_later_executor_argument_getter() {
+    let sources = [source("executor-getter.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+}
+
+#[test]
+fn source_api_prefers_the_canonical_typescript_source_candidate() {
+    let sources = [
+        source("priority-consumer.ts"),
+        source("priority-helper.ts"),
+        source("priority-helper.tsx"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "priority-consumer.ts")
+        .unwrap();
+    assert!(statement.complete, "{statement:?}");
+    assert_eq!(
+        statement.sql_text.as_deref(),
+        Some("/* preferred source */ SELECT 1")
+    );
+}
+
+#[test]
 fn source_api_observes_eager_commonjs_dependency_before_imported_read() {
     let sources = [
         source("cjs-eager-consumer.ts"),

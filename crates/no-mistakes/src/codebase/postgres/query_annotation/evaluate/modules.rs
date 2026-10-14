@@ -20,6 +20,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let files = self.files;
         if files[path].facts.precise_records {
             let module = &files[path].module;
+            let mut unresolved_relative = false;
             let eager_targets = module
                 .ts
                 .imports
@@ -27,12 +28,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 .filter(|import| {
                     import.kind == ImportKind::Static && import.function_scope.is_none()
                 })
-                .map(|import| import.specifier.as_str())
-                .filter_map(|specifier| module.target(specifier, path, &self.resolve))
-                .map(Path::to_path_buf)
+                .filter_map(|import| {
+                    let target = module.target(&import.specifier, path, &self.resolve);
+                    if target.is_none() && import.specifier.starts_with('.') {
+                        unresolved_relative = true;
+                    }
+                    target.map(Path::to_path_buf)
+                })
                 .collect::<Vec<_>>();
             for target in eager_targets {
                 self.module_environment(&target);
+            }
+            // Initialize every supplied dependency before invalidating. A
+            // missing eager module could itself import and mutate any of them.
+            if unresolved_relative {
+                self.invalidate_live_builders();
             }
         }
         let facts = &files[path].facts;

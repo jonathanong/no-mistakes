@@ -989,6 +989,7 @@ test("executed PostgreSQL source extraction exposes its named async contract", (
   assert.match(declarations, /export type ExecutedPostgresSqlKind =/);
   assert.match(declarations, /kind: ExecutedPostgresSqlKind;/);
   assert.match(declarations, /complete: boolean;/);
+  assert.match(declarations, /onlyValuePlaceholders: boolean;/);
   assert.match(
     declarations,
     /extractExecutedPostgresSql\(\s*options: ExecutedPostgresSqlOptions,\s*\): Promise<ExecutedPostgresSql\[\]>;/,
