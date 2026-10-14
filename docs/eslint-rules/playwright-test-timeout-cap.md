@@ -152,3 +152,19 @@ Callable timeout values remain unknown even when their return expression is a
 known number. For example, `test.setTimeout(() => 1)` does not establish a
 one-millisecond deadline, and a subsequent `test.slow()` retains an unknown
 effective deadline. Numeric timeout values retain their normal cap checks.
+
+## Delegating unresolved configuration values
+
+`configUnknownValues` defaults to `"inherit"`, preserving `unknownValues` behavior.
+Explicit `"defer-to-runner"` delegates only unresolved configuration/project
+carriers to a separate effective-runner admission policy. Known invalid and
+oversized numeric configuration values still report. This option does not change
+case, hook, fixture, registration, suite or runtime-setter analysis; inherited
+Playwright slot findings remain findings.
+
+This option is a consumer policy decision, not proof that an external guard exists.
+Use it only where the normal runner continuously validates effective selected
+project budgets, including CLI overrides, before test execution, with required CI
+controls that fail when that owner is absent. A clean baseline snapshot, alternate
+config bypass, filename exclusion or general unknown-value ignore is not a
+substitute. The option does not establish repository-wide timeout closure.

@@ -1,0 +1,23 @@
+{
+  "extends": [
+    "./.oxlintrc.json"
+  ],
+  "rules": {
+    "no-mistakes/playwright-test-timeout-cap": [
+      "error",
+      {
+        "unknownValues": "finding",
+        "configUnknownValues": "defer-to-runner"
+      }
+    ]
+  },
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "pedantic": "off",
+    "perf": "off",
+    "style": "off",
+    "restriction": "off",
+    "nursery": "off"
+  }
+}
