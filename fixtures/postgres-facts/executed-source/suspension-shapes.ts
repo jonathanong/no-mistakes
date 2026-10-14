@@ -1,3 +1,5 @@
+import sql from 'sql-template-strings'
+
 const query = '/* suspension/shapes */ SELECT id FROM posts'
 
 export async function baseline() {
@@ -53,4 +55,11 @@ export async function nestedWriteGate() {
   const gate = (state.value = await Promise.resolve(1))
   void gate
   return query
+}
+
+export async function appendGate() {
+  const builder = sql`/* suspension/append */ SELECT id FROM posts`
+  const gate = builder.append(await Promise.resolve(' WHERE id = 1'))
+  void gate
+  return builder
 }

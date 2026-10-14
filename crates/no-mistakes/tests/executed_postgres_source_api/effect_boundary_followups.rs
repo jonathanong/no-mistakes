@@ -93,6 +93,7 @@ fn source_api_keeps_callbacks_exported_through_containers_generic() {
         "exported-dynamic-key-callback.ts",
         "exported-sequence-callback.ts",
         "exported-logical-callback.ts",
+        "exported-cyclic-alias.ts",
     ] {
         let statements =
             extract_executed_postgres_sql_with_imports(&[source(fixture)], &options, &[]).unwrap();
@@ -144,7 +145,7 @@ fn source_api_classifies_nested_await_shapes_in_imported_helpers() {
         .iter()
         .filter(|statement| statement.file_name == "suspension-shapes-consumer.ts")
         .collect();
-    assert_eq!(statements.len(), 9);
+    assert_eq!(statements.len(), 10);
     assert_eq!(
         statements
             .iter()

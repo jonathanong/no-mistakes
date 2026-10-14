@@ -9,6 +9,7 @@ import {
   opaqueGate,
   writeGate,
   nestedWriteGate,
+  appendGate,
 } from './suspension-shapes'
 
 export async function readBaseline() {
@@ -45,4 +46,8 @@ export async function readWrite() {
 
 export async function readNestedWrite() {
   return read(await nestedWriteGate())
+}
+
+export async function readAppend() {
+  return read(await appendGate())
 }
