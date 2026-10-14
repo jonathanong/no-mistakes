@@ -115,6 +115,7 @@ mod selector_optimization;
 mod source_store_reuse;
 #[path = "transparent_receiver_alias.rs"]
 mod transparent_receiver_alias;
+mod type_origin_cache;
 mod workflow_topology_edges;
 mod workflow_topology_run;
 include!("call_traversal.rs");

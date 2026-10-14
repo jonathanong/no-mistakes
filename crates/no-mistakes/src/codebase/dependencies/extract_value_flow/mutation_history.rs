@@ -14,6 +14,7 @@ pub struct ValueMutationHistory {
 pub struct ValueAssignedMutations {
     pub members: FxHashMap<String, ValueAssignedMutation>,
     pub dynamic: Option<ValueAssignedMutation>,
+    pub early: Option<Box<super::destructuring_order::EarlyAssignments>>,
     #[cfg(feature = "test-instrumentation")]
     pub merge_reinsertions: usize,
 }
