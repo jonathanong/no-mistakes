@@ -373,5 +373,22 @@ fn non_string_explicit_keys_do_not_steal_real_job_locations() {
     );
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("real#job"));
-    assert_eq!(findings[0].line, 12);
+    assert_eq!(findings[0].line, 18);
+}
+
+#[test]
+fn explicit_scalar_job_keys_preserve_locations_and_suppression() {
+    for options in ["rejectJobAtOrAboveStepSum: true", "maxMinutes: 9"] {
+        let findings = run(&fixture("step-sum-explicit-scalar"), options);
+        let mut locations: Vec<_> = findings
+            .iter()
+            .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+            .collect();
+        locations.sort_unstable();
+        assert_eq!(
+            locations,
+            [("following", 57), ("normal", 46), ("visible#colon:job", 38)],
+            "{findings:?}"
+        );
+    }
 }

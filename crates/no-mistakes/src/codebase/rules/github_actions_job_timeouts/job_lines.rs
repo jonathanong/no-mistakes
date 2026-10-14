@@ -20,6 +20,7 @@ pub(super) fn collect(source: &str) -> Locations {
     let mut root_indent = None;
     let mut in_jobs = false;
     let mut job_indent = None;
+    let mut pending_key = None;
     for (index, line) in source.lines().enumerate() {
         let text = line.trim();
         if text.is_empty()
@@ -29,21 +30,36 @@ pub(super) fn collect(source: &str) -> Locations {
             continue;
         }
         let indent = line.len() - line.trim_start().len();
-        if indent == *root_indent.get_or_insert(indent) {
+        let root_indent = *root_indent.get_or_insert(indent);
+        if in_jobs && indent == root_indent {
+            break;
+        }
+        if indent != root_indent && (!in_jobs || indent != *job_indent.get_or_insert(indent)) {
+            continue;
+        }
+        if let Some(key) = text.strip_prefix("? ") {
+            pending_key = Some((decode_key(key), index + 1));
+            continue;
+        }
+        let (key, key_line) = if text
+            .strip_prefix(':')
+            .is_some_and(|value| value.chars().next().is_none_or(char::is_whitespace))
+        {
+            // The document has already parsed, so explicit key/value pairing is valid.
+            pending_key.take().unwrap_or((None, index + 1))
+        } else {
+            pending_key = None;
+            (mapping_key(text), index + 1)
+        };
+        if indent == root_indent {
+            in_jobs = key.as_deref() == Some("jobs");
             if in_jobs {
-                break;
-            }
-            in_jobs = mapping_key(text).as_deref() == Some("jobs");
-            if in_jobs {
-                locations.declaration = index + 1;
+                locations.declaration = key_line;
             }
             continue;
         }
-        if !in_jobs || indent != *job_indent.get_or_insert(indent) {
-            continue;
-        }
-        if let Some(key) = mapping_key(text) {
-            locations.lines.insert(key, index + 1);
+        if let Some(key) = key {
+            locations.lines.insert(key, key_line);
         }
     }
     locations
@@ -73,5 +89,11 @@ fn mapping_key(text: &str) -> Option<String> {
         None
     })?;
     // Ignore the value: a job alias can reference an anchor outside this line.
-    serde_yaml::from_str(&text[..colon]).ok()
+    decode_key(&text[..colon])
+}
+
+fn decode_key(text: &str) -> Option<String> {
+    serde_yaml::from_str::<serde_yaml::Value>(text)
+        .ok()
+        .and_then(|key| key.as_str().map(str::to_owned))
 }

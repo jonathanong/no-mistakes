@@ -1,3 +1,9 @@
+?
+  [metadata, key]
+: ignored
+scalar-key: &scalar-key metadata
+? *scalar-key
+: ignored
 name: Non-string explicit keys
 jobs:
   # Complex non-string keys are ignored and must not steal real job locations.

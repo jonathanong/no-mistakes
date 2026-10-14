@@ -1,0 +1,83 @@
+name: Explicit scalar keys
+? "j\u006fbs"
+:
+  # no-mistakes-disable-next-line github-actions-job-timeouts
+  ? test
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  ? "double:colon" # no-mistakes-disable-line github-actions-job-timeouts
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  ? 'single''quote' # no-mistakes-disable-line github-actions-job-timeouts
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  # no-mistakes-disable-next-line github-actions-job-timeouts
+  ? "escaped\u0023\u003ajob"
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  ? "visible#colon:job"
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  normal: &defaults
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  ? "aliased#job" # no-mistakes-disable-line github-actions-job-timeouts
+  : *defaults
+  ? [not, a, job]
+  : *defaults
+  following:
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  'false': # no-mistakes-disable-line github-actions-job-timeouts
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  false: *defaults # Non-string key must not overwrite the quoted string location.
+  '1': # no-mistakes-disable-line github-actions-job-timeouts
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  1: *defaults # Numeric keys also retain their YAML type.
+# A later explicit root key must end job indexing before its nested lookalike.
+? metadata: value
+  normal: lookalike
+: unused
