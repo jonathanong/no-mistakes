@@ -65,7 +65,7 @@
       "path": "docs/performance/imported-receiver-facts-evidence/profiler-provenance.json",
       "original_sha256": "1a93535a5aa399014d6120acbb718d9a78754701fd353b9d3902202c52bbf2b4",
       "public_sha256": "1a93535a5aa399014d6120acbb718d9a78754701fd353b9d3902202c52bbf2b4",
-      "public_status": "normalized public copy"
+      "public_status": "unchanged"
     },
     {
       "path": "docs/performance/imported-receiver-facts-evidence/profile-archive-manifest.json",
@@ -76,7 +76,7 @@
       "path": "docs/performance/imported-receiver-facts-evidence/quiet-window.json",
       "original_sha256": "1dcaaf715a2b23435efe437e39ed3b11d273af5260de41aa471720618b091c51",
       "public_sha256": "1dcaaf715a2b23435efe437e39ed3b11d273af5260de41aa471720618b091c51",
-      "public_status": "normalized public copy"
+      "public_status": "unchanged"
     },
     {
       "path": "docs/performance/imported-receiver-facts-evidence/measure.py",
@@ -322,7 +322,7 @@
       "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/evidence-manifest.json",
       "original_sha256": "dc827d547cadb80c29a4366a6b262c76f016eeb10f65e579b19c278df01f12c0",
       "public_sha256": "03caebfb9f1dfd9dfad69f9e22973edc3b23472550dbb3e98a4d77bbac17b7df",
-      "public_status": "unchanged"
+      "public_status": "normalized public copy"
     },
     {
       "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance-final-graph-single-worker-raw.json",
