@@ -67,3 +67,7 @@ export function opaqueCoercion() {
   const result = '' + value;
   read(query);
 }
+export function executorArgument() {
+  const query = sql`/* operands/executor */ SELECT 1`;
+  read(query, (opaque(), []));
+}

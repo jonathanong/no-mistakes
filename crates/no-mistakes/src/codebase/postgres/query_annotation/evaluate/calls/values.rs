@@ -2,7 +2,7 @@ use super::super::{Evaluator, Value};
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
-    pub(super) fn refresh_arguments(&self, values: &mut [Value]) {
+    pub(in super::super) fn refresh_arguments(&self, values: &mut [Value]) {
         for value in values {
             self.refresh_argument(value);
         }

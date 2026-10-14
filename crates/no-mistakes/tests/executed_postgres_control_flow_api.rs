@@ -240,7 +240,7 @@ fn collection_deletion_is_scoped_and_static_false_branches_do_not_invent_writes(
 #[test]
 fn opaque_operand_effects_survive_final_collection_and_scalar_values() {
     let rows = extract("control-flow-operand-effects.ts");
-    assert_eq!(rows.len(), 13, "{rows:?}");
+    assert_eq!(rows.len(), 14, "{rows:?}");
     let safe = rows
         .iter()
         .filter(|row| row.complete || row.only_value_placeholders)
@@ -254,4 +254,25 @@ fn opaque_operand_effects_survive_final_collection_and_scalar_values() {
         assert!(row.sql_text.is_none(), "{row:?}");
         assert!(row.incomplete_reason.is_some(), "{row:?}");
     }
+}
+
+#[test]
+fn sparse_shapes_do_not_choose_safe_branches_and_literal_elements_refresh_builders() {
+    let rows = extract("control-flow-sparse-snapshots.ts");
+    assert_eq!(rows.len(), 2, "{rows:?}");
+    assert!(
+        !rows[0].complete && !rows[0].only_value_placeholders,
+        "{rows:?}"
+    );
+    assert_eq!(
+        rows[0].incomplete_reason.as_deref(),
+        Some("sparse-or-opaque-collection-shape")
+    );
+    assert!(rows[1].complete, "{rows:?}");
+    assert!(rows[1]
+        .sql_text
+        .as_ref()
+        .unwrap()
+        .contains("DELETE FROM records"));
+    assert!(!read_statement_shape(&[&rows[1]]));
 }

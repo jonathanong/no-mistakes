@@ -1,4 +1,5 @@
 mod alternatives;
+mod atomic;
 mod callbacks;
 mod calls;
 mod collections;
@@ -83,103 +84,88 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Some(depth) = depth.checked_sub(1) else {
             return Value::Failure("evaluation-depth-limit");
         };
-        let value = match expr {
-            Expr::Unknown | Expr::Primitive => Value::Unknown,
-            Expr::Number(number) => {
-                if self.files[path].facts.precise_records {
-                    Value::Number(*number)
-                } else {
-                    Value::Unknown
+        let value = if let Some(value) = self.atomic(expr, path, env, (depth, generic)) {
+            value
+        } else {
+            match expr {
+                Expr::Binary(op, left, right) => {
+                    self.binary(op, left, right, path, env, (depth, generic))
                 }
-            }
-            Expr::Boolean(boolean) => {
-                if self.files[path].facts.precise_records {
-                    Value::Boolean(*boolean)
-                } else {
-                    Value::Unknown
+                Expr::Flow(steps) => self.steps(steps, path, &mut env.clone(), depth, generic),
+                Expr::Template(parts) => self.template(parts, path, env, (depth, generic)),
+                Expr::Append(base, tail) => self.append(base, tail, path, env, (depth, generic)),
+                Expr::Tagged(tag, parts, effects) => {
+                    self.tagged(tag, parts, effects, path, env, (depth, generic))
                 }
-            }
-            Expr::Binary(op, left, right) => {
-                self.binary(op, left, right, path, env, (depth, generic))
-            }
-            Expr::Flow(steps) => self.steps(steps, path, &mut env.clone(), depth, generic),
-            Expr::Unsupported => Value::Unsupported,
-            Expr::Text(value) => Value::Prefix(value.clone(), true, None),
-            Expr::Name(name) => self.mapped_parameter_value(*env, name).unwrap_or_else(|| {
-                self.scopes[*env]
-                    .get(name)
-                    .cloned()
-                    .unwrap_or_else(|| self.name(path, name, depth, generic))
-            }),
-            Expr::Function(function) => {
-                // Request-owned scope IDs retain live bindings without recursive
-                // closure copies or reference cycles between sibling functions.
-                Value::Function(Arc::clone(function), path.to_path_buf(), *env)
-            }
-            Expr::Template(parts) => self.template(parts, path, env, (depth, generic)),
-            Expr::Append(base, tail) => self.append(base, tail, path, env, (depth, generic)),
-            Expr::Tagged(tag, parts, effects) => {
-                self.tagged(tag, parts, effects, path, env, (depth, generic))
-            }
-            Expr::Sequence(parts) => self.sequence(parts, path, env, (depth, generic)),
-            Expr::Discard(expr) => self.discard(expr, path, env, (depth, generic)),
-            Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
-            Expr::Spread(expr) => {
-                Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)].into())
-            }
-            Expr::OpaqueCallback(expr) => {
-                match self.expr(expr, path, env, depth, generic).exposed() {
-                    Value::Function(mut function, path, captured) => {
-                        Arc::make_mut(&mut function).supported = false;
-                        Value::Function(function, path, captured)
+                Expr::Sequence(parts) => self.sequence(parts, path, env, (depth, generic)),
+                Expr::Discard(expr) => self.discard(expr, path, env, (depth, generic)),
+                Expr::Alternatives(arms) => self.alternatives(arms, path, env, depth, generic),
+                Expr::Spread(expr) => {
+                    Value::Aggregate(vec![self.expr(expr, path, env, depth, generic)].into())
+                }
+                Expr::OpaqueCallback(expr) => {
+                    match self.expr(expr, path, env, depth, generic).exposed() {
+                        Value::Function(mut function, path, captured) => {
+                            Arc::make_mut(&mut function).supported = false;
+                            Value::Function(function, path, captured)
+                        }
+                        _ => Value::Unknown,
                     }
-                    _ => Value::Unknown,
                 }
-            }
-            Expr::Await(expr) => self.await_expr(expr, path, env, depth, generic),
-            Expr::Call {
-                callee,
-                args,
-                start,
-                end,
-            } => self.call(callee, args, (*start, *end), path, env, (depth, generic)),
-            Expr::ModuleLoad(specifier) => self.load_dynamic_import(specifier, path),
-            Expr::Delete(children, index) => {
-                self.deleted(children, *index, path, env, (depth, generic))
-            }
-            Expr::Opaque(children) => self.opaque(children, &[], path, env, (depth, generic)),
-            Expr::OpaqueWrite { children, targets } => {
-                self.opaque(children, targets, path, env, (depth, generic))
-            }
-            Expr::SlotWrite {
-                receiver,
-                index,
-                value,
-            } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
-            Expr::Member(object, name) => {
-                if let Some(value) = self.namespace_member(object, name, path, *env, depth, generic)
-                {
-                    value
-                } else {
+                Expr::Await(expr) => self.await_expr(expr, path, env, depth, generic),
+                Expr::Call {
+                    callee,
+                    args,
+                    start,
+                    end,
+                } => self.call(callee, args, (*start, *end), path, env, (depth, generic)),
+                Expr::ModuleLoad(specifier) => self.load_dynamic_import(specifier, path),
+                Expr::Delete(children, index) => {
+                    self.deleted(children, *index, path, env, (depth, generic))
+                }
+                Expr::Opaque(children) => self.opaque(children, &[], path, env, (depth, generic)),
+                Expr::OpaqueWrite { children, targets } => {
+                    self.opaque(children, targets, path, env, (depth, generic))
+                }
+                Expr::SlotWrite {
+                    receiver,
+                    index,
+                    value,
+                } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
+                Expr::Member(object, name) => {
+                    if let Some(value) =
+                        self.namespace_member(object, name, path, *env, depth, generic)
+                    {
+                        value
+                    } else {
+                        let value = self.expr(object, path, env, depth, generic).exposed();
+                        self.member(value, name, path)
+                    }
+                }
+                Expr::ComputedMember(object, key) => {
                     let value = self.expr(object, path, env, depth, generic).exposed();
-                    self.member(value, name, path)
+                    self.expr(key, path, env, depth, generic);
+                    self.member(value, "", path)
                 }
-            }
-            Expr::ComputedMember(object, key) => {
-                let value = self.expr(object, path, env, depth, generic).exposed();
-                self.expr(key, path, env, depth, generic);
-                self.member(value, "", path)
-            }
-            Expr::Index(object, index) => {
-                let value = self.expr(object, path, env, depth, generic).exposed();
-                self.index(value, *index)
-            }
-            Expr::Children(children)
-            | Expr::Array(children)
-            | Expr::Container(children)
-            | Expr::Object(children)
-            | Expr::Record(children, _) => {
-                self.container(expr, children, path, env, (depth, generic))
+                Expr::Index(object, index) => {
+                    let value = self.expr(object, path, env, depth, generic).exposed();
+                    self.index(value, *index)
+                }
+                Expr::Children(children)
+                | Expr::Array(children)
+                | Expr::Container(children)
+                | Expr::Object(children)
+                | Expr::Record(children, _) => {
+                    self.container(expr, children, path, env, (depth, generic))
+                }
+                Expr::Unknown
+                | Expr::Primitive
+                | Expr::Number(_)
+                | Expr::Boolean(_)
+                | Expr::Unsupported
+                | Expr::Text(_)
+                | Expr::Name(_)
+                | Expr::Function(_) => unreachable!("atomic expression"),
             }
         };
         if matches!(&value, Value::Prefix(_, _, Some(id)) if self.invalidated_builders.contains(id))

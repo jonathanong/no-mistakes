@@ -59,6 +59,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         let handled_projection = matches!(callee, Expr::Name(_))
             && self.projected_primitive_arguments(args, &raw_arguments, path, *env);
+        let executor_operands_opaque = raw_arguments
+            .iter()
+            .any(|value| matches!(value, Value::Evaluated(_, false)));
         let operands_handled = callee_handled
             && args
                 .iter()
@@ -69,13 +72,16 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             .map(Value::exposed)
             .collect::<Vec<_>>();
         if self.files[path].executors.contains(&span) {
+            let value = if self.files[path].facts.precise_records && executor_operands_opaque {
+                self.invalidate_live_builders();
+                Value::Failure("opaque-executor-operand-effect")
+            } else {
+                arguments.first().cloned().unwrap_or(Value::Unknown)
+            };
             self.events
                 .entry((path.to_path_buf(), span))
                 .or_default()
-                .push((
-                    generic,
-                    arguments.first().cloned().unwrap_or(Value::Unknown),
-                ));
+                .push((generic, value));
             return Value::Unknown;
         }
         if let Some(value) = self.collection_projection(

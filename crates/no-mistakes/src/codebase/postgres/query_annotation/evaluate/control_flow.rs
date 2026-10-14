@@ -22,6 +22,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let left_value = self.expr(left, path, env, depth, generic);
         let right_value = self.expr(right, path, env, depth, generic);
+        if let Value::Failure(reason) = left_value.clone().exposed() {
+            return Value::Failure(reason);
+        }
+        if let Value::Failure(reason) = right_value.clone().exposed() {
+            return Value::Failure(reason);
+        }
         if !self.handled_deletion_effect(left, &left_value, path, *env)
             || !self.handled_deletion_effect(right, &right_value, path, *env)
         {
@@ -70,12 +76,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let (test, left, right) = test_and_arms;
         let (depth, generic) = context;
         let condition = self.expr(test, path, env, depth, generic).exposed();
+        let condition_reason = match &condition {
+            Value::Failure(reason) => Some(*reason),
+            _ => None,
+        };
         let arms = match condition {
             Value::Boolean(false) | Value::Number(0) => vec![right],
             Value::Boolean(true) | Value::Number(_) => vec![left],
             _ => vec![left, right],
         };
-        let unsafe_condition = self.effect_can_mutate(test, path, *env);
+        let unsafe_condition =
+            condition_reason.is_some() || self.effect_can_mutate(test, path, *env);
         // Block-scoped bindings require scope exit semantics; do not flatten them
         // into the continuation and accidentally certify a shadowed SQL value.
         let binding = arms.iter().any(|arm| {
@@ -98,7 +109,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let reason = if binding {
             Some("branch-local-binding")
         } else if unsafe_condition || opaque {
-            Some("opaque-control-flow-effect")
+            Some(condition_reason.unwrap_or("opaque-control-flow-effect"))
         } else {
             None
         };

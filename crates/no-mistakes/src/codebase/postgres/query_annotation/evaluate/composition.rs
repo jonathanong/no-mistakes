@@ -78,11 +78,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let values: super::value::Values = children
+        let mut values: super::value::Values = children
             .iter()
             .map(|child| self.expr(child, path, env, depth, generic))
             .collect::<Vec<_>>()
             .into();
+        if self.files[path].facts.precise_records {
+            self.refresh_arguments(&mut values);
+        }
         match expr {
             Expr::Array(_) if self.files[path].facts.precise_records => {
                 if children.iter().any(|child| matches!(child, Expr::Unknown)) {

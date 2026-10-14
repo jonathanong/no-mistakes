@@ -40,6 +40,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         match object {
             // The intrinsic length is a primitive; passing it cannot expose
             // an argument slot or a callback captured by the container.
+            Value::Array(id)
+                if name == "length"
+                    && self.files[path].facts.precise_records
+                    && (self.invalidated_builders.contains(&id)
+                        || self
+                            .argument_extra_slots
+                            .get(&id)
+                            .is_some_and(|slots| !slots.is_empty())) =>
+            {
+                Value::Failure("sparse-or-opaque-collection-shape")
+            }
             Value::Arguments(id) | Value::Array(id) if name == "length" => {
                 if self.invalidated_builders.contains(&id) {
                     Value::Unknown
