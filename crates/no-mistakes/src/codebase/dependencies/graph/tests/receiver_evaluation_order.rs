@@ -175,6 +175,12 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
         ("nested-argument-order", Some("mutableDefault"), "fn", None),
         (
             "nested-argument-order",
+            Some("enclosingFactory/enclosingDefault"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
+            "nested-argument-order",
             Some("objectDefaultLater"),
             "fn",
             None,

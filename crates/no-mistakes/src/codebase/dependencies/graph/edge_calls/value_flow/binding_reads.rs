@@ -39,12 +39,12 @@ impl ValueFlowResolution<'_, '_> {
             .unwrap_or((offset, context))
     }
 
-    /// Captured module bindings must exist and remain unchanged at execution.
+    /// Captured bindings must exist and remain unchanged at execution.
     /// Local TDZ checks and stored initializer acquisition keep source offsets.
     pub(super) fn binding_read(
         &self,
         path: &std::path::Path,
-        scope: usize,
+        declared_owner: Option<CallableId>,
         source_offset: u32,
         source_context: Option<CallableId>,
         offset: u32,
@@ -53,7 +53,7 @@ impl ValueFlowResolution<'_, '_> {
         let Some(read) = &self.invocation_read else {
             return (source_offset, offset, context);
         };
-        if scope != 0 || read.file != path || source_context.is_none() {
+        if read.file != path || source_context.is_none() || declared_owner == source_context {
             return (source_offset, offset, context);
         }
         if let Some((_, read_at, read_context)) = self

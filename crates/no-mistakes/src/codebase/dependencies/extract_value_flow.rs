@@ -60,6 +60,8 @@ pub enum ValueExpression {
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueBinding {
+    /// Declaring callable; distinct from a nested closure reading this binding.
+    pub owner: Option<CallableId>,
     pub name: String,
     pub scope: usize,
     pub declared_at: u32,

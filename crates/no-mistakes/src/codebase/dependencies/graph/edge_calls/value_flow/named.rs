@@ -33,8 +33,14 @@ impl ValueFlowResolution<'_, '_> {
             return FlowValue::Unknown;
         }
         let value = if let Some(binding) = scoped_name(&file.values.bindings, scope, base) {
-            let (available_at, read_at, read_context) =
-                self.binding_read(path, scope, source_offset, source_context, offset, context);
+            let (available_at, read_at, read_context) = self.binding_read(
+                path,
+                binding.owner,
+                source_offset,
+                source_context,
+                offset,
+                context,
+            );
             if binding
                 .mutation_contexts
                 .iter()

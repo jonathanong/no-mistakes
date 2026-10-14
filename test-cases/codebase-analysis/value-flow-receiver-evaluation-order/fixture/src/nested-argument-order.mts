@@ -45,3 +45,10 @@ let mutableDefaultSaved = copyMutableAfter();
 
 function laterObjectAcquire() { return { fn: objectLater.get }; }
 (function objectDefaultLater({ fn } = laterObjectAcquire()) { fn('key'); })(undefined, objectLater.get = replacement);
+
+function enclosingFactory() {
+  function enclosingAcquire() { return enclosingSaved; }
+  const enclosingSaved = primary.get;
+  return function enclosingDefault(fn = enclosingAcquire()) { fn('key'); };
+}
+enclosingFactory()();

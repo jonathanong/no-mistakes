@@ -42,6 +42,7 @@ impl ImportCollector {
                     .push(self.value_flow.bindings.len());
                 self.record_value_reference(scope, &name, &value);
                 self.value_flow.bindings.push(ValueBinding {
+                    owner: self.current_function_id(),
                     name,
                     scope,
                     declared_at,

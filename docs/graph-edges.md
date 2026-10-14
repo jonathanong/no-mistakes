@@ -527,7 +527,8 @@ Live receivers supplied to helpers are read after argument evaluation. For examp
 target. Calls on an assignment's right-hand side still precede that assignment's
 write. This ordering uses the existing request-owned mutation summaries; dynamic
 spreads and uncertain execution remain conservative. Synchronous functions called
-from inline defaults read captured module bindings at invocation, while stored
+from inline defaults read captured module and enclosing-function bindings at
+invocation, while stored
 initializers keep their acquisition time and local temporal dead zones remain
 unresolved. A supplied nested call still acquires its value before later arguments.
 This timing applies during inline invocation analysis, including lazy fields
