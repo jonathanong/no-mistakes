@@ -41,6 +41,7 @@ impl ImportCollector {
             arguments: std::sync::Arc::new(arguments),
             bound: false,
             spread_at: None,
+            once: false,
         });
     }
 }

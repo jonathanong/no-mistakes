@@ -125,6 +125,8 @@ fn walk_instance_property_with_class_scope<'a>(
     if let Some(type_annotation) = &property.type_annotation {
         collector.visit_ts_type_annotation(type_annotation);
     }
+    // Instance initializers run per object; their callable context prevents
+    // an inline call here from claiming module-once execution.
     collector.push_function_scope(Some(class_name.to_string()), class_id);
     if let Some(value) = &property.value {
         collector.visit_expression(value);

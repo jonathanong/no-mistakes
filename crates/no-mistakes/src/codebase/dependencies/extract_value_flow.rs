@@ -109,9 +109,13 @@ pub struct ValueCall {
     pub arguments: std::sync::Arc<Vec<ValueExpression>>,
     pub bound: bool,
     pub spread_at: Option<usize>,
+    /// A direct, module-level arrow invocation outside a repeated construct.
+    pub once: bool,
 }
 #[path = "extract_value_flow/collect.rs"]
 mod collect;
+#[path = "extract_value_flow/collect_helpers.rs"]
+mod collect_helpers;
 
 #[path = "extract_value_flow/expressions.rs"]
 mod expressions;

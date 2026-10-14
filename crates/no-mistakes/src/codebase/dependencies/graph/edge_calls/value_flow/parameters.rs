@@ -133,6 +133,7 @@ impl ValueFlowResolution<'_, '_> {
                     offset: call.offset,
                     context: call.context,
                     owner: (path.to_path_buf(), parameter.owner),
+                    once: call.once,
                 });
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);

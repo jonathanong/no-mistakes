@@ -111,22 +111,22 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
-        visit_for_statement_with_scope(self, statement);
+        with_repeat_execution(self, statement, visit_for_statement_with_scope);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
-        visit_for_in_statement_with_scope(self, statement);
+        with_repeat_execution(self, statement, visit_for_in_statement_with_scope);
     }
 
     fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
-        visit_for_of_statement_with_scope(self, statement);
+        with_repeat_execution(self, statement, visit_for_of_statement_with_scope);
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
-        visit_while_statement_per_item(self, statement);
+        with_repeat_execution(self, statement, visit_while_statement_per_item);
     }
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
-        visit_do_while_statement_per_item(self, statement);
+        with_repeat_execution(self, statement, visit_do_while_statement_per_item);
     }
 
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
