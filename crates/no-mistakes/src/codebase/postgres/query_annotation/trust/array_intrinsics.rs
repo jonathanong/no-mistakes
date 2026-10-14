@@ -1,5 +1,7 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{ComputedMemberExpression, Expression, Program, StaticMemberExpression};
+use oxc_ast::ast::{
+    ComputedMemberExpression, Expression, IdentifierReference, Program, StaticMemberExpression,
+};
 use oxc_ast_visit::{walk, Visit};
 
 pub(super) fn exposed(program: &Program<'_>) -> bool {
@@ -13,12 +15,20 @@ pub(super) fn exposed(program: &Program<'_>) -> bool {
 // would require tracking arbitrary effects beyond this bounded evaluator.
 struct Exposure(bool);
 impl<'a> Visit<'a> for Exposure {
+    fn visit_identifier_reference(&mut self, value: &IdentifierReference<'a>) {
+        // A constructor reference can escape through an arbitrary alias.
+        self.0 |= value.name == "Array";
+    }
     fn visit_static_member_expression(&mut self, value: &StaticMemberExpression<'a>) {
-        self.0 |= value.property.name == "prototype" && array_constructor(&value.object);
+        self.0 |= value.property.name == "__proto__"
+            || (value.property.name == "Array" && global(&value.object))
+            || (value.property.name == "prototype" && array_constructor(&value.object));
         walk::walk_static_member_expression(self, value);
     }
     fn visit_computed_member_expression(&mut self, value: &ComputedMemberExpression<'a>) {
-        self.0 |= named(&value.expression, "prototype") && array_constructor(&value.object);
+        self.0 |= named(&value.expression, "__proto__")
+            || (named(&value.expression, "Array") && global(&value.object))
+            || (named(&value.expression, "prototype") && array_constructor(&value.object));
         walk::walk_computed_member_expression(self, value);
     }
 }

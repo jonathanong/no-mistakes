@@ -134,7 +134,8 @@ cannot certify the others. Group alternatives by `fileName` and `line`, parse
 every statement, and inspect nested effects (including DML inside `WITH`) before
 classifying the site as read-only. SQL construction alone never proves a read.
 Array intrinsic projections remain incomplete when a supplied source exposes
-`Array.prototype`, including computed access, aliases, and read-only exposure;
+`Array.prototype`, an `Array` constructor reference, or `__proto__`, including
+computed access, aliases, and read-only exposure;
 this conservative guard cannot prove that an exposed prototype stays pristine.
 
 `incompleteReason` is additive evaluator metadata: `null` for complete statements

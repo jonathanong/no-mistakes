@@ -90,3 +90,25 @@ fn ordinary_dense_intrinsics_remain_precise_without_prototype_exposure() {
         Some("/* intrinsics/pristine */ SELECT 1")
     );
 }
+
+#[test]
+fn constructor_and_instance_aliases_taint_future_imported_intrinsics() {
+    for dependency in [
+        "control-flow-array-intrinsics-constructor-dependency.ts",
+        "control-flow-array-intrinsics-instance-dependency.ts",
+    ] {
+        let rows = extract(&[
+            "control-flow-array-intrinsics-alias-consumer.ts",
+            dependency,
+        ]);
+        assert_eq!(rows.len(), 1, "{rows:?}");
+        assert!(
+            !rows[0].complete && !rows[0].only_value_placeholders,
+            "{rows:?}"
+        );
+        assert_eq!(
+            rows[0].incomplete_reason.as_deref(),
+            Some("untrusted-array-intrinsics")
+        );
+    }
+}
