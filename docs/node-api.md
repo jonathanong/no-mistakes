@@ -125,6 +125,14 @@ SQL construction; consumers must inspect the statement before classifying a
 opaque top-level effects and unscheduled async helper work make affected shared
 builders unproven. Use `check()` for project-wide annotation enforcement.
 
+Import-aware evaluation treats named private functions returned through reachable
+branch arms of an exported factory as public callable entrypoints, including
+nested branches and existing static array/record wrappers. It recovers the function's complete
+SQL, including modifying appends; opaque returned expressions and unsupported
+function bodies remain incomplete. Literal Boolean and integer conditions exclude
+discarded return arms; unsupported branch bindings and lexical shadows stay
+conservative. Returning a function does not prove a read.
+
 Import-aware evaluation follows helper `if`/early-return paths and finite array
 `map`, `join`, `push`, and `forEach` operations, including conditional CTE assembly
 and append helpers. It recovers whole statements, with the same 16-alternative

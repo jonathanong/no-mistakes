@@ -60,6 +60,8 @@ mod executed_postgres_branch_regressions_api;
 mod executed_postgres_control_flow_api;
 #[path = "executed_postgres_intrinsics_api.rs"]
 mod executed_postgres_intrinsics_api;
+#[path = "executed_postgres_returned_entrypoints_api.rs"]
+mod executed_postgres_returned_entrypoints_api;
 #[path = "executed_postgres_source_api.rs"]
 mod executed_postgres_source_api;
 #[path = "postgres_catalog_real/main.rs"]

@@ -56,6 +56,12 @@ and the default `unanalyzableSql: report` policy; explicitly choose `ignore` for
 opaque leading SQL. This annotation evidence does not imply complete SQL for
 structural PostgreSQL rules.
 
+Import-aware executed SQL extraction follows named private callables returned
+from nested branches of exported factories through the same Rust and async Node
+ESM/CJS API. Static callable wrappers and cyclic return references retain their
+existing behavior; opaque returned expressions and unsupported bodies remain
+unproven. Recovered modifying SQL still requires statement-level classification.
+
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
 dependency artifacts participate in semantic native test planning. Playwright, React,
