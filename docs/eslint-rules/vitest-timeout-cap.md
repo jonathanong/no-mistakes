@@ -314,3 +314,19 @@ to an unproved consumer retains unknown diagnostics; supported `defineConfig`
 callbacks still use their returned configuration. Direct timeout properties also
 reject callable values: `{ timeout: () => 1 }` is unknown rather than a numeric
 one-millisecond budget, even without an earlier opaque consumer.
+
+## Delegating unresolved configuration values
+
+`configUnknownValues` defaults to `"inherit"`, preserving `unknownValues` behavior.
+Explicit `"defer-to-runner"` delegates only unresolved configuration/project
+carriers to a separate effective-runner admission policy. Known invalid and
+oversized numeric configuration values still report. This option does not change
+case, hook, suite or runtime-setter analysis. Findings outside configuration
+retain their current behavior.
+
+This option is a consumer policy decision, not proof that an external guard exists.
+Use it only where the normal runner continuously validates effective selected
+project budgets, including CLI overrides, before test execution, with required CI
+controls that fail when that owner is absent. A clean baseline snapshot, alternate
+config bypass, filename exclusion or general unknown-value ignore is not a
+substitute. The option does not establish repository-wide timeout closure.

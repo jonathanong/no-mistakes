@@ -249,7 +249,10 @@ table callbacks, configuration, and `no-mistakes` suppression directives.
 ### `playwright-test-timeout-cap`
 
 Opt-in bounded Playwright test deadline policy. Options: `max`, `fixtureMax`,
-`unknownValues`, `registrationPackages`, `exportRoles`, and `configFiles`.
+`unknownValues`, `configUnknownValues`, `registrationPackages`, `exportRoles`, and `configFiles`.
+`configUnknownValues: "defer-to-runner"` delegates only unresolved configuration
+values to a separate effective runner policy; its default `"inherit"` keeps
+`unknownValues` behavior. Known invalid values and checks outside configuration retain their current behavior.
 Reviewed helper export roles distinguish assertions from opaque registrars;
 builtin SDK and known registrar identities cannot be overridden. Under finding
 policy, `effectiveSlot` reports unproved inherited registration deadlines/latches,
@@ -265,6 +268,9 @@ config/project `testTimeout` and `hookTimeout`; `overrideMax` defaults to
 `configRoot` explicitly admits plain standalone configuration exports; enable it
 only for actual configuration-file scopes. Both caps must be positive finite numbers. `unknownValues` defaults to
 `ignore`; set `finding` to require statically recoverable timeout values.
+`configUnknownValues` defaults to `"inherit"`; `"defer-to-runner"` delegates only
+unresolved configuration values to a separate effective runner policy without
+changing known-invalid findings or those outside configuration.
 Same-module constants, aliases, config callbacks with a single return,
 object/array spreads and effective `mergeConfig` precedence are supported.
 See [the rule reference](eslint-rules/vitest-timeout-cap.md) for limits and

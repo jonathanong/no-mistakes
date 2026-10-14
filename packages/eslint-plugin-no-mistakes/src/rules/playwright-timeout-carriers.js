@@ -2,28 +2,34 @@
 const { unwrapExpression, isFunction } = require("./async-ast");
 const { resolveVariable, isReassigned } = require("./async-target-bindings");
 function createCarriers(context, evaluate, check, max, fixtureMax) {
-  function field(value, node, name = "timeout", cap = max) {
+  const option = context.options[0] ?? {};
+  function configCheck(value, ...args) {
+    const unresolved = value.kind !== "number" || value.runtimeFunction;
+    if (unresolved && option.configUnknownValues === "defer-to-runner") return;
+    check(value, ...args);
+  }
+  function field(value, node, name = "timeout", cap = max, inspect = check) {
     if (value.kind !== "object") {
-      check({ kind: "unknown" }, node, name, cap);
+      inspect({ kind: "unknown" }, node, name, cap);
       return undefined;
     }
     const entry = value.properties.get("timeout");
-    if (entry) check(entry.value, entry.origin, name, cap);
-    else if (value.unknown) check({ kind: "unknown" }, node, name, cap);
+    if (entry) inspect(entry.value, entry.origin, name, cap);
+    else if (value.unknown) inspect({ kind: "unknown" }, node, name, cap);
     return entry?.value;
   }
   function config(value, node) {
     if (value.kind !== "object") {
-      check({ kind: "unknown" }, node, "config carrier");
+      configCheck({ kind: "unknown" }, node, "config carrier");
       return;
     }
-    field(value, node, "project timeout");
+    field(value, node, "project timeout", max, configCheck);
     const projects = value.properties.get("projects");
     if (projects) {
       if (projects.value.kind !== "array")
-        check({ kind: "unknown" }, projects.origin, "projects carrier");
+        configCheck({ kind: "unknown" }, projects.origin, "projects carrier");
       else for (const entry of projects.value.entries) config(entry.value, entry.origin);
-    } else if (value.unknown) check({ kind: "unknown" }, node, "projects carrier");
+    } else if (value.unknown) configCheck({ kind: "unknown" }, node, "projects carrier");
   }
   function fixtures(node) {
     const value = evaluate(node);
@@ -78,7 +84,7 @@ function createCarriers(context, evaluate, check, max, fixtureMax) {
       if (api?.kind === "defineConfig") {
         checkedConfigs.add(node);
         if (node.arguments.length === 1) config(evaluate(node.arguments[0]), node.arguments[0]);
-        else check({ kind: "unknown" }, node, "merged config carrier");
+        else configCheck({ kind: "unknown" }, node, "merged config carrier");
       } else if (
         (option.configFiles ?? []).some(
           (file) =>
@@ -91,7 +97,7 @@ function createCarriers(context, evaluate, check, max, fixtureMax) {
       if (checkedConfigs.has(node) || bindings.resolve(node.callee)?.kind !== "defineConfig")
         continue;
       if (node.arguments.length === 1) config(evaluate(node.arguments[0]), node.arguments[0]);
-      else check({ kind: "unknown" }, node, "merged config carrier");
+      else configCheck({ kind: "unknown" }, node, "merged config carrier");
     }
   }
   return { field, configRoots, fixtures, slowCondition };
