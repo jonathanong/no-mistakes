@@ -42,9 +42,10 @@ impl DeadlineGuard {
         owner: Option<std::thread::ThreadId>,
         limit: Option<Deadline>,
     ) -> Result<Self> {
+        let started = clock::now();
         let deadline = timeout
             .map(|timeout| {
-                clock::now()
+                started
                     .checked_add(timeout)
                     .map(|expires_at| Deadline {
                         expires_at,
@@ -55,6 +56,15 @@ impl DeadlineGuard {
                     .context("command timeout is too large")
             })
             .transpose()?;
+        // Acquisition expiry belongs to the original invocation limit at entry,
+        // not a shorter command deadline that expires while this guard is built.
+        if limit.is_some_and(|limit| limit.expires_at <= started) {
+            return Err(InvocationError::new(
+                InvocationErrorKind::CommandTimeout,
+                "invocation deadline elapsed during lock acquisition".to_string(),
+            )
+            .into());
+        }
         let deadline = match (deadline, limit) {
             (Some(command), Some(limit)) => Some(if command.expires_at <= limit.expires_at {
                 command
@@ -64,13 +74,6 @@ impl DeadlineGuard {
             (None, limit) => limit,
             (command, None) => command,
         };
-        if limit.is_some() && deadline.is_some_and(|deadline| deadline.expires_at <= clock::now()) {
-            return Err(InvocationError::new(
-                InvocationErrorKind::CommandTimeout,
-                "invocation deadline elapsed during lock acquisition".to_string(),
-            )
-            .into());
-        }
         let mut active = active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
