@@ -59,7 +59,7 @@ struct ValueFlowResolution<'a, 'b> {
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
-    invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    invocation_read: Option<default_origins::InvocationRead>,
 }
 
 #[path = "value_flow/named.rs"]

@@ -150,21 +150,20 @@ impl ValueFlowResolution<'_, '_> {
             return false;
         }
         let OriginKind::InvocationReceiver {
-            file: source,
-            offset,
-            context: read_context,
-            owner,
+            read,
+            history_file,
             history,
         } = origin
         else {
             return false;
         };
-        if receivers_only {
-            receivers && history.assignment_invalidated(projection, *offset, *read_context, false)
-        } else {
-            // Ownership is checked before projection, including root calls and
-            // escaped closures. Member mutation waits for the receiver walk.
-            source != file || context != Some(*owner)
-        }
+        // Supplier offsets only order their own history. Reader ownership is
+        // file-qualified, while member writes follow the receiver projection.
+        read.file != *history_file
+            || if receivers_only {
+                receivers && history.assignment_invalidated(projection, read.offset, read.context, false)
+            } else {
+                read.owner.0 != file || context != Some(read.owner.1)
+            }
     }
 }
