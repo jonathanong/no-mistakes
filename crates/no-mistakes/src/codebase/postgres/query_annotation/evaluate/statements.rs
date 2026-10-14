@@ -1,5 +1,5 @@
 use super::{concat, Environment, Evaluator, Value};
-use crate::codebase::postgres::query_annotation::Step;
+use crate::codebase::postgres::query_annotation::{Expr, Step};
 use std::path::{Path, PathBuf};
 
 mod effects;
@@ -13,42 +13,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
-        let vars = steps
-            .iter()
-            .filter_map(|step| match step {
-                Step::Var(name) => Some(name.as_str()),
-                _ => None,
-            })
-            .collect::<crate::fx::FxHashSet<_>>();
-        // Reserve lexical names before evaluation so TDZ/shadowed bindings do
-        // not accidentally resolve to a module helper or trusted tag.
-        for step in steps {
-            match step {
-                Step::Bind(name, _) if vars.contains(name.as_str()) => {
-                    // Initialized var redeclarations assign at this statement,
-                    // rather than replacing a parameter during hoisting.
-                    self.scopes[*env]
-                        .entry(name.clone())
-                        .or_insert(Value::Unknown);
-                }
-                Step::Bind(name, _) | Step::Hoisted(name, _) => {
-                    self.scopes[*env].insert(name.clone(), Value::Unknown);
-                }
-                Step::Var(name) => {
-                    self.scopes[*env]
-                        .entry(name.clone())
-                        .or_insert(Value::Unsupported);
-                }
-                Step::Reserve(names) => {
-                    for name in names {
-                        self.scopes[*env]
-                            .entry(name.clone())
-                            .or_insert(Value::Unknown);
-                    }
-                }
-                _ => {}
-            }
-        }
+        self.reserve_bindings(steps, env);
         let supported = !steps.iter().any(|step| matches!(step, Step::Unsupported));
         let unsafe_scope = steps.iter().any(|step| {
             matches!(step, Step::PotentialCalls(calls) if calls.iter().any(|start| !self.files[path].executors.contains(start)))
@@ -107,30 +72,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.write_captured_binding(*env, name, &value);
                 }
                 Step::Effect(expr) => {
-                    let effect = self.expr(expr, path, env, depth, generic);
-                    if self.effect_can_mutate(expr, path, *env)
-                        && !self.handled_deletion_effect(expr, &effect, path, *env)
-                        && !self.proven_append_only_effect(expr, path, *env, depth, generic)
-                    {
-                        opaque_return = true;
-                        if self.files[path].facts.precise_records
-                            && (self.modules.get(path).is_some_and(|module| *module == *env)
-                                || effects::contains_accessor_read(expr))
-                        {
-                            self.invalidate_live_builders();
-                        }
-                        // Arbitrary effects can mutate a builder passed by
-                        // reference. Its previous prefix is no longer proof.
-                        for value in self.scopes[*env].values_mut() {
-                            if matches!(value, Value::Prefix(_, _, _)) {
-                                *value = if matches!(effect, Value::Unsupported) {
-                                    unsupported.clone()
-                                } else {
-                                    Value::Unknown
-                                };
-                            }
-                        }
-                    }
+                    opaque_return |=
+                        self.apply_effect(expr, path, env, depth, generic, &unsupported);
                 }
                 Step::Return(expr) => {
                     let value = self.expr(expr, path, env, depth, generic).exposed();
@@ -144,6 +87,82 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         Value::Unknown
+    }
+
+    fn reserve_bindings(&mut self, steps: &[Step], env: &Environment) {
+        let vars = steps
+            .iter()
+            .filter_map(|step| match step {
+                Step::Var(name) => Some(name.as_str()),
+                _ => None,
+            })
+            .collect::<crate::fx::FxHashSet<_>>();
+        // Reserve lexical names before evaluation so TDZ/shadowed bindings do
+        // not accidentally resolve to a module helper or trusted tag.
+        for step in steps {
+            match step {
+                Step::Bind(name, _) if vars.contains(name.as_str()) => {
+                    // Initialized var redeclarations assign at this statement,
+                    // rather than replacing a parameter during hoisting.
+                    self.scopes[*env]
+                        .entry(name.clone())
+                        .or_insert(Value::Unknown);
+                }
+                Step::Bind(name, _) | Step::Hoisted(name, _) => {
+                    self.scopes[*env].insert(name.clone(), Value::Unknown);
+                }
+                Step::Var(name) => {
+                    self.scopes[*env]
+                        .entry(name.clone())
+                        .or_insert(Value::Unsupported);
+                }
+                Step::Reserve(names) => {
+                    for name in names {
+                        self.scopes[*env]
+                            .entry(name.clone())
+                            .or_insert(Value::Unknown);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn apply_effect(
+        &mut self,
+        expr: &Expr,
+        path: &Path,
+        env: &mut Environment,
+        depth: u8,
+        generic: bool,
+        unsupported: &Value,
+    ) -> bool {
+        let effect = self.expr(expr, path, env, depth, generic);
+        if self.effect_can_mutate(expr, path, *env)
+            && !self.handled_deletion_effect(expr, &effect, path, *env)
+            && !self.proven_append_only_effect(expr, path, *env, depth, generic)
+        {
+            if self.files[path].facts.precise_records
+                && (self.modules.get(path).is_some_and(|module| *module == *env)
+                    || effects::contains_accessor_read(expr))
+            {
+                self.invalidate_live_builders();
+            }
+            // Arbitrary effects can mutate a builder passed by reference.
+            // Its previous prefix is no longer proof.
+            for value in self.scopes[*env].values_mut() {
+                if matches!(value, Value::Prefix(_, _, _)) {
+                    *value = if matches!(effect, Value::Unsupported) {
+                        unsupported.clone()
+                    } else {
+                        Value::Unknown
+                    };
+                }
+            }
+            true
+        } else {
+            false
+        }
     }
 }
 
