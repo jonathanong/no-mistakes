@@ -128,7 +128,7 @@ Literal CommonJS `require` calls and awaited dynamic imports evaluate supplied
 targets at their expression position; a target that cannot be resolved leaves
 shared builder SQL unproven. Getter-capable member reads likewise prevent a
 later executor from certifying a builder they could have changed.
-An unawaited dynamic import is not executed synchronously: its scheduling is
+A dynamic import without `await` is not executed synchronously: its scheduling is
 uncertain, so later reads of affected builders remain incomplete.
 
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
