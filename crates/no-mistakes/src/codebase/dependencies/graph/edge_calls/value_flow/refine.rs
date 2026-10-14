@@ -81,11 +81,15 @@ fn refine_iteration(
             continue;
         };
         if matches!(site.target, ResolvedCallTarget::Unknown) {
+            let mut callee = &call.callee;
+            while let ValueExpression::Member(base, _) = callee {
+                callee = base;
+            }
             if let ValueExpression::Named {
                 name,
                 scope: None | Some(0),
                 ..
-            } = &call.callee
+            } = callee
             {
                 let head = name.split_once('.').map_or(name.as_str(), |(head, _)| head);
                 if index.imported.get(head).is_some_and(|binding| binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace) { continue; }
