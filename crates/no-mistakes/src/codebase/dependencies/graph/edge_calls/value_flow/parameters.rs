@@ -32,7 +32,9 @@ impl ValueFlowResolution<'_, '_> {
                     supers: self.supers,
                     replacements: self.replacements,
                     replacement_read: false,
-                    foreign_acquisition: self.foreign_acquisition,
+                    // Agreement values depend only on indexed incoming sources,
+                    // never on the ambient query which first fills the cache.
+                    foreign_acquisition: false,
                     cache: self.cache,
                     parameters_enabled: true,
                     initializing: self.initializing.clone(),
@@ -129,6 +131,10 @@ impl ValueFlowResolution<'_, '_> {
                 continue;
             }
             self.default_origins = None;
+            let previous_foreign = self.foreign_acquisition;
+            self.foreign_acquisition = self
+                .replacements
+                .is_some_and(|catalog| catalog.possible_repeat(&caller, call.offset, call.context));
             let previous_read = self.invocation_read.clone();
             if super::inline_inputs::inline_callee(&call.callee) {
                 self.invocation_read = Some(default_origins::InvocationRead {
@@ -185,6 +191,7 @@ impl ValueFlowResolution<'_, '_> {
                 from_default.then_some((path, parameter.owner, true)),
             );
             self.invocation_read = previous_read;
+            self.foreign_acquisition = previous_foreign;
             default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         }
         if values.is_empty() {

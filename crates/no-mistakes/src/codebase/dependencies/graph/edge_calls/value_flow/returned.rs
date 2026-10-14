@@ -106,7 +106,10 @@ impl ValueFlowResolution<'_, '_> {
                     self.make_receiver_use(path, &call, previous.clone(), Some((&file, id, false)))
                 });
                 let previous_foreign = self.foreign_acquisition;
-                self.foreign_acquisition |= file != path;
+                self.foreign_acquisition |= file != path
+                    && self.replacements.is_some_and(|catalog| {
+                        catalog.possible_repeat(path, call.offset, call.context)
+                    });
                 let value = agreed_value(
                     returns
                         .iter()

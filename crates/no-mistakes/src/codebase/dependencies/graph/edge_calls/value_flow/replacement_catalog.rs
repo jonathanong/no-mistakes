@@ -227,6 +227,19 @@ impl ReplacementCatalog {
         });
         probe
     }
+    pub(super) fn possible_repeat(
+        &self,
+        path: &std::path::Path,
+        offset: u32,
+        owner: Option<CallableId>,
+    ) -> bool {
+        owner.is_some()
+            || self.file(path).is_some_and(|file| {
+                file.writes
+                    .region_at(owner, offset)
+                    .is_some_and(|id| file.writes.facts.regions[id].may_repeat)
+            })
+    }
     pub(super) fn mutated_member(&self, target: &ResolvedCallTarget, member: &str) -> bool {
         let ResolvedCallTarget::ModuleExport {
             specifier,
@@ -268,7 +281,7 @@ impl ReplacementFile {
         if owner.is_none() && region.is_none() {
             return None;
         }
-        if region.is_some_and(|id| !self.writes.facts.regions[id].may_repeat) {
+        if owner.is_none() && region.is_some_and(|id| !self.writes.facts.regions[id].may_repeat) {
             return None;
         }
         let Some(receiver) = self.receivers.get(source_receiver).copied() else {

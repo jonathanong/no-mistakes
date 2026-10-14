@@ -1,5 +1,5 @@
-import { foreignGetterReceiver, foreignCopiedReceiver, rhs } from '@vendor/producer';
-import { acquireForeign, acquireCopied, acquireSibling } from './foreign-getter.mts';
+import { foreignGetterReceiver, foreignCopiedReceiver, beforeLoopGetterReceiver, rhs } from '@vendor/producer';
+import { acquireForeign, acquireCopied, acquireSibling, acquireBeforeLoop } from './foreign-getter.mts';
 for (const item of ['a', 'b']) {
   const fresh = acquireForeign();
   fresh(item);
@@ -11,4 +11,11 @@ for (const item of ['a', 'b']) {
   const copied = acquireCopied();
   copied(item);
   foreignCopiedReceiver.get = rhs.get;
+}
+
+// The getter itself executes once here; its result remains a method snapshot.
+const acquiredBefore = acquireBeforeLoop();
+for (const item of ['a', 'b']) {
+  acquiredBefore(item);
+  beforeLoopGetterReceiver.get = rhs.get;
 }

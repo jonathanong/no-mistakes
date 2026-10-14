@@ -99,6 +99,15 @@ fn repeated_replacement_prefix_tail_and_closed_owner() {
         )),
         ["foreignGetterReceiver.set"]
     );
+    assert_eq!(
+        producer_selectors(producer_site(
+            &graph,
+            &root,
+            "foreign-getter-caller",
+            "acquiredBefore"
+        )),
+        ["beforeLoopGetterReceiver.get"]
+    );
     let middle = graph.call_sites_in_file(&root.join("src/positive.mts"));
     let reads: Vec<_> = middle
         .iter()
@@ -131,6 +140,8 @@ fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
         ("controls", "resetReceiver.get"),
         ("controls", "leftResetReceiver.get"),
         ("controls", "destructuredReceiver.get"),
+        ("nested-once", "closedOnceReceiver.get"),
+        ("nested-once", "unsupportedOnceReceiver.get"),
         ("owners", "escapedReceiver.get"),
         ("owners", "interruptedReceiver.get"),
         ("foreign", "sharedReceiver.get"),
@@ -158,6 +169,11 @@ fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
     assert!(!unrelated.has_unknown_target());
     for (file, callee, expected) in [
         ("foreign", "sharedReceiver.set", "sharedReceiver.set"),
+        (
+            "nested-once",
+            "closedOnceReceiver.set",
+            "closedOnceReceiver.set",
+        ),
         ("repository", "objectReceiver.set", "objectReceiver.set"),
     ] {
         assert_eq!(

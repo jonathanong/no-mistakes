@@ -134,10 +134,12 @@ include!("class_resolution_index.rs");
 include!("symbol_runtime_edges.rs");
 include!("call_site_index.rs");
 
-#[path = "value_flow_worklist.rs"]
-mod value_flow_worklist;
+#[path = "repeated_foreign_parameters.rs"]
+mod repeated_foreign_parameters;
 #[path = "value_flow_repeated_replacements.rs"]
 mod value_flow_repeated_replacements;
+#[path = "value_flow_worklist.rs"]
+mod value_flow_worklist;
 
 #[path = "imported_receiver_mutations.rs"]
 mod imported_receiver_mutations;
