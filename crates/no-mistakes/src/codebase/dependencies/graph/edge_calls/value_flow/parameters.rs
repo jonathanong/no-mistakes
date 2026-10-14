@@ -39,6 +39,7 @@ impl ValueFlowResolution<'_, '_> {
                     default_origins: None,
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
+                    member_read: None,
                 };
                 flow.visiting
                     .insert((path.to_path_buf(), parameter.scope, parameter.name.clone()));
@@ -73,18 +74,36 @@ impl ValueFlowResolution<'_, '_> {
         let mut values = Vec::new();
         let mut origins = None;
         let synchronous = self.synchronous_callable(path, parameter.owner);
-        let has_concrete = synchronous && incoming.iter().any(|input| {
-            if input.callback { return false; }
-            let call = self.indexes.file(self.facts, &input.file)
-                .and_then(|index| index.values.sites.get(&input.offset)
-                    .and_then(|sites| sites.get(&input.callee))
-                    .and_then(|key| index.values.calls.get(key).cloned()));
-            call.is_some_and(|call| self.safe_inline_callee(&input.file, &call.callee))
-        });
+        let has_concrete = synchronous
+            && incoming.iter().any(|input| {
+                if input.callback {
+                    return false;
+                }
+                let call = self
+                    .indexes
+                    .file(self.facts, &input.file)
+                    .and_then(|index| {
+                        index
+                            .values
+                            .sites
+                            .get(&input.offset)
+                            .and_then(|sites| sites.get(&input.callee))
+                            .and_then(|key| index.values.calls.get(key).cloned())
+                    });
+                call.is_some_and(|call| self.safe_inline_callee(&input.file, &call.callee))
+            });
         for input in incoming {
-            let ParameterInput { file: caller, offset, callee, synthetic_callback, callback } = input;
+            let ParameterInput {
+                file: caller,
+                offset,
+                callee,
+                synthetic_callback,
+                callback,
+            } = input;
             if callback {
-                if !(synthetic_callback && has_concrete) { values.push(FlowValue::Unknown); }
+                if !(synthetic_callback && has_concrete) {
+                    values.push(FlowValue::Unknown);
+                }
                 continue;
             }
             let Some(index) = self.indexes.file(self.facts, &caller) else {
@@ -100,14 +119,17 @@ impl ValueFlowResolution<'_, '_> {
                 values.push(FlowValue::Unknown);
                 continue;
             };
-            if inline_callee(&call.callee) && (!synchronous || !self.safe_inline_callee(&caller, &call.callee)) {
+            if inline_callee(&call.callee)
+                && (!synchronous || !self.safe_inline_callee(&caller, &call.callee))
+            {
                 values.push(FlowValue::Unknown);
                 continue;
             }
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
             if inline_callee(&call.callee) {
-                self.invocation_read = Some((caller.clone(), call.offset, call.context, parameter.owner));
+                self.invocation_read =
+                    Some((caller.clone(), call.offset, call.context, parameter.owner));
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);

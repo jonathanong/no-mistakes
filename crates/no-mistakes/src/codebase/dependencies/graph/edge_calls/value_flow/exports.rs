@@ -30,7 +30,8 @@ pub(in super::super) fn resolve_value_exports(
                 calls_visiting: fx_set(),
                 default_origins: None,
                 acquisition_context: None,
-                    invocation_read: None,
+                invocation_read: None,
+                member_read: None,
             };
             let mut value = flow.named(file, local, Some(0), u32::MAX, None);
             loop {

@@ -164,13 +164,54 @@ fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {
         .filter(|site| site.source_callee == "options.client.get")
         .collect::<Vec<_>>();
     assert_eq!(receivers.len(), 128);
-    assert!(receivers
-        .iter()
-        .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
+    assert!(
+        receivers
+            .iter()
+            .all(|site| matches!(site.target, ResolvedCallTarget::Unknown))
+    );
     assert_eq!(benchmark_probe_parameter_agreements(), 1);
     assert!(
         benchmark_probe_origin_nodes() <= 128 * 8 + 8,
         "receiver sites must reuse the agreement/context instead of copying history per projection: {} nodes",
+        benchmark_probe_origin_nodes()
+    );
+}
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn live_parameter_alias_sites_keep_shared_origin_work_linear() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("value-flow-live-alias-cache"));
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+    let aliases = sites
+        .iter()
+        .filter(|site| site.source_callee == "alias.get")
+        .collect::<Vec<_>>();
+    assert_eq!(aliases.len(), 128);
+    assert!(
+        aliases
+            .iter()
+            .all(|site| matches!(site.target, ResolvedCallTarget::Unknown))
+    );
+    assert_eq!(benchmark_probe_parameter_agreements(), 1);
+    assert!(
+        benchmark_probe_origin_nodes() <= 128 * 8 + 8,
+        "live alias reads must retain shared origins and linear work: {} nodes",
         benchmark_probe_origin_nodes()
     );
 }

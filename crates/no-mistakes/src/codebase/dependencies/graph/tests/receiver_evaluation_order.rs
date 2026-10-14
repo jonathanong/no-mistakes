@@ -167,6 +167,37 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             "value.get",
             Some("primary.get"),
         ),
+        // Local aliases are read live at the member access; copied methods remain snapshots.
+        (
+            "live-parameter-alias",
+            Some("liveAfterWrite"),
+            "chained.get",
+            None,
+        ),
+        (
+            "live-parameter-alias",
+            Some("aliasBeforeWrite"),
+            "alias.get",
+            Some("primary.get"),
+        ),
+        (
+            "live-parameter-alias",
+            Some("copiedMethod"),
+            "get",
+            Some("primary.get"),
+        ),
+        (
+            "live-parameter-alias",
+            Some("unrelated"),
+            "alias.set",
+            Some("replica.set"),
+        ),
+        (
+            "live-parameter-alias",
+            Some("objectAlias"),
+            "alias.client.get",
+            None,
+        ),
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));
         let line = match callee {

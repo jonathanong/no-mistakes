@@ -9,9 +9,13 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> FlowValue {
-        let (offset, context) = self.invocation_read.as_ref()
+        let (offset, context) = self
+            .invocation_read
+            .as_ref()
             .filter(|(file, _, _, _)| file == path)
-            .map_or((offset, context), |(_, offset, context, _)| (*offset, *context));
+            .map_or((offset, context), |(_, offset, context, _)| {
+                (*offset, *context)
+            });
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -21,8 +25,14 @@ impl ValueFlowResolution<'_, '_> {
         let Some(scope) = scope.or_else(|| file.imported.contains_key(base).then_some(0)) else {
             return FlowValue::Unknown;
         };
-        if self.invocation_read.is_some() && file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base))
-            .is_some_and(|history| history.invalidated(&[], &[], offset, context, false))
+        if self.invocation_read.is_some()
+            && file
+                .values
+                .receiver_mutations
+                .as_ref()
+                .and_then(|histories| histories.get(&scope))
+                .and_then(|names| names.get(base))
+                .is_some_and(|history| history.invalidated(&[], &[], offset, context, false))
         {
             return FlowValue::Unknown;
         }
@@ -134,11 +144,23 @@ impl ValueFlowResolution<'_, '_> {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
         if let Some((source, read_offset, read_context, owner)) = &self.invocation_read {
-            if let Some(history) = file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base)) {
-                let origin = self.cache.origin_node(OriginKind::InvocationReceiver {
-                    file: source.clone(), offset: *read_offset, context: *read_context, owner: *owner,
-                    history: std::sync::Arc::clone(history),
-                }, 1);
+            if let Some(history) = file
+                .values
+                .receiver_mutations
+                .as_ref()
+                .and_then(|histories| histories.get(&scope))
+                .and_then(|names| names.get(base))
+            {
+                let origin = self.cache.origin_node(
+                    OriginKind::InvocationReceiver {
+                        file: source.clone(),
+                        offset: *read_offset,
+                        context: *read_context,
+                        owner: *owner,
+                        history: std::sync::Arc::clone(history),
+                    },
+                    1,
+                );
                 default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
             }
         }
@@ -147,7 +169,9 @@ impl ValueFlowResolution<'_, '_> {
         } else {
             value
         };
-        member.map_or(value.clone(), |member| self.member(value, member))
+        member.map_or(value.clone(), |member| {
+            self.member_at(value, member, path, offset, context)
+        })
     }
     fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
         if let Some(binding) = file.imported.get(base).filter(|binding| {

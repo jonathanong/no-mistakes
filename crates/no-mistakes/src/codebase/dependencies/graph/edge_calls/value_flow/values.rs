@@ -29,8 +29,9 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Callable(id) => self.callable(path, *id),
             ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
+                let (read_offset, read_context) = self.member_read_location(path, base);
                 let base = self.value(path, base);
-                self.member(base, member)
+                self.member_at(base, member, path, read_offset, read_context)
             }
             ValueExpression::Object(fields, null_prototype) => FlowValue::Object {
                 null_prototype: *null_prototype,

@@ -60,10 +60,13 @@ struct ValueFlowResolution<'a, 'b> {
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
     invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
 #[path = "value_flow/named.rs"]
 mod named;
+#[path = "value_flow/member_reads.rs"]
+mod member_reads;
 #[path = "value_flow/refine.rs"]
 mod refine;
 #[path = "value_flow/returned.rs"]
