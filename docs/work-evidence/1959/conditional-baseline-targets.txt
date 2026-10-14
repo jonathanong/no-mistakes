@@ -42,3 +42,15 @@ src/nested-receiver-cutoffs.mts|savedBeforeDynamicRestoration|value.get|primary.
 src/nested-receiver-cutoffs.mts|-|savedBeforeDynamicRestoration|?
 src/nested-receiver-cutoffs.mts|cyclicAcquisition|value.get|primary.get
 src/nested-receiver-cutoffs.mts|-|cyclicAcquisition|?
+src/nested-receiver-cutoffs.mts|labeledBypass|value.get|primary.get
+src/nested-receiver-cutoffs.mts|-|labeledBypass|?
+src/nested-receiver-cutoffs.mts|unlabeledFresh|value.get|primary.get
+src/nested-receiver-cutoffs.mts|-|unlabeledFresh|?
+src/nested-receiver-cutoffs.mts|logicalFreshPreserved|value.get|primary.get
+src/nested-receiver-cutoffs.mts|-|logicalFreshPreserved|?
+src/nested-receiver-cutoffs.mts|logicalAndUncertain|value.get|primary.get
+src/nested-receiver-cutoffs.mts|-|logicalAndUncertain|?
+src/nested-receiver-cutoffs.mts|logicalOrUncertain|value.get|primary.get
+src/nested-receiver-cutoffs.mts|-|logicalOrUncertain|?
+src/nested-receiver-cutoffs.mts|logicalNullUncertain|value.get|primary.get
+src/nested-receiver-cutoffs.mts|-|logicalNullUncertain|?

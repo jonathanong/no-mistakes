@@ -226,7 +226,7 @@ fn conditional_and_unknown_reference_writes_do_not_sever_original_receivers() {
             .filter(|finding| finding.file == "src/nested-receiver-cutoffs.mts")
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [93, 175, 184],
+        [93, 175, 184, 207, 217],
         "{findings:#?}"
     );
     assert_eq!(

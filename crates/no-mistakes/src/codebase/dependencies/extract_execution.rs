@@ -33,7 +33,7 @@ fn with_conditional_receiver_write(collector: &mut ImportCollector, visit: impl 
 }
 
 fn receiver_replacement_is_fresh(assignment: &AssignmentExpression<'_>) -> bool {
-    assignment.operator == oxc_syntax::operator::AssignmentOperator::Assign
+    (assignment.operator == oxc_syntax::operator::AssignmentOperator::Assign || assignment.operator.is_logical())
         && matches!(&assignment.left, AssignmentTarget::StaticMemberExpression(_) | AssignmentTarget::ComputedMemberExpression(_))
         && matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&assignment.right),
             Expression::ObjectExpression(_) | Expression::ArrayExpression(_)
@@ -140,4 +140,13 @@ fn visit_try_with_receiver_execution<'a>(collector: &mut ImportCollector, statem
     with_conditional_receiver_write(collector, |collector| collector.visit_block_statement(&statement.block));
     if let Some(handler) = &statement.handler { collector.visit_catch_clause(handler); }
     if let Some(finalizer) = &statement.finalizer { collector.visit_block_statement(finalizer); }
+}
+
+fn visit_label_with_receiver_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::LabeledStatement<'a>) {
+    with_conditional_receiver_write(collector, |collector| collector.visit_statement(&statement.body));
+}
+
+fn visit_new_expression_with_imports_and_calls<'a>(collector: &mut ImportCollector, new: &NewExpression<'a>) {
+    visit_new_expression_with_imports(collector, new);
+    walk::walk_new_expression(collector, new);
 }

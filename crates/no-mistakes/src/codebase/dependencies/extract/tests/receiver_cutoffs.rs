@@ -61,7 +61,17 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
         .unwrap()
         .members["client"];
     assert!(parameter.unconditional_offset.is_none());
-    for name in ["forBox", "whileBox", "doBox", "arrayBox", "tryBox"] {
+    for name in [
+        "forBox",
+        "whileBox",
+        "doBox",
+        "arrayBox",
+        "tryBox",
+        "labelBox",
+        "logicalAndBox",
+        "logicalOrBox",
+        "logicalNullBox",
+    ] {
         let write = &histories[&0][name].assigned.as_ref().unwrap().members["client"];
         assert!(write.unconditional_offset.is_none(), "{name}: {write:?}");
     }

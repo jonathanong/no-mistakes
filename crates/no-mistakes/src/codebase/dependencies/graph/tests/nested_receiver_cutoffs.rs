@@ -34,6 +34,11 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         "arrayBindingDefault",
         "caughtReplacement",
         "cyclicAcquisition",
+        "labeledBypass",
+        "logicalAndUncertain",
+        "logicalOrUncertain",
+        "logicalNullUncertain",
+        "compoundUncertain",
         "restoredReference",
         "dynamicRestoration",
         "assignmentDefault",
@@ -63,7 +68,12 @@ fn nested_receiver_cutoffs_require_guaranteed_distinct_references() {
         if export_path == "primary.get"),
         "{guaranteed:?}"
     );
-    for name in ["savedBeforeRestoration", "savedBeforeDynamicRestoration"] {
+    for name in [
+        "savedBeforeRestoration",
+        "savedBeforeDynamicRestoration",
+        "unlabeledFresh",
+        "logicalFreshPreserved",
+    ] {
         let site = sites
             .iter()
             .find(|site| site.caller.as_deref() == Some(name) && site.source_callee == "value.get")

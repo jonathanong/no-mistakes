@@ -151,3 +151,14 @@ existing alias-link bound remains explicit rather than claiming a linear whole
 collector. Root statically reviewed the timeline, completeness joins, writer
 checks, and returned joined reads before publication. Fresh semantic tests,
 weighted CRAP, coverage floors, and performance validation remain pending.
+
+The next review correction marks labeled bodies receiver-conditional because a
+labeled break can bypass replacement. Fresh RHS classification now admits plain
+and logical assignments separately from guaranteed execution: fresh logical
+writes preserve a prior distinct receiver but cannot establish one. Other
+compound operators remain conservative. Saved controls cover the labeled bypass,
+an ordinary fresh positive, all three logical operators preserving prior
+freshness, and all three operators with unknown original identity. Existing
+assertions remain unchanged; new positive lines are added explicitly. The
+unchanged new-expression visitor body is delegated to keep the 200-line file
+limit without changing traversal order. No compiler or weighted-gate claim.

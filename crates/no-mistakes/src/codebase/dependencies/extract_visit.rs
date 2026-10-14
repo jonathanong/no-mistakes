@@ -129,6 +129,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) { visit_try_with_receiver_execution(self, statement); }
+    fn visit_labeled_statement(&mut self, statement: &oxc_ast::ast::LabeledStatement<'a>) { visit_label_with_receiver_execution(self, statement); }
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
     }
@@ -197,8 +198,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
-        visit_new_expression_with_imports(self, new);
-        walk::walk_new_expression(self, new);
+        visit_new_expression_with_imports_and_calls(self, new);
     }
 
     fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {

@@ -191,3 +191,57 @@ const { client: cycle2 = cycle1.client } = cycle1;
 cycle1.get = replacement;
 function cyclicAcquisition(value) { value.get('key'); }
 for (const item of items) { cyclicAcquisition(client20); }
+
+import { primary as client21 } from '@vendor/valkey';
+const labelBox = { client: client21 };
+outer: { if (flag) break outer; labelBox.client = {}; }
+labelBox.client.get = replacement;
+function labeledBypass(value) { value.get('key'); }
+for (const item of items) { labeledBypass(client21); }
+
+import { primary as client22 } from '@vendor/valkey';
+const plainFreshBox = { client: client22 };
+plainFreshBox.client = {};
+plainFreshBox.client.get = replacement;
+function unlabeledFresh(value) { value.get('key'); }
+for (const item of items) { unlabeledFresh(client22); }
+
+import { primary as client23 } from '@vendor/valkey';
+const logicalFreshBox = { client: client23 };
+logicalFreshBox.client = {};
+logicalFreshBox.client &&= {};
+logicalFreshBox.client ||= {};
+logicalFreshBox.client ??= {};
+logicalFreshBox.client.get = replacement;
+function logicalFreshPreserved(value) { value.get('key'); }
+for (const item of items) { logicalFreshPreserved(client23); }
+
+import { primary as client24 } from '@vendor/valkey';
+const logicalAndBox = { client: client24 };
+logicalAndBox.client &&= {};
+logicalAndBox.client.get = replacement;
+function logicalAndUncertain(value) { value.get('key'); }
+for (const item of items) { logicalAndUncertain(client24); }
+
+import { primary as client25 } from '@vendor/valkey';
+const logicalOrBox = { client: client25 };
+logicalOrBox.client ||= {};
+logicalOrBox.client.get = replacement;
+function logicalOrUncertain(value) { value.get('key'); }
+for (const item of items) { logicalOrUncertain(client25); }
+
+import { primary as client26 } from '@vendor/valkey';
+const logicalNullBox = { client: client26 };
+logicalNullBox.client ??= {};
+logicalNullBox.client.get = replacement;
+function logicalNullUncertain(value) { value.get('key'); }
+for (const item of items) { logicalNullUncertain(client26); }
+
+import { primary as client27 } from '@vendor/valkey';
+const compoundBox = { client: client27 };
+compoundBox.client = {};
+// Unsupported compound RHS evaluation cannot establish replacement identity.
+compoundBox.client += {};
+compoundBox.client.get = replacement;
+function compoundUncertain(value) { value.get('key'); }
+for (const item of items) { compoundUncertain(client27); }
