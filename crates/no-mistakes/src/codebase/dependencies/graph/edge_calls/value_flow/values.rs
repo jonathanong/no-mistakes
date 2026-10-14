@@ -39,6 +39,7 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
                 let whole_receiver = std::cell::Cell::new(true);
+                let (read_offset, read_context) = Self::member_read_location(base);
                 let hint = member_projection::MemberProjection {
                     member,
                     outer: projection,
@@ -46,7 +47,7 @@ impl ValueFlowResolution<'_, '_> {
                     whole_receiver: projection.map_or(&whole_receiver, |hint| hint.whole_receiver),
                 };
                 let base = self.value_projected(path, base, Some(&hint));
-                self.member(base, member)
+                self.member_at(base, member, path, read_offset, read_context)
             }
             ValueExpression::Object(fields, null_prototype) => FlowValue::Object {
                 null_prototype: *null_prototype,

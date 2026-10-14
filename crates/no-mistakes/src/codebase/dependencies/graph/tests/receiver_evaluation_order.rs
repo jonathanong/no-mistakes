@@ -197,6 +197,45 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             "value.get",
             Some("primary.get"),
         ),
+        // Local aliases are read live at the member access; copied methods remain snapshots.
+        (
+            "alias-after-write",
+            Some("aliasAfterWrite"),
+            "alias.get",
+            None,
+        ),
+        ("hoisted-after-write", Some("hoisted"), "alias.get", None),
+        ("iife-after-write", Some("<anonymous:1>"), "alias.get", None),
+        (
+            "chained-after-write",
+            Some("chainedAfterWrite"),
+            "chained.get",
+            None,
+        ),
+        (
+            "object-after-write",
+            Some("objectAfterWrite"),
+            "alias.client.get",
+            None,
+        ),
+        (
+            "alias-before-write",
+            Some("aliasBeforeWrite"),
+            "alias.get",
+            Some("primary.get"),
+        ),
+        (
+            "copied-method",
+            Some("copiedMethod"),
+            "get",
+            Some("primary.get"),
+        ),
+        (
+            "live-parameter-alias",
+            Some("unrelated"),
+            "alias.set",
+            Some("replica.set"),
+        ),
         (
             "destructuring",
             Some("overlappingAfter"),

@@ -173,7 +173,9 @@ impl ValueFlowResolution<'_, '_> {
         } else {
             value
         };
-        member.map_or(value.clone(), |member| self.member(value, member))
+        member.map_or(value.clone(), |member| {
+            self.member_at(value, member, path, offset, context)
+        })
     }
     fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
         if let Some(binding) = file.imported.get(base).filter(|binding| {
