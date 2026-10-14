@@ -63,7 +63,7 @@ fn destructuring_exact_histories_separate_lhs_phases_from_rhs_reads() {
     let source = std::fs::read_to_string(fixture).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.errors.is_empty(), "{:?}", parsed.errors);
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program,
         &source,
@@ -107,7 +107,7 @@ fn destructuring_ranges_are_recorded_once_and_shared_across_aliases() {
     let source = std::fs::read_to_string(fixture).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.errors.is_empty());
+    assert!(parsed.diagnostics.is_empty());
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program,
         &source,
@@ -147,7 +147,7 @@ fn non_receiver_destructuring_keeps_early_range_storage_cold() {
     let source = std::fs::read_to_string(fixture).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.errors.is_empty());
+    assert!(parsed.diagnostics.is_empty());
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program,
         &source,
