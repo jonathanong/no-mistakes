@@ -89,3 +89,80 @@ pub(super) fn property_key(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<String
         crate::codebase::ts_source::static_property_key_name(key).map(str::to_string)
     }
 }
+
+/// Inherit later sibling ranges, never an enclosing default or assignment RHS.
+pub(in super::super) fn record_early_targets(
+    collector: &mut ImportCollector,
+    target: &AssignmentTarget<'_>,
+) {
+    if collector.prior_member_mutations.is_empty() || !collector.has_early_assignment_target(target)
+    {
+        return;
+    }
+    walk_early_targets(collector, target, &mut Vec::new());
+}
+fn walk_early_targets(
+    collector: &mut ImportCollector,
+    target: &AssignmentTarget<'_>,
+    later: &mut Vec<(u32, u32)>,
+) {
+    match target {
+        AssignmentTarget::ArrayAssignmentTarget(array) => {
+            let last = array.elements.iter().rposition(Option::is_some);
+            for (index, element) in array.elements.iter().enumerate() {
+                if let Some(element) = element {
+                    let end =
+                        (Some(index) != last || array.rest.is_some()).then_some(array.span.end);
+                    record_early_default(collector, element, end, later);
+                }
+            }
+            if let Some(rest) = &array.rest {
+                walk_early_targets(collector, &rest.target, later);
+            }
+        }
+        AssignmentTarget::ObjectAssignmentTarget(object) => {
+            for (index, property) in object.properties.iter().enumerate() {
+                if let AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) =
+                    property
+                {
+                    let end = (index + 1 < object.properties.len() || object.rest.is_some())
+                        .then_some(object.span.end);
+                    record_early_default(collector, &property.binding, end, later);
+                }
+            }
+            if let Some(rest) = &object.rest {
+                walk_early_targets(collector, &rest.target, later);
+            }
+        }
+        AssignmentTarget::StaticMemberExpression(_)
+        | AssignmentTarget::ComputedMemberExpression(_) => {
+            for (name, path) in targets(target) {
+                collector.record_early_assignment(&name, &path, later);
+            }
+        }
+        _ => {}
+    }
+}
+fn record_early_default(
+    collector: &mut ImportCollector,
+    target: &AssignmentTargetMaybeDefault<'_>,
+    end: Option<u32>,
+    later: &mut Vec<(u32, u32)>,
+) {
+    let length = later.len();
+    // The target's own default completes before its write, even though its
+    // binding is printed first. Enclosing defaults are excluded by recursion.
+    if let Some(end) = end {
+        #[cfg(feature = "test-instrumentation")]
+        if later.len() == later.capacity() {
+            collector.value_flow.early_assignment_stack_growths += 1;
+        }
+        later.push((target.span().end, end));
+    }
+    let binding = match target {
+        AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(default) => &default.binding,
+        _ => target.as_assignment_target().expect("assignment target"),
+    };
+    walk_early_targets(collector, binding, later);
+    later.truncate(length);
+}

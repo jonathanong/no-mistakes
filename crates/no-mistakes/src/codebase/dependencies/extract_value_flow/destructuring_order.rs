@@ -1,0 +1,175 @@
+use super::*;
+use mutation_history::{ValueAssignedMutations, ValueMutationHistory};
+use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
+
+/// Only reads in later destructuring targets precede the ordinary completion
+/// cutoff. RHS reads keep their original offsets and never enter these ranges.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EarlyAssignments {
+    members: FxHashMap<String, Vec<(u32, u32)>>,
+    dynamic: Vec<(u32, u32)>,
+}
+impl EarlyAssignments {
+    #[cfg(feature = "test-instrumentation")]
+    pub fn range_count(&self) -> usize {
+        self.dynamic.len() + self.members.values().map(Vec::len).sum::<usize>()
+    }
+
+    pub(super) fn merge(&mut self, source: Self) {
+        self.dynamic.extend(source.dynamic);
+        for (member, ranges) in source.members {
+            self.members.entry(member).or_default().extend(ranges);
+        }
+    }
+    pub(super) fn invalidated(
+        &self,
+        member: &str,
+        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
+        assignments: &ValueAssignedMutations,
+    ) -> bool {
+        [
+            (assignments.members.get(member), self.members.get(member)),
+            (assignments.dynamic.as_ref(), Some(&self.dynamic)),
+        ]
+        .into_iter()
+        .any(|(write, ranges)| {
+            let Some(offset) = write.and_then(|write| reader(write.context)) else {
+                return false;
+            };
+            ranges.is_some_and(|ranges| {
+                let end = ranges.partition_point(|range| range.0 <= offset);
+                end > 0 && offset < ranges[end - 1].1
+            })
+        })
+    }
+
+    fn finish(&mut self) {
+        for ranges in self
+            .members
+            .values_mut()
+            .chain(std::iter::once(&mut self.dynamic))
+        {
+            ranges.sort_unstable();
+            let mut count = 0;
+            for index in 0..ranges.len() {
+                let range = ranges[index];
+                if count > 0 && ranges[count - 1].1 >= range.0 {
+                    ranges[count - 1].1 = ranges[count - 1].1.max(range.1);
+                } else {
+                    ranges[count] = range;
+                    count += 1;
+                }
+            }
+            ranges.truncate(count);
+        }
+    }
+}
+impl ValueMutationHistory {
+    pub(super) fn finish_early_assignments(&mut self) {
+        if let Some(early) = self
+            .assigned
+            .as_mut()
+            .and_then(|assigned| assigned.early.as_mut())
+        {
+            early.finish();
+        }
+        for child in self
+            .members
+            .values_mut()
+            .chain(self.dynamic.iter_mut().map(Box::as_mut))
+        {
+            child.finish_early_assignments();
+        }
+    }
+}
+impl ImportCollector {
+    pub(in super::super) fn record_early_assignment(
+        &mut self,
+        name: &str,
+        path: &[Option<String>],
+        ranges: &[(u32, u32)],
+    ) {
+        if !self.collect_value_flow || ranges.is_empty() {
+            return;
+        }
+        let Some((member, path)) = path.split_last() else {
+            return;
+        };
+        let base = name.split('.').next().expect("write has a receiver");
+        let scope = self.callee_binding_scope(name).or_else(|| {
+            (self.imported_bindings.contains(base)
+                || self.predeclared_imported_bindings.contains(base))
+            .then_some(0)
+        });
+        let Some(scope) = scope else {
+            return;
+        };
+        let Some(mut history) = self
+            .prior_member_mutations
+            .get_mut(&scope)
+            .and_then(|names| names.get_mut(base))
+        else {
+            return;
+        };
+        for segment in path {
+            history = match segment {
+                Some(member) => history.members.entry(member.clone()).or_default(),
+                None => history.dynamic.get_or_insert_with(Default::default),
+            };
+        }
+        let early = history
+            .assigned
+            .get_or_insert_with(Default::default)
+            .early
+            .get_or_insert_with(Default::default);
+        let target = match member {
+            Some(member) => early.members.entry(member.clone()).or_default(),
+            None => &mut early.dynamic,
+        };
+        target.extend_from_slice(ranges);
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.early_assignment_range_records += ranges.len();
+        }
+    }
+}
+
+impl ImportCollector {
+    pub(super) fn has_early_assignment_target(&self, target: &AssignmentTarget<'_>) -> bool {
+        match target {
+            AssignmentTarget::StaticMemberExpression(member) => self.has_early_receiver(&member.object),
+            AssignmentTarget::ComputedMemberExpression(member) => self.has_early_receiver(&member.object),
+            AssignmentTarget::ArrayAssignmentTarget(array) => array.elements.iter().flatten().any(|target| self.has_early_default(target))
+                || array.rest.as_ref().is_some_and(|rest| self.has_early_assignment_target(&rest.target)),
+            AssignmentTarget::ObjectAssignmentTarget(object) => object.properties.iter().any(|property| {
+                matches!(property, AssignmentTargetProperty::AssignmentTargetPropertyProperty(property)
+                    if self.has_early_default(&property.binding))
+            }) || object.rest.as_ref().is_some_and(|rest| self.has_early_assignment_target(&rest.target)),
+            _ => false,
+        }
+    }
+    fn has_early_default(&self, target: &AssignmentTargetMaybeDefault<'_>) -> bool {
+        match target {
+            AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(default) => {
+                self.has_early_assignment_target(&default.binding)
+            }
+            _ => target
+                .as_assignment_target()
+                .is_some_and(|target| self.has_early_assignment_target(target)),
+        }
+    }
+    fn has_early_receiver(&self, object: &Expression<'_>) -> bool {
+        match crate::codebase::ts_source::unwrap_ts_wrappers(object) {
+            Expression::StaticMemberExpression(member) => self.has_early_receiver(&member.object),
+            Expression::ComputedMemberExpression(member) => self.has_early_receiver(&member.object),
+            Expression::Identifier(identifier) => {
+                let name = identifier.name.as_str();
+                let scope = self.callee_binding_scope(name).unwrap_or(0);
+                self.prior_member_mutations
+                    .get(&scope)
+                    .is_some_and(|names| names.contains_key(name))
+            }
+            _ => false,
+        }
+    }
+}

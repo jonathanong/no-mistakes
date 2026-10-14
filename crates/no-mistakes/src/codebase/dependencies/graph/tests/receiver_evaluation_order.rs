@@ -167,6 +167,51 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             "value.get",
             Some("primary.get"),
         ),
+        (
+            "destructuring",
+            Some("overlappingAfter"),
+            "client.get",
+            None,
+        ),
+        ("destructuring", Some("after"), "client.get", None),
+        (
+            "destructuring",
+            Some("before"),
+            "client.get",
+            Some("replica.get"),
+        ),
+        (
+            "destructuring",
+            Some("rhs"),
+            "client.get",
+            Some("scoped.get"),
+        ),
+        ("destructuring", Some("afterRhs"), "client.get", None),
+        (
+            "destructuring",
+            Some("untouched"),
+            "client.info",
+            Some("session.info"),
+        ),
+        ("destructuring", Some("copied"), "get", Some("nested.get")),
+        ("destructuring", Some("copiedAfter"), "get", None),
+        ("destructuring", Some("nestedAfter"), "client.get", None),
+        (
+            "destructuring",
+            Some("enclosingDefault"),
+            "client.get",
+            Some("standalone.get"),
+        ),
+        ("destructuring", Some("outerAfter"), "client.get", None),
+        ("destructuring", Some("arrayAfter"), "client.get", None),
+        ("destructuring", Some("computedAfter"), "client.get", None),
+        ("destructuring", Some("dynamicAfter"), "client.get", None),
+        (
+            "destructuring",
+            Some("ownBefore"),
+            "client.get",
+            Some("ownDefault.get"),
+        ),
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));
         let line = match callee {

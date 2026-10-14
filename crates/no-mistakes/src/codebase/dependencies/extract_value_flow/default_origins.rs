@@ -78,6 +78,7 @@ impl ImportCollector {
             if component.is_empty() {
                 continue;
             }
+            history.finish_early_assignments();
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {
                 retained
