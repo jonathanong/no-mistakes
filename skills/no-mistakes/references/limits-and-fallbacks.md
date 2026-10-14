@@ -95,7 +95,7 @@ configs participate via their own edge kinds (`md`, `ci`, `workflow`,
 `terraform`, `process`) and are not walked for TS/JS import-style edges.
 
 For GitHub Actions, configure
-[`github-actions-job-timeouts`](../../../docs/rules/github-actions-job-timeouts.md)
+[`github-actions-job-timeouts`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md)
 with `rejectJobAtOrAboveStepSum: true` to keep the job deadline below the sum
 of at least two steps' supported literal timeout bounds. Every step needs a
 supported literal bound for that comparison; conditional and matrix steps

@@ -1,5 +1,11 @@
 checks:
   commands:
+    - name: skills-self-contained
+      include:
+        - "skills/**/*.md"
+        - tests/js/skills-self-contained.test.js
+      command: [pnpm, exec, vitest, run, tests/js/skills-self-contained.test.js]
+      fileArgs: none
     # Explicit opt-in: integration sources are modules of shared Cargo suites.
     - name: rust-integration-validation
       include:

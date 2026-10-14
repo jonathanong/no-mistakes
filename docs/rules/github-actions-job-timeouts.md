@@ -24,7 +24,11 @@ matrix steps count; composite action internals are not expanded, so only the
 caller's timeout is considered.
 
 This sum check keeps the job-level fail-fast deadline below the full
-end-to-end budget implied by its steps. The job timeout must be at least the
+end-to-end budget implied by its top-level steps; it compares their literal
+timeout bounds and does not estimate concurrent runtime budgets. A parallel
+group whose outer step has no supported literal timeout makes the job's sum
+unprovable, so the comparison skips that job. When both `rejectStepExceedingJob` and
+`rejectJobAtOrAboveStepSum` are enabled, the job timeout must be at least the
 longest step timeout and strictly less than the sum of all step timeouts.
 Neither `maxMinutes` nor `allow` entries bypass the sum check.
 
@@ -87,10 +91,11 @@ jobs:
         timeout-minutes: 8
 ```
 
-Set a literal job timeout that is at least the longest step and strictly below
-the sum. Under the example cap of 10, valid values are 8 through 10. Use an
-`allow` entry with a higher cap only when the job legitimately needs to exceed
-that cap; it does not change the sum requirement.
+With both timeout relationship checks enabled, set a literal job timeout that
+is at least the longest step and strictly below the sum. Under the example cap
+of 10, valid values are 8 through 10. Use an `allow` entry with a higher cap
+only when the job legitimately needs to exceed that cap; it does not change
+the sum requirement.
 
 ## Related rules
 

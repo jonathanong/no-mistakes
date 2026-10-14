@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+mod job_lines;
 mod scan;
 mod step_sum;
 mod yaml;

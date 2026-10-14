@@ -315,3 +315,63 @@ fn step_sum_option_composes_with_step_exceeding_job_check() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(findings[0].message.contains("exceeding its job timeout"));
 }
+
+#[test]
+fn quoted_job_keys_preserve_job_locations_and_line_suppression() {
+    let findings = run(
+        &fixture("step-sum-quoted"),
+        "rejectJobAtOrAboveStepSum: true",
+    );
+    let mut locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [("anchored", 58), ("visible#colon:job", 51)],
+        "{findings:?}"
+    );
+    // Existing job diagnostics share these locations, including quoted aliases.
+    let findings = run(&fixture("step-sum-quoted"), "maxMinutes: 9");
+    let mut locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [("anchored", 58), ("visible#colon:job", 51)],
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn job_locations_support_indented_root_and_inline_mapping() {
+    let options = "rejectJobAtOrAboveStepSum: true";
+    let findings = run(&fixture("step-sum-indented"), options);
+    let mut locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [("anchored", 60), ("visible#colon:job", 53)],
+        "{findings:?}"
+    );
+    let findings = run(&fixture("step-sum-inline"), options);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 3);
+}
+
+#[test]
+fn non_string_explicit_keys_do_not_steal_real_job_locations() {
+    let findings = run(
+        &fixture("step-sum-explicit"),
+        "rejectJobAtOrAboveStepSum: true",
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].target.as_deref(), Some("real#job"));
+    assert_eq!(findings[0].line, 12);
+}

@@ -1,0 +1,3 @@
+name: Inline jobs
+# Inline mapping findings use the jobs declaration when individual lines do not exist.
+jobs: {inline: {timeout-minutes: 10, steps: [{run: echo, timeout-minutes: 4}, {run: echo, timeout-minutes: 6}]}}

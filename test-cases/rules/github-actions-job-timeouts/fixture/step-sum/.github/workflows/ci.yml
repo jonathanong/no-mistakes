@@ -110,3 +110,14 @@ jobs:
         timeout-minutes: 1
       - run: echo ignored
         timeout-minutes: 1
+  parallel-without-caller-timeout:
+    timeout-minutes: 20
+    steps:
+      # A parallel group's child timeouts are not a literal top-level bound.
+      - parallel:
+          - run: echo branch one
+            timeout-minutes: 1
+          - run: echo branch two
+            timeout-minutes: 1
+      - run: echo after group
+        timeout-minutes: 1
