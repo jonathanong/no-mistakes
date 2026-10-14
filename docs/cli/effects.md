@@ -100,5 +100,9 @@ read. For example, `const alias = client; alias.get()` retains the original
 `get` target after only a sibling `set` write. Matching and dynamic writes still
 invalidate live members. A copied method such as `const get = alias.get` keeps
 its acquisition snapshot; copying a container keeps descendant members live.
+For a direct, module-level arrow invocation executed once, a copied method
+also keeps its original target when that same body writes the member afterward.
+Calls inside loops, repeatable functions, and instance initializers remain
+unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.

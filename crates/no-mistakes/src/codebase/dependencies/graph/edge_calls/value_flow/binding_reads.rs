@@ -24,6 +24,7 @@ impl ValueFlowResolution<'_, '_> {
                 offset: call.end.saturating_sub(1),
                 context: call.context,
                 owner: (file.to_path_buf(), owner),
+                once: call.once,
             });
         }
     }

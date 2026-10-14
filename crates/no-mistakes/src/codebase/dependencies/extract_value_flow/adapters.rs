@@ -126,6 +126,7 @@ impl ImportCollector {
             arguments: std::sync::Arc::new(arguments),
             bound: false,
             spread_at,
+            once: false,
         });
     }
 }
