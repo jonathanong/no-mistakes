@@ -97,6 +97,14 @@ fn acquire_lock_with_budget(
     options: InvocationOptions,
     invocation_deadline: Option<Deadline>,
 ) -> Result<std::fs::File> {
+    // Path resolution may consume the budget before either a fail-fast or free open.
+    if invocation_deadline.is_some_and(|deadline| deadline.expires_at <= clock::now()) {
+        return Err(InvocationError::new(
+            InvocationErrorKind::CommandTimeout,
+            "invocation deadline elapsed during lock acquisition",
+        )
+        .into());
+    }
     let lock_timeout = match (invocation_deadline, options.lock_timeout) {
         (Some(deadline), Some(lock)) => Some(
             deadline
@@ -112,7 +120,12 @@ fn acquire_lock_with_budget(
             if invocation_deadline.is_some_and(|deadline| deadline.expires_at <= clock::now())
                 && error
                     .downcast_ref::<InvocationError>()
-                    .is_some_and(|error| error.kind() == InvocationErrorKind::LockTimeout) =>
+                    .is_some_and(|error| {
+                        matches!(
+                            error.kind(),
+                            InvocationErrorKind::LockTimeout | InvocationErrorKind::LockBusy
+                        )
+                    }) =>
         {
             let timeout = invocation_deadline
                 .expect("expired invocation deadline")

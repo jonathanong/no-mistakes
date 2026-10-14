@@ -328,3 +328,91 @@ fn oversized_shared_deadline_fails_before_lock_path_side_effects() {
         .contains("invocation timeout is too large"));
     assert!(!touched.get());
 }
+
+// A native channel timeout starts after the guard captures its deadline, so
+// path resolution necessarily consumes that budget without polling or sleeps.
+fn resolve_after_budget(path: &std::path::Path, budget: Duration) -> Result<std::path::PathBuf> {
+    let (sender, receiver) = std::sync::mpsc::channel::<()>();
+    let outcome = receiver.recv_timeout(budget);
+    drop(sender);
+    assert_eq!(outcome, Err(std::sync::mpsc::RecvTimeoutError::Timeout));
+    Ok(path.to_path_buf())
+}
+
+#[test]
+fn elapsed_resolution_budget_precedes_fail_fast_lock_contention() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("held.lock");
+    let holder = acquire_lock(&path, None, false).unwrap();
+    let budget = Duration::from_millis(10);
+    let result = InvocationGuard::acquire_resolving_path(
+        InvocationOptions {
+            invocation_timeout: Some(budget),
+            fail_on_lock: true,
+            ..InvocationOptions::default()
+        },
+        false,
+        || resolve_after_budget(&path, budget),
+    );
+    drop(holder);
+    let error = result.err().expect("expired acquisition must fail");
+    assert_eq!(
+        error.downcast_ref::<InvocationError>().unwrap().kind(),
+        InvocationErrorKind::CommandTimeout
+    );
+    assert!(active_deadline().read().unwrap().is_none());
+}
+
+#[test]
+fn elapsed_resolution_budget_does_not_create_a_lock_file() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("never-opened.lock");
+    let budget = Duration::from_millis(10);
+    let result = InvocationGuard::acquire_resolving_path(
+        InvocationOptions {
+            invocation_timeout: Some(budget),
+            ..InvocationOptions::default()
+        },
+        false,
+        || resolve_after_budget(&path, budget),
+    );
+    let error = result.err().expect("expired acquisition must fail");
+    assert_eq!(
+        error.downcast_ref::<InvocationError>().unwrap().kind(),
+        InvocationErrorKind::CommandTimeout
+    );
+    assert!(!path.exists(), "expired work must not open the lock path");
+}
+
+#[test]
+fn unexpired_fail_fast_contention_keeps_its_original_error_kind() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("held.lock");
+    let holder = acquire_lock(&path, None, false).unwrap();
+    let result = InvocationGuard::acquire_at_path(
+        InvocationOptions {
+            invocation_timeout: Some(Duration::from_secs(30)),
+            fail_on_lock: true,
+            ..InvocationOptions::default()
+        },
+        &path,
+        false,
+    );
+    drop(holder);
+    let error = result
+        .err()
+        .expect("held lock must reject fail-fast acquisition");
+    assert_eq!(
+        error.downcast_ref::<InvocationError>().unwrap().kind(),
+        InvocationErrorKind::LockBusy
+    );
+}
