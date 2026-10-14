@@ -39,9 +39,16 @@ impl ValueFlowResolution<'_, '_> {
         path: &std::path::Path,
         expression: &ValueExpression,
     ) -> (u32, Option<CallableId>) {
-        if let Some((file, offset, context, owner)) = &self.invocation_read {
-            if file == path && *context == Some(*owner) {
-                return (*offset, *context);
+        if let (
+            Some((file, offset, _, owner)),
+            ValueExpression::Named {
+                context: Some(read_context),
+                ..
+            },
+        ) = (&self.invocation_read, expression)
+        {
+            if file == path && read_context == owner {
+                return (*offset, Some(*read_context));
             }
         }
         match expression {
