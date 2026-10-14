@@ -34,29 +34,13 @@ impl ValueFlowResolution<'_, '_> {
         value
     }
 
-    pub(super) fn member_read_location(
-        &self,
-        path: &std::path::Path,
-        expression: &ValueExpression,
-    ) -> (u32, Option<CallableId>) {
-        if let (
-            Some(read),
-            ValueExpression::Named {
-                context: Some(read_context),
-                ..
-            },
-        ) = (&self.invocation_read, expression)
-        {
-            if read.file == path && read.owner.0 == path && *read_context == read.owner.1 {
-                return (read.offset, Some(*read_context));
-            }
-        }
+    pub(super) fn member_read_location(expression: &ValueExpression) -> (u32, Option<CallableId>) {
         match expression {
             ValueExpression::Named {
                 offset, context, ..
             } => (*offset, *context),
             ValueExpression::Member(base, _) | ValueExpression::Awaited(base) => {
-                self.member_read_location(path, base)
+                Self::member_read_location(base)
             }
             _ => (0, None),
         }

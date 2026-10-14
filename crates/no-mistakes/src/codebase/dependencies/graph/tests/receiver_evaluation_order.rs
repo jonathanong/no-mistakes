@@ -22,6 +22,36 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
     .unwrap();
     for (file, caller, callee, export) in [
         (
+            "destructuring-scopes",
+            Some("scopeApi"),
+            "client.get",
+            None, // Named class self-binding remains a pre-existing graph limit.
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeBlock"),
+            "client.get",
+            Some("block.get"),
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeComputed"),
+            "client.get",
+            Some("computedScope.get"),
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeUpdated"),
+            "client.get",
+            Some("updatedScope.get"),
+        ),
+        (
+            "destructuring-scopes",
+            Some("scopeMatching"),
+            "client.get",
+            None,
+        ),
+        (
             "supplied-context",
             Some("before"),
             "client.get",
@@ -174,6 +204,8 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             "alias.get",
             None,
         ),
+        ("hoisted-after-write", Some("hoisted"), "alias.get", None),
+        ("iife-after-write", Some("<anonymous:1>"), "alias.get", None),
         (
             "chained-after-write",
             Some("chainedAfterWrite"),
@@ -203,6 +235,111 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             Some("unrelated"),
             "alias.set",
             Some("replica.set"),
+        ),
+        (
+            "destructuring",
+            Some("overlappingAfter"),
+            "client.get",
+            None,
+        ),
+        ("destructuring", Some("after"), "client.get", None),
+        (
+            "destructuring",
+            Some("before"),
+            "client.get",
+            Some("replica.get"),
+        ),
+        (
+            "destructuring",
+            Some("rhs"),
+            "client.get",
+            Some("scoped.get"),
+        ),
+        ("destructuring", Some("afterRhs"), "client.get", None),
+        (
+            "destructuring",
+            Some("untouched"),
+            "client.info",
+            Some("session.info"),
+        ),
+        ("destructuring", Some("copied"), "get", Some("nested.get")),
+        ("destructuring", Some("copiedAfter"), "get", None),
+        ("destructuring", Some("nestedAfter"), "client.get", None),
+        (
+            "destructuring",
+            Some("enclosingDefault"),
+            "client.get",
+            Some("standalone.get"),
+        ),
+        ("destructuring", Some("outerAfter"), "client.get", None),
+        ("destructuring", Some("arrayAfter"), "client.get", None),
+        ("destructuring", Some("computedAfter"), "client.get", None),
+        ("destructuring", Some("dynamicAfter"), "client.get", None),
+        (
+            "destructuring",
+            Some("ownBefore"),
+            "client.get",
+            Some("ownDefault.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("nestedRhs"),
+            "first.get",
+            Some("inner.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("nestedRhs"),
+            "second.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterInner"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterOuter"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("source"),
+            "client.get",
+            Some("rhsNested.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("rootRhs"),
+            "client.get",
+            Some("root.get"),
+        ),
+        (
+            "destructuring-nested",
+            Some("afterNested"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterRoot"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterFunction"),
+            "client.get",
+            None,
+        ),
+        (
+            "destructuring-nested",
+            Some("afterUpdate"),
+            "client.get",
+            None,
         ),
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));
