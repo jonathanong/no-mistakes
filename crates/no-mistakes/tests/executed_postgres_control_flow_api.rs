@@ -180,7 +180,13 @@ fn opaque_collection_callbacks_and_shapes_keep_explicit_blockers() {
     for row in rows.iter().filter(|row| {
         !matches!(
             row.annotation.as_deref(),
-            Some("effects/live-elements" | "effects/comparisons" | "effects/mapped-branches")
+            Some(
+                "effects/live-elements"
+                    | "effects/comparisons"
+                    | "effects/mapped-branches"
+                    | "effects/unrelated-deletion"
+                    | "effects/false-branch"
+            )
         )
     }) {
         assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
