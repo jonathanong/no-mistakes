@@ -25,17 +25,20 @@ impl ValueMutationHistory {
         reads: &[nested::ReceiverRead],
     ) -> bool {
         let mut node = self;
-        for (member, read) in path.iter().zip(reads) {
+        for (index, (member, read)) in path.iter().zip(reads).enumerate() {
             let Some((offset, context)) = read else {
                 return false;
             };
             let Some(member) = member else {
                 return false;
             };
-            if node
-                .assigned
-                .as_ref()
-                .is_some_and(|assigned| assigned.definitely_replaced(member, *offset, *context))
+            // A distinct outer container may still retain the old descendant.
+            // Only replacement of the actual acquired receiver severs this path.
+            if index + 1 == path.len()
+                && node
+                    .assigned
+                    .as_ref()
+                    .is_some_and(|assigned| assigned.definitely_replaced(member, *offset, *context))
             {
                 return true;
             }

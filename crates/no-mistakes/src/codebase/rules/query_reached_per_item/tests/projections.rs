@@ -238,4 +238,17 @@ fn conditional_and_unknown_reference_writes_do_not_sever_original_receivers() {
         [12, 30],
         "{findings:#?}"
     );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file.starts_with("src/nested-receiver-containers/"))
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("src/nested-receiver-containers/copied-method.mts", 9),
+            ("src/nested-receiver-containers/replaced-terminal.mts", 8),
+            ("src/nested-receiver-containers/sibling.mts", 8),
+        ],
+        "{findings:#?}"
+    );
 }

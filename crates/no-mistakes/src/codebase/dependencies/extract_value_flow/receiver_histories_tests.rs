@@ -89,3 +89,36 @@ fn populated_late_union_preserves_exact_restoration_and_phase_evidence() {
         }
     }
 }
+
+#[test]
+fn fresh_ancestor_does_not_prove_a_distinct_descendant_reference() {
+    for (case, descendant, replaced) in [
+        ("retained-object", "client", false),
+        ("retained-array", "0", false),
+        ("replaced-terminal", "client", true),
+    ] {
+        let source = std::fs::read_to_string(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers")
+            .join(format!("{case}.mts"))).unwrap();
+        let allocator = Allocator::default();
+        let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let facts = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            true,
+        );
+        let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["box"];
+        let read = Some((source.len() as u32, None));
+        assert_eq!(
+            history.reference_may_be_replaced(
+                &[Some("wrapper".into()), Some(descendant.into())],
+                &[read, read]
+            ),
+            replaced,
+            "{case}"
+        );
+    }
+}

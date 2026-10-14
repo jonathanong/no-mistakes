@@ -176,9 +176,8 @@ and RHS bodies, so it does not leak from an enclosing assignment into deferred
 updates; no extra fresh-state mechanism is added.
 
 The isolated instrumented build at 8eec845 was stopped below the 500 MiB disk
-floor before the library test harness completed. Its manifest, raw logs and
-abandoned-target inventory remain under `/workspace/quality-1959-evidence`;
-only the private generated target was removed with root authorization. This
+floor before the library test harness completed. Diagnostic evidence was retained
+privately; only the abandoned private generated target was removed. This
 provided no local semantic or coverage pass. CI retains the unchanged weighted
 CRAP command and failure status while publishing its text report and LCOV as a
 small diagnostic artifact, because the connected large-job log route fails.
@@ -213,8 +212,7 @@ The ed1d14d run passed semantic tests, documentation tests, coverage generation 
 The diagnostic artifact identifies one weighted-gate offender:
 ValueAssignedMutations::merge, CC 9, coverage 0%, CRAP 90. The unchanged threshold
 is 30. Its text summary/provenance is saved in `weighted-crap-ed1-summary.txt`;
-the full report and LCOV remain in CI artifact 11932317069 and locally under
-`/workspace/quality-1959-evidence/ed1-ci`. The ZIP hash matches GitHub's artifact
+the full report and LCOV remain in CI artifact 11932317069. The ZIP hash matches GitHub's artifact
 digest. The defensive populated-component merge path was not exercised by prior
 late-union controls, which contained only prefix writes.
 
@@ -235,3 +233,28 @@ fixtures are retained. Root reviewed the narrow resolution before publication.
 The earlier 663f80e quality results do not validate this combined head; fresh
 semantic, coverage, quality and review gates remain required. No unrelated
 freshness merge or local compiler is used.
+
+
+A later review identified an unsafe ancestor cutoff: replacing a wrapper with a
+fresh object or array does not prove that its descendant receiver changed. The
+wrapper can retain the original client. The correction admits a guaranteed
+replacement cutoff only at the final acquired-reference segment; traversal still
+borrows the same exact-history trie and recorded acquisition offsets. No new
+heap tracker, AST pass, alias inventory, history copy or per-write graph walk is
+added. A direct cutoff assertion uses extracted saved-fixture histories to reject
+object/array ancestor cutoffs while retaining explicit terminal replacement.
+
+The six separate `nested-receiver-containers/*.mts` controls require original-receiver
+invalidation for retained object/array descendants and a wrapper acquired before
+replacement. Explicit terminal replacement, a method copied before replacement,
+and an unrelated sibling write retain imported get proofs. Existing assertions
+remain unchanged. The verified frozen 917 graph reports primary.get for all six
+controls, each in an independent source file so earlier mutations cannot contaminate
+positive controls. A readable copy of the raw output, its original SHA-256 and
+explicit path-normalization label are preserved in `retained-container-baseline.txt`.
+No internal workspace or cache paths occur in that copy. The first,
+second and acquired-wrapper cases are therefore part of the original nested-alias
+precision gap on that baseline, and unsound within this PR's intended mutation
+behavior. No claim is made that the new expectations passed on the frozen base.
+More general replacement-RHS shape/heap tracking is not implemented. Candidate
+semantic and quality validation is pending after this correction.
