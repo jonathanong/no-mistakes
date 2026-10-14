@@ -105,9 +105,8 @@ impl ValueFlowResolution<'_, '_> {
                     }
                 }
                 OriginKind::Receiver(..) | OriginKind::ReceiverOwnedContexts(..) => {}
-                OriginKind::InvocationReceiver { file: source, offset: read_offset, context: read_context, owner, history } => {
-                    if !receivers_only && self.invocation_read.is_none() && (source != file || context != Some(*owner)
-                        || history.invalidated(&[], &[], *read_offset, *read_context, false)) {
+                origin @ OriginKind::InvocationReceiver { .. } => {
+                    if self.invocation_receiver_invalidated(origin, file, context, receivers_only) {
                         return true;
                     }
                 }
@@ -127,5 +126,30 @@ impl ValueFlowResolution<'_, '_> {
             }
         }
         false
+    }
+
+    fn invocation_receiver_invalidated(
+        &self,
+        origin: &OriginKind,
+        file: &std::path::Path,
+        context: Option<CallableId>,
+        receivers_only: bool,
+    ) -> bool {
+        if receivers_only || self.invocation_read.is_some() {
+            return false;
+        }
+        let OriginKind::InvocationReceiver {
+            file: source,
+            offset,
+            context: read_context,
+            owner,
+            history,
+        } = origin
+        else {
+            return false;
+        };
+        source != file
+            || context != Some(*owner)
+            || history.invalidated(&[], &[], *offset, *read_context, false)
     }
 }
