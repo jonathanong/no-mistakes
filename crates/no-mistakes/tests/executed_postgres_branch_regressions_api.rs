@@ -143,3 +143,43 @@ fn ordered_operand_effects_precede_nested_executor_events() {
         assert!(!row.only_value_placeholders, "{row:?}");
     }
 }
+
+#[test]
+fn unvisited_branch_local_callbacks_never_certify_a_lexical_prefix() {
+    let rows = extract("control-flow-branch-local-callback.ts");
+    assert_eq!(rows.len(), 23, "{rows:?}");
+    for row in rows
+        .iter()
+        .filter(|row| matches!(row.line, 51 | 58 | 65) || row.line >= 106)
+    {
+        assert!(!row.complete && !row.only_value_placeholders, "{rows:?}");
+    }
+    // Dead containers, shadowed aliases and TDZ aliases do not execute bodies.
+    for row in rows.iter().filter(|row| row.line > 70 && row.line < 105) {
+        assert!(row.complete, "{rows:?}");
+        assert_eq!(
+            row.kind,
+            no_mistakes::codebase::postgres::EmbeddedSqlKind::ImmutableLocal
+        );
+    }
+    let callback = rows.iter().find(|row| row.line == 8).unwrap();
+    assert!(
+        !callback.complete && !callback.only_value_placeholders,
+        "{rows:?}"
+    );
+    let reachable = rows.iter().find(|row| row.line == 23).unwrap();
+    assert!(reachable.complete, "{rows:?}");
+    assert_eq!(reachable.sql_text.as_deref(), Some("SELECT 1"));
+    let uninvoked = rows.iter().find(|row| row.line == 34).unwrap();
+    // Retaining a declaration does not manufacture an evaluator invocation.
+    assert!(uninvoked.complete, "{rows:?}");
+    assert_eq!(
+        uninvoked.kind,
+        no_mistakes::codebase::postgres::EmbeddedSqlKind::ImmutableLocal
+    );
+    let hoisted = rows.iter().find(|row| row.line == 43).unwrap();
+    assert!(
+        !hoisted.complete && !hoisted.only_value_placeholders,
+        "{rows:?}"
+    );
+}

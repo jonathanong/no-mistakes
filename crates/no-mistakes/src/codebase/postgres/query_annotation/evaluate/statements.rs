@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 mod bindings;
 pub(super) mod effects;
+mod failed_bindings;
+mod failed_values;
 mod updates;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -37,17 +39,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 // even when their local parameter copies are poisoned below.
                 self.invalidate_live_builders();
             }
-            for value in self.scopes[*env].values_mut() {
-                *value = unsupported.clone();
-            }
+            self.poison_scope(
+                *env,
+                &unsupported,
+                depth,
+                self.files[path].facts.precise_records,
+            );
         }
         for step in steps {
             if let Step::Hoisted(name, expr) = step {
-                let value = if supported {
-                    self.expr(expr, path, env, depth, generic).exposed()
-                } else {
-                    unsupported.clone()
-                };
+                let value = self
+                    .binding_value(expr, path, env, (depth, generic), (supported, &unsupported))
+                    .exposed();
                 self.write_captured_binding_evaluated(*env, name, &value, depth);
             }
         }

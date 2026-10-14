@@ -3,6 +3,23 @@ use super::effects;
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn binding_value(
+        &mut self,
+        expr: &Expr,
+        path: &Path,
+        env: &Environment,
+        context: (u8, bool),
+        state: (bool, &Value),
+    ) -> Value {
+        match (state.0, expr) {
+            (true, _) => self.expr(expr, path, env, context.0, context.1),
+            (false, _) if self.files[path].facts.precise_records => {
+                self.failed_binding(expr, path, *env, state.1, context.0)
+            }
+            _ => state.1.clone(),
+        }
+    }
+
     pub(super) fn bind_step(
         &mut self,
         name: &str,
@@ -19,11 +36,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             && self.effect_can_mutate(expr, path, *env)
             && !self.proven_append_only_effect(expr, path, *env, depth, generic);
         let live_before = may_mutate.then(|| self.live_builder_values());
-        let value = if supported {
-            self.expr(expr, path, env, depth, generic)
-        } else {
-            unsupported.clone()
-        };
+        let value = self.binding_value(expr, path, env, context, (supported, unsupported));
         let handled = self.handled_deletion_effect(expr, &value, path, *env);
         let value = value.exposed();
         self.write_captured_binding_evaluated(*env, name, &value, depth);
