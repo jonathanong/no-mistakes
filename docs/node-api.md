@@ -133,6 +133,8 @@ overflow makes the entire executor site incomplete; a favorable read alternative
 cannot certify the others. Group alternatives by `fileName` and `line`, parse
 every statement, and inspect nested effects (including DML inside `WITH`) before
 classifying the site as read-only. SQL construction alone never proves a read.
+Conditional array cardinality stays unknown across slot writes; collection
+projection cannot use internal shape metadata to skip possible callback effects.
 Array intrinsic projections remain incomplete when a supplied source exposes
 `Array.prototype`, an `Array` constructor reference, instance `constructor`,
 `__proto__`, or `getPrototypeOf`, including computed access, aliases, and read-only

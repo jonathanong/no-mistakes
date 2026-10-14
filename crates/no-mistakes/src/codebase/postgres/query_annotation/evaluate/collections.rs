@@ -28,6 +28,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 _ => Value::Failure("unbounded-collection-shape"),
             });
         };
+        if self.conditional_collection_shape(*id) {
+            self.invalidate_live_builders();
+            self.opaque_callbacks(args, depth);
+            return Some(Value::Failure("conditional-collection-shape"));
+        }
         if self.invalidated_builders.contains(id)
             || self
                 .deleted_argument_slots
@@ -121,6 +126,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         };
         Some(Value::Evaluated(Box::new(result), true))
+    }
+
+    pub(super) fn conditional_collection_shape(&self, id: u64) -> bool {
+        self.argument_objects[&id] == [Value::Failure("conditional-collection-shape")]
     }
 }
 

@@ -52,7 +52,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Value::Failure("sparse-or-opaque-collection-shape")
             }
             Value::Arguments(id) | Value::Array(id) if name == "length" => {
-                if self.argument_objects[&id] == [Value::Failure("conditional-collection-shape")] {
+                if self.conditional_collection_shape(id) {
                     Value::Failure("conditional-collection-shape")
                 } else if self.invalidated_builders.contains(&id) {
                     Value::Unknown

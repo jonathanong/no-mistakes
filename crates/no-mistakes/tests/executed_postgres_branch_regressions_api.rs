@@ -64,3 +64,23 @@ fn branch_returned_private_functions_remain_safely_incomplete() {
         );
     }
 }
+
+#[test]
+fn conditional_shapes_cannot_skip_later_callback_mutations() {
+    let rows = extract("control-flow-conditional-callback-shapes.ts");
+    assert_eq!(rows.len(), 8, "{rows:?}");
+    for row in rows {
+        if matches!(row.line, 35 | 44) {
+            assert!(row.complete, "{row:?}");
+            assert_eq!(
+                row.sql_text.as_deref(),
+                Some("SELECT 1; DELETE FROM records")
+            );
+        } else if row.line == 51 {
+            // Both push-length alternatives were already recovered before the fix.
+            assert!(row.complete, "{row:?}");
+        } else {
+            assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
+        }
+    }
+}

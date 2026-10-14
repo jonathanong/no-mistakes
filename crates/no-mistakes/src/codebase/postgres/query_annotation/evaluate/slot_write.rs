@@ -30,6 +30,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 return Value::Evaluated(Box::new(stored), false);
             }
         };
+        if self.conditional_collection_shape(id) {
+            // A known slot write cannot recover a divergent array cardinality.
+            self.invalidate_builders(&[Value::Array(id)]);
+        }
         let previously_invalidated = self.invalidated_builders.contains(&id);
         let disconnected = self.disconnected_argument_slots.contains(&(id, index));
         let possibly_disconnected = self.deleted_argument_slots.contains(&(id, None))
