@@ -56,9 +56,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .into(),
             ),
             Value::References(values) => self.failed_scope_callbacks(Value::References(values)),
-            Value::Array(id) => {
+            value @ (Value::Array(id) | Value::Arguments(id)) => {
                 self.failed_scope_array(id, unsupported, depth, seen);
-                Value::Array(id)
+                value
             }
             _ => unsupported.clone(),
         }
@@ -74,7 +74,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut callbacks = Vec::new();
         while let Some(value) = pending.pop() {
             match value {
-                Value::Array(id) if seen.insert(id) => pending.extend(self.live_callbacks(id)),
+                Value::Array(id) | Value::Arguments(id) if seen.insert(id) => {
+                    pending.extend(self.live_callbacks(id))
+                }
                 Value::Record(values, _) | Value::Object(values) | Value::References(values) => {
                     pending.extend(values)
                 }

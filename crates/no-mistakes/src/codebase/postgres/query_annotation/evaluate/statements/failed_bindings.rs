@@ -30,6 +30,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Some(
                     value @ (Value::Record(_, _)
                     | Value::Object(_)
+                    | Value::Arguments(_)
                     | Value::Array(_)
                     | Value::References(_)),
                 ) => {
@@ -46,6 +47,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .into();
                 Value::Record(values, keys.clone())
             }
+            Expr::Alternatives(children) | Expr::Container(children) => Value::References(
+                children
+                    .iter()
+                    .map(|child| self.failed_binding(child, path, env, unsupported, depth))
+                    .collect::<Vec<_>>()
+                    .into(),
+            ),
             Expr::Object(children) => Value::Object(
                 children
                     .iter()
@@ -87,9 +95,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut callbacks = Vec::new();
         while let Some(expr) = pending.pop() {
             match expr {
-                Expr::Record(children, _) | Expr::Object(children) | Expr::Array(children) => {
-                    pending.extend(children)
-                }
+                Expr::Record(children, _)
+                | Expr::Object(children)
+                | Expr::Array(children)
+                | Expr::Alternatives(children)
+                | Expr::Container(children) => pending.extend(children),
                 Expr::Sequence(children) => pending.extend(children.last()),
                 Expr::Member(child, name) if name.is_empty() => pending.push(child),
                 Expr::Function(_) | Expr::Name(_) => {

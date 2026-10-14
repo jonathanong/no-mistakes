@@ -249,3 +249,27 @@ fn opaque_object_literals_keep_inert_callback_references_for_actual_calls() {
         assert_eq!(row.complete, matches!(row.line, 34 | 41 | 45), "{rows:?}");
     }
 }
+
+#[test]
+fn conditional_failed_bindings_keep_actual_callback_identity() {
+    let rows = extract("control-flow-conditional-callback-bindings.ts");
+    assert_eq!(rows.len(), 9, "{rows:?}");
+    // Retention is inert: unused/static-false alternatives must not execute.
+    for row in &rows {
+        assert_eq!(
+            row.complete,
+            !matches!(row.line, 6 | 12 | 31 | 37 | 43 | 49),
+            "{rows:?}"
+        );
+    }
+}
+
+#[test]
+fn poisoned_arguments_preserve_actual_callback_identity() {
+    let rows = extract("control-flow-poisoned-arguments-callbacks.ts");
+    assert_eq!(rows.len(), 5, "{rows:?}");
+    // An arguments container alone must not manufacture callback execution.
+    for row in &rows {
+        assert_eq!(row.complete, !matches!(row.line, 8 | 31), "{rows:?}");
+    }
+}
