@@ -56,12 +56,14 @@ fn member_writes_do_not_rebuild_reference_links() {
         true,
     );
     assert_eq!(facts.value_flow.reference_link_constructions, 515);
+    assert_eq!(facts.value_flow.reference_component_links, 3);
+    assert!(facts.value_flow.reference_component_root_steps <= 2 * 257 + 3 * 3 + 4 * 2);
     let assigned = facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["primary"]
         .assigned
         .as_ref()
         .unwrap();
     assert_eq!(assigned.members.len(), 257);
-    assert_eq!(assigned.merge_reinsertions, 1);
+    assert_eq!(assigned.merge_reinsertions, 0);
     for name in ["client", "alias", "late"] {
         let binding = facts
             .value_flow
@@ -202,3 +204,88 @@ fn late_default_exports_capture_an_already_mutated_receiver() {
 
 #[path = "assigned_writer_contexts.rs"]
 mod assigned_writer_contexts;
+
+#[test]
+fn nested_writes_retain_exact_assignments_in_shared_receiver_histories() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/nested-receiver-writes.mts");
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let receivers = facts.value_flow.receiver_mutations.as_ref().unwrap();
+    let primary = &receivers[&0]["primary"];
+    assert!(std::sync::Arc::ptr_eq(primary, &receivers[&0]["receiver"]));
+    assert!(std::sync::Arc::ptr_eq(
+        &receivers[&0]["box"],
+        &receivers[&0]["alias"]
+    ));
+    let assigned = primary.assigned.as_ref().unwrap();
+    assert_eq!(assigned.members.len(), 2);
+    assert!(assigned.members.contains_key("get"));
+    assert!(assigned.members.contains_key("info"));
+    assert!(primary.members["nested"]
+        .assigned
+        .as_ref()
+        .unwrap()
+        .members
+        .contains_key("get"));
+    let defaults = facts.value_flow.parameters[0]
+        .default_mutations
+        .as_ref()
+        .unwrap();
+    assert!(std::sync::Arc::ptr_eq(primary, &defaults[&0][0].history));
+    assert!(!receivers[&0].contains_key("session"));
+    #[cfg(feature = "test-instrumentation")]
+    {
+        assert_eq!(
+            facts.value_flow.reference_link_constructions,
+            facts.value_flow.bindings.len()
+        );
+        assert_eq!(facts.value_flow.reference_component_links, 2);
+        assert!(facts.value_flow.reference_component_root_steps <= 64);
+    }
+}
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn nested_writes_check_one_alias_component_per_write() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/nested-receiver-write-sharing.mts",
+    );
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    assert_eq!(facts.value_flow.reference_link_constructions, 257);
+    assert_eq!(facts.value_flow.reference_component_links, 128);
+    // Each write performs bounded root lookups, never a 129-name graph walk.
+    // Unrelated objects are absent from the component index.
+    assert!(facts.value_flow.reference_component_root_steps <= 128 * 3 + 128 * 5 + 130 * 2);
+    let receivers = facts.value_flow.receiver_mutations.as_ref().unwrap();
+    let primary = &receivers[&0]["primary"];
+    assert_eq!(primary.assigned.as_ref().unwrap().members.len(), 128);
+    for name in (0..128).map(|i| format!("alias{i}")) {
+        assert!(std::sync::Arc::ptr_eq(
+            &receivers[&0]["box"],
+            &receivers[&0][&name]
+        ));
+    }
+    let defaults = facts.value_flow.parameters[0]
+        .default_mutations
+        .as_ref()
+        .unwrap();
+    assert!(std::sync::Arc::ptr_eq(primary, &defaults[&0][0].history));
+}

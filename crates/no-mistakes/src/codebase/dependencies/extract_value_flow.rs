@@ -4,8 +4,9 @@ pub(super) type DefaultOriginIndex =
     FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
 // None is a dynamic segment; Some("*") is an ordinary literal property.
 pub type ValueMutationPath = Vec<Option<String>>;
-pub(super) type PriorMemberMutations =
-    FxHashMap<usize, FxHashMap<String, mutation_history::ValueMutationHistory>>;
+#[path = "extract_value_flow/receiver_histories.rs"]
+mod receiver_histories;
+pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
 pub type ValueReceiverMutations =
     FxHashMap<usize, FxHashMap<String, std::sync::Arc<mutation_history::ValueMutationHistory>>>;
 pub type ValueDefaultMutations = FxHashMap<usize, Vec<ValueDefaultMutationSource>>;
@@ -27,6 +28,10 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_component_links: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_component_root_steps: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
@@ -112,6 +117,8 @@ mod adapters;
 mod completion;
 #[path = "extract_value_flow/mutations.rs"]
 mod mutations;
+#[path = "extract_value_flow/references.rs"]
+mod references;
 
 #[path = "extract_value_flow/result_kind.rs"]
 mod result_kind;

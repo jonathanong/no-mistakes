@@ -29,12 +29,7 @@ impl ImportCollector {
         offset: u32,
     ) {
         let context = self.current_function_id();
-        let history = self
-            .prior_member_mutations
-            .entry(key.0)
-            .or_default()
-            .entry(key.1.clone())
-            .or_default();
+        let history = self.prior_member_mutations.history_mut(key);
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
             history.record_assignment(path, assigned, completed_at, context);
@@ -45,39 +40,14 @@ impl ImportCollector {
             return;
         };
         let mut histories = std::mem::take(&mut self.prior_member_mutations);
-        let seeds = histories
-            .iter()
-            .flat_map(|(scope, names)| names.keys().map(move |name| (*scope, name.clone())))
-            .collect::<Vec<_>>();
+        let components = histories.finish();
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.reference_component_links = histories.links;
+            self.value_flow.reference_component_root_steps = histories.root_steps.get();
+        }
         let mut retained = fx_map();
-        let mut visited = fx_set();
-        for seed in seeds {
-            let mut pending = vec![seed];
-            let mut component = Vec::new();
-            let mut history = mutation_history::ValueMutationHistory::default();
-            while let Some(key) = pending.pop() {
-                if !visited.insert(key.clone()) {
-                    continue;
-                }
-                if let Some(source) = histories
-                    .get_mut(&key.0)
-                    .and_then(|names| names.remove(key.1.as_str()))
-                {
-                    history.merge(source);
-                }
-                if let Some(neighbors) = self
-                    .value_reference_links
-                    .as_ref()
-                    .and_then(|links| links.get(&key.0))
-                    .and_then(|names| names.get(key.1.as_str()))
-                {
-                    pending.extend(neighbors.iter().cloned());
-                }
-                component.push(key);
-            }
-            if component.is_empty() {
-                continue;
-            }
+        for (component, history) in components {
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {
                 retained

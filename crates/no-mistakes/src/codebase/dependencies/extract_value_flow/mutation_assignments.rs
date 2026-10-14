@@ -32,6 +32,37 @@ impl ValueAssignedMutations {
 }
 
 impl ValueMutationHistory {
+    pub(super) fn reference_may_be_replaced(
+        &self,
+        path: &[Option<String>],
+        reads: &[nested::ReceiverRead],
+    ) -> bool {
+        let mut node = self;
+        for (member, (offset, context)) in path.iter().zip(reads) {
+            let Some(member) = member else {
+                return false;
+            };
+            if node
+                .assigned
+                .as_ref()
+                .and_then(|assigned| assigned.members.get(member))
+                // Only ordered writes in the same context sever this path.
+                // Unknown execution order cannot discard a possible mutation
+                // of the original receiver.
+                .is_some_and(|write| {
+                    !write.multiple_contexts && write.context == *context && write.offset <= *offset
+                })
+            {
+                return true;
+            }
+            let Some(child) = node.members.get(member) else {
+                return false;
+            };
+            node = child;
+        }
+        false
+    }
+
     pub(super) fn record_assignment(
         &mut self,
         path: &[Option<String>],

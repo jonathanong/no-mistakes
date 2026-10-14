@@ -33,24 +33,35 @@ impl ImportCollector {
                 },
                 |path| path.to_vec(),
             );
-            // Exact assignments belong to the syntactic receiver/direct aliases.
-            // Nested propagation keeps the existing default-origin prefix policy.
+            // A nested alias writes the same member on its original receiver.
+            // Keep exact assignment metadata alongside every propagated path.
+            let assigned_member = match receiver {
+                Some(path) => path.last().and_then(Option::as_deref),
+                None => name.rsplit_once('.').map(|(_, member)| member),
+            };
             let mut assigned = parts.pop().map(|member| (member, completed_at));
-            let mut pending = vec![(((scope, base.to_string()), parts), false, true)];
+            let has_assignment = assigned.is_some();
+            let reads = vec![(offset, self.current_function_id()); parts.len()];
+            let mut pending = vec![((((scope, base.to_string()), parts), reads), false, true)];
             let mut active = fx_set();
             let mut visited = fx_set();
-            while let Some(((key, path), exiting, remember)) = pending.pop() {
+            while let Some((((key, path), reads), exiting, remember)) = pending.pop() {
                 if exiting {
                     active.remove(&key);
                     continue;
                 }
                 if remember {
-                    self.remember_member_mutation(&key, &path, assigned.take(), offset);
+                    let exact = assigned.take().or_else(|| {
+                        has_assignment.then(|| (assigned_member.map(str::to_string), completed_at))
+                    });
+                    self.remember_member_mutation(&key, &path, exact, offset);
                 }
-                if !visited.insert((key.clone(), path.clone())) || !active.insert(key.clone()) {
+                if !visited.insert((key.clone(), path.clone(), reads.clone()))
+                    || !active.insert(key.clone())
+                {
                     continue;
                 }
-                pending.push(((key.clone(), Vec::new()), true, false));
+                pending.push((((key.clone(), Vec::new()), Vec::new()), true, false));
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links
@@ -60,7 +71,11 @@ impl ImportCollector {
                     .into_iter()
                     .flatten()
                 {
-                    pending.push(((target.clone(), path.clone()), false, false));
+                    pending.push((
+                        ((target.clone(), path.clone()), reads.clone()),
+                        false,
+                        false,
+                    ));
                 }
                 for index in self
                     .value_binding_indexes
@@ -75,10 +90,14 @@ impl ImportCollector {
                     {
                         continue;
                     }
+                    if self.reference_path_may_be_replaced(&key, &path, &reads) {
+                        continue;
+                    }
                     let mut references = Vec::new();
-                    nested::receiver_references(
+                    nested::write_receiver_references(
                         &self.value_flow.bindings[*index].value,
                         &path,
+                        &reads,
                         &mut references,
                     );
                     pending.extend(
@@ -144,62 +163,17 @@ impl ImportCollector {
     }
 }
 impl ImportCollector {
-    fn prepare_value_references(&mut self) {
-        self.prepare_parameter_origins();
-        if self.value_reference_links.is_some() {
-            return;
+    fn reference_path_may_be_replaced(
+        &self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: &[nested::ReceiverRead],
+    ) -> bool {
+        if path.is_empty() {
+            return false;
         }
-        let mut links = fx_map();
-        for binding in &self.value_flow.bindings {
-            insert_reference(&mut links, binding.scope, &binding.name, &binding.value);
-            #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_link_constructions += 1;
-            }
-        }
-        self.value_reference_links = Some(links);
-    }
-    pub(super) fn record_value_reference(
-        &mut self,
-        scope: usize,
-        name: &str,
-        value: &ValueExpression,
-    ) {
-        if let Some(links) = &mut self.value_reference_links {
-            insert_reference(links, scope, name, value);
-            #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_link_constructions += 1;
-            }
-        }
-    }
-}
-fn insert_reference(links: &mut ReferenceLinks, scope: usize, name: &str, value: &ValueExpression) {
-    if let Some((target_scope, target_name)) = referenced_value_root(value) {
-        links
-            .entry(scope)
-            .or_default()
-            .entry(name.to_string())
-            .or_default()
-            .push((target_scope, target_name.clone()));
-        links
-            .entry(target_scope)
-            .or_default()
-            .entry(target_name)
-            .or_default()
-            .push((scope, name.to_string()));
-    }
-}
-
-fn referenced_value_root(value: &ValueExpression) -> Option<(usize, String)> {
-    match value {
-        ValueExpression::Named { name, scope, .. } if !name.contains('.') => Some((
-            scope.unwrap_or(0),
-            name.split_once('.')
-                .map_or(name.as_str(), |(head, _)| head)
-                .to_string(),
-        )),
-
-        _ => None,
+        self.prior_member_mutations
+            .history(key)
+            .is_some_and(|history| history.reference_may_be_replaced(path, reads))
     }
 }

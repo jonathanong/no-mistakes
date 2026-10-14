@@ -200,3 +200,18 @@ fn imported_receivers_track_late_objects_and_supplied_arguments() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn nested_alias_writes_do_not_report_stale_imported_effects() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/nested-receiver-writes.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 16, 18, 20, 41, 55, 73, 81],
+        "{findings:#?}"
+    );
+}
