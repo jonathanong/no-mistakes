@@ -21,6 +21,25 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
     )
     .unwrap();
     for (file, caller, callee, export) in [
+        (
+            "supplied-context",
+            Some("before"),
+            "client.get",
+            Some("primary.get"),
+        ),
+        ("supplied-context", Some("after"), "client.get", None),
+        (
+            "supplied-context",
+            Some("objectBefore"),
+            "value.client.get",
+            Some("scoped.get"),
+        ),
+        (
+            "supplied-context",
+            Some("objectAfter"),
+            "value.client.get",
+            None,
+        ),
         ("rhs", Some("rhs"), "client.get", Some("primary.get")),
         ("rhs", Some("afterWrite"), "client.get", None),
         ("rhs", Some("iterable"), "client.get", Some("replica.get")),

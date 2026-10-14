@@ -5,8 +5,7 @@ use crate::codebase::dependencies::extract::{
 
 #[derive(Clone, Default)]
 pub(super) struct FlowFileIndex {
-    receiver_mutations:
-        Option<std::sync::Arc<crate::codebase::dependencies::extract::ValueReceiverMutations>>,
+    receiver_mutations: Option<std::sync::Arc<prepared_receivers::PreparedReceiverMutations>>,
     bindings: ScopedNameMap<ValueBinding>,
     parameters: ScopedNameMap<ValueParameter>,
     returns: FxHashMap<CallableId, Vec<ValueExpression>>,
@@ -140,6 +139,10 @@ mod receiver_contexts;
 
 #[path = "value_flow/origin_walk.rs"]
 mod origin_walk;
+#[path = "value_flow/parameter_reads.rs"]
+mod parameter_reads;
+#[path = "value_flow/prepared_receivers.rs"]
+mod prepared_receivers;
 #[path = "value_flow/receiver_reads.rs"]
 mod receiver_reads;
 

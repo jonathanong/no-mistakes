@@ -17,7 +17,11 @@ impl FlowFileIndex {
                 .insert(call.source_callee.clone(), (call.offset, call.end));
         }
         Self {
-            receiver_mutations: flow.receiver_mutations.clone(),
+            receiver_mutations: flow.receiver_mutations.as_ref().map(|histories| {
+                std::sync::Arc::new(prepared_receivers::PreparedReceiverMutations::new(
+                    std::sync::Arc::clone(histories),
+                ))
+            }),
             async_callables: flow.async_callables.clone(),
             generator_callables: flow.generator_callables.clone(),
             sites,

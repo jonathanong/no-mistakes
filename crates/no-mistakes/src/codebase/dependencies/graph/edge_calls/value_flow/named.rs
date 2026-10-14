@@ -55,7 +55,16 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                self.parameter(path, parameter, &file)
+                let value = self.parameter(path, parameter, &file);
+                if context.is_some_and(|context| {
+                    file.values
+                        .receiver_mutations
+                        .as_ref()
+                        .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
+                }) {
+                    self.record_parameter_receiver_read(path, offset, context);
+                }
+                value
             }
         } else if let Some(id) = file.resolve_local_callable_id(Some(scope), base) {
             self.callable(path, id)
