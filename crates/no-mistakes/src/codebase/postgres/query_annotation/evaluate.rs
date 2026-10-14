@@ -117,11 +117,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             }
             Expr::Await(expr) => {
-                let mut value = self.expr(expr, path, env, depth, generic).exposed();
-                while let Value::Promise(inner) = value {
-                    value = inner.exposed();
+                if let Expr::ModuleLoad(specifier) = expr.as_ref() {
+                    self.await_dynamic_import(specifier, path)
+                } else {
+                    let mut value = self.expr(expr, path, env, depth, generic).exposed();
+                    while let Value::Promise(inner) = value {
+                        value = inner.exposed();
+                    }
+                    value
                 }
-                value
             }
             Expr::Call {
                 callee,
@@ -143,8 +147,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 value,
             } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
             Expr::Member(object, name) => {
-                let value = self.expr(object, path, env, depth, generic).exposed();
-                self.member(value, name, path)
+                if let Some(value) = self.namespace_member(object, name, path, *env, depth, generic)
+                {
+                    value
+                } else {
+                    let value = self.expr(object, path, env, depth, generic).exposed();
+                    self.member(value, name, path)
+                }
             }
             Expr::ComputedMember(object, key) => {
                 let value = self.expr(object, path, env, depth, generic).exposed();

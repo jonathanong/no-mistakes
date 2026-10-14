@@ -2,7 +2,7 @@ use super::{concat, Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::{Expr, Step};
 use std::path::{Path, PathBuf};
 
-mod effects;
+pub(super) mod effects;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn steps(
@@ -43,7 +43,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             match step {
                 Step::Bind(name, expr) => {
                     let may_mutate = self.files[path].facts.precise_records
-                        && effects::contains_accessor_read(expr)
+                        && (effects::contains_accessor_read(expr)
+                            || matches!(expr, Expr::Call { .. }))
                         && self.effect_can_mutate(expr, path, *env)
                         && !self.proven_append_only_effect(expr, path, *env, depth, generic);
                     let live_before = may_mutate.then(|| self.live_builder_values());
@@ -54,7 +55,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     };
                     self.write_captured_binding_evaluated(*env, name, &value, depth);
                     if let Some(live_before) = live_before {
-                        self.invalidate_builders(&live_before);
+                        // Known function bodies have already projected their
+                        // builder effects. An opaque result or accessor read
+                        // still cannot prove that earlier builders survived.
+                        if effects::contains_accessor_read(expr)
+                            || matches!(value, Value::Unknown | Value::Unsupported)
+                        {
+                            self.invalidate_builders(&live_before);
+                        }
                     }
                 }
                 Step::Append(name, expr) => {

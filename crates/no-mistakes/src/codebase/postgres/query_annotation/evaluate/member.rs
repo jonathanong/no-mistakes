@@ -1,7 +1,41 @@
 use super::{Evaluator, Value};
+use crate::codebase::dependencies::extract::ImportedBindingKind;
+use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn namespace_member(
+        &mut self,
+        object: &Expr,
+        name: &str,
+        path: &Path,
+        env: super::Environment,
+        depth: u8,
+        generic: bool,
+    ) -> Option<Value> {
+        let Expr::Name(local) = object else {
+            return None;
+        };
+        if self.scopes[env].contains_key(local) || self.mapped_parameter_value(env, local).is_some()
+        {
+            return None;
+        }
+        let file = &self.files[path];
+        let import = file
+            .module
+            .imports
+            .get(local)
+            .map(|index| &file.module.ts.imported_bindings[*index])?;
+        if import.kind != ImportedBindingKind::Namespace {
+            return None;
+        }
+        let target = file.module.target(&import.specifier, path, &self.resolve)?;
+        Some(
+            self.lookup_export(target, name, depth, generic)
+                .unwrap_or(Value::Unknown),
+        )
+    }
+
     pub(super) fn member(&self, object: Value, name: &str, path: &Path) -> Value {
         match object {
             // The intrinsic length is a primitive; passing it cannot expose

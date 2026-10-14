@@ -117,7 +117,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 }
 
-pub(super) fn contains_accessor_read(expr: &Expr) -> bool {
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn contains_accessor_read(
+    expr: &Expr,
+) -> bool {
     match expr {
         Expr::Member(_, _) | Expr::ComputedMember(_, _) | Expr::Index(_, _) => true,
         Expr::Spread(inner) | Expr::Discard(inner) | Expr::OpaqueCallback(inner) => {

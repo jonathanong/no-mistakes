@@ -4,6 +4,8 @@ use crate::fx::FxHashMap;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+mod entrypoints;
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
         let file = &self.files[path];
@@ -56,6 +58,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
+        let mut seen_functions = BTreeSet::new();
         for (name, expr) in globals {
             // Only exported functions are independently callable by a
             // supplied-source consumer. A private callback still contributes
@@ -69,7 +72,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             {
                 continue;
             }
-            if let Expr::Function(function) = expr {
+            let mut functions = Vec::new();
+            if file.facts.precise_records {
+                entrypoints::collect(
+                    globals,
+                    expr,
+                    &mut BTreeSet::new(),
+                    &mut seen_functions,
+                    &mut functions,
+                );
+            } else if let Expr::Function(function) = expr {
+                functions.push(std::sync::Arc::clone(function));
+            }
+            for function in functions {
                 // Speculative entrypoints share initialized facts, never effects
                 // from an unrelated function considered earlier in name order.
                 self.scopes.clone_from(&scopes);

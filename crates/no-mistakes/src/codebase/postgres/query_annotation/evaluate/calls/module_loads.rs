@@ -28,6 +28,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn load_dynamic_import(
         &mut self,
+        _specifier: &str,
+        path: &Path,
+    ) -> Value {
+        if !self.files[path].facts.precise_records {
+            return Value::Unknown;
+        }
+        // `import()` schedules module evaluation after the current job. Even
+        // a literal supplied target must not be executed synchronously here:
+        // reads before it runs and reads after an await can see different SQL.
+        self.invalidate_live_builders();
+        Value::Promise(Box::new(Value::Unknown))
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn await_dynamic_import(
+        &mut self,
         specifier: &str,
         path: &Path,
     ) -> Value {

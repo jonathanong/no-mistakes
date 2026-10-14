@@ -14,6 +14,9 @@ fn source(name: &str) -> ExecutedPostgresSource {
     }
 }
 
+#[path = "executed_postgres_source_api/review_followups.rs"]
+mod review_followups;
+
 #[test]
 fn source_api_keeps_execution_sites_annotations_and_complete_alternatives() {
     let sources = [source("reads.ts"), source("writes.ts")];
@@ -147,6 +150,16 @@ fn source_api_retains_generic_callbacks_exposed_by_exported_records() {
 }
 
 #[test]
+fn source_api_retains_generic_inline_callbacks_in_exported_records() {
+    let sources = [source("exported-inline-record.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
 fn source_api_retains_generic_callbacks_exposed_by_conditional_exports() {
     let sources = [source("exported-conditional.ts")];
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
@@ -242,6 +255,25 @@ fn source_api_prefers_the_canonical_typescript_source_candidate() {
     let statement = statements
         .iter()
         .find(|statement| statement.file_name == "priority-consumer.ts")
+        .unwrap();
+    assert!(statement.complete, "{statement:?}");
+    assert_eq!(
+        statement.sql_text.as_deref(),
+        Some("/* preferred source */ SELECT 1")
+    );
+}
+
+#[test]
+fn source_api_resolves_a_static_namespace_member_from_supplied_source() {
+    let sources = [
+        source("namespace-consumer.ts"),
+        source("priority-helper.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "namespace-consumer.ts")
         .unwrap();
     assert!(statement.complete, "{statement:?}");
     assert_eq!(

@@ -3,6 +3,7 @@ mod module_loads;
 mod names;
 pub(super) mod scopes;
 mod values;
+use super::statements::effects::contains_accessor_read;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
@@ -21,7 +22,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.initialize_require(callee, args, path);
         // Keep the member/index base so a non-arrow callee receives it as `this`.
         // Evaluating the callee expression alone would drop that reference.
-        let (target, receiver) = match callee {
+        let (target, mut receiver) = match callee {
             Expr::Index(object, index) => {
                 let receiver = self.expr(object, path, env, depth, generic).exposed();
                 (
@@ -47,9 +48,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         if args
             .iter()
             .skip(1)
-            .any(|arg| self.effect_can_mutate(arg, path, *env))
+            .any(|arg| contains_accessor_read(arg) && self.effect_can_mutate(arg, path, *env))
         {
             self.invalidate_live_builders();
+        }
+        if let Some(receiver) = receiver.as_mut() {
+            // A method was selected before its arguments ran, but `this` may
+            // still hold a builder changed by an argument expression.
+            self.refresh_arguments(std::slice::from_mut(receiver));
         }
         // Later operands can mutate the object an earlier operand returned.
         self.refresh_arguments(&mut raw_arguments);
