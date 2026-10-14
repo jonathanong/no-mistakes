@@ -101,12 +101,22 @@ impl ValueFlowResolution<'_, '_> {
                 let Some(returns) = index.values.returns.get(&id) else {
                     return FlowValue::Unknown;
                 };
-                agreed_value(
+                let previous = self.acquisition_context.take();
+                self.acquisition_context = index.values.receiver_mutations.as_ref().map(|_| {
+                    self.make_receiver_use(path, &call, previous.clone(), Some((&file, id, false)))
+                });
+                let value = agreed_value(
                     returns
                         .iter()
                         .map(|value| self.value(&file, value))
                         .collect(),
-                )
+                );
+                if self.acquisition_context.is_some() {
+                    self.seal_receiver_acquisition();
+                }
+                self.acquisition_context = previous;
+                self.record_receiver_use(path, &call, &value, Some((&file, id, false)));
+                value
             })
             .unwrap_or(FlowValue::Unknown);
         self.calls_visiting.remove(&key);

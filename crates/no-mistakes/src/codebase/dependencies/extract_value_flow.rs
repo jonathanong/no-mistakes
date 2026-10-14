@@ -2,12 +2,12 @@ use super::*;
 
 pub(super) type DefaultOriginIndex =
     FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
-pub type ValueReceiverMutations =
-    FxHashMap<usize, FxHashMap<String, std::sync::Arc<mutation_history::ValueMutationHistory>>>;
 // None is a dynamic segment; Some("*") is an ordinary literal property.
 pub type ValueMutationPath = Vec<Option<String>>;
 pub(super) type PriorMemberMutations =
     FxHashMap<usize, FxHashMap<String, mutation_history::ValueMutationHistory>>;
+pub type ValueReceiverMutations =
+    FxHashMap<usize, FxHashMap<String, std::sync::Arc<mutation_history::ValueMutationHistory>>>;
 pub type ValueDefaultMutations = FxHashMap<usize, Vec<ValueDefaultMutationSource>>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueDefaultMutationSource {
@@ -139,3 +139,6 @@ pub(super) mod write_targets;
 
 #[path = "extract_value_flow/object_values.rs"]
 mod object_values;
+
+#[path = "extract_value_flow/mutation_assignments.rs"]
+mod mutation_assignments;

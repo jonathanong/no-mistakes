@@ -116,7 +116,7 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
-    record_assignment_target_writes(collector, &assignment.left, assignment.span.start);
+    record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         collector.visit_expression(&assignment.right);
@@ -147,6 +147,7 @@ fn visit_update_expression_with_calls<'a>(
         collector,
         update.argument.as_assignment_target(),
         update.span.start,
+        update.span.end,
     );
     walk::walk_update_expression(collector, update);
 }
@@ -155,6 +156,7 @@ fn record_assignment_target_writes(
     collector: &mut ImportCollector,
     target: &AssignmentTarget<'_>,
     offset: u32,
+    completed_at: u32,
 ) {
     for (name, path) in extract_value_flow::write_targets::targets(target) {
         if !record_static_setter_assignment(collector, &name, offset)
@@ -163,7 +165,7 @@ fn record_assignment_target_writes(
             if path.is_empty() {
                 collector.record_reassigned_callable_alias(&name, offset);
             } else {
-                collector.record_reassigned_callable_alias_path(&name, offset, Some(&path));
+                collector.record_reassigned_callable_alias_path(&name, offset, Some(&path), completed_at);
             }
         }
     }

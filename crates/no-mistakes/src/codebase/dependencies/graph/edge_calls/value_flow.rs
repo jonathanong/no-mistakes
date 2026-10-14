@@ -7,7 +7,7 @@ use crate::codebase::dependencies::extract::{
 pub(super) struct FlowFileIndex {
     synthetic_callbacks: FxHashSet<String>,
     immediate_factory_results: FxHashSet<(u32, u32)>,
-    receiver_mutations: Option<std::sync::Arc<crate::codebase::dependencies::extract::ValueReceiverMutations>>,
+    receiver_mutations: Option<std::sync::Arc<prepared_receivers::PreparedReceiverMutations>>,
     bindings: ScopedNameMap<ValueBinding>,
     parameters: ScopedNameMap<ValueParameter>,
     returns: FxHashMap<CallableId, Vec<ValueExpression>>,
@@ -17,55 +17,9 @@ pub(super) struct FlowFileIndex {
     async_callables: FxHashSet<CallableId>,
     generator_callables: FxHashSet<CallableId>,
 }
-impl FlowFileIndex {
-    pub(super) fn new(
-        flow: &crate::codebase::dependencies::extract::ValueFlowFacts,
-        scopes: &[(CallableId, String)],
-        function_calls: &[crate::codebase::dependencies::extract::FunctionCall],
-    ) -> Self {
-        let mut returns: FxHashMap<_, Vec<_>> = fx_map();
-        for (owner, value) in &flow.returns {
-            returns.entry(*owner).or_default().push(value.clone());
-        }
-        let mut sites: FxHashMap<_, FxHashMap<_, _>> = fx_map();
-        for call in &flow.calls {
-            sites
-                .entry(call.offset)
-                .or_default()
-                .insert(call.source_callee.clone(), (call.offset, call.end));
-        }
-        Self {
-            synthetic_callbacks: function_calls.iter().filter(|call|
-                call.invocation == InvocationKind::Callback && call.callee_binding_scope.is_none())
-                .map(|call| call.callee.clone()).collect(),
-            immediate_factory_results: flow.calls.iter().filter_map(|call| inline_inputs::immediate_call(&call.callee)).collect(),
-            receiver_mutations: flow.receiver_mutations.clone(),
-            async_callables: flow.async_callables.clone(),
-            generator_callables: flow.generator_callables.clone(),
-            sites,
-            scopes: scopes.iter().cloned().collect(),
-            bindings: index_scoped_names(
-                flow.bindings
-                    .iter()
-                    .map(|value| ((value.scope, value.name.clone()), value.clone())),
-            ),
-            parameters: index_scoped_names(
-                flow.parameters
-                    .iter()
-                    .map(|value| ((value.scope, value.name.clone()), value.clone())),
-            ),
-            returns,
-            calls: flow
-                .calls
-                .iter()
-                .map(|call| ((call.offset, call.end), call.clone()))
-                .collect(),
-        }
-    }
-}
 #[path = "value_flow/types.rs"]
 mod types;
-use types::{FlowValue, BoundArguments};
+use types::{BoundArguments, FlowValue};
 
 type ParameterInputs =
     FxHashMap<(std::path::PathBuf, CallableId), Vec<ParameterInput>>;
@@ -104,6 +58,7 @@ struct ValueFlowResolution<'a, 'b> {
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
+    acquisition_context: default_origins::Origins,
     invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
 }
 
@@ -157,8 +112,34 @@ mod origin_tree;
 #[path = "value_flow/parameter_projection.rs"]
 mod parameter_projection;
 
-#[path = "value_flow/provenance.rs"]
-mod provenance;
+#[path = "value_flow/receiver_origins.rs"]
+mod receiver_origins;
+
+#[path = "value_flow/origin_sources.rs"]
+mod origin_sources;
+
+#[path = "value_flow/receiver_contexts.rs"]
+mod receiver_contexts;
+
+#[path = "value_flow/origin_walk.rs"]
+mod origin_walk;
+#[path = "value_flow/parameter_reads.rs"]
+mod parameter_reads;
+#[path = "value_flow/prepared_receivers.rs"]
+mod prepared_receivers;
+#[path = "value_flow/receiver_reads.rs"]
+mod receiver_reads;
+
+#[path = "value_flow/receiver_owned_contexts.rs"]
+mod receiver_owned_contexts;
+
 #[path = "value_flow/agreement.rs"]
 mod agreement;
+#[path = "value_flow/file_index.rs"]
+mod file_index;
+#[path = "value_flow/provenance.rs"]
+mod provenance;
 use agreement::agreed_value;
+
+#[path = "value_flow/invocation_argument.rs"]
+mod invocation_argument;

@@ -185,3 +185,18 @@ fn default_mutation_paths_late_declarations_and_inherited_fields_are_conservativ
         );
     }
 }
+
+#[test]
+fn imported_receivers_track_late_objects_and_supplied_arguments() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/imported-receiver-mutations.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [7, 21, 23, 25, 33],
+        "{findings:#?}"
+    );
+}

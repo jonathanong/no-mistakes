@@ -63,6 +63,7 @@ fn refine_iteration(
         visiting: fx_set(),
         calls_visiting: fx_set(),
         default_origins: None,
+        acquisition_context: None,
                     invocation_read: None,
     };
     let mut sites = base.to_vec();
@@ -105,7 +106,12 @@ fn refine_iteration(
         let mut value = value;
         loop {
             value = match value {
-                FlowValue::Provenance { executor, typed, members, .. } => {
+                FlowValue::Provenance {
+                    executor,
+                    typed,
+                    members,
+                    ..
+                } => {
                     site.typed_from.extend(typed);
                     site.returned_member_from.extend(members);
                     *executor
@@ -123,7 +129,14 @@ fn refine_iteration(
                 }
             };
         }
-        if matches!(value, FlowValue::Promise(_) | FlowValue::Uncallable | FlowValue::Object { .. } | FlowValue::Array { .. } | FlowValue::Undefined) {
+        if matches!(
+            value,
+            FlowValue::Promise(_)
+                | FlowValue::Uncallable
+                | FlowValue::Object { .. }
+                | FlowValue::Array { .. }
+                | FlowValue::Undefined
+        ) {
             site.typed_from.clear();
             site.returned_member_from.clear();
         }

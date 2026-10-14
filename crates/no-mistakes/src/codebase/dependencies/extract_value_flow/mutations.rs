@@ -7,7 +7,7 @@ impl ImportCollector {
         name: &str,
         offset: u32,
     ) {
-        self.invalidate_value_write_with_path(scope, name, offset, None);
+        self.invalidate_value_write_with_path(scope, name, offset, None, offset);
     }
     pub(in super::super) fn invalidate_value_write_with_path(
         &mut self,
@@ -15,6 +15,7 @@ impl ImportCollector {
         name: &str,
         offset: u32,
         receiver: Option<&[Option<String>]>,
+        completed_at: u32,
     ) {
         let (base, member) = name
             .split_once('.')
@@ -32,7 +33,9 @@ impl ImportCollector {
                 },
                 |path| path.to_vec(),
             );
-            parts.pop();
+            // Exact assignments belong to the syntactic receiver/direct aliases.
+            // Nested propagation keeps the existing default-origin prefix policy.
+            let mut assigned = parts.pop().map(|member| (member, completed_at));
             let mut pending = vec![(((scope, base.to_string()), parts), false, true)];
             let mut active = fx_set();
             let mut visited = fx_set();
@@ -42,7 +45,7 @@ impl ImportCollector {
                     continue;
                 }
                 if remember {
-                    self.remember_member_mutation(&key, &path, offset);
+                    self.remember_member_mutation(&key, &path, assigned.take(), offset);
                 }
                 if !visited.insert((key.clone(), path.clone())) || !active.insert(key.clone()) {
                     continue;

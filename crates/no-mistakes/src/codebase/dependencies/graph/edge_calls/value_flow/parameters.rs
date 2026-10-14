@@ -37,6 +37,7 @@ impl ValueFlowResolution<'_, '_> {
                     visiting: fx_set(),
                     calls_visiting: fx_set(),
                     default_origins: None,
+                    acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
                 };
                 flow.visiting
@@ -110,18 +111,46 @@ impl ValueFlowResolution<'_, '_> {
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
+            let acquisition = self
+                .indexes
+                .file(self.facts, path)
+                .filter(|index| index.values.receiver_mutations.is_some())
+                .filter(|_| {
+                    from_default
+                        || parameter
+                            .projection
+                            .iter()
+                            .any(|step| matches!(step, ValueProjection::Default(..)))
+                })
+                .map(|_| {
+                    self.make_receiver_use(&caller, call, None, Some((path, parameter.owner, true)))
+                });
+            let previous = self.acquisition_context.take();
+            if from_default {
+                self.acquisition_context = acquisition.clone();
+            }
             let value = if from_default {
                 self.parameter_default(path, parameter)
             } else {
                 argument.expect("supplied non-undefined argument")
             };
-            values.push(self.project_parameter(path, parameter, value, from_default));
+            values.push(self.project_parameter(path, parameter, value, from_default, acquisition));
+            if self.acquisition_context.is_some() {
+                self.seal_receiver_acquisition();
+            }
+            self.acquisition_context = previous;
+            self.record_receiver_use(
+                &caller,
+                call,
+                values.last().expect("projected argument"),
+                from_default.then_some((path, parameter.owner, true)),
+            );
             self.invocation_read = previous_read;
             default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         }
         if values.is_empty() {
             let value = self.parameter_default(path, parameter);
-            values.push(self.project_parameter(path, parameter, value, true));
+            values.push(self.project_parameter(path, parameter, value, true, None));
         }
         default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         self.default_origins = origins;
@@ -137,44 +166,6 @@ impl ValueFlowResolution<'_, '_> {
         let value = self.value(path, &parameter.default);
         self.initializing.pop();
         value
-    }
-    fn invocation_argument(
-        &mut self,
-        caller: &std::path::Path,
-        call: &ValueCall,
-        mut index: usize,
-    ) -> Option<FlowValue> {
-        let origins = self.default_origins.take();
-        let mut callee = self.value(caller, &call.callee);
-        self.default_origins = origins;
-        loop {
-            callee = match callee {
-                FlowValue::Returned { executor, .. } | FlowValue::Provenance { executor, .. } => {
-                    *executor
-                }
-                other => {
-                    callee = other;
-                    break;
-                }
-            };
-        }
-        if let FlowValue::Bound { arguments, .. } = callee {
-            for bound in arguments {
-                if bound.spread_at.is_some_and(|spread| index >= spread) {
-                    return Some(FlowValue::Unknown);
-                }
-                if let Some(argument) = bound.arguments.get(index) {
-                    return Some(self.value(&bound.file, argument));
-                }
-                index -= bound.arguments.len();
-            }
-        }
-        if call.spread_at.is_some_and(|spread| index >= spread) {
-            return Some(FlowValue::Unknown);
-        }
-        call.arguments
-            .get(index)
-            .map(|argument| self.value(caller, argument))
     }
 }
 

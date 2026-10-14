@@ -63,7 +63,16 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                self.parameter(path, parameter, &file)
+                let value = self.parameter(path, parameter, &file);
+                if context.is_some_and(|context| {
+                    file.values
+                        .receiver_mutations
+                        .as_ref()
+                        .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
+                }) {
+                    self.record_parameter_receiver_read(path, offset, context);
+                }
+                value
             }
         } else if let Some(id) = file.resolve_local_callable_id(Some(scope), base) {
             self.callable(path, id)
@@ -121,6 +130,9 @@ impl ValueFlowResolution<'_, '_> {
             FlowValue::Unknown
         };
         self.visiting.remove(&key);
+        if scope == 0 && file.imported.contains_key(base) {
+            self.record_receiver_origin(path, scope, base, offset, context);
+        }
         if let Some((source, read_offset, read_context, owner)) = &self.invocation_read {
             if let Some(history) = file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base)) {
                 let origin = self.cache.origin_node(OriginKind::InvocationReceiver {

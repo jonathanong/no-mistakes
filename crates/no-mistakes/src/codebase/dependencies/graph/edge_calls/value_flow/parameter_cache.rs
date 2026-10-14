@@ -61,7 +61,7 @@ impl ParameterCache {
         #[cfg(feature = "test-instrumentation")]
         self.origin_nodes
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        Arc::new(OriginNode { kind, height })
+        Arc::new(OriginNode::new(kind, height))
     }
     #[cfg(feature = "test-instrumentation")]
     pub(in super::super) fn origin_nodes(&self) -> usize {

@@ -25,15 +25,20 @@ impl ImportCollector {
         &mut self,
         key: &(usize, String),
         path: &[Option<String>],
+        assigned: Option<(Option<String>, u32)>,
         offset: u32,
     ) {
         let context = self.current_function_id();
-        self.prior_member_mutations
+        let history = self
+            .prior_member_mutations
             .entry(key.0)
             .or_default()
             .entry(key.1.clone())
-            .or_default()
-            .record(path, offset, context);
+            .or_default();
+        history.record(path, offset, context);
+        if let Some((assigned, completed_at)) = assigned {
+            history.record_assignment(path, assigned, completed_at, context);
+        }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {
         let Some(index) = self.parameter_default_origins.take() else {

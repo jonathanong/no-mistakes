@@ -21,6 +21,7 @@ fn destructured_value_bindings_share_one_initializer() {
     );
     #[cfg(feature = "test-instrumentation")]
     assert_eq!(facts.value_flow.reference_link_constructions, 0);
+    assert!(facts.value_flow.receiver_mutations.is_none());
     let bases = facts
         .value_flow
         .bindings
@@ -55,6 +56,12 @@ fn member_writes_do_not_rebuild_reference_links() {
         true,
     );
     assert_eq!(facts.value_flow.reference_link_constructions, 515);
+    let assigned = facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["primary"]
+        .assigned
+        .as_ref()
+        .unwrap();
+    assert_eq!(assigned.members.len(), 257);
+    assert_eq!(assigned.merge_reinsertions, 1);
     for name in ["client", "alias", "late"] {
         let binding = facts
             .value_flow
@@ -133,6 +140,21 @@ fn late_defaults_share_one_indexed_mutation_history() {
         .iter()
         .all(|history| std::sync::Arc::ptr_eq(histories[0], history)));
     let history = histories[0];
+    let receivers = facts.value_flow.receiver_mutations.as_ref().unwrap();
+    let receiver_histories = receivers
+        .values()
+        .flat_map(|names| names.values())
+        .collect::<Vec<_>>();
+    // Inline-call analysis retains every alias, but all names share one history.
+    assert_eq!(receiver_histories.len(), 513);
+    assert!(receiver_histories
+        .iter()
+        .all(|receiver| std::sync::Arc::ptr_eq(history, receiver)));
+    let cloned = facts.value_flow.clone();
+    assert!(std::sync::Arc::ptr_eq(
+        receivers,
+        cloned.receiver_mutations.as_ref().unwrap()
+    ));
     assert_eq!(history.members.len(), 512);
     assert!(history
         .members
@@ -177,3 +199,6 @@ fn late_default_exports_capture_an_already_mutated_receiver() {
         .is_some_and(|offset| offset < export.declared_at));
     assert!(export.mutation_contexts.contains(&None));
 }
+
+#[path = "assigned_writer_contexts.rs"]
+mod assigned_writer_contexts;
