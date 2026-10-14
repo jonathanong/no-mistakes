@@ -21,6 +21,17 @@ fn with_conditional_execution(
     collector.conditional_execution = previous;
 }
 
+fn with_repeat_execution<T>(
+    collector: &mut ImportCollector,
+    statement: &T,
+    visit: impl FnOnce(&mut ImportCollector, &T),
+) {
+    // Include loop headers: tests and updates can invoke the same call again.
+    collector.repeat_depth += 1;
+    visit(collector, statement);
+    collector.repeat_depth -= 1;
+}
+
 // Literal conditions can prove one branch executes. Unknown conditions remain
 // conservative; these facts do not evaluate bindings or replace syntactic edges.
 fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {

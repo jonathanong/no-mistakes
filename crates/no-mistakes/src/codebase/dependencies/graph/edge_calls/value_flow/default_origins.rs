@@ -7,6 +7,7 @@ pub(super) struct InvocationRead {
     pub(super) offset: u32,
     pub(super) context: Option<CallableId>,
     pub(super) owner: (std::path::PathBuf, CallableId),
+    pub(super) once: bool,
 }
 pub(super) struct OriginNode {
     pub(super) kind: OriginKind,
