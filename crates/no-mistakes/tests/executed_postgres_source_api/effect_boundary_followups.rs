@@ -88,6 +88,7 @@ fn source_api_keeps_callbacks_exported_through_containers_generic() {
     // The exact local call cannot certify an exported callback's unknown caller.
     for fixture in [
         "exported-array-callback.ts",
+        "exported-spread-callback.ts",
         "exported-indexed-callback.ts",
         "exported-computed-callback.ts",
         "exported-dynamic-key-callback.ts",
