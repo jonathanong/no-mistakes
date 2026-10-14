@@ -178,7 +178,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         self.register_mappings(scope, captured, &function, mapping);
         self.register_captured_bindings(scope, captured, &function);
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
-        if function.asynchronous && async_suspension::has_suspension(&function.body) {
+        if self.files[&function_path].facts.precise_records
+            && function.asynchronous
+            && async_suspension::has_suspension(&function.body)
+        {
             // The evaluator does not schedule post-await work. Whether the
             // caller awaits this promise or reads a shared builder first is
             // unknown, so neither the returned SQL nor its shared builders
