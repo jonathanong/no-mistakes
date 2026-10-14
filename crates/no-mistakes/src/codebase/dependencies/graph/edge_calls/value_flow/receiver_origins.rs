@@ -149,7 +149,9 @@ impl ValueFlowResolution<'_, '_> {
                 origins,
                 ReceiverRead {
                     file: file.to_path_buf(),
-                    offset: call.offset,
+                    // The closing delimiter follows argument evaluation, but precedes
+                    // an enclosing assignment whose exclusive end equals call.end.
+                    offset: call.end.saturating_sub(1),
                     // Inline callees have no Named expression; facts own their caller context.
                     context: call.context,
                     invocation: true,
