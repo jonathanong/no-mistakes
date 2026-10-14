@@ -133,7 +133,7 @@ impl ValueFlowResolution<'_, '_> {
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
-        if let Some((source, _, read_context, owner)) = &self.invocation_read {
+        if let Some(read) = &self.invocation_read {
             if let Some(history) = file
                 .values
                 .receiver_mutations
@@ -141,14 +141,15 @@ impl ValueFlowResolution<'_, '_> {
                 .and_then(|histories| histories.get(&scope))
                 .and_then(|names| names.get(base))
             {
+                let mut read = read.clone();
+                // Acquisition offsets only order a history in the same file.
+                if read.file == path {
+                    read.offset = offset;
+                }
                 let origin = self.cache.origin_node(
                     OriginKind::InvocationReceiver {
-                        // Preserve acquisition timing even after the invocation scope
-                        // ends; the separate ReceiverUse frame times live members.
-                        file: source.clone(),
-                        offset,
-                        context: *read_context,
-                        owner: *owner,
+                        read,
+                        history_file: path.to_path_buf(),
                         history: std::sync::Arc::clone(history),
                     },
                     1,

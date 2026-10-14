@@ -127,11 +127,7 @@ impl ValueFlowResolution<'_, '_> {
             }
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
-            if super::inline_inputs::inline_callee(&call.callee) {
-                let offset = call.end.saturating_sub(1);
-                self.invocation_read =
-                    Some((caller.clone(), offset, call.context, parameter.owner));
-            }
+            self.enter_inline_read(&caller, call, path, parameter.owner);
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
             let acquisition = self

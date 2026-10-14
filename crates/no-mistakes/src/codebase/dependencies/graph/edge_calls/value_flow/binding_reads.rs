@@ -1,22 +1,41 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
+    pub(super) fn enter_inline_read(
+        &mut self,
+        caller: &std::path::Path,
+        call: &ValueCall,
+        file: &std::path::Path,
+        owner: CallableId,
+    ) {
+        if super::inline_inputs::inline_callee(&call.callee) {
+            self.invocation_read = Some(default_origins::InvocationRead {
+                file: caller.to_path_buf(),
+                offset: call.end.saturating_sub(1),
+                context: call.context,
+                owner: (file.to_path_buf(), owner),
+            });
+        }
+    }
     pub(super) fn expression_read(
         &self,
         path: &std::path::Path,
         offset: u32,
         context: Option<CallableId>,
     ) -> (u32, Option<CallableId>) {
-        let Some((source, invocation, caller, owner)) = &self.invocation_read else {
+        let Some(read) = &self.invocation_read else {
             return (offset, context);
         };
-        if source != path {
+        if read.file != path {
             return (offset, context);
         }
         self.executing_read
             .filter(|(owner, _, _)| Some(*owner) == context)
             .map(|(_, offset, context)| (offset, context))
-            .or_else(|| (context == Some(*owner)).then_some((*invocation, *caller)))
+            .or_else(|| {
+                (read.owner.0 == path && context == Some(read.owner.1))
+                    .then_some((read.offset, read.context))
+            })
             .unwrap_or((offset, context))
     }
 
@@ -31,10 +50,10 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> (u32, u32, Option<CallableId>) {
-        let Some((source, invocation, caller, _)) = &self.invocation_read else {
+        let Some(read) = &self.invocation_read else {
             return (source_offset, offset, context);
         };
-        if scope != 0 || source != path || source_context.is_none() {
+        if scope != 0 || read.file != path || source_context.is_none() {
             return (source_offset, offset, context);
         }
         if let Some((_, read_at, read_context)) = self
@@ -44,7 +63,7 @@ impl ValueFlowResolution<'_, '_> {
             return (read_at, read_at, read_context);
         }
         self.acquired_binding_read(path, source_context.expect("captured binding"))
-            .unwrap_or((*invocation, *invocation, *caller))
+            .unwrap_or((read.offset, read.offset, read.context))
     }
 
     /// Lazy returned fields borrow their existing owner-qualified acquisition
@@ -85,10 +104,10 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         owner: CallableId,
     ) {
-        let Some((source, offset, context, outer_owner)) = &self.invocation_read else {
+        let Some(read) = &self.invocation_read else {
             return;
         };
-        if source != caller || source != file {
+        if read.file != caller || read.file != file {
             self.executing_read = None;
             return;
         }
@@ -96,7 +115,10 @@ impl ValueFlowResolution<'_, '_> {
             .executing_read
             .filter(|(executing, _, _)| Some(*executing) == call.context)
             .map(|(_, offset, context)| (offset, context))
-            .or_else(|| (call.context == Some(*outer_owner)).then_some((*offset, *context)));
+            .or_else(|| {
+                (read.owner.0 == caller && call.context == Some(read.owner.1))
+                    .then_some((read.offset, read.context))
+            });
         let (read_at, read_context) =
             inherited.unwrap_or((call.end.saturating_sub(1), call.context));
         self.executing_read = Some((owner, read_at, read_context));
