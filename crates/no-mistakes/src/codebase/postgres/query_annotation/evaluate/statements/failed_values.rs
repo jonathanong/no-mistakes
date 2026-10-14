@@ -48,6 +48,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .into();
                 Value::Record(values, keys)
             }
+            Value::Object(values) => Value::Object(
+                values
+                    .into_iter()
+                    .map(|value| self.failed_scope_value(value, unsupported, depth, seen))
+                    .collect::<Vec<_>>()
+                    .into(),
+            ),
             Value::References(values) => self.failed_scope_callbacks(Value::References(values)),
             Value::Array(id) => {
                 self.failed_scope_array(id, unsupported, depth, seen);
@@ -68,7 +75,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         while let Some(value) = pending.pop() {
             match value {
                 Value::Array(id) if seen.insert(id) => pending.extend(self.live_callbacks(id)),
-                Value::Record(values, _) | Value::References(values) => pending.extend(values),
+                Value::Record(values, _) | Value::Object(values) | Value::References(values) => {
+                    pending.extend(values)
+                }
                 Value::Function(mut function, owner, captured) => {
                     std::sync::Arc::make_mut(&mut function).supported = false;
                     callbacks.push(Value::Function(function, owner, captured));

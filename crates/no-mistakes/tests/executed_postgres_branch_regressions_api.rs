@@ -239,3 +239,13 @@ fn sparse_failed_arrays_retain_callback_positions_without_dense_allocation() {
     assert_eq!(rows.len(), 1, "{rows:?}");
     assert!(!rows[0].complete, "{rows:?}");
 }
+
+#[test]
+fn opaque_object_literals_keep_inert_callback_references_for_actual_calls() {
+    let rows = extract("control-flow-opaque-object-callbacks.ts");
+    assert_eq!(rows.len(), 8, "{rows:?}");
+    // Uninvoked and statically false callback bodies retain lexical completeness.
+    for row in &rows {
+        assert_eq!(row.complete, matches!(row.line, 34 | 41 | 45), "{rows:?}");
+    }
+}

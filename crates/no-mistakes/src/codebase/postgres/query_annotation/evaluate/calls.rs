@@ -108,6 +108,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         if self.files[path].facts.precise_records && !operands_handled {
             self.invalidate_live_builders();
+            // An uncertain member fetch still invokes the inert callee candidates.
+            self.opaque_callbacks(std::slice::from_ref(&target), depth);
             self.opaque_callbacks(&arguments, depth);
             return Value::Failure("opaque-call-operand-effect");
         }

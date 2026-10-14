@@ -27,7 +27,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     std::sync::Arc::make_mut(&mut function).supported = false;
                     Value::Function(function, owner.clone(), *captured)
                 }
-                Some(value @ (Value::Record(_, _) | Value::Array(_) | Value::References(_))) => {
+                Some(
+                    value @ (Value::Record(_, _)
+                    | Value::Object(_)
+                    | Value::Array(_)
+                    | Value::References(_)),
+                ) => {
                     // This scope already contains inert failed metadata; keep alias identity.
                     value.clone()
                 }
@@ -40,6 +45,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .collect::<Vec<_>>()
                     .into();
                 Value::Record(values, keys.clone())
+            }
+            Expr::Object(children) => Value::Object(
+                children
+                    .iter()
+                    .map(|child| self.failed_binding(child, path, env, unsupported, depth))
+                    .collect::<Vec<_>>()
+                    .into(),
+            ),
+            // Object lowering wraps computed values in Sequence and spreads in
+            // an empty-name Member. Retain the inert value, never run key effects.
+            Expr::Sequence(children) => children.last().map_or_else(
+                || unsupported.clone(),
+                |child| self.failed_binding(child, path, env, unsupported, depth),
+            ),
+            Expr::Member(child, name) if name.is_empty() => {
+                self.failed_binding(child, path, env, unsupported, depth)
             }
             Expr::Array(children) => {
                 let values = children
@@ -66,7 +87,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut callbacks = Vec::new();
         while let Some(expr) = pending.pop() {
             match expr {
-                Expr::Record(children, _) | Expr::Array(children) => pending.extend(children),
+                Expr::Record(children, _) | Expr::Object(children) | Expr::Array(children) => {
+                    pending.extend(children)
+                }
+                Expr::Sequence(children) => pending.extend(children.last()),
+                Expr::Member(child, name) if name.is_empty() => pending.push(child),
                 Expr::Function(_) | Expr::Name(_) => {
                     callbacks.push(self.failed_binding(expr, path, env, unsupported, 1));
                 }
