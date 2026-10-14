@@ -1,5 +1,5 @@
 use super::{concat, Environment, Evaluator, Value};
-use crate::codebase::postgres::query_annotation::{Expr, Step};
+use crate::codebase::postgres::query_annotation::Step;
 use std::path::{Path, PathBuf};
 
 mod effects;
@@ -75,53 +75,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let mut opaque_return = false;
         for step in steps {
-            // ESM imports execute before module evaluation; an unconditional
-            // CommonJS require executes here, at its source statement. Moving
-            // it before an earlier executor would change the recovered SQL.
-            let eager_require = if self.files[path].facts.precise_records
-                && self
-                    .modules
-                    .get(path)
-                    .is_some_and(|current| *current == *env)
-            {
-                let call = match step {
-                    Step::Effect(call) | Step::Bind(_, call) => Some(call),
-                    _ => None,
-                };
-                match call {
-                    Some(Expr::Call { callee, args, .. }) if matches!(&**callee, Expr::Name(name) if name == "require") => {
-                        match args.as_slice() {
-                            [Expr::Text(specifier)]
-                                if self.files[path]
-                                    .module
-                                    .ts
-                                    .eager_require_specifiers
-                                    .contains(specifier) =>
-                            {
-                                self.files[path]
-                                    .module
-                                    .target(specifier, path, &self.resolve)
-                                    .map(Path::to_path_buf)
-                            }
-                            _ => None,
-                        }
-                    }
-                    _ => None,
-                }
-            } else {
-                None
-            };
-            if let Some(target) = eager_require {
-                self.module_environment(&target);
-            }
             match step {
                 Step::Bind(name, expr) => {
+                    let may_mutate = self.files[path].facts.precise_records
+                        && effects::contains_accessor_read(expr)
+                        && self.effect_can_mutate(expr, path, *env)
+                        && !self.proven_append_only_effect(expr, path, *env, depth, generic);
+                    let live_before = may_mutate.then(|| self.live_builder_values());
                     let value = if supported {
                         self.expr(expr, path, env, depth, generic).exposed()
                     } else {
                         unsupported.clone()
                     };
                     self.write_captured_binding_evaluated(*env, name, &value, depth);
+                    if let Some(live_before) = live_before {
+                        self.invalidate_builders(&live_before);
+                    }
                 }
                 Step::Append(name, expr) => {
                     let tail = self.expr(expr, path, env, depth, generic).exposed();
@@ -144,6 +113,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         && !self.proven_append_only_effect(expr, path, *env, depth, generic)
                     {
                         opaque_return = true;
+                        if self.files[path].facts.precise_records
+                            && (self.modules.get(path).is_some_and(|module| *module == *env)
+                                || effects::contains_accessor_read(expr))
+                        {
+                            self.invalidate_live_builders();
+                        }
                         // Arbitrary effects can mutate a builder passed by
                         // reference. Its previous prefix is no longer proof.
                         for value in self.scopes[*env].values_mut() {

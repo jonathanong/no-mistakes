@@ -129,6 +129,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 start,
                 end,
             } => self.call(callee, args, (*start, *end), path, env, (depth, generic)),
+            Expr::ModuleLoad(specifier) => self.load_dynamic_import(specifier, path),
             Expr::Delete(children, index) => {
                 self.deleted(children, *index, path, env, (depth, generic))
             }

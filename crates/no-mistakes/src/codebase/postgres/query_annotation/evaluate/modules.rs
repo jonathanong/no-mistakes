@@ -47,12 +47,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Step::Reserve(_) | Step::Hoisted(_, _) | Step::Var(_) | Step::Return(_) => false,
             })
         {
-            let values = self
-                .scopes
-                .iter()
-                .flat_map(|scope| scope.values().cloned())
-                .collect::<Vec<_>>();
-            self.invalidate_builders(&values);
+            self.invalidate_live_builders();
         }
         // Unmodeled top-level statements must not discard independently
         // supported function bodies. Their captured values remain conservative.

@@ -124,6 +124,10 @@ SQL construction; consumers must inspect the statement before classifying a
 `WITH` body as a read. Supplied static dependencies execute before their importer;
 opaque top-level effects and unscheduled async helper work make affected shared
 builders unproven. Use `check()` for project-wide annotation enforcement.
+Literal CommonJS `require` calls and awaited dynamic imports evaluate supplied
+targets at their expression position; a target that cannot be resolved leaves
+shared builder SQL unproven. Getter-capable member reads likewise prevent a
+later executor from certifying a builder they could have changed.
 
 `postgres-sql-shape-policy` also accepts `banned-function-call` and its
 `shapeOptions.bannedFunctionCall.functions` list through the same YAML rule

@@ -157,6 +157,26 @@ fn source_api_retains_generic_callbacks_exposed_by_conditional_exports() {
 }
 
 #[test]
+fn source_api_keeps_exported_object_spread_callbacks_generic() {
+    let sources = [source("exported-spread.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
+fn source_api_invalidates_a_builder_after_an_ordinary_getter_read() {
+    let sources = [source("member-getter.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
 fn source_api_preserves_proven_intrinsic_string_raw_text() {
     let sources = [source("intrinsic-raw.ts")];
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
@@ -223,6 +243,48 @@ fn source_api_keeps_read_before_later_commonjs_mutator() {
         statement.sql_text.as_deref(),
         Some("/* eager import */ SELECT 1")
     );
+}
+
+#[test]
+fn source_api_initializes_wrapped_commonjs_require_before_later_read() {
+    let sources = [
+        source("cjs-wrapped-consumer.ts"),
+        source("eager-builder.ts"),
+        source("eager-mutator.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "cjs-wrapped-consumer.ts")
+        .unwrap();
+    assert!(!statement.complete, "{statement:?}");
+    assert!(statement.sql_text.is_none(), "{statement:?}");
+}
+
+#[test]
+fn source_api_initializes_awaited_dynamic_import_before_later_read() {
+    let sources = [
+        source("dynamic-import-consumer.ts"),
+        source("eager-builder.ts"),
+        source("eager-mutator.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "dynamic-import-consumer.ts")
+        .unwrap();
+    assert!(!statement.complete, "{statement:?}");
+    assert!(statement.sql_text.is_none(), "{statement:?}");
+
+    let legacy = extract_executed_postgres_sql(&sources, &options).unwrap();
+    let legacy_statement = legacy
+        .iter()
+        .find(|statement| statement.file_name == "dynamic-import-consumer.ts")
+        .unwrap();
+    assert!(!legacy_statement.complete, "{legacy_statement:?}");
+    assert!(legacy_statement.sql_text.is_none(), "{legacy_statement:?}");
 }
 
 #[test]

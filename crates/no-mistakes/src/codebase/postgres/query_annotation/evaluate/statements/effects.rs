@@ -117,6 +117,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 }
 
+pub(super) fn contains_accessor_read(expr: &Expr) -> bool {
+    match expr {
+        Expr::Member(_, _) | Expr::ComputedMember(_, _) | Expr::Index(_, _) => true,
+        Expr::Spread(inner) | Expr::Discard(inner) | Expr::OpaqueCallback(inner) => {
+            contains_accessor_read(inner)
+        }
+        Expr::Call { callee, args, .. } => {
+            contains_accessor_read(callee) || args.iter().any(contains_accessor_read)
+        }
+        Expr::Object(parts)
+        | Expr::Record(parts, _)
+        | Expr::Container(parts)
+        | Expr::Children(parts)
+        | Expr::Sequence(parts)
+        | Expr::Alternatives(parts)
+        | Expr::Opaque(parts)
+        | Expr::Template(parts) => parts.iter().any(contains_accessor_read),
+        _ => false,
+    }
+}
+
 fn is_arguments_value(value: &Value) -> bool {
     match value {
         Value::Arguments(_) => true,

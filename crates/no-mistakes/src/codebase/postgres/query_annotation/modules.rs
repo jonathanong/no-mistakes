@@ -29,7 +29,9 @@ impl Module {
         // Static dependencies execute even when this module never reads one of
         // their exports (including bare imports).
         for import in &ts.imports {
-            if import.kind == ImportKind::Static && import.function_scope.is_none() {
+            if (import.kind == ImportKind::Static && import.function_scope.is_none())
+                || import.kind == ImportKind::Dynamic
+            {
                 targets
                     .entry(import.specifier.clone())
                     .or_insert_with(OnceLock::new);

@@ -3,6 +3,18 @@ use crate::fx::{fx_set, FxHashSet};
 use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn invalidate_live_builders(&mut self) {
+        let values = self.live_builder_values();
+        self.invalidate_builders(&values);
+    }
+
+    pub(super) fn live_builder_values(&self) -> Vec<Value> {
+        self.scopes
+            .iter()
+            .flat_map(|scope| scope.values().cloned())
+            .collect()
+    }
+
     pub(super) fn invalidate_builders(&mut self, values: &[Value]) {
         let mut ids = fx_set();
         for value in values {

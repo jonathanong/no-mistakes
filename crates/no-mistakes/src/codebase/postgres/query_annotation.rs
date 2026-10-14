@@ -47,6 +47,7 @@ pub(super) enum Expr {
         start: u32,
         end: u32,
     },
+    ModuleLoad(String),
     Function(std::sync::Arc<Function>),
     // Child references/effects do not describe the expression's runtime result.
     Children(Vec<Expr>),

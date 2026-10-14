@@ -137,6 +137,14 @@ fn value_reaches(
 ) -> bool {
     match value {
         Expr::Name(name) => exported_reaches(globals, name, target, visiting),
+        Expr::Spread(value)
+        | Expr::Member(value, _)
+        | Expr::Index(value, _)
+        | Expr::OpaqueCallback(value)
+        | Expr::Discard(value) => value_reaches(globals, value, target, visiting),
+        Expr::ComputedMember(value, key) | Expr::Append(value, key) =>
+            value_reaches(globals, value, target, visiting)
+                || value_reaches(globals, key, target, visiting),
         Expr::Record(values, _)
         | Expr::Object(values)
         | Expr::Container(values)

@@ -26,6 +26,11 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
             ])
         }
         Expression::CallExpression(value) => calls::calls(value, source),
+        Expression::ImportExpression(value) => {
+            crate::codebase::dependencies::extract::static_import_specifier(&value.source)
+                .map(Expr::ModuleLoad)
+                .unwrap_or_else(|| Expr::Opaque(children::collect(expr, source)))
+        }
         Expression::ArrowFunctionExpression(value) => functions::arrow(value, source),
         Expression::FunctionExpression(value) => {
             functions::named_function_expression(value, source)

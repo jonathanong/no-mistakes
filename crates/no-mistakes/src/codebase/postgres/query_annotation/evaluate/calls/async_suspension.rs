@@ -63,7 +63,8 @@ fn contains_await(expr: &Expr) -> bool {
             children: parts, ..
         }
         | Expr::Delete(parts, _) => any_await(parts),
-        Expr::Primitive
+        Expr::ModuleLoad(_)
+        | Expr::Primitive
         | Expr::Unknown
         | Expr::Unsupported
         | Expr::Text(_)
