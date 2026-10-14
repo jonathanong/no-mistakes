@@ -86,7 +86,7 @@ impl ValueMutationHistory {
     }
 }
 impl ImportCollector {
-    pub(in super::super) fn record_early_assignment(
+    pub(super) fn record_early_assignment(
         &mut self,
         scope: usize,
         name: &str,
