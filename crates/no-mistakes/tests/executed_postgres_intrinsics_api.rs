@@ -112,3 +112,27 @@ fn constructor_and_instance_aliases_taint_future_imported_intrinsics() {
         );
     }
 }
+
+#[test]
+fn reflected_array_prototypes_taint_future_imported_intrinsics() {
+    let rows = [
+        "control-flow-array-intrinsics-object-dependency.ts",
+        "control-flow-array-intrinsics-reflect-dependency.ts",
+    ]
+    .map(|dependency| {
+        extract(&[
+            "control-flow-array-intrinsics-alias-consumer.ts",
+            dependency,
+        ])
+    });
+    assert!(
+        rows.iter()
+            .all(|rows| rows.len() == 1 && !rows[0].complete && !rows[0].only_value_placeholders),
+        "{rows:?}"
+    );
+    assert!(
+        rows.iter()
+            .all(|rows| rows[0].incomplete_reason.as_deref() == Some("untrusted-array-intrinsics")),
+        "{rows:?}"
+    );
+}

@@ -78,7 +78,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.opaque_callbacks(args, depth);
                     return Some(Value::Failure("unsupported-collection-callback"));
                 }
-                let mut mapped = Vec::new();
+                let mapped = self.next_builder;
+                self.next_builder += 1;
+                self.argument_objects.insert(mapped, Vec::new());
                 for index in 0..values.len() {
                     let value = self.index(Value::Array(*id), index);
                     // Invoke through the ordinary callback/effect machinery, never
@@ -88,6 +90,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         ("element".into(), value),
                         ("index".into(), Value::Number(index as i64)),
                         ("array".into(), Value::Array(*id)),
+                        // Keep collected aliases rooted across callback branch joins.
+                        ("mapped".into(), Value::Array(mapped)),
                     ]));
                     let call = Expr::Call {
                         callee: Box::new(Expr::Name("callback".into())),
@@ -104,13 +108,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         self.invalidate_live_builders();
                         return Some(Value::Failure("opaque-collection-callback-effect"));
                     }
-                    mapped.push(value.exposed());
+                    self.argument_objects
+                        .get_mut(&mapped)
+                        .unwrap()
+                        .push(value.exposed());
                 }
                 if name == "map" {
-                    let id = self.next_builder;
-                    self.next_builder += 1;
-                    self.argument_objects.insert(id, mapped);
-                    Value::Array(id)
+                    Value::Array(mapped)
                 } else {
                     Value::Primitive
                 }

@@ -347,3 +347,19 @@ fn direct_unresolved_executor_operands_cannot_certify_earlier_builders() {
         Some("opaque-executor-operand-effect")
     );
 }
+
+#[test]
+fn mapped_builder_slots_include_later_iteration_mutations() {
+    let rows = extract("control-flow-map-builder-alias.ts");
+    assert_eq!(rows.len(), 3, "{rows:?}");
+    assert!(
+        rows.iter().all(|row| {
+            !row.complete
+                || row
+                    .sql_text
+                    .as_deref()
+                    .is_some_and(|text| text.contains("DELETE FROM records"))
+        }),
+        "{rows:?}"
+    );
+}
