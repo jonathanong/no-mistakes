@@ -5,7 +5,7 @@
     {
       "path": "docs/performance/imported-receiver-facts.md",
       "original_sha256": "0f55f0857d8241eddb4d89abf824b055c260c8cf8b9f188f2efe54ca363cd526",
-      "public_sha256": "44d8f22c0379121938e24faa9560f88f43a2edf8bb5834fed740085f7a200d75",
+      "public_sha256": "dcf6d41f3b57db029e905d454e1d3969895ea7157e426612512282ad401f24ef",
       "public_status": "normalized public copy"
     },
     {
@@ -321,7 +321,7 @@
     {
       "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/evidence-manifest.json",
       "original_sha256": "dc827d547cadb80c29a4366a6b262c76f016eeb10f65e579b19c278df01f12c0",
-      "public_sha256": "dc827d547cadb80c29a4366a6b262c76f016eeb10f65e579b19c278df01f12c0",
+      "public_sha256": "03caebfb9f1dfd9dfad69f9e22973edc3b23472550dbb3e98a4d77bbac17b7df",
       "public_status": "unchanged"
     },
     {

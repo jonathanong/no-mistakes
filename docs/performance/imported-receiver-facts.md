@@ -57,8 +57,10 @@ Rayon workers and 100 fresh collections per sample.
 
 The reverse-order increases are about 1.16 ms and 0.88 ms per collection.
 The cause remains unresolved. Optimized results do not erase this historical
-observation. All 13 original raw/summary/harness/provenance files are preserved
-byte-for-byte under [historical-unoptimized](imported-receiver-facts-evidence/historical-unoptimized/evidence-manifest.json).
+observation. All 13 original raw/summary/harness/provenance files remain byte-for-byte
+unchanged locally. The public [historical evidence manifest](imported-receiver-facts-evidence/historical-unoptimized/evidence-manifest.json)
+verifies the shipped path-normalized copies and separately records original
+byte counts and hashes. Public copies are not described as original bytes.
 
 ## Workload and timing method
 
