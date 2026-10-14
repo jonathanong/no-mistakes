@@ -94,3 +94,11 @@ unknown argument set to a proven invocation. Returned helpers require every
 known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
+
+Transparent aliases of default receiver parameters preserve the eventual member
+read. For example, `const alias = client; alias.get()` retains the original
+`get` target after only a sibling `set` write. Matching and dynamic writes still
+invalidate live members. A copied method such as `const get = alias.get` keeps
+its acquisition snapshot; copying a container keeps descendant members live.
+Captured and suspended helpers remain conservative. Nested propagation without
+an exact assigned member history also retains the conservative default guard.

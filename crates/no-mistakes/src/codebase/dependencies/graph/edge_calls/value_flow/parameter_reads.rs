@@ -1,7 +1,7 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
-    pub(super) fn record_parameter_receiver_read(
+    pub(super) fn record_value_receiver_read(
         &mut self,
         file: &std::path::Path,
         offset: u32,
