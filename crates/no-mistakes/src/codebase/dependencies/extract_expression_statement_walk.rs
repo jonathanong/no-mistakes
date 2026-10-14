@@ -39,4 +39,3 @@ fn visit_expression_with_annex_b_initializer<'a>(
         walk::walk_expression(collector, expression);
     }
 }
-
