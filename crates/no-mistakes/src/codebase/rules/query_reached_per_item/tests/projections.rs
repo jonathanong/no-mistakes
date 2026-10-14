@@ -164,3 +164,24 @@ fn selected_default_origins_track_receiver_mutations_and_copied_methods() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn default_mutation_paths_late_declarations_and_inherited_fields_are_conservative() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    for (file, expected) in [
+        ("src/default-review-stars.mts", vec![6]),
+        ("src/default-review-late.mts", vec![12]),
+        ("src/default-review-inherited.mts", vec![7, 9]),
+    ] {
+        assert_eq!(
+            findings
+                .iter()
+                .filter(|finding| finding.file == file)
+                .map(|finding| finding.line)
+                .collect::<Vec<_>>(),
+            expected,
+            "{findings:#?}"
+        );
+    }
+}

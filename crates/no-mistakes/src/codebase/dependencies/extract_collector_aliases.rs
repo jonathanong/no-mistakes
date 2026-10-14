@@ -148,6 +148,12 @@ impl ImportCollector {
             .rposition(|scope| scope.contains(binding_name))
             .map(|depth| (depth, self.lexical_scope_ids[depth]))
         else {
+            if self.collect_value_flow
+                && (self.imported_bindings.contains(binding_name)
+                    || self.predeclared_imported_bindings.contains(binding_name))
+            {
+                self.invalidate_value_write(0, name, offset);
+            }
             return;
         };
         self.insert_reassigned_callable_at(binding_scope, name.to_string());

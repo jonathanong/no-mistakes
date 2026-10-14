@@ -17,7 +17,7 @@ impl ImportCollector {
             let mut parts = name
                 .split('.')
                 .skip(1)
-                .map(str::to_string)
+                .map(|member| Some(member.to_string()))
                 .collect::<Vec<_>>();
             parts.pop();
             let mut pending = vec![(((scope, base.to_string()), parts), false)];
@@ -33,6 +33,7 @@ impl ImportCollector {
                 }
                 pending.push(((key.clone(), Vec::new()), true));
                 self.invalidate_default_origins(&key, &path, offset);
+                self.remember_member_mutation(&key, &path, offset);
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links

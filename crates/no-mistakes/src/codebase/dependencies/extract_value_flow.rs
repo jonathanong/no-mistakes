@@ -2,7 +2,11 @@ use super::*;
 
 pub(super) type DefaultOriginIndex =
     FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
-pub type ValueDefaultMutations = FxHashMap<usize, FxHashMap<Vec<String>, ValueMutationInfo>>;
+// None is a dynamic segment; Some("*") is an ordinary literal property.
+pub type ValueMutationPath = Vec<Option<String>>;
+pub(super) type MemberMutations = FxHashMap<ValueMutationPath, ValueMutationInfo>;
+pub(super) type PriorMemberMutations = FxHashMap<usize, FxHashMap<String, MemberMutations>>;
+pub type ValueDefaultMutations = FxHashMap<usize, MemberMutations>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueMutationInfo {
     pub offset: u32,

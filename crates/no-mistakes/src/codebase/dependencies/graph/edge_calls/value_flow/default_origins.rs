@@ -84,7 +84,7 @@ impl ValueFlowResolution<'_, '_> {
                                     receiver.len() >= origin.projection.len()
                                         && receiver.iter().zip(&origin.projection).all(
                                             |(actual, expected)| {
-                                                actual == expected || actual == "*"
+                                                actual.as_deref().is_none_or(|actual| actual == expected)
                                             },
                                         )
                                         && (origin.file != file

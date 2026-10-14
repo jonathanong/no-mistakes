@@ -3,7 +3,7 @@ use super::*;
 pub(in super::super) struct ReceiverOrigin {
     parameter: usize,
     origin: usize,
-    path: Vec<String>,
+    path: ValueMutationPath,
 }
 impl ImportCollector {
     pub(super) fn prepare_parameter_origins(&mut self) {
@@ -18,13 +18,63 @@ impl ImportCollector {
     }
     pub(super) fn record_parameter_origins(&mut self, slot: usize) {
         if let Some(index) = &mut self.parameter_default_origins {
-            index_parameter(index, slot, &self.value_flow.parameters[slot]);
+            let mut added = fx_map();
+            index_parameter(&mut added, slot, &self.value_flow.parameters[slot]);
+            for (scope, names) in added {
+                for (name, receivers) in names {
+                    if let Some(history) = self
+                        .prior_member_mutations
+                        .get(&scope)
+                        .and_then(|names| names.get(name.as_str()))
+                    {
+                        for receiver in &receivers {
+                            for (path, mutation) in history {
+                                attach_mutation(
+                                    &mut self.value_flow.parameters[slot],
+                                    receiver,
+                                    path,
+                                    mutation.offset,
+                                    mutation.contexts.iter().copied(),
+                                );
+                            }
+                        }
+                    }
+                    index
+                        .entry(scope)
+                        .or_default()
+                        .entry(name)
+                        .or_default()
+                        .extend(receivers);
+                }
+            }
         }
+    }
+    pub(super) fn remember_member_mutation(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        offset: u32,
+    ) {
+        let context = self.current_function_id();
+        let paths = self
+            .prior_member_mutations
+            .entry(key.0)
+            .or_default()
+            .entry(key.1.clone())
+            .or_default();
+        let mutation = paths
+            .entry(path.to_vec())
+            .or_insert_with(|| ValueMutationInfo {
+                offset,
+                contexts: fx_set(),
+            });
+        mutation.offset = mutation.offset.min(offset);
+        mutation.contexts.insert(context);
     }
     pub(super) fn invalidate_default_origins(
         &mut self,
         key: &(usize, String),
-        path: &[String],
+        path: &[Option<String>],
         offset: u32,
     ) {
         let context = self.current_function_id();
@@ -36,30 +86,13 @@ impl ImportCollector {
             .into_iter()
             .flatten()
         {
-            if path.len() < receiver.path.len()
-                || !path
-                    .iter()
-                    .zip(&receiver.path)
-                    .all(|(actual, expected)| actual == expected || actual == "*")
-            {
-                continue;
-            }
-            let parameter = &mut self.value_flow.parameters[receiver.parameter];
-            let mutations = std::sync::Arc::make_mut(
-                parameter
-                    .default_mutations
-                    .get_or_insert_with(|| std::sync::Arc::new(fx_map())),
+            attach_mutation(
+                &mut self.value_flow.parameters[receiver.parameter],
+                receiver,
+                path,
+                offset,
+                std::iter::once(context),
             );
-            let suffix = &path[receiver.path.len()..];
-            let paths = mutations.entry(receiver.origin).or_default();
-            if let Some(mutation) = paths.get_mut(suffix) {
-                mutation.contexts.insert(context);
-                mutation.offset = mutation.offset.min(offset);
-            } else {
-                let mut contexts = fx_set();
-                contexts.insert(context);
-                paths.insert(suffix.to_vec(), ValueMutationInfo { offset, contexts });
-            }
         }
     }
 }
@@ -88,7 +121,7 @@ fn index_origin(
         .iter()
         .filter_map(|step| match step {
             ValueProjection::Member(member) | ValueProjection::Element(member) => {
-                Some(member.clone())
+                Some(Some(member.clone()))
             }
             ValueProjection::Default(_, _) => None,
         })
@@ -107,4 +140,35 @@ fn index_origin(
                 path,
             });
     }
+}
+
+fn attach_mutation(
+    parameter: &mut ValueParameter,
+    receiver: &ReceiverOrigin,
+    path: &[Option<String>],
+    offset: u32,
+    contexts: impl Iterator<Item = Option<CallableId>>,
+) {
+    if path.len() < receiver.path.len()
+        || !path
+            .iter()
+            .zip(&receiver.path)
+            .all(|(actual, expected)| actual.is_none() || actual == expected)
+    {
+        return;
+    }
+    let mutations = std::sync::Arc::make_mut(
+        parameter
+            .default_mutations
+            .get_or_insert_with(|| std::sync::Arc::new(fx_map())),
+    );
+    let paths = mutations.entry(receiver.origin).or_default();
+    let mutation = paths
+        .entry(path[receiver.path.len()..].to_vec())
+        .or_insert_with(|| ValueMutationInfo {
+            offset,
+            contexts: fx_set(),
+        });
+    mutation.offset = mutation.offset.min(offset);
+    mutation.contexts.extend(contexts);
 }

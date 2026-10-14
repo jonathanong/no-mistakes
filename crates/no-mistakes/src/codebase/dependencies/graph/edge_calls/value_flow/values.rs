@@ -87,9 +87,16 @@ impl ValueFlowResolution<'_, '_> {
             FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => fields
                 .get(member)
                 .map_or(FlowValue::Undefined, |value| self.value(&file, value)),
-            FlowValue::Object { file, fields } => fields
-                .get(member)
-                .map_or(FlowValue::Undefined, |value| self.value(&file, value)),
+            FlowValue::Object { file, fields } => fields.get(member).map_or_else(
+                || {
+                    if inherited_object_member(member) {
+                        FlowValue::Unknown
+                    } else {
+                        FlowValue::Undefined
+                    }
+                },
+                |value| self.value(&file, value),
+            ),
             FlowValue::Target(ResolvedCallTarget::ModuleExport {
                 specifier,
                 export_path,
@@ -107,4 +114,22 @@ impl ValueFlowResolution<'_, '_> {
             _ => FlowValue::Unknown,
         }
     }
+}
+
+fn inherited_object_member(member: &str) -> bool {
+    matches!(
+        member,
+        "constructor"
+            | "toString"
+            | "toLocaleString"
+            | "valueOf"
+            | "hasOwnProperty"
+            | "isPrototypeOf"
+            | "propertyIsEnumerable"
+            | "__proto__"
+            | "__defineGetter__"
+            | "__defineSetter__"
+            | "__lookupGetter__"
+            | "__lookupSetter__"
+    )
 }
