@@ -6,6 +6,19 @@ impl ValueFlowResolution<'_, '_> {
         path: &std::path::Path,
         expression: &ValueExpression,
     ) -> FlowValue {
+        let outer = self.default_origins.take();
+        let value = self.expression_value(path, expression);
+        if value == FlowValue::Undefined {
+            self.default_origins = None;
+        }
+        default_origins::merge(&mut self.default_origins, outer, self.cache);
+        value
+    }
+    fn expression_value(
+        &mut self,
+        path: &std::path::Path,
+        expression: &ValueExpression,
+    ) -> FlowValue {
         match expression {
             ValueExpression::Named {
                 name,
@@ -19,7 +32,12 @@ impl ValueFlowResolution<'_, '_> {
                 let base = self.value(path, base);
                 self.member(base, member)
             }
-            ValueExpression::Object(fields) => FlowValue::Object {
+            ValueExpression::Object(fields, null_prototype) => FlowValue::Object {
+                null_prototype: *null_prototype,
+                file: path.to_path_buf(),
+                fields: std::sync::Arc::clone(fields),
+            },
+            ValueExpression::Array(fields) => FlowValue::Array {
                 file: path.to_path_buf(),
                 fields: std::sync::Arc::clone(fields),
             },
@@ -58,14 +76,32 @@ impl ValueFlowResolution<'_, '_> {
             .unwrap_or(FlowValue::Unknown)
     }
     pub(super) fn member(&mut self, base: FlowValue, member: &str) -> FlowValue {
+        self.project_default_origins(member);
+        self.member_value(base, member)
+    }
+    fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
             FlowValue::Returned {
                 receiver: Some(receiver),
                 ..
-            } => self.member(FlowValue::Target(receiver), member),
-            FlowValue::Object { file, fields } => fields
+            } => self.member_value(FlowValue::Target(receiver), member),
+            FlowValue::Array { file, fields } if member.parse::<usize>().is_ok() => fields
                 .get(member)
                 .map_or(FlowValue::Undefined, |value| self.value(&file, value)),
+            FlowValue::Object {
+                file,
+                fields,
+                null_prototype,
+            } => fields.get(member).map_or_else(
+                || {
+                    if !null_prototype && inherited_object_member(member) {
+                        FlowValue::Unknown
+                    } else {
+                        FlowValue::Undefined
+                    }
+                },
+                |value| self.value(&file, value),
+            ),
             FlowValue::Target(ResolvedCallTarget::ModuleExport {
                 specifier,
                 export_path,
@@ -83,4 +119,22 @@ impl ValueFlowResolution<'_, '_> {
             _ => FlowValue::Unknown,
         }
     }
+}
+
+fn inherited_object_member(member: &str) -> bool {
+    matches!(
+        member,
+        "constructor"
+            | "toString"
+            | "toLocaleString"
+            | "valueOf"
+            | "hasOwnProperty"
+            | "isPrototypeOf"
+            | "propertyIsEnumerable"
+            | "__proto__"
+            | "__defineGetter__"
+            | "__defineSetter__"
+            | "__lookupGetter__"
+            | "__lookupSetter__"
+    )
 }

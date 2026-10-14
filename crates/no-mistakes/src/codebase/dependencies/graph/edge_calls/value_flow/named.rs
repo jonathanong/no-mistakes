@@ -42,7 +42,9 @@ impl ValueFlowResolution<'_, '_> {
             }
         } else if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
             if self.initializing.iter().any(|(file, owner, index)| {
-                file == path && *owner == parameter.owner && parameter.index >= *index
+                file == path
+                    && *owner == parameter.owner
+                    && parameter.initialization_order >= *index
             }) || parameter
                 .mutation_contexts
                 .iter()
@@ -111,6 +113,11 @@ impl ValueFlowResolution<'_, '_> {
             FlowValue::Unknown
         };
         self.visiting.remove(&key);
+        let value = if self.default_origin_invalidated(path, offset, context) {
+            FlowValue::Unknown
+        } else {
+            value
+        };
         member.map_or(value.clone(), |member| self.member(value, member))
     }
     fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {

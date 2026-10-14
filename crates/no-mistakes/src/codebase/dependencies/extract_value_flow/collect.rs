@@ -40,6 +40,7 @@ impl ImportCollector {
                     .entry(name.clone())
                     .or_default()
                     .push(self.value_flow.bindings.len());
+                self.record_value_reference(scope, &name, &value);
                 self.value_flow.bindings.push(ValueBinding {
                     name,
                     scope,
@@ -101,23 +102,13 @@ impl ImportCollector {
                         }),
                 ),
             };
-            if let Some(name) = binding_identifier_name(pattern) {
-                self.value_parameter_indexes
-                    .entry(self.current_lexical_scope_id())
-                    .or_default()
-                    .entry(name.to_string())
-                    .or_default()
-                    .push(self.value_flow.parameters.len());
-                self.value_flow.parameters.push(ValueParameter {
-                    owner,
-                    index,
-                    name: name.to_string(),
-                    scope: self.current_lexical_scope_id(),
-                    default,
-                    invalidated_at: None,
-                    mutation_contexts: fx_set(),
-                });
-            }
+            self.record_parameter_pattern(
+                pattern,
+                (owner, index),
+                &default,
+                self.value_flow.parameters.len(),
+                Vec::new(),
+            );
         }
     }
     pub(in super::super) fn record_value_call(&mut self, call: &CallExpression<'_>) {

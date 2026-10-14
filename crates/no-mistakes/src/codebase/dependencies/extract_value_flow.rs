@@ -1,9 +1,30 @@
 use super::*;
 
+pub(super) type DefaultOriginIndex =
+    FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
+// None is a dynamic segment; Some("*") is an ordinary literal property.
+pub type ValueMutationPath = Vec<Option<String>>;
+pub(super) type PriorMemberMutations =
+    FxHashMap<usize, FxHashMap<String, mutation_history::ValueMutationHistory>>;
+pub type ValueDefaultMutations = FxHashMap<usize, Vec<ValueDefaultMutationSource>>;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValueDefaultMutationSource {
+    pub path: ValueMutationPath,
+    pub history: std::sync::Arc<mutation_history::ValueMutationHistory>,
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValueMutationInfo {
+    pub offset: u32,
+    pub contexts: FxHashSet<Option<CallableId>>,
+}
+pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
+
 /// Syntactic value flow retained by the import collector. Resolution uses the
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_link_constructions: usize,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
@@ -24,7 +45,8 @@ pub enum ValueExpression {
     Callable(CallableId),
     Super(CallableId),
     Member(std::sync::Arc<ValueExpression>, String),
-    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>),
+    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>, bool),
+    Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
     Undefined,
     Default(
         std::sync::Arc<ValueExpression>,
@@ -42,12 +64,22 @@ pub struct ValueBinding {
     pub value: ValueExpression,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValueProjection {
+    Member(String),
+    Element(String),
+    Default(ValueExpression, usize),
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueParameter {
     pub owner: CallableId,
     pub index: usize,
     pub name: String,
     pub scope: usize,
     pub default: ValueExpression,
+    pub projection: Vec<ValueProjection>,
+    pub initialization_order: usize,
+    pub default_order: usize,
+    pub default_mutations: Option<std::sync::Arc<ValueDefaultMutations>>,
     pub invalidated_at: Option<u32>,
     pub mutation_contexts: FxHashSet<Option<CallableId>>,
 }
@@ -84,3 +116,18 @@ mod templates;
 
 #[path = "extract_value_flow/nested.rs"]
 mod nested;
+
+#[path = "extract_value_flow/parameter_patterns.rs"]
+mod parameter_patterns;
+
+#[path = "extract_value_flow/default_origins.rs"]
+mod default_origins;
+
+#[path = "extract_value_flow/mutation_history.rs"]
+mod mutation_history;
+
+#[path = "extract_value_flow/write_targets.rs"]
+pub(super) mod write_targets;
+
+#[path = "extract_value_flow/object_values.rs"]
+mod object_values;

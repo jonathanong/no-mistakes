@@ -22,6 +22,19 @@ impl ImportCollector {
             Expression::TaggedTemplateExpression(tagged) => {
                 ValueExpression::Call(templates::tag_offset(tagged), tagged.span.end)
             }
+            Expression::StaticMemberExpression(member) => ValueExpression::Member(
+                std::sync::Arc::new(self.value_expression(&member.object)),
+                member.property.name.to_string(),
+            ),
+            Expression::ComputedMemberExpression(member) => write_targets::static_key(
+                &member.expression,
+            )
+            .map_or(ValueExpression::Unknown, |key| {
+                ValueExpression::Member(
+                    std::sync::Arc::new(self.value_expression(&member.object)),
+                    key,
+                )
+            }),
             Expression::Super(_) => self
                 .current_function_id()
                 .map_or(ValueExpression::Unknown, ValueExpression::Super),
@@ -47,24 +60,25 @@ impl ImportCollector {
             Expression::FunctionExpression(function) => {
                 ValueExpression::Callable(CallableId(function.span.start))
             }
-            Expression::ObjectExpression(object) => {
+            Expression::ArrayExpression(array) => {
                 let mut fields = fx_map();
-                for property in &object.properties {
-                    let ObjectPropertyKind::ObjectProperty(property) = property else {
-                        return ValueExpression::Unknown;
-                    };
-                    if property.computed || property.method || property.kind != PropertyKind::Init {
+                for (index, element) in array.elements.iter().enumerate() {
+                    if matches!(
+                        element,
+                        oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)
+                    ) {
                         return ValueExpression::Unknown;
                     }
-                    let Some(key) =
-                        crate::codebase::ts_source::static_property_key_name(&property.key)
-                    else {
-                        return ValueExpression::Unknown;
-                    };
-                    fields.insert(key.to_string(), self.value_expression(&property.value));
+                    let value = element
+                        .as_expression()
+                        .map_or(ValueExpression::Undefined, |expression| {
+                            self.value_expression(expression)
+                        });
+                    fields.insert(index.to_string(), value);
                 }
-                ValueExpression::Object(std::sync::Arc::new(fields))
+                ValueExpression::Array(std::sync::Arc::new(fields))
             }
+            Expression::ObjectExpression(object) => self.object_value(object),
             _ => simple_callee_name(expression).map_or(ValueExpression::Unknown, |name| {
                 ValueExpression::Named {
                     scope: self.callee_binding_scope(&name),

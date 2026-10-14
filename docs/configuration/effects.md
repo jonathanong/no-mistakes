@@ -46,7 +46,7 @@ those names. Adding targets alongside those lists does not narrow the lists.
 
 Returned functions and destructured factory exports resolve through their visible
 factory bodies, including awaited initializers and explicit re-export chains.
-Receiver provenance follows client defaults and supplied arguments through helpers.
+Receiver provenance follows client defaults and supplied arguments through helpers, including static object and array parameter patterns with nested bindings and defaults.
 A shared helper receiver resolves only when its statically known callers agree;
 unknown, conflicting, or reassigned values stay unresolved. Imported clients
 created by opaque factories retain their exported receiver identity.

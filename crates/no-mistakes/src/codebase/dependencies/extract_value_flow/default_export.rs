@@ -18,6 +18,7 @@ impl ImportCollector {
             .entry("default".to_string())
             .or_default()
             .push(self.value_flow.bindings.len());
+        self.record_value_reference(0, "default", &value);
         self.value_flow.bindings.push(ValueBinding {
             name: "default".to_string(),
             scope: 0,

@@ -34,6 +34,7 @@ impl ValueFlowResolution<'_, '_> {
                     used_parameters: fx_set(),
                     visiting: fx_set(),
                     calls_visiting: fx_set(),
+                    default_origins: None,
                 };
                 flow.visiting
                     .insert((path.to_path_buf(), parameter.scope, parameter.name.clone()));
@@ -42,14 +43,17 @@ impl ValueFlowResolution<'_, '_> {
                 let value = flow.compute_parameter(path, parameter);
                 let cached = std::sync::Arc::new(CachedParameter {
                     value,
-                    dependencies: flow.used_parameters,
+                    origins: flow.default_origins,
                 });
-                lease.publish(std::sync::Arc::clone(&cached));
+                lease.publish(
+                    std::sync::Arc::clone(&cached),
+                    (path.to_path_buf(), parameter.owner),
+                    flow.used_parameters,
+                );
                 cached
             }
         };
-        self.used_parameters
-            .extend(cached.dependencies.iter().cloned());
+        self.extend_default_origins(cached.origins.as_ref());
         cached.value.clone()
     }
     fn compute_parameter(
@@ -63,6 +67,7 @@ impl ValueFlowResolution<'_, '_> {
             .cloned()
             .unwrap_or_default();
         let mut values = Vec::new();
+        let mut origins = None;
         for (caller, offset, callee) in incoming {
             let Some(index) = self.indexes.file(self.facts, &caller) else {
                 continue;
@@ -77,15 +82,22 @@ impl ValueFlowResolution<'_, '_> {
                 values.push(FlowValue::Unknown);
                 continue;
             };
+            self.default_origins = None;
             let argument = self.invocation_argument(&caller, call, parameter.index);
-            values.push(match argument {
+            let from_default = matches!(argument, None | Some(FlowValue::Undefined));
+            let value = match argument {
                 None | Some(FlowValue::Undefined) => self.parameter_default(path, parameter),
                 Some(value) => value,
-            });
+            };
+            values.push(self.project_parameter(path, parameter, value, from_default));
+            default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         }
         if values.is_empty() {
-            values.push(self.parameter_default(path, parameter));
+            let value = self.parameter_default(path, parameter);
+            values.push(self.project_parameter(path, parameter, value, true));
         }
+        default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
+        self.default_origins = origins;
         agreed_value(values)
     }
     fn parameter_default(
@@ -94,7 +106,7 @@ impl ValueFlowResolution<'_, '_> {
         parameter: &ValueParameter,
     ) -> FlowValue {
         self.initializing
-            .push((path.to_path_buf(), parameter.owner, parameter.index));
+            .push((path.to_path_buf(), parameter.owner, parameter.default_order));
         let value = self.value(path, &parameter.default);
         self.initializing.pop();
         value
@@ -105,7 +117,9 @@ impl ValueFlowResolution<'_, '_> {
         call: &ValueCall,
         mut index: usize,
     ) -> Option<FlowValue> {
+        let origins = self.default_origins.take();
         let mut callee = self.value(caller, &call.callee);
+        self.default_origins = origins;
         while let FlowValue::Returned { executor, .. } = callee {
             callee = *executor;
         }

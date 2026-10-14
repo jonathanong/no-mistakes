@@ -79,6 +79,7 @@ pub(in super::super::super) fn refine_value_calls(
             edges.insert(index, resolved_edges);
         }
         if !changed.is_empty() {
+            changed = pass.parameter_cache.affected(changed);
             pass.parameter_cache.clear();
         }
         for key in changed {

@@ -56,6 +56,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     collector.visit_program(program);
     collector.materialize_aggregate_aliases();
     collector.materialize_deferred_simple_aliases();
+    collector.finish_default_mutations();
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids

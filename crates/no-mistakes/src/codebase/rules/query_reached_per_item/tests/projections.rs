@@ -134,3 +134,54 @@ fn switch_tags_void_defaults_and_nested_mutations_preserve_value_flow() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn destructured_parameters_project_before_caller_agreement() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/destructured-parameters.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [4, 6, 8, 17, 21, 31, 43, 45, 52, 57],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn selected_default_origins_track_receiver_mutations_and_copied_methods() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/default-origin-mutations.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [10, 13, 16, 19, 25, 28, 32],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn default_mutation_paths_late_declarations_and_inherited_fields_are_conservative() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    for (file, expected) in [
+        ("src/default-review-stars.mts", vec![6]),
+        ("src/default-review-late.mts", vec![12]),
+        ("src/default-review-inherited.mts", vec![7, 9, 14, 20]),
+    ] {
+        assert_eq!(
+            findings
+                .iter()
+                .filter(|finding| finding.file == file)
+                .map(|finding| finding.line)
+                .collect::<Vec<_>>(),
+            expected,
+            "{findings:#?}"
+        );
+    }
+}
