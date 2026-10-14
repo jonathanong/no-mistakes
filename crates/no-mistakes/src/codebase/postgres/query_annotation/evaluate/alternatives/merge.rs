@@ -33,7 +33,10 @@ pub(super) fn objects(
                 copied_slots += after.len();
             }
             std::collections::hash_map::Entry::Occupied(mut entry) => {
-                if entry.get().len() != after.len() {
+                if entry.get().len() != after.len()
+                    || entry.get() == &[Value::Failure("conditional-collection-shape")]
+                    || after == &[Value::Failure("conditional-collection-shape")]
+                {
                     // A missing element is not an empty SQL fragment. Retain
                     // shape uncertainty rather than zip away a possible write.
                     *entry.get_mut() = vec![Value::Failure("conditional-collection-shape")];
