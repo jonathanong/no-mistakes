@@ -138,14 +138,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     value,
                 } => self.slot_write(receiver, *index, value, path, env, (depth, generic)),
                 Expr::Member(object, name) => {
-                    if let Some(value) =
-                        self.namespace_member(object, name, path, *env, depth, generic)
-                    {
-                        value
-                    } else {
-                        let value = self.expr(object, path, env, depth, generic).exposed();
-                        self.member(value, name, path)
-                    }
+                    self.member_expr(object, name, path, env, (depth, generic))
                 }
                 Expr::ComputedMember(object, key) => {
                     let value = self.operand(object, path, env, (depth, generic)).exposed();

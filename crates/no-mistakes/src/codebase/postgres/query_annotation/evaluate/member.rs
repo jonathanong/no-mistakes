@@ -4,6 +4,23 @@ use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn member_expr(
+        &mut self,
+        object: &Expr,
+        name: &str,
+        path: &Path,
+        env: &super::Environment,
+        context: (u8, bool),
+    ) -> Value {
+        let (depth, generic) = context;
+        if let Some(value) = self.namespace_member(object, name, path, *env, depth, generic) {
+            value
+        } else {
+            let value = self.expr(object, path, env, depth, generic).exposed();
+            self.member(value, name, path)
+        }
+    }
+
     pub(super) fn static_namespace_read(
         &self,
         object: &Expr,
