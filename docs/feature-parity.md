@@ -56,6 +56,12 @@ and the default `unanalyzableSql: report` policy; explicitly choose `ignore` for
 opaque leading SQL. This annotation evidence does not imply complete SQL for
 structural PostgreSQL rules.
 
+Import-aware executed SQL extraction follows named private callables returned
+from nested branches of exported factories through the same Rust and async Node
+ESM/CJS API. Static callable wrappers and cyclic return references retain their
+existing behavior; opaque returned expressions and unsupported bodies remain
+unproven. Recovered modifying SQL still requires statement-level classification.
+
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
 dependency artifacts participate in semantic native test planning. Playwright, React,
@@ -109,6 +115,10 @@ predicates, bind parameters, typed temporal literals, and discriminated ordinary
 literal values equally through Rust and the async CJS/ESM/native source API.
 Conservative nullable spans and completeness remain independent of execution
 policy and INSERT provenance.
+
+Import-aware executed PostgreSQL extraction stringifies literal booleans in
+finite joins, plain templates, and string concatenation through Rust and async
+CJS/ESM APIs. Trusted-tag value binds and opaque coercion boundaries are preserved.
 
 The pure PostgreSQL source API is available through the async native Node
 binding in CJS and ESM. Its typed CREATE INDEX facts preserve the `ON ONLY`

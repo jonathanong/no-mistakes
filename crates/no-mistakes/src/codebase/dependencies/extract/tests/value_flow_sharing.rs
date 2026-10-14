@@ -145,7 +145,8 @@ fn late_defaults_share_one_indexed_mutation_history() {
         .values()
         .flat_map(|names| names.values())
         .collect::<Vec<_>>();
-    assert_eq!(receiver_histories.len(), 1);
+    // Inline-call analysis retains every alias, but all names share one history.
+    assert_eq!(receiver_histories.len(), 513);
     assert!(receiver_histories
         .iter()
         .all(|receiver| std::sync::Arc::ptr_eq(history, receiver)));

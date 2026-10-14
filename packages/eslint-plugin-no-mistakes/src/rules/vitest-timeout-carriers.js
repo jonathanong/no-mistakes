@@ -1,5 +1,10 @@
 "use strict";
 function createCarriers(option, check) {
+  function configCheck(entry, ...args) {
+    const unresolved = entry.value.kind !== "number" || entry.value.runtimeFunction;
+    if (unresolved && option.configUnknownValues === "defer-to-runner") return;
+    check(entry, ...args);
+  }
   function properties(
     value,
     names,
@@ -7,30 +12,31 @@ function createCarriers(option, check) {
     origin,
     carrier = "timeout options",
     carrierOrigin = origin,
+    inspect = check,
   ) {
     if (value.kind !== "object") {
-      check({ value: { kind: "unknown" }, origin }, carrier, max, origin);
+      inspect({ value: { kind: "unknown" }, origin }, carrier, max, origin);
       return;
     }
     let unresolvedKeys = false;
     for (const name of names) {
       const entry = value.properties.get(name);
-      if (entry) check(entry, name, max, origin);
+      if (entry) inspect(entry, name, max, origin);
       else if (value.unknown) unresolvedKeys = true;
     }
     if (unresolvedKeys)
-      check({ value: { kind: "unknown" }, origin: carrierOrigin }, carrier, max, carrierOrigin);
+      inspect({ value: { kind: "unknown" }, origin: carrierOrigin }, carrier, max, carrierOrigin);
   }
   function defaults(value, project, origin = project) {
     const max = option.defaultMax ?? 5000;
     if (value.kind !== "object") {
-      check({ value: { kind: "unknown" }, origin }, "config carrier", max, origin);
+      configCheck({ value: { kind: "unknown" }, origin }, "config carrier", max, origin);
       return;
     }
     const testEntry = value.properties.get("test");
     if (!testEntry) {
       if (value.unknown)
-        check({ value: { kind: "unknown" }, origin }, "config carrier", max, origin);
+        configCheck({ value: { kind: "unknown" }, origin }, "config carrier", max, origin);
       return;
     }
     const test = testEntry.value;
@@ -42,6 +48,7 @@ function createCarriers(option, check) {
       test.kind === "object" ? project : testOrigin,
       "test options carrier",
       testOrigin,
+      configCheck,
     );
     if (test.kind !== "object") return;
     const projects = test.properties.get("projects");
@@ -50,14 +57,14 @@ function createCarriers(option, check) {
         for (const entry of projects.value.entries)
           defaults(entry.value, entry.origin, entry.origin);
       else
-        check(
+        configCheck(
           { value: { kind: "unknown" }, origin: projects.origin },
           "projects carrier",
           max,
           projects.origin,
         );
     } else if (test.unknown && !project)
-      check(
+      configCheck(
         { value: { kind: "unknown" }, origin: testOrigin },
         "projects carrier",
         max,

@@ -94,6 +94,7 @@ pub struct ValueCall {
     pub offset: u32,
     pub end: u32,
     pub source_callee: String,
+    pub context: Option<CallableId>,
     pub callee: ValueExpression,
     pub arguments: std::sync::Arc<Vec<ValueExpression>>,
     pub bound: bool,
@@ -131,6 +132,7 @@ mod default_origins;
 
 #[path = "extract_value_flow/mutation_history.rs"]
 mod mutation_history;
+pub use mutation_history::ValueMutationHistory;
 
 #[path = "extract_value_flow/write_targets.rs"]
 pub(super) mod write_targets;

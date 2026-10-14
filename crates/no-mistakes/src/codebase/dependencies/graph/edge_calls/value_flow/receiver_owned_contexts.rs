@@ -42,7 +42,7 @@ pub(super) fn frames<'a>(
                 }
             }
             // Default validation metadata is not an invocation alternative.
-            OriginKind::Source(_) => {}
+            OriginKind::Source(_) | OriginKind::InvocationReceiver { .. } => {}
             OriginKind::Receiver(..) => unmatched = true,
         }
     }

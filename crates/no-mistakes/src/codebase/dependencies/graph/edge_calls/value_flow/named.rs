@@ -9,6 +9,9 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> FlowValue {
+        let (offset, context) = self.invocation_read.as_ref()
+            .filter(|(file, _, _, _)| file == path)
+            .map_or((offset, context), |(_, offset, context, _)| (*offset, *context));
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -18,6 +21,11 @@ impl ValueFlowResolution<'_, '_> {
         let Some(scope) = scope.or_else(|| file.imported.contains_key(base).then_some(0)) else {
             return FlowValue::Unknown;
         };
+        if self.invocation_read.is_some() && file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base))
+            .is_some_and(|history| history.invalidated(&[], &[], offset, context, false))
+        {
+            return FlowValue::Unknown;
+        }
         let key = (path.to_path_buf(), scope, base.to_string());
         if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
             self.used_parameters
@@ -124,6 +132,15 @@ impl ValueFlowResolution<'_, '_> {
         self.visiting.remove(&key);
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, offset, context);
+        }
+        if let Some((source, read_offset, read_context, owner)) = &self.invocation_read {
+            if let Some(history) = file.values.receiver_mutations.as_ref().and_then(|histories| histories.get(&scope)).and_then(|names| names.get(base)) {
+                let origin = self.cache.origin_node(OriginKind::InvocationReceiver {
+                    file: source.clone(), offset: *read_offset, context: *read_context, owner: *owner,
+                    history: std::sync::Arc::clone(history),
+                }, 1);
+                default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
+            }
         }
         let value = if self.default_origin_invalidated(path, offset, context) {
             FlowValue::Unknown

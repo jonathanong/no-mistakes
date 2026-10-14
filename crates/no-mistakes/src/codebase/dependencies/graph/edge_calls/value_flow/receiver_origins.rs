@@ -16,7 +16,8 @@ impl ValueFlowResolution<'_, '_> {
                 .receiver_mutations
                 .as_ref()
                 .and_then(|receivers| receivers.get(&scope))
-                .is_some_and(|names| names.contains_key(name))
+                .and_then(|names| names.get(name))
+                .is_some_and(|history| history.has_assignments)
         }) {
             let source = self.cache.origin_node(
                 OriginKind::Receiver(file.to_path_buf(), scope, name.to_string()),
@@ -143,21 +144,14 @@ impl ValueFlowResolution<'_, '_> {
         origins: default_origins::Origins,
         owned_context: Option<(&std::path::Path, CallableId, bool)>,
     ) -> std::sync::Arc<OriginNode> {
-        let mut callee = &call.callee;
-        while let ValueExpression::Member(base, _) = callee {
-            callee = base;
-        }
-        let context = match callee {
-            ValueExpression::Named { context, .. } => *context,
-            _ => None,
-        };
         self.cache.origin_node(
             OriginKind::ReceiverUse(
                 origins,
                 ReceiverRead {
                     file: file.to_path_buf(),
                     offset: call.offset,
-                    context,
+                    // Inline callees have no Named expression; facts own their caller context.
+                    context: call.context,
                     invocation: true,
                     owned_context: owned_context.map(|(file, owner, preserve)| {
                         Box::new((file.to_path_buf(), owner, preserve))

@@ -6,6 +6,8 @@ pub(in super::super) use worklist::refine_value_calls;
 pub(super) fn incoming_inputs(
     sites: &[ResolvedCallSite],
     constructors: &ConstructorRoutes,
+    indexes: &CallableResolutionIndexes,
+    facts: &dyn TsFactLookup,
 ) -> ParameterInputs {
     let mut incoming: ParameterInputs = fx_map();
     for site in sites {
@@ -29,7 +31,7 @@ pub(super) fn incoming_inputs(
             incoming
                 .entry((file.to_path_buf(), *id))
                 .or_default()
-                .push((site.file.clone(), site.offset, site.source_callee.clone()));
+                .push(ParameterInput::from_site(site, indexes, facts));
         }
     }
     incoming
@@ -62,6 +64,7 @@ fn refine_iteration(
         calls_visiting: fx_set(),
         default_origins: None,
         acquisition_context: None,
+                    invocation_read: None,
     };
     let mut sites = base.to_vec();
     let mut edges = Vec::new();

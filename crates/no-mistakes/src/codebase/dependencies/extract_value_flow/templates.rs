@@ -32,6 +32,7 @@ impl ImportCollector {
                 .map(|value| self.value_expression(value)),
         );
         self.value_flow.calls.push(ValueCall {
+            context: self.current_function_id(),
             offset: tag_offset(tagged),
             end: tagged.span.end,
             source_callee: simple_callee_name(&tagged.tag)

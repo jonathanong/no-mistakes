@@ -51,16 +51,23 @@ fn divergent_dense_shapes_do_not_fabricate_a_known_length() {
 }
 
 #[test]
-fn branch_returned_private_functions_remain_safely_incomplete() {
+fn branch_returned_private_functions_recover_modifying_sql() {
     let rows = extract("control-flow-branch-returned-functions.ts");
     assert_eq!(rows.len(), 2, "{rows:?}");
-    // Follow-up #1973 will recover these returned entrypoints. Until then the
-    // lexical pre-append prefix must never be certified as the full statement.
-    for row in rows {
-        assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
-        assert_eq!(
-            row.incomplete_reason.as_deref(),
-            Some("unresolved-sql-fragment")
+    for annotation in ["returns/left", "returns/right"] {
+        let row = rows
+            .iter()
+            .find(|row| row.annotation.as_deref() == Some(annotation))
+            .unwrap();
+        // Returned private entrypoints must include their modifying append.
+        assert!(row.complete && !row.only_value_placeholders, "{row:?}");
+        assert!(row.incomplete_reason.is_none(), "{row:?}");
+        assert!(
+            row.sql_text
+                .as_ref()
+                .unwrap()
+                .contains("; DELETE FROM records"),
+            "{row:?}"
         );
     }
 }

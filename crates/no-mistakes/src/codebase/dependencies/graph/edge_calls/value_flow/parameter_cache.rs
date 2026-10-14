@@ -7,6 +7,7 @@ pub(super) struct ParameterKey {
     pub(super) file: std::path::PathBuf,
     pub(super) scope: usize,
     pub(super) name: String,
+    pub(super) invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
     pub(super) initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
 }
 #[derive(Clone)]
@@ -22,6 +23,7 @@ type Owner = (std::path::PathBuf, CallableId);
 #[derive(Default)]
 struct State {
     entries: FxHashMap<ParameterKey, Entry>,
+    factory_agreement: FxHashMap<Owner, bool>,
     waiting: FxHashMap<ThreadId, ThreadId>,
     computations: usize,
     reverse_dependencies: FxHashMap<Owner, FxHashSet<Owner>>,
@@ -95,12 +97,14 @@ impl ParameterCache {
             }
         }
     }
+    pub(super) fn factory_agrees(&self, owner: Owner, compute: impl FnOnce() -> bool) -> bool {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        *state.factory_agreement.entry(owner).or_insert_with(compute)
+    }
     pub(super) fn clear(&self) {
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .entries
-            .clear();
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        state.entries.clear();
+        state.factory_agreement.clear();
     }
     #[cfg(feature = "test-instrumentation")]
     pub(in super::super) fn computations(&self) -> usize {

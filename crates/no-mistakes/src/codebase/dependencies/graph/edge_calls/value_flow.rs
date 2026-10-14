@@ -5,6 +5,8 @@ use crate::codebase::dependencies::extract::{
 
 #[derive(Clone, Default)]
 pub(super) struct FlowFileIndex {
+    synthetic_callbacks: FxHashSet<String>,
+    immediate_factory_results: FxHashSet<(u32, u32)>,
     receiver_mutations: Option<std::sync::Arc<prepared_receivers::PreparedReceiverMutations>>,
     bindings: ScopedNameMap<ValueBinding>,
     parameters: ScopedNameMap<ValueParameter>,
@@ -20,7 +22,23 @@ mod types;
 use types::{BoundArguments, FlowValue};
 
 type ParameterInputs =
-    FxHashMap<(std::path::PathBuf, CallableId), Vec<(std::path::PathBuf, u32, String)>>;
+    FxHashMap<(std::path::PathBuf, CallableId), Vec<ParameterInput>>;
+
+#[derive(Clone, PartialEq, Eq)]
+struct ParameterInput {
+    file: std::path::PathBuf,
+    offset: u32,
+    callee: String,
+    synthetic_callback: bool,
+    callback: bool,
+}
+impl ParameterInput {
+    fn from_site(site: &ResolvedCallSite, indexes: &CallableResolutionIndexes, facts: &dyn TsFactLookup) -> Self {
+        Self { callback: site.invocation == InvocationKind::Callback, file: site.file.clone(), offset: site.offset, callee: site.source_callee.clone(),
+            synthetic_callback: site.invocation == InvocationKind::Callback && indexes.file(facts, &site.file)
+                .is_some_and(|index| index.values.synthetic_callbacks.contains(site.source_callee.as_str())) }
+    }
+}
 
 /// Resolves returned values and receiver parameters over parser-owned facts and
 /// the same prepared callable indexes as ordinary calls. Incoming argument
@@ -41,6 +59,7 @@ struct ValueFlowResolution<'a, 'b> {
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
+    invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
 }
 
 #[path = "value_flow/named.rs"]
@@ -53,55 +72,20 @@ mod returned;
 mod values;
 pub(super) use refine::refine_value_calls;
 
-impl FlowFileIndex {
-    pub(super) fn factory_binding(&self, scope: usize, name: &str) -> bool {
-        self.factory_value(
-            &ValueExpression::Named {
-                name: name.to_string(),
-                scope: Some(scope),
-                offset: u32::MAX,
-                context: None,
-            },
-            &mut fx_set(),
-        )
-    }
-    fn factory_value(
-        &self,
-        value: &ValueExpression,
-        visiting: &mut FxHashSet<(usize, String)>,
-    ) -> bool {
-        match value {
-            ValueExpression::Call(_, _) => true,
-            ValueExpression::Member(value, _) | ValueExpression::Awaited(value) => {
-                self.factory_value(value, visiting)
-            }
-            ValueExpression::Default(value, fallback) => {
-                self.factory_value(value, visiting) || self.factory_value(fallback, visiting)
-            }
-            ValueExpression::Named {
-                name,
-                scope: Some(scope),
-                ..
-            } => {
-                let base = name.split_once('.').map_or(name.as_str(), |(base, _)| base);
-                if !visiting.insert((*scope, base.to_string())) {
-                    return false;
-                }
-                scoped_name(&self.bindings, *scope, base).is_some_and(|binding| {
-                    binding.invalidated_at.is_none() && self.factory_value(&binding.value, visiting)
-                })
-            }
-            _ => false,
-        }
-    }
-}
+
+#[path = "value_flow/factory_bindings.rs"]
+mod factory_bindings;
 
 #[path = "value_flow/exports.rs"]
 mod exports;
 pub(super) use exports::resolve_value_exports;
 
+#[path = "value_flow/inline_inputs.rs"]
+mod inline_inputs;
+
 #[path = "value_flow/parameters.rs"]
 mod parameters;
+
 
 pub(super) type ConstructorRoutes = FxHashMap<std::path::PathBuf, FxHashMap<CallableId, NodeId>>;
 #[derive(Clone, Copy)]
@@ -156,3 +140,6 @@ mod file_index;
 #[path = "value_flow/provenance.rs"]
 mod provenance;
 use agreement::agreed_value;
+
+#[path = "value_flow/invocation_argument.rs"]
+mod invocation_argument;

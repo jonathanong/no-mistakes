@@ -54,12 +54,16 @@ mod cli_check_rules_postgres_unmatched_executors;
 mod cli_check_rules_postgres_variants;
 #[path = "cli_postgres_catalog.rs"]
 mod cli_postgres_catalog;
+#[path = "executed_postgres_boolean_api.rs"]
+mod executed_postgres_boolean_api;
 #[path = "executed_postgres_branch_regressions_api.rs"]
 mod executed_postgres_branch_regressions_api;
 #[path = "executed_postgres_control_flow_api.rs"]
 mod executed_postgres_control_flow_api;
 #[path = "executed_postgres_intrinsics_api.rs"]
 mod executed_postgres_intrinsics_api;
+#[path = "executed_postgres_returned_entrypoints_api.rs"]
+mod executed_postgres_returned_entrypoints_api;
 #[path = "executed_postgres_source_api.rs"]
 mod executed_postgres_source_api;
 #[path = "postgres_catalog_real/main.rs"]

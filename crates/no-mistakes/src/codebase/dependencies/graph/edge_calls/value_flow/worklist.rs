@@ -10,7 +10,7 @@ pub(in super::super::super) fn refine_value_calls(
     pass: &mut CallPass,
 ) {
     let base = pass.sites.clone();
-    let mut incoming = incoming_inputs(&base, &pass.constructor_routes);
+    let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
     let mut pending: FxHashSet<usize> = base
         .iter()
         .enumerate()
@@ -63,7 +63,7 @@ pub(in super::super::super) fn refine_value_calls(
             if pass.sites[index].target_node != site.target_node {
                 if let Some(key) = function_key(&pass.sites[index]) {
                     if let Some(arguments) = incoming.get_mut(&key) {
-                        arguments.retain(|argument| argument != &site_argument(&site));
+                        arguments.retain(|argument| argument != &site_argument(&site, indexes, facts));
                     }
                     changed.insert(key);
                 }
@@ -71,7 +71,7 @@ pub(in super::super::super) fn refine_value_calls(
                     incoming
                         .entry(key.clone())
                         .or_default()
-                        .push(site_argument(&site));
+                        .push(site_argument(&site, indexes, facts));
                     changed.insert(key);
                 }
             }
@@ -114,6 +114,6 @@ fn function_key(site: &ResolvedCallSite) -> Option<FunctionKey> {
         _ => None,
     }
 }
-fn site_argument(site: &ResolvedCallSite) -> (std::path::PathBuf, u32, String) {
-    (site.file.clone(), site.offset, site.source_callee.clone())
+fn site_argument(site: &ResolvedCallSite, indexes: &CallableResolutionIndexes, facts: &dyn TsFactLookup) -> ParameterInput {
+    ParameterInput::from_site(site, indexes, facts)
 }

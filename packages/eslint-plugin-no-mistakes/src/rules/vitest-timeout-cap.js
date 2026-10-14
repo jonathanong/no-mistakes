@@ -27,6 +27,7 @@ module.exports = rule(
           defaultMax: { type: "number", minimum: 0, exclusiveMinimum: true },
           overrideMax: { type: "number", minimum: 0, exclusiveMinimum: true },
           unknownValues: { enum: ["ignore", "finding"] },
+          configUnknownValues: { enum: ["inherit", "defer-to-runner"] },
           configRoot: { type: "boolean" },
         },
         additionalProperties: false,
@@ -109,10 +110,11 @@ module.exports = rule(
         for (const original of overrides) {
           const kind = overrideCall(original, context);
           if (!kind) continue;
-          const node = { ...original, arguments: invocationArguments(original, context) };
+          const node = original;
+          const callArguments = invocationArguments(original, context);
           const max = option.overrideMax ?? 30000;
           if (kind === "test" || kind === "hook")
-            for (const argument of node.arguments)
+            for (const argument of callArguments)
               if (opaqueCallback(argument, context))
                 check(
                   { value: { kind: "unknown" }, origin: argument },
@@ -126,14 +128,14 @@ module.exports = rule(
           }
           if (kind === "runtime") {
             properties(
-              evaluate(node.arguments[0]),
+              evaluate(callArguments[0]),
               ["testTimeout", "hookTimeout"],
               max,
-              node.arguments[0] || node,
+              callArguments[0] || node,
             );
             continue;
           }
-          const args = kind === "hook" ? node.arguments.slice(1) : node.arguments.slice(1, 3);
+          const args = kind === "hook" ? callArguments.slice(1) : callArguments.slice(1, 3);
           for (const argument of args) {
             if (callback(argument)) continue;
             const value = evaluate(argument);
@@ -148,17 +150,17 @@ module.exports = rule(
               );
             else if (
               kind === "test" &&
-              node.arguments.length >= 3 &&
-              argument !== node.arguments.at(-1) &&
+              callArguments.length >= 3 &&
+              argument !== callArguments.at(-1) &&
               value.kind === "unknown"
             )
               properties(value, ["timeout"], max, argument);
           }
-          const last = node.arguments.at(-1);
+          const last = callArguments.at(-1);
           const minimum = kind === "hook" ? 2 : 3;
-          if (!last || node.arguments.length < minimum || callback(last)) continue;
+          if (!last || callArguments.length < minimum || callback(last)) continue;
           // An options object followed by a callback is not a trailing timeout.
-          if (evaluate(node.arguments.at(-2)).kind === "object") continue;
+          if (evaluate(callArguments.at(-2)).kind === "object") continue;
           const value = evaluate(last);
           if (value.kind !== "object") check({ value, origin: last }, "timeout", max);
         }

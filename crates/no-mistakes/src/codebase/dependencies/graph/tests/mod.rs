@@ -105,6 +105,7 @@ mod core_independent_edges;
 mod edge_kind_semantics;
 mod edge_resources;
 mod finalization;
+mod inline_call_context;
 mod remaining_edges;
 mod selector_fact_plan;
 mod selector_optimization;

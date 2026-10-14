@@ -1,0 +1,25 @@
+{
+  "extends": [
+    "./.oxlintrc.json"
+  ],
+  "rules": {
+    "no-mistakes/vitest-timeout-cap": [
+      "error",
+      {
+        "unknownValues": "finding",
+        "configUnknownValues": "defer-to-runner",
+        "defaultMax": 30000,
+        "overrideMax": 30000
+      }
+    ]
+  },
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "pedantic": "off",
+    "perf": "off",
+    "style": "off",
+    "restriction": "off",
+    "nursery": "off"
+  }
+}

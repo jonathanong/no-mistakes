@@ -49,8 +49,8 @@ impl ImportCollector {
             .iter()
             .flat_map(|(scope, names)| names.keys().map(move |name| (*scope, name.clone())))
             .collect::<Vec<_>>();
+        let mut retained = fx_map();
         let mut visited = fx_set();
-        let mut receivers: ValueReceiverMutations = fx_map();
         for seed in seeds {
             let mut pending = vec![seed];
             let mut component = Vec::new();
@@ -80,12 +80,10 @@ impl ImportCollector {
             }
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {
-                if scope == 0 && self.imported_bindings.contains(&name) && history.has_assignments {
-                    receivers
-                        .entry(scope)
-                        .or_default()
-                        .insert(name.clone(), std::sync::Arc::clone(&history));
-                }
+                retained
+                    .entry(scope)
+                    .or_insert_with(fx_map)
+                    .insert(name.clone(), std::sync::Arc::clone(&history));
                 // A late alias captures the already mutated receiver, including
                 // a synthetic default export. Apply the shared cutoff once.
                 if let Some(summary) = &history.summary {
@@ -128,9 +126,7 @@ impl ImportCollector {
                 }
             }
         }
-        if !receivers.is_empty() {
-            self.value_flow.receiver_mutations = Some(std::sync::Arc::new(receivers));
-        }
+        self.value_flow.receiver_mutations = Some(std::sync::Arc::new(retained));
     }
 }
 

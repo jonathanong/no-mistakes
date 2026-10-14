@@ -48,7 +48,7 @@ pub(super) fn reads<'a>(
                 }
             }
             OriginKind::Source(_) if read.is_some() => reads.push(read),
-            OriginKind::Source(_) => {}
+            OriginKind::Source(_) | OriginKind::InvocationReceiver { .. } => {}
             OriginKind::Receiver(..) => reads.push(read),
         }
     }

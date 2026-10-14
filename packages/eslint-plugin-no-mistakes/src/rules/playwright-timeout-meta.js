@@ -9,6 +9,7 @@ module.exports = {
         max: { type: "number", minimum: 0, exclusiveMinimum: true },
         fixtureMax: { type: "number", minimum: 0, exclusiveMinimum: true },
         unknownValues: { enum: ["ignore", "finding"] },
+        configUnknownValues: { enum: ["inherit", "defer-to-runner"] },
         registrationPackages: { type: "array", items: { type: "string" }, uniqueItems: true },
         exportRoles: {
           type: "object",

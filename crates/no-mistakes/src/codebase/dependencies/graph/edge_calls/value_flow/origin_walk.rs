@@ -105,6 +105,12 @@ impl ValueFlowResolution<'_, '_> {
                     }
                 }
                 OriginKind::Receiver(..) | OriginKind::ReceiverOwnedContexts(..) => {}
+                OriginKind::InvocationReceiver { file: source, offset: read_offset, context: read_context, owner, history } => {
+                    if !receivers_only && self.invocation_read.is_none() && (source != file || context != Some(*owner)
+                        || history.invalidated(&[], &[], *read_offset, *read_context, false)) {
+                        return true;
+                    }
+                }
                 OriginKind::Source(origin) => {
                     if !receivers_only
                         && self.source_origin_invalidated(

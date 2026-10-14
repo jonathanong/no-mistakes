@@ -21,6 +21,12 @@ pub(super) fn concat(base: Value, tail: Value) -> Value {
         (base @ Value::Prefix(_, _, _), Value::Number(number)) => {
             concat(base, Value::Prefix(number.to_string(), true, None))
         }
+        (base @ Value::Prefix(_, _, _), Value::Boolean(boolean)) => {
+            concat(base, Value::Prefix(boolean.to_string(), true, None))
+        }
+        (Value::Boolean(boolean), tail @ Value::Prefix(_, _, None)) => {
+            concat(Value::Prefix(boolean.to_string(), true, None), tail)
+        }
         (Value::Unsupported, _) => Value::Unsupported,
         (Value::Prefix(base, true, _), Value::Unsupported) if base.trim().is_empty() => {
             Value::Unsupported

@@ -125,12 +125,24 @@ SQL construction; consumers must inspect the statement before classifying a
 opaque top-level effects and unscheduled async helper work make affected shared
 builders unproven. Use `check()` for project-wide annotation enforcement.
 
+Import-aware evaluation treats named private functions returned through reachable
+branch arms of an exported factory as public callable entrypoints, including
+nested branches and existing static array/record wrappers. It recovers the function's complete
+SQL, including modifying appends; opaque returned expressions and unsupported
+function bodies remain incomplete. Literal Boolean and integer conditions exclude
+discarded return arms; unsupported branch bindings and lexical shadows stay
+conservative. Returning a function does not prove a read.
+
 Import-aware evaluation follows helper `if`/early-return paths and finite array
 `map`, `join`, `push`, and `forEach` operations, including conditional CTE assembly
-and append helpers. It recovers whole statements, with the same 16-alternative
-limit as embedded SQL extraction. One unknown structural alternative or a limit
-overflow makes the entire executor site incomplete; a favorable read alternative
-cannot certify the others. Group alternatives by `fileName` and `line`, parse
+and append helpers. Literal booleans stringify as JavaScript `true` and `false`
+in finite joins, plain templates, and string concatenation; for example,
+`'SELECT ' + [true, false].join(', ')` recovers `SELECT true, false`.
+Trusted SQL-tag interpolations remain generated value binds, while unknown
+values and object coercions remain incomplete. It recovers whole statements,
+with the same 16-alternative limit as embedded SQL extraction. One unknown
+structural alternative or a limit overflow makes the entire executor site
+incomplete; a favorable read alternative cannot certify the others. Group alternatives by `fileName` and `line`, parse
 every statement, and inspect nested effects (including DML inside `WITH`) before
 classifying the site as read-only. SQL construction alone never proves a read.
 Conditional array cardinality stays unknown across slot writes; collection
@@ -1174,3 +1186,15 @@ Polling does not cancel analysis, write stderr, or install process signal
 handlers. Callers choose their polling interval and cancellation policy. The
 CLI counterpart is [`--progress`](cli/diagnostics.md), with an opt-in flushed
 heartbeat and a Unix termination snapshot.
+
+The async `effects()` API shares the CLI receiver resolution.
+
+Synchronous inline arrows, function expressions, and returned helpers retain their enclosing
+invocation context when resolving supplied receiver arguments and defaults. A
+later receiver write in that same context does not invalidate an earlier direct
+helper call. Calls after a write and captured closures with uncertain execution
+order remain unresolved; synthetic reachability edges do not add a second
+unknown argument set to a proven invocation. Returned helpers require every
+known factory invocation to call its result immediately; a stored result or
+opaque escape keeps receiver arguments unresolved. Async and generator helpers
+remain conservative because their receiver reads may occur after suspension.
