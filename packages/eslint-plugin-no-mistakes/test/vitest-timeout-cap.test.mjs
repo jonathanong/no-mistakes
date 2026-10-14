@@ -432,7 +432,12 @@ describe("vitest-timeout-cap effective config and source boundaries", () => {
     assert.deepEqual(findings("unknown-spreads"), []);
     assert.deepEqual(
       findings("unknown-spreads", { unknownValues: "finding" }).map((item) => item.messageId),
-      ["unknown", "unknown", "unknown"],
+      ["unknown", "unknown", "unknown", "unknown"],
+    );
+    assert.ok(
+      findings("unknown-spreads", { unknownValues: "finding" }).some((item) =>
+        item.message.includes("projects carrier"),
+      ),
     );
   });
   it("handles signed constants, getters, local unknowns and suppression at module-options usage", () => {
