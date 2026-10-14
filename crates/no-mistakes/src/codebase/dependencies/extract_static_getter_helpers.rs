@@ -117,11 +117,27 @@ fn visit_assignment_expression_with_calls<'a>(
     assignment: &AssignmentExpression<'a>,
 ) {
     collector.record_replacement_assignment(assignment);
-    record_assignment_target_writes(collector, &assignment.left, assignment.span.start, assignment.span.end);
+    let receipts = collector.begin_phase_receipts(&assignment.left);
+    record_assignment_target_writes(
+        collector,
+        &assignment.left,
+        assignment.span.start,
+        assignment.span.end,
+    );
+    let phases = collector.begin_destructuring_phases(&assignment.left);
+    let receipts = if phases.is_some() {
+        receipts
+    } else {
+        collector.end_phase_receipts(receipts);
+        None
+    };
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+    collector.end_destructuring_lhs(&phases);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         collector.visit_expression(&assignment.right);
     });
+    collector.finish_destructuring_phases(phases);
+    collector.end_phase_receipts(receipts);
 }
 
 fn walk_assignment_lhs_without_written_getter<'a>(
@@ -144,7 +160,11 @@ fn visit_update_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     update: &oxc_ast::ast::UpdateExpression<'a>,
 ) {
-    collector.record_replacement_target(update.argument.as_assignment_target(), ValueExpression::Unknown, update.span.end);
+    collector.record_replacement_target(
+        update.argument.as_assignment_target(),
+        ValueExpression::Unknown,
+        update.span.end,
+    );
     record_assignment_target_writes(
         collector,
         update.argument.as_assignment_target(),
@@ -160,15 +180,22 @@ fn record_assignment_target_writes(
     offset: u32,
     completed_at: u32,
 ) {
-    for (name, path) in extract_value_flow::write_targets::targets(target) {
+    for (name, path, start) in extract_value_flow::write_targets::targets(target) {
+        let previous = collector.assignment_target_start.replace(start);
         if !record_static_setter_assignment(collector, &name, offset)
             && !record_object_setter_assignment(collector, &name, offset)
         {
             if path.is_empty() {
                 collector.record_reassigned_callable_alias(&name, offset);
             } else {
-                collector.record_reassigned_callable_alias_path(&name, offset, Some(&path), completed_at);
+                collector.record_reassigned_callable_alias_path(
+                    &name,
+                    offset,
+                    Some(&path),
+                    completed_at,
+                );
             }
         }
+        collector.assignment_target_start = previous;
     }
 }

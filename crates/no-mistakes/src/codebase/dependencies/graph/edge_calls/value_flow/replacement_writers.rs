@@ -63,6 +63,13 @@ impl<'a> ForeignWriters<'a> {
         };
         entry.1 |= entry.0 != path;
     }
+    pub(super) fn summary(&self, receiver: usize) -> Option<(FxHashSet<String>, bool)> {
+        let writers = self.receivers.get(&receiver)?;
+        Some((
+            writers.exact.keys().cloned().collect(),
+            writers.dynamic.is_some(),
+        ))
+    }
     pub(super) fn contains(&self, receiver: usize, property: &str, path: &std::path::Path) -> bool {
         self.receivers.get(&receiver).is_some_and(|writers| {
             [writers.exact.get(property), writers.dynamic.as_ref()]

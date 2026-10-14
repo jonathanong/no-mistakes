@@ -140,8 +140,49 @@ fn imported_receivers_preserve_member_snapshots_and_live_nested_inputs() {
 #[cfg(feature = "test-instrumentation")]
 #[test]
 fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {
+    for (name, callee) in [
+        ("value-flow-imported-receiver-cache", "options.client.get"),
+        ("value-flow-destructured-acquisition-cache", "get"),
+    ] {
+        let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
+        let config = TsConfig {
+            dir: root.clone(),
+            paths: vec![],
+            paths_dir: root.clone(),
+            base_url: None,
+        };
+        let graph = DepGraph::build_with_plan(
+            &root,
+            &config,
+            GraphBuildPlan {
+                calls: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let sites = graph.call_sites_in_file(&root.join("src/projected.mts"));
+        assert_eq!(sites.len(), 129);
+        let receivers = sites
+            .iter()
+            .filter(|site| site.source_callee == callee)
+            .collect::<Vec<_>>();
+        assert_eq!(receivers.len(), 128);
+        assert!(receivers
+            .iter()
+            .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
+        assert_eq!(benchmark_probe_parameter_agreements(), 1);
+        assert!(
+            benchmark_probe_origin_nodes() <= 128 * 8 + 8,
+            "{name}: agreement/context must stay shared: {} nodes",
+            benchmark_probe_origin_nodes()
+        );
+    }
+}
+
+#[test]
+fn destructured_methods_acquire_receivers_at_the_callers_invocation() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture(
-        "value-flow-imported-receiver-cache",
+        "value-flow-destructured-acquisition",
     ));
     let config = TsConfig {
         dir: root.clone(),
@@ -158,19 +199,70 @@ fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {
         },
     )
     .unwrap();
-    let sites = graph.call_sites_in_file(&root.join("src/projected.mts"));
-    let receivers = sites
+    let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+    for (caller, callee, expected) in [
+        ("beforeWrite", "get", Some("primary.get")),
+        ("afterWrite", "get", None),
+        ("copiedMethod", "get", Some("primary.get")),
+        ("untouched", "info", Some("primary.info")),
+        ("nested", "get", None),
+        ("forwarded", "get", None),
+        ("defaulted", "get", None),
+        ("arrayInput", "get", None),
+        ("ownedDefault", "get", Some("session.get")),
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.caller.as_deref() == Some(caller) && site.source_callee == callee)
+            .unwrap();
+        match expected {
+            Some(expected) => assert!(
+                matches!(&site.target,
+                ResolvedCallTarget::ModuleExport { export_path, .. }
+                if export_path == expected),
+                "{caller}: {site:?}"
+            ),
+            None => assert!(
+                matches!(site.target, ResolvedCallTarget::Unknown),
+                "{caller}: {site:?}"
+            ),
+        }
+    }
+}
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn live_parameter_alias_sites_keep_shared_origin_work_linear() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("value-flow-live-alias-cache"));
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+    let aliases = sites
         .iter()
-        .filter(|site| site.source_callee == "options.client.get")
+        .filter(|site| site.source_callee == "alias.get")
         .collect::<Vec<_>>();
-    assert_eq!(receivers.len(), 128);
-    assert!(receivers
+    assert_eq!(aliases.len(), 128);
+    assert!(aliases
         .iter()
         .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
     assert_eq!(benchmark_probe_parameter_agreements(), 1);
     assert!(
         benchmark_probe_origin_nodes() <= 128 * 8 + 8,
-        "receiver sites must reuse the agreement/context instead of copying history per projection: {} nodes",
+        "live alias reads must retain shared origins and linear work: {} nodes",
         benchmark_probe_origin_nodes()
     );
 }

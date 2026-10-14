@@ -9,12 +9,10 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> (u32, Option<CallableId>) {
-        if let Some((_, offset, context, _)) = self
-            .invocation_read
-            .as_ref()
-            .filter(|(file, _, _, owner)| file == path && context == Some(*owner))
-        {
-            return (*offset, *context);
+        if let Some(read) = self.invocation_read.as_ref().filter(|read| {
+            read.file == path && read.owner.0 == path && context == Some(read.owner.1)
+        }) {
+            return (read.offset, read.context);
         }
         // Pure synchronous method-return helpers acquire the method at their
         // physical invocation. Borrow that already prepared frame directly;

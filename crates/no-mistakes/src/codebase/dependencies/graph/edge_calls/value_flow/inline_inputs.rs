@@ -94,3 +94,11 @@ pub(super) fn immediate_call(value: &ValueExpression) -> Option<(u32, u32)> {
         _ => None,
     }
 }
+
+pub(super) fn inline_callee(value: &ValueExpression) -> bool {
+    match value {
+        ValueExpression::Callable(_) | ValueExpression::Call(_, _) => true,
+        ValueExpression::Member(base, _) | ValueExpression::Awaited(base) => inline_callee(base),
+        _ => false,
+    }
+}

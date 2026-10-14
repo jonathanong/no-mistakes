@@ -168,6 +168,12 @@ An append observes supported mutations to its captured builder receiver while
 evaluating the tail, preserving the receiver's identity rather than an old prefix.
 Operand effects apply from left to right before later nested executor calls.
 An earlier read retains its result when an opaque effect occurs afterward.
+Opaque callback discovery also visits live modeled array slots, including nested
+arrays and aliases. Cycles share the existing callback budget, and slots marked
+definitely deleted are excluded. Traversal retains conservative captured SQL
+proofs: an opaque callback cannot restore `complete` or `onlyValuePlaceholders`
+after a potentially modifying effect. Observed callback effects can discard an
+earlier recovered fragment and report `unresolved-value-or-effect`.
 
 `incompleteReason` is additive evaluator metadata: `null` for complete statements
 or proven generated value binds, otherwise a blocker such as `variant-limit`,
@@ -672,6 +678,12 @@ companion reports use broader runner catalogs or ignored explicit roots;
 equivalent call graphs are reused. A `symbols` list report paired with `check`
 retains the standalone symbols result for every explicit file, including a
 visible file outside configured check candidates and a file with no exports.
+`effects()` retains supplier read timing for synchronous, immediately invoked
+returned helpers imported directly or through re-exports. Later receiver writes
+do not erase an earlier proven call; prior writes, escaping helpers, and
+conflicting inputs remain conservative. CLI and async CJS/ESM APIs share this
+prepared analysis.
+
 `effects` also supports binding-aware
 `effects.<kind>.targets` config
 selectors by exact import specifier and export path; its string lists retain
@@ -1199,6 +1211,13 @@ known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
 
+Transparent aliases of default receiver parameters preserve the eventual member
+read. For example, `const alias = client; alias.get()` retains the original
+`get` target after only a sibling `set` write. Matching and dynamic writes still
+invalidate live members. A copied method such as `const get = alias.get` keeps
+its acquisition snapshot; copying a container keeps descendant members live.
+Captured and suspended helpers remain conservative. Nested propagation without
+an exact assigned member history also retains the conservative default guard.
 
 ### Effect alternatives
 

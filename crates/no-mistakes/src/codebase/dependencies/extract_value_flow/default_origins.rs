@@ -35,6 +35,9 @@ impl ImportCollector {
             .or_default()
             .entry(key.1.clone())
             .or_default();
+        // Nested propagation records a coarse receiver mutation without an
+        // exact assigned leaf. Projected default reads must retain that guard.
+        history.has_unassigned |= assigned.is_none();
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
             history.record_assignment(path, assigned, completed_at, context);
@@ -77,6 +80,12 @@ impl ImportCollector {
             }
             if component.is_empty() {
                 continue;
+            }
+            history.finish_early_assignments();
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.early_assignment_normalization_visits +=
+                    history.early_phase_entries();
             }
             let history = std::sync::Arc::new(history);
             for (scope, name) in component {

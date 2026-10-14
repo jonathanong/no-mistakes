@@ -34,11 +34,13 @@ fn effects_typed_and_returned_members_preserve_category_filters() {
     );
     assert_eq!(value["callSites"].as_array().unwrap().len(), 5);
     assert_eq!(value["byCategory"]["transaction"], 5);
-    assert!(value["callSites"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|site| site["callee"] == "writePool.connect().query"));
+    assert!(
+        value["callSites"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|site| site["callee"] == "writePool.connect().query")
+    );
     let output = run_in(
         &root,
         &[
@@ -51,8 +53,10 @@ fn effects_typed_and_returned_members_preserve_category_filters() {
         ],
     );
     assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("no functions for the requested categories"));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("no functions for the requested categories")
+    );
 }
 
 #[test]
@@ -167,6 +171,68 @@ fn effects_cli_retains_inline_invocation_context() {
         ("mixed-callback", 0),
         ("mixed-named-callback", 0),
         ("top-level", 1),
+    ] {
+        let entry = format!("src/{name}.mts");
+        let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}
+
+#[test]
+fn effects_namespace_types_cross_explicit_barrels() {
+    let root =
+        fixture("effects").join("../../../rules/query-reached-per-item/namespace-types-fixture");
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
+    let value = run_json(&root, &["effects", "postgres", "--entry", "src/entry.mts"]);
+    assert_eq!(value["callSites"].as_array().unwrap().len(), 3, "{value}");
+}
+
+#[test]
+fn effects_cli_retains_cross_file_inline_receiver_timing() {
+    let root = fixture("cross-file-inline-receiver");
+    for (name, expected) in [
+        ("earlier", 1),
+        ("sibling", 1),
+        ("reexported", 1),
+        ("defaults", 1),
+        ("mutated-default", 0),
+        ("later", 0),
+        ("prior", 0),
+        ("other-context", 0),
+        ("conflicting", 0),
+        ("unknown", 0),
+        ("escaped", 0),
+    ] {
+        let entry = format!("src/{name}.mts");
+        let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}
+
+#[test]
+fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
+    let root = fixture("inline-member-precision");
+    for (name, expected) in [
+        ("alias-named", 1),
+        ("alias-inline", 1),
+        ("alias-chain", 1),
+        ("alias-matching", 0),
+        ("alias-dynamic", 0),
+        ("alias-live", 0),
+        ("alias-supplied-live", 0),
+        ("alias-supplied-snapshot", 1),
+        ("alias-supplied-nested-live", 0),
+        ("alias-snapshot", 1),
+        ("alias-inline-live", 0),
+        ("alias-inline-snapshot", 1),
+        ("alias-inline-snapshot-owned", 0),
+        ("inline-snapshot-owned", 0),
+        ("alias-captured", 0),
+        ("alias-async", 0),
     ] {
         let entry = format!("src/{name}.mts");
         let report = run_json(&root, &["effects", "cache", "--entry", &entry]);

@@ -14,6 +14,7 @@ mod writers;
 /// One immutable request projection; ordinary files do not create an index.
 pub(super) struct ReplacementCatalog {
     files: FxHashMap<std::path::PathBuf, ReplacementFile>,
+    mutated_external: FxHashMap<String, FxHashMap<String, (FxHashSet<String>, bool)>>,
     #[cfg(feature = "test-instrumentation")]
     probe: ReplacementProbeSnapshot,
 }
@@ -86,6 +87,7 @@ impl ReplacementCatalog {
             probe.canonical_receiver_ids = identities.imported_ids.len();
             probe.local_receiver_ids = identities.local_ids();
         }
+        let mutated_external = identities.into_mutated_external(&foreign);
         let mut flow = ValueFlowResolution {
             inputs,
             facts,
@@ -95,6 +97,7 @@ impl ReplacementCatalog {
             supers: &pass.super_constructors,
             replacements: None,
             replacement_read: false,
+            foreign_acquisition: false,
             used_parameters: fx_set(),
             parameters_enabled: false,
             initializing: Vec::new(),
@@ -104,6 +107,7 @@ impl ReplacementCatalog {
             default_origins: None,
             acquisition_context: None,
             invocation_read: None,
+            member_read: None,
         };
         for (path, file, receivers, repeated_owners, writes) in prepared {
             #[allow(unused_mut)]
@@ -206,6 +210,7 @@ impl ReplacementCatalog {
         }
         Some(Self {
             files,
+            mutated_external,
             #[cfg(feature = "test-instrumentation")]
             probe,
         })
@@ -221,6 +226,21 @@ impl ReplacementCatalog {
             (&left.file, left.write_index).cmp(&(&right.file, right.write_index))
         });
         probe
+    }
+    pub(super) fn mutated_member(&self, target: &ResolvedCallTarget, member: &str) -> bool {
+        let ResolvedCallTarget::ModuleExport {
+            specifier,
+            export_path,
+            repository_target: None,
+            ..
+        } = target
+        else {
+            return false;
+        };
+        self.mutated_external
+            .get(specifier)
+            .and_then(|exports| exports.get(export_path))
+            .is_some_and(|(properties, dynamic)| *dynamic || properties.contains(member))
     }
     pub(super) fn file(&self, path: &std::path::Path) -> Option<&ReplacementFile> {
         self.files.get(path)

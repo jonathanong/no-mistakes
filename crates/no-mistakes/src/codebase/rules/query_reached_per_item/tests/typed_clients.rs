@@ -103,3 +103,22 @@ fn factory_metadata_preserves_existing_value_flow_operations() {
         "metadata must preserve legacy report fields"
     );
 }
+
+#[test]
+fn namespace_members_keep_suffixes_through_explicit_type_barrels() {
+    let root = crate::test_support::rule_fixture_root("query-reached-per-item")
+        .with_file_name("namespace-types-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("src/entry.mts", 8),
+            ("src/entry.mts", 11),
+            ("src/entry.mts", 14)
+        ],
+        "{findings:#?}"
+    );
+}

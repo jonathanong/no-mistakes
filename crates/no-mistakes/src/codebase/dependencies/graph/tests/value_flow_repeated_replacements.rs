@@ -81,6 +81,24 @@ fn repeated_replacement_prefix_tail_and_closed_owner() {
         );
         assert!(!site.has_unknown_target(), "{site:#?}");
     }
+    assert_eq!(
+        producer_selectors(producer_site(
+            &graph,
+            &root,
+            "foreign-getter-caller",
+            "copied"
+        )),
+        ["foreignCopiedReceiver.get"]
+    );
+    assert_eq!(
+        producer_selectors(producer_site(
+            &graph,
+            &root,
+            "foreign-getter-caller",
+            "sibling"
+        )),
+        ["foreignGetterReceiver.set"]
+    );
     let middle = graph.call_sites_in_file(&root.join("src/positive.mts"));
     let reads: Vec<_> = middle
         .iter()
@@ -116,6 +134,7 @@ fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
         ("owners", "escapedReceiver.get"),
         ("owners", "interruptedReceiver.get"),
         ("foreign", "sharedReceiver.get"),
+        ("foreign-getter-caller", "fresh"),
         ("repository", "objectReceiver.get"),
     ] {
         let site = producer_site(&graph, &root, file, callee);

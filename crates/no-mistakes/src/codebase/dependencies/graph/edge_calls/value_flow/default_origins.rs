@@ -1,6 +1,13 @@
 use super::*;
 use std::sync::Arc;
 pub(super) type Origins = Option<Arc<OriginNode>>;
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub(super) struct InvocationRead {
+    pub(super) file: std::path::PathBuf,
+    pub(super) offset: u32,
+    pub(super) context: Option<CallableId>,
+    pub(super) owner: (std::path::PathBuf, CallableId),
+}
 pub(super) struct OriginNode {
     pub(super) kind: OriginKind,
     pub(super) height: usize,
@@ -18,10 +25,8 @@ pub(super) enum OriginKind {
     ReceiverContexts(Arc<OriginNode>, Arc<OriginNode>),
     ReceiverOwnedContexts(Arc<OriginNode>, std::path::PathBuf, CallableId),
     InvocationReceiver {
-        file: std::path::PathBuf,
-        offset: u32,
-        context: Option<CallableId>,
-        owner: CallableId,
+        read: InvocationRead,
+        history_file: std::path::PathBuf,
         history: std::sync::Arc<crate::codebase::dependencies::extract::ValueMutationHistory>,
     },
     Union(Arc<OriginNode>, Arc<OriginNode>),
@@ -85,11 +90,12 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         offset: u32,
         context: Option<CallableId>,
+        projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> bool {
         self.default_origins
             .as_ref()
             .is_some_and(|origins| origins.has_defaults)
-            && self.origins_invalidated(file, offset, context, false)
+            && self.origins_invalidated(file, offset, context, false, projection)
     }
     pub(super) fn receiver_origin_invalidated(&self) -> bool {
         if !self
@@ -99,6 +105,6 @@ impl ValueFlowResolution<'_, '_> {
         {
             return false;
         }
-        self.origins_invalidated(std::path::Path::new(""), 0, None, true)
+        self.origins_invalidated(std::path::Path::new(""), 0, None, true, None)
     }
 }

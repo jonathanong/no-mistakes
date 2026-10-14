@@ -320,3 +320,26 @@ fn native_conflict_indirection_and_operator_classes_keep_enclosing_inserts() {
         "text_pattern_ops"
     );
 }
+
+#[test]
+fn opaque_array_callbacks_keep_both_sql_proof_flags_false() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/control-flow-array-callbacks.ts"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": [{"fileName":"control-flow-array-callbacks.ts", "source":source}],
+            "importSpecifier":"@example/db", "resolveImports":true,
+            "trustedSqlTags":[{"module":"@example/db", "name":"sql"}]
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let rows = result.as_array().unwrap();
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert_eq!(rows[0]["complete"], false);
+    assert_eq!(rows[0]["onlyValuePlaceholders"], false);
+    assert!(rows[0]["sqlText"].is_null(), "{rows:?}");
+    assert_eq!(rows[0]["incompleteReason"], "unresolved-value-or-effect");
+}

@@ -8,6 +8,7 @@ impl ValueFlowResolution<'_, '_> {
         scope: Option<usize>,
         offset: u32,
         context: Option<CallableId>,
+        projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
         if let Some(value) = self.replacement_value(path, name, scope, offset, context) {
             return value;
@@ -16,10 +17,10 @@ impl ValueFlowResolution<'_, '_> {
         let (offset, context) = self
             .invocation_read
             .as_ref()
-            .filter(|(file, _, _, owner)| file == path && source_context == Some(*owner))
-            .map_or((offset, context), |(_, offset, context, _)| {
-                (*offset, *context)
-            });
+            .filter(|read| {
+                read.file == path && read.owner.0 == path && source_context == Some(read.owner.1)
+            })
+            .map_or((offset, context), |read| (read.offset, read.context));
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -29,26 +30,17 @@ impl ValueFlowResolution<'_, '_> {
         let Some(scope) = scope.or_else(|| file.imported.contains_key(base).then_some(0)) else {
             return FlowValue::Unknown;
         };
-        if self.invocation_read.is_some()
-            && file
-                .values
-                .receiver_mutations
-                .as_ref()
-                .and_then(|histories| histories.get(&scope))
-                .and_then(|names| names.get(base))
-                .is_some_and(|history| history.invalidated(&[], &[], offset, context, false))
-        {
-            return FlowValue::Unknown;
-        }
         let key = (path.to_path_buf(), scope, base.to_string());
-        if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
+        let parameter = scoped_name(&file.values.parameters, scope, base);
+        if let Some(parameter) = parameter {
             self.used_parameters
                 .insert((path.to_path_buf(), parameter.owner));
         }
         if !self.visiting.insert(key.clone()) {
             return FlowValue::Unknown;
         }
-        let value = if let Some(binding) = scoped_name(&file.values.bindings, scope, base) {
+        let binding = scoped_name(&file.values.bindings, scope, base);
+        let value = if let Some(binding) = binding {
             if binding
                 .mutation_contexts
                 .iter()
@@ -60,9 +52,16 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                self.value(path, &binding.value)
+                // Whole-object aliases retain the eventual read projection. A
+                // copied member initializer must acquire its own snapshot.
+                let projection = projection.filter(|_| {
+                    matches!(
+                        &binding.value, ValueExpression::Named { name, .. } if !name.contains('.')
+                    )
+                });
+                self.value_projected(path, &binding.value, projection)
             }
-        } else if let Some(parameter) = scoped_name(&file.values.parameters, scope, base) {
+        } else if let Some(parameter) = parameter {
             if self.initializing.iter().any(|(file, owner, index)| {
                 file == path
                     && *owner == parameter.owner
@@ -77,16 +76,7 @@ impl ValueFlowResolution<'_, '_> {
             {
                 FlowValue::Unknown
             } else {
-                let value = self.parameter(path, parameter, &file);
-                if context.is_some_and(|context| {
-                    file.values
-                        .receiver_mutations
-                        .as_ref()
-                        .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
-                }) {
-                    self.record_parameter_receiver_read(path, offset, context);
-                }
-                value
+                self.parameter(path, parameter, &file)
             }
         } else if let Some(id) = file.resolve_local_callable_id(Some(scope), base) {
             self.callable(path, id)
@@ -117,7 +107,7 @@ impl ValueFlowResolution<'_, '_> {
                 });
             match imported_value {
                 Some(ExportedCallableResolution::Value(target, local)) => {
-                    let value = self.named(&target, &local, Some(0), u32::MAX, None);
+                    let value = self.named(&target, &local, Some(0), u32::MAX, None, None);
                     value.map_executor(|value| match value {
                         FlowValue::Callable {
                             file: target,
@@ -143,14 +133,26 @@ impl ValueFlowResolution<'_, '_> {
         } else {
             FlowValue::Unknown
         };
+        if (binding.is_some() || parameter.is_some())
+            && context.is_some_and(|context| {
+                file.values
+                    .receiver_mutations
+                    .as_ref()
+                    .is_some_and(|receivers| receivers.writer_contexts.contains(&context))
+            })
+        {
+            // A container alias reads live descendants at its use, while
+            // acquired member segments retain their existing snapshot nodes.
+            self.record_value_receiver_read(path, offset, context);
+        }
         self.visiting.remove(&key);
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
-        if let Some((source, read_offset, read_context, owner)) = self
+        if let Some(read) = self
             .invocation_read
             .as_ref()
-            .filter(|(_, _, _, owner)| source_context == Some(*owner))
+            .filter(|read| read.owner.0 == path && source_context == Some(read.owner.1))
         {
             if let Some(history) = file
                 .values
@@ -161,10 +163,8 @@ impl ValueFlowResolution<'_, '_> {
             {
                 let origin = self.cache.origin_node(
                     OriginKind::InvocationReceiver {
-                        file: source.clone(),
-                        offset: *read_offset,
-                        context: *read_context,
-                        owner: *owner,
+                        read: read.clone(),
+                        history_file: path.to_path_buf(),
                         history: std::sync::Arc::clone(history),
                     },
                     1,
@@ -172,12 +172,21 @@ impl ValueFlowResolution<'_, '_> {
                 default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
             }
         }
-        let value = if self.default_origin_invalidated(path, offset, context) {
+        // A member initializer has already checked its source at acquisition.
+        // Reading descendants still validates the live receiver projection.
+        let acquired_member = projection.is_none()
+            && member.is_none()
+            && binding.is_some_and(|binding| matches!(binding.value, ValueExpression::Member(..)));
+        let value = if !acquired_member
+            && self.default_origin_invalidated(path, offset, context, projection)
+        {
             FlowValue::Unknown
         } else {
             value
         };
-        member.map_or(value.clone(), |member| self.member(value, member))
+        member.map_or(value.clone(), |member| {
+            self.member_at(value, member, path, Some((offset, context)))
+        })
     }
     fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
         if let Some(binding) = file.imported.get(base).filter(|binding| {

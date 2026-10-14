@@ -1,22 +1,26 @@
 use super::*;
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
-type WriteTarget = (String, ValueMutationPath);
+type WriteTarget = (String, ValueMutationPath, u32);
 pub(in super::super) fn targets(target: &AssignmentTarget<'_>) -> Vec<WriteTarget> {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(_) => assignment_target_names(target)
             .into_iter()
-            .map(|name| (name, Vec::new()))
+            .map(|name| (name, Vec::new(), target.span().start))
             .collect(),
-        AssignmentTarget::StaticMemberExpression(member) => {
-            member_target(&member.object, Some(member.property.name.to_string()))
-                .into_iter()
-                .collect()
-        }
-        AssignmentTarget::ComputedMemberExpression(member) => {
-            member_target(&member.object, static_key(&member.expression))
-                .into_iter()
-                .collect()
-        }
+        AssignmentTarget::StaticMemberExpression(member) => member_target(
+            &member.object,
+            Some(member.property.name.to_string()),
+            target.span().start,
+        )
+        .into_iter()
+        .collect(),
+        AssignmentTarget::ComputedMemberExpression(member) => member_target(
+            &member.object,
+            static_key(&member.expression),
+            target.span().start,
+        )
+        .into_iter()
+        .collect(),
         AssignmentTarget::ArrayAssignmentTarget(array) => array
             .elements
             .iter()
@@ -29,7 +33,11 @@ pub(in super::super) fn targets(target: &AssignmentTarget<'_>) -> Vec<WriteTarge
             .iter()
             .flat_map(|property| match property {
                 AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(property) => {
-                    vec![(property.binding.name.to_string(), Vec::new())]
+                    vec![(
+                        property.binding.name.to_string(),
+                        Vec::new(),
+                        property.binding.span.start,
+                    )]
                 }
                 AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) => {
                     maybe_default(&property.binding)
@@ -46,7 +54,11 @@ fn maybe_default(target: &AssignmentTargetMaybeDefault<'_>) -> Vec<WriteTarget> 
     }
     target.as_assignment_target().map_or_else(Vec::new, targets)
 }
-fn member_target(object: &Expression<'_>, property: Option<String>) -> Option<WriteTarget> {
+fn member_target(
+    object: &Expression<'_>,
+    property: Option<String>,
+    start: u32,
+) -> Option<WriteTarget> {
     let (base, mut path) = expression_path(object)?;
     path.push(property);
     let name = std::iter::once(base)
@@ -56,7 +68,7 @@ fn member_target(object: &Expression<'_>, property: Option<String>) -> Option<Wr
         )
         .collect::<Vec<_>>()
         .join(".");
-    Some((name, path))
+    Some((name, path, start))
 }
 fn expression_path(expression: &Expression<'_>) -> Option<(String, ValueMutationPath)> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {

@@ -1,5 +1,7 @@
 use super::*;
-use std::sync::{Arc, Condvar, Mutex};
+use dashmap::DashMap;
+use rustc_hash::FxBuildHasher;
+use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::thread::ThreadId;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -7,7 +9,7 @@ pub(super) struct ParameterKey {
     pub(super) file: std::path::PathBuf,
     pub(super) scope: usize,
     pub(super) name: String,
-    pub(super) invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    pub(super) invocation_read: Option<default_origins::InvocationRead>,
     pub(super) initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
 }
 #[derive(Clone)]
@@ -28,11 +30,16 @@ struct State {
     computations: usize,
     reverse_dependencies: FxHashMap<Owner, FxHashSet<Owner>>,
 }
+type TypeOrigins = DashMap<
+    (std::path::PathBuf, String),
+    Arc<OnceLock<(String, String)>>,
+    FxBuildHasher,
+>;
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
     state: Mutex<State>,
     ready: Condvar,
-    type_origins: Mutex<FxHashMap<(std::path::PathBuf, String), (String, String)>>,
+    type_origins: OnceLock<TypeOrigins>,
     #[cfg(feature = "test-instrumentation")]
     origin_nodes: std::sync::atomic::AtomicUsize,
 }
@@ -51,11 +58,18 @@ impl ParameterCache {
         key: (std::path::PathBuf, String),
         resolve: impl FnOnce() -> (String, String),
     ) -> (String, String) {
-        let mut origins = self
+        // Keep cold shard construction small; resolutions run outside guards,
+        // so the shard count does not cap concurrent independent resolutions.
+        let origins = self
             .type_origins
-            .lock()
-            .expect("type origin cache lock poisoned");
-        origins.entry(key).or_insert_with(resolve).clone()
+            .get_or_init(|| DashMap::with_hasher_and_shard_amount(FxBuildHasher, 8));
+        if let Some(value) = origins.get(&key).and_then(|slot| slot.get().cloned()) {
+            return value;
+        }
+        let slot = Arc::clone(origins.entry(key).or_default().value());
+        // Release the shard guard before walking prepared type re-exports. Even
+        // unrelated keys in the same shard must be able to resolve concurrently.
+        slot.get_or_init(resolve).clone()
     }
     pub(super) fn origin_node(&self, kind: OriginKind, height: usize) -> Arc<OriginNode> {
         #[cfg(feature = "test-instrumentation")]
@@ -179,3 +193,7 @@ impl Drop for Lease<'_> {
 
 #[path = "parameter_dependencies.rs"]
 mod dependencies;
+
+#[cfg(test)]
+#[path = "parameter_cache_tests.rs"]
+mod tests;

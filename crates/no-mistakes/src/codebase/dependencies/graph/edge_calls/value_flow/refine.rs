@@ -56,6 +56,7 @@ fn refine_iteration(
         supers: data.supers,
         replacements: data.replacements,
         replacement_read: false,
+        foreign_acquisition: false,
         used_parameters: fx_set(),
         parameters_enabled,
         initializing: Vec::new(),
@@ -65,6 +66,7 @@ fn refine_iteration(
         default_origins: None,
         acquisition_context: None,
         invocation_read: None,
+        member_read: None,
     };
     let mut sites = base.to_vec();
     for site in &mut sites {

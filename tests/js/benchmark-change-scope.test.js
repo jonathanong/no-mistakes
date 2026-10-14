@@ -47,6 +47,7 @@ test("conservatively runs every shard for shared benchmark inputs", () => {
     "fixtures/tsconfig/workspace-resolution/tsconfig.json",
     ".github/workflows/ci.yml",
     ".github/scripts/benchmark-change-scope.cjs",
+    ".github/scripts/benchmark-handoff.sh",
     "tests/js/benchmark-change-scope.test.js",
   ]) {
     assert.deepEqual(benchmarkChangeScope(modified([path])), { changed: true, scope: "all" });

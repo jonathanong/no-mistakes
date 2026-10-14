@@ -99,7 +99,7 @@ impl ImportCollector {
         // A destructuring target can reset an imported receiver without a
         // direct property write. Reuse the existing syntactic target extractor
         // while collecting this unsupported write; reads must still see a reset.
-        for (name, path) in extract_value_flow::write_targets::targets(target) {
+        for (name, path, _) in extract_value_flow::write_targets::targets(target) {
             if path.is_empty() {
                 self.record_replacement_write(
                     &name,

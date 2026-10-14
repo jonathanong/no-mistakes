@@ -1,0 +1,15 @@
+{
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "cpu_count": 5,
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cgroup_cpu_max": "400000 100000",
+  "main_revision": "917c9ea1c2f2400e8a5d3d50c18c0a52fe21ad4a"
+}

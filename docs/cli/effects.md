@@ -60,7 +60,7 @@ Module selectors match the import specifier exactly for repository callables;
 a different repository barrel needs its own selector. Explicit re-exports of
 external modules resolve to the external module/export selector. Dynamic calls
 and invalidated aliases can remain unresolved.
-For an ordinary single-identity call, when both a spelling and a target select one occurrence, the spelling match
+When both a spelling and a target select one occurrence, the spelling match
 keeps its existing category and the occurrence appears once. Reachability
 follows import edges from the entry, so a file that `filesystem.skipDirectories`
 excludes from discovery can still be reported if it is imported from the entry.
@@ -86,12 +86,22 @@ See [effects configuration](../configuration/effects.md).
 Synchronous inline arrows, function expressions, and returned helpers retain their enclosing
 invocation context when resolving supplied receiver arguments and defaults. A
 later receiver write in that same context does not invalidate an earlier direct
-helper call. Calls after a write and captured closures with uncertain execution
+helper call, including an immediately invoked returned helper imported directly
+or through a re-export. Supplier read timing and the helper's file-qualified
+callable ownership are tracked separately. Calls after a write and captured closures with uncertain execution
 order remain unresolved; synthetic reachability edges do not add a second
 unknown argument set to a proven invocation. Returned helpers require every
 known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
+
+Transparent aliases of default receiver parameters preserve the eventual member
+read. For example, `const alias = client; alias.get()` retains the original
+`get` target after only a sibling `set` write. Matching and dynamic writes still
+invalidate live members. A copied method such as `const get = alias.get` keeps
+its acquisition snapshot; copying a container keeps descendant members live.
+Captured and suspended helpers remain conservative. Nested propagation without
+an exact assigned member history also retains the conservative default guard.
 
 
 A physical call with multiple known callable possibilities still occupies one

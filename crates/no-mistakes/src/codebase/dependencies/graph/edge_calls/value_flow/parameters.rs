@@ -32,6 +32,7 @@ impl ValueFlowResolution<'_, '_> {
                     supers: self.supers,
                     replacements: self.replacements,
                     replacement_read: false,
+                    foreign_acquisition: self.foreign_acquisition,
                     cache: self.cache,
                     parameters_enabled: true,
                     initializing: self.initializing.clone(),
@@ -41,6 +42,7 @@ impl ValueFlowResolution<'_, '_> {
                     default_origins: None,
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
+                    member_read: None,
                 };
                 flow.visiting
                     .insert((path.to_path_buf(), parameter.scope, parameter.name.clone()));
@@ -120,7 +122,7 @@ impl ValueFlowResolution<'_, '_> {
                 values.push(FlowValue::Unknown);
                 continue;
             };
-            if inline_callee(&call.callee)
+            if super::inline_inputs::inline_callee(&call.callee)
                 && (!synchronous || !self.safe_inline_callee(&caller, &call.callee))
             {
                 values.push(FlowValue::Unknown);
@@ -128,9 +130,13 @@ impl ValueFlowResolution<'_, '_> {
             }
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
-            if inline_callee(&call.callee) {
-                self.invocation_read =
-                    Some((caller.clone(), call.offset, call.context, parameter.owner));
+            if super::inline_inputs::inline_callee(&call.callee) {
+                self.invocation_read = Some(default_origins::InvocationRead {
+                    file: caller.clone(),
+                    offset: call.offset,
+                    context: call.context,
+                    owner: (path.to_path_buf(), parameter.owner),
+                });
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
@@ -157,6 +163,16 @@ impl ValueFlowResolution<'_, '_> {
             } else {
                 argument.expect("supplied non-undefined argument")
             };
+            if !parameter.projection.is_empty() {
+                // Destructuring acquires methods before the body executes. Carry
+                // caller timing into lazy receiver fields before they snapshot.
+                self.record_receiver_use(
+                    &caller,
+                    call,
+                    &value,
+                    from_default.then_some((path, parameter.owner, true)),
+                );
+            }
             values.push(self.project_parameter(path, parameter, value, from_default, acquisition));
             if self.acquisition_context.is_some() {
                 self.seal_receiver_acquisition();
@@ -178,24 +194,5 @@ impl ValueFlowResolution<'_, '_> {
         default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         self.default_origins = origins;
         agreed_value(values)
-    }
-    fn parameter_default(
-        &mut self,
-        path: &std::path::Path,
-        parameter: &ValueParameter,
-    ) -> FlowValue {
-        self.initializing
-            .push((path.to_path_buf(), parameter.owner, parameter.default_order));
-        let value = self.value(path, &parameter.default);
-        self.initializing.pop();
-        value
-    }
-}
-
-fn inline_callee(value: &ValueExpression) -> bool {
-    match value {
-        ValueExpression::Callable(_) | ValueExpression::Call(_, _) => true,
-        ValueExpression::Member(base, _) | ValueExpression::Awaited(base) => inline_callee(base),
-        _ => false,
     }
 }

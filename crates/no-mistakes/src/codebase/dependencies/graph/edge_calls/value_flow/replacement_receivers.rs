@@ -16,6 +16,20 @@ pub(super) struct ReceiverIdentities {
     pub(super) imported_ids: FxHashSet<usize>,
 }
 impl ReceiverIdentities {
+    pub(super) fn into_mutated_external(
+        self,
+        writers: &super::writers::ForeignWriters<'_>,
+    ) -> FxHashMap<String, FxHashMap<String, (FxHashSet<String>, bool)>> {
+        let mut mutated: FxHashMap<String, FxHashMap<String, (FxHashSet<String>, bool)>> = fx_map();
+        for (identity, receiver) in self.identities {
+            if let ReceiverIdentity::External(module, export) = identity {
+                if let Some(summary) = writers.summary(receiver) {
+                    mutated.entry(module).or_default().insert(export, summary);
+                }
+            }
+        }
+        mutated
+    }
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn local_ids(&self) -> usize {
         self.identities.len() - self.imported_ids.len()

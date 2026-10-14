@@ -71,6 +71,7 @@ struct ValueFlowResolution<'a, 'b> {
     supers: &'a ConstructorRoutes,
     replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
     replacement_read: bool,
+    foreign_acquisition: bool,
     used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
     initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
@@ -79,9 +80,14 @@ struct ValueFlowResolution<'a, 'b> {
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
-    invocation_read: Option<(std::path::PathBuf, u32, Option<CallableId>, CallableId)>,
+    invocation_read: Option<default_origins::InvocationRead>,
+    member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
+#[path = "value_flow/member_projection.rs"]
+mod member_projection;
+#[path = "value_flow/member_reads.rs"]
+mod member_reads;
 #[path = "value_flow/named.rs"]
 mod named;
 #[path = "value_flow/refine.rs"]
