@@ -1038,6 +1038,11 @@ their existing asynchronous exports. `DeclaredPayloadCompatibilityOptions`,
 shapes. Reports retain the existing `RuleFinding` contract; unsupported schema
 forms produce unproven findings.
 
+The configured [github-actions-job-timeouts](rules/github-actions-job-timeouts.md)
+rule, including `rejectJobAtOrAboveStepSum`, is available through the existing
+async `check()` and `analyzeProject()` check reports. Configure the option in
+the project rules; no additional Node export is needed.
+
 `importers()`, `exportsOf()`, `deadExports()`, and `callSites()` return additive
 collection diagnostics: `partial` and `incompleteFiles` (exported types
 `QueryDiagnostics`, `QueryIncompleteFile`, and `QueryIncompleteReason`). A file

@@ -1,0 +1,2 @@
+# The locator also handles malformed workflow containers without a partial index.
+jobs: disabled

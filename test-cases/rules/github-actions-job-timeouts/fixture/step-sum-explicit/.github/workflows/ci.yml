@@ -1,0 +1,24 @@
+?
+  [metadata, key]
+: ignored
+scalar-key: &scalar-key metadata
+? *scalar-key
+: ignored
+name: Non-string explicit keys
+jobs:
+  # Complex non-string keys are ignored and must not steal real job locations.
+  ? [not, a, job]
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  "real#job":
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6

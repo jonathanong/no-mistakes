@@ -316,3 +316,27 @@ fn check_json_reports_both_markdown_rule_ids() {
 
 #[path = "check_deadline_evidence.rs"]
 mod check_deadline_evidence;
+
+#[test]
+fn check_json_reads_job_step_sum_option_from_config() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-job-timeouts/fixture/step-sum");
+    let report: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": root.join(".no-mistakes.yml") }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{report}");
+    let mut targets: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["rule"], "github-actions-job-timeouts");
+            finding["target"].as_str().unwrap()
+        })
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(targets, ["above", "conditional-matrix-composite", "equal"]);
+}

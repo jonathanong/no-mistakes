@@ -236,3 +236,209 @@ fn timeout_minutes_accepts_strings_and_rejects_other_values() {
     let allow = AllowEntry::default();
     assert_eq!(allow.clone().job, allow.job);
 }
+
+#[test]
+fn step_sum_bound_is_opt_in() {
+    assert!(run(&fixture("step-sum"), "{}").is_empty());
+    assert!(run(&fixture("step-sum"), "rejectJobAtOrAboveStepSum: false").is_empty());
+}
+
+#[test]
+fn step_sum_rejects_equal_and_larger_job_deadlines_only_with_complete_bounds() {
+    let findings = run(&fixture("step-sum"), "rejectJobAtOrAboveStepSum: true");
+    let mut targets: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.target.as_deref().unwrap())
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(
+        targets,
+        ["above", "conditional-matrix-composite", "equal"],
+        "{findings:?}"
+    );
+    for finding in findings {
+        let timeout = if finding.target.as_deref() == Some("above") {
+            11
+        } else {
+            10
+        };
+        assert!(finding
+            .message
+            .contains(&format!("timeout-minutes is {timeout},")));
+        assert!(
+            finding.message.contains("step timeout sum of 10"),
+            "{finding:?}"
+        );
+        assert!(finding.message.contains("largest step timeout: 6"));
+        assert!(finding.message.contains("choose a job timeout below"));
+        assert!(finding.message.contains("tighter total runtime bound"));
+    }
+}
+
+#[test]
+fn allow_entries_do_not_bypass_step_sum_bound() {
+    for entry in ["", "    maxMinutes: 30\n"] {
+        let findings = run(&fixture("step-sum"), &format!(
+            "rejectJobAtOrAboveStepSum: true\nmaxMinutes: 10\nallow:\n  - job: '.github/workflows/ci.yml#above'\n{entry}"
+        ));
+        let above: Vec<_> = findings
+            .iter()
+            .filter(|finding| finding.target.as_deref() == Some("above"))
+            .collect();
+        assert_eq!(above.len(), 1, "{findings:?}");
+        assert!(above[0].message.contains("step timeout sum of 10"));
+    }
+}
+
+#[test]
+fn step_sum_respects_file_and_line_suppressions() {
+    for name in ["step-sum-disabled", "step-sum-suppressed"] {
+        assert!(
+            run(&fixture(name), "rejectJobAtOrAboveStepSum: true").is_empty(),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn step_sum_option_composes_with_step_exceeding_job_check() {
+    let options = "rejectJobAtOrAboveStepSum: true\nrejectStepExceedingJob: true";
+    let findings = run(&fixture("step-sum"), options);
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.message.contains("step timeout sum"))
+            .count(),
+        3
+    );
+    let findings = run(&fixture("step-exceeds"), options);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("exceeding its job timeout"));
+}
+
+#[test]
+fn quoted_job_keys_preserve_job_locations_and_line_suppression() {
+    let findings = run(
+        &fixture("step-sum-quoted"),
+        "rejectJobAtOrAboveStepSum: true",
+    );
+    let mut locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [("anchored", 58), ("visible#colon:job", 51)],
+        "{findings:?}"
+    );
+    // Existing job diagnostics share these locations, including quoted aliases.
+    let findings = run(&fixture("step-sum-quoted"), "maxMinutes: 9");
+    let mut locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [("anchored", 58), ("visible#colon:job", 51)],
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn job_locations_support_indented_root_and_inline_mapping() {
+    let options = "rejectJobAtOrAboveStepSum: true";
+    let findings = run(&fixture("step-sum-indented"), options);
+    let mut locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [("anchored", 60), ("visible#colon:job", 53)],
+        "{findings:?}"
+    );
+    let findings = run(&fixture("step-sum-inline"), options);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 3);
+}
+
+#[test]
+fn non_string_explicit_keys_do_not_steal_real_job_locations() {
+    let findings = run(
+        &fixture("step-sum-explicit"),
+        "rejectJobAtOrAboveStepSum: true",
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].target.as_deref(), Some("real#job"));
+    assert_eq!(findings[0].line, 18);
+}
+
+#[test]
+fn explicit_scalar_job_keys_preserve_locations_and_suppression() {
+    for options in ["rejectJobAtOrAboveStepSum: true", "maxMinutes: 9"] {
+        let findings = run(&fixture("step-sum-explicit-scalar"), options);
+        let mut locations: Vec<_> = findings
+            .iter()
+            .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+            .collect();
+        locations.sort_unstable();
+        assert_eq!(
+            locations,
+            [("following", 57), ("normal", 46), ("visible#colon:job", 38)],
+            "{findings:?}"
+        );
+    }
+}
+
+fn assert_job_locations(name: &str, expected: &[(&str, usize)]) {
+    for options in ["rejectJobAtOrAboveStepSum: true", "maxMinutes: 9"] {
+        let findings = run(&fixture(name), options);
+        let mut locations: Vec<_> = findings
+            .iter()
+            .map(|finding| (finding.target.as_deref().unwrap(), finding.line))
+            .collect();
+        locations.sort_unstable();
+        assert_eq!(locations, expected, "{name}: {findings:?}");
+    }
+}
+
+#[test]
+fn document_locations_resolve_scalar_and_container_aliases() {
+    assert_job_locations("step-sum-alias-keys", &[("visible", 22)]);
+    assert_job_locations("step-sum-flow-alias", &[]);
+    assert_job_locations("step-sum-root-alias", &[("root-alias", 3)]);
+    assert_job_locations("step-sum-map-alias", &[("mapped", 2)]);
+}
+
+#[test]
+fn document_locations_preserve_multiline_and_tagged_key_types() {
+    assert_job_locations("step-sum-multiline", &[("multi line", 2)]);
+    assert_job_locations(
+        "step-sum-tags",
+        &[
+            ("1", 24),
+            ("3", 52),
+            ("4", 59),
+            ("custom", 17),
+            ("map", 66),
+            ("seq", 73),
+        ],
+    );
+}
+
+#[test]
+fn document_location_parse_failure_returns_no_partial_index() {
+    for name in ["invalid", "step-sum-empty"] {
+        let source =
+            std::fs::read_to_string(fixture(name).join(".github/workflows/ci.yml")).unwrap();
+        let locations = super::job_lines::collect(&source);
+        assert_eq!(locations.line("jobs"), 1);
+    }
+    let source =
+        std::fs::read_to_string(fixture("step-sum-scalar-jobs").join(".github/workflows/ci.yml"))
+            .unwrap();
+    assert_eq!(super::job_lines::collect(&source).line("missing"), 2);
+}

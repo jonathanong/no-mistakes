@@ -1,0 +1,5 @@
+job-id: &job-id flow
+jobs: {
+  # no-mistakes-disable-next-line github-actions-job-timeouts
+  *job-id : {timeout-minutes: 10, steps: [{run: echo, timeout-minutes: 4}, {run: echo, timeout-minutes: 6}]}
+}

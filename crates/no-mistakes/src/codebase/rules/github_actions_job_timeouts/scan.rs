@@ -4,7 +4,6 @@ use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 use std::path::Path;
-
 pub(super) fn check_file(
     root: &Path,
     path: &Path,
@@ -32,7 +31,6 @@ pub(super) fn check_file(
     super::super::suppress_rule_findings_with_source(&mut findings, &source);
     findings
 }
-
 pub(super) fn check_parsed(
     rel: &str,
     source: &str,
@@ -44,6 +42,7 @@ pub(super) fn check_parsed(
     };
     let mut findings = Vec::new();
     let mut used_allow = BTreeSet::new();
+    let job_lines = super::job_lines::collect(source);
     for (key, job) in jobs {
         let Some(job_id) = key.as_str() else {
             continue;
@@ -54,7 +53,15 @@ pub(super) fn check_parsed(
         if job.contains_key(Value::String("uses".to_string())) {
             continue;
         }
-        findings.extend(check_job(rel, source, job_id, job, opts, &mut used_allow));
+        findings.extend(check_job(
+            rel,
+            source,
+            job_id,
+            job,
+            opts,
+            &mut used_allow,
+            &job_lines,
+        ));
     }
     for allowed in opts.allow.keys() {
         if used_allow.contains(allowed) || !allowed.starts_with(&format!("{rel}#")) {
@@ -77,9 +84,10 @@ fn check_job(
     job: &serde_yaml::Mapping,
     opts: &CompiledOptions,
     used_allow: &mut BTreeSet<String>,
+    job_lines: &super::job_lines::Locations,
 ) -> Vec<RuleFinding> {
     let allow_key = format!("{rel}#{job_id}");
-    let line = key_line(source, job_id);
+    let line = job_lines.line(job_id);
     let Some(raw) = job.get(Value::String("timeout-minutes".to_string())) else {
         return vec![finding(
             rel,
@@ -99,6 +107,9 @@ fn check_job(
     let mut findings = cap_findings(rel, line, job_id, minutes, &allow_key, opts, used_allow);
     if opts.reject_step_exceeding_job {
         findings.extend(step_findings(rel, source, job_id, job, minutes));
+    }
+    if opts.reject_job_at_or_above_step_sum {
+        findings.extend(super::step_sum::finding(rel, line, job_id, job, minutes));
     }
     findings
 }

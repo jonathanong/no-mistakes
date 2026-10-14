@@ -1,0 +1,35 @@
+job-id: &job-id aliased
+explicit-id: &explicit-id explicit
+visible-id: &visible-id visible
+false-id: &false-id false
+jobs:
+  # no-mistakes-disable-next-line github-actions-job-timeouts
+  *job-id :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  ? *explicit-id # no-mistakes-disable-line github-actions-job-timeouts
+  :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  *visible-id :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6
+  *false-id :
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 4
+      - run: echo second
+        timeout-minutes: 6

@@ -32,3 +32,9 @@ accepts `options.contracts`, an opt-in list of named producer/consumer JSON
 Schema references. Paths are relative to the invocation root; optional RFC 6901
 pointers select each declaration. It checks supported declaration compatibility
 and reports unsupported schemas as unproven, without inferring runtime adoption.
+
+For [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md),
+`options.rejectJobAtOrAboveStepSum` defaults to `false`. Enable it to require a
+job timeout below the sum of at least two steps' supported literal timeout
+bounds; missing or unsupported step bounds make the sum unprovable and skip
+that check. This option is independent of caps and `allow` entries.

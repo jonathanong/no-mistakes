@@ -1,0 +1,69 @@
+--- # Document marker comments do not set the root mapping indentation.
+# A whole root mapping may be indented in valid YAML.
+  env:
+    double: earlier nested key
+    "hash#colon:job": earlier nested key
+  jobs:
+    plain:
+      timeout-minutes: 9
+      env:
+        double: another nested key
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    "double": # no-mistakes-disable-line github-actions-job-timeouts
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    # no-mistakes-disable-next-line github-actions-job-timeouts
+    'single':
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    # no-mistakes-disable-next-line github-actions-job-timeouts
+    "hash#colon:job":
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    "escaped\u0023\u003ajob": # no-mistakes-disable-line github-actions-job-timeouts
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    'single''quote': # no-mistakes-disable-line github-actions-job-timeouts
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    "visible#colon:job":
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    anchored: &defaults
+      timeout-minutes: 10
+      steps:
+        - run: echo first
+          timeout-minutes: 4
+        - run: echo second
+          timeout-minutes: 6
+    "aliased#job": *defaults # no-mistakes-disable-line github-actions-job-timeouts
+  after-jobs:
+    visible: should not replace a job location

@@ -1380,6 +1380,7 @@ dependencies = [
  "directories",
  "git2",
  "globset",
+ "granit-parser",
  "hcl-rs",
  "ignore",
  "is-terminal",

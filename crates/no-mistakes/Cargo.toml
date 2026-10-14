@@ -22,6 +22,7 @@ clap = { version = "4", features = ["derive"] }
 dashmap = "6.2.1"
 directories = "6"
 globset = "0.4"
+granit-parser = "1.0"
 git2 = "0.21"
 hcl-rs = "0.19"
 ignore = "0.4"
