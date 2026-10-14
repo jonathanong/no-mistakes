@@ -33,7 +33,15 @@ fn visit_property_definition_with_decorators<'a>(
         collector.visit_ts_type_annotation(type_annotation);
     }
     if let Some(value) = &property.value {
+        // An anonymous class outside an inferred class binding can reach this
+        // visitor with module context, though its field runs per instance.
+        if !property.r#static {
+            collector.repeat_depth += 1;
+        }
         collector.visit_expression(value);
+        if !property.r#static {
+            collector.repeat_depth -= 1;
+        }
     }
 }
 
@@ -47,7 +55,13 @@ fn visit_accessor_property_with_decorators<'a>(
         collector.visit_ts_type_annotation(type_annotation);
     }
     if let Some(value) = &property.value {
+        if !property.r#static {
+            collector.repeat_depth += 1;
+        }
         collector.visit_expression(value);
+        if !property.r#static {
+            collector.repeat_depth -= 1;
+        }
     }
 }
 

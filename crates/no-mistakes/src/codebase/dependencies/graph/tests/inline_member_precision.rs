@@ -93,9 +93,19 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
         ("alias-snapshot-bind", "<unknown>", Some("primary.get")),
         ("alias-inline-snapshot", "get", Some("primary.get")),
         ("inline-snapshot-after-call", "get", Some("primary.get")),
-        // Alias precision does not broaden the existing inline owner boundary.
-        ("alias-inline-snapshot-owned", "get", None),
-        ("inline-snapshot-owned", "get", None),
+        // A single inline acquisition precedes the owned body write.
+        ("alias-inline-snapshot-owned", "get", Some("primary.get")),
+        ("inline-snapshot-owned", "get", Some("primary.get")),
+        ("inline-snapshot-owned-write-first", "get", None),
+        // Repeated execution can acquire the replacement on a later pass.
+        ("inline-snapshot-repeated-for", "get", None),
+        ("inline-snapshot-repeated-header", "get", None),
+        ("inline-snapshot-repeated-function", "get", None),
+        ("inline-snapshot-repeated-while", "get", None),
+        ("inline-snapshot-repeated-do", "get", None),
+        ("inline-snapshot-repeated-field", "get", None),
+        ("inline-snapshot-repeated-nested-field", "get", None),
+        ("inline-snapshot-repeated-accessor", "get", None),
         ("alias-inline-live", "alias.get", None),
         ("alias-captured", "alias.get", None),
         ("alias-async", "alias.get", None),
