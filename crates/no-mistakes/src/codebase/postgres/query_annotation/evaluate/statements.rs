@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 mod bindings;
 pub(super) mod effects;
+mod failed_arrays;
 mod failed_bindings;
 mod failed_values;
 mod updates;

@@ -219,3 +219,23 @@ fn handled_alternative_updates_cannot_revive_an_earlier_builder_snapshot() {
         assert_eq!(row.sql_text.as_deref(), Some("SELECT 1"), "{rows:?}");
     }
 }
+
+#[test]
+fn failed_callback_container_aliases_keep_only_actual_invocation_metadata() {
+    let rows = extract("control-flow-callback-container-aliases.ts");
+    assert_eq!(rows.len(), 9, "{rows:?}");
+    for row in &rows {
+        assert_eq!(
+            row.complete,
+            !matches!(row.line, 6 | 14 | 41 | 50),
+            "{rows:?}"
+        );
+    }
+}
+
+#[test]
+fn sparse_failed_arrays_retain_callback_positions_without_dense_allocation() {
+    let rows = extract("control-flow-sparse-failed-array.ts");
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert!(!rows[0].complete, "{rows:?}");
+}

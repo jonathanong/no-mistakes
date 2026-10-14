@@ -27,6 +27,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     std::sync::Arc::make_mut(&mut function).supported = false;
                     Value::Function(function, owner.clone(), *captured)
                 }
+                Some(value @ (Value::Record(_, _) | Value::Array(_) | Value::References(_))) => {
+                    // This scope already contains inert failed metadata; keep alias identity.
+                    value.clone()
+                }
                 _ => unsupported.clone(),
             },
             Expr::Record(children, keys) => {

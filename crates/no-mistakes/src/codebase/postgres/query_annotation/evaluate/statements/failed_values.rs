@@ -1,4 +1,5 @@
 use super::{Environment, Evaluator, Value};
+use crate::fx::FxHashSet;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -13,9 +14,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .iter()
             .map(|(name, value)| (name.clone(), value.clone()))
             .collect::<Vec<_>>();
+        let mut seen = FxHashSet::default();
         for (name, value) in values {
             let value = if precise {
-                self.failed_scope_value(value, unsupported, depth)
+                self.failed_scope_value(value, unsupported, depth, &mut seen)
             } else {
                 unsupported.clone()
             };
@@ -23,7 +25,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    fn failed_scope_value(&mut self, value: Value, unsupported: &Value, depth: u8) -> Value {
+    pub(super) fn failed_scope_value(
+        &mut self,
+        value: Value,
+        unsupported: &Value,
+        depth: u8,
+        seen: &mut FxHashSet<u64>,
+    ) -> Value {
         let Some(depth) = depth.checked_sub(1) else {
             return self.failed_scope_callbacks(value);
         };
@@ -35,28 +43,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Record(values, keys) => {
                 let values = values
                     .into_iter()
-                    .map(|value| self.failed_scope_value(value, unsupported, depth))
+                    .map(|value| self.failed_scope_value(value, unsupported, depth, seen))
                     .collect::<Vec<_>>()
                     .into();
                 Value::Record(values, keys)
             }
             Value::References(values) => self.failed_scope_callbacks(Value::References(values)),
             Value::Array(id) => {
-                let mut values = Vec::new();
-                for (index, value) in self.argument_slots(id) {
-                    // Keep authored positions: deleted slots must not shift a callback.
-                    values.resize(index + 1, unsupported.clone());
-                    if !self.definite_deleted_argument_slots.contains(&(id, index)) {
-                        values[index] = value.clone();
-                    }
-                }
-                let values = values
-                    .into_iter()
-                    .map(|value| self.failed_scope_value(value, unsupported, depth))
-                    .collect();
-                let id = self.next_builder;
-                self.next_builder += 1;
-                self.argument_objects.insert(id, values);
+                self.failed_scope_array(id, unsupported, depth, seen);
                 Value::Array(id)
             }
             _ => unsupported.clone(),
