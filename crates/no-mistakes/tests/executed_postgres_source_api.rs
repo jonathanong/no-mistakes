@@ -17,6 +17,9 @@ fn source(name: &str) -> ExecutedPostgresSource {
 #[path = "executed_postgres_source_api/review_followups.rs"]
 mod review_followups;
 
+#[path = "executed_postgres_source_api/effect_boundary_followups.rs"]
+mod effect_boundary_followups;
+
 #[test]
 fn source_api_keeps_execution_sites_annotations_and_complete_alternatives() {
     let sources = [source("reads.ts"), source("writes.ts")];
