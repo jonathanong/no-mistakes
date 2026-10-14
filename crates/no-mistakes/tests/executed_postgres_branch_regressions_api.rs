@@ -84,3 +84,19 @@ fn conditional_shapes_cannot_skip_later_callback_mutations() {
         }
     }
 }
+
+#[test]
+fn operand_failure_cannot_discard_accessor_effects() {
+    let rows = extract("control-flow-operand-failure-effects.ts");
+    assert_eq!(rows.len(), 7, "{rows:?}");
+    assert_eq!(
+        rows.iter().filter(|row| row.complete).count(),
+        2,
+        "{rows:?}"
+    );
+    for row in rows {
+        let pure = matches!(row.line, 26 | 32);
+        assert_eq!(row.complete, pure, "{row:?}");
+        assert!(!row.only_value_placeholders, "{row:?}");
+    }
+}

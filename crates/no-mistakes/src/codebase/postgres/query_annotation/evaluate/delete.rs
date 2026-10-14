@@ -59,6 +59,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         Value::Unknown
     }
 
+    pub(super) fn preserve_operand_effect(
+        &mut self,
+        expr: &Expr,
+        value: &Value,
+        path: &Path,
+        env: Environment,
+    ) -> bool {
+        let handled = self.handled_deletion_effect(expr, value, path, env);
+        if !handled {
+            self.invalidate_live_builders();
+        }
+        handled
+    }
+
     pub(super) fn handled_deletion_effect(
         &self,
         expr: &Expr,

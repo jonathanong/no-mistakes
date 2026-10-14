@@ -95,10 +95,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let (depth, generic) = context;
         let result = self.expr(expr, path, env, depth, generic);
         if self.files[path].facts.precise_records {
+            let handled = self.preserve_operand_effect(expr, &result, path, *env);
             if matches!(result.clone().exposed(), Value::Failure(_)) {
                 return result.exposed();
             }
-            let handled = self.handled_deletion_effect(expr, &result, path, *env);
             if matches!(&result, Value::Evaluated(_, false))
                 || opaque_return
                 || (self.effect_can_mutate(expr, path, *env) && !handled)

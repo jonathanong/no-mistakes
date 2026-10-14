@@ -22,16 +22,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let left_value = self.expr(left, path, env, depth, generic);
         let right_value = self.expr(right, path, env, depth, generic);
+        let left_handled = self.preserve_operand_effect(left, &left_value, path, *env);
+        let right_handled = self.preserve_operand_effect(right, &right_value, path, *env);
         if let Value::Failure(reason) = left_value.clone().exposed() {
             return Value::Failure(reason);
         }
         if let Value::Failure(reason) = right_value.clone().exposed() {
             return Value::Failure(reason);
         }
-        if !self.handled_deletion_effect(left, &left_value, path, *env)
-            || !self.handled_deletion_effect(right, &right_value, path, *env)
-        {
-            self.invalidate_live_builders();
+        if !left_handled || !right_handled {
             return Value::Failure("opaque-binary-operand-effect");
         }
         if !matches!(op, "===" | "!==")

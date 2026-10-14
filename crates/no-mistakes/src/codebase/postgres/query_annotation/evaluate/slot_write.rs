@@ -14,9 +14,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         context: (u8, bool),
     ) -> Value {
         let (depth, generic) = context;
-        let receiver = self.expr(receiver, path, env, depth, generic).exposed();
+        let raw_receiver = self.expr(receiver, path, env, depth, generic);
+        let handled_receiver = self.preserve_operand_effect(receiver, &raw_receiver, path, *env);
+        let receiver = raw_receiver.exposed();
         let value = self.expr(expression, path, env, depth, generic);
-        let handled_value = self.handled_deletion_effect(expression, &value, path, *env);
+        let handled_value =
+            self.preserve_operand_effect(expression, &value, path, *env) && handled_receiver;
         let stored = match value.clone().exposed() {
             Value::SlotDeletion => Value::Unknown,
             value => value,
