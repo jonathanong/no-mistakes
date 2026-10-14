@@ -48,6 +48,7 @@ fn computed_global_and_aliased_prototype_exposures_are_untrusted() {
         "control-flow-array-intrinsics-global.ts",
         "control-flow-array-intrinsics-alias.ts",
         "control-flow-array-intrinsics-exposure.ts",
+        "control-flow-array-intrinsics-namespace.ts",
     ] {
         let rows = extract(&[name]);
         assert_eq!(rows.len(), 1, "{name}: {rows:?}");
@@ -97,6 +98,7 @@ fn constructor_and_instance_aliases_taint_future_imported_intrinsics() {
         "control-flow-array-intrinsics-constructor-dependency.ts",
         "control-flow-array-intrinsics-instance-dependency.ts",
         "control-flow-array-intrinsics-derived-dependency.ts",
+        "control-flow-array-intrinsics-node-dependency.ts",
     ] {
         let rows = extract(&[
             "control-flow-array-intrinsics-alias-consumer.ts",

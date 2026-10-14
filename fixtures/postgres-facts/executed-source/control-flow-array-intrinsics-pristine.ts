@@ -2,9 +2,9 @@ import { read } from '@example/db';
 // Non-Array prototype properties must not taint intrinsic projections.
 const local = { prototype: 'local' };
 local.prototype;
-const otherGlobal = { Array: { prototype: 'local' } };
-otherGlobal.Array.prototype;
-otherGlobal['Array']['prototype'];
+const otherGlobal = { Other: { prototype: 'local' } };
+otherGlobal.Other.prototype;
+otherGlobal['Other']['prototype'];
 function ordinaryObject() { return { prototype: 'local' }; }
 ordinaryObject().prototype;
 export function run() {

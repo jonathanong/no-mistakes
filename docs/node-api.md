@@ -138,6 +138,8 @@ Array intrinsic projections remain incomplete when a supplied source exposes
 `__proto__`, or `getPrototypeOf`, including computed access, aliases, and read-only
 exposure;
 this conservative guard cannot prove that an exposed prototype stays pristine.
+Any static or literal computed member named `Array` counts as exposure, including
+local namespaces, so aliases of standard global objects cannot bypass the guard.
 
 `incompleteReason` is additive evaluator metadata: `null` for complete statements
 or proven generated value binds, otherwise a blocker such as `variant-limit`,
