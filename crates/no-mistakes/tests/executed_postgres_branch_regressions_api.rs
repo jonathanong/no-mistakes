@@ -128,14 +128,14 @@ fn builder_coercion_observes_later_supported_operand_effects() {
 #[test]
 fn ordered_operand_effects_precede_nested_executor_events() {
     let rows = extract("control-flow-ordered-operand-effects.ts");
-    assert_eq!(rows.len(), 13, "{rows:?}");
+    assert_eq!(rows.len(), 15, "{rows:?}");
     assert_eq!(
         rows.iter().filter(|row| row.complete).count(),
-        3,
+        4,
         "{rows:?}"
     );
     for row in rows {
-        let pure = matches!(row.line, 25 | 29 | 57);
+        let pure = matches!(row.line, 25 | 29 | 57 | 65);
         assert_eq!(row.complete, pure, "{row:?}");
         assert!(!row.only_value_placeholders, "{row:?}");
     }

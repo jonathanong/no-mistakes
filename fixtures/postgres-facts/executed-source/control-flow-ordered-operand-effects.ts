@@ -56,3 +56,11 @@ export function calleeOperands(object: unknown, opaque: unknown) {
 export function earlierValidRead(object: unknown) {
   [read(sharedQuery), object.mutate];
 }
+
+export function branchTestAfterEffect(object: unknown) {
+  if ((object.mutate, read(sharedQuery), true)) {}
+}
+
+export function branchTestEarlierRead(object: unknown) {
+  if ((read(sharedQuery), object.mutate, true)) {}
+}
