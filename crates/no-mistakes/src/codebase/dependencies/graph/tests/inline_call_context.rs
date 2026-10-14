@@ -38,6 +38,9 @@ fn inline_helper_retains_enclosing_context_before_later_receiver_write() {
         );
     }
     for name in [
+        "async",
+        "generator",
+        "returned-async",
         "after",
         "captured",
         "callback",

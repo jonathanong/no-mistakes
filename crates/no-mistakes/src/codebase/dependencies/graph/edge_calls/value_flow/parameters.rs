@@ -70,7 +70,8 @@ impl ValueFlowResolution<'_, '_> {
             .unwrap_or_default();
         let mut values = Vec::new();
         let mut origins = None;
-        let has_concrete = incoming.iter().any(|input| {
+        let synchronous = self.synchronous_callable(path, parameter.owner);
+        let has_concrete = synchronous && incoming.iter().any(|input| {
             if input.callback { return false; }
             let call = self.indexes.file(self.facts, &input.file)
                 .and_then(|index| index.values.sites.get(&input.offset)
@@ -97,7 +98,7 @@ impl ValueFlowResolution<'_, '_> {
                 values.push(FlowValue::Unknown);
                 continue;
             };
-            if inline_callee(&call.callee) && !self.safe_inline_callee(&caller, &call.callee) {
+            if inline_callee(&call.callee) && (!synchronous || !self.safe_inline_callee(&caller, &call.callee)) {
                 values.push(FlowValue::Unknown);
                 continue;
             }

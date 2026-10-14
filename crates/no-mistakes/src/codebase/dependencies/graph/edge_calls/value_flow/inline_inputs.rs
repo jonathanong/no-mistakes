@@ -1,9 +1,13 @@
 use super::*;
 
 impl ValueFlowResolution<'_, '_> {
+    pub(super) fn synchronous_callable(&self, path: &std::path::Path, id: CallableId) -> bool {
+        self.indexes.file(self.facts, path).is_some_and(|index|
+            !index.values.async_callables.contains(&id) && !index.values.generator_callables.contains(&id))
+    }
     pub(super) fn safe_inline_callee(&mut self, path: &std::path::Path, value: &ValueExpression) -> bool {
         match value {
-            ValueExpression::Callable(_) => true,
+            ValueExpression::Callable(id) => self.synchronous_callable(path, *id),
             ValueExpression::Member(base, _) | ValueExpression::Awaited(base) => self.safe_inline_callee(path, base),
             ValueExpression::Call(offset, end) => {
                 let Some(call) = self.indexes.file(self.facts, path)

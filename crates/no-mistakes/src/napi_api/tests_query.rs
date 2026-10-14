@@ -89,7 +89,7 @@ fn registry_extension_json_returns_report() {
 
 #[test]
 fn effects_json_retains_inline_invocation_context() {
-    for (name, expected) in [("inline", 1), ("function", 1), ("default", 1), ("returned", 1), ("after", 0), ("captured", 0), ("callback", 0), ("bound-escape", 0), ("direct-escape", 0), ("mixed-callback", 0), ("mixed-named-callback", 0), ("other-context", 0), ("top-level", 1)] {
+    for (name, expected) in [("inline", 1), ("function", 1), ("default", 1), ("returned", 1), ("async", 0), ("generator", 0), ("returned-async", 0), ("after", 0), ("captured", 0), ("callback", 0), ("bound-escape", 0), ("direct-escape", 0), ("mixed-callback", 0), ("mixed-named-callback", 0), ("other-context", 0), ("top-level", 1)] {
         let options = json!({
             "root": fixture_root("inline-call-context"),
             "kind": "cache", "entry": format!("src/{name}.mts")
