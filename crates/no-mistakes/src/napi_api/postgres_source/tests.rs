@@ -175,7 +175,7 @@ fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
             expected_kind
         );
     }
-    for line in [22, 28, 40, 60, 73] {
+    for line in [22, 28, 40, 60, 83, 96] {
         assert!(
             rows.iter().any(|row| {
                 row["line"] == line
@@ -186,6 +186,13 @@ fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
             "line {line}: {rows:?}"
         );
     }
+    assert!(rows.iter().any(|row| {
+        row["line"] == 71
+            && row["annotation"].is_null()
+            && row["sqlText"].is_null()
+            && row["complete"] == false
+            && row["onlyValuePlaceholders"] == false
+    }));
 }
 #[test]
 fn standalone_and_batch_bindings_keep_structured_source_facts() {

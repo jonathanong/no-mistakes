@@ -35,7 +35,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         function.supported && function.body.iter().all(|step| match step {
             Step::Reserve(_) => true,
             Step::Append(target, tail) => {
-                function.params.contains(target)
+                function
+                    .params
+                    .iter()
+                    .position(|param| param == target)
+                    .and_then(|index| args.get(index))
+                    .and_then(|arg| match arg {
+                        Expr::Name(name) => self.scopes[env].get(name),
+                        _ => None,
+                    })
+                    .is_some_and(|value| {
+                        matches!(value, Value::Prefix(_, _, Some(id)) if !self.invalidated_builders.contains(id))
+                    })
                     && match tail {
                         Expr::Text(_) => true,
                         Expr::Template(parts) => {

@@ -1,6 +1,7 @@
 use super::{Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -61,12 +62,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // its contextual invocations, but speculative calls to it must
             // not erase the exact argument supplied by its owner.
             if file.facts.precise_records
-                && !file
-                    .module
-                    .ts
-                    .exported_bindings
-                    .iter()
-                    .any(|binding| binding.specifier.is_none() && binding.local == *name)
+                && !file.module.ts.exported_bindings.iter().any(|binding| {
+                    binding.specifier.is_none()
+                        && exported_reaches(globals, &binding.local, name, &mut BTreeSet::new())
+                })
             {
                 continue;
             }
@@ -108,6 +107,43 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.steps(&function.body, path, &mut env, 16, true);
             }
         }
+    }
+}
+
+fn exported_reaches(
+    globals: &BTreeMap<String, Expr>,
+    exported: &str,
+    target: &str,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    if exported == target {
+        return true;
+    }
+    if !visiting.insert(exported.to_string()) {
+        return false;
+    }
+    let reaches = globals
+        .get(exported)
+        .is_some_and(|value| value_reaches(globals, value, target, visiting));
+    visiting.remove(exported);
+    reaches
+}
+
+fn value_reaches(
+    globals: &BTreeMap<String, Expr>,
+    value: &Expr,
+    target: &str,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    match value {
+        Expr::Name(name) => exported_reaches(globals, name, target, visiting),
+        Expr::Record(values, _) | Expr::Object(values) | Expr::Container(values) => values
+            .iter()
+            .any(|value| value_reaches(globals, value, target, visiting)),
+        Expr::Function(function) => function.body.iter().any(|step| {
+            matches!(step, super::super::Step::Return(value) if value_reaches(globals, value, target, visiting))
+        }),
+        _ => false,
     }
 }
 

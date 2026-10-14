@@ -60,6 +60,29 @@ export function taggedGetterArgument() {
   return read(query)
 }
 
+export function customAppendReceiver() {
+  const query = sql`/* custom receiver */ SELECT 1`
+  const receiver = {
+    append(_suffix: string) {
+      query.append(' UPDATE posts SET title = title')
+    },
+  }
+  appendKnown(receiver)
+  return read(query)
+}
+
+export function directTaggedGetter() {
+  const query = sql`/* direct getter */ SELECT 1`
+  const object = {
+    get trigger() {
+      query.append(' UPDATE posts SET title = title')
+      return 1
+    },
+  }
+  query.append(sql`${object.trigger}`)
+  return read(query)
+}
+
 export function twoBindTemplates(first: string, second: string) {
   const query = sql`/* two binds */ SELECT ${first}::text`
   query.append(sql` || ${second}::text`)

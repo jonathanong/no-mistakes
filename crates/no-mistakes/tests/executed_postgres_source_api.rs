@@ -116,8 +116,29 @@ fn source_api_never_certifies_sql_across_imported_async_suspension() {
 }
 
 #[test]
+fn source_api_discards_executor_events_recorded_after_async_suspension() {
+    let sources = [source("async-event-consumer.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert_eq!(statements[0].file_name, "async-event-consumer.ts");
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
 fn source_api_retains_the_generic_call_of_an_exported_helper() {
     let sources = [source("exported-generic.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert!(!statements[0].complete, "{:?}", statements[0]);
+    assert!(statements[0].sql_text.is_none(), "{:?}", statements[0]);
+}
+
+#[test]
+fn source_api_retains_generic_callbacks_exposed_by_exported_records() {
+    let sources = [source("exported-record.ts")];
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
     assert_eq!(statements.len(), 1);
@@ -143,6 +164,22 @@ fn source_api_observes_side_effect_only_module_before_imported_read() {
         assert!(!statement.complete, "{statement:?}");
         assert!(!statement.only_value_placeholders, "{statement:?}");
     }
+}
+
+#[test]
+fn source_api_observes_eager_commonjs_dependency_before_imported_read() {
+    let sources = [
+        source("cjs-eager-consumer.ts"),
+        source("eager-builder.ts"),
+        source("eager-mutator.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    let statement = statements
+        .iter()
+        .find(|statement| statement.file_name == "cjs-eager-consumer.ts")
+        .unwrap();
+    assert!(!statement.complete, "{statement:?}");
 }
 
 #[test]

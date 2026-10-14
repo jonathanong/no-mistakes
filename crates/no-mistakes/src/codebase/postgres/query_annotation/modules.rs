@@ -35,6 +35,11 @@ impl Module {
                     .or_insert_with(OnceLock::new);
             }
         }
+        for specifier in &ts.eager_require_specifiers {
+            targets
+                .entry(specifier.clone())
+                .or_insert_with(OnceLock::new);
+        }
         for (index, binding) in ts.exported_bindings.iter().enumerate() {
             exports.entry(binding.exported.clone()).or_insert(index);
             if let Some(specifier) = &binding.specifier {
