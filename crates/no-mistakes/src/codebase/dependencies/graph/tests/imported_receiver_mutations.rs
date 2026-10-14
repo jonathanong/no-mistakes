@@ -164,11 +164,9 @@ fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {
         .filter(|site| site.source_callee == "options.client.get")
         .collect::<Vec<_>>();
     assert_eq!(receivers.len(), 128);
-    assert!(
-        receivers
-            .iter()
-            .all(|site| matches!(site.target, ResolvedCallTarget::Unknown))
-    );
+    assert!(receivers
+        .iter()
+        .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
     assert_eq!(benchmark_probe_parameter_agreements(), 1);
     assert!(
         benchmark_probe_origin_nodes() <= 128 * 8 + 8,
@@ -203,11 +201,9 @@ fn live_parameter_alias_sites_keep_shared_origin_work_linear() {
         .filter(|site| site.source_callee == "alias.get")
         .collect::<Vec<_>>();
     assert_eq!(aliases.len(), 128);
-    assert!(
-        aliases
-            .iter()
-            .all(|site| matches!(site.target, ResolvedCallTarget::Unknown))
-    );
+    assert!(aliases
+        .iter()
+        .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)));
     assert_eq!(benchmark_probe_parameter_agreements(), 1);
     assert!(
         benchmark_probe_origin_nodes() <= 128 * 8 + 8,
