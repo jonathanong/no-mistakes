@@ -23,7 +23,6 @@ jobs:
     env:
       # Exact historical compiler; source worktrees must not select their moving stable alias.
       RUSTUP_TOOLCHAIN: '1.99.0'
-      EXPERIMENT_ROOT: ${{ runner.temp }}/receiver-native-2012
       DRIVER: .github/scripts/receiver-fact-native
     steps:
       - name: Checkout experiment and public probe
@@ -32,6 +31,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set isolated runtime output path
+        timeout-minutes: 1
+        run: printf 'EXPERIMENT_ROOT=%s/receiver-native-2012\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Test saved report fixtures
         timeout-minutes: 2
         run: python3 -m unittest discover -s "$DRIVER" -p 'test_*.py'

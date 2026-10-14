@@ -33,8 +33,9 @@ experiments require separate, clearly labeled follow-ups.
 
 ## Resource and provenance bounds
 
-The single job has a 180-minute limit. Step limits sum to 168 minutes:
-checkout 5, saved-record tests 2, compiler setup 5, preflight 3, release builds
+The single job has a 180-minute limit. Step limits sum to 169 minutes:
+checkout 5, runtime path setup 1, saved-record tests 2, compiler setup 5,
+preflight 3, release builds
 90, release samples 15, release cleanup 2, dev builds 25, dev samples 12,
 dev cleanup 2, report 2, and evidence upload 5. Dependency downloads and full
 LTO are within these limits; timeout or resource exhaustion is incomplete
