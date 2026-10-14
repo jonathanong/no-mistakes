@@ -1,4 +1,25 @@
 use crate::codebase::postgres::query_annotation::{Expr, Step};
+use std::{collections::BTreeMap, path::PathBuf};
+
+use super::super::{CallSpan, ExecutionEvents, Value};
+
+pub(super) type EventLengths = BTreeMap<(PathBuf, CallSpan), usize>;
+
+pub(super) fn event_lengths(events: &ExecutionEvents) -> EventLengths {
+    events
+        .iter()
+        .map(|(key, values)| (key.clone(), values.len()))
+        .collect()
+}
+
+pub(super) fn invalidate_new_events(events: &mut ExecutionEvents, previous: &EventLengths) {
+    for (key, values) in events {
+        let count = previous.get(key).copied().unwrap_or(0);
+        for (_, value) in values.iter_mut().skip(count) {
+            *value = Value::Unknown;
+        }
+    }
+}
 
 pub(super) fn has_suspension(steps: &[Step]) -> bool {
     steps.iter().any(|step| match step {

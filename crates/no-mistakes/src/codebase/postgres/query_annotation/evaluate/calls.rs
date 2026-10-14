@@ -180,24 +180,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let suspended = self.files[&function_path].facts.precise_records
             && function.asynchronous
             && async_suspension::has_suspension(&function.body);
-        let prior_events = suspended.then(|| {
-            self.events
-                .iter()
-                .map(|(key, values)| (key.clone(), values.len()))
-                .collect::<std::collections::BTreeMap<_, _>>()
-        });
+        let prior_events = suspended.then(|| async_suspension::event_lengths(&self.events));
         let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
         if let Some(prior_events) = prior_events {
             // The evaluator does not schedule post-await work. Whether the
             // caller awaits this promise or reads a shared builder first is
             // unknown. Events recorded while evaluating the body are just as
             // uncertain as its return value and captured builders.
-            for (key, values) in &mut self.events {
-                let previous = prior_events.get(key).copied().unwrap_or(0);
-                for (_, value) in values.iter_mut().skip(previous) {
-                    *value = Value::Unknown;
-                }
-            }
+            async_suspension::invalidate_new_events(&mut self.events, &prior_events);
             self.invalidate_builders(&arguments);
             self.invalidate_captured(captured, &function);
             return Value::Promise(Box::new(Value::Unknown));
