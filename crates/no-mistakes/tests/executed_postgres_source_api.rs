@@ -125,15 +125,8 @@ fn source_api_observes_side_effect_only_module_before_imported_read() {
             .iter()
             .find(|statement| statement.file_name == consumer)
             .unwrap();
-        assert!(
-            !statement.complete
-                || statement
-                    .sql_text
-                    .as_deref()
-                    .unwrap_or("")
-                    .contains("UPDATE posts"),
-            "{statement:?}"
-        );
+        assert!(!statement.complete, "{statement:?}");
+        assert!(!statement.only_value_placeholders, "{statement:?}");
     }
 }
 
