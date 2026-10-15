@@ -97,9 +97,9 @@ Local spelling and a matching terminal type name alone do not select a call. The
 marker in `query-reached-per-item` findings.
 
 Static indexed annotations such as `NonNullable<QueryOptions['query']>` preserve
-an exported object type's exact field-type identity. Only an unshadowed global
+an exported object type's exact field-type identity. Only a global
 `NonNullable` is transparent; local/imported utilities, generic shadows, and
-same-named fields from unconfigured modules supply no selected proof. Ownership
+same-named fields from unselected modules supply no selected proof. Ownership
 uses the complete lexical scope, including declarations and imports appearing
 after the annotation; nested type shadows cannot borrow an outer imported identity. An explicit
 callback annotation such as `(query: TransactionQuery) => Promise<void>` can
@@ -108,7 +108,7 @@ agrees. This type evidence does not relax conservative async receiver tracking.
 
 A nullish executor such as `options.query ?? write` retains each possible
 branch's own imported type/factory/target evidence. Independently configured
-possible effects report normally; an unknown or unconfigured branch does not
+possible effects report normally; an unknown or unselected branch does not
 borrow another branch's type identity. Mixed ordinary and transaction candidates
 are not diagnosed as transaction-client-only. Unsupported type expressions remain
 unresolved; this is a syntactic projection, not general TypeScript type checking.
