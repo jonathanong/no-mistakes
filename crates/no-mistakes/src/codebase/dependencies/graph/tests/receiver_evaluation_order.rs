@@ -52,6 +52,12 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
                     && line.is_none_or(|line| site.line == line)
             })
             .unwrap_or_else(|| panic!("{file} {caller:?} {callee}: {sites:?}"));
+        if file == "direct-inline-arguments" {
+            assert_eq!(
+                site.invocation,
+                crate::codebase::dependencies::extract::InvocationKind::Call
+            );
+        }
         assert_eq!(
             match &site.target {
                 ResolvedCallTarget::ModuleExport { export_path, .. } => Some(export_path.as_str()),
@@ -74,4 +80,21 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
         if export_path == "savedPhase.get"),
         "{snapshot:?}"
     );
+    let direct = graph.call_sites_in_file(&root.join("src/direct-inline-arguments.mts"));
+    // These are real canonical incoming calls, not synthetic membership rows.
+    for (caller, scope) in [
+        (None, "runDirect"),
+        (Some("runDirect"), "runDirect/takeLive"),
+    ] {
+        let incoming = direct.iter().filter(|site| {
+            site.caller.as_deref() == caller
+                && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { scope: target, .. } if target == scope)
+        }).collect::<Vec<_>>();
+        assert_eq!(incoming.len(), 1, "{scope}: {direct:?}");
+        assert_eq!(
+            incoming[0].invocation,
+            crate::codebase::dependencies::extract::InvocationKind::Call
+        );
+        assert!(incoming[0].target_node.is_some(), "{scope}");
+    }
 }

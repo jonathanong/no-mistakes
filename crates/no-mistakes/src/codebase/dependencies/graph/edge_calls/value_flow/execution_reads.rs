@@ -45,7 +45,20 @@ impl<'a> ValueFlowResolution<'a, '_> {
         {
             return phase;
         }
-        let source = ExecutionPhase::Exact((offset, context));
+        // Arguments execute in the caller, while the derived parameter phase is
+        // owned by the inline callee. Preserve the argument's authored position,
+        // but carry repetition from that same invocation's canonical callers.
+        let repeated = self.executing_read.is_some_and(|(file, owner, phase)| {
+            file == path
+                && phase.is_repeated()
+                && self.invocation_read.as_ref().is_some_and(|read| {
+                    read.file == path
+                        && read.owner.0 == path
+                        && read.owner.1 == owner
+                        && read.context == context
+                })
+        });
+        let source = ExecutionPhase::Exact((offset, context)).repeated(repeated);
         self.invocation_read
             .as_ref()
             .filter(|read| {

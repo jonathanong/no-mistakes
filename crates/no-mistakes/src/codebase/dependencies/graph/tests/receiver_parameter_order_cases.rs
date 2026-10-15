@@ -3,6 +3,36 @@ use super::cases::Case;
 pub(super) fn cases() -> &'static [Case] {
     &[
         (
+            "direct-inline-arguments",
+            Some("runDirect/takeLive"),
+            "fn",
+            None,
+        ),
+        (
+            "direct-inline-arguments",
+            Some("runCopied/takeCopied"),
+            "fn",
+            Some("directSaved.get"),
+        ),
+        (
+            "direct-inline-arguments",
+            Some("runOnce/takeOnce"),
+            "fn",
+            Some("directOnce.get"),
+        ),
+        (
+            "direct-inline-arguments",
+            Some("runSibling/takeSibling"),
+            "fn",
+            Some("directSibling.set"),
+        ),
+        (
+            "direct-inline-arguments",
+            Some("runNested/takeNested"),
+            "fn",
+            None,
+        ),
+        (
             "module-snapshot-escape",
             Some("savedObjectEscape"),
             "fn",

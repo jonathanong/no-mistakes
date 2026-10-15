@@ -435,7 +435,7 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `target` reachable; reassigned and dynamic arguments stay unresolved.
   Call edges and that reachability pass share one per-file `CallableFileIndex`:
   aliases and callable bindings are indexed by lexical `(binding scope, local
-name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
+  name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
   `invalidated_at`. Value initializers after a direct `return` or `throw` in a
   branch remain unknown for deferred captures. This cutoff stays within that
@@ -466,11 +466,11 @@ name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   `C.value = next` invoke only the setter. Increment and
   decrement writes such as `C.value++` record a setter invocation instead of
   invalidating the accessor. Object-literal setter writes such as `api.value =
-next` and `api.value++` invoke the setter instead of replacing the member;
+  next` and `api.value++` invoke the setter instead of replacing the member;
   ordinary data-property writes such as `api.load = other` still invalidate.
   Class aliases expose only static members, including static getter
   reads such as `const Alias = C; Alias.value`. Named `export default class
-Service` registers `Service` in the enclosing module binding scope before
+  Service` registers `Service` in the enclosing module binding scope before
   the class body, so `new Service()` keeps the constructor reachable. Named and
   default imports of a class resolve `Service.run()` through that class's static
   member metadata; namespace imports such as `api.Service` still follow the
@@ -583,6 +583,9 @@ conservative.
 
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay
-conservative across loop executions, while methods copied before the loop keep
+conservative across loop executions. Direct arguments to inline helpers inherit
+that same repeated caller evidence while retaining their source acquisition
+position; an earlier argument copied before a later write remains independent.
+Methods copied before the loop keep
 their acquisition snapshots. Loop initializer and iterable expressions retain
 their existing one-time timing proof.
