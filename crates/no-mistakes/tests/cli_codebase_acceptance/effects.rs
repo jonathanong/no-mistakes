@@ -217,7 +217,7 @@ fn effects_cli_respects_definite_enclosing_initialization() {
         &["effects", "cache", "--entry", "src/enclosing-tdz.mts"],
     );
     let sites = report["callSites"].as_array().unwrap();
-    assert_eq!(sites.len(), 4, "{report}");
+    assert_eq!(sites.len(), 5, "{report}");
     assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
 }
 

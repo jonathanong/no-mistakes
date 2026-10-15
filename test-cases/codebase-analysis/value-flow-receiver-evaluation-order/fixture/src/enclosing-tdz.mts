@@ -14,6 +14,15 @@ function adjacentNeverInitialized() {
 }
 adjacentNeverInitialized()();
 
+function terminalNestedBlock() {
+  {
+    function acquire() { return nestedSaved; }
+    // The final block tests a terminal nested sequence with no outer suffix.
+    return function nestedRun(fn = acquire()) { fn('key'); };const nestedSaved = primary.get;
+  }
+}
+terminalNestedBlock()();
+
 function initializedBeforeReturn() {
   const saved = primary.get;
   function acquire() { return saved; }
@@ -29,6 +38,19 @@ function conditionalReturn(flag: boolean) {
   conditionalRun();
 }
 conditionalReturn(false);
+
+function branchLocalCutoff(flag: boolean) {
+  if (flag) {
+    return;
+    const unreachable = primary.get;
+  } else {
+    const saved = primary.get;
+    function acquire() { return saved; }
+    function branchRun(fn = acquire()) { fn('key'); }
+    branchRun();
+  }
+}
+branchLocalCutoff(false);
 
 function bothBranchesReturn(flag: boolean) {
   function acquire() { return saved; }

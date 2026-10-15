@@ -6,12 +6,23 @@ pub(super) fn sequence_completes(statements: &[Statement<'_>]) -> bool {
 
 pub(super) fn sequence_completion(statements: &[Statement<'_>]) -> (bool, Option<u32>) {
     for (index, statement) in statements.iter().enumerate() {
-        if !statement_completes(statement) {
-            let cutoff = (index + 1 < statements.len()).then_some(statement.span().end);
+        let (completes, nested_cutoff) = statement_completion(statement);
+        if !completes {
+            let cutoff = nested_cutoff
+                .or_else(|| (index + 1 < statements.len()).then_some(statement.span().end));
             return (false, cutoff);
         }
     }
     (true, None)
+}
+
+fn statement_completion(statement: &Statement<'_>) -> (bool, Option<u32>) {
+    match statement {
+        // Propagate only a sequential block's cutoff. Branch-local cutoffs
+        // stay confined to their branch because another path may reach it.
+        Statement::BlockStatement(block) => sequence_completion(&block.body),
+        _ => (statement_completes(statement), None),
+    }
 }
 
 fn statement_completes(statement: &Statement<'_>) -> bool {

@@ -209,6 +209,12 @@ pub(super) fn cases() -> &'static [Case] {
         ),
         (
             "enclosing-tdz",
+            Some("terminalNestedBlock/nestedRun"),
+            "fn",
+            None,
+        ),
+        (
+            "enclosing-tdz",
             Some("initializedBeforeReturn/initializedRun"),
             "fn",
             Some("primary.get"),
@@ -216,6 +222,12 @@ pub(super) fn cases() -> &'static [Case] {
         (
             "enclosing-tdz",
             Some("conditionalReturn/conditionalRun"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
+            "enclosing-tdz",
+            Some("branchLocalCutoff/branchRun"),
             "fn",
             Some("primary.get"),
         ),

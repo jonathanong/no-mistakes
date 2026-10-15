@@ -193,7 +193,6 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return self.unreachable_value_binding_after;
         }
-        let previous_cutoff = self.unreachable_value_binding_after;
         let (completes, cutoff) = completion::sequence_completion(statements);
         self.unreachable_value_binding_after = cutoff;
         if completes {

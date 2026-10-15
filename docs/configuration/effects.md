@@ -66,10 +66,10 @@ unknown argument set to a proven invocation. Returned helpers require every
 known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
-For callable bodies, an initializer after a suffix that completion analysis
-proves unreachable does not establish a captured receiver. A conditional return
-keeps an initializer known when another path reaches it; if every branch
-returns, later initializers remain unresolved.
+For callable bodies and nested blocks, an initializer after a suffix that
+completion analysis proves unreachable does not establish a captured receiver.
+A conditional return keeps an initializer known when another path reaches it;
+if every branch returns, later initializers remain unresolved.
 
 
 `returnedExecutors` selects imported factories whose returned callable is an
