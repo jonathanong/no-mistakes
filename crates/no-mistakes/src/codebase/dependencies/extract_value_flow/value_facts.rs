@@ -37,6 +37,9 @@ pub struct ValueFlowFacts {
     /// Actual active/visited bookkeeping attempts, including rejected revisits.
     #[cfg(feature = "test-instrumentation")]
     pub reference_successor_bookkeeping: usize,
+    /// Allocated overflow version buckets in mutable receiver traversals.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_version_table_capacity: usize,
     /// Sum of each mutation traversal's peak pending capacity, in entries.
     #[cfg(feature = "test-instrumentation")]
     pub reference_pending_capacity: usize,

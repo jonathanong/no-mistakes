@@ -6,12 +6,39 @@ struct TraversalState {
     active: FxHashSet<(usize, String)>,
     visited: Paths,
 }
+struct MutableTraversal {
+    first: (mutable_origins::RootVersion, TraversalState),
+    other: FxHashMap<mutable_origins::RootVersion, TraversalState>,
+}
+impl MutableTraversal {
+    fn state(&mut self, version: mutable_origins::RootVersion) -> &mut TraversalState {
+        if self.first.0 == version {
+            &mut self.first.1
+        } else {
+            self.other.entry(version).or_default()
+        }
+    }
+    fn existing(&mut self, version: mutable_origins::RootVersion) -> Option<&mut TraversalState> {
+        if self.first.0 == version {
+            Some(&mut self.first.1)
+        } else {
+            self.other.get_mut(&version)
+        }
+    }
+}
 #[derive(Default)]
 pub(super) struct ReceiverTraversal {
     ordinary: TraversalState,
-    mutable: Option<Box<FxHashMap<mutable_origins::RootVersion, TraversalState>>>,
+    mutable: Option<Box<MutableTraversal>>,
 }
 impl ReceiverTraversal {
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) fn version_table_capacity(&self) -> usize {
+        self.mutable
+            .as_ref()
+            .map_or(0, |state| state.other.capacity())
+    }
+
     pub(super) fn enter(
         &mut self,
         key: &(usize, String),
@@ -22,9 +49,13 @@ impl ReceiverTraversal {
         let state = match version {
             Some(version) => self
                 .mutable
-                .get_or_insert_with(Default::default)
-                .entry(version)
-                .or_default(),
+                .get_or_insert_with(|| {
+                    Box::new(MutableTraversal {
+                        first: (version, TraversalState::default()),
+                        other: fx_map(),
+                    })
+                })
+                .state(version),
             None => &mut self.ordinary,
         };
         if state.active.contains(key) {
@@ -43,7 +74,7 @@ impl ReceiverTraversal {
             Some(version) => self
                 .mutable
                 .as_mut()
-                .and_then(|states| states.get_mut(&version)),
+                .and_then(|states| states.existing(version)),
             None => Some(&mut self.ordinary),
         };
         if let Some(state) = state {
