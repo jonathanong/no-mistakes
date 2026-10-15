@@ -192,8 +192,7 @@ impl ImportCollector {
         }
         #[cfg(feature = "test-instrumentation")]
         {
-            self.value_flow.reference_version_dispatches += traversal.version_dispatches;
-            self.value_flow.reference_version_table_capacity += traversal.version_table_capacity();
+            traversal.record_counts(&mut self.value_flow);
             self.value_flow.reference_binding_visits += binding_visits;
             self.value_flow.reference_pending_capacity += pending.capacity();
             self.value_flow.reference_pending_bytes +=

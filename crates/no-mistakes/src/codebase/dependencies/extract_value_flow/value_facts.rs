@@ -17,6 +17,9 @@ pub struct ValueFlowFacts {
     pub receiver_only_lookups: usize,
     #[cfg(feature = "test-instrumentation")]
     pub receiver_only_visits: usize,
+    /// Origin projections that required a heap-backed pending stack.
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_pending_spills: usize,
     #[cfg(feature = "test-instrumentation")]
     pub receiver_only_phase_visits: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -50,6 +53,9 @@ pub struct ValueFlowFacts {
     /// Allocated overflow version buckets in mutable receiver traversals.
     #[cfg(feature = "test-instrumentation")]
     pub reference_version_table_capacity: usize,
+    /// Actual active/visited hash buffers constructed by mutation traversals.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_state_heap_buffers: usize,
     /// Actual stores to earliest binding/parameter/callable invalidation offsets.
     #[cfg(feature = "test-instrumentation")]
     pub reference_invalidation_stores: usize,

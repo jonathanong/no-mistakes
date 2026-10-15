@@ -1,26 +1,8 @@
 use super::*;
 
-type Paths = FxHashMap<((usize, String), ValueMutationPath), Vec<nested::ReceiverRead>>;
-#[derive(Default)]
-struct TraversalState {
-    active: FxHashSet<(usize, String)>,
-    visited: Paths,
-}
-impl TraversalState {
-    fn enter(
-        &mut self,
-        key: &(usize, String),
-        path: &[Option<String>],
-        reads: Vec<nested::ReceiverRead>,
-    ) -> Option<Vec<nested::ReceiverRead>> {
-        if self.active.contains(key) {
-            return None;
-        }
-        let reads = merge_reads(&mut self.visited, key, path, reads)?;
-        self.active.insert(key.clone());
-        Some(reads)
-    }
-}
+#[path = "receiver_traversal_state.rs"]
+mod state;
+use state::TraversalState;
 
 struct MutableTraversal {
     first: (mutable_origins::RootVersion, TraversalState),
@@ -71,6 +53,21 @@ impl ReceiverTraversal {
         states.other.is_empty()
             && !self.ordinary.active.contains(key)
             && states.first.1.active.remove(key)
+    }
+
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) fn record_counts(&self, facts: &mut ValueFlowFacts) {
+        facts.reference_version_dispatches += self.version_dispatches;
+        facts.reference_version_table_capacity += self.version_table_capacity();
+        facts.reference_state_heap_buffers += self.ordinary.heap_buffers();
+        if let Some(states) = &self.mutable {
+            facts.reference_state_heap_buffers += states.first.1.heap_buffers()
+                + states
+                    .other
+                    .values()
+                    .map(TraversalState::heap_buffers)
+                    .sum::<usize>();
+        }
     }
 
     #[cfg(feature = "test-instrumentation")]
@@ -128,33 +125,6 @@ impl ReceiverTraversal {
 #[cfg(test)]
 #[path = "receiver_traversal_tests.rs"]
 mod tests;
-
-/// One monotone cutoff summary per receiver/path, rather than one state per
-/// acquisition route. An ambiguous context can never prove replacement.
-fn merge_reads(
-    visited: &mut Paths,
-    key: &(usize, String),
-    path: &[Option<String>],
-    reads: Vec<nested::ReceiverRead>,
-) -> Option<Vec<nested::ReceiverRead>> {
-    let state = (key.clone(), path.to_vec());
-    let Some(previous) = visited.get_mut(&state) else {
-        visited.insert(state, reads.clone());
-        return Some(reads);
-    };
-    let mut changed = false;
-    for (previous, incoming) in previous.iter_mut().zip(&reads) {
-        let merged = match (*previous, *incoming) {
-            (Some((left, context)), Some((right, other))) if context == other => {
-                Some((left.min(right), context))
-            }
-            _ => None,
-        };
-        changed |= *previous != merged;
-        *previous = merged;
-    }
-    changed.then(|| previous.clone())
-}
 
 impl ImportCollector {
     pub(super) fn mutation_reference_is_terminal(&self, key: &(usize, String)) -> bool {

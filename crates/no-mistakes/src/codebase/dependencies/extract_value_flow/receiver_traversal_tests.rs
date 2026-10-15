@@ -41,3 +41,67 @@ fn ambiguous_active_versions_keep_their_exit_ownership() {
         .enter(&key, &path, vec![None], Some(first))
         .is_none());
 }
+
+#[test]
+fn active_binding_cycles_are_independent_of_visited_paths() {
+    let mut traversal = ReceiverTraversal::default();
+    let key = (0, "box".to_string());
+    let get = [Some("get".to_string())];
+    let set = [Some("set".to_string())];
+    let reads = vec![Some((30, None))];
+    assert_eq!(
+        traversal.enter_ordinary(&key, &get, reads.clone()),
+        Some(reads.clone())
+    );
+    // A second member path cannot bypass a still-active binding cycle.
+    assert_eq!(traversal.enter_ordinary(&key, &set, reads.clone()), None);
+    traversal.exit_ordinary(&key);
+    // Once exited, the distinct path must not be mistaken for the first visit.
+    assert_eq!(
+        traversal.enter_ordinary(&key, &set, reads.clone()),
+        Some(reads.clone())
+    );
+    traversal.exit_ordinary(&key);
+    assert_eq!(traversal.enter_ordinary(&key, &get, reads), None);
+    assert_eq!(
+        traversal.enter_ordinary(&key, &get, vec![Some((20, None))]),
+        Some(vec![Some((20, None))])
+    );
+    traversal.exit_ordinary(&key);
+    assert_eq!(
+        traversal.enter_ordinary(&key, &get, vec![None]),
+        Some(vec![None])
+    );
+    traversal.exit_ordinary(&key);
+    assert_eq!(
+        traversal.enter_ordinary(&key, &get, vec![Some((10, None))]),
+        None
+    );
+}
+
+#[test]
+fn exiting_inline_active_key_keeps_other_active_bindings() {
+    let mut traversal = ReceiverTraversal::default();
+    let first = (0, "first".to_string());
+    let other = (0, "other".to_string());
+    let third = (0, "third".to_string());
+    let path = [Some("get".to_string())];
+    assert!(traversal
+        .enter_ordinary(&first, &path, vec![None])
+        .is_some());
+    assert!(traversal
+        .enter_ordinary(&other, &path, vec![None])
+        .is_some());
+    traversal.exit_ordinary(&first);
+    assert!(traversal
+        .enter_ordinary(&third, &path, vec![None])
+        .is_some());
+    assert!(traversal
+        .enter_ordinary(&other, &path, vec![None])
+        .is_none());
+    traversal.exit_ordinary(&other);
+    traversal.exit_ordinary(&third);
+    assert!(traversal
+        .enter_ordinary(&other, &[None], vec![None])
+        .is_some());
+}
