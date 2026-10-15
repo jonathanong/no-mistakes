@@ -16,6 +16,10 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub receiver_only_lookups: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_membership_probes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_owned_keys: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub receiver_only_visits: usize,
     /// Origin projections that required a heap-backed pending stack.
     #[cfg(feature = "test-instrumentation")]

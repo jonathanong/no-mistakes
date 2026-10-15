@@ -7,6 +7,8 @@ mod data;
 mod pending;
 #[path = "mutable_origin_phases.rs"]
 mod phases;
+#[path = "mutable_origin_records.rs"]
+mod records;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(super) struct RootVersion {
@@ -45,6 +47,10 @@ pub(in super::super) struct ReceiverBindingOrigins {
     visits: std::cell::Cell<usize>,
     #[cfg(feature = "test-instrumentation")]
     spills: std::cell::Cell<usize>,
+    #[cfg(feature = "test-instrumentation")]
+    membership_probes: std::cell::Cell<usize>,
+    #[cfg(feature = "test-instrumentation")]
+    owned_keys: usize,
 }
 impl ReceiverBindingOrigins {
     #[cfg(feature = "test-instrumentation")]
@@ -53,11 +59,15 @@ impl ReceiverBindingOrigins {
         facts.receiver_only_lookups = self.lookups.get();
         facts.receiver_only_visits = self.visits.get();
         facts.receiver_only_pending_spills = self.spills.get();
+        facts.receiver_only_membership_probes = self.membership_probes.get();
+        facts.receiver_only_owned_keys = self.owned_keys;
     }
     pub(super) fn watermark(&self) -> usize {
         self.arena.len()
     }
     pub(super) fn contains(&self, scope: usize, name: &str) -> bool {
+        #[cfg(feature = "test-instrumentation")]
+        self.membership_probes.set(self.membership_probes.get() + 1);
         self.roots
             .get(&scope)
             .is_some_and(|names| names.contains_key(name))
@@ -66,39 +76,6 @@ impl ReceiverBindingOrigins {
         self.roots
             .iter()
             .flat_map(|(scope, names)| names.keys().map(move |name| (*scope, name.as_str())))
-    }
-    pub(super) fn record(
-        &mut self,
-        key: (usize, &str),
-        location: (u32, Option<CallableId>),
-        value: ValueExpression,
-        guaranteed: bool,
-    ) {
-        let leaf = self.arena.len();
-        self.arena.push(Origin::Value(value));
-        let root = self
-            .roots
-            .entry(key.0)
-            .or_default()
-            .entry(key.1.to_string())
-            .or_default();
-        root.generation += 1;
-        let states = root.owners.entry(location.1).or_default();
-        let previous = states
-            .snapshots
-            .range(..location.0)
-            .next_back()
-            .map(|(_, id)| *id);
-        let selected = match (guaranteed, previous) {
-            (false, Some(previous)) => {
-                let id = self.arena.len();
-                self.arena.push(Origin::Either(previous, leaf));
-                id
-            }
-            _ => leaf,
-        };
-        states.snapshots.insert(location.0, selected);
-        states.possible.push(leaf);
     }
     pub(super) fn version(
         &self,

@@ -183,3 +183,7 @@ fn imported_alias_successors_remain_active_with_an_unrelated_mutable_root() {
 
 #[path = "mutable_receiver_version_tests.rs"]
 mod versions;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "mutable_root_probe_tests.rs"]
+mod probes;
