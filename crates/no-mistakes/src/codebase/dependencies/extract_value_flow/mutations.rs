@@ -34,8 +34,8 @@ impl ImportCollector {
         {
             self.fresh_receiver_effects.rebind(scope, base);
         }
-        let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
-        affected.entry(scope).or_default().insert(base.to_string());
+        let mut affected = mutation_projection::Affected::default();
+        affected.insert(scope, base.to_string());
         if member && self.collect_value_flow {
             let metadata = self.receiver_mutation_metadata(offset);
             self.record_phase_scope(scope);

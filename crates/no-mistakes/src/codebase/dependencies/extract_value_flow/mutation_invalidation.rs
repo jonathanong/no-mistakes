@@ -8,7 +8,9 @@ impl ImportCollector {
         offset: u32,
         member: bool,
     ) {
-        for (scope, names) in affected {
+        #[cfg(feature = "test-instrumentation")]
+        affected.record_counts(&mut self.value_flow);
+        for (scope, names) in affected.iter() {
             for name in names {
                 for index in self
                     .value_binding_indexes
