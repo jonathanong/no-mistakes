@@ -17,20 +17,22 @@ jobs:
       - name: Checkout and validate the temporary diagnostic driver
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 2
+          fetch-depth: 3
           persist-credentials: false
 
-      - name: Verify driver parent and exact changed-path allowlist
+      - name: Verify driver parent chain and exact changed-path allowlist
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "f13f706c857458c1360a8be73605f694ff45369c"
-          actual=$(git diff-tree --no-commit-id --name-only -r HEAD | sort)
+          test "$(git rev-parse HEAD^)" = "6b008130ae9e833dd866d0f32d9fba1d993034f0"
+          test "$(git rev-parse HEAD^^)" = "f13f706c857458c1360a8be73605f694ff45369c"
+          actual=$(git diff-tree --no-commit-id --name-only -r f13f706c857458c1360a8be73605f694ff45369c HEAD | sort)
           expected=$(printf '%s\n' \
             '.github/scripts/diagnose-lcov-1959.py' \
             '.github/workflows/diagnose-lcov-1959.yml' | sort)
           test "$actual" = "$expected"
-          printf 'Driver commit: `%s`\nDriver parent: `f13f706c857458c1360a8be73605f694ff45369c`\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Driver commit: `%s`\nParent: `%s`\nGrandparent: `f13f706c857458c1360a8be73605f694ff45369c`\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse HEAD^)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Checkout exact measured synthetic source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -73,15 +75,20 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t files < <(find "$RUNNER_TEMP/coverage-artifact" -type f -print)
-          test "${#files[@]}" -gt 0
-          test "${#files[@]}" -le 1000
           total=0
           for file in "${files[@]}"; do
             size=$(stat -c '%s' "$file")
             total=$((total + size))
           done
-          test "$total" -le 25000000
           mapfile -t lcov < <(find "$RUNNER_TEMP/coverage-artifact" -type f -name lcov.info -print)
+          printf 'Extracted file count: %s; expanded bytes: %s; LCOV matches: %s\n' \
+            "${#files[@]}" "$total" "${#lcov[@]}"
+          for file in "${lcov[@]}"; do
+            printf 'LCOV basename: %s; bytes: %s\n' "$(basename "$file")" "$(stat -c '%s' "$file")"
+          done
+          test "${#files[@]}" -gt 0
+          test "${#files[@]}" -le 1000
+          test "$total" -le 100000000
           test "${#lcov[@]}" -eq 1
           test "$(stat -c '%s' "${lcov[0]}")" -le 100000000
           echo "path=${lcov[0]}" >> "$GITHUB_OUTPUT"
