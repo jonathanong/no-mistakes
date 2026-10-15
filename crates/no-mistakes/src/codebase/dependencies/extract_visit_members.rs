@@ -17,7 +17,12 @@ fn visit_method_definition_with_scope<'a>(
     }
     collector.add_type_parameter_names(method.value.type_parameters.as_deref());
     collector.add_formal_parameters(&method.value.params);
-    walk_function_with_body_bindings(collector, &method.value);
+    // A dynamic key may have no display scope; its body is still repeatable.
+    with_repeat_execution(
+        collector,
+        method.value.as_ref(),
+        walk_function_with_body_bindings,
+    );
     collector.pop_function_scope(pushed);
 }
 
@@ -82,7 +87,11 @@ fn visit_object_property_with_scope<'a>(
             }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
-            walk_function_with_body_bindings(collector, function);
+            with_repeat_execution(
+                collector,
+                function.as_ref(),
+                walk_function_with_body_bindings,
+            );
             collector.pop_function_scope(pushed);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
@@ -95,7 +104,11 @@ fn visit_object_property_with_scope<'a>(
             }
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
-            walk_arrow_function_with_body_bindings(collector, arrow);
+            with_repeat_execution(
+                collector,
+                arrow.as_ref(),
+                walk_arrow_function_with_body_bindings,
+            );
             collector.pop_function_scope(pushed);
         }
         _ => walk::walk_object_property(collector, property),

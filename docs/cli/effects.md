@@ -102,6 +102,8 @@ invalidate live members. A copied method such as `const get = alias.get` keeps
 its acquisition snapshot; copying a container keeps descendant members live.
 For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
+This includes an IIFE evaluated in `export default`, directly or as an object
+member value. Exported functions and object methods retain their callable guards.
 This includes classic `for` initializers and `for-in`/`for-of` right-hand
 expressions, which execute once per loop statement. Tests, updates, bodies,
 per-item bindings, and sloppy-script Annex B initializers remain conservative.
