@@ -39,3 +39,28 @@ impl ImportCollector {
         })
     }
 }
+
+impl ImportCollector {
+    pub(in super::super) fn finish_projected_receiver<R: nested::RootCoordinate>(
+        &mut self,
+        traversal: &mut receiver_traversal::ReceiverTraversal,
+        key: &(usize, String),
+        root_read: R,
+        assigned: bool,
+    ) {
+        // RHS exits own their separate receipt-qualified active stack.
+        if assigned {
+            traversal.exit_assigned(key);
+            return;
+        }
+        if root_read.read().is_none() {
+            traversal.exit_ordinary(key);
+            return;
+        }
+        if root_read.read().is_some() && traversal.exit_single_version(key) {
+            return;
+        }
+        let version = self.projected_root_version(key, root_read);
+        traversal.exit(key, version);
+    }
+}
