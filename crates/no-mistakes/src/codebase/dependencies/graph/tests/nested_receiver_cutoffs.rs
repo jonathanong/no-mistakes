@@ -2,6 +2,8 @@
 mod global_identity;
 #[path = "guarded_receiver_regions.rs"]
 mod guarded_regions;
+#[path = "post_capture_receiver_calls.rs"]
+mod post_capture_calls;
 use super::*;
 
 #[test]
@@ -166,6 +168,7 @@ fn fresh_containers_retain_possible_original_descendant_mutations() {
     .into_iter()
     .chain(guarded_regions::CASES.iter().copied())
     .chain(global_identity::CASES.iter().copied())
+    .chain(post_capture_calls::CASES.iter().copied())
     {
         // Each file is an independent module; positive controls never import a
         // receiver already mutated by another case.

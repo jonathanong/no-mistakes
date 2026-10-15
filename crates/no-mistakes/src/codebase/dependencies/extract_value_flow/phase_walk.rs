@@ -7,6 +7,11 @@ pub(super) struct PhaseWrite {
     pub(super) path: ValueMutationPath,
     pub(super) phase: u32,
 }
+#[derive(Default)]
+pub(super) struct ReferencePhaseEvents {
+    pub(super) opaque: Option<std::collections::BTreeSet<(u32, u32)>>,
+    pub(super) fresh: Option<std::collections::BTreeSet<u32>>,
+}
 pub(super) struct PhaseWalk<'c> {
     pub(super) collector: Option<&'c ImportCollector>,
     pub(super) phase: u32,
@@ -16,8 +21,7 @@ pub(super) struct PhaseWalk<'c> {
     pub(super) nested_pattern: bool,
     pub(super) pattern_depth: usize,
     pub(super) collect_reference_effects: bool,
-    pub(super) effects: Option<std::collections::BTreeSet<(u32, u32)>>,
-    pub(super) fresh_phases: Option<std::collections::BTreeSet<u32>>,
+    pub(super) proof_events: ReferencePhaseEvents,
 }
 impl PhaseWalk<'_> {
     pub(super) fn segment(&mut self, end: u32) {
@@ -43,7 +47,8 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
         let class =
             self.collect_reference_effects && matches!(expression, Expression::ClassExpression(_));
         if class {
-            self.effects
+            self.proof_events
+                .opaque
                 .get_or_insert_with(Default::default)
                 .insert((self.phase, expression.span().start));
         }
@@ -71,7 +76,8 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
                     | Expression::JSXFragment(_)
             )
         {
-            self.effects
+            self.proof_events
+                .opaque
                 .get_or_insert_with(Default::default)
                 .insert((self.phase, expression.span().end));
         }
@@ -93,7 +99,8 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
             self.expression(&assignment.right);
             self.write(&assignment.left);
             if self.collect_reference_effects && receiver_replacement_is_fresh(assignment) {
-                self.fresh_phases
+                self.proof_events
+                    .fresh
                     .get_or_insert_with(Default::default)
                     .insert(self.phase);
             }

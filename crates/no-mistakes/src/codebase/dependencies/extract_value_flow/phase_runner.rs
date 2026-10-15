@@ -51,8 +51,7 @@ impl ImportCollector {
             nested_pattern: false,
             pattern_depth: 0,
             collect_reference_effects: self.prior_member_mutations.has_reference_proof_demand(),
-            effects: None,
-            fresh_phases: None,
+            proof_events: Default::default(),
         };
         walk.target(target);
         walk.segments.sort_unstable_by_key(|segment| segment.0);
@@ -61,8 +60,7 @@ impl ImportCollector {
             segments,
             writes,
             nested_pattern,
-            effects,
-            fresh_phases,
+            proof_events,
             ..
         } = walk;
         let catalog = Arc::new(PhaseCatalog {
@@ -90,7 +88,7 @@ impl ImportCollector {
                     &self.prior_member_mutations,
                     owner,
                     inert,
-                    (effects, fresh_phases),
+                    proof_events,
                 ))
             });
         let previous_identity =

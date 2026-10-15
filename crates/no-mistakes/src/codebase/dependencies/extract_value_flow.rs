@@ -50,6 +50,10 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_phase_prepared_fresh_entries: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub reference_call_indexes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_call_entries: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_phase_effects: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_phase_queries: usize,
@@ -178,6 +182,9 @@ mod reference_identity;
 #[path = "extract_value_flow/capture_reads.rs"]
 mod capture_reads;
 
+#[cfg(test)]
+#[path = "extract_value_flow/post_capture_call_tests.rs"]
+mod post_capture_call_tests;
 #[cfg(test)]
 #[path = "extract_value_flow/receiver_identity_tests.rs"]
 mod receiver_identity_tests;

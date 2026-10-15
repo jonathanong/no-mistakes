@@ -39,10 +39,13 @@ impl ActiveReferencePhases {
         histories: &ReceiverHistories,
         owner: Option<CallableId>,
         inert_rhs: bool,
-        proof_events: (Option<BTreeSet<(u32, u32)>>, Option<BTreeSet<u32>>),
+        proof_events: phase_walk::ReferencePhaseEvents,
     ) -> Self {
         let (catalog, rhs_end) = coordinates;
-        let (effects, fresh_phases) = proof_events;
+        let phase_walk::ReferencePhaseEvents {
+            opaque: effects,
+            fresh: fresh_phases,
+        } = proof_events;
         let mut result = Self {
             catalog: Arc::clone(catalog),
             rhs_end,

@@ -27,6 +27,11 @@ impl FreshReceiverEffects {
             facts.reference_capture_logical_tokens,
             facts.reference_capture_indexes,
         ) = self.capture_counts();
+        facts.reference_call_indexes = usize::from(self.calls.is_some());
+        facts.reference_call_entries = self
+            .calls
+            .as_ref()
+            .map_or(0, |calls| calls.0.values().map(BTreeSet::len).sum());
     }
     pub(super) fn note_rhs_visit(&mut self) {
         #[cfg(feature = "test-instrumentation")]
@@ -57,7 +62,7 @@ impl FreshReceiverEffects {
         self.identity_visits.get()
     }
     pub(super) fn call(&mut self, offset: u32, context: Option<CallableId>) {
-        if self.active {
+        if self.active || self.captures.is_some() {
             self.calls
                 .get_or_insert_with(Default::default)
                 .0
@@ -167,6 +172,8 @@ impl ImportCollector {
     }
     pub(in super::super) fn record_descriptor_call(&mut self, offset: u32) {
         if self.collect_value_flow {
+            self.fresh_receiver_effects
+                .call(offset, self.current_function_id());
             self.fresh_receiver_effects.descriptor_call = Some(
                 self.fresh_receiver_effects
                     .descriptor_call

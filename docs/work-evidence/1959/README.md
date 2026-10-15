@@ -365,3 +365,32 @@ Each hot trie node adds one empty BTreeSet header and at most one additional ent
 per non-fresh static write. Actual retained-entry and temporary-classification
 counters, layout comparison, cold controls, and paired fresh/original restoration
 fixtures require fresh remote execution. No measured CPU/RSS conclusion is claimed.
+
+Atf3214b4, Rust job116207426220 in run38668974075 passed library semantics,
+documentation tests, weighted CRAP, complexity and all coverage floors. This validates the
+34 identity graph controls and direct retained-entry/layout/cold assertions at
+that revision. Its lint failure is limited to the nested proof-event argument
+type; a named ReferencePhaseEvents owner replaces that tuple without changing
+its meaning or lifetime. This passing semantic result does not validate later
+changes or establish a performance comparison.
+
+Review4278228393 identified an intervening opaque call omitted after the active
+fresh-assignment traversal ended. The correction retains the existing indexed
+call stream after the first actual capture, qualified by callable and execution
+epoch. Existing post-call/new/tagged hooks also record completion after argument
+evaluation, covering calls whose arguments create the first capture. The earlier
+pre-walk recording remains for active fresh RHS evaluation; equal end offsets
+deduplicate in the shared set. Cold files with no captures allocate no call index.
+Hot retention can grow with all calls after the first capture; this is an added
+cost, not a speed or memory improvement claim.
+
+Six isolated saved controls cover ordinary/new/tagged calls, argument-created
+capture, calls before the holder exists, and deferred callable boundaries.
+The authoritative frozen917 baseline resolves all six to primary.get; readable
+output and exact fixture hashes are in post-capture-calls-917-baseline.txt.
+Prior6ad source also lacks an intervening-call guard; review9b405f1 reports the
+candidate's stale target. No independent local candidate execution is claimed.
+The direct imported-history, shared call-index, deduplicated entry and cold
+controls need fresh remote validation. General standalone getters/coercions
+outside existing prepared phase barriers remain an unmodeled boundary; this is
+not a heap, escape, callee-purity or general JavaScript effects analysis.

@@ -29,6 +29,10 @@ fn capture_suffixes_share_alias_chain_and_direct_writes_stay_cold() {
             );
             assert_eq!(facts.value_flow.reference_capture_nodes, nodes, "{case}");
             assert_eq!(facts.value_flow.reference_phase_indexes, 0, "{case}");
+            if case == "global-direct-write" {
+                assert_eq!(facts.value_flow.reference_call_indexes, 0);
+                assert_eq!(facts.value_flow.reference_call_entries, 0);
+            }
             assert_eq!(facts.value_flow.reference_phase_write_entries, 0, "{case}");
             assert_eq!(
                 facts.value_flow.reference_phase_original_entries, 0,
