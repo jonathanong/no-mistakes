@@ -31,6 +31,12 @@ pub struct ValueFlowFacts {
     pub reference_binding_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_root_probes: usize,
+    /// Actual calls through the version-aware traversal entry/exit selector.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_version_dispatches: usize,
+    /// Full receiver-writer metadata captures; lexical writes need no capture.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_metadata_captures: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_rebind_calls: usize,
     #[cfg(feature = "test-instrumentation")]

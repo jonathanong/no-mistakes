@@ -28,6 +28,9 @@ fn mutable_root_snapshots_bound_origin_projection_work() {
     // needs storage only on the first event.
     assert_eq!(facts.value_flow.reference_rebind_calls, 256);
     assert_eq!(facts.value_flow.reference_rebind_name_allocations, 1);
+    // Only the 128 member writers need phase/history metadata. The root
+    // reassignments still invalidate bindings without creating writer receipts.
+    assert_eq!(facts.value_flow.reference_metadata_captures, 128);
 }
 
 #[test]

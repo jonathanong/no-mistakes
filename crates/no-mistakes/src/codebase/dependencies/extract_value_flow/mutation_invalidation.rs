@@ -4,7 +4,8 @@ impl ImportCollector {
     pub(super) fn invalidate_mutation_bindings(
         &mut self,
         affected: &mutation_projection::Affected,
-        metadata: mutation_metadata::MutationMetadata,
+        context: Option<CallableId>,
+        offset: u32,
         member: bool,
     ) {
         for (scope, names) in affected {
@@ -17,8 +18,8 @@ impl ImportCollector {
                     .flatten()
                 {
                     let binding = &mut self.value_flow.bindings[*index];
-                    binding.mutation_contexts.insert(metadata.context);
-                    let _stored = mark_invalidated(&mut binding.invalidated_at, metadata.offset);
+                    binding.mutation_contexts.insert(context);
+                    let _stored = mark_invalidated(&mut binding.invalidated_at, offset);
                     #[cfg(feature = "test-instrumentation")]
                     {
                         self.value_flow.reference_invalidation_stores += usize::from(_stored);
@@ -32,8 +33,8 @@ impl ImportCollector {
                     .flatten()
                 {
                     let parameter = &mut self.value_flow.parameters[*index];
-                    parameter.mutation_contexts.insert(metadata.context);
-                    let _stored = mark_invalidated(&mut parameter.invalidated_at, metadata.offset);
+                    parameter.mutation_contexts.insert(context);
+                    let _stored = mark_invalidated(&mut parameter.invalidated_at, offset);
                     #[cfg(feature = "test-instrumentation")]
                     {
                         self.value_flow.reference_invalidation_stores += usize::from(_stored);
@@ -53,7 +54,7 @@ impl ImportCollector {
                     .get(&alias.binding_scope)
                     .is_some_and(|names| names.contains(head))
             {
-                let _stored = mark_invalidated(&mut alias.invalidated_at, metadata.offset);
+                let _stored = mark_invalidated(&mut alias.invalidated_at, offset);
                 #[cfg(feature = "test-instrumentation")]
                 {
                     self.value_flow.reference_invalidation_stores += usize::from(_stored);
