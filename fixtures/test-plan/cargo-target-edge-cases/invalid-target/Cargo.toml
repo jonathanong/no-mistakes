@@ -1,0 +1,6 @@
+[package]
+name = "invalid-target"
+version = "0.1.0"
+
+[[bin]]
+path = "src/bin/unnamed.rs"

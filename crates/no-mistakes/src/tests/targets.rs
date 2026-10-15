@@ -73,6 +73,13 @@ pub(crate) fn generate_targets(args: &TargetsArgs) -> Result<TestsTargetsReport>
         let abs = resolve_input_file(&root, raw);
         let rel = relative_slash(&root, &abs);
         if let Some(targets) = by_path.get(&abs) {
+            if args.framework == TestFramework::Cargo && targets.is_empty() {
+                warnings.push(TargetWarning {
+                    r#type: "cargo-target-unresolved".into(),
+                    message: format!("No unambiguous enabled Cargo test target owns `{rel}`; no execution command was generated. Check the visible Cargo.toml and target entrypoints."),
+                    file: rel.clone(),
+                });
+            }
             tests.push(TestTargetRow {
                 test_file: rel,
                 targets: targets.clone(),

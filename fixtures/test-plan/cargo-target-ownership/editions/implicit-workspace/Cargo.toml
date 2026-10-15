@@ -1,0 +1,8 @@
+[package]
+name = "implicit-workspace"
+version = "0.1.0"
+edition.workspace = true
+
+[[test]]
+name = "manual"
+path = "tests/manual.rs"

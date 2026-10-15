@@ -55,12 +55,28 @@ fn cargo_execution_targets_keep_distinct_integration_selectors() {
     assert_eq!(targets.len(), 2);
     assert!(targets.iter().any(|target| {
         target["runner"] == "cargo"
-            && target["runner_args"] == serde_json::json!(["-p", "app", "--test", "a"])
+            && target["runner_args"]
+                == serde_json::json!([
+                    "--manifest-path",
+                    "app/Cargo.toml",
+                    "-p",
+                    "app",
+                    "--test",
+                    "a"
+                ])
             && target["test_files"] == serde_json::json!(["app/tests/a.rs"])
     }));
     assert!(targets.iter().any(|target| {
         target["runner"] == "cargo"
-            && target["runner_args"] == serde_json::json!(["-p", "app", "--test", "b"])
+            && target["runner_args"]
+                == serde_json::json!([
+                    "--manifest-path",
+                    "app/Cargo.toml",
+                    "-p",
+                    "app",
+                    "--test",
+                    "b"
+                ])
             && target["test_files"] == serde_json::json!(["app/tests/b.rs"])
     }));
 }

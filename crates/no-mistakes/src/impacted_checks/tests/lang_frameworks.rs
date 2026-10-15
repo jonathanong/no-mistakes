@@ -16,7 +16,11 @@ fn language_frameworks_emit_native_test_commands() {
     let cases: &[(&str, &[&str], &str)] = &[
         ("python-test-plan", &["app/users.py"], "pytest"),
         ("go-test-plan", &["pkg/ping.go"], "go test"),
-        ("cargo-test-plan", &["app/src/lib.rs"], "cargo test -p app"),
+        (
+            "cargo-test-plan",
+            &["app/src/lib.rs"],
+            "cargo test --manifest-path app/Cargo.toml -p app",
+        ),
         ("rails-test-plan", &["app/models/user.rb"], "bin/rails test"),
         (
             "php-test-plan",

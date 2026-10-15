@@ -25,6 +25,11 @@ pub(super) fn target_for(
     project: Option<&str>,
     test_file: &str,
 ) -> TestExecutionTarget {
+    assert_ne!(
+        runner,
+        TestRunner::Cargo,
+        "Cargo targets require prepared manifest ownership"
+    );
     if runner == TestRunner::Dotnet {
         return dotnet_target_for(config, project, test_file);
     }

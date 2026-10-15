@@ -1,0 +1,26 @@
+# An earlier target name must not become the package name.
+[[test]]
+name = "declared-suite"
+path = "harness/suite/entry.rs"
+[package]
+name = "renamed-package"
+version = "0.1.0"
+edition = "2024"
+autotests = false
+autobins = false
+[lib]
+name = "different_library"
+path = "library/entry.rs"
+
+[[test]]
+name = "disabled-suite"
+path = "harness/disabled.rs"
+test = false
+
+[[test]]
+name = "feature-suite"
+path = "harness/feature.rs"
+required-features = ["optional"]
+
+[features]
+optional = []

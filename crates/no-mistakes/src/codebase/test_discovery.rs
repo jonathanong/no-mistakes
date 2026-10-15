@@ -1,3 +1,4 @@
+mod cargo_targets;
 mod dotnet_projects;
 mod filters;
 mod lang_projects;

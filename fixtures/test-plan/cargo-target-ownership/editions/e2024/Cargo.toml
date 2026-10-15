@@ -1,0 +1,12 @@
+[package]
+name = "edition-2024"
+version = "0.1.0"
+edition = "2024"
+
+[[test]]
+name = "manual"
+path = "tests/manual.rs"
+
+[[test]]
+name = "renamed-entry"
+path = "tests/physical.rs"

@@ -20,6 +20,7 @@ require("./receiver-inline-arguments-api.test.js");
 require("./postgres-do-constraint-api.test.js");
 require("./postgres-metadata-api.test.js");
 require("./tests-audit-native-api.test.js");
+require("./cargo-target-ownership-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");
@@ -178,8 +179,14 @@ test(
     assert.deepEqual(
       direct.executionTargets.map(({ runnerArgs, testFiles }) => ({ runnerArgs, testFiles })),
       [
-        { runnerArgs: ["-p", "app", "--test", "a"], testFiles: ["app/tests/a.rs"] },
-        { runnerArgs: ["-p", "app", "--test", "b"], testFiles: ["app/tests/b.rs"] },
+        {
+          runnerArgs: ["--manifest-path", "app/Cargo.toml", "-p", "app", "--test", "a"],
+          testFiles: ["app/tests/a.rs"],
+        },
+        {
+          runnerArgs: ["--manifest-path", "app/Cargo.toml", "-p", "app", "--test", "b"],
+          testFiles: ["app/tests/b.rs"],
+        },
       ],
     );
 

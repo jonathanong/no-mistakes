@@ -10,7 +10,7 @@ pub(super) fn language_target_for(
     Some(match runner {
         TestRunner::Python => python_target_for(config, test_file),
         TestRunner::Go => go_target_for(config, test_file),
-        TestRunner::Cargo => cargo_target_for(config, project, test_file),
+        TestRunner::Cargo => return None,
         TestRunner::Rails => rails_target_for(config, test_file),
         TestRunner::Php => php_target_for(config, project, test_file),
         TestRunner::Java => java_target_for(config, test_file),
@@ -52,29 +52,6 @@ fn go_target_for(module: Option<&str>, test_file: &str) -> TestExecutionTarget {
         None,
         vec!["go".to_string(), "test".to_string()],
         vec![format!("./{rel}")],
-    )
-}
-
-fn cargo_target_for(
-    package_path: Option<&str>,
-    crate_name: Option<&str>,
-    test_file: &str,
-) -> TestExecutionTarget {
-    let pkg = crate_name
-        .or(package_path)
-        .unwrap_or("app")
-        .trim_end_matches('/');
-    let mut runner_args = vec!["-p".to_string(), pkg.to_string()];
-    if let Some(name) = cargo_integration_name(test_file) {
-        runner_args.push("--test".to_string());
-        runner_args.push(name);
-    }
-    language_target(
-        TestRunner::Cargo,
-        package_path,
-        crate_name,
-        vec!["cargo".to_string(), "test".to_string()],
-        runner_args,
     )
 }
 
@@ -169,15 +146,6 @@ fn relative_to_config(config: Option<&str>, path: &str) -> String {
         .unwrap_or(path)
         .trim_start_matches("./")
         .to_string()
-}
-
-fn cargo_integration_name(test_file: &str) -> Option<String> {
-    let path = slash(test_file);
-    let file_name = path.rsplit('/').next()?;
-    let stem = file_name.strip_suffix(".rs")?;
-    path.contains("/tests/")
-        .then(|| stem.to_string())
-        .filter(|stem| !stem.is_empty())
 }
 
 fn slash(path: &str) -> String {

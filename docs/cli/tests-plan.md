@@ -268,3 +268,16 @@ tests directly and select dependent Swift tests through Swift graph edges and
 HTTP route edges. When native tests are discoverable but the source/project
 change cannot be traced, the plan falls back to the framework-scoped discovered
 tests and reports `fallback_triggered`/`fallback_reason`.
+
+Cargo execution targets come from visible manifests, including the actual
+package name, `--manifest-path`, and `--lib`/`--bin`/`--test` selector. A filename
+inside `src/**/tests/` never becomes a fabricated integration-test name.
+Ambiguous helpers, missing package ownership, disabled targets, and unsupported
+feature-gated targets have empty `targets` and a `cargo-target-unresolved`
+warning. Inspect warnings before treating an empty execution list as complete.
+Package-wide source fallback remains opt-in through `tests.rust.packages` and
+is reported by `fallback_triggered`/`fallback_reason`.
+
+Explicit Cargo target paths outside their declaring package directory are not
+yet associated with that package; they produce no command rather than an
+inferred package-wide fallback.
