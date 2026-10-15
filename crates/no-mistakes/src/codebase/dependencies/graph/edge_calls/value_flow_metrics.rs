@@ -1,5 +1,5 @@
 thread_local! {
-    static LAST_NULLISH_WORK: std::cell::Cell<[usize; 11]> = const { std::cell::Cell::new([0; 11]) };
+    static LAST_NULLISH_WORK: std::cell::Cell<[usize; 15]> = const { std::cell::Cell::new([0; 15]) };
     static LAST_EXECUTION_STEPS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static LAST_DEPENDENCIES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static LAST_ORIGINS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -46,9 +46,9 @@ pub fn execution_steps() -> usize {
     LAST_EXECUTION_STEPS.get()
 }
 
-pub(super) fn record_nullish_work(counts: [usize; 11]) {
+pub(super) fn record_nullish_work(counts: [usize; 15]) {
     LAST_NULLISH_WORK.set(counts);
 }
-pub fn nullish_work() -> [usize; 11] {
+pub fn nullish_work() -> [usize; 15] {
     LAST_NULLISH_WORK.get()
 }

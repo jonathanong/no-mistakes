@@ -142,7 +142,7 @@ fn ordinary_queries_leave_nullish_memo_cold() {
     .unwrap();
     assert_eq!(
         crate::codebase::dependencies::graph::benchmark_probe_nullish_work(),
-        [0; 11]
+        [0; 15]
     );
 }
 
@@ -230,7 +230,14 @@ fn nullish_cycles_preserve_fallbacks_and_report_work() {
         {
             let layers = layers.parse::<usize>().unwrap();
             assert!(work[0] <= 64 * (layers + 1), "case={case} work={work:?}");
-            // Include guard-log scans and sorting, not just binding evaluations.
+            // Retained dependency receipts remain quadratic. Capturing a suffix
+            // visits unique last-read names, rather than rescanning repeated reads.
+            assert!(
+                work[7] <= 16 * (layers + 1).pow(2),
+                "case={case} work={work:?}"
+            );
+            assert!(work[8] <= 8 * (layers + 1), "case={case} work={work:?}");
+            // Include guard reads and capture candidates, not just evaluations.
             assert!(
                 work[4..8].iter().sum::<usize>() <= 128 * (layers + 1).pow(3),
                 "case={case} work={work:?}"

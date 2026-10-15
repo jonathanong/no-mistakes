@@ -28,7 +28,7 @@ impl ValueFlowResolution<'_, '_> {
         if let Some(memo) = &self.nullish_memo {
             memo.borrow_mut()
                 .guard_reads
-                .append(std::iter::once(name.clone()), self.cache);
+                .append(std::iter::once(name), self.cache);
         }
     }
 
@@ -59,12 +59,12 @@ impl ValueFlowResolution<'_, '_> {
         let key = self.nullish_key(path, binding, read, projection);
         let cached = memo.borrow().entries.get(&key).cloned();
         if let Some(cached) = cached
-            .filter(|receipt| nullish_guards::matches(&receipt.guards, &self.visiting, self.cache))
+            .filter(|receipt| memo.borrow().guard_reads.matches(&receipt.guards, &self.visiting, self.cache))
         {
             // Replay negative checks too: an outer cached computation must own
             // every ancestry assumption made by this shared receipt.
-            memo.borrow_mut().guard_reads.append(
-                cached.guards.iter().map(|(name, _)| name.clone()),
+            memo.borrow_mut().guard_reads.append_ids(
+                cached.guards.iter().map(|(id, _)| *id),
                 self.cache,
             );
             #[cfg(feature = "test-instrumentation")]

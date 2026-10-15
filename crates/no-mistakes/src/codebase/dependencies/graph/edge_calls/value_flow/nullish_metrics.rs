@@ -10,7 +10,7 @@ impl ParameterCache {
         self.nullish_work[slot].fetch_max(count, std::sync::atomic::Ordering::Relaxed);
     }
     #[cfg(feature = "test-instrumentation")]
-    pub(in super::super::super) fn nullish_work(&self) -> [usize; 11] {
+    pub(in super::super::super) fn nullish_work(&self) -> [usize; 15] {
         self.nullish_work
             .each_ref()
             .map(|count| count.load(std::sync::atomic::Ordering::Relaxed))

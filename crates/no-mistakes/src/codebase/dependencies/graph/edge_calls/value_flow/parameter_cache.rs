@@ -36,7 +36,7 @@ type TypeOrigins =
 pub(in super::super) struct ParameterCache {
     state: Mutex<State>,
     #[cfg(feature = "test-instrumentation")]
-    nullish_work: [std::sync::atomic::AtomicUsize; 11],
+    nullish_work: [std::sync::atomic::AtomicUsize; 15],
     ready: Condvar,
     type_origins: OnceLock<TypeOrigins>,
     #[cfg(feature = "test-instrumentation")]
