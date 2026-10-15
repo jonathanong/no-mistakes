@@ -27,7 +27,10 @@ impl ImportCollector {
         {
             self.receiver_conditional_region = None;
         }
-        if !member && self.prior_member_mutations.requires_proof(scope, base) {
+        if !member
+            && (self.prior_member_mutations.requires_proof(scope, base)
+                || self.has_mutable_receiver_binding(scope, base))
+        {
             self.fresh_receiver_effects.rebind(scope, base);
         }
         let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
@@ -55,16 +58,22 @@ impl ImportCollector {
             let acquired_at = self.receiver_acquisition_offset(offset);
             let reads = vec![Some((acquired_at, self.current_function_id())); parts.len()];
             let mut pending = vec![(
-                (((scope, base.to_string()), parts), reads),
+                (
+                    ((scope, base.to_string()), parts),
+                    reads,
+                    (acquired_at, self.current_function_id()),
+                ),
                 false,
                 true,
                 false,
             )];
-            let mut active = fx_set();
-            let mut visited = fx_map();
-            while let Some((((key, path), reads), exiting, remember, propagated)) = pending.pop() {
+            let mut traversal = receiver_traversal::ReceiverTraversal::default();
+            while let Some((((key, path), reads, root_read), exiting, remember, propagated)) =
+                pending.pop()
+            {
+                let version = self.mutable_receiver_version(&key, root_read);
                 if exiting {
-                    active.remove(&key);
+                    traversal.exit(&key, version);
                     continue;
                 }
                 if remember {
@@ -73,20 +82,21 @@ impl ImportCollector {
                     });
                     self.remember_member_mutation(&key, &path, &reads, exact, offset, propagated);
                 }
-                // A cycle must not mark an unpropagated weaker summary visited.
-                if active.contains(&key) {
-                    continue;
-                }
-                let Some(reads) = receiver_traversal::merge_reads(&mut visited, &key, &path, reads)
-                else {
+                // Version-qualified mutable roots may revisit an earlier saved
+                // root without conflating it with the replacement's identity.
+                let Some(reads) = traversal.enter(&key, &path, reads, version) else {
                     continue;
                 };
-                active.insert(key.clone());
                 #[cfg(feature = "test-instrumentation")]
                 {
                     self.value_flow.reference_path_visits += 1;
                 }
-                pending.push((((key.clone(), Vec::new()), Vec::new()), true, false, false));
+                pending.push((
+                    ((key.clone(), Vec::new()), Vec::new(), root_read),
+                    true,
+                    false,
+                    false,
+                ));
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links
@@ -101,41 +111,42 @@ impl ImportCollector {
                         self.value_flow.reference_link_visits += 1;
                     }
                     pending.push((
-                        ((target.clone(), path.clone()), reads.clone()),
+                        ((target.clone(), path.clone()), reads.clone(), root_read),
                         false,
                         false,
                         propagated,
                     ));
                 }
-                for index in self
+                let mut references = Vec::new();
+                for value in self
                     .value_binding_indexes
                     .get(&key.0)
                     .and_then(|names| names.get(key.1.as_str()))
                     .into_iter()
                     .flatten()
+                    .map(|index| &self.value_flow.bindings[*index].value)
                 {
                     // Direct aliases are handled by the component links at finalization.
-                    if matches!(&self.value_flow.bindings[*index].value,
-                        ValueExpression::Named { name, .. } if !name.contains('.'))
+                    if matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
+                        && !self.references_mutable_receiver(value)
                     {
                         continue;
                     }
                     if self.reference_path_may_be_replaced(&key, &path, &reads) {
                         continue;
                     }
-                    let mut references = Vec::new();
-                    nested::write_receiver_references(
-                        &self.value_flow.bindings[*index].value,
-                        &path,
-                        &reads,
-                        &mut references,
-                    );
-                    pending.extend(
-                        references
-                            .into_iter()
-                            .map(|reference| (reference, false, true, true)),
-                    );
+                    nested::write_receiver_references(value, &path, &reads, &mut references);
                 }
+                self.append_mutable_receiver_references(
+                    &key,
+                    (&path, &reads, root_read),
+                    &mut references,
+                );
+                pending.extend(
+                    references
+                        .into_iter()
+                        .map(|reference| (reference, false, true, true)),
+                );
             }
         }
         let context = self.current_function_id();

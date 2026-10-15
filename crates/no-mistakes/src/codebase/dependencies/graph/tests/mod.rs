@@ -166,3 +166,6 @@ mod scalar_refinement;
 
 #[cfg(feature = "test-instrumentation")]
 mod opaque_entry_preparation;
+
+#[path = "mutable_receiver_bindings.rs"]
+mod mutable_receiver_bindings;

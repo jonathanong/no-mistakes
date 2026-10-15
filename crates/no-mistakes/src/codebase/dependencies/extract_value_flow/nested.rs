@@ -2,7 +2,8 @@ use super::*;
 
 type Receiver = ((usize, String), ValueMutationPath);
 pub(super) type ReceiverRead = Option<(u32, Option<CallableId>)>;
-pub(super) type ReceiverWrite = (Receiver, Vec<ReceiverRead>);
+pub(super) type RootRead = (u32, Option<CallableId>);
+pub(super) type ReceiverWrite = (Receiver, Vec<ReceiverRead>, RootRead);
 pub(super) fn receiver_references(
     value: &ValueExpression,
     path: &[Option<String>],
@@ -22,7 +23,7 @@ pub(super) fn write_receiver_references(
         let reads = std::iter::repeat_n(Some(read), acquired)
             .chain(reads[reads.len() - retained..].iter().copied())
             .collect();
-        output.push((receiver, reads));
+        output.push((receiver, reads, read));
     });
 }
 

@@ -8,17 +8,30 @@ impl ImportCollector {
         }
         let mut links = fx_map();
         for binding in &self.value_flow.bindings {
-            insert_reference(
-                &mut links,
-                &mut self.prior_member_mutations,
-                binding.scope,
-                &binding.name,
-                &binding.value,
-            );
+            if self.references_mutable_receiver(&binding.value) {
+                self.prior_member_mutations
+                    .require_reference_proof(binding.scope, &binding.name);
+            } else {
+                insert_reference(
+                    &mut links,
+                    &mut self.prior_member_mutations,
+                    binding.scope,
+                    &binding.name,
+                    &binding.value,
+                );
+            }
             #[cfg(feature = "test-instrumentation")]
             {
                 self.value_flow.reference_link_constructions += 1;
             }
+        }
+        for (scope, name) in self
+            .receiver_only_bindings
+            .iter()
+            .flat_map(|origins| origins.bindings())
+        {
+            self.prior_member_mutations
+                .require_reference_proof(scope, name);
         }
         self.value_reference_links = Some(links);
     }
@@ -28,8 +41,14 @@ impl ImportCollector {
         name: &str,
         value: &ValueExpression,
     ) {
+        let mutable = self.references_mutable_receiver(value);
         if let Some(links) = &mut self.value_reference_links {
-            insert_reference(links, &mut self.prior_member_mutations, scope, name, value);
+            if mutable {
+                self.prior_member_mutations
+                    .require_reference_proof(scope, name);
+            } else {
+                insert_reference(links, &mut self.prior_member_mutations, scope, name, value);
+            }
             #[cfg(feature = "test-instrumentation")]
             {
                 self.value_flow.reference_link_constructions += 1;
