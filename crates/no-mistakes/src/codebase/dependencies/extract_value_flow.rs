@@ -7,6 +7,8 @@ mod receiver_histories;
 pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
 #[path = "extract_value_flow/mutation_sources.rs"]
 mod mutation_sources;
+#[path = "extract_value_flow/reference_output.rs"]
+mod reference_output;
 pub use mutation_sources::{
     ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,
     ValueReceiverMutations,

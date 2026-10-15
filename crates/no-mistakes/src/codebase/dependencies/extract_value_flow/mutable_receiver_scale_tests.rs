@@ -25,6 +25,7 @@ fn mutable_root_snapshots_bound_origin_projection_work() {
     assert!(facts.value_flow.receiver_only_lookups <= 3 * 128);
     assert_eq!(facts.value_flow.receiver_only_visits, 128);
     assert_eq!(facts.value_flow.reference_state_heap_buffers, 0);
+    assert_eq!(facts.value_flow.reference_output_heap_buffers, 0);
     assert_eq!(facts.value_flow.receiver_only_pending_spills, 0);
     // Early invalidation and post-RHS completion both rebind, but the name
     // needs storage only on the first event.

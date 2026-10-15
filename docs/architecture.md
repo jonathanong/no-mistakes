@@ -738,3 +738,9 @@ The integration prepared catalog owns this check projection and its importer-sco
 Runner selection is `notRequested`, `prepared`, or `failed`. Requested empty lists are prepared empty selections. Config failures retain diagnostics separately from prepared project records. Each project exposes `case`, `hook`, and `fixture` as explicit `absent`, `known`, or `unknown` tagged slots. Known invalid values survive unchanged. Unknown reasons are exhaustive typed projections. Provenance paths use the existing request-root-relative slash formatter, byte spans are half-open offsets (or null), and inheritance order is retained. Outside-root sources retain their path rather than being silently re-rooted.
 
 Ordinary fields and integration errors remain unchanged. Missing inputs retain evidence failure records without satisfying the legacy integration coverage invariant. Suppression affects findings, not evidence. Batched requests prepare the union demand once and expose evidence only on check reports that requested it; JSON/YAML share the ordinary check renderer. This projection does not prove registration packages, browser/custom runner behavior, SDK defaults, runtime latches or transitive package closure.
+
+Propagated receiver mutation facts share the aggregate and context history while
+there is one writer context. A second context promotes the storage to separate
+aggregate and context projections. Rust consumers read these through
+`aggregate()` and `context(owner)` instead of writable storage fields; CLI,
+Node reports and the logical Rust fact debug shape remain unchanged.

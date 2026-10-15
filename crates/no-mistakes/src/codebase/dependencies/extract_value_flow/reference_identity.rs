@@ -1,5 +1,5 @@
 use super::*;
-use identity_metadata::{map_between, FreshCapture};
+use identity_metadata::{FreshCapture, map_between};
 use mutation_history::{ValueAssignedMutations, ValueAssignedWriter, ValueMutationHistory};
 
 pub(super) fn reference_replaced(
@@ -117,7 +117,7 @@ impl ValueAssignedMutations {
         {
             return true;
         }
-        let propagated = self.propagated.as_ref().map(|writes| &writes.aggregate);
+        let propagated = self.propagated.as_ref().map(|writes| writes.aggregate());
         let writes = [
             self.members.get(member),
             self.dynamic.as_ref(),

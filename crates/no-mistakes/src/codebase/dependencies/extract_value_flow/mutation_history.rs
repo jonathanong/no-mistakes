@@ -22,11 +22,9 @@ pub struct ValueAssignedMutations {
     #[cfg(feature = "test-instrumentation")]
     pub merge_reinsertions: usize,
 }
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct ValuePropagatedMutations {
-    pub aggregate: ValueAssignedMutations,
-    pub contexts: FxHashMap<Option<CallableId>, ValueAssignedMutations>,
-}
+#[path = "propagated_mutations.rs"]
+mod propagated;
+pub use propagated::ValuePropagatedMutations;
 /// Exact writes need only one context, or the fact that writers differ.
 /// With two distinct writers, at least one differs from every reader.
 /// Copy keeps each property summary inline instead of allocating a context set.
