@@ -15,7 +15,7 @@ pub(super) struct AssignedTraversal {
 #[derive(Default)]
 struct AssignedState {
     active: FxHashMap<(usize, String), usize>,
-    visited: Paths,
+    visited: state::Visits,
 }
 impl AssignedTraversal {
     pub(super) fn enter(
@@ -37,7 +37,7 @@ impl AssignedTraversal {
         if previous.is_some_and(|depth| path.len() >= depth) {
             return None;
         }
-        let reads = merge_reads(&mut state.visited, key, path, reads)?;
+        let reads = state.visited.enter(key, path, reads)?;
         state.active.insert(key.clone(), path.len());
         self.active.push((index, previous));
         Some(reads)
