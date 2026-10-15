@@ -23,6 +23,32 @@ impl ImportCollector {
         self.retain_receiver_origin(scope, name, value, completed_at, true);
     }
 
+    pub(in super::super) fn prepare_mutable_pattern_roots(
+        &mut self,
+        target: &AssignmentTarget<'_>,
+    ) {
+        if self.receiver_only_bindings.is_none()
+            || !matches!(
+                target,
+                AssignmentTarget::ArrayAssignmentTarget(_)
+                    | AssignmentTarget::ObjectAssignmentTarget(_)
+            )
+        {
+            return;
+        }
+        if write_targets::targets(target)
+            .iter()
+            .any(|(name, path, _)| {
+                path.is_empty()
+                    && self
+                        .callee_binding_scope(name)
+                        .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name))
+            })
+        {
+            self.prepare_value_references();
+        }
+    }
+
     pub(in super::super) fn record_mutable_receiver_assignment(
         &mut self,
         assignment: &AssignmentExpression<'_>,
@@ -30,24 +56,38 @@ impl ImportCollector {
         if self.receiver_only_bindings.is_none() {
             return;
         }
-        let AssignmentTarget::AssignmentTargetIdentifier(identifier) = &assignment.left else {
-            return;
-        };
-        let name = identifier.name.as_str();
-        let Some(scope) = self.callee_binding_scope(name) else {
-            return;
-        };
-        if self.has_mutable_receiver_binding(scope, name) {
-            // Root rebinding never turns a mutable variable into ordinary value
-            // provenance. Retain possible receivers for saved aliases as well.
-            let value = self.value_expression(&assignment.right);
-            self.retain_receiver_origin(
-                scope,
-                name,
-                value,
-                assignment.span.end,
-                !assignment.operator.is_logical(),
-            );
+        if let Some(name) = mutable_root_name(&assignment.left) {
+            if let Some(scope) = self.callee_binding_scope(name) {
+                if self.has_mutable_receiver_binding(scope, name) {
+                    let value = self.value_expression(&assignment.right);
+                    self.fresh_receiver_effects.rebind(scope, name);
+                    self.retain_receiver_origin(
+                        scope,
+                        name,
+                        value,
+                        assignment.span.end,
+                        !assignment.operator.is_logical(),
+                    );
+                }
+            }
+        } else {
+            // Destructuring replaces lexical roots too. Its projected RHS is
+            // intentionally unknown here; never keep a stale prior root.
+            for (name, path, _) in write_targets::targets(&assignment.left) {
+                if path.is_empty() {
+                    if let Some(scope) = self.callee_binding_scope(&name) {
+                        if self.has_mutable_receiver_binding(scope, &name) {
+                            self.retain_receiver_origin(
+                                scope,
+                                &name,
+                                ValueExpression::Unknown,
+                                assignment.span.end,
+                                true,
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -110,5 +150,25 @@ impl ImportCollector {
         {
             self.value_flow.receiver_only_origins += 1;
         }
+    }
+}
+
+fn mutable_root_name<'a>(target: &'a AssignmentTarget<'_>) -> Option<&'a str> {
+    let expression = match target {
+        AssignmentTarget::AssignmentTargetIdentifier(identifier) => {
+            return Some(identifier.name.as_str())
+        }
+        AssignmentTarget::TSAsExpression(value) => &value.expression,
+        AssignmentTarget::TSSatisfiesExpression(value) => &value.expression,
+        AssignmentTarget::TSNonNullExpression(value) => &value.expression,
+        AssignmentTarget::TSTypeAssertion(value) => &value.expression,
+        _ => return None,
+    };
+    if let Expression::Identifier(identifier) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(expression)
+    {
+        Some(identifier.name.as_str())
+    } else {
+        None
     }
 }

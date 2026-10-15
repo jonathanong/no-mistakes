@@ -33,6 +33,8 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub receiver_only_visits: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_phase_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_component_links: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_component_root_steps: usize,
@@ -223,3 +225,6 @@ mod mutable_receiver_tests;
 
 #[path = "extract_value_flow/mutable_origins.rs"]
 mod mutable_origins;
+
+#[path = "extract_value_flow/mutable_patterns.rs"]
+mod mutable_patterns;

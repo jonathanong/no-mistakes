@@ -15,6 +15,33 @@ test(
     );
     const config = join(root, "mutable-receivers.yml");
     for (const [name, expected] of [
+      ["mutable-let-pattern-final-foreign", 0],
+      ["mutable-let-pattern-conditional-whole", 1],
+      ["mutable-let-pattern-conditional-final", 0],
+      ["mutable-let-pattern-final-root", 1],
+      ["mutable-let-pattern-foreign-catalog", 1],
+      ["mutable-let-pattern-logical-rebind", 0],
+      ["mutable-let-pattern-foreign-rebind", 0],
+      ["mutable-let-pattern-shorthand", 1],
+      ["mutable-let-pattern-rhs-rebind", 1],
+      ["mutable-let-pattern-lhs-rebind", 1],
+      ["mutable-let-pattern-nested-before-rhs", 0],
+      ["mutable-let-pattern-conditional-rebind", 0],
+      ["mutable-let-pattern-self-copy", 0],
+      ["mutable-let-pattern-twice", 1],
+      ["mutable-let-pattern-before", 0],
+      ["mutable-let-wrapped-unrelated", 1],
+      ["mutable-let-pattern-wrapped", 1],
+      ["mutable-let-pattern-lhs", 1],
+      ["mutable-let-pattern-rhs", 0],
+      ["mutable-let-pattern-default", 1],
+      ["mutable-let-wrapped-as", 1],
+      ["mutable-let-wrapped-non-null", 1],
+      ["mutable-let-wrapped-assertion", 1],
+      ["mutable-let-wrapped-satisfies", 1],
+      ["mutable-let-destructured-array", 1],
+      ["mutable-let-destructured-object", 1],
+      ["mutable-let-destructured-default", 1],
       ["mutable-let-guarded", 0],
       ["mutable-const-guarded", 0],
       ["mutable-let-direct", 0],
@@ -47,6 +74,25 @@ test(
       assert.equal(report.callSites.length, expected, name);
       assert.ok(
         report.callSites.every((site) => site.callee === "primary.get"),
+        name,
+      );
+    }
+    for (const name of [
+      "mutable-let-pattern-class-context",
+      "mutable-let-pattern-cold-class",
+      "mutable-let-pattern-shadowed-class",
+    ]) {
+      const options = {
+        root,
+        config,
+        kind: "valkey",
+        entry: `src/nested-receiver-containers/${name}.mts`,
+      };
+      const report = await cjs.effects(options);
+      assert.deepEqual(await esm.effects(options), report, name);
+      assert.deepEqual(
+        report.callSites.map((site) => site.callee),
+        ["replica.get"],
         name,
       );
     }

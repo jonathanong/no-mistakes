@@ -46,7 +46,7 @@ dynamicBox.client[key] = replacement;
 function dynamicWrite(client) { client.get('key'); }
 for (const item of items) { dynamicWrite(dynamic); }
 
-// Mutable aliases have no stable receiver origin; do not guess their target.
+// Rebinding the mutable root leaves its previous receiver untouched.
 import { primary as mutable } from '@vendor/valkey';
 let rebound = { client: mutable };
 rebound = { client: session };

@@ -12,12 +12,24 @@ pub(super) struct ReferencePhaseEvents {
     pub(super) opaque: Option<std::collections::BTreeSet<(u32, u32)>>,
     pub(super) fresh: Option<std::collections::BTreeSet<u32>>,
 }
+pub(super) struct RootPhaseWrite {
+    pub(super) scope: usize,
+    pub(super) name: String,
+    pub(super) phase: u32,
+    pub(super) value: ValueExpression,
+    pub(super) guaranteed: bool,
+}
 pub(super) struct PhaseWalk<'c> {
     pub(super) collector: Option<&'c ImportCollector>,
     pub(super) phase: u32,
     pub(super) cursor: u32,
     pub(super) segments: Vec<(u32, u32, u32)>,
     pub(super) writes: Vec<PhaseWrite>,
+    pub(super) root_writes: Vec<RootPhaseWrite>,
+    pub(super) collect_root_origins: bool,
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) root_visits: usize,
+    pub(super) conditional: bool,
     pub(super) nested_pattern: bool,
     pub(super) pattern_depth: usize,
     pub(super) collect_reference_effects: bool,
@@ -37,6 +49,11 @@ impl PhaseWalk<'_> {
         self.segment(expression.span().end);
         self.cursor = cursor;
     }
+    pub(super) fn conditional_expression(&mut self, expression: &Expression<'_>) {
+        let previous = std::mem::replace(&mut self.conditional, true);
+        self.expression(expression);
+        self.conditional = previous;
+    }
     fn skip(&mut self, span: oxc_span::Span) {
         self.segment(span.start);
         self.cursor = span.end;
@@ -44,6 +61,10 @@ impl PhaseWalk<'_> {
 }
 impl<'a> Visit<'a> for PhaseWalk<'_> {
     fn visit_expression(&mut self, expression: &Expression<'a>) {
+        #[cfg(feature = "test-instrumentation")]
+        if self.collect_root_origins {
+            self.root_visits += 1;
+        }
         let class =
             self.collect_reference_effects && matches!(expression, Expression::ClassExpression(_));
         if class {
@@ -96,8 +117,14 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
             self.target(&assignment.left);
         } else {
             self.reference(&assignment.left);
-            self.expression(&assignment.right);
-            self.write(&assignment.left);
+            if assignment.operator.is_logical() {
+                self.conditional_expression(&assignment.right);
+            } else {
+                self.expression(&assignment.right);
+            }
+            let value = (assignment.operator.is_assign() || assignment.operator.is_logical())
+                .then_some(&assignment.right);
+            self.write(&assignment.left, value, !assignment.operator.is_logical());
             if self.collect_reference_effects && receiver_replacement_is_fresh(assignment) {
                 self.proof_events
                     .fresh
@@ -111,8 +138,32 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
         self.segment(update.span.start);
         let target = update.argument.as_assignment_target();
         self.reference(target);
-        self.write(target);
+        self.write(target, None, true);
         self.cursor = update.span.end;
+    }
+    fn visit_conditional_expression(
+        &mut self,
+        expression: &oxc_ast::ast::ConditionalExpression<'a>,
+    ) {
+        self.visit_expression(&expression.test);
+        let previous = std::mem::replace(&mut self.conditional, true);
+        self.visit_expression(&expression.consequent);
+        self.visit_expression(&expression.alternate);
+        self.conditional = previous;
+    }
+    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+        self.visit_expression(&expression.left);
+        let previous = std::mem::replace(&mut self.conditional, true);
+        self.visit_expression(&expression.right);
+        self.conditional = previous;
+    }
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        // The normal collector owns class-local bindings and initializer
+        // execution contexts. This borrowed outer scope cannot resolve class
+        // assignments; do not turn deferred or shadowed writes into root facts.
+        let collector = self.collector.take();
+        walk::walk_class(self, class);
+        self.collector = collector;
     }
     fn visit_function(
         &mut self,

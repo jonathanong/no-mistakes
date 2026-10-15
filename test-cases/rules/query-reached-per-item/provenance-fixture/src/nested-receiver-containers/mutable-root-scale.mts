@@ -260,4 +260,3 @@ box.client.get = replacement;
 box.client.get = replacement;
 let { unused } = { unused: 1 };
 unbound = {};
-[box] = [];
