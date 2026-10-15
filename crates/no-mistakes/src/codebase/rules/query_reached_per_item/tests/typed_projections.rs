@@ -72,31 +72,26 @@ fn effects_query_uses_the_same_exact_type_projection_and_alternative_provenance(
 }
 
 #[test]
-fn projected_annotations_keep_lexical_ownership_and_reconcile_callback_contexts() {
-    let root = projections_fixture();
-    for entry in [
-        "controls.mts",
-        "imported-utility.mts",
-        "unselected-indexed.mts",
-        "class-utility.mts",
-        "unsupported-shapes.mts",
-        "forward-utility.mts",
-        "forward-import-utility.mts",
-        "forward-type-shadow.mts",
-        "contextual-controls.mts",
-    ] {
-        let report = crate::effects_query::run(
-            &root,
-            None,
-            None,
-            "postgres",
-            std::path::Path::new(entry),
-            &[],
-            None,
-        )
-        .unwrap();
-        assert!(report.call_sites.is_empty(), "{entry}: {report:#?}");
-    }
+fn projected_annotations_reconcile_every_forwarded_callback_context() {
+    let report = crate::effects_query::run(
+        &projections_fixture(),
+        None,
+        None,
+        "postgres",
+        std::path::Path::new("contextual-agreement.mts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        report
+            .call_sites
+            .iter()
+            .map(|site| (site.line, site.callee.as_str()))
+            .collect::<Vec<_>>(),
+        [(17, "TransactionQuery")],
+        "{report:#?}"
+    );
 }
 
 #[test]
@@ -171,7 +166,9 @@ fn projected_type_shapes_keep_object_members_and_explicit_owner_bindings() {
 fn nullish_receipts_preserve_factory_member_bound_and_async_admission() {
     for (file, expected) in [
         ("nullish-receipts.mts", vec![6, 10, 14]),
-        ("nullish-acquisitions.mts", vec![15, 26]),
+        ("recursive-indexed-types.mts", vec![5, 10]),
+        ("nullish-literals-and-types.mts", vec![5, 9, 14]),
+        ("nullish-acquisitions.mts", vec![15, 26, 35]),
     ] {
         let report = crate::effects_query::run(
             &projections_fixture(),

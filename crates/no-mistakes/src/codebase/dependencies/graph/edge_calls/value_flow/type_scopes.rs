@@ -60,15 +60,13 @@ impl ValueFlowResolution<'_, '_> {
         let ValueTypeSource::Function(parameters) = source.as_ref() else {
             return None;
         };
-        self.annotation_projection(
+        self.annotation_origin_scoped(
             file,
             parameters.get(index)?.as_ref()?,
-            &[],
             AnnotationScope {
                 lexical: *scope,
                 module: None,
             },
-            &mut fx_set(),
         )
     }
 }
