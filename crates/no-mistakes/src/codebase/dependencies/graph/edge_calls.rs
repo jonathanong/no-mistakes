@@ -216,3 +216,6 @@ pub use value_flow_metrics::origin_nodes as benchmark_probe_origin_nodes;
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::dependency_links as benchmark_probe_parameter_dependency_links;
+
+#[cfg(feature = "test-instrumentation")]
+pub use value_flow_metrics::execution_steps as benchmark_probe_execution_phase_steps;
