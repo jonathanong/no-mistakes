@@ -54,7 +54,7 @@ fn walk_function_property_value<'a>(
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk_function_with_body_bindings(collector, function);
+    walk_function_with_body_bindings(collector, function, pushed);
     collector.pop_function_scope(pushed);
 }
 
@@ -72,6 +72,6 @@ fn walk_arrow_property_value<'a>(
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
     visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
-    walk_arrow_function_with_body_bindings(collector, arrow);
+    walk_arrow_function_with_body_bindings(collector, arrow, pushed);
     collector.pop_function_scope(pushed);
 }

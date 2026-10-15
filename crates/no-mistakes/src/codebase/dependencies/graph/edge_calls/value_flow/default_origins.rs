@@ -8,6 +8,7 @@ pub(super) struct InvocationRead {
     pub(super) context: Option<CallableId>,
     pub(super) owner: (std::path::PathBuf, CallableId),
     pub(super) once: bool,
+    pub(super) repeated: bool,
 }
 pub(super) struct OriginNode {
     pub(super) kind: OriginKind,
@@ -38,6 +39,7 @@ pub(super) struct ReceiverRead {
     pub(super) offset: u32,
     pub(super) context: Option<CallableId>,
     pub(super) invocation: bool,
+    pub(super) repeated: bool,
     pub(super) owned_context: Option<Box<(std::path::PathBuf, CallableId, bool)>>,
 }
 impl ReceiverRead {

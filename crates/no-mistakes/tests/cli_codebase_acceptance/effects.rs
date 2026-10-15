@@ -225,6 +225,9 @@ fn effects_cli_respects_definite_enclosing_initialization() {
 fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
     let root = fixture("inline-member-precision");
     for (name, expected) in [
+        ("unique-helper-repeated", 0),
+        ("unique-helper-snapshot", 1),
+        ("unique-helper-setup", 1),
         ("alias-named", 1),
         ("alias-inline", 1),
         ("alias-chain", 1),

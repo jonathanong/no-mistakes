@@ -45,4 +45,7 @@ pub struct ValueCall {
     pub spread_at: Option<usize>,
     /// A direct, module-level arrow invocation outside a repeated construct.
     pub once: bool,
+    /// Repetition within this execution scope; qualified callable bodies do not
+    /// inherit repetition solely from their creation site.
+    pub repeated: bool,
 }

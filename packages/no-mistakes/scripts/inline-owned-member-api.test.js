@@ -15,6 +15,9 @@ test(
       "../../../test-cases/codebase-analysis/inline-member-precision/fixture",
     );
     const cases = [
+      ["unique-helper-repeated", 0],
+      ["unique-helper-snapshot", 1],
+      ["unique-helper-setup", 1],
       ["inline-snapshot-owned", 1],
       ["default-snapshot-owned", 1],
       ["default-object-snapshot-owned", 1],

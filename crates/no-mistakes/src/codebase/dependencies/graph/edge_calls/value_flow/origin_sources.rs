@@ -1,5 +1,5 @@
 use super::*;
-use default_origins::{DefaultOriginUse, merge};
+use default_origins::{merge, DefaultOriginUse};
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn record_default_origin(
@@ -32,7 +32,7 @@ impl ValueFlowResolution<'_, '_> {
         hint_len: usize,
         file: &std::path::Path,
         read: (u32, Option<CallableId>),
-        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
+        reader: &impl Fn(Option<CallableId>) -> receiver_reads::ReadOffset,
     ) -> bool {
         self.indexes
             .file(self.facts, &origin.file)
@@ -71,9 +71,12 @@ impl ValueFlowResolution<'_, '_> {
                                         if origin.file != file {
                                             None
                                         } else if acquired {
-                                            reader(writer)
+                                            reader(writer).known()
                                         } else {
-                                            (writer == read.1).then_some(read.0)
+                                            match reader(writer) {
+                                                receiver_reads::ReadOffset::Repeated => None,
+                                                _ => (writer == read.1).then_some(read.0),
+                                            }
                                         }
                                     })
                             } else {
@@ -82,7 +85,11 @@ impl ValueFlowResolution<'_, '_> {
                                     &projection[hint_len..],
                                     read.0,
                                     read.1,
-                                    origin.file != file,
+                                    origin.file != file
+                                        || matches!(
+                                            reader(read.1),
+                                            receiver_reads::ReadOffset::Repeated
+                                        ),
                                 )
                             }
                         })

@@ -1,6 +1,28 @@
 use super::*;
 use default_origins::ReceiverRead;
 
+/// A repeated frame is evidence of unknown ordering, not a missing frame.
+#[derive(Clone, Copy)]
+pub(super) enum ReadOffset {
+    Absent,
+    Exact(u32),
+    Repeated,
+}
+impl ReadOffset {
+    pub(super) fn known(self) -> Option<u32> {
+        match self {
+            Self::Exact(offset) => Some(offset),
+            Self::Absent | Self::Repeated => None,
+        }
+    }
+    pub(super) fn or_absent(self, fallback: impl FnOnce() -> Option<u32>) -> Self {
+        if matches!(self, Self::Absent) {
+            fallback().map_or(Self::Absent, Self::Exact)
+        } else {
+            self
+        }
+    }
+}
 pub(super) type ReadId = Option<std::num::NonZeroUsize>;
 /// Walk-local links retain invocation paths without copying origin subgraphs.
 #[derive(Default)]
@@ -41,11 +63,18 @@ impl<'a> ReceiverReads<'a> {
         id: ReadId,
         file: &std::path::Path,
         context: Option<CallableId>,
-    ) -> Option<u32> {
-        self.iter(id)
+    ) -> ReadOffset {
+        let mut offset = None;
+        for read in self
+            .iter(id)
             .filter(|read| read.file == file && read.context == context)
-            .map(|read| read.offset)
-            .max()
+        {
+            if read.repeated {
+                return ReadOffset::Repeated;
+            }
+            offset = Some(offset.map_or(read.offset, |old: u32| old.max(read.offset)));
+        }
+        offset.map_or(ReadOffset::Absent, ReadOffset::Exact)
     }
     pub(super) fn default_owner(&self, id: ReadId, file: &std::path::Path) -> Option<CallableId> {
         self.iter(id).find_map(|read| {

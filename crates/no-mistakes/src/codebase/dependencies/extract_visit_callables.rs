@@ -33,7 +33,7 @@ fn visit_function_with_value_flow_scope<'a>(
     }
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk_function_with_body_bindings(collector, function);
+    walk_function_with_body_bindings(collector, function, true);
     collector.pop_function_scope(true);
     collector.pop_syntactic_caller(pushed_syntactic_caller);
     if let Some(previous) = enclosing_unreachable_binding_after {
@@ -51,7 +51,7 @@ fn visit_arrow_function_with_value_flow_scope(
     collector.push_anonymous_function_scope(CallableId(arrow.span.start));
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
-    walk_arrow_function_with_body_bindings(collector, arrow);
+    walk_arrow_function_with_body_bindings(collector, arrow, true);
     collector.pop_function_scope(true);
     if let Some(previous) = enclosing_unreachable_binding_after {
         collector.unreachable_value_binding_after = previous;

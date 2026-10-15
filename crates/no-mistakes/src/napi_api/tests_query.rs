@@ -131,6 +131,9 @@ fn effects_json_retains_inline_invocation_context() {
 #[test]
 fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
     for (name, expected) in [
+        ("unique-helper-repeated", 0),
+        ("unique-helper-snapshot", 1),
+        ("unique-helper-setup", 1),
         ("alias-named", 1),
         ("alias-inline", 1),
         ("alias-chain", 1),

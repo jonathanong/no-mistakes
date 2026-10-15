@@ -101,7 +101,7 @@ impl ValueFlowResolution<'_, '_> {
                             .is_some_and(|history| {
                                 history.assignment_invalidated_owned_reads(
                                     &projection,
-                                    &|writer| reads.offset(read, source, writer),
+                                    &|writer| reads.offset(read, source, writer).known(),
                                     &|| reads.default_owner(read, source),
                                 )
                             })
@@ -131,7 +131,7 @@ impl ValueFlowResolution<'_, '_> {
                             file,
                             (offset, context),
                             &|writer| {
-                                reads.offset(read, &origin.file, writer).or_else(|| {
+                                reads.offset(read, &origin.file, writer).or_absent(|| {
                                     (origin.file == file && writer == context).then_some(offset)
                                 })
                             },
@@ -169,16 +169,19 @@ impl ValueFlowResolution<'_, '_> {
         // file-qualified, while member writes follow the receiver projection.
         read.file != *history_file
             || if receivers_only {
-                receivers && history.assignment_invalidated_reads(projection, &|writer| {
-                        if read.once
+                receivers
+                    && history.assignment_invalidated_reads(projection, &|writer| {
+                        if read.repeated {
+                            None
+                        } else if read.once
                             && read.owner.0 == *history_file
                             && writer == Some(read.owner.1)
                         {
-                            reader.1.offset(reader.0, history_file, writer)
+                            reader.1.offset(reader.0, history_file, writer).known()
                         } else {
                             (writer == read.context).then_some(read.offset)
                         }
-                })
+                    })
             } else {
                 read.owner.0 != query.0 || query.1 != Some(read.owner.1)
             }

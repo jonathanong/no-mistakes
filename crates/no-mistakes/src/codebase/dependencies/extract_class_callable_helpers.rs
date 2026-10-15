@@ -38,12 +38,12 @@ fn walk_static_callable_field_with_scope<'a>(
         Expression::FunctionExpression(function) => {
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
-            walk_function_with_body_bindings(collector, function);
+            walk_function_with_body_bindings(collector, function, true);
         }
         Expression::ArrowFunctionExpression(arrow) => {
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
-            walk_arrow_function_with_body_bindings(collector, arrow);
+            walk_arrow_function_with_body_bindings(collector, arrow, true);
         }
         _ => unreachable!("static callable field was validated before walking"),
     }
@@ -99,7 +99,7 @@ fn walk_class_method_with_scope<'a>(
     }
     collector.add_type_parameter_names(method.value.type_parameters.as_deref());
     collector.add_formal_parameters(&method.value.params);
-    walk_function_with_body_bindings(collector, &method.value);
+    walk_function_with_body_bindings(collector, &method.value, pushed);
     collector.pop_function_scope(pushed);
     collector.pop_function_scope(true);
 }

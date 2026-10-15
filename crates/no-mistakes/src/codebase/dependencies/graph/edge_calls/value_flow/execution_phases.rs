@@ -1,4 +1,5 @@
 use super::*;
+use execution_quality::ExecutionPhase;
 
 enum Step {
     Owner(CallableId),
@@ -12,33 +13,46 @@ impl ValueFlowResolution<'_, '_> {
         &mut self,
         path: &std::path::Path,
         owner: CallableId,
-    ) -> Option<(u32, Option<CallableId>)> {
-        let read = self.invocation_read.as_ref()?;
+    ) -> ExecutionPhase {
+        let Some(read) = self.invocation_read.as_ref() else {
+            return ExecutionPhase::Absent;
+        };
+        let mut repeated = read.repeated;
         if read.file != path || read.owner.0 != path {
-            return None;
+            return ExecutionPhase::Absent.repeated(repeated);
         }
         let mut key = (path.to_path_buf(), owner);
         let (mut slow, mut fast) = (owner, owner);
         loop {
             key.1 = slow;
-            slow = match self.execution_step(&key)? {
-                Step::Owner(owner) => owner,
-                Step::Phase(offset, context) => return Some((offset, context)),
+            slow = match self.execution_step(&key, &mut repeated) {
+                Some(Step::Owner(owner)) => owner,
+                Some(Step::Phase(offset, context)) => {
+                    return ExecutionPhase::Exact((offset, context)).repeated(repeated);
+                }
+                None => return ExecutionPhase::Absent.repeated(repeated),
             };
             for _ in 0..2 {
                 key.1 = fast;
-                fast = match self.execution_step(&key)? {
-                    Step::Owner(owner) => owner,
-                    Step::Phase(offset, context) => return Some((offset, context)),
+                fast = match self.execution_step(&key, &mut repeated) {
+                    Some(Step::Owner(owner)) => owner,
+                    Some(Step::Phase(offset, context)) => {
+                        return ExecutionPhase::Exact((offset, context)).repeated(repeated);
+                    }
+                    None => return ExecutionPhase::Absent.repeated(repeated),
                 };
             }
             if slow == fast {
-                return None;
+                return ExecutionPhase::Absent.repeated(repeated);
             }
         }
     }
 
-    fn execution_step(&mut self, key: &(std::path::PathBuf, CallableId)) -> Option<Step> {
+    fn execution_step(
+        &mut self,
+        key: &(std::path::PathBuf, CallableId),
+        repeated: &mut bool,
+    ) -> Option<Step> {
         #[cfg(feature = "test-instrumentation")]
         self.cache.record_execution_step();
         if !self.used_parameters.contains(key) {
@@ -61,6 +75,7 @@ impl ValueFlowResolution<'_, '_> {
             .get(&input.offset)
             .and_then(|sites| sites.get(&input.callee))
             .and_then(|key| index.values.calls.get(key))?;
+        *repeated |= call.repeated;
         if call.bound || call.spread_at.is_some() {
             return None;
         }

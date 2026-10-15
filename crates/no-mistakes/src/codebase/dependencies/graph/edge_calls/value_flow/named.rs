@@ -14,7 +14,7 @@ impl ValueFlowResolution<'_, '_> {
         let source_context = context;
         // Runtime body reads and supplied acquisition are distinct; the
         // invocation identity still owns the separate escape guard below.
-        let (offset, context) = self.expression_read(path, offset, context);
+        let (offset, context, repeated) = self.expression_read(path, offset, context);
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -35,34 +35,13 @@ impl ValueFlowResolution<'_, '_> {
         }
         let binding = scoped_name(&file.values.bindings, scope, base);
         let value = if let Some(binding) = binding {
-            let (available_at, read_at, read_context) = self.binding_read(
+            self.binding_value(
                 path,
-                binding.owner,
-                source_offset,
-                source_context,
-                offset,
-                context,
-            );
-            if binding
-                .mutation_contexts
-                .iter()
-                .any(|writer| *writer != read_context)
-                || available_at < binding.declared_at
-                || binding
-                    .invalidated_at
-                    .is_some_and(|cutoff| read_at >= cutoff)
-            {
-                FlowValue::Unknown
-            } else {
-                // Whole-object aliases retain the eventual read projection. A
-                // copied member initializer must acquire its own snapshot.
-                let projection = projection.filter(|_| {
-                    matches!(
-                        &binding.value, ValueExpression::Named { name, .. } if !name.contains('.')
-                    )
-                });
-                self.value_projected(path, &binding.value, projection)
-            }
+                binding,
+                (source_offset, source_context),
+                (offset, context),
+                projection,
+            )
         } else if let Some(parameter) = parameter {
             if self.initializing.iter().any(|(file, owner, index)| {
                 file == path
@@ -145,11 +124,11 @@ impl ValueFlowResolution<'_, '_> {
         {
             // A container alias reads live descendants at its use, while
             // acquired member segments retain their existing snapshot nodes.
-            self.record_value_receiver_read(path, offset, context);
+            self.record_receiver_read(path, offset, context, repeated);
         }
         self.visiting.remove(&key);
         if scope == 0 && file.imported.contains_key(base) {
-            self.record_receiver_origin(path, scope, base, offset, context);
+            self.record_receiver_origin(path, scope, base, (offset, context, repeated));
         }
         if let Some(read) = &self.invocation_read {
             if let Some(history) = file
@@ -163,6 +142,7 @@ impl ValueFlowResolution<'_, '_> {
                 // Acquisition offsets only order a history in the same file.
                 if read.file == path {
                     read.offset = offset;
+                    read.repeated = repeated;
                 }
                 let origin = self.cache.origin_node(
                     OriginKind::InvocationReceiver {

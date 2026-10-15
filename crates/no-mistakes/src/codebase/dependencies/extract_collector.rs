@@ -22,6 +22,8 @@ struct ImportCollector {
     /// Live straight-line guarded segment and its one admitted assignment.
     receiver_conditional_region: Option<(std::num::NonZeroU32, u32)>,
     repeat_depth: usize,
+    /// Repetition inherited from callable creation does not execute its body.
+    call_repeat_base: usize,
     /// Synthetic ownership of a default value evaluated by the module itself.
     module_evaluation_owner: Option<CallableId>,
     sloppy_script: bool,

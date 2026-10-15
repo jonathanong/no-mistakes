@@ -551,3 +551,9 @@ Setup nested in an outer loop, repeatable function, or instance initializer also
 remains unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.
+
+Repeated calls do not establish one runtime receiver-acquisition phase merely
+because their helper has one syntactic incoming call. Live helper defaults stay
+conservative across loop executions, while methods copied before the loop keep
+their acquisition snapshots. Loop initializer and iterable expressions retain
+their existing one-time timing proof.

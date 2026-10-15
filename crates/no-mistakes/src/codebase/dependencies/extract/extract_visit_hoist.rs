@@ -11,11 +11,16 @@ use oxc_ast_visit::{walk, Visit};
 pub(super) fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
+    owner_entered: bool,
 ) {
     let enclosing_unreachable_binding_after = collector
         .collect_value_flow
         .then(|| collector.unreachable_value_binding_after.take());
     with_callable_receiver_execution(collector, |collector| {
+        let previous_repeat_base = collector.call_repeat_base;
+        if owner_entered {
+            collector.call_repeat_base = collector.repeat_depth;
+        }
         collector.record_callable_result_kind(function.r#async, function.generator);
         // Default parameters run in the parameter environment, before the body
         // lexical environment exists. Visit them before introducing body bindings.
@@ -30,6 +35,7 @@ pub(super) fn walk_function_with_body_bindings<'a>(
             walk::walk_function_body(collector, body);
             collector.unreachable_value_binding_after = previous_cutoff;
         }
+        collector.call_repeat_base = previous_repeat_base;
     });
     if let Some(previous) = enclosing_unreachable_binding_after {
         collector.unreachable_value_binding_after = previous;
@@ -39,11 +45,16 @@ pub(super) fn walk_function_with_body_bindings<'a>(
 pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+    owner_entered: bool,
 ) {
     let enclosing_unreachable_binding_after = collector
         .collect_value_flow
         .then(|| collector.unreachable_value_binding_after.take());
     with_callable_receiver_execution(collector, |collector| {
+        let previous_repeat_base = collector.call_repeat_base;
+        if owner_entered {
+            collector.call_repeat_base = collector.repeat_depth;
+        }
         collector.record_callable_result_kind(arrow.r#async, false);
         // Default parameters run before the body lexical environment exists.
         visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
@@ -65,6 +76,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
             }
             collector.visit_expression(expression);
         }
+        collector.call_repeat_base = previous_repeat_base;
     });
     if let Some(previous) = enclosing_unreachable_binding_after {
         collector.unreachable_value_binding_after = previous;
