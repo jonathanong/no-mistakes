@@ -65,3 +65,20 @@ Linux, macOS, and Windows. Both tests assert a CJS
 promise, await CJS and ESM results, and compare all expected call-site counts.
 Prior #2014's manual compiled-addon reproduction does not establish that CI ran
 this previously omitted script. Fresh executed native results remain pending.
+
+## Computed member callable guard
+
+Current-head Codex review found an introduced unsafe proof: specialized object
+function/arrow and anonymous class method visitors do not push a display scope
+for dynamic computed keys, leaving the synthetic module owner visible inside
+their deferred bodies. The correction wraps the three actual callable traversals
+in the existing repeated-execution guard, including default parameters, after
+computed key and decorator evaluation. It changes no graph/export/resource
+ownership and adds no collector field, fact field, allocation, pass, or cache.
+
+Saved object arrow/function/method, class method, and default-parameter controls
+remain unknown. Computed object/class keys and an ordinary module computed-arrow
+control are covered across graph, CLI, Rust N-API, and compiled CJS/ESM tests.
+A saved extraction fixture alternates deferred bodies with module-evaluated keys
+and the final value, asserting guard restoration after all three visitor paths.
+The review thread remains open pending actual current-head validation.

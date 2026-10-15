@@ -41,3 +41,29 @@ fn synthetic_default_owner_is_distinct_from_nested_runtime_callables() {
     assert!(!inner.once);
     assert!(inner_id.0 > outer_id.0);
 }
+
+#[test]
+fn computed_callable_guards_restore_module_frequency_before_the_next_key() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/inline-member-precision/fixture/src/default-computed-restored.mts",
+    );
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let frequency = facts
+        .value_flow
+        .calls
+        .iter()
+        .filter(|call| matches!(call.callee, ValueExpression::Callable(_)))
+        .map(|call| call.once)
+        .collect::<Vec<_>>();
+    assert_eq!(frequency, [false, true, false, true, false, true]);
+}

@@ -205,3 +205,5 @@ fn effects_json_retains_cross_file_inline_receiver_timing() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+include!("tests_query_computed.rs");
