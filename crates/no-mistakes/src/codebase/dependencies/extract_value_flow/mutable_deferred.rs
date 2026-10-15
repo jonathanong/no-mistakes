@@ -111,18 +111,22 @@ impl ImportCollector {
                 proof: Some(&deferred.proof),
             };
             for (((key, path), reads, root_read), version, blocked) in deferred.sources {
+                let current = self.mutable_receiver_version(&key, root_read);
                 let same = version
-                    .zip(self.mutable_receiver_version(&key, root_read))
+                    .zip(current)
                     .is_some_and(|(before, after)| before.same_selected(&after));
                 if blocked && same {
                     continue;
                 }
-                if !same || !self.mutation_reference_replaced(&key, &path, &reads, info) {
+                if let Some(current) = current.filter(|_| {
+                    !same || !self.mutation_reference_replaced(&key, &path, &reads, info)
+                }) {
                     self.append_mutable_receiver_references_unchecked(
                         &key,
                         (&path, &reads, root_read),
                         &mut references,
                         deferred.metadata.foreign_before,
+                        current,
                     );
                 }
             }

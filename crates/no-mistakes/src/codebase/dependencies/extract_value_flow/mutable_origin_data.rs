@@ -13,12 +13,7 @@ impl ReceiverBindingOrigins {
         if root.owners.len() != 1 {
             return None;
         }
-        let (completed_at, selected) = root
-            .owners
-            .get(&read.1)?
-            .snapshots
-            .range(..=read.0)
-            .next_back()?;
+        let (completed_at, selected) = root.owners.get(&read.1)?.snapshots.at(read.0)?;
         let selected = root
             .patterns
             .as_ref()

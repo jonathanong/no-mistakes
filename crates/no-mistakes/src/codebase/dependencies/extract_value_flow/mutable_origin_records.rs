@@ -34,20 +34,38 @@ impl RootOrigins {
     ) {
         self.generation += 1;
         let states = self.owners.entry(location.1).or_default();
-        let previous = states
-            .snapshots
-            .range(..location.0)
-            .next_back()
-            .map(|(_, id)| *id);
-        let selected = match (guaranteed, previous) {
-            (false, Some(previous)) => {
+        let selected = if guaranteed {
+            leaf
+        } else {
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.predecessor_queries += 1;
+            }
+            let previous = states.snapshots.before(location.0).map(|(_, id)| *id);
+            if let Some(previous) = previous {
                 let id = arena.len();
                 arena.push(Origin::Either(previous, leaf));
                 id
+            } else {
+                leaf
             }
-            _ => leaf,
         };
+        #[cfg(feature = "test-instrumentation")]
+        states.observe_insertion(location.0);
         states.snapshots.insert(location.0, selected);
         states.possible.push(leaf);
+    }
+}
+
+#[cfg(feature = "test-instrumentation")]
+impl RootStates {
+    pub(super) fn observe_insertion(&mut self, offset: u32) {
+        let class = match self.snapshots.last_key_value() {
+            None => 0,
+            Some((previous, _)) if *previous < offset => 0,
+            Some((previous, _)) if *previous == offset => 1,
+            _ => 2,
+        };
+        self.insertion_order[class] += 1;
     }
 }

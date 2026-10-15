@@ -21,16 +21,23 @@ impl RootVersion {
         self.context == other.context && self.selected == other.selected
     }
 }
+#[path = "mutable_origin_snapshots.rs"]
+mod snapshots;
+
 #[derive(Default)]
 struct RootStates {
-    snapshots: BTreeMap<u32, usize>,
+    snapshots: snapshots::RootSnapshots,
     possible: Vec<usize>,
+    #[cfg(feature = "test-instrumentation")]
+    insertion_order: [usize; 3],
 }
 #[derive(Default)]
 struct RootOrigins {
     patterns: Option<Box<mutable_patterns::PatternRoots>>,
     owners: FxHashMap<Option<CallableId>, RootStates>,
     generation: usize,
+    #[cfg(feature = "test-instrumentation")]
+    predecessor_queries: usize,
 }
 enum Origin {
     Value(ValueExpression),
@@ -51,6 +58,8 @@ pub(in super::super) struct ReceiverBindingOrigins {
     membership_probes: std::cell::Cell<usize>,
     #[cfg(feature = "test-instrumentation")]
     owned_keys: usize,
+    #[cfg(feature = "test-instrumentation")]
+    snapshot_queries: std::cell::Cell<usize>,
 }
 impl ReceiverBindingOrigins {
     #[cfg(feature = "test-instrumentation")]
@@ -61,6 +70,28 @@ impl ReceiverBindingOrigins {
         facts.receiver_only_pending_spills = self.spills.get();
         facts.receiver_only_membership_probes = self.membership_probes.get();
         facts.receiver_only_owned_keys = self.owned_keys;
+        facts.receiver_only_snapshot_queries = self.snapshot_queries.get();
+        for states in self
+            .roots
+            .values()
+            .flat_map(|names| names.values())
+            .flat_map(|root| root.owners.values())
+        {
+            facts.receiver_only_snapshot_tree_buffers += states.snapshots.tree_buffer();
+            for (total, count) in facts
+                .receiver_only_insertion_order
+                .iter_mut()
+                .zip(states.insertion_order)
+            {
+                *total += count;
+            }
+        }
+        facts.receiver_only_predecessor_queries = self
+            .roots
+            .values()
+            .flat_map(|names| names.values())
+            .map(|root| root.predecessor_queries)
+            .sum();
     }
     pub(super) fn watermark(&self) -> usize {
         self.arena.len()
@@ -88,7 +119,11 @@ impl ReceiverBindingOrigins {
         let selected = root
             .owners
             .get(&read.1)
-            .and_then(|states| states.snapshots.range(..=read.0).next_back())
+            .and_then(|states| {
+                #[cfg(feature = "test-instrumentation")]
+                self.snapshot_queries.set(self.snapshot_queries.get() + 1);
+                states.snapshots.at(read.0)
+            })
             .map(|(_, id)| *id);
         Some(RootVersion {
             context: read.1,
@@ -106,6 +141,7 @@ impl ReceiverBindingOrigins {
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
         output: &mut impl Extend<nested::ReceiverWrite<R>>,
         foreign_before: usize,
+        version: RootVersion,
     ) {
         let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {
             return;
@@ -116,8 +152,8 @@ impl ReceiverBindingOrigins {
             .patterns
             .as_ref()
             .and_then(|patterns| patterns.selected(root_read));
-        if let Some(selected) = phase_selected {
-            pending.extend(selected.map(|id| (id, false)));
+        if phase_selected.is_some() {
+            pending.extend(version.selected.map(|id| (id, false)));
         }
         for (owner, states) in &root.owners {
             if root_read.1 != *owner {
@@ -126,13 +162,7 @@ impl ReceiverBindingOrigins {
                 let end = states.possible.partition_point(|id| *id < foreign_before);
                 pending.extend(states.possible[..end].iter().map(|id| (*id, true)));
             } else if phase_selected.is_none() {
-                pending.extend(
-                    states
-                        .snapshots
-                        .range(..=root_read.0)
-                        .next_back()
-                        .map(|(_, id)| (*id, false)),
-                );
+                pending.extend(version.selected.map(|id| (id, false)));
             }
         }
         // Arena links share alternatives without recursive traversal or drop.

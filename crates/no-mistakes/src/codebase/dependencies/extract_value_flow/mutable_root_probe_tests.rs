@@ -18,7 +18,9 @@ fn existing_root_records_allocate_only_the_initial_owned_key() {
     let source = mutable_receiver_source("mutable-root-scale.mts");
     let facts = flow(&source);
     assert_eq!(facts.receiver_only_origins, 129);
+    assert_eq!(facts.receiver_only_snapshot_tree_buffers, 0);
     assert_eq!(facts.receiver_only_owned_keys, 1);
+    assert_eq!(facts.receiver_only_predecessor_queries, 0);
     assert!(
         facts.receiver_mutations.as_ref().unwrap()[&0]["client"].assignment_invalidated(
             &["get"],
@@ -39,6 +41,7 @@ fn captured_versions_bound_repeated_membership_probes() {
         facts.receiver_only_membership_probes
     );
     assert_eq!(facts.receiver_only_lookups, 128);
+    assert_eq!(facts.receiver_only_snapshot_queries, 128);
 }
 #[test]
 fn reused_versions_preserve_deferred_conditional_and_foreign_roots() {
@@ -52,6 +55,9 @@ fn reused_versions_preserve_deferred_conditional_and_foreign_roots() {
         let facts = flow(&source);
         assert!(facts.receiver_only_membership_probes > 0, "{name}");
         assert!(facts.receiver_only_owned_keys > 0, "{name}");
+        if name == "mutable-let-conditional-root.mts" {
+            assert!(facts.receiver_only_predecessor_queries > 0);
+        }
         assert!(
             facts.receiver_only_owned_keys <= facts.receiver_only_origins,
             "{name}"
@@ -97,4 +103,28 @@ fn ordinary_aliases_keep_the_root_index_cold() {
             false
         )
     );
+}
+
+#[test]
+fn saved_root_snapshot_insertion_orders() {
+    for name in [
+        "mutable-root-scale.mts",
+        "mutable-let-pattern-lhs.mts",
+        "mutable-let-pattern-static-rebind.mts",
+        "mutable-let-conditional-root.mts",
+        "mutable-let-foreign-root.mts",
+        "mutable-pattern-phase-scale.mts",
+        "mutable-pattern-eager-class-scale.mts",
+        "mutable-pattern-cold-class-scale.mts",
+    ] {
+        let facts = flow(&mutable_receiver_source(name));
+        println!(
+            "SNAPSHOT_ORDER {name} {:?}",
+            facts.receiver_only_insertion_order
+        );
+        assert!(facts.receiver_only_insertion_order.iter().sum::<usize>() > 0);
+        if name == "mutable-root-scale.mts" {
+            assert_eq!(facts.receiver_only_insertion_order, [129, 0, 0]);
+        }
+    }
 }
