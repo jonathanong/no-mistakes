@@ -13,7 +13,11 @@ pub(super) struct MutationMetadata {
 }
 
 impl ImportCollector {
-    pub(super) fn receiver_mutation_metadata(&self, offset: u32) -> MutationMetadata {
+    pub(super) fn receiver_mutation_metadata(&mut self, offset: u32) -> MutationMetadata {
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.reference_metadata_captures += 1;
+        }
         MutationMetadata {
             offset,
             context: self.current_function_id(),

@@ -26,6 +26,10 @@ impl ImportCollector {
             pending.pop()
         {
             if exiting {
+                if root_read.read().is_none() {
+                    traversal.exit_ordinary(&key);
+                    continue;
+                }
                 if root_read.read().is_some() && traversal.exit_single_version(&key) {
                     continue;
                 }
@@ -77,9 +81,12 @@ impl ImportCollector {
             {
                 self.value_flow.reference_successor_bookkeeping += 1;
             }
-            let Some(reads) = traversal.enter(&key, &path, reads, version) else {
-                continue;
+            let entered = if root_read.read().is_none() {
+                traversal.enter_ordinary(&key, &path, reads)
+            } else {
+                traversal.enter(&key, &path, reads, version)
             };
+            let Some(reads) = entered else { continue };
             #[cfg(feature = "test-instrumentation")]
             {
                 self.value_flow.reference_path_visits += 1;
@@ -185,6 +192,7 @@ impl ImportCollector {
         }
         #[cfg(feature = "test-instrumentation")]
         {
+            self.value_flow.reference_version_dispatches += traversal.version_dispatches;
             self.value_flow.reference_version_table_capacity += traversal.version_table_capacity();
             self.value_flow.reference_binding_visits += binding_visits;
             self.value_flow.reference_pending_capacity += pending.capacity();

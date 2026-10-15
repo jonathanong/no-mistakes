@@ -6,6 +6,22 @@ struct TraversalState {
     active: FxHashSet<(usize, String)>,
     visited: Paths,
 }
+impl TraversalState {
+    fn enter(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: Vec<nested::ReceiverRead>,
+    ) -> Option<Vec<nested::ReceiverRead>> {
+        if self.active.contains(key) {
+            return None;
+        }
+        let reads = merge_reads(&mut self.visited, key, path, reads)?;
+        self.active.insert(key.clone());
+        Some(reads)
+    }
+}
+
 struct MutableTraversal {
     first: (mutable_origins::RootVersion, TraversalState),
     other: FxHashMap<mutable_origins::RootVersion, TraversalState>,
@@ -29,9 +45,23 @@ impl MutableTraversal {
 #[derive(Default)]
 pub(super) struct ReceiverTraversal {
     ordinary: TraversalState,
-    mutable: Option<Box<MutableTraversal>>,
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) version_dispatches: usize,
+    mutable: Option<MutableTraversal>,
 }
 impl ReceiverTraversal {
+    pub(super) fn enter_ordinary(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: Vec<nested::ReceiverRead>,
+    ) -> Option<Vec<nested::ReceiverRead>> {
+        self.ordinary.enter(key, path, reads)
+    }
+    pub(super) fn exit_ordinary(&mut self, key: &(usize, String)) {
+        self.ordinary.active.remove(key);
+    }
+
     /// An exit belongs to its sole active version; ambiguous states still
     /// resolve the original source coordinate before removing their key.
     pub(super) fn exit_single_version(&mut self, key: &(usize, String)) -> bool {
@@ -57,30 +87,31 @@ impl ReceiverTraversal {
         reads: Vec<nested::ReceiverRead>,
         version: Option<mutable_origins::RootVersion>,
     ) -> Option<Vec<nested::ReceiverRead>> {
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.version_dispatches += 1;
+        }
         let state = match version {
             Some(version) => self
                 .mutable
-                .get_or_insert_with(|| {
-                    Box::new(MutableTraversal {
-                        first: (version, TraversalState::default()),
-                        other: fx_map(),
-                    })
+                .get_or_insert_with(|| MutableTraversal {
+                    first: (version, TraversalState::default()),
+                    other: fx_map(),
                 })
                 .state(version),
             None => &mut self.ordinary,
         };
-        if state.active.contains(key) {
-            return None;
-        }
-        let reads = merge_reads(&mut state.visited, key, path, reads)?;
-        state.active.insert(key.clone());
-        Some(reads)
+        state.enter(key, path, reads)
     }
     pub(super) fn exit(
         &mut self,
         key: &(usize, String),
         version: Option<mutable_origins::RootVersion>,
     ) {
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.version_dispatches += 1;
+        }
         let state = match version {
             Some(version) => self
                 .mutable
