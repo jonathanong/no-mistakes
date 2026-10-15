@@ -145,21 +145,6 @@ fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
         ("alias-inline-snapshot", 1),
         ("alias-inline-snapshot-owned", 1),
         ("inline-snapshot-owned", 1),
-        ("default-snapshot-owned", 1),
-        ("default-object-snapshot-owned", 1),
-        ("default-wrapped-snapshot-owned", 1),
-        ("default-restored-snapshot-owned", 1),
-        ("default-deferred-arrow", 0),
-        ("default-deferred-function", 0),
-        ("default-deferred-method", 0),
-        ("default-deferred-field", 0),
-        ("default-deferred-accessor", 0),
-        ("default-deferred-nested", 0),
-        ("default-snapshot-write-first", 0),
-        ("default-live-receiver", 0),
-        ("default-snapshot-async", 0),
-        ("default-snapshot-captured", 1),
-        ("default-receiver-captured", 0),
         ("inline-snapshot-owned-write-first", 0),
         ("inline-snapshot-repeated-for", 0),
         ("inline-snapshot-repeated-header", 0),
@@ -208,3 +193,5 @@ fn effects_json_retains_cross_file_inline_receiver_timing() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+include!("tests_default_export_once.rs");

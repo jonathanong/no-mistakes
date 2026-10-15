@@ -105,7 +105,8 @@ also keeps its original target when that same body writes the member afterward.
 This includes an IIFE constructing `export default`, directly or as an object
 member: synthetic export ownership does not defer module evaluation. Exported
 functions, methods, nested closures, class fields, and accessors keep their
-deferred or repeated execution guards.
+deferred or repeated execution guards. Computed keys evaluate in their
+enclosing context; computed methods and their default parameters remain deferred.
 Calls inside loops, repeatable functions, and instance initializers remain
 unresolved when a later execution could copy a replacement.
 Captured receivers and suspended helpers remain conservative. Nested propagation without

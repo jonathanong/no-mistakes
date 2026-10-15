@@ -12,6 +12,8 @@ pub(super) fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
 ) {
+    // Computed callable syntax may traverse a body without an ownership frame.
+    collector.runtime_callable_depth += 1;
     collector.record_callable_result_kind(function.r#async, function.generator);
     // Default parameters run in the parameter environment, before the body
     // lexical environment exists. Visit them before introducing body bindings.
@@ -25,12 +27,14 @@ pub(super) fn walk_function_with_body_bindings<'a>(
         predeclare_function_declarations(collector, &body.statements);
         walk::walk_function_body(collector, body);
     }
+    collector.runtime_callable_depth -= 1;
 }
 
 pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
+    collector.runtime_callable_depth += 1;
     collector.record_callable_result_kind(arrow.r#async, false);
     // Default parameters run before the body lexical environment exists.
     visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
@@ -51,6 +55,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
         }
         collector.visit_expression(expression);
     }
+    collector.runtime_callable_depth -= 1;
 }
 
 pub(super) fn predeclare_hoisted_var_bindings<'a>(
