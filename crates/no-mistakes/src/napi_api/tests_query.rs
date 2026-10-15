@@ -143,8 +143,17 @@ fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
         ("alias-snapshot", 1),
         ("alias-inline-live", 0),
         ("alias-inline-snapshot", 1),
-        ("alias-inline-snapshot-owned", 0),
-        ("inline-snapshot-owned", 0),
+        ("alias-inline-snapshot-owned", 1),
+        ("inline-snapshot-owned", 1),
+        ("inline-snapshot-owned-write-first", 0),
+        ("inline-snapshot-repeated-for", 0),
+        ("inline-snapshot-repeated-header", 0),
+        ("inline-snapshot-repeated-function", 0),
+        ("inline-snapshot-repeated-while", 0),
+        ("inline-snapshot-repeated-do", 0),
+        ("inline-snapshot-repeated-field", 0),
+        ("inline-snapshot-repeated-nested-field", 0),
+        ("inline-snapshot-repeated-accessor", 0),
         ("alias-captured", 0),
         ("alias-async", 0),
     ] {
@@ -184,3 +193,5 @@ fn effects_json_retains_cross_file_inline_receiver_timing() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+include!("tests_loop_setup.rs");

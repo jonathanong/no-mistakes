@@ -136,13 +136,22 @@ fn collect_call_edges_for_core(
         value_flow::prepare_constructor_routes(&mut pass);
         refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass);
         if plan.effect_selectors {
-            value_flow::resolve_value_exports(edge_inputs, facts, resolver, &indexes, &pass, callable_export_resolutions);
+            value_flow::resolve_value_exports(
+                edge_inputs,
+                facts,
+                resolver,
+                &indexes,
+                &pass,
+                callable_export_resolutions,
+            );
         }
     }
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_parameters(pass.parameter_cache.computations());
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_origins(pass.parameter_cache.origin_nodes());
+    #[cfg(feature = "test-instrumentation")]
+    value_flow_metrics::record_execution_steps(pass.parameter_cache.execution_steps());
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_dependency_links(pass.parameter_cache.dependency_links());
     if namespaces_in_repo {

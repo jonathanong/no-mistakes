@@ -25,6 +25,7 @@ impl ImportCollector {
         &mut self,
         key: &(usize, String),
         path: &[Option<String>],
+        reads: &[nested::ReceiverRead],
         assigned: Option<(Option<String>, u32)>,
         offset: u32,
         propagated: bool,
@@ -36,6 +37,24 @@ impl ImportCollector {
             .receiver_conditional_region
             .filter(|(_, admitted)| *admitted == offset && self.receiver_replacement_is_fresh)
             .map(|(token, _)| token.get());
+        let capture_allowed = !self.fresh_receiver_effects.rebound(key.0, &key.1);
+        let captured = assigned.as_ref().and_then(|(_, completed_at)| {
+            (capture_allowed
+                && self.receiver_replacement_is_fresh
+                && (unconditional || region.is_some())
+                && self.prior_member_mutations.requires_proof(key.0, &key.1))
+            .then(|| identity_metadata::FreshCapture {
+                origin: Some((offset, context)),
+                epoch: self.fresh_receiver_effects.epoch,
+                reads: self.fresh_receiver_effects.capture(reads),
+                phase: self
+                    .fresh_receiver_effects
+                    .phases
+                    .as_ref()
+                    .and_then(|phases| phases.capture_phase(self.assignment_target_start)),
+                completed_at: *completed_at,
+            })
+        });
         let (history, proof) = self.prior_member_mutations.history_mut(key);
         // Projected default reads retain guards for writes without an exact leaf.
         history.has_unassigned |= assigned.is_none();
@@ -55,10 +74,14 @@ impl ImportCollector {
                 propagated,
                 proof.then_some(self.receiver_replacement_is_fresh),
                 region,
+                captured,
             );
         }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {
+        #[cfg(feature = "test-instrumentation")]
+        self.fresh_receiver_effects
+            .record_counts(&mut self.value_flow);
         let Some(index) = self.parameter_default_origins.take() else {
             return;
         };

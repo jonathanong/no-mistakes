@@ -27,6 +27,9 @@ impl ImportCollector {
         {
             self.receiver_conditional_region = None;
         }
+        if !member && self.prior_member_mutations.requires_proof(scope, base) {
+            self.fresh_receiver_effects.rebind(scope, base);
+        }
         let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
         affected.entry(scope).or_default().insert(base.to_string());
         if member && self.collect_value_flow {
@@ -49,7 +52,8 @@ impl ImportCollector {
             };
             let mut assigned = parts.pop().map(|member| (member, completed_at));
             let has_assignment = assigned.is_some();
-            let reads = vec![Some((offset, self.current_function_id())); parts.len()];
+            let acquired_at = self.receiver_acquisition_offset(offset);
+            let reads = vec![Some((acquired_at, self.current_function_id())); parts.len()];
             let mut pending = vec![(
                 (((scope, base.to_string()), parts), reads),
                 false,
@@ -67,7 +71,7 @@ impl ImportCollector {
                     let exact = assigned.take().or_else(|| {
                         has_assignment.then(|| (assigned_member.map(str::to_string), completed_at))
                     });
-                    self.remember_member_mutation(&key, &path, exact, offset, propagated);
+                    self.remember_member_mutation(&key, &path, &reads, exact, offset, propagated);
                 }
                 // A cycle must not mark an unpropagated weaker summary visited.
                 if active.contains(&key) {

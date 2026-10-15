@@ -1,0 +1,95 @@
+{
+  "cases": [
+    {
+      "demand": "values",
+      "stdout_bytes": [
+        49,
+        50,
+        56,
+        10
+      ],
+      "stderr_bytes": [],
+      "expected_signature": "128",
+      "expected_stdout_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "private_stdout": false,
+      "private_stderr": false
+    },
+    {
+      "demand": "imports",
+      "stdout_bytes": [
+        48,
+        10
+      ],
+      "stderr_bytes": [],
+      "expected_signature": "0",
+      "expected_stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "private_stdout": false,
+      "private_stderr": false
+    },
+    {
+      "demand": "values",
+      "stdout_bytes": [
+        49,
+        50,
+        56,
+        10,
+        101,
+        120,
+        116,
+        114,
+        97,
+        32,
+        117,
+        110,
+        112,
+        117,
+        98,
+        108,
+        105,
+        115,
+        104,
+        101,
+        100,
+        32,
+        100,
+        101,
+        116,
+        97,
+        105,
+        108
+      ],
+      "stderr_bytes": [
+        112,
+        114,
+        105,
+        118,
+        97,
+        116,
+        101,
+        32,
+        101,
+        114,
+        114,
+        111,
+        114
+      ],
+      "expected_signature": "mismatch",
+      "expected_stdout_sha256": "454808c8ac619d4caa2316d0f476e0f23d9779d5eb8a5c9f0770f9885cc82797",
+      "private_stdout": true,
+      "private_stderr": true
+    },
+    {
+      "demand": "imports",
+      "stdout_bytes": [
+        255,
+        0,
+        128
+      ],
+      "stderr_bytes": [],
+      "expected_signature": "mismatch",
+      "expected_stdout_sha256": "ef192b7af54e943f206ab27075ec1805384c972c9959fc5820f1fa7d5268fcef",
+      "private_stdout": true,
+      "private_stderr": false
+    }
+  ]
+}

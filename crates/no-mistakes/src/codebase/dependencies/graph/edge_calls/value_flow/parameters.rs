@@ -39,6 +39,7 @@ impl ValueFlowResolution<'_, '_> {
                     default_origins: None,
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
+                    executing_read: None,
                     member_read: None,
                 };
                 flow.visiting
@@ -127,13 +128,10 @@ impl ValueFlowResolution<'_, '_> {
             }
             self.default_origins = None;
             let previous_read = self.invocation_read.clone();
-            if super::inline_inputs::inline_callee(&call.callee) {
-                self.invocation_read = Some(default_origins::InvocationRead {
-                    file: caller.clone(),
-                    offset: call.offset,
-                    context: call.context,
-                    owner: (path.to_path_buf(), parameter.owner),
-                });
+            let previous_execution = self.executing_read;
+            self.enter_inline_read(&caller, call, path, parameter.owner);
+            if synchronous {
+                self.enter_parameter_read(&caller, call, path, parameter.owner);
             }
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
@@ -182,6 +180,7 @@ impl ValueFlowResolution<'_, '_> {
                 from_default.then_some((path, parameter.owner, true)),
             );
             self.invocation_read = previous_read;
+            self.executing_read = previous_execution;
             default_origins::merge(&mut origins, self.default_origins.take(), self.cache);
         }
         if values.is_empty() {

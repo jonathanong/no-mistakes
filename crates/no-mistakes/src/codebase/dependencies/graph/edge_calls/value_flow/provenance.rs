@@ -59,7 +59,9 @@ impl ValueFlowResolution<'_, '_> {
             // Barrels bind the exported root; the remaining namespace path stays intact.
             let (root, member) = export
                 .split_once('.')
-                .map_or((export.as_str(), None), |(root, member)| (root, Some(member)));
+                .map_or((export.as_str(), None), |(root, member)| {
+                    (root, Some(member))
+                });
             let Some(binding) = facts
                 .value_flow
                 .type_exports

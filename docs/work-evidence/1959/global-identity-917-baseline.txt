@@ -1,0 +1,124 @@
+Frozen 917-equivalent production graph baseline.
+Output paths are relative to the saved fixture root; output lines below are unmodified.
+Source input hashes identify the exact saved files probed.
+Raw output SHA-256: db929df5534023cab2e08ad405a5862cdd2aa2825fcd189915f426556bbad6fc
+
+Inputs:
+3ced336e58d35e0726a2f5c92fd837aa4229c24ecf119cf425bd4ca75baeb027  src/nested-receiver-containers/global-ancestor-rhs.mts
+d8a66453ba4c3b3ee3607758b47004e682e6d8644205ab1ed4c9c621bcd301f6  src/nested-receiver-containers/global-ancestor-between.mts
+88b72d50f576c967da2761d0e0022ce4fe42e4b86c0c2e9d93a9096218be9602  src/nested-receiver-containers/global-ancestor-logical.mts
+c255094e8d1edabcae43b3fe281e31723077518e1cf670e9bf72d5cc0b3a2c80  src/nested-receiver-containers/global-unrelated-rhs.mts
+268ee0543723295de233f11f9a33e9cfb2f951e19cbdad3d17fadc79f8e8b37a  src/nested-receiver-containers/global-sibling-rhs.mts
+2326c928e4b6eec593f55c4d5602376e05f7eaaf759b0cce59125ac13ca5a6db  src/nested-receiver-containers/global-saved-old-wrapper.mts
+8fc9eab9e5372c262ab7dec9d6781c8ba552a33af867d4a418c766ba5b573754  src/nested-receiver-containers/global-saved-before-fresh.mts
+2f8fe9a2757b84333e9f8dd8b1cbe35bc5a34269f78c492a0a34a9e4e9dce52a  src/nested-receiver-containers/global-direct-alias.mts
+55bc8b2a05bbccf4504bf6c170eb6500ffcc629fe29cedec5601a94a7a4f1d9e  src/nested-receiver-containers/global-dynamic-ancestor.mts
+d09b3dd120aeabb1e2686c4fdea8b31c42894c4688750bc912d46e4cd21567d1  src/nested-receiver-containers/global-nested-fresh.mts
+5e128a691a4384a4b929ce95d6e91399dd92fca91d0849d436ad5f1331a64a4d  src/nested-receiver-containers/global-immediate-call.mts
+509ebaccd431eff21e48aa4cf0935d87835062f41471c5ac3b303e08bfed9b1d  src/nested-receiver-containers/global-unknown-call.mts
+cbafe44914f45ad61a2c32700bca0b595dca2e866386b011018ed174041776e8  src/nested-receiver-containers/global-deferred-own.mts
+852681bfbc368083dd6cb044b3d9839e2c1b7ecf9d3ab5fd691229eb7e7e8fb5  src/nested-receiver-containers/global-instance-own.mts
+ea80939851e47720c9b0082aaa4bf05c8c552ea2c900b4e4dac21f7efd79562f  src/nested-receiver-containers/global-static-call.mts
+3a20aa188e7c894d7ea1d244a318dbc8c4a1ab087793e29351861058b0b3136d  src/nested-receiver-containers/global-computed-call.mts
+37a6745ddb55683f37e96574013a81246dbd7f2c6d099c0d651b5035bc32e4c2  src/nested-receiver-containers/global-sibling-after.mts
+80e37382da6fb420f32082da763ba3c9f60e44bc1d44f1b8282af77109e6d982  src/nested-receiver-containers/global-saved-after-fresh.mts
+dbef00b6edc5960339a7083333af9686707a4542d80d4a04ae43d59479bca5ac  src/nested-receiver-containers/global-saved-client.mts
+76157904e9c213ef884625736a5f14c907c2fa02d10f94490515c189006f0908  src/nested-receiver-containers/global-copied-method.mts
+7e0a6674194b166e9c8681a823985e45f672f8a2eae5fbf2bac7bd55928e7beb  src/nested-receiver-containers/global-phase-before.mts
+0987f621dc06494d402faf6f69a7f36d449211c93f55c8d19ba268ca6184f301  src/nested-receiver-containers/global-phase-after.mts
+e2b8b025c36a5cc1ba665f77bd8197e46dedee6867de98cd5fcdd5b1118ab844  src/nested-receiver-containers/global-computed-rhs-call.mts
+71c6944938cdbf1c719bc7c346f9c65354804ed0503c8bab978fc833cd0d6148  src/nested-receiver-containers/global-phase-rhs-first.mts
+5353ad117e89accc36df021d2dfd1bbcb53e3ea63c1adbc9da531dbc1ea3a524  src/nested-receiver-containers/global-phase-rhs-call.mts
+cac4f85bdd3bdeec42c87ec3473127ed95d20d790e7d74cf226b73fe02bd323f  src/nested-receiver-containers/global-phase-rhs-getter.mts
+e4a10fd38d0661011cec8b51626a8fa59eb834ab2d19f5758e6b9ecef63a3ba5  src/nested-receiver-containers/global-phase-rhs-spread.mts
+3813a6e7d2706febdaa74704b88006b783255d8c0b86022f98993bd113b40b66  src/nested-receiver-containers/global-phase-before-call.mts
+b05ae2b1a3cddb294175d1adb23d0347b488a68a0e7e12abed861428f4162dce  src/nested-receiver-containers/global-phase-after-call.mts
+a860d2b69455f9c823310bfdbf0c14aff455236da2ce118986c8e62bf271ea74  src/nested-receiver-containers/global-phase-nested-getter.mts
+c0e9a7f4f0036f0421059af4486d9e7cfe330862d335240f3aa04135e854c660  src/nested-receiver-containers/global-phase-preserved-fresh.mts
+b37e0bf6f6c3b4e63d246df6aeca8c272c5ebf7d1ec88448c8597e1dcdea4765  src/nested-receiver-containers/global-phase-descriptor-call.mts
+95d2489810cc48a290fffb1c6dfe5462cba883ac7f1fcb4bb9f019e7d5e93cd2  src/nested-receiver-containers/global-phase-argument-before-call.mts
+
+Raw graph output:
+src/nested-receiver-containers/global-ancestor-rhs.mts|globalAncestorRhs|value.get|primary.get
+src/nested-receiver-containers/global-ancestor-rhs.mts|-|globalAncestorRhs|?
+src/nested-receiver-containers/global-ancestor-between.mts|globalAncestorBetween|value.get|primary.get
+src/nested-receiver-containers/global-ancestor-between.mts|-|globalAncestorBetween|?
+src/nested-receiver-containers/global-ancestor-logical.mts|globalAncestorLogical|value.get|primary.get
+src/nested-receiver-containers/global-ancestor-logical.mts|-|globalAncestorLogical|?
+src/nested-receiver-containers/global-unrelated-rhs.mts|globalUnrelatedRhs|value.get|primary.get
+src/nested-receiver-containers/global-unrelated-rhs.mts|-|globalUnrelatedRhs|?
+src/nested-receiver-containers/global-sibling-rhs.mts|globalSiblingRhs|value.get|primary.get
+src/nested-receiver-containers/global-sibling-rhs.mts|-|globalSiblingRhs|?
+src/nested-receiver-containers/global-saved-old-wrapper.mts|globalSavedOldWrapper|value.get|primary.get
+src/nested-receiver-containers/global-saved-old-wrapper.mts|-|globalSavedOldWrapper|?
+src/nested-receiver-containers/global-saved-before-fresh.mts|globalSavedBeforeFresh|value.get|primary.get
+src/nested-receiver-containers/global-saved-before-fresh.mts|-|globalSavedBeforeFresh|?
+src/nested-receiver-containers/global-direct-alias.mts|globalDirectAlias|value.get|primary.get
+src/nested-receiver-containers/global-direct-alias.mts|-|globalDirectAlias|?
+src/nested-receiver-containers/global-dynamic-ancestor.mts|globalDynamicAncestor|value.get|primary.get
+src/nested-receiver-containers/global-dynamic-ancestor.mts|-|globalDynamicAncestor|?
+src/nested-receiver-containers/global-nested-fresh.mts|globalNestedFresh|value.get|primary.get
+src/nested-receiver-containers/global-nested-fresh.mts|-|globalNestedFresh|?
+src/nested-receiver-containers/global-immediate-call.mts|-|rebind|?
+src/nested-receiver-containers/global-immediate-call.mts|globalImmediateCall|value.get|primary.get
+src/nested-receiver-containers/global-immediate-call.mts|-|globalImmediateCall|?
+src/nested-receiver-containers/global-unknown-call.mts|-|opaque|?
+src/nested-receiver-containers/global-unknown-call.mts|globalUnknownCall|value.get|primary.get
+src/nested-receiver-containers/global-unknown-call.mts|-|globalUnknownCall|?
+src/nested-receiver-containers/global-deferred-own.mts|fn|opaque|?
+src/nested-receiver-containers/global-deferred-own.mts|globalDeferredOwn|value.get|primary.get
+src/nested-receiver-containers/global-deferred-own.mts|-|globalDeferredOwn|?
+src/nested-receiver-containers/global-instance-own.mts|-|opaque|?
+src/nested-receiver-containers/global-instance-own.mts|globalInstanceOwn|value.get|primary.get
+src/nested-receiver-containers/global-instance-own.mts|-|globalInstanceOwn|?
+src/nested-receiver-containers/global-static-call.mts|-|opaque|?
+src/nested-receiver-containers/global-static-call.mts|globalStaticCall|value.get|primary.get
+src/nested-receiver-containers/global-static-call.mts|-|globalStaticCall|?
+src/nested-receiver-containers/global-computed-call.mts|-|opaque|?
+src/nested-receiver-containers/global-computed-call.mts|globalComputedCall|value.get|primary.get
+src/nested-receiver-containers/global-computed-call.mts|-|globalComputedCall|?
+src/nested-receiver-containers/global-sibling-after.mts|globalSiblingAfter|value.get|primary.get
+src/nested-receiver-containers/global-sibling-after.mts|-|globalSiblingAfter|?
+src/nested-receiver-containers/global-saved-after-fresh.mts|globalSavedAfterFresh|value.get|primary.get
+src/nested-receiver-containers/global-saved-after-fresh.mts|-|globalSavedAfterFresh|?
+src/nested-receiver-containers/global-saved-client.mts|globalSavedClient|value.get|primary.get
+src/nested-receiver-containers/global-saved-client.mts|-|globalSavedClient|?
+src/nested-receiver-containers/global-copied-method.mts|-|copied|?
+src/nested-receiver-containers/global-copied-method.mts|globalCopiedMethod|fn|primary.get
+src/nested-receiver-containers/global-copied-method.mts|-|globalCopiedMethod|?
+src/nested-receiver-containers/global-phase-before.mts|globalPhaseBefore|value.get|primary.get
+src/nested-receiver-containers/global-phase-before.mts|-|globalPhaseBefore|?
+src/nested-receiver-containers/global-phase-after.mts|globalPhaseAfter|value.get|primary.get
+src/nested-receiver-containers/global-phase-after.mts|-|globalPhaseAfter|?
+src/nested-receiver-containers/global-computed-rhs-call.mts|-|rebind|?
+src/nested-receiver-containers/global-computed-rhs-call.mts|globalComputedRhsCall|value.get|primary.get
+src/nested-receiver-containers/global-computed-rhs-call.mts|-|globalComputedRhsCall|?
+src/nested-receiver-containers/global-phase-rhs-first.mts|globalPhaseRhsFirst|value.get|primary.get
+src/nested-receiver-containers/global-phase-rhs-first.mts|-|globalPhaseRhsFirst|?
+src/nested-receiver-containers/global-phase-rhs-call.mts|-|restore|?
+src/nested-receiver-containers/global-phase-rhs-call.mts|globalPhaseRhsCall|value.get|primary.get
+src/nested-receiver-containers/global-phase-rhs-call.mts|-|globalPhaseRhsCall|?
+src/nested-receiver-containers/global-phase-rhs-getter.mts|globalPhaseRhsGetter|value.get|primary.get
+src/nested-receiver-containers/global-phase-rhs-getter.mts|-|globalPhaseRhsGetter|?
+src/nested-receiver-containers/global-phase-rhs-spread.mts|-|restore|?
+src/nested-receiver-containers/global-phase-rhs-spread.mts|globalPhaseRhsSpread|value.get|primary.get
+src/nested-receiver-containers/global-phase-rhs-spread.mts|-|globalPhaseRhsSpread|?
+src/nested-receiver-containers/global-phase-before-call.mts|-|restore|?
+src/nested-receiver-containers/global-phase-before-call.mts|globalPhaseBeforeCall|value.get|primary.get
+src/nested-receiver-containers/global-phase-before-call.mts|-|globalPhaseBeforeCall|?
+src/nested-receiver-containers/global-phase-after-call.mts|-|restore|?
+src/nested-receiver-containers/global-phase-after-call.mts|globalPhaseAfterCall|value.get|primary.get
+src/nested-receiver-containers/global-phase-after-call.mts|-|globalPhaseAfterCall|?
+src/nested-receiver-containers/global-phase-nested-getter.mts|-|makeEvil|?
+src/nested-receiver-containers/global-phase-nested-getter.mts|evil|makeEvil|?
+src/nested-receiver-containers/global-phase-nested-getter.mts|globalPhaseNestedGetter|value.get|primary.get
+src/nested-receiver-containers/global-phase-nested-getter.mts|-|globalPhaseNestedGetter|?
+src/nested-receiver-containers/global-phase-preserved-fresh.mts|globalPhasePreservedFresh|value.get|primary.get
+src/nested-receiver-containers/global-phase-preserved-fresh.mts|-|globalPhasePreservedFresh|?
+src/nested-receiver-containers/global-phase-descriptor-call.mts|-|Object.defineProperty|?
+src/nested-receiver-containers/global-phase-descriptor-call.mts|get|boxes.shift|?
+src/nested-receiver-containers/global-phase-descriptor-call.mts|globalPhaseDescriptorCall|value.get|primary.get
+src/nested-receiver-containers/global-phase-descriptor-call.mts|-|globalPhaseDescriptorCall|?
+src/nested-receiver-containers/global-phase-argument-before-call.mts|-|consume|?
+src/nested-receiver-containers/global-phase-argument-before-call.mts|globalPhaseArgumentBeforeCall|value.get|primary.get
+src/nested-receiver-containers/global-phase-argument-before-call.mts|-|globalPhaseArgumentBeforeCall|?

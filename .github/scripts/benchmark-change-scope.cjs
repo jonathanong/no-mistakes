@@ -22,6 +22,7 @@ function affectsEveryBenchmark(path) {
     path === "Cargo.lock" ||
     path === ".github/workflows/ci.yml" ||
     path === ".github/scripts/benchmark-change-scope.cjs" ||
+    path === ".github/scripts/benchmark-handoff.sh" ||
     path === "tests/js/benchmark-change-scope.test.js" ||
     path.startsWith("crates/") ||
     path.startsWith("fixtures/performance/") ||

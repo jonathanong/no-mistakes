@@ -42,6 +42,7 @@ impl ImportCollector {
                     .push(self.value_flow.bindings.len());
                 self.record_value_reference(scope, &name, &value);
                 self.value_flow.bindings.push(ValueBinding {
+                    owner: self.current_function_id(),
                     name,
                     scope,
                     declared_at,
@@ -133,23 +134,10 @@ impl ImportCollector {
             arguments: std::sync::Arc::new(arguments),
             bound,
             spread_at,
+            once: self.current_function_id().is_none()
+                && self.repeat_depth == 0
+                && collect_helpers::direct_arrow(&call.callee),
         });
-    }
-}
-
-impl ImportCollector {
-    fn parameter_type_reference(
-        &self,
-        param: &oxc_ast::ast::FormalParameter<'_>,
-    ) -> Option<String> {
-        let oxc_ast::ast::TSType::TSTypeReference(reference) =
-            &param.type_annotation.as_ref()?.type_annotation
-        else {
-            return None;
-        };
-        let name = type_reference_name(reference)?;
-        let root = name.split('.').next()?;
-        (!self.type_parameter_shadows(root) && !self.type_binding_shadows(root)).then_some(name)
     }
 }
 

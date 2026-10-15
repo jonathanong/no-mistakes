@@ -144,3 +144,7 @@ mod nested_receiver_cutoffs;
 
 #[path = "receiver_evaluation_order.rs"]
 mod receiver_evaluation_order;
+
+#[path = "module_scope_receiver_reads.rs"]
+mod module_scope_receiver_reads;
+mod unique_execution_phases;

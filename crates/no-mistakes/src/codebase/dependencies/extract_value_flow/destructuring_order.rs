@@ -41,6 +41,17 @@ impl EarlyAssignments {
         })
     }
 
+    pub(super) fn identity_uncertain(
+        &self,
+        member: &str,
+        left: u32,
+        right: u32,
+        assignments: &ValueAssignedMutations,
+    ) -> bool {
+        left != right
+            && (self.invalidated(member, &|_| Some(left), assignments)
+                || self.invalidated(member, &|_| Some(right), assignments))
+    }
     fn finish(&mut self) {
         for ranges in self
             .members

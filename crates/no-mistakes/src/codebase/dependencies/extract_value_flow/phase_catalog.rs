@@ -8,7 +8,7 @@ pub(super) struct PhaseCatalog {
     pub(super) segments: Vec<(u32, u32, u32)>,
 }
 impl PhaseCatalog {
-    fn phase(&self, offset: u32) -> Option<u32> {
+    pub(super) fn phase(&self, offset: u32) -> Option<u32> {
         if offset >= self.end {
             return None;
         }

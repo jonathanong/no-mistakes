@@ -2,24 +2,15 @@ use super::*;
 
 pub(super) type DefaultOriginIndex =
     FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
-// None is a dynamic segment; Some("*") is an ordinary literal property.
-pub type ValueMutationPath = Vec<Option<String>>;
 #[path = "extract_value_flow/receiver_histories.rs"]
 mod receiver_histories;
 pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
-pub type ValueReceiverMutations =
-    FxHashMap<usize, FxHashMap<String, std::sync::Arc<mutation_history::ValueMutationHistory>>>;
-pub type ValueDefaultMutations = FxHashMap<usize, Vec<ValueDefaultMutationSource>>;
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValueDefaultMutationSource {
-    pub path: ValueMutationPath,
-    pub history: std::sync::Arc<mutation_history::ValueMutationHistory>,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValueMutationInfo {
-    pub offset: u32,
-    pub contexts: FxHashSet<Option<CallableId>>,
-}
+#[path = "extract_value_flow/mutation_sources.rs"]
+mod mutation_sources;
+pub use mutation_sources::{
+    ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,
+    ValueReceiverMutations,
+};
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
 /// Syntactic value flow retained by the import collector. Resolution uses the
@@ -36,6 +27,28 @@ pub struct ValueFlowFacts {
     pub reference_link_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_path_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_identity_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_capture_nodes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_capture_indexes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_rhs_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_indexes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_nodes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_path_tokens: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_pending_tokens: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_effects: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_queries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_capture_logical_tokens: usize,
     #[cfg(feature = "test-instrumentation")]
     pub receiver_region_breaks: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -79,50 +92,13 @@ pub enum ValueExpression {
     ),
     Unknown,
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValueBinding {
-    pub name: String,
-    pub scope: usize,
-    pub declared_at: u32,
-    pub invalidated_at: Option<u32>,
-    pub mutation_contexts: FxHashSet<Option<CallableId>>,
-    pub value: ValueExpression,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ValueProjection {
-    Member(String),
-    Element(String),
-    Default(ValueExpression, usize),
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValueParameter {
-    pub owner: CallableId,
-    pub index: usize,
-    pub name: String,
-    pub scope: usize,
-    pub default: ValueExpression,
-    pub projection: Vec<ValueProjection>,
-    pub initialization_order: usize,
-    pub default_order: usize,
-    pub default_mutations: Option<std::sync::Arc<ValueDefaultMutations>>,
-    pub invalidated_at: Option<u32>,
-    pub mutation_contexts: FxHashSet<Option<CallableId>>,
-    /// An explicit reference in the annotation namespace, distinct from runtime names.
-    pub type_reference: Option<String>,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValueCall {
-    pub offset: u32,
-    pub end: u32,
-    pub source_callee: String,
-    pub context: Option<CallableId>,
-    pub callee: ValueExpression,
-    pub arguments: std::sync::Arc<Vec<ValueExpression>>,
-    pub bound: bool,
-    pub spread_at: Option<usize>,
-}
+#[path = "extract_value_flow/value_descriptors.rs"]
+mod value_descriptors;
+pub use value_descriptors::{ValueBinding, ValueCall, ValueParameter, ValueProjection};
 #[path = "extract_value_flow/collect.rs"]
 mod collect;
+#[path = "extract_value_flow/collect_helpers.rs"]
+mod collect_helpers;
 
 #[path = "extract_value_flow/expressions.rs"]
 mod expressions;
@@ -185,3 +161,23 @@ mod phase_targets;
 mod phase_walk;
 #[path = "extract_value_flow/receiver_traversal.rs"]
 mod receiver_traversal;
+
+#[path = "extract_value_flow/fresh_receiver_effects.rs"]
+pub(super) mod fresh_receiver_effects;
+#[path = "extract_value_flow/identity_metadata.rs"]
+mod identity_metadata;
+#[path = "extract_value_flow/reference_identity.rs"]
+mod reference_identity;
+
+#[path = "extract_value_flow/capture_reads.rs"]
+mod capture_reads;
+
+#[cfg(test)]
+#[path = "extract_value_flow/receiver_identity_tests.rs"]
+mod receiver_identity_tests;
+
+#[path = "extract_value_flow/active_reference_phases.rs"]
+mod active_reference_phases;
+
+#[path = "extract_value_flow/inert_receiver_rhs.rs"]
+mod inert_receiver_rhs;

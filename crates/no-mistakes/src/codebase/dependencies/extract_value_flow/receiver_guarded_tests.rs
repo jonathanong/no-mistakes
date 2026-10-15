@@ -89,8 +89,8 @@ fn guarded_proof_and_import_histories_use_supported_immutable_bindings() {
             let region = *events.regions.as_ref().unwrap().keys().next().unwrap();
             let path = [Some("client".into())];
             let reads = [Some((offset, None))];
-            assert!(!history.reference_may_be_replaced(&path, &reads, None));
-            assert!(history.reference_may_be_replaced(&path, &reads, Some(region)));
+            assert!(!history.reference_may_be_replaced(&path, &reads, None, None, None));
+            assert!(history.reference_may_be_replaced(&path, &reads, Some(region), None, None));
         }
         #[cfg(feature = "test-instrumentation")]
         if case.starts_with("guarded-ancestor-") {

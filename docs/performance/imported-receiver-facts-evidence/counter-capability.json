@@ -1,0 +1,26 @@
+{
+  "event": "instructions:u",
+  "syscall": "perf_event_open",
+  "syscall_number": 298,
+  "own_child": true,
+  "attr_size": 128,
+  "attr_flags": 4195,
+  "read_format": 3,
+  "kernel_or_host_settings_changed": false,
+  "rayon_workers": 1,
+  "child_cpu_affinity": [
+    0
+  ],
+  "binary": "<WORKSPACE>/performance-1972-evidence/baseline-facts",
+  "binary_sha256": "448bc02da0902614bf2d7815001adba950ace5af71c9d952b6046163b982f934",
+  "fixture": "<WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+  "iterations": 1000,
+  "demand": "values",
+  "available": false,
+  "errno": 2,
+  "error_name": "ENOENT",
+  "error": "No such file or directory",
+  "benchmark_executed": false,
+  "stdout": "",
+  "stderr": ""
+}

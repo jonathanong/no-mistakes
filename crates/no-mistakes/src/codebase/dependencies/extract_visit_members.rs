@@ -88,10 +88,26 @@ fn visit_object_property_with_scope<'a>(
     }
 }
 
-fn visit_receiver_field_initializer<'a>(collector: &mut ImportCollector, is_static: bool, value: &Expression<'a>) {
+fn visit_receiver_field_initializer<'a>(
+    collector: &mut ImportCollector,
+    is_static: bool,
+    value: &Expression<'a>,
+) {
     if is_static {
         collector.visit_expression(value);
     } else {
+        // Deferred fields can run once per instance even with module context.
+        collector.repeat_depth += 1;
+        let active = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
+        let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
+        let epoch = std::mem::replace(
+            &mut collector.fresh_receiver_effects.epoch,
+            u64::from(value.span().start) + 1,
+        );
         with_conditional_receiver_write(collector, |collector| collector.visit_expression(value));
+        collector.fresh_receiver_effects.epoch = epoch;
+        collector.fresh_receiver_effects.active = active;
+        collector.fresh_receiver_effects.descriptor_call = descriptor_call;
+        collector.repeat_depth -= 1;
     }
 }

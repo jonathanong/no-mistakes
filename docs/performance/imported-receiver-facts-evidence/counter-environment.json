@@ -1,0 +1,10 @@
+{
+  "perf_client_present_before_download": false,
+  "perf_event_paranoid_read_only": "2",
+  "event_source_devices_read_only": [
+    "breakpoint",
+    "msr",
+    "software"
+  ],
+  "host_or_kernel_settings_changed": false
+}

@@ -6,6 +6,8 @@ pub(in super::super) struct ReceiverHistories {
     components: Vec<Component>,
     histories: FxHashMap<usize, mutation_history::ValueMutationHistory>,
     proofs: FxHashMap<usize, bool>,
+    generation: usize,
+    reference_proof_demand: bool,
     #[cfg(feature = "test-instrumentation")]
     pub(super) links: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -70,6 +72,8 @@ impl ReceiverHistories {
         if let Some(proof) = proof {
             self.proofs.insert(left, proof);
         }
+        // Saturation poisons active proof indices instead of wrapping their identity.
+        self.generation = self.generation.saturating_add(1);
         self.components[right].parent = left;
         self.components[left].size += self.components[right].size;
         if let Some(history) = self.histories.remove(&right) {
@@ -78,12 +82,30 @@ impl ReceiverHistories {
     }
 
     pub(super) fn require_reference_proof(&mut self, scope: usize, name: &str) {
+        self.reference_proof_demand = true;
         let id = self.intern(scope, name);
         let root = self.root(id);
         let complete = !self.histories.contains_key(&root);
         self.proofs.entry(root).or_insert(complete);
     }
 
+    pub(super) fn component_generation(&self) -> Option<usize> {
+        self.generation.checked_add(1)
+    }
+    pub(super) fn proof_component(&self, scope: usize, name: &str) -> Option<usize> {
+        let root = self.root(*self.names.get(&scope)?.get(name)?);
+        (self.proofs.get(&root) == Some(&true)).then_some(root)
+    }
+    pub(super) fn has_reference_proof_demand(&self) -> bool {
+        self.reference_proof_demand
+    }
+
+    pub(super) fn requires_proof(&self, scope: usize, name: &str) -> bool {
+        self.names
+            .get(&scope)
+            .and_then(|names| names.get(name))
+            .is_some_and(|id| self.proofs.get(&self.root(*id)) == Some(&true))
+    }
     pub(super) fn is_empty(&self) -> bool {
         self.histories.is_empty()
     }

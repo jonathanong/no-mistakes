@@ -1,3 +1,6 @@
+#[path = "extract_binding_names.rs"]
+mod extract_binding_names;
+use extract_binding_names::{assignment_target_names, binding_names};
 fn visit_binding_defaults_for_name<'a>(
     collector: &mut ImportCollector,
     pattern: &BindingPattern<'a>,

@@ -52,6 +52,9 @@ impl ImportCollector {
             return;
         };
         let previous = receipts.scopes.insert(target, scope);
+        if let Some(phases) = &mut self.fresh_receiver_effects.phases {
+            phases.resolve(target, scope, &self.prior_member_mutations);
+        }
         #[cfg(feature = "test-instrumentation")]
         if previous.is_none() {
             self.value_flow.early_assignment_scope_receipts += 1;

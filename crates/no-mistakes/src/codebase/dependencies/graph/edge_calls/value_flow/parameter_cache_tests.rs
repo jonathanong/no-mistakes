@@ -19,15 +19,16 @@ fn independent_type_origins_resolve_without_holding_map_shards() {
             let release = &release;
             let entered = entered.clone();
             scope.spawn(move || {
-                let result = cache.type_origin((format!("{index}.ts").into(), "Type".into()), || {
-                    entered.send(()).unwrap();
-                    let (lock, ready) = release;
-                    let mut released = lock.lock().unwrap();
-                    while !*released {
-                        released = ready.wait(released).unwrap();
-                    }
-                    ("package".into(), format!("Type{index}"))
-                });
+                let result =
+                    cache.type_origin((format!("{index}.ts").into(), "Type".into()), || {
+                        entered.send(()).unwrap();
+                        let (lock, ready) = release;
+                        let mut released = lock.lock().unwrap();
+                        while !*released {
+                            released = ready.wait(released).unwrap();
+                        }
+                        ("package".into(), format!("Type{index}"))
+                    });
                 assert_eq!(result, ("package".into(), format!("Type{index}")));
             });
         }

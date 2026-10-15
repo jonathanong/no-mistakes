@@ -1,0 +1,11 @@
+==457304== Callgrind, a call-graph generating cache profiler
+==457304== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==457304== Using Valgrind-3.24.0 and LibVEX; rerun with -h for copyright info
+==457304== Command: <WORKSPACE>/performance-1972-evidence/baseline-facts <WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts values 1
+==457304== 
+==457304== For interactive control, run 'callgrind_control -h'.
+==457304== 
+==457304== Events    : Ir
+==457304== Collected : 31241713
+==457304== 
+==457304== I   refs:      31,241,713

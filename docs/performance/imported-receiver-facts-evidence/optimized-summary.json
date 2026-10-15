@@ -1,0 +1,507 @@
+{
+  "scope": "Historical optimized 57c927df to 8d81aa1; not current-main measurements",
+  "manifests": {
+    "baseline": {
+      "revision": "57c927df4c09f450f67248277d49070f9576ba3b",
+      "tree": "4deecf0efbb9c9c2478025434e4dbfb0ba2fc47f",
+      "analyzer_tree": "4782db522d9821c49f126f735a8902dcc184808a",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-receiver-baseline/crates/no-mistakes/src/lib.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release/libno_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps/libno_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence/libbaseline.rlib",
+      "sha256": "5c895c3dd890572782ee16432a4cb8deebcdb65a666226a94cb6ebcbed39d858",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "binary_sha256": "448bc02da0902614bf2d7815001adba950ace5af71c9d952b6046163b982f934",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    },
+    "candidate": {
+      "revision": "8d81aa148eb2e62773919a290dd21439a1616f42",
+      "tree": "0a768383587495ce34a587073758dbee0e747604",
+      "analyzer_tree": "e9e30f71cf4efbded15d813953c3629787ab5624",
+      "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file://<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes#0.90.0",
+        "manifest_path": "<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "<WORKSPACE>/no-mistakes-1972-historical/crates/no-mistakes/src/lib.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "<WORKSPACE>/performance-1972-target/release/libno_mistakes.rlib",
+          "<WORKSPACE>/performance-1972-target/release/deps/libno_mistakes-d86b3886736f9e86.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      },
+      "frozen": "<WORKSPACE>/performance-1972-evidence/libcandidate.rlib",
+      "sha256": "53bef3abd88669513bb45c4acbf5669cebd6056925df58ebcf39ceb0a6a70f55",
+      "release_profile": {
+        "lto": true,
+        "codegen_units": 1,
+        "opt_level": 3
+      },
+      "build_command": "cargo build --release --locked -p no-mistakes --lib --message-format=json",
+      "toolchain_recording_correction": "Initial metadata command ran from <WORKSPACE> and reported its default1.96; builds and probe links ran from stable-pinned historical worktree using1.99. ELF .comment in BOTH executables and dedicated Cargo rustc cache independently confirm1.99. Corrected before any sampling; initial metadata preserved separately.",
+      "binary_sha256": "e909fe312d46c398616e2a0f64e4be08e4eba9e99380624d2e6208b5b54489ff",
+      "harness_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "probe_rustc_flags": [
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1"
+      ]
+    }
+  },
+  "rayon_workers": 4,
+  "batch_multiplier": 1,
+  "run_tag": "",
+  "binary_hashes": {
+    "baseline": "448bc02da0902614bf2d7815001adba950ace5af71c9d952b6046163b982f934",
+    "candidate": "e909fe312d46c398616e2a0f64e4be08e4eba9e99380624d2e6208b5b54489ff"
+  },
+  "cases": [
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.4098536269957549,
+        "cpu_s": 0.407894,
+        "rss_kib": 15444.0
+      },
+      "candidate": {
+        "wall_s": 0.4213390025033732,
+        "cpu_s": 0.420313,
+        "rss_kib": 15542.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.5983688444975996,
+        "cpu_s": 0.5959384999999999,
+        "rss_kib": 15248.0
+      },
+      "candidate": {
+        "wall_s": 0.46902571249665925,
+        "cpu_s": 0.47058349999999993,
+        "rss_kib": 15406.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.1959327665026649,
+        "cpu_s": 0.1940835,
+        "rss_kib": 13664.0
+      },
+      "candidate": {
+        "wall_s": 0.18831493549078004,
+        "cpu_s": 0.187089,
+        "rss_kib": 13664.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.16571940349967917,
+        "cpu_s": 0.16483199999999998,
+        "rss_kib": 13664.0
+      },
+      "candidate": {
+        "wall_s": 0.1421682115033036,
+        "cpu_s": 0.1387585,
+        "rss_kib": 13664.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "shared_histories",
+      "demand": "values",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.16586565749457804,
+        "cpu_s": 0.1652015,
+        "rss_kib": 13664.0
+      },
+      "candidate": {
+        "wall_s": 0.16671043299720623,
+        "cpu_s": 0.1649565,
+        "rss_kib": 13810.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "shared_histories",
+      "demand": "imports",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.02051859800121747,
+        "cpu_s": 0.018771999999999997,
+        "rss_kib": 13792.0
+      },
+      "candidate": {
+        "wall_s": 0.01826394999807235,
+        "cpu_s": 0.01688,
+        "rss_kib": 13792.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "jsx",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.02731004100496648,
+        "cpu_s": 0.026333499999999996,
+        "rss_kib": 13792.0
+      },
+      "candidate": {
+        "wall_s": 0.016706333997717593,
+        "cpu_s": 0.015303499999999998,
+        "rss_kib": 13792.0
+      }
+    },
+    {
+      "order": "ABBA",
+      "case": "jsx",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.03610412150010234,
+        "cpu_s": 0.0351215,
+        "rss_kib": 13792.0
+      },
+      "candidate": {
+        "wall_s": 0.018174478500441182,
+        "cpu_s": 0.0179505,
+        "rss_kib": 13792.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.3734284954989562,
+        "cpu_s": 0.37305699999999997,
+        "rss_kib": 15402.0
+      },
+      "candidate": {
+        "wall_s": 0.3618620444976841,
+        "cpu_s": 0.360603,
+        "rss_kib": 15576.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "no_writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+        "bytes": 2454,
+        "lines": 3
+      },
+      "baseline": {
+        "wall_s": 0.5356106639956124,
+        "cpu_s": 0.5359575,
+        "rss_kib": 15292.0
+      },
+      "candidate": {
+        "wall_s": 0.5374041830000351,
+        "cpu_s": 0.5334155,
+        "rss_kib": 15390.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "writes",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.18249333000130719,
+        "cpu_s": 0.1820405,
+        "rss_kib": 13920.0
+      },
+      "candidate": {
+        "wall_s": 0.1767416750008124,
+        "cpu_s": 0.1759,
+        "rss_kib": 13920.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "writes",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+        "bytes": 24398,
+        "lines": 774
+      },
+      "baseline": {
+        "wall_s": 0.206349763997423,
+        "cpu_s": 0.2030725,
+        "rss_kib": 13920.0
+      },
+      "candidate": {
+        "wall_s": 0.15192299499904038,
+        "cpu_s": 0.149587,
+        "rss_kib": 13920.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "shared_histories",
+      "demand": "values",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.13824610249866964,
+        "cpu_s": 0.138486,
+        "rss_kib": 13984.0
+      },
+      "candidate": {
+        "wall_s": 0.11864801800402347,
+        "cpu_s": 0.1183915,
+        "rss_kib": 14048.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "shared_histories",
+      "demand": "imports",
+      "iterations": 1,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+        "bytes": 59584,
+        "lines": 1538
+      },
+      "baseline": {
+        "wall_s": 0.01561126299930038,
+        "cpu_s": 0.012119499999999998,
+        "rss_kib": 14048.0
+      },
+      "candidate": {
+        "wall_s": 0.012263374504982494,
+        "cpu_s": 0.010827,
+        "rss_kib": 14048.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "jsx",
+      "demand": "values",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.022409040495404042,
+        "cpu_s": 0.0216415,
+        "rss_kib": 14048.0
+      },
+      "candidate": {
+        "wall_s": 0.019759029004490003,
+        "cpu_s": 0.01958,
+        "rss_kib": 14048.0
+      }
+    },
+    {
+      "order": "BAAB",
+      "case": "jsx",
+      "demand": "imports",
+      "iterations": 100,
+      "samples_per_binary": 8,
+      "fixture": {
+        "path": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+        "bytes": 9660,
+        "lines": 136
+      },
+      "baseline": {
+        "wall_s": 0.026429866498801857,
+        "cpu_s": 0.0257255,
+        "rss_kib": 14048.0
+      },
+      "candidate": {
+        "wall_s": 0.028149200006737374,
+        "cpu_s": 0.029269499999999997,
+        "rss_kib": 14048.0
+      }
+    }
+  ]
+}

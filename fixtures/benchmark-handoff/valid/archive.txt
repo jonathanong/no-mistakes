@@ -1,0 +1,1 @@
+Saved text stand-in for a packaged benchmark archive; digest tests never extract it.

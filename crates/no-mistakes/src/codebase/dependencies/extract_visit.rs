@@ -125,10 +125,10 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
-        visit_while_statement_per_item(self, statement);
+        with_repeat_execution(self, statement, visit_while_statement_per_item);
     }
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
-        visit_do_while_statement_per_item(self, statement);
+        with_repeat_execution(self, statement, visit_do_while_statement_per_item);
     }
 
     fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) { visit_try_with_receiver_execution(self, statement); }
@@ -197,7 +197,7 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) { self.visit_value_return(statement); }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        visit_call_expression_per_item(self, call);
+        self.visit_receiver_call(call);
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
@@ -205,7 +205,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
-        self.visit_value_tagged(tagged);
+        self.visit_receiver_tagged(tagged);
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {

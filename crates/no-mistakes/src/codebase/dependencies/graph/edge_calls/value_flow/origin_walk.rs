@@ -113,10 +113,10 @@ impl ValueFlowResolution<'_, '_> {
                 origin @ OriginKind::InvocationReceiver { .. } => {
                     if self.invocation_receiver_invalidated(
                         origin,
-                        file,
-                        context,
+                        (file, context),
                         receivers_only,
                         receivers,
+                        (read, &reads),
                         &projection,
                     ) {
                         return true;
@@ -148,10 +148,10 @@ impl ValueFlowResolution<'_, '_> {
     fn invocation_receiver_invalidated(
         &self,
         origin: &OriginKind,
-        file: &std::path::Path,
-        context: Option<CallableId>,
+        query: (&std::path::Path, Option<CallableId>),
         receivers_only: bool,
         receivers: bool,
+        reader: (receiver_reads::ReadId, &receiver_reads::ReceiverReads<'_>),
         projection: &[&str],
     ) -> bool {
         if self.invocation_read.is_some() {
@@ -169,10 +169,18 @@ impl ValueFlowResolution<'_, '_> {
         // file-qualified, while member writes follow the receiver projection.
         read.file != *history_file
             || if receivers_only {
-                receivers
-                    && history.assignment_invalidated(projection, read.offset, read.context, false)
+                receivers && history.assignment_invalidated_reads(projection, &|writer| {
+                        if read.once
+                            && read.owner.0 == *history_file
+                            && writer == Some(read.owner.1)
+                        {
+                            reader.1.offset(reader.0, history_file, writer)
+                        } else {
+                            (writer == read.context).then_some(read.offset)
+                        }
+                })
             } else {
-                read.owner.0 != file || context != Some(read.owner.1)
+                read.owner.0 != query.0 || query.1 != Some(read.owner.1)
             }
     }
 }

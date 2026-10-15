@@ -1,0 +1,934 @@
+{
+  "original_local_commit": "3983956b20f32a937e82e8bd39009bf9b55f6de6",
+  "policy": "Text-only public copy. Internal absolute roots use explicit placeholders. Detailed Cargo artifact/environment records and all full Callgrind profiles (original and normalized) are withheld locally. Original SHA values refer to original stored bytes. Readable summaries, numeric work records and native measurement rows remain public.",
+  "records": [
+    {
+      "path": "docs/performance/imported-receiver-facts.md",
+      "original_sha256": "0f55f0857d8241eddb4d89abf824b055c260c8cf8b9f188f2efe54ca363cd526",
+      "public_sha256": "dcf6d41f3b57db029e905d454e1d3969895ea7157e426612512282ad401f24ef",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/no-writes1000-optimized-raw.json",
+      "original_sha256": "d4e0eefb1a883af557e781245ab2afdcf0c84609e62f6de62296a9b977d919cb",
+      "public_sha256": "d4e0eefb1a883af557e781245ab2afdcf0c84609e62f6de62296a9b977d919cb",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-environment.json",
+      "original_sha256": "89a6afda69ac1b2eb3bcc95ca17e7e0d3dd0a6491cb8d466b29c9873dbb450a6",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-shared100-optimized-raw.json",
+      "original_sha256": "0e915103a27e8be4bb8a5a4b2973cc7ae1cd0bc2e4407725aeb3deb8b0dde674",
+      "public_sha256": "0e915103a27e8be4bb8a5a4b2973cc7ae1cd0bc2e4407725aeb3deb8b0dde674",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/link-probe.sh",
+      "original_sha256": "35cf1f2cba05a7ec63f3418d68fa8b632b49e5a2e29ce85da5a0fa6b5f31d17d",
+      "public_sha256": "9bf6e2139e61561c65856afbc5e2097bc9942b42106af8ec4dab19db02d4b78a",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/measure-four-worker-original.py",
+      "original_sha256": "8399febf22ee5396ab22e313601634c18e6c7d77572ba5057d4ce0637374ec4a",
+      "public_sha256": "4a6983daa25e90456b031b21215f09d1a220694e7f44eafe8e05ed1855712e52",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-serial-cpu0-no-writes1000-optimized-raw.json",
+      "original_sha256": "f10e74d5b08af260f7b42b34f3112fd79ad60d67cccd59c858f7e675b65b6b77",
+      "public_sha256": "f10e74d5b08af260f7b42b34f3112fd79ad60d67cccd59c858f7e675b65b6b77",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/machine.json",
+      "original_sha256": "6423e3a9c4a9a3c8867c83d67342c76953f4bc94c80c4df017b4bd453773b9f1",
+      "public_sha256": "6423e3a9c4a9a3c8867c83d67342c76953f4bc94c80c4df017b4bd453773b9f1",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/optimized-summary.json",
+      "original_sha256": "ce7195975888db89a11a7c177000d1d8b7323118391d9b4616f0e1f81fd47a47",
+      "public_sha256": "964ccd79a6d818f93536453c77ce50e6ccbf7c9c1ba782f7a48021d846e962e6",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/pilot.py",
+      "original_sha256": "2713ff4cf45c5ffc602f454cda9a9846002d4e647446a917e281038586ebac03",
+      "public_sha256": "e4ad1e65d0fd6af9921fc4edcf1e59d942a4aa2a9a13ebd99e46dd04c6ec9b6d",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiler-provenance.json",
+      "original_sha256": "1a93535a5aa399014d6120acbb718d9a78754701fd353b9d3902202c52bbf2b4",
+      "public_sha256": "1a93535a5aa399014d6120acbb718d9a78754701fd353b9d3902202c52bbf2b4",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profile-archive-manifest.json",
+      "original_sha256": "a6c5574fa478cb7edafd0051d0cda8bf971ab8926187903426e626c3dfeccf89",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/quiet-window.json",
+      "original_sha256": "1dcaaf715a2b23435efe437e39ed3b11d273af5260de41aa471720618b091c51",
+      "public_sha256": "1dcaaf715a2b23435efe437e39ed3b11d273af5260de41aa471720618b091c51",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/measure.py",
+      "original_sha256": "78ccae72214435eaf84af99923705306c4a1617d88ce7beb21ceb2a25e4f0a86",
+      "public_sha256": "faf66b90403ee95920c0c6bc8195592e047a78b1bbd2bb5b7f12a22d163010b1",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/facts-probe.rs",
+      "original_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "public_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/paired-uncertainty.json",
+      "original_sha256": "d4300d19f693817e3ea7e97ec2312c300282053d1b6153774ce3ac9a0e3c3ed0",
+      "public_sha256": "d4300d19f693817e3ea7e97ec2312c300282053d1b6153774ce3ac9a0e3c3ed0",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-no-writes1000-optimized-summary.json",
+      "original_sha256": "9b3814a5d45176c666f4cc7a999390078f8bcda8d849d3520784df357cbbf64d",
+      "public_sha256": "37f26ef3ac8a306f44ccc2fb6b2a27710e0cde7013368e89e6de7d1dd111c6b4",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/baseline-manifest.json",
+      "original_sha256": "51b1380c7556ef1eb068bae1c2cf85ed336628e28ea6d9af0732563cbedb37e2",
+      "public_sha256": "3208c4dbaf7c7d37487b21c8dcf23a1a31025317326b2bfa569bb5f1cf89c38e",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/fixtures.json",
+      "original_sha256": "0db160503a77f3264aaea78cb392284b0c26ed0d7fd2f3526373fb6ffa2af787",
+      "public_sha256": "0db160503a77f3264aaea78cb392284b0c26ed0d7fd2f3526373fb6ffa2af787",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/counter-capability.json",
+      "original_sha256": "ac340573c89d23d6038b5063b482d3b1a721aa4817c53dcb3d56e1a756cd30f2",
+      "public_sha256": "b51ca007bb8e89f7ae447d4d0b56a9159436fe3a78c6d3f41daf0d5aa090079e",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/candidate-manifest-initial-cwd-error.json",
+      "original_sha256": "9870ae16adb347ba864654dd1217c3d7c1eed0c7c9bdf1edbb7c978e7ab6568d",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-serial-cpu0-no-writes1000-optimized-summary.json",
+      "original_sha256": "46ea6d4f763d854c29ccd6cde88623aa35678127598da3681dce1ff7c2fcf28b",
+      "public_sha256": "6a5611ada0833e1078dd1270ce89939e0a740056582d5d2e37ee134a9712dbb3",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-candidate-manifest.json",
+      "original_sha256": "523bce90180a2340c803b4d0502392cbd8548a345cb4b13a9ef8d46f790b83d8",
+      "public_sha256": "2a4129ee5d8231204086a36ac6dd0c2beb7a5d96eb598957eb97af0748715d5e",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-no-writes1000-optimized-raw.json",
+      "original_sha256": "5cb385347c5d2fc2390736c2f724aa7ca7d7a53d0de74114c0baeac6dfd13a33",
+      "public_sha256": "5cb385347c5d2fc2390736c2f724aa7ca7d7a53d0de74114c0baeac6dfd13a33",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-baseline-manifest.json",
+      "original_sha256": "fd04392ea0ebbc5550bf3572c586da53cb2c54962e361ef39fec7a4b8d6fb5f2",
+      "public_sha256": "a3c1ae2d2448b890d30a0bbad36bf24eb1288cfb50c885de16a72bfd7ae877c2",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/shared100-optimized-summary.json",
+      "original_sha256": "bf2b4f98d64854fdcfee0d21e1c418e838b4556caf0dec01bd30a4753a6855f5",
+      "public_sha256": "b4f7f7422261a0a31c66fb069e641f9043a06dd287245b0ccb89d7f880cff267",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profile-work.py",
+      "original_sha256": "809e3f9a9bdb5026060f8afc95ef4bd9c838c8297820bf9272c291e5cf5c3909",
+      "public_sha256": "eb2b2b2bb25fadc356019a9530c240405daea800c78955394958212575c98052",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/serial-cpu0-no-writes1000-optimized-raw.json",
+      "original_sha256": "9d6f9a659c852049beb063438ff8afe07f2892ba5b0b71409a0da171bba83fd9",
+      "public_sha256": "9d6f9a659c852049beb063438ff8afe07f2892ba5b0b71409a0da171bba83fd9",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-graph-helper-archives.json",
+      "original_sha256": "6d09569361a2804aa3185d6c0ac559fe5e2bbe2f761dc8753edeab186caf8d5c",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/shared100-optimized-raw.json",
+      "original_sha256": "b89e940e1253f4523389c4633a6c32fd0b6ca9b09e8830a59bdaf1ddbe6e6c31",
+      "public_sha256": "b89e940e1253f4523389c4633a6c32fd0b6ca9b09e8830a59bdaf1ddbe6e6c31",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-shared100-optimized-summary.json",
+      "original_sha256": "d1ec90188fc32ffb54487a789b0f227e25b458ac4926314a8500f137d79ab7f5",
+      "public_sha256": "4865e798ba6d53875e00987d152d8f01e87f9a35cf3d7d88cda0db0dec590ee0",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/counter-environment.json",
+      "original_sha256": "784aeb3d257a43d93712a1e947a0b419edc24af4c4e8d9adb6d5c7a5f1bddb36",
+      "public_sha256": "784aeb3d257a43d93712a1e947a0b419edc24af4c4e8d9adb6d5c7a5f1bddb36",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/candidate-manifest.json",
+      "original_sha256": "eedb0400ba8f89f25d57b0473758e01a2a4f8780862155a3b3b0bd4d8a6c551d",
+      "public_sha256": "0aef25b0f9874119f9381317a719fc5052dfc879eac80a587936b8ff2f3b1241",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/freeze-artifact.py",
+      "original_sha256": "11395d92122ec4349b8e01727138baaff2ef655e40a2d9e456e9c26aa8719719",
+      "public_sha256": "ade722a8b5c623ca508a5e900eae3e9e029cb467e7905290b12acdf315af66e1",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/graph-probe.rs",
+      "original_sha256": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135",
+      "public_sha256": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/serial-cpu0-no-writes1000-optimized-summary.json",
+      "original_sha256": "f24b7b85fd8199e5718ece95e8d5a85d4161e30e986577a2bf37b83a3b8fa6dc",
+      "public_sha256": "37d6f78daf567bdb7d510a42826ca6c469076737a4382e0b7be7eaed371d4b47",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/optimized-raw.json",
+      "original_sha256": "71aa0d38d6b21ee19ad2d24b4a541abe73cb517a01ffcd911823f0e277990f66",
+      "public_sha256": "71aa0d38d6b21ee19ad2d24b4a541abe73cb517a01ffcd911823f0e277990f66",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/cargo-rustc-info.json",
+      "original_sha256": "3b9fd664d252b5dccd52b69a054a9e077cbe9c223f6803d0da20ea2e797f5016",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-baseline-elf-compiler.txt",
+      "original_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/timing-evidence-manifest.json",
+      "original_sha256": "138522e12ba319ab1e785a9957d7846adc92556ac5732b9b3c4913e61c1d51a1",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-report.py",
+      "original_sha256": "55eebc94983c765eae38758b49144ee87534b4fdb518649e96d3db74c3916710",
+      "public_status": "withheld locally; original report-generation helper references withheld records"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/baseline-elf-compiler.txt",
+      "original_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/counter-capability.py",
+      "original_sha256": "c42cd73e65f346995c9a2cc5b2b50e24015abf22633a36acd5d848c2361b0e6f",
+      "public_sha256": "cd3ede79dd5cf753e13a1ac29af7acfca7592535a082908967d1c22ac4f86315",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/complete-evidence-manifest.json",
+      "original_sha256": "214f19d91dc7ad2602416d9f157b992e49d2b9a80355232057be12533f69fd19",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-optimized-summary.json",
+      "original_sha256": "cdac664f91e16da2b2000af4d868bdb2bb985731d68f42379ddae994d21ba003",
+      "public_sha256": "b6dc3173a3c72401d8a8decb94b464b6fa72ef9effa5126d835249bba2959ab7",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/pilot-raw.json",
+      "original_sha256": "ca95905259fa875c93d38bc2c2beb97f4f926a58917cb8eaace7061a85d428e4",
+      "public_sha256": "ca95905259fa875c93d38bc2c2beb97f4f926a58917cb8eaace7061a85d428e4",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/no-writes1000-optimized-summary.json",
+      "original_sha256": "99b00025da0f4cbef67efb9031fcb588c929512a05a9e391e722b40deff52ed9",
+      "public_sha256": "9b015fd35f86f684e4d055c3489e5b7cd755d5d0ea38e689de02104b230c6744",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-optimized-raw.json",
+      "original_sha256": "ca0765ea91363badb1c5092fc316136a1dc3d2c91c114eb51d1d454513f8d90f",
+      "public_sha256": "ca0765ea91363badb1c5092fc316136a1dc3d2c91c114eb51d1d454513f8d90f",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/current-candidate-elf-compiler.txt",
+      "original_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/candidate-elf-compiler.txt",
+      "original_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_sha256": "18c1d381d2c2dbc35c42a46da7d023e67e0389952b7f130abd249649d1f53c64",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/.gitattributes",
+      "original_sha256": "24b53cdf05ad5631bd5dd590bf3c1f1c3b8dd2cb5b21e5bffceb92ac37de27cc",
+      "public_sha256": "24b53cdf05ad5631bd5dd590bf3c1f1c3b8dd2cb5b21e5bffceb92ac37de27cc",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profile-original-work.py",
+      "original_sha256": "2fc1b64834be293c995c3b64427e564492bd67be1c5e3b718aaa473ce22bf7f0",
+      "public_sha256": "d772a4265014aa4ee0a1f525d8cb8631c3d8e9beb79bc37aee6d40481ae2b52d",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-no-writes-recheck-raw.json",
+      "original_sha256": "3226a7c128bbea0301bb3be6da375e8ca568881aa89a9b4e3308c38f8215ba8e",
+      "public_sha256": "3226a7c128bbea0301bb3be6da375e8ca568881aa89a9b4e3308c38f8215ba8e",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-no-writes-recheck.py",
+      "original_sha256": "89207edda2b6dd5769e74a431e94ad633e52316d0fa290fe28c74a6cd7a485c4",
+      "public_sha256": "ce71211efab9cb24569568ac091bc0338d09f065cb430966f46844d93dea1fb1",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/evidence-manifest.json",
+      "original_sha256": "dc827d547cadb80c29a4366a6b262c76f016eeb10f65e579b19c278df01f12c0",
+      "public_sha256": "03caebfb9f1dfd9dfad69f9e22973edc3b23472550dbb3e98a4d77bbac17b7df",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance-final-graph-single-worker-raw.json",
+      "original_sha256": "03629954307527038c9cb1d40a461a79863637f6bc0aa0d6ecf961a31d108e37",
+      "public_sha256": "03629954307527038c9cb1d40a461a79863637f6bc0aa0d6ecf961a31d108e37",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance-final-graph-single-worker-summary.json",
+      "original_sha256": "12a6bdb891f40a9a74a0c73f639b2db145c07261c141146c10b51d50c39a9df5",
+      "public_sha256": "12a6bdb891f40a9a74a0c73f639b2db145c07261c141146c10b51d50c39a9df5",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-candidate-artifacts.json",
+      "original_sha256": "0761b289ba1d78460687850f0b3ef5a693ce383b099d3110e971f43b035b5cb0",
+      "public_sha256": "d5a65cdac1ceb90627aef96f8572d2328a13039e88a55332f59df5931c998ebc",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance.py",
+      "original_sha256": "cb59c9e0adff4d5ab9d698e3516727c8e849bf317bda5020778db6cd80748afe",
+      "public_sha256": "cdaa30ada797344385e70368445c5573415d7b965d5fc9fb56563671e84ef99c",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance-summary.json",
+      "original_sha256": "8f07c15021c1c14d735ccb44d2f24b8e6a1271f69a8791d570986d454ca18080",
+      "public_sha256": "c56534c7d268558ef73ff737441cbe42104084851c0126618d8658114bdece22",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/followups-perf-harness.rs",
+      "original_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "public_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance-raw.json",
+      "original_sha256": "4508f68b774a1fd57336941d752ab2e415049e13bcf86870f15609abc53b1908",
+      "public_sha256": "4508f68b774a1fd57336941d752ab2e415049e13bcf86870f15609abc53b1908",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-no-writes-recheck-summary.json",
+      "original_sha256": "09370fe152f2d5be85f7c272dfc7afb86e32a4b606d38dc2f5123bb235c4d3ee",
+      "public_sha256": "09370fe152f2d5be85f7c272dfc7afb86e32a4b606d38dc2f5123bb235c4d3ee",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-baseline-artifacts.json",
+      "original_sha256": "4198f8f40beb81577c0d9a12b62d736127a83a1188ef3609c24672c684ff47d1",
+      "public_sha256": "22c5414455700e9c051634a65e18aae294485bd5b2ffbfffe57322ee2b8bef9d",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/receiver-performance-final-graph-single-worker.py",
+      "original_sha256": "45e925b8e55bc926b12e0a189caf80e03c606ed1812495e64720e296213b5795",
+      "public_sha256": "940e9519758509a3e49576c5e2b871b5422c852e388691df5757f5e93cfd1e10",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/historical-unoptimized/followups-graph-perf.rs",
+      "original_sha256": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135",
+      "public_sha256": "cbd1314b8a99fa6b3f9b264393fe94e69d9d65ff301063d5250f1bb9a34b3135",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-candidate-link.log",
+      "original_sha256": "92ab016faef0714f74e1d9a2c3bb5d18bb3d9337c434a978fc290135f4bcad6d",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-current-candidate-link.log",
+      "original_sha256": "bbf3bf48b643f01b5b6650ad157b977eafc716d807f2b4fa887dbb2e9b6335f4",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-current-baseline-link.log",
+      "original_sha256": "a78e69e36f342cfa8b7e9f693ba48f1220f29cc26ee0caa9fe795e7f745d390b",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-current-candidate-build.log",
+      "original_sha256": "14488fd641c17e57521e2dfdf0458e9723c6d2c8b246264e8c9926c796b2f377",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-candidate-build.jsonl",
+      "original_sha256": "74b5d3b13784fdb92063e166bbea1a76b6b1b32e56db28753919bae959234ba0",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-baseline-build.log",
+      "original_sha256": "e304845f7968cdf831bf5a8b34ceb6c757f20efa22a1d2c88cfdf9b550f84288",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-candidate-build.log",
+      "original_sha256": "56bfacad8fd0887d74defa4ce78c93c6c1ee56a8676aad28c9ed47618444a693",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-current-baseline-build.log",
+      "original_sha256": "c6507d7e931457209044b082da8dfa9215b1b2ca35e24b817555ee1f64e9b829",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-current-baseline-build.jsonl",
+      "original_sha256": "94bd1da4e2c73bc4662785a7d5d8149f7e2bb7ec6a1e583387d1fe7c706b2dae",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-baseline-link.log",
+      "original_sha256": "d33f073fb27c6b823adb4ce92db171005e617c85c342458c6c8a511a79750850",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-current-candidate-build.jsonl",
+      "original_sha256": "ed1596a7d66e0e16551dad14c9000a865c818c994e04a5a8aff2a1f82cac6c34",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/build-records/performance-1972-baseline-build.jsonl",
+      "original_sha256": "d9c37f7dbada6c8549f0fcda5c08d955b9a6445570f011b590e14b0105a2213d",
+      "public_status": "withheld locally; detailed build/environment record or superseded raw manifest"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/work-raw.json",
+      "original_sha256": "b8bf501f986751a290ea02fce7a813cc6cc2927a62b9bdacc775aa9577e49503",
+      "public_sha256": "ea30d3d524cbf5a9a3406d0c0040787a1b47ff2c8ce4a5912a728093af4013e1",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-2-candidate-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-1-candidate-collect10.callgrind.gz",
+      "original_sha256": "d3e88e1f77385642bd62992fc7858eb23f4c27739523cf635a5ac5078a9bc907",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "6570a1035fbf9b9b356b85804abea86ea2b3879556b587bdd94f1cd26f2b070d"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-3-baseline-collect10.stderr",
+      "original_sha256": "7113019546c35897466d8184befe4775cfe5e7857c7a35887d96fdd28cf5e359",
+      "public_sha256": "96b8a1f914fcc0bfc05282c6e3e06b2558af7ff8830753aa079a28c7d3e5cabe",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-1-candidate-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/smoke-baseline-values1.stderr",
+      "original_sha256": "091785b0562047c4430d7dcf60c1d4cc0e0eaf8db63c8f4f1cf55449dfe05afb",
+      "public_sha256": "fcc4dd2c9f8c56947698228b19e07891fbc305870e093292cd03c8746b035ea7",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-2-candidate-collect10.stderr",
+      "original_sha256": "c6d067156bc8090cac72ec1256ee75cd0a3912ffbb941258eddcc3a264179311",
+      "public_sha256": "451ed7cff479e49065b3209411b3936c339259574fdff99487b45f695d7a4d3b",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/smoke-baseline-values1.annotated.txt",
+      "original_sha256": "35bfa2c5d6024d419e33ee6dfd8f0f41306957fa437f17c21d56ba353dacdb89",
+      "public_sha256": "c045d6129ecf1cfb9d0f655bcff22942e1f64c08a5d8697a83cd1c446be878ac",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-3-baseline-collect10.stderr",
+      "original_sha256": "2a47e88b42adab2fe317a1b577b71682fb32eb8326b86a8f8ace8ae2b489b7f9",
+      "public_sha256": "b1b952112f8e683491748727d9df71d48e49281a0e31b69e0cab495c6cfbdbca",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-1-candidate-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-1-candidate-collect10.stderr",
+      "original_sha256": "4ee7d9378dddbddcd21f865bf45d0804002fcccc7d3c100f272e35d26e875e35",
+      "public_sha256": "5ef21a078807e9fb92eca834a7a9f7e8de3e8f340b55cee236ec1d04ae57a2f0",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-1-candidate-collect10.callgrind.gz",
+      "original_sha256": "1e18383c6afea10f3a6331a173d5fb01e0004e5b6c1973b32e8cc1754513873a",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "623b1cb9ea00119e316fab7158d35cc3ef59ab3df4c11012db4d9c8880f1a1eb"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-0-baseline-collect10.callgrind.gz",
+      "original_sha256": "e4742b632f410b6cb5c70e78db73c455d2e17e07e02983d613581503e2740b7e",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "ba65152e788109cb40dff7e952516a1f5c0afc971477abbd986db3c806182b3c"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/historical-candidate-values10.annotated.txt",
+      "original_sha256": "83cb9448d14cbe7f5d4b6a2f8ed2f3bdcfe089957ad7af63ae08ca13fc2c2ef5",
+      "public_sha256": "780e05b7b35e65e5c0ebfed23e8d60ae842cb81eaed83a32d55d732668c8c4b8",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-2-candidate-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-3-baseline-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-1-candidate-collect10.callgrind.gz",
+      "original_sha256": "7b17dbc1d2b6143423ea5ceb2c5e6118d256a7a2bee5d56160ff7f9109453e0b",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "7d811ef8eec7ccf4b5c236dd4c840efb3c4a0d5405c91e98921623918c928204"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-0-baseline-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-3-baseline-collect10.callgrind.gz",
+      "original_sha256": "f3c8e357da44b793b67509bc8c8df4e4e1bf23cc4a9a8f279ebc06b77dbc8a19",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "03dcc88622cc6cdd242396b24cd99f7cefefaa2e2859a33aed52f6dddd5a59b4"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-3-baseline-collect10.stderr",
+      "original_sha256": "2a6b69cb49ae16881a47e743a992665c3f67cf06ca49f412a2bfb4052f84a44b",
+      "public_sha256": "a23acf7651bf08e16e97763fcf8d75134e5545e1b3c2ba2a95eaf023cde193a9",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-1-candidate-collect10.stderr",
+      "original_sha256": "9b8105384d8b2f8a933f1799eaae92ed26f52101e5f44b4ef99123236b358547",
+      "public_sha256": "1b477b1951f6a800f1c2fc3c778d2884397a7f7d87bd3878dc46394551e43416",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-0-baseline-collect10.callgrind.gz",
+      "original_sha256": "053b82a2bcb81de0a5dbe7b57d67ec9b2341de8f4a5e9e437a2b9bdf943283e8",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "78639e0a4beedf7241b9a8525cf15b00031c95a4708a4f0ecc065a8c769644d5"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-3-baseline-collect10.callgrind.gz",
+      "original_sha256": "616e2b89c9adca69e0ab1d64769c220a85348d1c90e56f34e94fd2d864bf0285",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "e314f2b1ca813bf5cb58cf4cca3723f4273690fc0856a5378c7887803839367f"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-0-baseline-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-2-candidate-collect10.stderr",
+      "original_sha256": "4f6e836f956201f489d7c56f654a683e13064e8291e50d529786a7a6021b7305",
+      "public_sha256": "159032b313c526891aff9a831f14b2af7437d398c2f0a3c43c3933fcfff4b3c2",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-1-candidate-collect10.stderr",
+      "original_sha256": "a6ed677531b760fdd52837274e49acf38473e6102dd7925e56327b91e1c91d7a",
+      "public_sha256": "e8cd67e6456de648af087e7ec0fbfbdfee452a9afe3e0978a7a5bae25e6cde96",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-1-candidate-collect10.stderr",
+      "original_sha256": "8cd0688d08dcbc295268309a7f9d59f522ef36c6f21d22d91fbd4ac7554afce1",
+      "public_sha256": "aedea2edb7bc964395fd61a291a6dd683a5502d3306da3dcd339e90382531fbc",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-2-candidate-collect10.callgrind.gz",
+      "original_sha256": "fada7c96b269ebcdc5296d2cffeee209ab4e45a0ae8d79b58baa3c0456c572bf",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "ffe2125d4b41d0144fa418f37d45bedb677de89d8cbdb846eec484cb90d19fd9"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-2-candidate-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/smoke-baseline-values1.callgrind.gz",
+      "original_sha256": "0038d41a651d24e5e875eeafdcf4c401500afdb3416fb22882fd2b2e914dd0b9",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "3deacfeb3d3e2016f7607250166be2f78071000c95f2bb88929044543e13c85f"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-2-candidate-collect10.stderr",
+      "original_sha256": "51239e0130e5e07a7afc7a73203e29ed0a61aaa10a9df1fc17ceca1258746748",
+      "public_sha256": "2edecf5dc473aec72c2784ffbb77a38d64a2d5756a16e7417e40821aac80f4b4",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-2-candidate-collect10.callgrind.gz",
+      "original_sha256": "c0258e640f1fa29f6e17fb6853b8e162ec14dd5af50779135de714b1f25572e3",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "6def81022a09781673dc1920b56db1ccebac6b9bb34308e1293ba12ddb163dd8"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-2-candidate-collect10.stderr",
+      "original_sha256": "8eacff136e97266809c51db6ef1de97e7d9d3804411c6ef74891fdcc7da5c745",
+      "public_sha256": "0523eabdb2df7baa5282d8c5c724c77e6626aaba4f42bac5755ca61ab93c9248",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-1-candidate-collect10.callgrind.gz",
+      "original_sha256": "0f6ea9ef2a89afe847b5879559f99eeb1edffb591da9e7a7a6bfb39a4229f48a",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "b5675ef1d699762b2c9973252aa5f72af69bc92bc4d690a3099449213b0130ed"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-0-baseline-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/smoke-baseline-values1.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-2-candidate-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-3-baseline-collect10.callgrind.gz",
+      "original_sha256": "245aeaf4e643c86b1ffa8d6fd3ae17671bfa88400fe99ea4a1c2e66ca652a7bc",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "567fb708e004c29dc2ea6a2e0c5827cd9dd81de289b735614d8d828cfcaffc5b"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-3-baseline-collect10.stderr",
+      "original_sha256": "3b9745de9b07d5594a24ebef4670d8afd09a09fabdc2b1a8f59a123d8d7571ac",
+      "public_sha256": "9d6a340bec78a962d5a57c49dbd3c6516b5b267e723c49b7d9d00992d7313f40",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/historical-baseline-values10.annotated.txt",
+      "original_sha256": "83a8e3439b013537c758042732204e636d724b141b5141d6f4fd298a21522f86",
+      "public_sha256": "73cccfc9366d558055196ffb168273a0c9147003dd4e877707337e97560c2024",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-0-baseline-collect10.callgrind.gz",
+      "original_sha256": "8ee301238882c5f7f412707fc56bb502ed31883f1361ba508241df639a520065",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "2b89e7e9aae2200389b47b5985e7d495e8d1f2bd3405f90189712d4beba09b33"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-1-candidate-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-2-candidate-collect10.callgrind.gz",
+      "original_sha256": "52245c6586825c0f7c9c8a3454b60d60bca3a4e9f2a3859cf647f00110c15bc5",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "df16635908abbc32fbcfa78bfef278d97100ff25a5a83f2e25f7dc4669ef7141"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-3-baseline-collect10.callgrind.gz",
+      "original_sha256": "adecfbf5a1b2523e24dd39a6db3e255e26af88d4bc259cf617835f15c880241d",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "a3cdfa5711236403d6acbbbbf29e8e5c1d801a117c213b6f147bfc19cbdd39a1"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-3-baseline-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-0-baseline-collect10.stderr",
+      "original_sha256": "2bd3240c4e0ab46e172fb113d78a779c7858a9ea8bbfd15fb88e4d9b18c09f38",
+      "public_sha256": "aa2f61feafd55a0ee4b243637df5cd60a674af4846c50782fde73c2dfaa5ab68",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-3-baseline-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-0-baseline-collect10.stderr",
+      "original_sha256": "4719d64fad5f39f8a4db3b703a611749f06ed680734b9ac538835d11b797b4b1",
+      "public_sha256": "d7cf406f6dcbbe2391595e879a05e9d1f854106b8a7a21bd2a14f3ef3a1bb0fb",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-0-baseline-collect10.stderr",
+      "original_sha256": "104014c13ac5eb0eb6c87d0691b0c1f323ca6e3c6a9abc841b664f338c5c85ba",
+      "public_sha256": "1bb341bee8bdfa8b87a63ab72d9bd7edc5dc61ba57ab7610ad51f65aec91fda7",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-2-candidate-collect10.callgrind.gz",
+      "original_sha256": "0ba0211f203f50d8a059993f61373b37fec966d141936b79ccf38d2367a9da3c",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "632658c51ae4b348648b70a018bfbfc2e809c9b40602d0d26a39c8fe2f8f344b"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-values-3-baseline-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/imports-1-candidate-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-0-baseline-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/current-imports-0-baseline-collect10.callgrind.gz",
+      "original_sha256": "feeadaf49c81717c7e14e253a5f217ba5a721aff800366c981cd0d2ac876ca2c",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "119fce91807a3390f5f4f5ed7109d79e5ae2a8e26139f75d79071000ce809e7a"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/values-0-baseline-collect10.stderr",
+      "original_sha256": "44317e24ad1e2e2e80670d44456b4f4e1162231f6abfa29a302a2bd2b361381c",
+      "public_sha256": "35e0332a814452cb79fae8cc7004b2a2d067f47a20550abb26718638f027367d",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/work-raw.json",
+      "original_sha256": "1c971882dcc2e7cab683d6e02f3a50b189dbdea9759da292566c678f187f1bdb",
+      "public_sha256": "bf4d6aa3c5d12cfee7aee725cd2cda34e3dacae36debf3a22baa0d4232fe18f3",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-2-candidate-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-1-candidate-collect10.callgrind.gz",
+      "original_sha256": "9956e17534827e3d4676b6a571b91c839ec454007b0c1068c6d4a69c8ec4e399",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "07ff815b1c3b3edc9836b42b8611fb6efc6de4aba85b316835a13837bb7399bf"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-2-candidate-collect10.stderr",
+      "original_sha256": "3aa403b84270b4a4ab6993d13e36603b6fa3e0b47811e3b94af25db9ba147459",
+      "public_sha256": "0adf58a29bc8a949e9b7ebf70ef8f54b62b438f5c4e8084d5af5837401623716",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-3-baseline-collect10.stderr",
+      "original_sha256": "9613dc5476c81683f1c616620e816b0bea771b4458f226d41aa21504d0c2a657",
+      "public_sha256": "9c718f78ca54258e6552815ba324e504fa3bf4c32e1eb5a356ae0cfebec78b67",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-1-candidate-collect10.stderr",
+      "original_sha256": "7eb20ba667ff206c80057e15c8ffbd9ab6bbfe8471f3a136920c5194dad5468a",
+      "public_sha256": "705bdfa498e79808981f1c7d8a6ae2c5764e38ca9345d0c60169e28e0ab53eba",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-1-candidate-collect10.callgrind.gz",
+      "original_sha256": "3271ecb2c66c880d215e87bb388b18cbe7273d7851b06b87004ccbc28f9983f4",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "0ab44757ea385041278665fd360dbe8b64535039710976b4ab0982cef140ecd6"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-3-baseline-collect10.stderr",
+      "original_sha256": "c96c0076cc5abcaa312e12a68deeb95aedb97e5d5eb6750c08a22eb112b95426",
+      "public_sha256": "d0509e17ec65361e6291d669e9bb6f23126b859d404cb2db55cab4598e585ab8",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-0-baseline-collect10.callgrind.gz",
+      "original_sha256": "402d6fc1845b8e267fc142f4c8e34be1bf98420c5fb12782b497e58e54dd1b56",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "c4b792ce2865d3c8fc42294930c736407e7e8949ba17cf7e33caedbd13d272f7"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-3-baseline-collect10.callgrind.gz",
+      "original_sha256": "02eb76a4172569cef9659387f468b14855e6fb5dad22fc78a06ebfd4213038a8",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "a2f93a6688f14e1e288e18ae5898dca61ccaede017acaa40e7c364a2db6a71c5"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-0-baseline-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-2-candidate-collect10.stderr",
+      "original_sha256": "89561953caeadc9820b56d65f33087526ad1ebacae6edccba183c5672298fe59",
+      "public_sha256": "05c46d7bf321aaa9daf2f967a38dd4ca9d72a4216d3daf395b4c0322a432ee2b",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-1-candidate-collect10.stderr",
+      "original_sha256": "563855c98e59c5336cb752bf8301c95ad34a2d8bffc4e12463a6817dc07ff289",
+      "public_sha256": "f3f1405a16d3b5b1f067fd265480da87e8658819e57c285ee9b915bc50c47898",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-0-baseline-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-2-candidate-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-0-baseline-collect10.callgrind.gz",
+      "original_sha256": "da324f6671e6be7e4dcc1feabd86c4c73159fd2b7cd9c67fb0fd38374136b4d8",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "9b1851274a01c88a0b76c3d8c8ebe9be5317b7c87b42b5ad231117c2fbb36f40"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-1-candidate-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-2-candidate-collect10.callgrind.gz",
+      "original_sha256": "914e5e72db89f327253e431412eb52fd927c2cfb94fea5fff9484c118d652484",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "952afc7bef57e922c0112d25dd4d3dd372aa36ad3fdc1785d8e8bd74acaff4b1"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-3-baseline-collect10.callgrind.gz",
+      "original_sha256": "fce5f54e450ebfacc307381960012d8b4454b576f1a8d5b38b6200db0538c3d4",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "0110c4981693efc17d08151bc87fafe0d6da5b90251162b5cb98e066f070c8ef"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-3-baseline-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-3-baseline-collect10.stdout",
+      "original_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-0-baseline-collect10.stderr",
+      "original_sha256": "a64e955a5535284362c371792d48f060acfe658b3969ac9f1563cfee9d6b25d9",
+      "public_sha256": "e0ff5c44c2f2d1111fb761b4aa7e51e28cfbf410c82fcf77f03897d754348ceb",
+      "public_status": "normalized public copy"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-2-candidate-collect10.callgrind.gz",
+      "original_sha256": "13b6f90027ae4c651537363df4313f109ac67902b4b671212c878ca98b40123f",
+      "public_status": "full original and normalized profile withheld locally; public package contains readable summaries and numeric work records only",
+      "withheld_normalized_sha256": "0241a4cdc2e03aa9d4f78f2ca4a25fc097af3c02042de77ba6d63ae882f23f75"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/imports-1-candidate-collect10.stdout",
+      "original_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "public_status": "unchanged"
+    },
+    {
+      "path": "docs/performance/imported-receiver-facts-evidence/profiles/original-unoptimized/values-0-baseline-collect10.stderr",
+      "original_sha256": "d2b58308f73518cf21b0e7990f4c94b84a0fd3ed7312a64a040a1d47011884c3",
+      "public_sha256": "61c7aed1e1739385b444841e8017960e82c10d6aa23370d1eb937567806147dc",
+      "public_status": "normalized public copy"
+    }
+  ]
+}

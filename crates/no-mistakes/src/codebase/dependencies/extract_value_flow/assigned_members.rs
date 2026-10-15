@@ -93,7 +93,7 @@ impl ValueAssignedMutations {
         offset: u32,
         context: Option<CallableId>,
         region: Option<u32>,
-    ) -> bool {
+    ) -> Option<&identity_metadata::FreshCapture> {
         let replaced = |write: &ValueAssignedMutation| {
             write.writer == mutation_history::ValueAssignedWriter::single(context)
                 && write
@@ -110,16 +110,17 @@ impl ValueAssignedMutations {
             .flatten()
             .any(|write| write.writer != mutation_history::ValueAssignedWriter::single(context))
         {
-            return false;
+            return None;
         }
-        let regional = region.is_some_and(|region| {
-            self.replacements
-                .as_ref()
-                .is_some_and(|events| events.replaced_in_region(region, member, offset))
-        });
-        if !regional && ![direct, propagated].into_iter().flatten().any(replaced) {
-            return false;
-        }
+        let events = self.replacements.as_ref()?;
+        let regional = region.and_then(|region| events.regional_offset(region, member, offset));
+        let global = [direct, propagated]
+            .into_iter()
+            .flatten()
+            .any(replaced)
+            .then(|| events.replacement_offset(member, offset))
+            .flatten();
+        let candidate = global.into_iter().chain(regional).max()?;
         if [
             self.dynamic.as_ref(),
             self.propagated
@@ -130,11 +131,9 @@ impl ValueAssignedMutations {
         .flatten()
         .any(|write| write.writer != mutation_history::ValueAssignedWriter::single(context))
         {
-            return false;
+            return None;
         }
-        self.replacements
-            .as_ref()
-            .is_some_and(|events| regional || events.replaced(member, offset))
+        events.identity.as_ref()?.captures.get(&candidate)?.as_ref()
     }
 }
 

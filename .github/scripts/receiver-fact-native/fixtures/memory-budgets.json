@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "name": "ancestor-constrains-host-memory",
+      "proc_available_bytes": 17179869184,
+      "limits": [
+        {
+          "headroom_bytes": 11811160064
+        },
+        {
+          "headroom_bytes": 6442450944
+        }
+      ],
+      "expected_effective_bytes": 6442450944
+    },
+    {
+      "name": "host-memory-constrains-unlimited-cgroup",
+      "proc_available_bytes": 4294967296,
+      "limits": [],
+      "expected_effective_bytes": 4294967296
+    },
+    {
+      "name": "sample-headroom-exhausted",
+      "proc_available_bytes": 17179869184,
+      "limits": [
+        {
+          "headroom_bytes": 536870912
+        }
+      ],
+      "expected_effective_bytes": 536870912
+    }
+  ]
+}

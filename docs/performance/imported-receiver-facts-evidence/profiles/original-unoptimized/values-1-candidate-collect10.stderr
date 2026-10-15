@@ -1,0 +1,14 @@
+==464246== Callgrind, a call-graph generating cache profiler
+==464246== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==464246== Using Valgrind-3.24.0 and LibVEX; rerun with -h for copyright info
+==464246== Command: <WORKSPACE>/receiver-candidate-perf <WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts values 10
+==464246== 
+==464246== For interactive control, run 'callgrind_control -h'.
+==464246== brk segment overflow in thread #1: can't grow to 0x968a000
+==464246== (see section Limitations in user manual)
+==464246== NOTE: further instances of this message will not be shown
+==464246== 
+==464246== Events    : Ir
+==464246== Collected : 1101892481
+==464246== 
+==464246== I   refs:      1,101,892,481

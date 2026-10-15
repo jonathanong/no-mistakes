@@ -308,3 +308,40 @@ The pre-existing mutable object-initializer boundary is tracked separately in
 [issue #2019](https://github.com/jonathanong/no-mistakes/issues/2019), queued until
 this PR merges. Its exact failed975 graph evidence and frozen917 comparison are
 distinguished from the corrected supported immutable-holder controls.
+
+
+The global acquired-reference correction additionally validates every proper
+ancestor at its captured LHS acquisition and the later write acquisition. It
+borrows indexed exact histories; fresh terminal evidence alone cannot identify
+a replaced ancestor. Captured acquisition paths share immutable suffixes, with
+iterative comparison and release. Unknown calls during fresh evaluation and
+unproven cross-context identities remain conservative. No general getter, heap
+or call-execution model is claimed.
+
+Hot destructuring proof queries reuse the existing phase walk and catalog,
+including authoritative target scope receipts. Missing nested-write receipts
+remain barriers. An indexed effect stream preserves writes before opaque effects
+and rejects proofs afterward. The supported inert-RHS gate rejects calls,
+getters, spreads and unproven nested patterns without replaying RHS execution.
+A direct own-data read exemption requires one exact prepared object binding, its
+actual callable owner, no root rebinding, a compatible execution region and no
+unknown call since binding acquisition. Its scalar records calls only after
+callee and argument evaluation. Deferred callable/field boundaries suspend it.
+
+The independent saved graph controls and exact input hashes are listed in
+[global-identity-917-baseline.txt](global-identity-917-baseline.txt). The frozen
+baseline resolves the new negative cases to primary.get, exposing its existing
+nested-write gap. Candidate expectations cover ancestor replacement inside RHS,
+sequential replacement, saved old wrappers, direct aliases, dynamic paths,
+destructuring order, opaque effects and descriptor-changing calls. Pure
+before-effect and argument-evaluation controls retain primary.get. These are
+expected results; candidate runtime validation is still pending.
+
+Saved production-extraction guards require 32 shared capture nodes for 528
+logical acquisition tokens along an alias chain; 16 nodes and 2,063 actual history
+visits for 64 deep writes; and 40 phase indexes, 42 RHS classifier visits,
+80 trie nodes and 40 indexed write-path tokens for nested assignments. Direct
+writes retain no capture or phase index. These assertions are pending remote
+execution. Shared nodes and indexes have allocation and metadata costs; operation
+counts do not establish CPU, latency or RSS improvement. Earlier CI/performance
+results in this file remain historical and are not carried to this runtime.

@@ -93,9 +93,19 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
         ("alias-snapshot-bind", "<unknown>", Some("primary.get")),
         ("alias-inline-snapshot", "get", Some("primary.get")),
         ("inline-snapshot-after-call", "get", Some("primary.get")),
-        // Alias precision does not broaden the existing inline owner boundary.
-        ("alias-inline-snapshot-owned", "get", None),
-        ("inline-snapshot-owned", "get", None),
+        // A single inline acquisition precedes the owned body write.
+        ("alias-inline-snapshot-owned", "get", Some("primary.get")),
+        ("inline-snapshot-owned", "get", Some("primary.get")),
+        ("inline-snapshot-owned-write-first", "get", None),
+        // Repeated execution can acquire the replacement on a later pass.
+        ("inline-snapshot-repeated-for", "get", None),
+        ("inline-snapshot-repeated-header", "get", None),
+        ("inline-snapshot-repeated-function", "get", None),
+        ("inline-snapshot-repeated-while", "get", None),
+        ("inline-snapshot-repeated-do", "get", None),
+        ("inline-snapshot-repeated-field", "get", None),
+        ("inline-snapshot-repeated-nested-field", "get", None),
+        ("inline-snapshot-repeated-accessor", "get", None),
         ("alias-inline-live", "alias.get", None),
         ("alias-captured", "alias.get", None),
         ("alias-async", "alias.get", None),
@@ -162,6 +172,43 @@ fn mixed_member_reads_share_the_same_two_bootstrap_agreements() {
                 "member uses must share their agreement/origin DAG: {} nodes",
                 benchmark_probe_origin_nodes()
             );
+        }
+    }
+}
+
+#[test]
+fn loop_setup_preserves_once_without_promoting_repeated_positions() {
+    let (root, graph) = graph("inline-member-precision");
+    for (name, expected) in [
+        ("loop-setup-annex.cjs", 0),
+        ("loop-setup-async.mts", 0),
+        ("loop-setup-for-declaration.mts", 1),
+        ("loop-setup-for-expression.mts", 1),
+        ("loop-setup-for-update.mts", 0),
+        ("loop-setup-function.mts", 0),
+        ("loop-setup-in-body.mts", 0),
+        ("loop-setup-in-default.mts", 0),
+        ("loop-setup-in-rhs.mts", 1),
+        ("loop-setup-in-target.mts", 0),
+        ("loop-setup-nested-for.mts", 0),
+        ("loop-setup-nested-in.mts", 0),
+        ("loop-setup-nested-of.mts", 0),
+        ("loop-setup-of-body.mts", 0),
+        ("loop-setup-of-default.mts", 0),
+        ("loop-setup-of-rhs.mts", 1),
+        ("loop-setup-of-target.mts", 0),
+    ] {
+        let sites = graph.call_sites_in_file(&root.join(format!("src/{name}")));
+        let reads = sites
+            .iter()
+            .filter(|site| site.source_callee == "get")
+            .collect::<Vec<_>>();
+        // Synthetic ownership projections may expose the same physical call twice.
+        assert!(!reads.is_empty(), "{name}: {sites:?}");
+        for site in reads {
+            let resolved = matches!(&site.target,
+                ResolvedCallTarget::ModuleExport { export_path, .. } if export_path == "primary.get");
+            assert_eq!(usize::from(resolved), expected, "{name}: {site:?}");
         }
     }
 }

@@ -1,0 +1,14 @@
+==458911== Callgrind, a call-graph generating cache profiler
+==458911== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==458911== Using Valgrind-3.24.0 and LibVEX; rerun with -h for copyright info
+==458911== Command: <WORKSPACE>/performance-1972-evidence/baseline-facts <WORKSPACE>/no-mistakes-1972/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts values 10
+==458911== 
+==458911== For interactive control, run 'callgrind_control -h'.
+==458911== brk segment overflow in thread #1: can't grow to 0x4918000
+==458911== (see section Limitations in user manual)
+==458911== NOTE: further instances of this message will not be shown
+==458911== 
+==458911== Events    : Ir
+==458911== Collected : 301112557
+==458911== 
+==458911== I   refs:      301,112,557

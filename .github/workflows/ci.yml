@@ -160,6 +160,10 @@ jobs:
         timeout-minutes: 2
         run: node --test .github/scripts/rust-disk-usage.test.cjs
 
+      - name: Test benchmark handoff guards
+        timeout-minutes: 2
+        run: node --test .github/scripts/benchmark-handoff.test.cjs
+
       - name: Record Rust disk usage before Clippy
         timeout-minutes: 1
         run: bash .github/scripts/rust-disk-usage.sh "before Clippy"
@@ -678,6 +682,10 @@ jobs:
     name: Build benchmarks
     needs: changes
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
+    outputs:
+      cache-key: ${{ steps.package.outputs.cache-key }}
+      sha256: ${{ steps.package.outputs.sha256 }}
+      cache-ready: ${{ steps.cache-probe.outputs.cache-hit }}
     # Must match benchmark-shards. ubuntu-latest mixes Intel and AMD, which
     # changes CodSpeed's simulated cycles. ubuntu-24.04-arm is one CPU
     # generation, and the uploaded harness must be built for that machine.
@@ -738,10 +746,37 @@ jobs:
           -m memory
 
       - name: Package benchmark executables
+        id: package
         timeout-minutes: 2
-        run: tar -C target/codspeed -cf codspeed-analysis.tar analysis
+        run: |
+          tar -C target/codspeed -cf codspeed-analysis.tar analysis
+          digest="$(sha256sum codspeed-analysis.tar | cut -d ' ' -f 1)"
+          source="$(git rev-parse HEAD)"
+          echo "sha256=$digest" >> "$GITHUB_OUTPUT"
+          # Publish the producer attempt; failed-shard reruns must reuse this key.
+          echo "cache-key=codspeed-handoff-v1-${RUNNER_OS}-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${source}-${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache benchmark executables
+        continue-on-error: true
+        timeout-minutes: 5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: ${{ steps.package.outputs.cache-key }}
+          path: codspeed-analysis.tar
+
+      - name: Confirm exact benchmark cache is available
+        id: cache-probe
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: ${{ steps.package.outputs.cache-key }}
+          path: codspeed-analysis.tar
+          lookup-only: true
 
       - name: Upload benchmark executables
+        id: artifact
+        continue-on-error: true
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -750,6 +785,13 @@ jobs:
           # Low-cost compression reduces the harness transferred to every shard.
           compression-level: 1
           retention-days: 1
+
+      - name: Require an available benchmark transport
+        timeout-minutes: 1
+        env:
+          CACHE_HIT: ${{ steps.cache-probe.outputs.cache-hit }}
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+        run: bash .github/scripts/benchmark-handoff.sh available
 
   benchmark-shards:
     name: Benchmark (${{ matrix.name }})
@@ -870,12 +912,40 @@ jobs:
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Download benchmark executables
-        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+      - name: Restore exact benchmark executables
+        id: benchmark-cache
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && needs.bench.outputs.cache-ready == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
+        with:
+          key: ${{ needs.bench.outputs.cache-key }}
+          path: codspeed-analysis.tar
+
+      - name: Verify cached benchmark executables
+        id: verify-cache
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && steps.benchmark-cache.outputs.cache-hit == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 1
+        env:
+          BENCHMARK_SHA256: ${{ needs.bench.outputs.sha256 }}
+        run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
+
+      - name: Download fallback benchmark executables
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && steps.verify-cache.outcome != 'success' }}
         timeout-minutes: 10
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: codspeed-analysis
+
+      - name: Verify benchmark executables before extraction
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        timeout-minutes: 1
+        env:
+          BENCHMARK_SHA256: ${{ needs.bench.outputs.sha256 }}
+        run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
 
       - name: Extract benchmark executables
         if: ${{ env.BENCHMARK_SELECTED == 'true' }}

@@ -56,7 +56,9 @@ fn populated_late_union_preserves_exact_restoration_and_phase_evidence() {
             assert!(assigned.members.contains_key("other"));
             assert!(assigned.dynamic.is_some());
             assert!(
-                !assigned.definitely_replaced("client", source.len() as u32, None, None),
+                assigned
+                    .definitely_replaced("client", source.len() as u32, None, None)
+                    .is_none(),
                 "a later restoration/dynamic write must survive the union"
             );
             assert!(assigned.early.is_some());
@@ -116,6 +118,8 @@ fn fresh_ancestor_does_not_prove_a_distinct_descendant_reference() {
             history.reference_may_be_replaced(
                 &[Some("wrapper".into()), Some(descendant.into())],
                 &[read, read],
+                None,
+                None,
                 None
             ),
             replaced,

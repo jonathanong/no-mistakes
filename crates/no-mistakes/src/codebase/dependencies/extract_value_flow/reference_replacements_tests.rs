@@ -4,26 +4,26 @@ use super::*;
 fn certain_execution_does_not_make_an_original_receiver_fresh() {
     let mut events = ReferenceReplacements::default();
     events.record(Some("client"), 10, true, true);
-    assert!(events.replaced("client", 15));
+    assert!(events.replacement_offset("client", 15).is_some());
     events.record(Some("client"), 20, false, true);
-    assert!(!events.replaced("client", 25));
+    assert!(events.replacement_offset("client", 25).is_none());
     assert!(
-        events.replaced("client", 15),
+        events.replacement_offset("client", 15).is_some(),
         "later restoration cannot rewrite a saved acquisition"
     );
     events.record(Some("client"), 30, true, true);
     events.record(None, 40, false, true);
-    assert!(events.replaced("client", 35));
-    assert!(!events.replaced("client", 45));
+    assert!(events.replacement_offset("client", 35).is_some());
+    assert!(events.replacement_offset("client", 45).is_none());
     events.record(Some("client"), 50, true, false);
     assert!(
-        !events.replaced("client", 55),
+        events.replacement_offset("client", 55).is_none(),
         "conditional freshness cannot establish identity"
     );
     events.record(Some("client"), 60, true, true);
     events.record(Some("client"), 70, true, false);
     assert!(
-        events.replaced("client", 75),
+        events.replacement_offset("client", 75).is_some(),
         "conditional freshness preserves an established distinct receiver"
     );
 }
@@ -37,19 +37,19 @@ fn regional_proof_is_indexed_shared_and_canceled_at_acquisition() {
         "ordinary conditional events allocate no regional index"
     );
     events.record_region(10, "client", 20);
-    assert!(!events.replaced("client", 25));
-    assert!(events.replaced_in_region(10, "client", 25));
-    assert!(!events.replaced_in_region(11, "client", 25));
-    assert!(!events.replaced_in_region(10, "client", 15));
+    assert!(events.replacement_offset("client", 25).is_none());
+    assert!(events.regional_offset(10, "client", 25).is_some());
+    assert!(events.regional_offset(11, "client", 25).is_none());
+    assert!(events.regional_offset(10, "client", 15).is_none());
     events.record(Some("client"), 30, false, false);
-    assert!(!events.replaced_in_region(10, "client", 35));
-    assert!(events.replaced_in_region(10, "client", 25));
+    assert!(events.regional_offset(10, "client", 35).is_none());
+    assert!(events.regional_offset(10, "client", 25).is_some());
     let mut alias = ReferenceReplacements::default();
     alias.record_region(10, "client", 40);
     events.merge(alias);
-    assert!(events.replaced_in_region(10, "client", 45));
+    assert!(events.regional_offset(10, "client", 45).is_some());
     events.record(None, 50, false, false);
-    assert!(!events.replaced_in_region(10, "client", 55));
+    assert!(events.regional_offset(10, "client", 55).is_none());
     assert_eq!(events.regions.as_ref().unwrap().len(), 1);
     assert_eq!(events.regions.as_ref().unwrap()[&10]["client"].len(), 2);
     #[cfg(feature = "test-instrumentation")]
@@ -60,7 +60,7 @@ fn regional_proof_is_indexed_shared_and_canceled_at_acquisition() {
         assert_eq!(snapshot, events);
         let _: &dyn Sync = &events;
         let _: Box<dyn Send> = Box::new(snapshot.clone());
-        assert!(events.replaced_in_region(10, "client", 45));
+        assert!(events.regional_offset(10, "client", 45).is_some());
         assert_ne!(snapshot, events, "instrumentation clones own their counter");
     }
 }

@@ -343,10 +343,21 @@ are not used: they register an organization-level runner, and this repository
 lives on a personal account. A CodSpeed report is not an implementation
 regression until both the base and the PR head ran on `ubuntu-24.04-arm`.
 
-The shared harness artifact uses compression level 1 to reduce the bytes
-transferred to every shard without paying the cost of stronger compression.
-Each shard allows ten minutes to download the artifact and twenty minutes for
-the whole job, including checkout, extraction, and a cold instrument install.
+The build job caches only the packaged harness, under an immutable key containing
+its OS/architecture, run ID, producer attempt, source revision, and archive digest.
+Shards use that producer output even when failed jobs are rerun. They accept only
+an exact cache hit with the expected SHA256, never a prefix or another build.
+Cache restores have a two-minute budget and one-minute segment deadline.
+
+The shared harness artifact remains a fallback because caches can be evicted and
+cache saves can warn without saving. One lookup-only probe confirms cache
+availability; the build fails if neither that exact cache nor an uploaded artifact
+is available. A cache miss, restore error, or digest mismatch uses the same-run
+artifact instead. Both paths require the build's digest before extraction.
+The fallback artifact uses compression level 1 and one-day retention. Each shard
+still allows ten minutes for its artifact download and twenty minutes for the
+whole job, including checkout, extraction, and a cold instrument install. These
+budgets are bounds, not a guarantee that either transport finishes in time.
 
 Each shard's benchmark step allows six minutes so a cold install of CodSpeed's
 instruments (valgrind and `libc6-dbg`) can finish. The action's instrument

@@ -14,6 +14,7 @@ pub struct ReferenceReplacements {
     pub members: FxHashMap<String, BTreeMap<u32, bool>>,
     pub dynamic: BTreeMap<u32, bool>,
     pub regions: Option<Box<RegionalReplacementEvents>>,
+    pub identity: Option<Box<identity_metadata::IdentityMetadata>>,
 }
 impl ReferenceReplacements {
     pub(super) fn record(
@@ -24,6 +25,9 @@ impl ReferenceReplacements {
         guaranteed: bool,
     ) {
         if fresh && (!guaranteed || member.is_none()) {
+            self.identity
+                .get_or_insert_with(Default::default)
+                .preserve(member, offset);
             return;
         }
         let events = match member {
@@ -44,12 +48,17 @@ impl ReferenceReplacements {
             .and_modify(|value| *value &= distinct)
             .or_insert(distinct);
     }
-    pub(super) fn merge(&mut self, source: Self) {
+    pub(super) fn merge(&mut self, mut source: Self) {
         #[cfg(feature = "test-instrumentation")]
         {
             self.region_record_attempts += source.region_record_attempts;
             self.region_queries
                 .set(self.region_queries.get() + source.region_queries.get());
+        }
+        if let Some(source) = source.identity.take() {
+            self.identity
+                .get_or_insert_with(Default::default)
+                .merge(*source);
         }
         if let Some(regions) = source.regions {
             let target = self.regions.get_or_insert_with(Default::default);
@@ -87,7 +96,7 @@ impl ReferenceReplacements {
             .expect("inserted regional member")
             .insert(offset);
     }
-    pub(super) fn replaced_in_region(&self, region: u32, member: &str, offset: u32) -> bool {
+    pub(super) fn regional_offset(&self, region: u32, member: &str, offset: u32) -> Option<u32> {
         #[cfg(feature = "test-instrumentation")]
         {
             self.region_queries
@@ -101,7 +110,7 @@ impl ReferenceReplacements {
             .and_then(|members| members.get(member))
             .and_then(|events| events.range(..=offset).next_back())
         else {
-            return false;
+            return None;
         };
         // Every possible-original restoration remains in the global timeline,
         // even when written in another region. Future writes cannot alter snapshots.
@@ -120,8 +129,9 @@ impl ReferenceReplacements {
             .into_iter()
             .chain(dynamic)
             .all(|offset| offset < fresh)
+            .then_some(*fresh)
     }
-    pub(super) fn replaced(&self, member: &str, offset: u32) -> bool {
+    pub(super) fn replacement_offset(&self, member: &str, offset: u32) -> Option<u32> {
         let direct = self
             .members
             .get(member)
@@ -129,10 +139,10 @@ impl ReferenceReplacements {
         let dynamic = self.dynamic.range(..=offset).next_back();
         match (direct, dynamic) {
             (Some((direct_offset, fresh)), Some((dynamic_offset, _))) => {
-                direct_offset > dynamic_offset && *fresh
+                (direct_offset > dynamic_offset && *fresh).then_some(*direct_offset)
             }
-            (Some((_, fresh)), None) => *fresh,
-            _ => false,
+            (Some((offset, fresh)), None) => fresh.then_some(*offset),
+            _ => None,
         }
     }
 }

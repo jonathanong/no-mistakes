@@ -1,11 +1,18 @@
-fn record_eager_require(collector: &mut ImportCollector, specifier: &str, kind: ImportKind, computed: bool) {
+fn record_eager_require(
+    collector: &mut ImportCollector,
+    specifier: &str,
+    kind: ImportKind,
+    computed: bool,
+) {
     if kind == ImportKind::Require
         && !computed
         && collector.function_stack.is_empty()
         && collector.current_function_id().is_none()
         && !collector.conditional_execution
     {
-        collector.eager_require_specifiers.insert(specifier.to_string());
+        collector
+            .eager_require_specifiers
+            .insert(specifier.to_string());
     }
 }
 
@@ -14,7 +21,9 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
-    if conditional { collector.receiver_conditional_region = None; }
+    if conditional {
+        collector.receiver_conditional_region = None;
+    }
     let previous = collector.conditional_execution;
     let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
@@ -24,12 +33,20 @@ fn with_conditional_execution(
     collector.receiver_write_is_conditional = previous_receiver;
 }
 
-fn visit_binding_default_with_execution<'a>(collector: &mut ImportCollector, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
+fn visit_binding_default_with_execution<'a>(
+    collector: &mut ImportCollector,
+    pattern: &oxc_ast::ast::AssignmentPattern<'a>,
+) {
     collector.visit_binding_pattern(&pattern.left);
-    with_conditional_receiver_write(collector, |collector| collector.visit_expression(&pattern.right));
+    with_conditional_receiver_write(collector, |collector| {
+        collector.visit_expression(&pattern.right)
+    });
 }
 
-fn with_conditional_receiver_write(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
+fn with_conditional_receiver_write(
+    collector: &mut ImportCollector,
+    visit: impl FnOnce(&mut ImportCollector),
+) {
     // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
     collector.receiver_conditional_region = None;
     let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
@@ -37,30 +54,15 @@ fn with_conditional_receiver_write(collector: &mut ImportCollector, visit: impl 
     collector.receiver_write_is_conditional = previous;
 }
 
-fn receiver_replacement_is_fresh(assignment: &AssignmentExpression<'_>) -> bool {
-    (assignment.operator == oxc_syntax::operator::AssignmentOperator::Assign || assignment.operator.is_logical())
-        && matches!(&assignment.left, AssignmentTarget::StaticMemberExpression(_) | AssignmentTarget::ComputedMemberExpression(_))
-        && matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&assignment.right),
-            Expression::ObjectExpression(_) | Expression::ArrayExpression(_)
-            | Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
-            | Expression::NullLiteral(_) | Expression::BooleanLiteral(_)
-            | Expression::NumericLiteral(_) | Expression::BigIntLiteral(_) | Expression::StringLiteral(_))
-}
-
-fn visit_target_default_with_execution<'a>(collector: &mut ImportCollector, target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>) {
-    collector.visit_assignment_target(&target.binding);
-    with_conditional_receiver_write(collector, |collector| collector.visit_expression(&target.init));
-}
-
-fn visit_parameter_default_with_execution<'a>(collector: &mut ImportCollector, parameter: &oxc_ast::ast::FormalParameter<'a>) {
-    collector.visit_decorators(&parameter.decorators);
-    collector.visit_binding_pattern(&parameter.pattern);
-    if let Some(annotation) = &parameter.type_annotation {
-        collector.visit_ts_type_annotation(annotation);
-    }
-    if let Some(initializer) = &parameter.initializer {
-        with_conditional_receiver_write(collector, |collector| collector.visit_expression(initializer));
-    }
+fn with_repeat_execution<T>(
+    collector: &mut ImportCollector,
+    statement: &T,
+    visit: impl FnOnce(&mut ImportCollector, &T),
+) {
+    // Repeated child positions retain all enclosing execution guards.
+    collector.repeat_depth += 1;
+    visit(collector, statement);
+    collector.repeat_depth -= 1;
 }
 
 // Literal conditions can prove one branch executes. Unknown conditions remain
@@ -76,7 +78,10 @@ fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {
     }
 }
 
-fn visit_if_with_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::IfStatement<'a>) {
+fn visit_if_with_execution<'a>(
+    collector: &mut ImportCollector,
+    statement: &oxc_ast::ast::IfStatement<'a>,
+) {
     collector.visit_expression(&statement.test);
     let truthy = literal_truthiness(&statement.test);
     with_conditional_execution(collector, truthy != Some(true), |collector| {
@@ -89,7 +94,10 @@ fn visit_if_with_execution<'a>(collector: &mut ImportCollector, statement: &oxc_
     }
 }
 
-fn visit_conditional_with_execution<'a>(collector: &mut ImportCollector, expression: &oxc_ast::ast::ConditionalExpression<'a>) {
+fn visit_conditional_with_execution<'a>(
+    collector: &mut ImportCollector,
+    expression: &oxc_ast::ast::ConditionalExpression<'a>,
+) {
     collector.visit_expression(&expression.test);
     let truthy = literal_truthiness(&expression.test);
     with_conditional_execution(collector, truthy != Some(true), |collector| {
@@ -100,7 +108,10 @@ fn visit_conditional_with_execution<'a>(collector: &mut ImportCollector, express
     });
 }
 
-fn visit_logical_with_execution<'a>(collector: &mut ImportCollector, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+fn visit_logical_with_execution<'a>(
+    collector: &mut ImportCollector,
+    expression: &oxc_ast::ast::LogicalExpression<'a>,
+) {
     collector.visit_expression(&expression.left);
     let unconditional = match expression.operator {
         oxc_ast::ast::LogicalOperator::And => literal_truthiness(&expression.left) == Some(true),
@@ -141,26 +152,52 @@ fn has_optional_chain(expression: &Expression<'_>) -> bool {
     }
 }
 
-fn visit_try_with_receiver_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::TryStatement<'a>) {
-    with_conditional_receiver_write(collector, |collector| collector.visit_block_statement(&statement.block));
-    if let Some(handler) = &statement.handler { collector.visit_catch_clause(handler); }
-    if let Some(finalizer) = &statement.finalizer { collector.visit_block_statement(finalizer); }
+fn visit_try_with_receiver_execution<'a>(
+    collector: &mut ImportCollector,
+    statement: &oxc_ast::ast::TryStatement<'a>,
+) {
+    with_conditional_receiver_write(collector, |collector| {
+        collector.visit_block_statement(&statement.block)
+    });
+    if let Some(handler) = &statement.handler {
+        collector.visit_catch_clause(handler);
+    }
+    if let Some(finalizer) = &statement.finalizer {
+        collector.visit_block_statement(finalizer);
+    }
 }
 
-fn visit_label_with_receiver_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::LabeledStatement<'a>) {
-    with_conditional_receiver_write(collector, |collector| collector.visit_statement(&statement.body));
+fn visit_label_with_receiver_execution<'a>(
+    collector: &mut ImportCollector,
+    statement: &oxc_ast::ast::LabeledStatement<'a>,
+) {
+    with_conditional_receiver_write(collector, |collector| {
+        collector.visit_statement(&statement.body)
+    });
 }
 
-fn visit_new_expression_with_imports_and_calls<'a>(collector: &mut ImportCollector, new: &NewExpression<'a>) {
+fn visit_new_expression_with_imports_and_calls<'a>(
+    collector: &mut ImportCollector,
+    new: &NewExpression<'a>,
+) {
+    collector.record_unknown_fresh_call(new.span.end);
     visit_new_expression_with_imports(collector, new);
     walk::walk_new_expression(collector, new);
+    collector.record_descriptor_call(new.span.end);
 }
 
-fn with_callable_receiver_execution(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
+fn with_callable_receiver_execution(
+    collector: &mut ImportCollector,
+    visit: impl FnOnce(&mut ImportCollector),
+) {
     // A deferred body has its own execution conditions; surrounding guards only
     // decide whether the callable is created or invoked.
     collector.receiver_conditional_region = None;
+    let fresh = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
+    let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
     let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
     visit(collector);
     collector.receiver_write_is_conditional = conditional;
+    collector.fresh_receiver_effects.active = fresh;
+    collector.fresh_receiver_effects.descriptor_call = descriptor_call;
 }

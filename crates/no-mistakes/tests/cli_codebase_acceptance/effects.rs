@@ -225,12 +225,51 @@ fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
         ("alias-snapshot", 1),
         ("alias-inline-live", 0),
         ("alias-inline-snapshot", 1),
-        ("alias-inline-snapshot-owned", 0),
-        ("inline-snapshot-owned", 0),
+        ("alias-inline-snapshot-owned", 1),
+        ("inline-snapshot-owned", 1),
+        ("inline-snapshot-owned-write-first", 0),
+        ("inline-snapshot-repeated-for", 0),
+        ("inline-snapshot-repeated-header", 0),
+        ("inline-snapshot-repeated-function", 0),
+        ("inline-snapshot-repeated-while", 0),
+        ("inline-snapshot-repeated-do", 0),
+        ("inline-snapshot-repeated-field", 0),
+        ("inline-snapshot-repeated-nested-field", 0),
+        ("inline-snapshot-repeated-accessor", 0),
         ("alias-captured", 0),
         ("alias-async", 0),
     ] {
         let entry = format!("src/{name}.mts");
+        let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
+        let sites = report["callSites"].as_array().unwrap();
+        assert_eq!(sites.len(), expected, "{name}: {report}");
+        assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+    }
+}
+
+#[test]
+fn effects_cli_distinguishes_loop_setup_from_repeated_positions() {
+    let root = fixture("inline-member-precision");
+    for (name, expected) in [
+        ("loop-setup-annex.cjs", 0),
+        ("loop-setup-async.mts", 0),
+        ("loop-setup-for-declaration.mts", 1),
+        ("loop-setup-for-expression.mts", 1),
+        ("loop-setup-for-update.mts", 0),
+        ("loop-setup-function.mts", 0),
+        ("loop-setup-in-body.mts", 0),
+        ("loop-setup-in-default.mts", 0),
+        ("loop-setup-in-rhs.mts", 1),
+        ("loop-setup-in-target.mts", 0),
+        ("loop-setup-nested-for.mts", 0),
+        ("loop-setup-nested-in.mts", 0),
+        ("loop-setup-nested-of.mts", 0),
+        ("loop-setup-of-body.mts", 0),
+        ("loop-setup-of-default.mts", 0),
+        ("loop-setup-of-rhs.mts", 1),
+        ("loop-setup-of-target.mts", 0),
+    ] {
+        let entry = format!("src/{name}");
         let report = run_json(&root, &["effects", "cache", "--entry", &entry]);
         let sites = report["callSites"].as_array().unwrap();
         assert_eq!(sites.len(), expected, "{name}: {report}");

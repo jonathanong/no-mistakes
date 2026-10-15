@@ -24,30 +24,10 @@ impl ValueMutationHistory {
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
         region: Option<u32>,
+        effects: Option<&fresh_receiver_effects::FreshReceiverEffects>,
+        phases: Option<active_reference_phases::PhaseCursor<'_>>,
     ) -> bool {
-        let mut node = self;
-        for (index, (member, read)) in path.iter().zip(reads).enumerate() {
-            let Some((offset, context)) = read else {
-                return false;
-            };
-            let Some(member) = member else {
-                return false;
-            };
-            // A distinct outer container may still retain the old descendant.
-            // Only replacement of the actual acquired receiver severs this path.
-            if index + 1 == path.len()
-                && node.assigned.as_ref().is_some_and(|assigned| {
-                    assigned.definitely_replaced(member, *offset, *context, region)
-                })
-            {
-                return true;
-            }
-            let Some(child) = node.members.get(member) else {
-                return false;
-            };
-            node = child;
-        }
-        false
+        reference_identity::reference_replaced(self, path, reads, region, effects, phases)
     }
 
     pub(super) fn record_assignment(
@@ -58,10 +38,21 @@ impl ValueMutationHistory {
         propagated: bool,
         replacement: Option<bool>,
         region: Option<u32>,
+        capture: Option<identity_metadata::FreshCapture>,
     ) {
         self.has_assignments = true;
         let mut node = self;
         for segment in path {
+            if segment.is_none() && replacement.is_some() {
+                node.assigned
+                    .get_or_insert_with(Default::default)
+                    .replacements
+                    .get_or_insert_with(Default::default)
+                    .identity
+                    .get_or_insert_with(Default::default)
+                    .unknown
+                    .record(initial.offset, initial.writer);
+            }
             node = match segment {
                 Some(member) => node.members.entry(member.clone()).or_default(),
                 None => node.dynamic.get_or_insert_with(Default::default),
@@ -84,6 +75,19 @@ impl ValueMutationHistory {
                 .replacements
                 .get_or_insert_with(Default::default)
                 .record_region(region, member, initial.offset);
+        }
+        if replacement == Some(true) && (initial.unconditional_offset.is_some() || region.is_some())
+        {
+            let identity = assigned
+                .replacements
+                .get_or_insert_with(Default::default)
+                .identity
+                .get_or_insert_with(Default::default);
+            if let Some(capture) = capture {
+                identity.capture(initial.offset, capture);
+            } else {
+                identity.captures.insert(initial.offset, None);
+            }
         }
         if propagated {
             assigned
@@ -149,7 +153,7 @@ impl ImportCollector {
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
     ) -> bool {
-        if path.is_empty() {
+        if path.is_empty() || self.fresh_receiver_effects.rebound(key.0, &key.1) {
             return false;
         }
         self.prior_member_mutations
@@ -161,6 +165,20 @@ impl ImportCollector {
                         reads,
                         self.receiver_conditional_region
                             .map(|(token, _)| token.get()),
+                        Some(&self.fresh_receiver_effects),
+                        self.fresh_receiver_effects
+                            .phases
+                            .as_ref()
+                            .filter(|_| {
+                                self.destructuring_phase_owner == Some(self.current_function_id())
+                            })
+                            .map(|phases| {
+                                phases.cursor(
+                                    &self.prior_member_mutations,
+                                    key,
+                                    self.current_function_id(),
+                                )
+                            }),
                     )
             })
     }
