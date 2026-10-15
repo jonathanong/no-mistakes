@@ -187,6 +187,7 @@ fn loop_setup_preserves_once_without_promoting_repeated_positions() {
         ("loop-setup-for-update.mts", 0),
         ("loop-setup-function.mts", 0),
         ("loop-setup-in-body.mts", 0),
+        ("loop-setup-in-default.mts", 0),
         ("loop-setup-in-rhs.mts", 1),
         ("loop-setup-in-target.mts", 0),
         ("loop-setup-nested-for.mts", 0),
