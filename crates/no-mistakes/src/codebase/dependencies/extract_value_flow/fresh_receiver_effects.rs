@@ -186,3 +186,7 @@ impl ImportCollector {
             .call(offset, self.current_function_id());
     }
 }
+
+#[cfg(test)]
+#[path = "fresh_receiver_effects_tests.rs"]
+mod tests;

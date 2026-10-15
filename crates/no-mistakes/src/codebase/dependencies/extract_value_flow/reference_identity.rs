@@ -155,3 +155,7 @@ impl ValueAssignedMutations {
                 .is_some_and(|identity| identity.changed(member, left_offset, right_offset))
     }
 }
+
+#[cfg(test)]
+#[path = "reference_identity_tests.rs"]
+mod tests;

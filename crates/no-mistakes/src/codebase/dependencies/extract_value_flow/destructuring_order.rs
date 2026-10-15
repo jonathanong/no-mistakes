@@ -138,6 +138,10 @@ impl ImportCollector {
     }
 }
 
+#[cfg(test)]
+#[path = "early_identity_tests.rs"]
+mod identity_tests;
+
 impl ImportCollector {
     pub(super) fn has_early_assignment_target(&self, target: &AssignmentTarget<'_>) -> bool {
         match target {

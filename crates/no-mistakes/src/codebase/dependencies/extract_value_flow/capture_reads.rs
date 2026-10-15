@@ -77,3 +77,13 @@ impl std::fmt::Debug for CaptureReads {
         formatter.debug_list().entries(self.iter()).finish()
     }
 }
+
+#[test]
+fn shared_capture_debug_preserves_unknown_reads_and_source_order() {
+    let reads = [Some((7, None)), None, Some((19, Some(CallableId(3))))];
+    let mut interner = CaptureInterner::default();
+    let capture = interner.capture(&reads);
+    assert_eq!(format!("{capture:?}"), format!("{:?}", reads.as_slice()));
+    assert_eq!(capture.iter().copied().collect::<Vec<_>>(), reads);
+    assert_eq!(format!("{:?}", interner.capture(&[])), "[]");
+}

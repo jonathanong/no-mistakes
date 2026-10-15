@@ -394,3 +394,28 @@ The direct imported-history, shared call-index, deduplicated entry and cold
 controls need fresh remote validation. General standalone getters/coercions
 outside existing prepared phase barriers remain an unmodeled boundary; this is
 not a heap, escape, callee-purity or general JavaScript effects analysis.
+
+At f13f706, run38670741865/job116213274119 passed the complete Rust semantic,
+documentation, weighted CRAP, complexity and overall coverage gates. The separate
+Rust patch check116215826202 reported 94.84894%, with 104 changed lines uncovered.
+The actual no-cache static CRAP command also passed at f13f706: 15,134 functions,
+zero above threshold30, with two existing parser warnings. These results apply
+to that revision, not to the additional tests below.
+
+A bounded diagnostic read the existing rust-quality-diagnostics artifact inside
+GitHub Actions and emitted only changed-production zero-hit line ranges. Its
+LCOV SHA256 is 51e22b11b79dbaceeb2c4b8d010e27309a6177f0f10dec64fbd04435fec84994;
+the compiled synthetic source is 0288f460c671d8e4db18dbb12d463234a31fd0ec,
+tree cb3ad202468dba164fb064854bfd2539db149f04, compared with d36ea2af.
+All 15 component files in that map have the same blob identities in f13f706.
+No raw coverage artifact or build log is published here.
+
+Additional tests exercise authoritative and pending scope receipts, dynamic phase
+writes, stale canonical generations, destructuring acquisition intervals from the
+saved late-union fixture, call-context and execution-epoch isolation, and shared
+capture formatting. The saved 32-deep alias fixture now also checks the semantic
+detachment result and a two-walk operation bound. Capture merge contracts preserve
+equal lineage and reject conflicting lineage, including canonical history adoption
+and foreign dynamic writers. Production behavior and existing expectations are
+unchanged. Compilation, these new assertions, and the resulting patch coverage
+remain pending fresh remote CI; no inferred coverage gain is reported.

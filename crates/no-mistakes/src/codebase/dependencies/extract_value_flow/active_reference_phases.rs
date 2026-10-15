@@ -191,3 +191,7 @@ impl ActiveReferencePhases {
 mod active_phase_stats;
 #[path = "active_phase_cursor.rs"]
 mod cursor;
+
+#[cfg(test)]
+#[path = "active_reference_phase_tests.rs"]
+mod tests;
