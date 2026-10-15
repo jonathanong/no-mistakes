@@ -20,6 +20,16 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
+        if !member
+            || self
+                .receiver_conditional_region
+                .is_some_and(|(_, admitted)| admitted != offset)
+        {
+            self.receiver_conditional_region = None;
+        }
+        if !member && self.prior_member_mutations.requires_proof(scope, base) {
+            self.fresh_receiver_effects.rebind(scope, base);
+        }
         let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
         affected.entry(scope).or_default().insert(base.to_string());
         if member && self.collect_value_flow {
@@ -34,24 +44,49 @@ impl ImportCollector {
                 },
                 |path| path.to_vec(),
             );
-            // Exact assignments belong to the syntactic receiver/direct aliases.
-            // Nested propagation keeps the existing default-origin prefix policy.
+            // A nested alias writes the same member on its original receiver.
+            // Keep exact assignment metadata alongside every propagated path.
+            let assigned_member = match receiver {
+                Some(path) => path.last().and_then(Option::as_deref),
+                None => name.rsplit_once('.').map(|(_, member)| member),
+            };
             let mut assigned = parts.pop().map(|member| (member, completed_at));
-            let mut pending = vec![(((scope, base.to_string()), parts), false, true)];
+            let has_assignment = assigned.is_some();
+            let acquired_at = self.receiver_acquisition_offset(offset);
+            let reads = vec![Some((acquired_at, self.current_function_id())); parts.len()];
+            let mut pending = vec![(
+                (((scope, base.to_string()), parts), reads),
+                false,
+                true,
+                false,
+            )];
             let mut active = fx_set();
-            let mut visited = fx_set();
-            while let Some(((key, path), exiting, remember)) = pending.pop() {
+            let mut visited = fx_map();
+            while let Some((((key, path), reads), exiting, remember, propagated)) = pending.pop() {
                 if exiting {
                     active.remove(&key);
                     continue;
                 }
                 if remember {
-                    self.remember_member_mutation(&key, &path, assigned.take(), offset);
+                    let exact = assigned.take().or_else(|| {
+                        has_assignment.then(|| (assigned_member.map(str::to_string), completed_at))
+                    });
+                    self.remember_member_mutation(&key, &path, &reads, exact, offset, propagated);
                 }
-                if !visited.insert((key.clone(), path.clone())) || !active.insert(key.clone()) {
+                // A cycle must not mark an unpropagated weaker summary visited.
+                if active.contains(&key) {
                     continue;
                 }
-                pending.push(((key.clone(), Vec::new()), true, false));
+                let Some(reads) = receiver_traversal::merge_reads(&mut visited, &key, &path, reads)
+                else {
+                    continue;
+                };
+                active.insert(key.clone());
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    self.value_flow.reference_path_visits += 1;
+                }
+                pending.push((((key.clone(), Vec::new()), Vec::new()), true, false, false));
                 affected.entry(key.0).or_default().insert(key.1.clone());
                 for target in self
                     .value_reference_links
@@ -61,7 +96,16 @@ impl ImportCollector {
                     .into_iter()
                     .flatten()
                 {
-                    pending.push(((target.clone(), path.clone()), false, false));
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        self.value_flow.reference_link_visits += 1;
+                    }
+                    pending.push((
+                        ((target.clone(), path.clone()), reads.clone()),
+                        false,
+                        false,
+                        propagated,
+                    ));
                 }
                 for index in self
                     .value_binding_indexes
@@ -76,16 +120,20 @@ impl ImportCollector {
                     {
                         continue;
                     }
+                    if self.reference_path_may_be_replaced(&key, &path, &reads) {
+                        continue;
+                    }
                     let mut references = Vec::new();
-                    nested::receiver_references(
+                    nested::write_receiver_references(
                         &self.value_flow.bindings[*index].value,
                         &path,
+                        &reads,
                         &mut references,
                     );
                     pending.extend(
                         references
                             .into_iter()
-                            .map(|reference| (reference, false, true)),
+                            .map(|reference| (reference, false, true, true)),
                     );
                 }
             }
@@ -142,65 +190,5 @@ impl ImportCollector {
         for (scope, local) in invalidated {
             self.insert_reassigned_callable_at(scope, local);
         }
-    }
-}
-impl ImportCollector {
-    fn prepare_value_references(&mut self) {
-        self.prepare_parameter_origins();
-        if self.value_reference_links.is_some() {
-            return;
-        }
-        let mut links = fx_map();
-        for binding in &self.value_flow.bindings {
-            insert_reference(&mut links, binding.scope, &binding.name, &binding.value);
-            #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_link_constructions += 1;
-            }
-        }
-        self.value_reference_links = Some(links);
-    }
-    pub(super) fn record_value_reference(
-        &mut self,
-        scope: usize,
-        name: &str,
-        value: &ValueExpression,
-    ) {
-        if let Some(links) = &mut self.value_reference_links {
-            insert_reference(links, scope, name, value);
-            #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_link_constructions += 1;
-            }
-        }
-    }
-}
-fn insert_reference(links: &mut ReferenceLinks, scope: usize, name: &str, value: &ValueExpression) {
-    if let Some((target_scope, target_name)) = referenced_value_root(value) {
-        links
-            .entry(scope)
-            .or_default()
-            .entry(name.to_string())
-            .or_default()
-            .push((target_scope, target_name.clone()));
-        links
-            .entry(target_scope)
-            .or_default()
-            .entry(target_name)
-            .or_default()
-            .push((scope, name.to_string()));
-    }
-}
-
-fn referenced_value_root(value: &ValueExpression) -> Option<(usize, String)> {
-    match value {
-        ValueExpression::Named { name, scope, .. } if !name.contains('.') => Some((
-            scope.unwrap_or(0),
-            name.split_once('.')
-                .map_or(name.as_str(), |(head, _)| head)
-                .to_string(),
-        )),
-
-        _ => None,
     }
 }

@@ -99,9 +99,11 @@ impl ValueFlowResolution<'_, '_> {
                             .and_then(|receivers| receivers.get(scope))
                             .and_then(|names| names.get(name))
                             .is_some_and(|history| {
-                                history.assignment_invalidated_reads(&projection, &|writer| {
-                                    reads.offset(read, source, writer)
-                                })
+                                history.assignment_invalidated_owned_reads(
+                                    &projection,
+                                    &|writer| reads.offset(read, source, writer),
+                                    &|| reads.default_owner(read, source),
+                                )
                             })
                     }) {
                         return true;

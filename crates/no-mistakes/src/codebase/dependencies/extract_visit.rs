@@ -1,4 +1,7 @@
 impl<'a> Visit<'a> for ImportCollector {
+    fn visit_statements(&mut self, statements: &oxc_allocator::Vec<'a, Statement<'a>>) {
+        visit_statements_with_receiver_region(self, statements);
+    }
     fn visit_expression(&mut self, expression: &Expression<'a>) { visit_expression_with_annex_b_initializer(self, expression); }
 
     fn visit_statement(&mut self, statement: &Statement<'a>) { visit_statement_with_type_binding(self, statement); }
@@ -6,6 +9,9 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) { visit_if_with_execution(self, statement); }
     fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) { visit_logical_with_execution(self, expression); }
     fn visit_conditional_expression(&mut self, expression: &oxc_ast::ast::ConditionalExpression<'a>) { visit_conditional_with_execution(self, expression); }
+    fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) { visit_binding_default_with_execution(self, pattern); }
+    fn visit_assignment_target_with_default(&mut self, target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>) { visit_target_default_with_execution(self, target); }
+    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) { visit_parameter_default_with_execution(self, parameter); }
 
     fn visit_function(
         &mut self,
@@ -53,11 +59,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
-        visit_variable_declaration_with_bindings(self, declaration);
-        self.record_callable_declaration_bindings(declaration);
-        self.record_const_callable_aliases(declaration);
-        self.record_value_declaration(declaration);
-        walk::walk_variable_declaration(self, declaration);
+        visit_variable_declaration_with_values(self, declaration);
     }
 
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
@@ -95,6 +97,8 @@ impl<'a> Visit<'a> for ImportCollector {
         with_repeat_execution(self, statement, visit_do_while_statement_per_item);
     }
 
+    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) { visit_try_with_receiver_execution(self, statement); }
+    fn visit_labeled_statement(&mut self, statement: &oxc_ast::ast::LabeledStatement<'a>) { visit_label_with_receiver_execution(self, statement); }
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
     }
@@ -159,16 +163,15 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) { self.visit_value_return(statement); }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        visit_call_expression_per_item(self, call);
+        self.visit_receiver_call(call);
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
-        visit_new_expression_with_imports(self, new);
-        walk::walk_new_expression(self, new);
+        visit_new_expression_with_imports_and_calls(self, new);
     }
 
     fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
-        self.visit_value_tagged(tagged);
+        self.visit_receiver_tagged(tagged);
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
@@ -204,11 +207,6 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
-        if let Some(name) = jsx_element_reference_name(&opening.name) {
-            if name.chars().next().is_some_and(char::is_uppercase) {
-                self.push_value_symbol_reference(name);
-            }
-        }
-        walk::walk_jsx_opening_element(self, opening);
+        visit_jsx_opening_element_with_value_reference(self, opening);
     }
 }

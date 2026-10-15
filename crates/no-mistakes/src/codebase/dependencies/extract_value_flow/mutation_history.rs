@@ -16,9 +16,16 @@ pub struct ValueMutationHistory {
 pub struct ValueAssignedMutations {
     pub members: FxHashMap<String, ValueAssignedMutation>,
     pub dynamic: Option<ValueAssignedMutation>,
+    pub propagated: Option<Box<ValuePropagatedMutations>>,
+    pub replacements: Option<Box<reference_replacements::ReferenceReplacements>>,
     pub early: Option<Box<super::destructuring_order::EarlyAssignments>>,
     #[cfg(feature = "test-instrumentation")]
     pub merge_reinsertions: usize,
+}
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ValuePropagatedMutations {
+    pub aggregate: ValueAssignedMutations,
+    pub contexts: FxHashMap<Option<CallableId>, ValueAssignedMutations>,
 }
 /// Exact writes need only one context, or the fact that writers differ.
 /// With two distinct writers, at least one differs from every reader.
@@ -26,8 +33,26 @@ pub struct ValueAssignedMutations {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ValueAssignedMutation {
     pub offset: u32,
-    pub context: Option<CallableId>,
-    pub multiple_contexts: bool,
+    /// Earliest guaranteed fresh overwrite, distinct from merely possible writes.
+    pub unconditional_offset: Option<std::num::NonZeroU32>,
+    pub writer: ValueAssignedWriter,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValueAssignedWriter {
+    Module,
+    Callable(CallableId),
+    Mixed,
+}
+impl ValueAssignedWriter {
+    pub(super) fn single(context: Option<CallableId>) -> Self {
+        context.map_or(Self::Module, Self::Callable)
+    }
+    pub(super) fn context(self) -> Option<CallableId> {
+        match self {
+            Self::Callable(id) => Some(id),
+            _ => None,
+        }
+    }
 }
 impl ValueMutationHistory {
     pub(super) fn record(

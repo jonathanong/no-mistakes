@@ -25,62 +25,74 @@ impl ImportCollector {
         &mut self,
         key: &(usize, String),
         path: &[Option<String>],
+        reads: &[nested::ReceiverRead],
         assigned: Option<(Option<String>, u32)>,
         offset: u32,
+        propagated: bool,
     ) {
         let context = self.current_function_id();
-        let history = self
-            .prior_member_mutations
-            .entry(key.0)
-            .or_default()
-            .entry(key.1.clone())
-            .or_default();
-        // Nested propagation records a coarse receiver mutation without an
-        // exact assigned leaf. Projected default reads must retain that guard.
+        let unconditional =
+            !self.receiver_write_is_conditional && self.receiver_replacement_is_fresh;
+        let region = self
+            .receiver_conditional_region
+            .filter(|(_, admitted)| *admitted == offset && self.receiver_replacement_is_fresh)
+            .map(|(token, _)| token.get());
+        let capture_allowed = !self.fresh_receiver_effects.rebound(key.0, &key.1);
+        let captured = assigned.as_ref().and_then(|(_, completed_at)| {
+            (capture_allowed
+                && self.receiver_replacement_is_fresh
+                && (unconditional || region.is_some())
+                && self.prior_member_mutations.requires_proof(key.0, &key.1))
+            .then(|| identity_metadata::FreshCapture {
+                origin: Some((offset, context)),
+                epoch: self.fresh_receiver_effects.epoch,
+                reads: self.fresh_receiver_effects.capture(reads),
+                phase: self
+                    .fresh_receiver_effects
+                    .phases
+                    .as_ref()
+                    .and_then(|phases| phases.capture_phase(self.assignment_target_start)),
+                completed_at: *completed_at,
+            })
+        });
+        let (history, proof) = self.prior_member_mutations.history_mut(key);
+        // Projected default reads retain guards for writes without an exact leaf.
         history.has_unassigned |= assigned.is_none();
         history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
-            history.record_assignment(path, assigned, completed_at, context);
+            let write = mutation_history::ValueAssignedMutation {
+                offset: completed_at,
+                writer: mutation_history::ValueAssignedWriter::single(context),
+                unconditional_offset: unconditional
+                    .then(|| std::num::NonZeroU32::new(completed_at))
+                    .flatten(),
+            };
+            history.record_assignment(
+                path,
+                assigned,
+                write,
+                propagated,
+                proof.then_some(self.receiver_replacement_is_fresh),
+                (region, captured),
+            );
         }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {
+        #[cfg(feature = "test-instrumentation")]
+        self.fresh_receiver_effects
+            .record_counts(&mut self.value_flow);
         let Some(index) = self.parameter_default_origins.take() else {
             return;
         };
         let mut histories = std::mem::take(&mut self.prior_member_mutations);
-        let seeds = histories
-            .iter()
-            .flat_map(|(scope, names)| names.keys().map(move |name| (*scope, name.clone())))
-            .collect::<Vec<_>>();
+        let components = histories.finish();
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.reference_component_links = histories.links;
+            self.value_flow.reference_component_root_steps = histories.root_steps.get();
+        }
         let mut retained = fx_map();
-        let mut visited = fx_set();
-        for seed in seeds {
-            let mut pending = vec![seed];
-            let mut component = Vec::new();
-            let mut history = mutation_history::ValueMutationHistory::default();
-            while let Some(key) = pending.pop() {
-                if !visited.insert(key.clone()) {
-                    continue;
-                }
-                if let Some(source) = histories
-                    .get_mut(&key.0)
-                    .and_then(|names| names.remove(key.1.as_str()))
-                {
-                    history.merge(source);
-                }
-                if let Some(neighbors) = self
-                    .value_reference_links
-                    .as_ref()
-                    .and_then(|links| links.get(&key.0))
-                    .and_then(|names| names.get(key.1.as_str()))
-                {
-                    pending.extend(neighbors.iter().cloned());
-                }
-                component.push(key);
-            }
-            if component.is_empty() {
-                continue;
-            }
+        for (component, mut history) in components {
             history.finish_early_assignments();
             #[cfg(feature = "test-instrumentation")]
             {

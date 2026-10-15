@@ -34,13 +34,24 @@ impl EarlyAssignments {
         ]
         .into_iter()
         .any(|(write, ranges)| {
-            let Some(offset) = write.and_then(|write| reader(write.context)) else {
+            let Some(offset) = write.and_then(|write| reader(write.writer.context())) else {
                 return false;
             };
             ranges.is_some_and(|ranges| ranges.invalidated(offset))
         })
     }
 
+    pub(super) fn identity_uncertain(
+        &self,
+        member: &str,
+        left: u32,
+        right: u32,
+        assignments: &ValueAssignedMutations,
+    ) -> bool {
+        left != right
+            && (self.invalidated(member, &|_| Some(left), assignments)
+                || self.invalidated(member, &|_| Some(right), assignments))
+    }
     fn finish(&mut self) {
         for ranges in self
             .members
@@ -100,8 +111,7 @@ impl ImportCollector {
         let base = name.split('.').next().expect("write has a receiver");
         let Some(mut history) = self
             .prior_member_mutations
-            .get_mut(&scope)
-            .and_then(|names| names.get_mut(base))
+            .existing_history_mut(scope, base)
         else {
             return;
         };
@@ -127,6 +137,10 @@ impl ImportCollector {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "early_identity_tests.rs"]
+mod identity_tests;
 
 impl ImportCollector {
     pub(super) fn has_early_assignment_target(&self, target: &AssignmentTarget<'_>) -> bool {
@@ -159,9 +173,7 @@ impl ImportCollector {
             Expression::Identifier(identifier) => {
                 let name = identifier.name.as_str();
                 let scope = self.callee_binding_scope(name).unwrap_or(0);
-                self.prior_member_mutations
-                    .get(&scope)
-                    .is_some_and(|names| names.contains_key(name))
+                self.prior_member_mutations.contains_history(scope, name)
             }
             _ => false,
         }

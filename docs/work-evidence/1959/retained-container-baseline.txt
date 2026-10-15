@@ -1,0 +1,17 @@
+Verified frozen 917 baseline; isolated saved fixtures.
+Original raw SHA-256: 7c3487466ad8f99065cf59cc8f15e35a960a871b29f3b37816f14720e11fec6a
+Path normalization: none; all paths below are repository-relative fixture paths.
+
+src/nested-receiver-containers/retained-object.mts|retainedObject|value.get|primary.get
+src/nested-receiver-containers/retained-object.mts|-|retainedObject|?
+src/nested-receiver-containers/retained-array.mts|retainedArray|value.get|primary.get
+src/nested-receiver-containers/retained-array.mts|-|retainedArray|?
+src/nested-receiver-containers/replaced-terminal.mts|replacedTerminal|value.get|primary.get
+src/nested-receiver-containers/replaced-terminal.mts|-|replacedTerminal|?
+src/nested-receiver-containers/copied-method.mts|-|copiedGet|?
+src/nested-receiver-containers/copied-method.mts|copiedBeforeContainer|fn|primary.get
+src/nested-receiver-containers/copied-method.mts|-|copiedBeforeContainer|?
+src/nested-receiver-containers/acquired-wrapper.mts|acquiredBeforeContainer|value.get|primary.get
+src/nested-receiver-containers/acquired-wrapper.mts|-|acquiredBeforeContainer|?
+src/nested-receiver-containers/sibling.mts|retainedSibling|value.get|primary.get
+src/nested-receiver-containers/sibling.mts|-|retainedSibling|?

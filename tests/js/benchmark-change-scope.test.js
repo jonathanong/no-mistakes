@@ -39,6 +39,23 @@ test("routes general language fixtures independently from native fixtures", () =
   );
 });
 
+test("routes opt-in frontend lifecycle controls to their benchmark owner", () => {
+  for (const path of [
+    ".github/frontend-lifecycle-smoke.yml",
+    ".github/frontend-lifecycle.yml",
+    ".github/scripts/frontend-lifecycle-run.sh",
+    ".github/scripts/frontend-lifecycle-smoke.sh",
+    ".github/scripts/frontend-lifecycle-profile.py",
+    ".github/scripts/test_frontend_lifecycle_profile.py",
+    ".github/scripts/frontend-lifecycle.test.cjs",
+  ]) {
+    assert.deepEqual(benchmarkChangeScope(modified([path])), {
+      changed: true,
+      scope: "language-frontends",
+    });
+  }
+});
+
 test("conservatively runs every shard for shared benchmark inputs", () => {
   for (const path of [
     "Cargo.lock",

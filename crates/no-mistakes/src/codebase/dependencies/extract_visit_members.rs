@@ -27,7 +27,7 @@ fn visit_method_definition_with_scope<'a>(
 }
 
 /// A class field evaluates its decorators and key first, then its annotation and
-/// initializer, all in the enclosing scope.
+/// initializer. Instance initializers cannot prove eager receiver replacement.
 fn visit_property_definition_with_decorators<'a>(
     collector: &mut ImportCollector,
     property: &PropertyDefinition<'a>,
@@ -38,15 +38,7 @@ fn visit_property_definition_with_decorators<'a>(
         collector.visit_ts_type_annotation(type_annotation);
     }
     if let Some(value) = &property.value {
-        // An anonymous class outside an inferred class binding can reach this
-        // visitor with module context, though its field runs per instance.
-        if !property.r#static {
-            collector.repeat_depth += 1;
-        }
-        collector.visit_expression(value);
-        if !property.r#static {
-            collector.repeat_depth -= 1;
-        }
+        visit_receiver_field_initializer(collector, property.r#static, value);
     }
 }
 
@@ -60,13 +52,7 @@ fn visit_accessor_property_with_decorators<'a>(
         collector.visit_ts_type_annotation(type_annotation);
     }
     if let Some(value) = &property.value {
-        if !property.r#static {
-            collector.repeat_depth += 1;
-        }
-        collector.visit_expression(value);
-        if !property.r#static {
-            collector.repeat_depth -= 1;
-        }
+        visit_receiver_field_initializer(collector, property.r#static, value);
     }
 }
 
@@ -112,5 +98,29 @@ fn visit_object_property_with_scope<'a>(
             collector.pop_function_scope(pushed);
         }
         _ => walk::walk_object_property(collector, property),
+    }
+}
+
+fn visit_receiver_field_initializer<'a>(
+    collector: &mut ImportCollector,
+    is_static: bool,
+    value: &Expression<'a>,
+) {
+    if is_static {
+        collector.visit_expression(value);
+    } else {
+        // Deferred fields can run once per instance even with module context.
+        collector.repeat_depth += 1;
+        let active = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
+        let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
+        let epoch = std::mem::replace(
+            &mut collector.fresh_receiver_effects.epoch,
+            u64::from(value.span().start) + 1,
+        );
+        with_conditional_receiver_write(collector, |collector| collector.visit_expression(value));
+        collector.fresh_receiver_effects.epoch = epoch;
+        collector.fresh_receiver_effects.active = active;
+        collector.fresh_receiver_effects.descriptor_call = descriptor_call;
+        collector.repeat_depth -= 1;
     }
 }
