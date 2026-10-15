@@ -1,4 +1,32 @@
 pub(super) const CASES: &[(&str, &str, &str, Option<&str>)] = &[
+    ("global-after-capture-await", "scan", "value.get", None),
+    ("global-await-operand-capture", "scan", "value.get", None),
+    (
+        "global-before-capture-await",
+        "scan",
+        "value.get",
+        Some("primary.get"),
+    ),
+    (
+        "global-deferred-await",
+        "scan",
+        "value.get",
+        Some("primary.get"),
+    ),
+    ("global-await-saved", "scan", "fn", Some("primary.get")),
+    ("global-after-capture-yield", "run/scan", "value.get", None),
+    (
+        "global-yield-operand-capture",
+        "run/scan",
+        "value.get",
+        None,
+    ),
+    (
+        "global-before-capture-yield",
+        "run/scan",
+        "value.get",
+        Some("primary.get"),
+    ),
     (
         "global-after-capture-call",
         "globalAfterCaptureCall",
