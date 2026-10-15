@@ -144,7 +144,7 @@ impl ImportCollector {
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut Vec<nested::ReceiverWrite<R>>,
+        output: &mut impl Extend<nested::ReceiverWrite<R>>,
         foreign_before: usize,
     ) {
         if let Some(origins) = &self.receiver_only_bindings {

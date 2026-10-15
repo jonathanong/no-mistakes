@@ -37,14 +37,14 @@ pub(super) fn write_receiver_references<R: RootCoordinate>(
     value: &ValueExpression,
     path: &[Option<String>],
     reads: &[ReceiverRead],
-    output: &mut Vec<ReceiverWrite<R>>,
+    output: &mut impl Extend<ReceiverWrite<R>>,
 ) {
     walk_references(value, path, 0, &mut |receiver, acquired, read| {
         let retained = receiver.1.len() - acquired;
         let reads = std::iter::repeat_n(Some(read), acquired)
             .chain(reads[reads.len() - retained..].iter().copied())
             .collect();
-        output.push((receiver, reads, R::capture(read)));
+        output.extend(std::iter::once((receiver, reads, R::capture(read))));
     });
 }
 

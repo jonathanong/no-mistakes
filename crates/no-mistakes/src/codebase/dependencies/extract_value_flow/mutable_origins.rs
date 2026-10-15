@@ -127,7 +127,7 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut Vec<nested::ReceiverWrite<R>>,
+        output: &mut impl Extend<nested::ReceiverWrite<R>>,
         foreign_before: usize,
     ) {
         let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {

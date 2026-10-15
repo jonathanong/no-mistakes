@@ -56,6 +56,8 @@ pub struct ValueFlowFacts {
     /// Actual active/visited hash buffers constructed by mutation traversals.
     #[cfg(feature = "test-instrumentation")]
     pub reference_state_heap_buffers: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_output_heap_buffers: usize,
     /// Actual stores to earliest binding/parameter/callable invalidation offsets.
     #[cfg(feature = "test-instrumentation")]
     pub reference_invalidation_stores: usize,

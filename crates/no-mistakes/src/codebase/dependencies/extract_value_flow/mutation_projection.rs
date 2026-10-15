@@ -117,7 +117,8 @@ impl ImportCollector {
                     propagated,
                 ));
             }
-            let mut references = Vec::new();
+            let mut references =
+                reference_output::ReferenceOutput::<nested::ReceiverWrite<R>>::default();
             // Direct component aliases have no value projection. Keep their
             // canonical proof lookup cold, as in the original traversal.
             let first_projected = self
@@ -184,6 +185,8 @@ impl ImportCollector {
                     );
                 }
             }
+            #[cfg(feature = "test-instrumentation")]
+            references.record_counts(&mut self.value_flow);
             pending.extend(
                 references
                     .into_iter()

@@ -32,9 +32,11 @@ fn destructured_value_bindings_share_one_initializer() {
         })
         .collect::<Vec<_>>();
     assert_eq!(bases.len(), 128);
-    assert!(bases
-        .iter()
-        .all(|base| std::sync::Arc::ptr_eq(bases[0], base)));
+    assert!(
+        bases
+            .iter()
+            .all(|base| std::sync::Arc::ptr_eq(bases[0], base))
+    );
     assert!(
         matches!(bases[0].as_ref(), ValueExpression::Object(fields, false) if fields.len() == 128)
     );
@@ -80,12 +82,14 @@ fn member_writes_do_not_rebuild_reference_links() {
             .unwrap();
         assert!(binding.invalidated_at.is_some());
     }
-    assert!(facts
-        .value_flow
-        .bindings
-        .iter()
-        .filter(|binding| binding.name.starts_with("unused"))
-        .all(|binding| binding.invalidated_at.is_none()));
+    assert!(
+        facts
+            .value_flow
+            .bindings
+            .iter()
+            .filter(|binding| binding.name.starts_with("unused"))
+            .all(|binding| binding.invalidated_at.is_none())
+    );
 }
 
 #[test]
@@ -108,9 +112,11 @@ fn default_exports_extend_an_already_initialized_reference_index() {
         .iter()
         .find(|binding| binding.name == "default")
         .unwrap();
-    assert!(exported
-        .invalidated_at
-        .is_some_and(|offset| offset > exported.declared_at));
+    assert!(
+        exported
+            .invalidated_at
+            .is_some_and(|offset| offset > exported.declared_at)
+    );
     assert!(exported.mutation_contexts.contains(&None));
 }
 
@@ -154,9 +160,11 @@ fn late_defaults_share_one_indexed_mutation_history() {
             &sources[0].history
         })
         .collect::<Vec<_>>();
-    assert!(histories
-        .iter()
-        .all(|history| std::sync::Arc::ptr_eq(histories[0], history)));
+    assert!(
+        histories
+            .iter()
+            .all(|history| std::sync::Arc::ptr_eq(histories[0], history))
+    );
     let history = histories[0];
     let receivers = facts.value_flow.receiver_mutations.as_ref().unwrap();
     let receiver_histories = receivers
@@ -165,19 +173,23 @@ fn late_defaults_share_one_indexed_mutation_history() {
         .collect::<Vec<_>>();
     // Inline-call analysis retains every alias, but all names share one history.
     assert_eq!(receiver_histories.len(), 513);
-    assert!(receiver_histories
-        .iter()
-        .all(|receiver| std::sync::Arc::ptr_eq(history, receiver)));
+    assert!(
+        receiver_histories
+            .iter()
+            .all(|receiver| std::sync::Arc::ptr_eq(history, receiver))
+    );
     let cloned = facts.value_flow.clone();
     assert!(std::sync::Arc::ptr_eq(
         receivers,
         cloned.receiver_mutations.as_ref().unwrap()
     ));
     assert_eq!(history.members.len(), 512);
-    assert!(history
-        .members
-        .values()
-        .all(|child| child.members.is_empty()));
+    assert!(
+        history
+            .members
+            .values()
+            .all(|child| child.members.is_empty())
+    );
     assert!(history.invalidated(&[], &[], u32::MAX, None, false));
     assert!(history.invalidated(&[], &["p0".into()], u32::MAX, None, false));
     assert!(!history.invalidated(&[], &["missing".into()], u32::MAX, None, false));
@@ -212,9 +224,11 @@ fn late_default_exports_capture_an_already_mutated_receiver() {
         .iter()
         .find(|binding| binding.name == "default")
         .unwrap();
-    assert!(export
-        .invalidated_at
-        .is_some_and(|offset| offset < export.declared_at));
+    assert!(
+        export
+            .invalidated_at
+            .is_some_and(|offset| offset < export.declared_at)
+    );
     assert!(export.mutation_contexts.contains(&None));
 }
 
@@ -249,7 +263,7 @@ fn nested_writes_retain_exact_assignments_in_shared_receiver_histories() {
         .propagated
         .as_ref()
         .unwrap()
-        .aggregate;
+        .aggregate();
     assert_eq!(assigned.members.len(), 2);
     assert!(assigned.members.contains_key("get"));
     assert!(assigned.members.contains_key("info"));
@@ -260,19 +274,22 @@ fn nested_writes_retain_exact_assignments_in_shared_receiver_histories() {
         .propagated
         .as_ref()
         .unwrap()
-        .contexts;
-    assert_eq!(contexts.len(), 1);
-    assert_eq!(contexts[&None].members.len(), 2);
-    assert!(primary.members["nested"]
-        .assigned
-        .as_ref()
-        .unwrap()
-        .propagated
-        .as_ref()
-        .unwrap()
-        .aggregate
-        .members
-        .contains_key("get"));
+        .context(None)
+        .unwrap();
+    assert_eq!(contexts.members.len(), 2);
+    assert_eq!(contexts.members, assigned.members);
+    assert!(
+        primary.members["nested"]
+            .assigned
+            .as_ref()
+            .unwrap()
+            .propagated
+            .as_ref()
+            .unwrap()
+            .aggregate()
+            .members
+            .contains_key("get")
+    );
     let defaults = facts.value_flow.parameters[0]
         .default_mutations
         .as_ref()
@@ -325,7 +342,7 @@ fn nested_writes_bound_existing_traversal_and_canonical_lookups() {
             .propagated
             .as_ref()
             .unwrap()
-            .aggregate
+            .aggregate()
             .members
             .len(),
         128

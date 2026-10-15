@@ -750,3 +750,9 @@ capsules carry an explicit marker; default externally prepared capsules remain
 conservative. Any receiver write, region, call proof, or unsafe owner requires
 receiver resolution. This representation preserves the single request-owned
 fact pass and canonical dependency graph; it adds no persistent cache.
+
+Propagated receiver mutation facts share the aggregate and context history while
+there is one writer context. A second context promotes the storage to separate
+aggregate and context projections. Rust consumers read these through
+`aggregate()` and `context(owner)` instead of writable storage fields; CLI,
+Node reports and the logical Rust fact debug shape remain unchanged.
