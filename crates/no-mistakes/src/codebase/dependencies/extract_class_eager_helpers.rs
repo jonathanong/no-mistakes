@@ -129,7 +129,7 @@ fn walk_instance_property_with_class_scope<'a>(
     // an inline call here from claiming module-once execution.
     collector.push_function_scope(Some(class_name.to_string()), class_id);
     if let Some(value) = &property.value {
-        collector.visit_expression(value);
+        visit_receiver_field_initializer(collector, false, value);
     }
     collector.pop_function_scope(true);
 }

@@ -137,6 +137,68 @@ fn imported_receivers_preserve_member_snapshots_and_live_nested_inputs() {
     }
 }
 
+#[test]
+fn nested_alias_writes_invalidate_original_receivers_with_member_precision() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/query-reached-per-item/provenance-fixture"),
+    );
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/nested-receiver-writes.mts"));
+    for (caller, callee, export) in [
+        (Some("before"), "client.get", Some("primary.get")),
+        (Some("scan"), "client.get", None),
+        (Some("untouched"), "client.info", Some("primary.info")),
+        (Some("other"), "client.info", Some("session.info")),
+        (Some("snapshot"), "get", Some("primary.get")),
+        (Some("objectSnapshot"), "options.get", Some("primary.get")),
+        (Some("copiedAfter"), "get", None),
+        (Some("nestedWrite"), "client.nested.get", None),
+        (
+            Some("sibling"),
+            "client.other.get",
+            Some("primary.other.get"),
+        ),
+        (None, "nestedCopied", Some("primary.nested.get")),
+        (Some("detachedReceiver"), "client.get", Some("primary.get")),
+        (Some("dynamicWrite"), "client.get", None),
+        (Some("mutableReceiver"), "client.get", Some("primary.get")),
+        (Some("savedReceiver"), "client.get", None),
+        (Some("liveReceiver"), "client.get", Some("primary.get")),
+        (Some("reboundAlias"), "client.get", Some("primary.get")),
+        (Some("calledReceiver"), "client.get", None),
+        (Some("mixedReceiver"), "client.get", None),
+        (Some("inverseReceiver"), "client.get", None),
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.caller.as_deref() == caller && site.source_callee == callee)
+            .unwrap();
+        assert_eq!(
+            match &site.target {
+                ResolvedCallTarget::ModuleExport { export_path, .. } => Some(export_path.as_str()),
+                _ => None,
+            },
+            export,
+            "{caller:?} {callee}: {site:?}"
+        );
+    }
+}
+
 #[cfg(feature = "test-instrumentation")]
 #[test]
 fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {

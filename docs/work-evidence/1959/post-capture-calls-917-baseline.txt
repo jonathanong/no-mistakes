@@ -1,0 +1,34 @@
+Verified frozen917 production graph baseline. Candidate execution is pending.
+Helper SHA256: 1fa11a4991c27a7de8637faece3842e23e17285c64f05a8409dead6046ab4646
+Raw output SHA256: 79eeefbee4bb94c01e7f10c27dd373c7b39b70727b52551a41b53c1b3b6efead
+Paths below are relative fixture input identifiers; output paths are unmodified.
+
+src/nested-receiver-containers/global-after-capture-call.mts SHA256 c2951e35835f2fc291a0878c14bcced7e19cedef48c69c67721b5ae6a50983ed
+src/nested-receiver-containers/global-after-capture-call.mts|-|opaque|?
+src/nested-receiver-containers/global-after-capture-call.mts|globalAfterCaptureCall|value.get|primary.get
+src/nested-receiver-containers/global-after-capture-call.mts|-|globalAfterCaptureCall|?
+
+src/nested-receiver-containers/global-call-argument-capture.mts SHA256 c7b9a9aa3b76f339d2a964c5b545dc161e33c052eb74e4207db6bb6a329ea93a
+src/nested-receiver-containers/global-call-argument-capture.mts|-|opaque|?
+src/nested-receiver-containers/global-call-argument-capture.mts|globalCallArgumentCapture|value.get|primary.get
+src/nested-receiver-containers/global-call-argument-capture.mts|-|globalCallArgumentCapture|?
+
+src/nested-receiver-containers/global-before-capture-call.mts SHA256 62890da779484e15ed206c45f5e000acc30dcfb19ef73b905f16928d5e637893
+src/nested-receiver-containers/global-before-capture-call.mts|-|opaque|?
+src/nested-receiver-containers/global-before-capture-call.mts|globalBeforeCaptureCall|value.get|primary.get
+src/nested-receiver-containers/global-before-capture-call.mts|-|globalBeforeCaptureCall|?
+
+src/nested-receiver-containers/global-after-capture-new.mts SHA256 ba710dce128b85026395cee96d543e19249fdb8103c33015f0bcacec38e135a1
+src/nested-receiver-containers/global-after-capture-new.mts|-|Opaque|?
+src/nested-receiver-containers/global-after-capture-new.mts|globalAfterCaptureNew|value.get|primary.get
+src/nested-receiver-containers/global-after-capture-new.mts|-|globalAfterCaptureNew|?
+
+src/nested-receiver-containers/global-after-capture-tagged.mts SHA256 8785ec3061c9a9dba7753571827e8e0b65dcffb80dc15fb4d70da460696fabb4
+src/nested-receiver-containers/global-after-capture-tagged.mts|-|opaque|?
+src/nested-receiver-containers/global-after-capture-tagged.mts|globalAfterCaptureTagged|value.get|primary.get
+src/nested-receiver-containers/global-after-capture-tagged.mts|-|globalAfterCaptureTagged|?
+
+src/nested-receiver-containers/global-after-capture-deferred-call.mts SHA256 8a0ac26d8e0cf8dd094dedd8a300685da5d0087b8a555dde85afae5f80a6eec8
+src/nested-receiver-containers/global-after-capture-deferred-call.mts|deferred|opaque|?
+src/nested-receiver-containers/global-after-capture-deferred-call.mts|globalAfterCaptureDeferredCall|value.get|primary.get
+src/nested-receiver-containers/global-after-capture-deferred-call.mts|-|globalAfterCaptureDeferredCall|?

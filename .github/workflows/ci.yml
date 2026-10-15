@@ -559,7 +559,19 @@ jobs:
 
       - name: Enforce CRAP threshold
         timeout-minutes: 2
-        run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
+        run: |
+          set -o pipefail
+          cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip 2>&1 | tee target/llvm-cov/crap-report.txt
+
+      - name: Upload Rust quality diagnostics
+        if: ${{ !cancelled() && hashFiles('target/llvm-cov/lcov.info') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: rust-quality-diagnostics
+          retention-days: 7
+          path: |
+            target/llvm-cov/crap-report.txt
+            target/llvm-cov/lcov.info
 
       - name: Enforce cyclomatic complexity threshold
         timeout-minutes: 2

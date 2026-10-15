@@ -251,7 +251,10 @@ include!("extract_collector_deferred_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
 include!("extract_control_flow_scopes.rs");
+include!("extract_loop_assignment_scopes.rs");
+include!("extract_receiver_regions.rs");
 include!("extract_execution.rs");
+include!("extract_receiver_assignment_helpers.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
 include!("extract_resource_scopes.rs");
@@ -262,8 +265,6 @@ use extract_visit_hoist::{
     walk_arrow_function_with_body_bindings, walk_function_with_body_bindings,
 };
 include!("extract_visit_types.rs");
-mod extract_binding_names;
-use extract_binding_names::{assignment_target_names, binding_names};
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
 

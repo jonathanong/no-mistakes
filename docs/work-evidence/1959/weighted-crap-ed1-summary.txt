@@ -1,0 +1,9 @@
+Head: ed1d14d397697487ddaf89fc3725d11cb7499e99
+Workflow run: 38644977268; Rust job: 116130043974
+Artifact: 11932317069 rust-quality-diagnostics
+ZIP SHA256: fabd2211748ed893f0ae84aa000ea679ed01ecee012fc715d865459af3d0914a
+Command: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
+│ ✗ ┆ 90.0 ┆  9 ┆ ░░░░░░░░░░   0.0% ┆ ValueAssignedMutations::merge                                                      ┆ ./crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_members.rs:5                                           │
+✗ 1/12516 function(s) exceed CRAP threshold 30.
+LCOV: assigned_members.rs merge DA5-38 zero; both merge function counters zero.
+Raw full report and LCOV: /workspace/quality-1959-evidence/ed1-ci
