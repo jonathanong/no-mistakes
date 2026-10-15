@@ -37,9 +37,9 @@ impl ValueMutationHistory {
         initial: ValueAssignedMutation,
         propagated: bool,
         replacement: Option<bool>,
-        region: Option<u32>,
-        capture: Option<identity_metadata::FreshCapture>,
+        proof: (Option<u32>, Option<identity_metadata::FreshCapture>),
     ) {
+        let (region, capture) = proof;
         self.has_assignments = true;
         let mut node = self;
         for segment in path {

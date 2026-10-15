@@ -33,8 +33,7 @@ pub(super) struct PhaseCursor<'a> {
 }
 impl ActiveReferencePhases {
     pub(super) fn new(
-        catalog: &Arc<PhaseCatalog>,
-        rhs_end: u32,
+        coordinates: (&Arc<PhaseCatalog>, u32),
         writes: &[PhaseWrite],
         scopes: Option<&FxHashMap<u32, usize>>,
         histories: &ReceiverHistories,
@@ -42,6 +41,7 @@ impl ActiveReferencePhases {
         inert_rhs: bool,
         effects: Option<BTreeSet<(u32, u32)>>,
     ) -> Self {
+        let (catalog, rhs_end) = coordinates;
         let mut result = Self {
             catalog: Arc::clone(catalog),
             rhs_end,

@@ -73,8 +73,7 @@ impl ImportCollector {
                 write,
                 propagated,
                 proof.then_some(self.receiver_replacement_is_fresh),
-                region,
-                captured,
+                (region, captured),
             );
         }
     }

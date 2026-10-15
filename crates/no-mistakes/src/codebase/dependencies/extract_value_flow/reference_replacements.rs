@@ -103,15 +103,12 @@ impl ReferenceReplacements {
                 .0
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
-        let Some(fresh) = self
+        let fresh = self
             .regions
             .as_ref()
             .and_then(|regions| regions.get(&region))
             .and_then(|members| members.get(member))
-            .and_then(|events| events.range(..=offset).next_back())
-        else {
-            return None;
-        };
+            .and_then(|events| events.range(..=offset).next_back())?;
         // Every possible-original restoration remains in the global timeline,
         // even when written in another region. Future writes cannot alter snapshots.
         let original = self

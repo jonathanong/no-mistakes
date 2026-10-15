@@ -80,8 +80,7 @@ impl ImportCollector {
                 let inert = !nested_pattern
                     && inert_receiver_rhs::inert_rhs(rhs, &mut self.fresh_receiver_effects);
                 Box::new(active_reference_phases::ActiveReferencePhases::new(
-                    &catalog,
-                    rhs.span().end,
+                    (&catalog, rhs.span().end),
                     &writes,
                     self.destructuring_phase_receipts
                         .as_ref()
