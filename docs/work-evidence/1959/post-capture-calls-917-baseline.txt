@@ -23,7 +23,7 @@ src/nested-receiver-containers/global-after-capture-new.mts|-|Opaque|?
 src/nested-receiver-containers/global-after-capture-new.mts|globalAfterCaptureNew|value.get|primary.get
 src/nested-receiver-containers/global-after-capture-new.mts|-|globalAfterCaptureNew|?
 
-src/nested-receiver-containers/global-after-capture-tagged.mts SHA256 bfb7c4d66a0affd89380eeb1aec59504ee494d29516bea5c14b0fd17e029fe18
+src/nested-receiver-containers/global-after-capture-tagged.mts SHA256 8785ec3061c9a9dba7753571827e8e0b65dcffb80dc15fb4d70da460696fabb4
 src/nested-receiver-containers/global-after-capture-tagged.mts|-|opaque|?
 src/nested-receiver-containers/global-after-capture-tagged.mts|globalAfterCaptureTagged|value.get|primary.get
 src/nested-receiver-containers/global-after-capture-tagged.mts|-|globalAfterCaptureTagged|?
