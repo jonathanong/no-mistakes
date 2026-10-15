@@ -1,0 +1,588 @@
+{
+  "status": "PROPOSAL ONLY: requires exact-head successful CI/all4Codecov and independent concrete source review before publication. No execution or measurement yet.",
+  "pr": 2022,
+  "baseline": {
+    "revision": "9e8b16d2d9717d8950a482f536bb8ddbb8be4fb9",
+    "tree": "57f06d96a0501394a9645d3b5d72dcc2a75247d9",
+    "scope": "Actual main parent including2031; frozen for this experiment only. No historical source-equivalence claim."
+  },
+  "candidate": {
+    "revision": "6c834a86e2842585ef2b5938457fcb2e9e55088c",
+    "tree": "17c3ca618f216765b3de573d229260a1b896ea81",
+    "parents": [
+      "9e8b16d2d9717d8950a482f536bb8ddbb8be4fb9",
+      "bab0868fd718aa79f625762ecd50425044a7df8c"
+    ],
+    "pr_head": "bab0868fd718aa79f625762ecd50425044a7df8c",
+    "verified_ci_run": 38688822960,
+    "ci_semantics_quality_status": "PENDING: prepare enforces actual success and all4Codecov before builds."
+  },
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "toolchain": "1.99.0",
+  "target": "aarch64-unknown-linux-gnu",
+  "rayon_threads": 4,
+  "iterations_cap": 10000,
+  "blocks_each_order": 4,
+  "bootstrap_seed": 1971,
+  "inputs": {
+    "shared-facts": {
+      "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+          "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+          "bytes": 2454,
+          "lines": 3
+        }
+      ]
+    },
+    "jsx-facts": {
+      "path": "fixtures/performance/react-traits/many-components.tsx",
+      "files": [
+        {
+          "path": "fixtures/performance/react-traits/many-components.tsx",
+          "sha256": "5076d2b9386e7920897e81a85ec9743e32c45fb1f12fbf6f58c51509ec5659e8",
+          "bytes": 3293,
+          "lines": 154
+        }
+      ],
+      "characteristics": {
+        "reviewed_jsx_opening_tags": 37,
+        "uppercase_named_functions": 33,
+        "scope": "Fixture-specific descriptive source count; generic<null> excluded, not an analyzer facts counter"
+      }
+    },
+    "cold-graph": {
+      "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/entry.mts",
+          "sha256": "2d5684755ea047b4d46ea8c2fff46bd2d62b8ea8e67894dedd53aa5470a2d5ed",
+          "bytes": 111,
+          "lines": 4
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/local.mts",
+          "sha256": "6dae0f6762b93c3e7f4b227c0d409e4f709caad09aa9534eec5e788cab8f6e85",
+          "bytes": 44,
+          "lines": 3
+        }
+      ]
+    },
+    "default-cold": {
+      "path": "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture/src/defaults.mts",
+          "sha256": "51dba1ee00b475ce463f6e974c80385ffb4bae5b8a57c331ae656ad5931cefee",
+          "bytes": 1585,
+          "lines": 131
+        }
+      ],
+      "characteristics": {
+        "physical_consume_calls": 128,
+        "receiver_writes": 0,
+        "scope": "Reviewed no-write saved control; actual prepared counts are exactCI assertions, not this descriptor"
+      }
+    },
+    "hot-16": {
+      "path": "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture/src/entry.mts",
+          "sha256": "3dadf44eb1b094a2e2518ee15fc9f964e8afa1334e91cc7ef9a083ad06d88c63",
+          "bytes": 822,
+          "lines": 21
+        }
+      ]
+    },
+    "hot-256": {
+      "path": "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture/src/entry.mts",
+          "sha256": "812632e137131078d364aac7fc0cbd9f686a77128837736e13d49f09ed810b99",
+          "bytes": 11059,
+          "lines": 261
+        }
+      ]
+    },
+    "inherited": {
+      "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/entry.mts",
+          "sha256": "662f5b975cc29daf867688543b18801cc08d232284ab0212d0d175e116e3a46c",
+          "bytes": 1322,
+          "lines": 42
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/helper.mts",
+          "sha256": "fb48c71d831747c468081787bc226beb6d5183519299b3a008db550eef0e7910",
+          "bytes": 175,
+          "lines": 3
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/writer.mts",
+          "sha256": "ef62867d06c2035d8bb910da351cfbe0684ca26e1111d52c6221c48c04e9c1de",
+          "bytes": 176,
+          "lines": 5
+        }
+      ]
+    },
+    "repository-incoming": {
+      "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture",
+      "files": [
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/barrel.mts",
+          "sha256": "1fc9747cc6d11d3d6f298406802119bb65cf80abe82038b64f6b2aa76a0a7d37",
+          "bytes": 89,
+          "lines": 1
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/closed.mts",
+          "sha256": "5cd54e4f7a13be5b56cacd9fdbcca3e526a12ea2dfa2f251c6cfd053dcac9ecd",
+          "bytes": 150,
+          "lines": 7
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/controls.mts",
+          "sha256": "cfd3938b13d23dc662e0746247b606a2a55834d5b2fd9305d51402593ac24df1",
+          "bytes": 1238,
+          "lines": 37
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter-caller.mts",
+          "sha256": "b56557485237486b4298f4c460d2dffa493c6935520f1519fd3b1a35c3d03a63",
+          "bytes": 751,
+          "lines": 21
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter.mts",
+          "sha256": "59488d4ac217391936e98d3e49093cefbeed9c71273792c96804fa9f46ae7015",
+          "bytes": 568,
+          "lines": 8
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-writer.mts",
+          "sha256": "0fd7f349aa1b7f59167a42fcd4f5b930da2a9d98b3a064d7a3f6288fcff7c9d6",
+          "bytes": 148,
+          "lines": 4
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign.mts",
+          "sha256": "bb779f3697e4cba2b0e4df7d09dffe7f1c2e7f45976ba64235bc1772d6ff792a",
+          "bytes": 451,
+          "lines": 14
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/nested-once.mts",
+          "sha256": "53e83d0b130c00a7a70b2c65abd2806c749e24e41dae7d63a629934c2d368186",
+          "bytes": 533,
+          "lines": 16
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque-owner.mts",
+          "sha256": "6d608a33067b7f146ba299b6eb3e3acbe0381ed8e7753a6bf4240c6053a808a3",
+          "bytes": 1270,
+          "lines": 42
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque.mts",
+          "sha256": "6f7c2d150a411617023236369426073c3dd39d9224f59db151a27fbe0374195e",
+          "bytes": 2453,
+          "lines": 73
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/owners.mts",
+          "sha256": "4218725e1e3e9634e45e252103b012e6546a01800c5c8a1ddb8cff7af6731ca2",
+          "bytes": 448,
+          "lines": 14
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/positive.mts",
+          "sha256": "f422615e81feb8b9de83e495f5db26dbb3e4617dc073d74ea6b4bc088d9e0d06",
+          "bytes": 467,
+          "lines": 16
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository-object.mts",
+          "sha256": "6fb58875cc8e7a50970a7f202134bdc3c0a81a6717357e20ffcb23472fe567a3",
+          "bytes": 201,
+          "lines": 3
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository.mts",
+          "sha256": "96f6bad83223905475f74841d987f0bd66012ad196181ee81846b2e097b47526",
+          "bytes": 569,
+          "lines": 16
+        },
+        {
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/snapshots.mts",
+          "sha256": "9b66bd63cf9d4e9fb18472767dabaf785899975e129a36119c6a978610a40d3c",
+          "bytes": 620,
+          "lines": 18
+        }
+      ]
+    },
+    "configured": {
+      "path": "fixtures/performance/core-analysis",
+      "files": [
+        {
+          "path": "fixtures/performance/core-analysis/.no-mistakes.yml",
+          "sha256": "8626562981218868b3bb4924900cd51b1559052f755ab86023dbb753f7db64a6",
+          "bytes": 774,
+          "lines": 43
+        },
+        {
+          "path": "fixtures/performance/core-analysis/package.json",
+          "sha256": "260a747db3c91aa568be7ab8149ef49e411a6bafb692b5e7e87e9376f8eb65ec",
+          "bytes": 144,
+          "lines": 8
+        },
+        {
+          "path": "fixtures/performance/core-analysis/packages/core/package.json",
+          "sha256": "47db8a2d7b9aad904c46e58b7d45ddad0e8c2ed7f2fc346bc91a89a66e35d08e",
+          "bytes": 83,
+          "lines": 5
+        },
+        {
+          "path": "fixtures/performance/core-analysis/packages/core/src/index.ts",
+          "sha256": "db6d8b570a4de4b1ddb7497dbbed10a3d24a18aff055d8ec6fef87aee084ad18",
+          "bytes": 136,
+          "lines": 7
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/app.tsx",
+          "sha256": "cd4ddf001fafdda0ab4877c73d5a4a4906b52896f3b74c7111e5f55408c40a19",
+          "bytes": 198,
+          "lines": 6
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/button.tsx",
+          "sha256": "5c9dd5b2b4a37d6f9873889a2b1ffadf279aa3385ae134ba762e24ebe6098be9",
+          "bytes": 117,
+          "lines": 3
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/feature.ts",
+          "sha256": "55a60a7cfff3acfb9b202dee77b75ae375751b1f2b567b66d8a40a374feef4aa",
+          "bytes": 33,
+          "lines": 1
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/forbidden.ts",
+          "sha256": "2140b7834e836b5c8cf390c1e01f49687f125c6a19c618d49178225eff70f607",
+          "bytes": 41,
+          "lines": 1
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/jobs/send.ts",
+          "sha256": "b82069b550b6881cc5368ae2f37e28110fe18639f509926fbb73f684349803f9",
+          "bytes": 135,
+          "lines": 5
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/jobs/worker.ts",
+          "sha256": "4e498aab7916ca1449d7680d57c22ace51f3a5bfb4ad28d3c124531876a6c0c5",
+          "bytes": 80,
+          "lines": 3
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/lazy.ts",
+          "sha256": "2d9e3866d73ab0441bffa2744a71eb82f8fb501c04bdbb019cacef1a329d5fc5",
+          "bytes": 70,
+          "lines": 3
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/lib.rs",
+          "sha256": "6e00da67d9207f76108ea901dda239ec3d7c9e8489de968e54a48d73ea792d76",
+          "bytes": 43,
+          "lines": 3
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/queues/create.ts",
+          "sha256": "2271832f419c3198a6233be90174b34f4df88010c003153e4bb20d43a233ac86",
+          "bytes": 136,
+          "lines": 6
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/queues/email.ts",
+          "sha256": "be46c4c4877b85f1acdbac1f241752f6a855e44be7ee9ab120f75d2a78fa9a5a",
+          "bytes": 89,
+          "lines": 3
+        },
+        {
+          "path": "fixtures/performance/core-analysis/src/util.mts",
+          "sha256": "780da513a6edb68ce5be405e5ef5912e5732ffdd160d42472de396e77edca2ae",
+          "bytes": 82,
+          "lines": 3
+        },
+        {
+          "path": "fixtures/performance/core-analysis/tests/app.test.ts",
+          "sha256": "102271ea2d9f92cb2be8045a2ca9083394f2b1f895349ee0c10d711aa9b7000a",
+          "bytes": 218,
+          "lines": 8
+        },
+        {
+          "path": "fixtures/performance/core-analysis/tests/lazy.test.ts",
+          "sha256": "1da1ebc6490bac5f112c1461131a47b75a7ecda5fc0ecd95c4b8a577d02fefba",
+          "bytes": 269,
+          "lines": 8
+        },
+        {
+          "path": "fixtures/performance/core-analysis/tsconfig.json",
+          "sha256": "abbf8aee96b598cfcb24310b000cb3f8b656152bd6b2d946a042681305702f3f",
+          "bytes": 220,
+          "lines": 10
+        },
+        {
+          "path": "fixtures/performance/core-analysis/vitest.config.ts",
+          "sha256": "b80b2e8f79a775c1693f2d004c419b618a1fb821a5ce974fad7cd9b57477bd93",
+          "bytes": 90,
+          "lines": 6
+        }
+      ]
+    },
+    "configured-consumer": {
+      "path": "test-cases/rules/query-reached-per-item/alternatives-fixture",
+      "files": [
+        {
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/.no-mistakes.yml",
+          "sha256": "eb892ec456cfab542f162f42ccb646c861839097c0992f658ba2b59f29b792ab",
+          "bytes": 192,
+          "lines": 9
+        },
+        {
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/src/entry.mts",
+          "sha256": "2e44440c8111f2118934c5f05fe977cb5a3f31263414230e20cd069cd4077429",
+          "bytes": 283,
+          "lines": 7
+        },
+        {
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/src/helpers.mts",
+          "sha256": "70391e500852c20abfc691f6e6bef9ee575058e5cbcf08d6762f5c8fcd72ba55",
+          "bytes": 101,
+          "lines": 4
+        }
+      ]
+    },
+    "plain-consumer": {
+      "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture",
+      "files": [
+        {
+          "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/.no-mistakes.yml",
+          "sha256": "fcba3231c637d6700174adde0d8dc5b3789fd67b48de9c3d1cef020c0b20c8a4",
+          "bytes": 266,
+          "lines": 13
+        },
+        {
+          "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/src/entry.mts",
+          "sha256": "80ec31586aba261129ff9900273da1703329a96283496a8cace7021975fa3666",
+          "bytes": 188,
+          "lines": 6
+        }
+      ]
+    }
+  },
+  "diagnostic_branch": "diagnostics/repeated-targets-native-1971-bab0868-reviewed1",
+  "diagnostic_parent": "bab0868fd718aa79f625762ecd50425044a7df8c",
+  "budgets_minutes": {
+    "prepare": 5,
+    "production_build": 90,
+    "preflight": 5,
+    "sample": 60,
+    "layout": 120,
+    "summary_upload": 10,
+    "job": 300
+  },
+  "direct_prepared_lookup_timing": "Unmeasured; no new production probe API. Reuse exact CI actual event counters and incoming assertions; time fresh full graphs.",
+  "workloads": [
+    {
+      "name": "shared-imports",
+      "kind": "probe",
+      "mode": "facts-imports",
+      "input": "shared-facts",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "shared-values",
+      "kind": "probe",
+      "mode": "facts-values",
+      "input": "shared-facts",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "jsx-imports",
+      "kind": "probe",
+      "mode": "facts-imports",
+      "input": "jsx-facts",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "jsx-values",
+      "kind": "probe",
+      "mode": "facts-values",
+      "input": "jsx-facts",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "cold-no-calls",
+      "kind": "probe",
+      "mode": "graph-no-calls",
+      "input": "cold-graph",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "cold-calls",
+      "kind": "probe",
+      "mode": "graph",
+      "input": "cold-graph",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "default-cold",
+      "kind": "probe",
+      "mode": "graph",
+      "input": "default-cold",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "hot-16",
+      "kind": "probe",
+      "mode": "graph",
+      "input": "hot-16",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "hot-256",
+      "kind": "probe",
+      "mode": "graph",
+      "input": "hot-256",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "inherited",
+      "kind": "probe",
+      "mode": "graph",
+      "input": "inherited",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "name": "configured-check",
+      "kind": "cli",
+      "input": "configured",
+      "diagnostics": false,
+      "command": [
+        "check"
+      ],
+      "semantic": "Exactcoldreportparity"
+    },
+    {
+      "name": "hot-rule-check",
+      "kind": "cli",
+      "input": "configured-consumer",
+      "diagnostics": false,
+      "command": [
+        "check"
+      ],
+      "semantic": "ApprovedA0/B1queryfindingtrace"
+    },
+    {
+      "name": "effects-plain-cold-off",
+      "kind": "cli",
+      "input": "default-cold",
+      "diagnostics": false,
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/defaults.mts"
+      ],
+      "semantic_case": "plain-cold",
+      "semantic": "Exactphysicalreportparity"
+    },
+    {
+      "name": "effects-plain-cold-diagnostics",
+      "kind": "cli",
+      "input": "default-cold",
+      "diagnostics": true,
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/defaults.mts"
+      ],
+      "semantic_case": "plain-cold",
+      "semantic": "Exactphysicalreportparity"
+    },
+    {
+      "name": "effects-plain-hot-off",
+      "kind": "cli",
+      "input": "plain-consumer",
+      "diagnostics": false,
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/entry.mts"
+      ],
+      "semantic_case": "plain-hot",
+      "semantic": "ApprovedA0/B1physicalread/uncategorized"
+    },
+    {
+      "name": "effects-plain-hot-diagnostics",
+      "kind": "cli",
+      "input": "plain-consumer",
+      "diagnostics": true,
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/entry.mts"
+      ],
+      "semantic_case": "plain-hot",
+      "semantic": "ApprovedA0/B1physicalread/uncategorized"
+    }
+  ],
+  "input_inventory_provisional_until_consumer_batch_commit": false,
+  "input_provenance": "49 selected physical input files copied from exact candidate; refreshed hashes against bab0868 integrated tree. No whole-build equivalence to historical pair claimed.",
+  "instrumented_benchmark_policy": "Inspect final exact-head CodSpeed report against actual main. Exclude fallback rows and preserve syscall warnings/adverse observations; instrumented CPU/allocator Memory is distinct from default-feature native CPU/wall/RSS.",
+  "instrumented_benchmark_observation": {
+    "head": "331532bfae2a2867f41216122919344e5bd2193a",
+    "baseline": "9e8b16d2d9717d8950a482f536bb8ddbb8be4fb9",
+    "check_id": 116268395052,
+    "conclusion": "neutral",
+    "regressed": "observer_counters_4threads[timings]1.6ms to3.7ms(-57.66%)",
+    "untouched": 222,
+    "skipped_baseline_fallback_excluded": 4,
+    "significant_syscall_warnings": 39,
+    "interpretation": "Test-only bab0868 does not change production source; final exact report still required. Unrelated observer outlier requires recheck; no source change inferred."
+  },
+  "prior_setup_attempt": {
+    "run": 38677607778,
+    "commit": "76778973223baacc0fa0210de877829e1243b35f",
+    "branch": "diagnostics/repeated-targets-native-1971-e184abf",
+    "artifact": 11946479675,
+    "artifact_sha256": "55cee978c4737d8d764d814c8387302c949690f852bb55c6500ba5c3288c5f5e",
+    "failure_code": "dirty_diagnostic_checkout",
+    "production_builds": 0,
+    "links": 0,
+    "semantic_probes": 0,
+    "native_samples": 0,
+    "layout_builds": 0
+  },
+  "prior_native_attempt": {
+    "run": 38678088305,
+    "driver_commit": "7838d64097c4087e8ba14f8baccb4a21c63f3260",
+    "baseline": "4907119fe6e634faca887c3c114eb26eb5f6292d",
+    "candidate": "f1c1229946e017988014d9eae7f06989689caad4",
+    "outcome": "Production-build60minute timeout; candidate build/semantic/sample/layout stages not reached; zero timing rows. Original artifacts/ref retained.",
+    "reason_for_new_attempt": "New integrated production source passes semantics; new fixed source pair and reviewed bounded build/layout budget. No prior successful timing observations exist to select from."
+  },
+  "build_jobs": 2
+}
