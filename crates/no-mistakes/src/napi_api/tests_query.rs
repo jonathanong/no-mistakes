@@ -207,3 +207,5 @@ fn effects_json_retains_cross_file_inline_receiver_timing() {
 }
 
 include!("tests_query_computed.rs");
+
+include!("tests_loop_setup.rs");

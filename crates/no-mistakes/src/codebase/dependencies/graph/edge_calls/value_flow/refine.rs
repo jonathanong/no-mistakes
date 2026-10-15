@@ -65,6 +65,7 @@ fn refine_iteration(
         default_origins: None,
         acquisition_context: None,
         invocation_read: None,
+        executing_read: None,
         member_read: None,
     };
     let mut sites = base.to_vec();

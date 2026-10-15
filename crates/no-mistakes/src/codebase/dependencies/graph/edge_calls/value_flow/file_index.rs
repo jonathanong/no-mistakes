@@ -18,10 +18,19 @@ impl FlowFileIndex {
                 .insert(call.source_callee.clone(), (call.offset, call.end));
         }
         Self {
-            synthetic_callbacks: function_calls.iter().filter(|call|
-                call.invocation == InvocationKind::Callback && call.callee_binding_scope.is_none())
-                .map(|call| call.callee.clone()).collect(),
-            immediate_factory_results: flow.calls.iter().filter_map(|call| inline_inputs::immediate_call(&call.callee)).collect(),
+            synthetic_callbacks: function_calls
+                .iter()
+                .filter(|call| {
+                    call.invocation == InvocationKind::Callback
+                        && call.callee_binding_scope.is_none()
+                })
+                .map(|call| call.callee.clone())
+                .collect(),
+            immediate_factory_results: flow
+                .calls
+                .iter()
+                .filter_map(|call| inline_inputs::immediate_call(&call.callee))
+                .collect(),
             receiver_mutations: flow.receiver_mutations.as_ref().map(|histories| {
                 std::sync::Arc::new(prepared_receivers::PreparedReceiverMutations::new(
                     std::sync::Arc::clone(histories),

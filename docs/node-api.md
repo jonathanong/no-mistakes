@@ -1220,7 +1220,10 @@ For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
 This includes an IIFE evaluated in `export default`, directly or as an object
 member value. Exported functions and object methods retain their callable guards.
-Calls inside loops, repeatable functions, and instance initializers remain
-unresolved when a later execution could copy a replacement.
+This includes classic `for` initializers and `for-in`/`for-of` right-hand
+expressions, which execute once per loop statement. Tests, updates, bodies,
+per-item bindings, and sloppy-script Annex B initializers remain conservative.
+Setup nested in an outer loop, repeatable function, or instance initializer also
+remains unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.

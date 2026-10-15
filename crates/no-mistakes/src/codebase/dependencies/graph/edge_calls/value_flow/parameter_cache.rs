@@ -30,11 +30,8 @@ struct State {
     computations: usize,
     reverse_dependencies: FxHashMap<Owner, FxHashSet<Owner>>,
 }
-type TypeOrigins = DashMap<
-    (std::path::PathBuf, String),
-    Arc<OnceLock<(String, String)>>,
-    FxBuildHasher,
->;
+type TypeOrigins =
+    DashMap<(std::path::PathBuf, String), Arc<OnceLock<(String, String)>>, FxBuildHasher>;
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
     state: Mutex<State>,
@@ -42,6 +39,8 @@ pub(in super::super) struct ParameterCache {
     type_origins: OnceLock<TypeOrigins>,
     #[cfg(feature = "test-instrumentation")]
     origin_nodes: std::sync::atomic::AtomicUsize,
+    #[cfg(feature = "test-instrumentation")]
+    execution_steps: std::sync::atomic::AtomicUsize,
 }
 pub(super) enum CacheAccess<'a> {
     Ready(Arc<CachedParameter>),
@@ -80,6 +79,17 @@ impl ParameterCache {
     #[cfg(feature = "test-instrumentation")]
     pub(in super::super) fn origin_nodes(&self) -> usize {
         self.origin_nodes.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) fn record_execution_step(&self) {
+        self.execution_steps
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+    #[cfg(feature = "test-instrumentation")]
+    pub(in super::super) fn execution_steps(&self) -> usize {
+        self.execution_steps
+            .load(std::sync::atomic::Ordering::Relaxed)
     }
 
     pub(super) fn acquire(&self, key: ParameterKey) -> CacheAccess<'_> {

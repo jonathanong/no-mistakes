@@ -82,3 +82,38 @@ control are covered across graph, CLI, Rust N-API, and compiled CJS/ESM tests.
 A saved extraction fixture alternates deferred bodies with module-evaluated keys
 and the final value, asserting guard restoration after all three visitor paths.
 The review thread remains open pending actual current-head validation.
+
+## Historical validated head and required main integration
+
+At `e7d26f8`, all 30 CI jobs passed, including full Rust semantic tests,
+documentation tests, CRAP/complexity and unchanged coverage floors, plus actual Linux,
+macOS and Windows native parity. All four external Codecov checks passed
+(Rust patch 100%, project 99.46%; JavaScript patch unaffected, project 99.76%).
+Exact-head Codex found no major issues; the corrected computed-member safety
+thread was resolved after actual tests. Later duplicate #2026 was closed unmerged
+with its branch preserved; #2020 remains canonical for #2017.
+
+The initial expected-base CodSpeed report flagged non-TS
+`language_frontends/extract` tracked peak heap at 210 KB to 482.1 KB. One
+same-head `ubuntu-24.04-arm` memory-shard rerun passed: 220 untouched and four
+skipped benchmarks. Its exact heap was omitted, so no value is inferred. The
+read-only profile response linked below observed an exact-head stored peak of
+375,043 B, including 160,008 B retained in unchanged Kotlin regex lazy-DFA worker
+caches; the remaining 215,035 B equals the base work peak. Worker ordering is
+inferred. The profile does not match the original 482.1 KB report, so attribution
+of that exact original value is unproven. This metric is tracked heap, not RSS;
+system call warnings establish no cause. No runtime fix or improvement is claimed.
+
+- Original run: `38659029493`, attempt 1, memory job `116178414390`.
+- One rerun: same run/head, attempt 2, memory job `116180292392`.
+- Profile: <https://github.com/jonathanong/no-mistakes/pull/2020#issuecomment-6181574412>.
+- Existing harness follow-up: <https://github.com/jonathanong/no-mistakes/issues/2025>.
+
+The final readiness check found genuine conflicts after main advanced to
+`d36ea2af42d7a2a6d20074e4cd8ac1d0bc89568a`. This merge preserves main's loop-setup
+precision, argument-evaluation facts and all existing default/computed safety
+controls. Conflict resolutions retain both N-API includes, both native test
+sections and their shared bridge registration, and combined public documentation.
+No additional analyzer behavior is introduced beyond the two integrated parents.
+The historical results above do not validate the integrated tree: fresh full CI,
+actual external coverage/performance gates and exact-head review remain required.
