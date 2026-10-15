@@ -163,3 +163,47 @@ fn mutable_root_target_decomposition_excludes_member_writes() {
         );
     }
 }
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn terminal_receiver_histories_skip_successor_bookkeeping() {
+    let source = mutable_receiver_source("terminal-receiver-history.mts");
+    let allocator = Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
+    assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+    assert!(facts.value_flow.reference_terminal_paths > 0);
+    assert_eq!(
+        facts.value_flow.reference_successor_bookkeeping, 2,
+        "only the two mutable containers require successor bookkeeping"
+    );
+    assert!(facts.value_flow.reference_path_visits <= 8);
+}
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn imported_alias_successors_remain_active_with_an_unrelated_mutable_root() {
+    let source = mutable_receiver_source("terminal-import-with-unrelated-root.mts");
+    let allocator = Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    assert_eq!(facts.value_flow.reference_terminal_paths, 0);
+    assert!(facts.value_flow.reference_successor_bookkeeping >= 2);
+    let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
+    assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+}

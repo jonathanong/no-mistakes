@@ -78,3 +78,19 @@ fn merge_reads(
     }
     changed.then(|| previous.clone())
 }
+
+impl ImportCollector {
+    pub(super) fn mutation_reference_is_terminal(&self, key: &(usize, String)) -> bool {
+        self.value_binding_indexes
+            .get(&key.0)
+            .and_then(|names| names.get(key.1.as_str()))
+            .is_none_or(Vec::is_empty)
+            && self
+                .value_reference_links
+                .as_ref()
+                .and_then(|links| links.get(&key.0))
+                .and_then(|names| names.get(key.1.as_str()))
+                .is_none_or(|links| links.is_empty())
+            && !self.has_mutable_receiver_binding(key.0, &key.1)
+    }
+}

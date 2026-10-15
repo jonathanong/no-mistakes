@@ -25,14 +25,14 @@ impl ImportCollector {
         while let Some((((key, path), reads, root_read), exiting, remember, propagated)) =
             pending.pop()
         {
-            let version = root_read.read().and_then(|read| {
-                #[cfg(feature = "test-instrumentation")]
-                {
-                    self.value_flow.reference_root_probes += 1;
-                }
-                self.mutable_receiver_version(&key, read)
-            });
             if exiting {
+                let version = root_read.read().and_then(|read| {
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        self.value_flow.reference_root_probes += 1;
+                    }
+                    self.mutable_receiver_version(&key, read)
+                });
                 traversal.exit(&key, version);
                 continue;
             }
@@ -50,8 +50,30 @@ impl ImportCollector {
                     propagated,
                 );
             }
+            let terminal = root_read.read().is_some() && self.mutation_reference_is_terminal(&key);
+            #[cfg(feature = "test-instrumentation")]
+            if terminal {
+                self.value_flow.reference_terminal_paths += 1;
+            }
+            // No descriptor, component link, or mutable origin can enqueue a
+            // successor. Mutation recording above and invalidation still apply.
+            if terminal {
+                affected.entry(key.0).or_default().insert(key.1.clone());
+                continue;
+            }
+            let version = root_read.read().and_then(|read| {
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    self.value_flow.reference_root_probes += 1;
+                }
+                self.mutable_receiver_version(&key, read)
+            });
             // Version-qualified mutable roots may revisit an earlier saved
             // root without conflating it with the replacement's identity.
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.reference_successor_bookkeeping += 1;
+            }
             let Some(reads) = traversal.enter(&key, &path, reads, version) else {
                 continue;
             };
