@@ -278,6 +278,8 @@ warning. Inspect warnings before treating an empty execution list as complete.
 Package-wide source fallback remains opt-in through `tests.rust.packages` and
 is reported by `fallback_triggered`/`fallback_reason`.
 
-Explicit Cargo target paths outside their declaring package directory are not
-yet associated with that package; they produce no command rather than an
-inferred package-wide fallback.
+Visible exact Cargo target entries outside their declaring package directory
+retain that declaring package and selector. When several selected packages
+declare the same entry, all enabled targets are returned deterministically.
+Configured package scopes still apply to the declaring packages; external
+entries do not make neighboring helpers or other packages eligible.

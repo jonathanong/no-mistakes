@@ -1232,7 +1232,7 @@ Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.
 
 `testsTargets({ framework: "cargo", ... })` and `testsPlan()` use visible Cargo
-manifests for package names and target selectors, including custom paths within their owning package directory.
+manifests for package names and target selectors, including visible exact paths outside their declaring package directory.
 They do not execute Cargo metadata. Rust unit-test modules select an
 unambiguous enabled library/binary target; ambiguous helpers, missing manifests,
 disabled targets, and unresolved required features retain empty `targets` and
@@ -1240,6 +1240,8 @@ disabled targets, and unresolved required features retain empty `targets` and
 and warnings. Inspect these warnings before running the structured argv;
 package-wide source fallback requires explicit `tests.rust.packages` config.
 
-Explicit Cargo target paths outside their declaring package directory are not
-yet associated with that package; they produce no command rather than an
-inferred package-wide fallback.
+Visible exact Cargo target entries outside their declaring package directory
+retain that declaring package and selector. When several selected packages
+declare the same entry, all enabled targets are returned deterministically.
+Configured package scopes still apply to the declaring packages; external
+entries do not make neighboring helpers or other packages eligible.

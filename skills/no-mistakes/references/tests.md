@@ -305,3 +305,6 @@ completeness. Async `testsAudit()` and `analyzeProject()` expose the same compar
 For Cargo plans, inspect `cargo-target-unresolved` warnings before executing
 commands: ambiguous helpers or disabled/missing manifest targets intentionally
 have empty `targets`. Package-wide fallback requires `tests.rust.packages`.
+Visible exact external Cargo target entries retain their selected declaring
+packages; shared entries can return several deterministic target selectors.
+This does not assign neighboring helper files to those packages.

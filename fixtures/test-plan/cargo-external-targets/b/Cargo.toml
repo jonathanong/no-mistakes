@@ -1,0 +1,7 @@
+[package]
+name = "declaring-b"
+version = "0.1.0"
+edition = "2024"
+[[test]]
+name = "b-shared"
+path = "../shared/tests/smoke.rs"

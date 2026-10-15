@@ -62,3 +62,91 @@ test(
     );
   },
 );
+
+test(
+  "compiled async Cargo external entries preserve declaring scopes and multiple owners",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const externalRoot = join(__dirname, "../../../fixtures/test-plan/cargo-external-targets");
+    const files = [
+      "shared/tests/smoke.rs",
+      "shared/entry.rs",
+      "b/tests/physical.rs",
+      "shared/tests/disabled.rs",
+      "shared/tests/feature.rs",
+      "shared/tests/unrelated.rs",
+    ];
+    for (const [config, expected] of [
+      [undefined, ["declaring-a", "declaring-b"]],
+      ["a.yml", ["declaring-a"]],
+      ["b.yml", ["declaring-b"]],
+      ["none.yml", []],
+    ]) {
+      const options = {
+        root: externalRoot,
+        framework: "cargo",
+        files,
+        ...(config ? { config: join(externalRoot, config) } : {}),
+      };
+      const pending = cjs.testsTargets(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.testsTargets(options), report);
+      const shared = report.tests.find((row) => row.testFile === files[0]);
+      assert.deepEqual(shared?.targets.map((target) => target.project) || [], expected);
+      if (expected.length) {
+        assert.deepEqual(
+          shared.targets.map((target) => target.runnerArgs),
+          expected.map((name) => {
+            const owner = name.endsWith("a") ? "a" : "b";
+            return [
+              "--manifest-path",
+              `${owner}/Cargo.toml`,
+              "-p",
+              name,
+              "--test",
+              `${owner}-shared`,
+            ];
+          }),
+        );
+      }
+      const planOptions = { ...options, changedFiles: files };
+      delete planOptions.files;
+      const plan = await cjs.testsPlan(planOptions);
+      assert.deepEqual(await esm.testsPlan(planOptions), plan);
+      const batch = await cjs.analyzeProject({
+        root: externalRoot,
+        ...(config ? { config: join(externalRoot, config) } : {}),
+        reports: [{ type: "testsPlan", framework: "cargo", changedFiles: files }],
+      });
+      assert.deepEqual(batch.reports[0].result, plan);
+      assert.equal(plan.fallbackTriggered, false);
+      if (config === "a.yml") {
+        const sourcePlan = await cjs.testsPlan({
+          root: externalRoot,
+          framework: "cargo",
+          config: join(externalRoot, config),
+          changedFiles: ["a/src/lib.rs"],
+        });
+        assert.equal(sourcePlan.fallbackTriggered, true);
+        assert.ok(sourcePlan.selectedTests.some((test) => test.testFile === "shared/entry.rs"));
+        assert.ok(
+          sourcePlan.selectedTests.some((test) => test.testFile === "shared/tests/smoke.rs"),
+        );
+        assert.ok(sourcePlan.executionTargets.every((target) => target.project === "declaring-a"));
+      }
+      if (!config || config === "a.yml") {
+        for (const file of files.slice(3, 5)) {
+          assert.deepEqual(report.tests.find((row) => row.testFile === file).targets, []);
+          assert.ok(
+            report.warnings.some(
+              (warning) => warning.type === "cargo-target-unresolved" && warning.file === file,
+            ),
+          );
+        }
+      }
+    }
+  },
+);
