@@ -191,6 +191,7 @@ fn static_process_cwd_arg(callee: &str, args: &[Argument<'_>]) -> Option<String>
 fn visit_jsx_opening_element_with_value_reference<'a>(collector: &mut ImportCollector, opening: &JSXOpeningElement<'a>) {
         if let Some(name) = jsx_element_reference_name(&opening.name) {
             if name.chars().next().is_some_and(char::is_uppercase) {
+                collector.record_callable_name_value_use(&name);
                 collector.push_value_symbol_reference(name);
             }
         }
