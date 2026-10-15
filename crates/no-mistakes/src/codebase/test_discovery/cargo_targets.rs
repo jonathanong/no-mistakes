@@ -3,6 +3,7 @@ use crate::codebase::ts_source::SourceStore;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+mod discovery;
 mod manifest;
 mod manifests;
 mod targets;
@@ -14,6 +15,7 @@ use targets::Package;
 pub(super) struct CargoTargets {
     packages: BTreeMap<PathBuf, Package>,
     manifests: BTreeSet<PathBuf>,
+    external_entries: BTreeMap<PathBuf, BTreeSet<PathBuf>>,
     scopes: BTreeSet<PathBuf>,
     #[cfg(any(test, feature = "test-instrumentation"))]
     membership_index_builds: usize,
@@ -59,6 +61,15 @@ impl CargoTargets {
                 continue;
             };
             if let Some(package) = manifest::parse(directory, value, &visible, edition.as_deref()) {
+                for target in &package.targets {
+                    if !target.entry.starts_with(directory) {
+                        result
+                            .external_entries
+                            .entry(target.entry.clone())
+                            .or_default()
+                            .insert(directory.to_path_buf());
+                    }
+                }
                 result.packages.insert(directory.to_path_buf(), package);
             }
         }
@@ -106,50 +117,6 @@ impl CargoTargets {
                 }
             })
             .collect()
-    }
-    fn owner(&self, file: &Path) -> Option<(&Path, &Package)> {
-        let directory = file
-            .ancestors()
-            .skip(1)
-            .find(|directory| self.manifests.contains(*directory))?;
-        self.packages
-            .get_key_value(directory)
-            .map(|(directory, package)| (directory.as_path(), package))
-    }
-    pub(super) fn discover(&self, root: &Path, files: &[PathBuf]) -> DiscoveredTests {
-        let mut tests = Vec::new();
-        let mut targets_by_path = BTreeMap::new();
-        for file in files {
-            if !self.scopes.is_empty()
-                && !file
-                    .ancestors()
-                    .skip(1)
-                    .find(|directory| self.manifests.contains(*directory))
-                    .is_some_and(|directory| self.scopes.contains(directory))
-            {
-                continue;
-            }
-            let relative = crate::codebase::ts_source::relative_slash_path(root, file);
-            let owner = self.owner(file);
-            let explicit_test = owner.is_some_and(|(_, package)| package.is_test_entry(file));
-            if !explicit_test
-                && !super::filters::fallback_runner_match(super::TestRunner::Cargo, &relative)
-            {
-                continue;
-            }
-            tests.push(file.clone());
-            let targets = owner
-                .map(|(directory, package)| self.targets(root, directory, package, file))
-                .unwrap_or_default();
-            targets_by_path.insert(file.clone(), targets);
-        }
-        tests.sort();
-        tests.dedup();
-        DiscoveredTests {
-            tests,
-            targets_by_path,
-            used_fallback: false,
-        }
     }
     fn targets(
         &self,
@@ -203,3 +170,6 @@ fn package_scope(root: &Path, directory: &Path) -> String {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod external_tests;

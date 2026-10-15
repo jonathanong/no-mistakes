@@ -328,3 +328,60 @@ fn cargo_manifest_targets_and_ambiguous_helpers_match_cli_contract() {
         "ambiguous ownership must not print runnable commands"
     );
 }
+
+#[test]
+fn cargo_external_entries_keep_multiple_declaring_selectors_and_package_scopes() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/cargo-external-targets"),
+    );
+    let unscoped = plan("cargo", &root, "shared/tests/smoke.rs");
+    let targets = unscoped["selected_tests"][0]["targets"].as_array().unwrap();
+    assert_eq!(targets.len(), 2);
+    assert_eq!(
+        targets[0]["runner_args"],
+        serde_json::json!([
+            "--manifest-path",
+            "a/Cargo.toml",
+            "-p",
+            "declaring-a",
+            "--test",
+            "a-shared"
+        ])
+    );
+    assert_eq!(
+        targets[1]["runner_args"],
+        serde_json::json!([
+            "--manifest-path",
+            "b/Cargo.toml",
+            "-p",
+            "declaring-b",
+            "--test",
+            "b-shared"
+        ])
+    );
+    assert_eq!(unscoped["fallback_triggered"], false);
+    let output = run(&[
+        "tests",
+        "targets",
+        "cargo",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        root.join("a.yml").to_str().unwrap(),
+        "shared/tests/smoke.rs",
+        "b/tests/physical.rs",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    for test in report["tests"].as_array().unwrap() {
+        assert_eq!(test["targets"].as_array().unwrap().len(), 1);
+        assert_eq!(test["targets"][0]["project"], "declaring-a");
+    }
+    assert!(report["warnings"].as_array().unwrap().is_empty());
+}

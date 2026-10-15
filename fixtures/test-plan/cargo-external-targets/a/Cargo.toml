@@ -1,0 +1,24 @@
+[package]
+name = "declaring-a"
+version = "0.1.0"
+edition = "2024"
+[[test]]
+name = "a-shared"
+path = "../shared/tests/smoke.rs"
+[[test]]
+name = "unusual"
+path = "../shared/entry.rs"
+[[test]]
+name = "foreign"
+path = "../b/tests/physical.rs"
+[[test]]
+name = "disabled"
+path = "../shared/tests/disabled.rs"
+test = false
+[[test]]
+name = "feature"
+path = "../shared/tests/feature.rs"
+required-features = ["extra"]
+[[test]]
+name = "missing"
+path = "../shared/missing.rs"

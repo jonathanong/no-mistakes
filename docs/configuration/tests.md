@@ -411,7 +411,7 @@ traced, `tests plan swift` falls back to framework-scoped discovered tests and
 sets `fallback_triggered`/`fallback_reason`.
 
 Cargo execution selectors are resolved from visible `Cargo.toml` package and
-target tables rather than directory names. Within the owning package directory, custom `lib.path`, `[[bin]]`, and
+target tables rather than directory names. Custom `lib.path`, `[[bin]]`, and
 `[[test]]` paths, `autolib`/`autobins`/`autotests`, and target `test = false`
 control discovery. Required-feature targets are conservatively omitted because
 the planner does not infer feature activation. Shared source directories that
@@ -419,6 +419,8 @@ cannot identify one target produce `cargo-target-unresolved` warnings and no
 command. Explicit `tests.rust.packages` continues to enable the documented
 package-scoped source fallback; packages without configuration do not gain that fallback.
 
-Explicit Cargo target paths outside their declaring package directory are not
-yet associated with that package; they produce no command rather than an
-inferred package-wide fallback.
+Visible exact Cargo target entries outside their declaring package directory
+retain that declaring package and selector. When several selected packages
+declare the same entry, all enabled targets are returned deterministically.
+Configured package scopes still apply to the declaring packages; external
+entries do not make neighboring helpers or other packages eligible.

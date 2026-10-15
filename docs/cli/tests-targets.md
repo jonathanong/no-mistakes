@@ -20,7 +20,7 @@ Node API: `testsTargets(options)`.
 
 Cargo targets use the owning visible `Cargo.toml`, its `[package].name`, and
 an enabled `--lib`, `--bin <name>`, or `--test <name>` target. Unit modules under
-`src/**/tests/` are not integration targets. Custom target paths within their package directory and disabled
+`src/**/tests/` are not integration targets. Custom target paths and disabled
 auto-discovery are read from the manifest. Feature-gated targets are omitted
 when their required features cannot be established by the planner.
 
@@ -31,6 +31,8 @@ The commands format rejects warnings instead of printing a partial runnable
 plan. Make the owning manifest/entrypoint visible or select a known target
 explicitly. This does not run Cargo metadata or infer a repository-wide suite.
 
-Explicit Cargo target paths outside their declaring package directory are not
-yet associated with that package; they produce no command rather than an
-inferred package-wide fallback.
+Visible exact Cargo target entries outside their declaring package directory
+retain that declaring package and selector. When several selected packages
+declare the same entry, all enabled targets are returned deterministically.
+Configured package scopes still apply to the declaring packages; external
+entries do not make neighboring helpers or other packages eligible.
