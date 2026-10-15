@@ -20,9 +20,11 @@ impl ValueFlowResolution<'_, '_> {
                 }
                 let origins = self.default_origins.take();
                 let read = self.invocation_read.take();
+                let start = self.invocation_start.take();
                 let mut target = self.value(path, &call.callee);
                 self.default_origins = origins;
                 self.invocation_read = read;
+                self.invocation_start = start;
                 while let FlowValue::Bound { target: inner, .. } = target { target = *inner; }
                 let owner = match target {
                     FlowValue::Callable { file, id, .. } => (file, id),

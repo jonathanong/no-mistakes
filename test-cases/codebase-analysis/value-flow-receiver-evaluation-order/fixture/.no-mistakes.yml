@@ -1,5 +1,27 @@
 effects:
   cache:
     targets:
-      - module: '@vendor/valkey'
+      - module: "@vendor/valkey"
         export: primary.get
+  direct-inline:
+    targets:
+      - module: "@vendor/valkey"
+        export: directLive.get
+      - module: "@vendor/valkey"
+        export: directSaved.get
+      - module: "@vendor/valkey"
+        export: directOnce.get
+      - module: "@vendor/valkey"
+        export: directSibling.set
+      - module: "@vendor/valkey"
+        export: directNested.get
+      - module: "@vendor/valkey"
+        export: moduleLoopLive.get
+      - module: "@vendor/valkey"
+        export: moduleLoopSaved.get
+      - module: "@vendor/valkey"
+        export: localLoopSaved.get
+      - module: "@vendor/valkey"
+        export: localOuterSaved.get
+      - module: "@vendor/valkey"
+        export: factoryLoopSaved.get

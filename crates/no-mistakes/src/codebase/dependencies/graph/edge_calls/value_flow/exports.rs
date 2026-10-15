@@ -32,6 +32,7 @@ pub(in super::super) fn resolve_value_exports(
                 default_origins: None,
                 acquisition_context: None,
                 invocation_read: None,
+                invocation_start: None,
                 executing_read: None,
                 module_writer_phases: &module_writer_phases,
                 writer_dependencies: Default::default(),

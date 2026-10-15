@@ -74,6 +74,9 @@ struct ValueFlowResolution<'a, 'b> {
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
     invocation_read: Option<default_origins::InvocationRead>,
+    // Transient argument-source bound from the existing call facts. The read's
+    // file/end/owner identity already identifies this span in parameter keys.
+    invocation_start: Option<u32>,
     executing_read: Option<(
         &'a std::path::Path,
         CallableId,
