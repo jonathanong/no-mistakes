@@ -3,6 +3,30 @@ use super::cases::Case;
 pub(super) fn cases() -> &'static [Case] {
     &[
         (
+            "created-callable-phase",
+            Some("createRun/createdRun/takeCreated"),
+            "fn",
+            Some("createdFunction.get"),
+        ),
+        (
+            "created-callable-phase",
+            Some("createArrow/createdArrow/takeArrow"),
+            "fn",
+            Some("createdArrowReceiver.get"),
+        ),
+        (
+            "created-callable-phase",
+            Some("createRepeat/createdRepeat/takeRepeat"),
+            "fn",
+            None,
+        ),
+        (
+            "created-callable-phase",
+            Some("createRepeatArrow/createdRepeatArrow/takeRepeatArrow"),
+            "fn",
+            None,
+        ),
+        (
             "foreign-repeated-phase",
             Some("foreignCopied"),
             "fn",

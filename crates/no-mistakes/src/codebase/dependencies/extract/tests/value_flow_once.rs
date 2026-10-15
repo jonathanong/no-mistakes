@@ -67,3 +67,68 @@ fn computed_callable_guards_restore_module_frequency_before_the_next_key() {
         .collect::<Vec<_>>();
     assert_eq!(frequency, [false, true, false, true, false, true]);
 }
+
+#[test]
+fn call_repetition_belongs_to_execution_not_callable_creation() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-facts.mts",
+    );
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    for (callee, repeated) in [
+        ("parameterCall", false),
+        ("bodyCall", false),
+        ("nestedLoopCall", true),
+        ("nestedBodyCall", false),
+        ("bodyAfterCall", false),
+        ("tagBody", false),
+        ("constructBody", false),
+        ("arrowParameterCall", false),
+        ("arrowBodyCall", false),
+        ("objectKeyCall", true),
+        // Unknown keys have no entered callable owner: retain the legacy guard.
+        ("objectBodyCall", true),
+        ("objectNamedBodyCall", false),
+        ("decoratorCall", true),
+        ("classKeyCall", true),
+        ("classBodyCall", true),
+        ("classNamedBodyCall", false),
+        ("overloadBodyCall", false),
+        ("classOverloadBodyCall", false),
+        ("defaultBodyCall", false),
+        ("defaultLoopCall", true),
+        ("outsideKeyCall", false),
+        ("outsideUnknownBodyCall", true),
+        ("fieldCall", true),
+        ("fieldArrowCall", false),
+        ("staticCall", true),
+        ("staticBlockCall", true),
+        ("loopAfterCall", true),
+        ("outsideFieldCall", true),
+        ("outsideArrowBodyCall", false),
+        ("outsideStaticCall", false),
+        ("outsideStaticBlockCall", false),
+        ("moduleAfterCall", false),
+    ] {
+        let calls: Vec<_> = facts
+            .value_flow
+            .calls
+            .iter()
+            .filter(|call| call.source_callee == callee)
+            .collect();
+        assert!(!calls.is_empty(), "saved execution marker {callee}");
+        assert!(
+            calls.iter().all(|call| call.repeated == repeated),
+            "{callee}: {calls:?}"
+        );
+    }
+}

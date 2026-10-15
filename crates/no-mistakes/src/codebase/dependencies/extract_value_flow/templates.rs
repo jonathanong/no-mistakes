@@ -42,7 +42,7 @@ impl ImportCollector {
             bound: false,
             spread_at: None,
             once: false,
-            repeated: self.repeat_depth > 0,
+            repeated: self.repeat_depth > self.call_repeat_base,
         });
     }
 }

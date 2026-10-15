@@ -40,7 +40,7 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         self.add_type_parameter_names(function.type_parameters.as_deref());
         self.add_formal_parameters(&function.params);
-        walk_function_with_body_bindings(self, function);
+        walk_function_with_body_bindings(self, function, true);
         self.pop_function_scope(true);
         self.pop_syntactic_caller(pushed_syntactic_caller);
     }
@@ -49,7 +49,7 @@ impl<'a> Visit<'a> for ImportCollector {
         self.push_anonymous_function_scope(CallableId(arrow.span.start));
         self.add_type_parameter_names(arrow.type_parameters.as_deref());
         self.add_formal_parameters(&arrow.params);
-        walk_arrow_function_with_body_bindings(self, arrow);
+        walk_arrow_function_with_body_bindings(self, arrow, true);
         self.pop_function_scope(true);
     }
 

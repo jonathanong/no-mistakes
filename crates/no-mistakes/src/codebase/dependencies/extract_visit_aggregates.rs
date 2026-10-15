@@ -63,7 +63,7 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.callable_scopes.insert("default".to_string());
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
-            walk_arrow_function_with_body_bindings(collector, arrow);
+            walk_arrow_function_with_body_bindings(collector, arrow, true);
             collector.pop_function_scope(true);
             collector.export_depth -= 1;
         }

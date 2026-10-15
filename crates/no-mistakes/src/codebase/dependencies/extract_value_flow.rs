@@ -113,7 +113,8 @@ pub struct ValueCall {
     pub spread_at: Option<usize>,
     /// A direct, module-level arrow invocation outside a repeated construct.
     pub once: bool,
-    /// Syntactically repeated evaluation; loop setup remains outside this guard.
+    /// Repetition within this execution scope; qualified callable bodies do not
+    /// inherit repetition solely from their creation site.
     pub repeated: bool,
 }
 #[path = "extract_value_flow/collect.rs"]

@@ -134,7 +134,7 @@ impl ImportCollector {
             arguments: std::sync::Arc::new(arguments),
             bound,
             spread_at,
-            repeated: self.repeat_depth > 0,
+            repeated: self.repeat_depth > self.call_repeat_base,
             once: self.current_function_id() == self.module_evaluation_owner
                 && self.repeat_depth == 0
                 && collect_helpers::direct_arrow(&call.callee),

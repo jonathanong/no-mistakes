@@ -9,7 +9,7 @@ fn visit_variable_declarator_with_scope<'a>(
             push_variable_function_scope(collector, declarator, name, CallableId(arrow.span.start));
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
-            walk_arrow_function_with_body_bindings(collector, arrow);
+            walk_arrow_function_with_body_bindings(collector, arrow, true);
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
@@ -43,7 +43,7 @@ fn visit_variable_declarator_with_scope<'a>(
             }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
-            walk_function_with_body_bindings(collector, function);
+            walk_function_with_body_bindings(collector, function, true);
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }

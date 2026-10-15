@@ -21,7 +21,7 @@ fn visit_method_definition_with_scope<'a>(
     with_repeat_execution(
         collector,
         method.value.as_ref(),
-        walk_function_with_body_bindings,
+        |collector, function| walk_function_with_body_bindings(collector, function, pushed),
     );
     collector.pop_function_scope(pushed);
 }
@@ -90,7 +90,7 @@ fn visit_object_property_with_scope<'a>(
             with_repeat_execution(
                 collector,
                 function.as_ref(),
-                walk_function_with_body_bindings,
+                |collector, function| walk_function_with_body_bindings(collector, function, pushed),
             );
             collector.pop_function_scope(pushed);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
@@ -107,7 +107,7 @@ fn visit_object_property_with_scope<'a>(
             with_repeat_execution(
                 collector,
                 arrow.as_ref(),
-                walk_arrow_function_with_body_bindings,
+                |collector, arrow| walk_arrow_function_with_body_bindings(collector, arrow, pushed),
             );
             collector.pop_function_scope(pushed);
         }
