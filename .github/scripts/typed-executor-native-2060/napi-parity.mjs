@@ -1,0 +1,21 @@
+// Untimed full prepared-analysis CJS/ESM parity, exact physical fixture.
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+const require = createRequire(import.meta.url);
+const [packageRoot, fixtureRoot, entriesJson, reportPrefix] = process.argv.slice(2);
+const entries = JSON.parse(entriesJson);
+assert.ok(reportPrefix === 'effects' || reportPrefix === 'utility');
+const cjs = require(packageRoot + '/index.js');
+const esm = await import(pathToFileURL(packageRoot + '/index.mjs').href);
+const reports = entries.map((entry, index) => ({type:'effects', id:`${reportPrefix}-${index}`, kind:'postgres', entry}));
+reports.push({type:'check', id:'check'});
+const pending = cjs.analyzeProject({root:fixtureRoot, reports});
+assert.ok(pending instanceof Promise, 'CJS prepared API must be async');
+const cjsResult = await pending;
+const esmPending = esm.analyzeProject({root:fixtureRoot, reports});
+assert.ok(esmPending instanceof Promise, 'ESM prepared API must be async');
+const esmResult = await esmPending;
+assert.deepEqual(cjsResult, esmResult, 'CJS/ESM full prepared reports differ');
+assert.equal(cjsResult.reports.length, entries.length + 1);
+process.stdout.write(JSON.stringify(cjsResult) + '\n');

@@ -1,0 +1,179 @@
+# Reviewed diagnostic branch; push only registers this workflow.
+# Only an exact-SHA workflow_dispatch can enter preflight, builds or sampling.
+name: Typed executor native diagnostic pair 2060
+on:
+  push:
+    branches:
+      - diagnostic/typed-executor-native-2060-d372
+  workflow_dispatch:
+    inputs:
+      approved_diagnostic_commit:
+        description: Independently reviewed SHA of this single overlay commit
+        required: true
+        type: string
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  RUSTUP_TOOLCHAIN: '1.99.1'
+  APPROVED_DIAGNOSTIC_COMMIT: ${{ inputs.approved_diagnostic_commit }}
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  pull-requests: read
+concurrency:
+  group: typed-executor-native-2060-exact-pair
+  cancel-in-progress: false
+jobs:
+  registration:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Register branch workflow for later reviewed dispatch
+        run: echo 'Diagnostic workflow registered; no build or sample on push.'
+  pair-preflight:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact source pair, reviewed driver, CI, four Codecov checks and all inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py pair-preflight
+      - name: Retain rejected pair preflight
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: typed-executor-2060-pair-preflight-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/public/
+          if-no-files-found: warn
+          retention-days: 30
+  production-build:
+    needs: pair-preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.99.1'
+      - name: Compile exact default-feature CLI, library, probes and N-API addon
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py production-build --arm '${{ matrix.arm }}'
+      - name: Retain source/build failure record
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: typed-executor-2060-${{ matrix.arm }}-build-record-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/public/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Transfer one arm's frozen private binaries and provenance within this run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: typed-executor-2060-${{ matrix.arm }}-private-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/${{ matrix.arm }}/transfer/
+          if-no-files-found: error
+          retention-days: 1
+  layout-build:
+    needs: pair-preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.99.1'
+      - name: Measure separately compiled default and instrumentation layouts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py layout-build --arm '${{ matrix.arm }}'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        with:
+          name: typed-executor-2060-${{ matrix.arm }}-layout-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/${{ matrix.arm }}/layout-public/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain layout failure record
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: typed-executor-2060-${{ matrix.arm }}-layout-record-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/public/
+          if-no-files-found: warn
+          retention-days: 30
+  measurement:
+    needs: [pair-preflight, production-build, layout-build]
+    # Enter the numeric curation path even when preflight/build/layout failed.
+    # Missing private binaries skip sampling but remain an explicit failed gate.
+    if: ${{ github.event_name == 'workflow_dispatch' && always() }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        if: ${{ needs.production-build.result == 'success' }}
+        with:
+          name: typed-executor-2060-baseline-private-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/baseline/transfer/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        if: ${{ needs.production-build.result == 'success' }}
+        with:
+          name: typed-executor-2060-candidate-private-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/candidate/transfer/
+      - name: Verify both artifact digests, exact sources and untimed full semantic reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py semantic-preflight
+      - name: Check CJS and ESM async N-API parity for all 17 prepared reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py napi-parity
+      - name: Sample both frozen binaries on this one runner, retaining every row
+        timeout-minutes: 180
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py sample
+      - name: Curate numeric evidence, including partial failures
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LAYOUT_RESULT: ${{ needs.layout-build.result }}
+          BUILD_RESULT: ${{ needs.production-build.result }}
+          PREFLIGHT_RESULT: ${{ needs.pair-preflight.result }}
+        run: python3 .github/scripts/typed-executor-native-2060/stage.py summary
+      - name: Publish numeric evidence only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: typed-executor-2060-readable-${{ github.run_id }}
+          path: ${{ runner.temp }}/typed-executor-2060/public/
+          if-no-files-found: error
+          retention-days: 30

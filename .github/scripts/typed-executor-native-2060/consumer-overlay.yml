@@ -1,0 +1,16 @@
+effects:
+  database:
+    targets:
+      - { module: '@vendor/database', export: read, category: query }
+    transactionFunctions: [primary.transaction]
+projects:
+  library:
+    type: library
+    root: .
+    include: [src/**/*.mts]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [database]
+      allow: [{file: src/entry.mts, callee: unused}]
