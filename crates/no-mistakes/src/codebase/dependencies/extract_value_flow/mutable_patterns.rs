@@ -22,7 +22,7 @@ impl PatternRoots {
         let entry = self.writes.get(&owner)?.get(&catalog.start)?;
         entry
             .versions
-            .range(..phase)
+            .range(..=phase)
             .next_back()
             .map(|(_, id)| *id)
             .or(entry.initial)

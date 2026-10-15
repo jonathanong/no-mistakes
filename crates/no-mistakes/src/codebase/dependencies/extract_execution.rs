@@ -29,9 +29,11 @@ fn with_conditional_execution(
     let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
     collector.receiver_write_is_conditional |= conditional;
+    collector.receiver_write_conditional_depth += usize::from(conditional);
     visit(collector);
     collector.conditional_execution = previous;
     collector.receiver_write_is_conditional = previous_receiver;
+    collector.receiver_write_conditional_depth -= usize::from(conditional);
 }
 
 fn visit_binding_default_with_execution<'a>(
@@ -51,8 +53,10 @@ fn with_conditional_receiver_write(
     // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
     collector.receiver_conditional_region = None;
     let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
+    collector.receiver_write_conditional_depth += 1;
     visit(collector);
     collector.receiver_write_is_conditional = previous;
+    collector.receiver_write_conditional_depth -= 1;
 }
 
 fn with_repeat_execution<T>(

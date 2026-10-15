@@ -27,31 +27,24 @@ impl ImportCollector {
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
         assigned: Option<(Option<String>, u32)>,
-        offset: u32,
+        metadata: &mutation_metadata::MutationMetadata,
         propagated: bool,
     ) {
-        let context = self.current_function_id();
-        let unconditional =
-            !self.receiver_write_is_conditional && self.receiver_replacement_is_fresh;
-        let region = self
-            .receiver_conditional_region
-            .filter(|(_, admitted)| *admitted == offset && self.receiver_replacement_is_fresh)
-            .map(|(token, _)| token.get());
+        let offset = metadata.offset;
+        let context = metadata.context;
+        let unconditional = metadata.unconditional;
+        let region = metadata.region;
         let capture_allowed = !self.fresh_receiver_effects.rebound(key.0, &key.1);
         let captured = assigned.as_ref().and_then(|(_, completed_at)| {
             (capture_allowed
-                && self.receiver_replacement_is_fresh
+                && metadata.fresh
                 && (unconditional || region.is_some())
                 && self.prior_member_mutations.requires_proof(key.0, &key.1))
             .then(|| identity_metadata::FreshCapture {
                 origin: Some((offset, context)),
-                epoch: self.fresh_receiver_effects.epoch,
+                epoch: metadata.epoch,
                 reads: self.fresh_receiver_effects.capture(reads),
-                phase: self
-                    .fresh_receiver_effects
-                    .phases
-                    .as_ref()
-                    .and_then(|phases| phases.capture_phase(self.assignment_target_start)),
+                phase: metadata.phase,
                 completed_at: *completed_at,
             })
         });
@@ -72,7 +65,7 @@ impl ImportCollector {
                 assigned,
                 write,
                 propagated,
-                proof.then_some(self.receiver_replacement_is_fresh),
+                proof.then_some(metadata.fresh),
                 (region, captured),
             );
         }

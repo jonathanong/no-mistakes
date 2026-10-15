@@ -1,0 +1,80 @@
+use super::*;
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn nested_class_patterns_bound_root_phase_walk_work() {
+    for name in [
+        "mutable-pattern-eager-class-scale.mts",
+        "mutable-pattern-cold-class-scale.mts",
+    ] {
+        let source = mutable_receiver_source(name);
+        let allocator = Allocator::default();
+        let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{name}: {:?}",
+            parsed.diagnostics
+        );
+        let facts = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            true,
+        );
+        let visits = facts.value_flow.receiver_only_phase_visits;
+        assert!(
+            visits > 0 && visits <= 32 * 16,
+            "{name}: root phase visits {visits}"
+        );
+    }
+}
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn deferred_mutable_alias_diamond_retains_shared_traversal() {
+    let source = mutable_receiver_source("mutable-pattern-deferred-diamond.mts");
+    let allocator = Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
+    assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+    assert!(
+        facts.value_flow.reference_path_visits <= 16 * 32,
+        "diamond projection visits {}",
+        facts.value_flow.reference_path_visits
+    );
+}
+
+#[test]
+fn deferred_foreign_roots_do_not_rescan_future_origin_suffixes() {
+    let mut counts = Vec::new();
+    for writes in [32, 128] {
+        let source =
+            mutable_receiver_source(&format!("mutable-pattern-future-foreign-{writes}.mts"));
+        let allocator = Allocator::default();
+        let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let facts = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            true,
+        );
+        let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
+        assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+        counts.push(facts.value_flow.receiver_only_visits);
+    }
+    assert!(
+        counts[1] <= counts[0] + 16 && counts[1] <= 16 * 4,
+        "sixteen writes with32/128 future foreign leaves: {counts:?}"
+    );
+}

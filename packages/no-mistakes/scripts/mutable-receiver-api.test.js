@@ -15,6 +15,12 @@ test(
     );
     const config = join(root, "mutable-receivers.yml");
     for (const [name, expected] of [
+      ["mutable-let-pattern-static-var-conditional", 0],
+      ["mutable-let-pattern-replaced-earlier-lhs", 1],
+      ["mutable-let-pattern-replaced-rhs-rebind", 1],
+      ["mutable-let-pattern-static-local", 1],
+      ["mutable-let-pattern-static-fields", 1],
+      ["mutable-let-pattern-static-rebind", 1],
       ["mutable-let-pattern-ternary-rebind", 0],
       ["mutable-let-pattern-final-foreign", 0],
       ["mutable-let-pattern-conditional-whole", 1],
@@ -79,6 +85,11 @@ test(
       );
     }
     for (const name of [
+      "mutable-let-pattern-static-capture",
+      "mutable-let-pattern-static-comma-capture",
+      "mutable-let-pattern-static-self-wrapper",
+      "mutable-let-pattern-replaced-getter-rhs",
+      "mutable-let-pattern-static-nested",
       "mutable-let-pattern-class-context",
       "mutable-let-pattern-cold-class",
       "mutable-let-pattern-shadowed-class",
@@ -96,6 +107,13 @@ test(
         ["replica.get"],
         name,
       );
+    }
+    for (const name of ["mutable-let-pattern-replaced-later-lhs", "mutable-let-pattern-replaced-carrier"]) {
+      const detached = { root, config, kind: "valkey",
+        entry: `src/nested-receiver-containers/${name}.mts` };
+      const detachedReport = await cjs.effects(detached);
+      assert.deepEqual(await esm.effects(detached), detachedReport);
+      assert.deepEqual(detachedReport.callSites.map((site) => site.callee).sort(), ["primary.get", "replica.get"], name);
     }
     const report = await cjs.check({ root, config });
     assert.deepEqual(await esm.check({ root, config }), report);

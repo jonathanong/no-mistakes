@@ -28,6 +28,7 @@ struct ImportCollector {
     conditional_execution: bool,
     receiver_replacement_is_fresh: bool,
     receiver_write_is_conditional: bool,
+    receiver_write_conditional_depth: usize,
     fresh_receiver_effects: extract_value_flow::fresh_receiver_effects::FreshReceiverEffects,
     decorator_applications: DecoratorApplications,
     /// Live straight-line guarded segment and its one admitted assignment.
@@ -40,7 +41,7 @@ struct ImportCollector {
     sloppy_script: bool,
     /// The Annex B for-in initializer runs before the first iteration. Its
     /// binding target still runs only when the right-hand side has a key.
-    annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool)>,
+    annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool, usize)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
     callable_assignment_state: Option<Box<CallableAssignmentState>>,
@@ -53,7 +54,8 @@ struct ImportCollector {
     receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
     destructuring_phase_owner: Option<Option<CallableId>>,
-    receiver_root_phase_context: Option<(Option<CallableId>, usize)>,
+    deferred_mutable_writes: Option<Box<extract_value_flow::mutable_deferred::DeferredMutations>>,
+    receiver_root_phases: Option<Box<extract_value_flow::root_phase_capture::RootPhaseCapture>>,
     destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,
     /// Present only while the normal visitor records this exact assignment leaf.
     assignment_target_start: Option<u32>,
