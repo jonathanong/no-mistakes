@@ -196,6 +196,48 @@ pub(super) fn cases() -> &'static [Case] {
             Some("primary.get"),
         ),
         (
+            "enclosing-tdz",
+            Some("neverInitialized/neverRun"),
+            "fn",
+            None,
+        ),
+        (
+            "enclosing-tdz",
+            Some("adjacentNeverInitialized/adjacentRun"),
+            "fn",
+            None,
+        ),
+        (
+            "enclosing-tdz",
+            Some("initializedBeforeReturn/initializedRun"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
+            "enclosing-tdz",
+            Some("conditionalReturn/conditionalRun"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
+            "enclosing-tdz",
+            Some("bothBranchesReturn/unreachableRun"),
+            "fn",
+            None,
+        ),
+        (
+            "enclosing-tdz",
+            Some("hoistedCalleeAfterReturn/later/hoistedRun"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
+            "enclosing-tdz",
+            Some("hoistedStaticBlockAfterReturn/later/staticInvoke"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
             "nested-argument-order",
             Some("objectDefaultLater"),
             "fn",

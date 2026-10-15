@@ -25,6 +25,9 @@ struct ImportCollector {
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
+    /// Cutoff for the current callable's body when its suffix is unreachable.
+    /// Saved and restored around body traversal; absent for ordinary bodies.
+    unreachable_value_binding_after: Option<u32>,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,

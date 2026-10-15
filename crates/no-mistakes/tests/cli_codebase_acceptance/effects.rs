@@ -210,6 +210,18 @@ fn effects_cli_retains_cross_file_inline_receiver_timing() {
 }
 
 #[test]
+fn effects_cli_respects_definite_enclosing_initialization() {
+    let root = fixture("value-flow-receiver-evaluation-order");
+    let report = run_json(
+        &root,
+        &["effects", "cache", "--entry", "src/enclosing-tdz.mts"],
+    );
+    let sites = report["callSites"].as_array().unwrap();
+    assert_eq!(sites.len(), 4, "{report}");
+    assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+}
+
+#[test]
 fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
     let root = fixture("inline-member-precision");
     for (name, expected) in [

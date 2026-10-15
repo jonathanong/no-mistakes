@@ -1,8 +1,19 @@
 use super::*;
 
 pub(super) fn sequence_completes(statements: &[Statement<'_>]) -> bool {
-    statements.iter().all(statement_completes)
+    sequence_completion(statements).0
 }
+
+pub(super) fn sequence_completion(statements: &[Statement<'_>]) -> (bool, Option<u32>) {
+    for (index, statement) in statements.iter().enumerate() {
+        if !statement_completes(statement) {
+            let cutoff = (index + 1 < statements.len()).then_some(statement.span().end);
+            return (false, cutoff);
+        }
+    }
+    (true, None)
+}
+
 fn statement_completes(statement: &Statement<'_>) -> bool {
     match statement {
         Statement::ReturnStatement(_) | Statement::ThrowStatement(_) => false,
