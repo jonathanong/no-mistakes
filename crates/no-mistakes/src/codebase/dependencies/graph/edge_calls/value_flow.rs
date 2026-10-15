@@ -78,6 +78,7 @@ struct ValueFlowResolution<'a, 'b> {
         CallableId,
         execution_quality::ExecutionPhase,
     )>,
+    module_snapshot: Option<(std::path::PathBuf, u32)>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 

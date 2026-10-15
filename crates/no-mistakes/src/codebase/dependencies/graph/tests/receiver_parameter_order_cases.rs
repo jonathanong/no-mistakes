@@ -3,6 +3,43 @@ use super::cases::Case;
 pub(super) fn cases() -> &'static [Case] {
     &[
         (
+            "module-snapshot-phase",
+            Some("runMultiple/savedMultiple"),
+            "fn",
+            None,
+        ),
+        (
+            "module-snapshot-phase",
+            Some("writeCyclic/savedCyclic"),
+            "fn",
+            None,
+        ),
+        (
+            "module-snapshot-phase",
+            Some("runNested/savedNested"),
+            "fn",
+            Some("nestedSnapshot.get"),
+        ),
+        ("module-snapshot-phase", Some("savedEarly"), "fn", None),
+        (
+            "module-snapshot-phase",
+            Some("runEscaped/savedEscaped"),
+            "fn",
+            None,
+        ),
+        (
+            "module-snapshot-phase",
+            Some("runLive/savedLive"),
+            "fn",
+            None,
+        ),
+        (
+            "module-snapshot-phase",
+            Some("runDeferred/savedDeferred"),
+            "fn",
+            None,
+        ),
+        (
             "created-callable-phase",
             Some("createRun/createdRun/takeCreated"),
             "fn",

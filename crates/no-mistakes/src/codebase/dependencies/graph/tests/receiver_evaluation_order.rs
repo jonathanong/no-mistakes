@@ -61,18 +61,17 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
             "{file} {caller:?} {callee}: {site:?}"
         );
     }
-    // #2033 is a current-parent precision gap, not a supported Unknown policy:
-    // exact4ddb and e1 report Unknown; desired JS target is savedPhase.get.
-    // Keep this separate from supported positives while reusing the same graph.
+    // The module copy predates every invocation, including repeated writes.
     let sites = graph.call_sites_in_file(&root.join("src/repeated-parameter-phase.mts"));
     let snapshot = sites
         .iter()
         .find(|site| {
             site.caller.as_deref() == Some("runSaved/repeatedSaved") && site.source_callee == "fn"
         })
-        .expect("#2033 copied-method precision-gap site");
+        .expect("module copied-method site");
     assert!(
-        matches!(&snapshot.target, ResolvedCallTarget::Unknown),
-        "#2033 current-parent gap; desired savedPhase.get: {snapshot:?}"
+        matches!(&snapshot.target, ResolvedCallTarget::ModuleExport { export_path, .. }
+        if export_path == "savedPhase.get"),
+        "{snapshot:?}"
     );
 }

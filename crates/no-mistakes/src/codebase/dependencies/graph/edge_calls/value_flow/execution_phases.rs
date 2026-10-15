@@ -92,3 +92,53 @@ impl ValueFlowResolution<'_, '_> {
         }
     }
 }
+
+impl ValueFlowResolution<'_, '_> {
+    /// A closed synchronous caller chain can prove that every execution starts
+    /// after an independently acquired module snapshot, even when it repeats.
+    /// Floyd's walk rejects cycles without retaining an extra caller graph.
+    pub(super) fn writer_after_module_snapshot(
+        &self,
+        path: &std::path::Path,
+        writer: CallableId,
+        acquisition: u32,
+    ) -> bool {
+        let mut key = (path.to_path_buf(), writer);
+        let (mut slow, mut fast) = (writer, writer);
+        loop {
+            key.1 = slow;
+            slow = match self.module_writer_step(&key) {
+                Some(Step::Owner(owner)) => owner,
+                Some(Step::Phase(offset, _)) => return offset > acquisition,
+                None => return false,
+            };
+            for _ in 0..2 {
+                key.1 = fast;
+                fast = match self.module_writer_step(&key) {
+                    Some(Step::Owner(owner)) => owner,
+                    Some(Step::Phase(offset, _)) => return offset > acquisition,
+                    None => return false,
+                };
+            }
+            if slow == fast { return false; }
+        }
+    }
+
+    fn module_writer_step(&self, key: &(std::path::PathBuf, CallableId)) -> Option<Step> {
+        let index = self.indexes.file(self.facts, &key.0)?;
+        let scope = index.values.scopes.get(&key.1)?;
+        if index.exported_scopes.contains(scope) || !self.synchronous_callable(&key.0, key.1) {
+            return None;
+        }
+        let [input] = self.incoming.get(key)?.as_slice() else { return None; };
+        if input.callback || input.file != key.0 { return None; }
+        let call = index.values.sites.get(&input.offset)
+            .and_then(|sites| sites.get(&input.callee))
+            .and_then(|key| index.values.calls.get(key))?;
+        if call.bound || call.spread_at.is_some() { return None; }
+        Some(match call.context {
+            Some(owner) => Step::Owner(owner),
+            None => Step::Phase(input.offset, None),
+        })
+    }
+}

@@ -50,7 +50,17 @@ impl ValueFlowResolution<'_, '_> {
         let projection = projection.filter(|_| {
             matches!(&binding.value, ValueExpression::Named { name, .. } if !name.contains('.'))
         });
-        self.value_projected(path, &binding.value, projection)
+        let previous = self.module_snapshot.take();
+        // Only a module binding's own copied-member initializer is acquired once.
+        // Live object aliases and callable-local acquisitions retain their timing.
+        self.module_snapshot = (binding.scope == 0
+            && binding.owner.is_none()
+            && matches!(binding.value, ValueExpression::Member(..))
+            && Self::member_read_location(&binding.value).is_some_and(|(_, owner)| owner.is_none()))
+            .then(|| (path.to_path_buf(), binding.declared_at));
+        let value = self.value_projected(path, &binding.value, projection);
+        self.module_snapshot = previous;
+        value
     }
 
     /// Captured bindings must exist and remain unchanged at execution.

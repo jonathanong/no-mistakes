@@ -101,7 +101,18 @@ impl ValueFlowResolution<'_, '_> {
                             .is_some_and(|history| {
                                 history.assignment_invalidated_owned_reads(
                                     &projection,
-                                    &|writer| reads.offset(read, source, writer).known(),
+                                    &|writer| {
+                                        reads.offset(read, source, writer).known().or_else(|| {
+                                            let (file, acquisition) = self.module_snapshot.as_ref()?;
+                                            let writer = writer?;
+                                            // This qualified proof precedes the writer's
+                                            // execution altogether; zero orders before
+                                            // every authored write in that callable.
+                                            (file == source && self.writer_after_module_snapshot(
+                                                source, writer, *acquisition,
+                                            )).then_some(0)
+                                        })
+                                    },
                                     &|| reads.default_owner(read, source),
                                 )
                             })
