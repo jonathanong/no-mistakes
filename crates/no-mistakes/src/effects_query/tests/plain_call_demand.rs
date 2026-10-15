@@ -44,6 +44,14 @@ fn plain_names_need_calls_for_any_prepared_replacement_or_incomplete_file() {
         Some(std::sync::Arc::new(Default::default()));
     assert!(needs_effect_call_graph(&selection, &files, &foreign));
 
+    let mut nullish = clean();
+    nullish
+        .get_mut(&writer)
+        .unwrap()
+        .value_flow
+        .has_nullish_alternatives = true;
+    assert!(needs_effect_call_graph(&selection, &files, &nullish));
+
     let missing = TsFactMap::from_iter_with_plan(
         [(entry.clone(), TsFileFacts::default())],
         TsFactPlan::default(),
@@ -140,5 +148,34 @@ fn saved_plain_only_replacement_alternatives_and_foreign_write_survive() {
             cross_file.call_sites[0].callee.as_str()
         ),
         (4, "transaction")
+    );
+}
+
+#[test]
+fn plain_names_keep_nullish_fallback_effects_without_replacement_facts() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/effects-plain-nullish/fixture");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let report = run(
+        fixture.path(),
+        None,
+        None,
+        "plain",
+        Path::new("src/entry.mts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    let expected: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(saved.join("expected.json")).unwrap())
+            .unwrap();
+    assert_eq!(serde_json::to_value(&report).unwrap(), expected);
+    assert_eq!(
+        report
+            .call_sites
+            .iter()
+            .map(|site| (site.line, site.callee.as_str()))
+            .collect::<Vec<_>>(),
+        [(5, "read"), (6, "write")]
     );
 }

@@ -113,6 +113,11 @@ fn visit_logical_with_execution<'a>(
     collector: &mut ImportCollector,
     expression: &oxc_ast::ast::LogicalExpression<'a>,
 ) {
+    if collector.collect_value_flow
+        && expression.operator == oxc_ast::ast::LogicalOperator::Coalesce
+    {
+        collector.value_flow.has_nullish_alternatives = true;
+    }
     collector.visit_expression(&expression.left);
     let unconditional = match expression.operator {
         oxc_ast::ast::LogicalOperator::And => literal_truthiness(&expression.left) == Some(true),

@@ -17,6 +17,8 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    /// Coalescing syntax may create canonical call alternatives without writes.
+    pub has_nullish_alternatives: bool,
     /// Local callable values can escape through containers, returns, or stores.
     /// Bare call callees are represented by canonical invocation facts instead.
     pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,

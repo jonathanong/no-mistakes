@@ -51,6 +51,12 @@ test(
         "src/defaults.mts",
         "expected.json",
       ],
+      [
+        join(__dirname, "../../../test-cases/codebase-analysis/effects-plain-nullish/fixture"),
+        "plain",
+        "src/entry.mts",
+        "expected.json",
+      ],
     ]) {
       const expected = JSON.parse(readFileSync(join(root, expectedName), "utf8"));
       for (const api of [cjs, esm]) {

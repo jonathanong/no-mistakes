@@ -67,7 +67,7 @@ fn needs_effect_call_graph(
         return true;
     }
     // Plain names need resolved calls only when a prepared replacement may
-    // create alternatives. Failures retain the full graph path, so a missing
+    // create alternatives, including nullish syntax. Failures retain the full graph path, so a missing
     // or partial fact set cannot silently suppress a configured effect.
     graph_files.indexable().iter().any(|path| {
         facts.get(path).is_none_or(|file| {
@@ -75,6 +75,7 @@ fn needs_effect_call_graph(
                 || file.parse_error.is_some()
                 || file.fatal_parse_error
                 || file.value_flow.replacements.is_some()
+                || file.value_flow.has_nullish_alternatives
         })
     })
 }
