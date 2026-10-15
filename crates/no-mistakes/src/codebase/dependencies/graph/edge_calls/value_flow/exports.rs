@@ -9,6 +9,7 @@ pub(in super::super) fn resolve_value_exports(
     exports: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) {
     let incoming = refine::incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
+    let module_writer_phases = execution_phases::ModuleWriterPhases::default();
     let resolved: Vec<_> = exports
         .par_iter()
         .filter_map(|(key, export)| {
@@ -32,6 +33,8 @@ pub(in super::super) fn resolve_value_exports(
                 acquisition_context: None,
                 invocation_read: None,
                 executing_read: None,
+                module_writer_phases: &module_writer_phases,
+                writer_dependencies: Default::default(),
                 module_snapshot: None,
                 member_read: None,
             };

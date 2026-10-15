@@ -66,6 +66,8 @@ fn refine_iteration(
         acquisition_context: None,
         invocation_read: None,
         executing_read: None,
+        module_writer_phases: data.module_writer_phases,
+        writer_dependencies: Default::default(),
         module_snapshot: None,
         member_read: None,
     };
@@ -190,5 +192,6 @@ fn refine_iteration(
         }
         site.target = target;
     }
+    flow.merge_writer_dependencies();
     (sites, edges, flow.used_parameters)
 }

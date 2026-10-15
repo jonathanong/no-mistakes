@@ -2,6 +2,27 @@ use super::cases::Case;
 
 pub(super) fn cases() -> &'static [Case] {
     &[
+        ("module-snapshot-phase", Some("savedRefined"), "fn", None),
+        ("module-snapshot-phase", Some("savedVarLoop"), "fn", None),
+        (
+            "module-snapshot-phase",
+            Some("savedInitializer"),
+            "fn",
+            None,
+        ),
+        ("module-snapshot-phase", Some("savedCallback"), "fn", None),
+        (
+            "module-snapshot-phase",
+            Some("runSpread/savedSpread"),
+            "fn",
+            None,
+        ),
+        (
+            "module-snapshot-phase",
+            Some("runIntermediate/savedIntermediate"),
+            "fn",
+            None,
+        ),
         (
             "module-snapshot-phase",
             Some("runMultiple/savedMultiple"),

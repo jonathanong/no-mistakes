@@ -1,6 +1,15 @@
 use super::*;
 use execution_quality::ExecutionPhase;
 
+type Owner = (std::path::PathBuf, CallableId);
+pub(super) struct ModuleWriterPhase {
+    phase: Option<u32>,
+    dependencies: FxHashSet<Owner>,
+}
+pub(super) type ModuleWriterPhases = std::sync::OnceLock<
+    dashmap::DashMap<Owner, std::sync::Arc<std::sync::OnceLock<ModuleWriterPhase>>, rustc_hash::FxBuildHasher>,
+>;
+
 enum Step {
     Owner(CallableId),
     Phase(u32, Option<CallableId>),
@@ -103,28 +112,50 @@ impl ValueFlowResolution<'_, '_> {
         writer: CallableId,
         acquisition: u32,
     ) -> bool {
-        let mut key = (path.to_path_buf(), writer);
-        let (mut slow, mut fast) = (writer, writer);
+        let key = (path.to_path_buf(), writer);
+        let phases = self.module_writer_phases.get_or_init(|| {
+            dashmap::DashMap::with_hasher_and_shard_amount(rustc_hash::FxBuildHasher, 8)
+        });
+        let slot = std::sync::Arc::clone(phases.entry(key.clone()).or_default().value());
+        // Release the shard guard before walking; independent writers proceed concurrently.
+        let proof = slot.get_or_init(|| {
+            let mut dependencies = fx_set();
+            let phase = self.module_writer_phase(key, &mut dependencies);
+            ModuleWriterPhase { phase, dependencies }
+        });
+        self.writer_dependencies.borrow_mut().extend(proof.dependencies.iter().cloned());
+        proof.phase.is_some_and(|offset| offset > acquisition)
+    }
+
+    pub(super) fn merge_writer_dependencies(&mut self) {
+        self.used_parameters.extend(self.writer_dependencies.get_mut().drain());
+    }
+
+    fn module_writer_phase(&self, mut key: Owner, dependencies: &mut FxHashSet<Owner>) -> Option<u32> {
+        let (mut slow, mut fast) = (key.1, key.1);
         loop {
             key.1 = slow;
-            slow = match self.module_writer_step(&key) {
+            slow = match self.module_writer_step(&key, dependencies) {
                 Some(Step::Owner(owner)) => owner,
-                Some(Step::Phase(offset, _)) => return offset > acquisition,
-                None => return false,
+                Some(Step::Phase(offset, _)) => return Some(offset),
+                None => return None,
             };
             for _ in 0..2 {
                 key.1 = fast;
-                fast = match self.module_writer_step(&key) {
+                fast = match self.module_writer_step(&key, dependencies) {
                     Some(Step::Owner(owner)) => owner,
-                    Some(Step::Phase(offset, _)) => return offset > acquisition,
-                    None => return false,
+                    Some(Step::Phase(offset, _)) => return Some(offset),
+                    None => return None,
                 };
             }
-            if slow == fast { return false; }
+            if slow == fast { return None; }
         }
     }
 
-    fn module_writer_step(&self, key: &(std::path::PathBuf, CallableId)) -> Option<Step> {
+    fn module_writer_step(&self, key: &Owner, dependencies: &mut FxHashSet<Owner>) -> Option<Step> {
+        dependencies.insert(key.clone());
+        #[cfg(feature = "test-instrumentation")]
+        self.cache.record_execution_step();
         let index = self.indexes.file(self.facts, &key.0)?;
         let scope = index.values.scopes.get(&key.1)?;
         if index.exported_scopes.contains(scope) || !self.synchronous_callable(&key.0, key.1) {

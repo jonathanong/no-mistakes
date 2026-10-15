@@ -26,8 +26,10 @@ runEscaped();
 
 // Copying the receiver does not copy a method; repeated reads stay live.
 const liveAlias = liveSnapshot;
+function acquireLive(fn = liveAlias.get) { return fn; }
+function forwardLive() { return acquireLive(); }
 function runLive() {
-  (function savedLive(fn) { fn('key'); })(liveAlias.get);
+  (function savedLive(fn) { fn('key'); })(forwardLive());
   liveSnapshot.get = replacement;
 }
 for (const value of [0, 1]) runLive(value);
@@ -57,3 +59,53 @@ function writeCyclic() {
   writeCyclic();
   cyclicSnapshot.get = replacement;
 }
+
+
+import { varLoopSnapshot, initializerSnapshot, callbackSnapshot, spreadSnapshot, intermediateSnapshot } from '@vendor/valkey';
+// A module var is mutable and its loop initializer does not acquire once.
+for (const value of [0, 1]) {
+  var repeatedSaved = varLoopSnapshot.get;
+  (function savedVarLoop(fn) { fn(value); })(repeatedSaved);
+  varLoopSnapshot.get = replacement;
+}
+
+// A call in the initializer can write before the member is acquired.
+function initializeReceiver() {
+  initializerSnapshot.get = replacement;
+  return initializerSnapshot;
+}
+const initializerSaved = initializeReceiver().get;
+(function savedInitializer(fn) { fn('key'); })(initializerSaved);
+
+function writeCallback() { callbackSnapshot.get = replacement; }
+external(writeCallback);
+const callbackSaved = callbackSnapshot.get;
+(function savedCallback(fn) { fn('key'); })(callbackSaved);
+
+const spreadSaved = spreadSnapshot.get;
+function writeSpread() { spreadSnapshot.get = replacement; }
+function runSpread() {
+  (function savedSpread(fn) { fn('key'); })(spreadSaved);
+  writeSpread(...[]);
+}
+runSpread();
+
+const intermediateSaved = intermediateSnapshot.get;
+function writeIntermediate() { intermediateSnapshot.get = replacement; }
+export function runIntermediate() {
+  (function savedIntermediate(fn) { fn('key'); })(intermediateSaved);
+  writeIntermediate();
+}
+runIntermediate();
+
+
+// The early writer call is discovered through value flow. Later refinement must
+// invalidate a proof that initially saw only the direct call after acquisition.
+import { refinedSnapshot } from '@vendor/valkey';
+function returnWriter() { return writeRefined; }
+const earlyWriter = returnWriter();
+earlyWriter();
+const refinedSaved = refinedSnapshot.get;
+function writeRefined() { refinedSnapshot.get = replacement; }
+(function savedRefined(fn) { fn('key'); })(refinedSaved);
+writeRefined();

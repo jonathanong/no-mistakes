@@ -50,14 +50,20 @@ impl ValueFlowResolution<'_, '_> {
         let projection = projection.filter(|_| {
             matches!(&binding.value, ValueExpression::Named { name, .. } if !name.contains('.'))
         });
+        let receiver_writers = self.indexes.file(self.facts, path).is_some_and(|index| {
+            index.values.receiver_mutations.as_ref().is_some_and(|receivers| {
+                !receivers.writer_contexts.is_empty()
+            })
+        });
         let previous = self.module_snapshot.take();
         // Only a module binding's own copied-member initializer is acquired once.
         // Live object aliases and callable-local acquisitions retain their timing.
-        self.module_snapshot = (binding.scope == 0
+        self.module_snapshot = (receiver_writers && binding.scope == 0
             && binding.owner.is_none()
             && matches!(binding.value, ValueExpression::Member(..))
             && Self::member_read_location(&binding.value).is_some_and(|(_, owner)| owner.is_none()))
-            .then(|| (path.to_path_buf(), binding.declared_at));
+            .then(|| (path.to_path_buf(), Self::member_read_location(&binding.value)
+                .expect("qualified static member initializer").0));
         let value = self.value_projected(path, &binding.value, projection);
         self.module_snapshot = previous;
         value
