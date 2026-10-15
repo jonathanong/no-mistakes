@@ -184,25 +184,3 @@ impl ImportCollector {
         }
     }
 }
-
-impl ImportCollector {
-    pub(in super::super) fn record_value_fallthrough(
-        &mut self,
-        statements: &[Statement<'_>],
-    ) -> Option<u32> {
-        if !self.collect_value_flow {
-            return self.unreachable_value_binding_after;
-        }
-        let previous_cutoff = self.unreachable_value_binding_after;
-        let (completes, cutoff) = completion::sequence_completion(statements);
-        self.unreachable_value_binding_after = cutoff;
-        if completes {
-            if let Some(owner) = self.current_function_id() {
-                self.value_flow
-                    .returns
-                    .push((owner, ValueExpression::Unknown));
-            }
-        }
-        previous_cutoff
-    }
-}

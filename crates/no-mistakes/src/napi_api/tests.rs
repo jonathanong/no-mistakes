@@ -345,6 +345,7 @@ fn react_json_functions_return_reports() {
 }
 
 include!("tests_query.rs");
+include!("tests_query_enclosing_init.rs");
 
 #[test]
 fn invalid_options_return_napi_errors() {

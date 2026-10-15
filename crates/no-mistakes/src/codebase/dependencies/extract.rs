@@ -230,6 +230,7 @@ include!("extract_namespace_uses.rs");
 include!("extract_export_names.rs");
 include!("extract_collector.rs");
 include!("extract_visit.rs");
+include!("extract_visit_callables.rs");
 include!("extract_visit_modules.rs");
 include!("extract_visit_exports.rs");
 include!("extract_collector_scopes.rs");
