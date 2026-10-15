@@ -174,13 +174,20 @@ fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
             "closedOnceReceiver.set",
             "closedOnceReceiver.set",
         ),
-        ("repository", "objectReceiver.set", "objectReceiver.set"),
+        (
+            "repository",
+            "objectReceiver.set",
+            "repositoryObjectSource.set",
+        ),
     ] {
         assert_eq!(
             producer_selectors(producer_site(&graph, &root, file, callee)),
             [expected]
         );
     }
+    let saved = producer_site(&graph, &root, "repository", "savedObject");
+    assert_eq!(producer_selectors(saved), ["repositoryObjectSource.get"]);
+    assert!(!saved.has_unknown_target());
 }
 
 #[test]
@@ -194,7 +201,7 @@ fn repeated_replacement_repository_nodes_fan_out_once() {
     let nodes: Vec<_> = site.target_nodes().collect();
     assert_eq!(nodes.len(), 1, "{site:#?}");
     let node = nodes[0];
-    let source = NodeId::file(&root.join("src/repository.mts"));
+    let source = NodeId::file(root.join("src/repository.mts"));
     assert!(graph
         .dependencies_of_node(&source)
         .unwrap()
@@ -253,6 +260,7 @@ fn repeated_replacement_prepares_states_once_independent_of_read_count() {
         assert_eq!(probe.alternatives_candidate_leaves, 2);
         assert_eq!(probe.lookup_count, count);
         assert_eq!(probe.prefix_searches, 2 * count);
+        assert_eq!(probe.inherited_frame_qualifications, 0);
         assert_eq!(probe.rhs.len(), 1);
         assert_eq!(probe.rhs[0].write_index, 0);
         assert!(probe.rhs[0].resolved && probe.rhs[0].known);

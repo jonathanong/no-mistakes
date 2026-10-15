@@ -5,6 +5,19 @@ struct WriterFiles<'a> {
     exact: FxHashMap<String, (&'a std::path::Path, bool)>,
     dynamic: Option<(&'a std::path::Path, bool)>,
 }
+/// Owned writer provenance retained in the catalog's existing external lookup.
+pub(super) struct PreparedWriters {
+    exact: FxHashMap<String, (std::path::PathBuf, bool)>,
+    dynamic: Option<(std::path::PathBuf, bool)>,
+}
+impl PreparedWriters {
+    pub(super) fn foreign(&self, property: &str, path: &std::path::Path) -> bool {
+        [self.exact.get(property), self.dynamic.as_ref()]
+            .into_iter()
+            .flatten()
+            .any(|(writer, multiple)| *multiple || writer != path)
+    }
+}
 #[derive(Default)]
 pub(super) struct ForeignWriters<'a> {
     receivers: FxHashMap<usize, WriterFiles<'a>>,
@@ -63,12 +76,20 @@ impl<'a> ForeignWriters<'a> {
         };
         entry.1 |= entry.0 != path;
     }
-    pub(super) fn summary(&self, receiver: usize) -> Option<(FxHashSet<String>, bool)> {
+    pub(super) fn summary(&self, receiver: usize) -> Option<PreparedWriters> {
         let writers = self.receivers.get(&receiver)?;
-        Some((
-            writers.exact.keys().cloned().collect(),
-            writers.dynamic.is_some(),
-        ))
+        Some(PreparedWriters {
+            exact: writers
+                .exact
+                .iter()
+                .map(|(property, (path, multiple))| {
+                    (property.clone(), (path.to_path_buf(), *multiple))
+                })
+                .collect(),
+            dynamic: writers
+                .dynamic
+                .map(|(path, multiple)| (path.to_path_buf(), multiple)),
+        })
     }
     pub(super) fn contains(&self, receiver: usize, property: &str, path: &std::path::Path) -> bool {
         self.receivers.get(&receiver).is_some_and(|writers| {

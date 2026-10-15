@@ -178,7 +178,7 @@ impl ValueFlowResolution<'_, '_> {
             && member.is_none()
             && binding.is_some_and(|binding| matches!(binding.value, ValueExpression::Member(..)));
         let value = if !acquired_member
-            && self.default_origin_invalidated(path, offset, context, projection)
+            && self.default_origin_invalidated(path, offset, (context, source_context), projection)
         {
             FlowValue::Unknown
         } else {

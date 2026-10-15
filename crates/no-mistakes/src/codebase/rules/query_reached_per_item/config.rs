@@ -1,7 +1,5 @@
 use super::RULE_ID;
-use crate::codebase::dependencies::graph::{
-    GraphBuildPlan, KnownCallTargetRef, ResolvedCallSite, ResolvedCallTarget,
-};
+use crate::codebase::dependencies::graph::{GraphBuildPlan, KnownCallTargetRef, ResolvedCallSite};
 use crate::config::v2::{schema::EffectKindConfig, NoMistakesConfig};
 use anyhow::{bail, Result};
 use serde::Deserialize;
@@ -73,9 +71,8 @@ impl<'a> Sinks<'a> {
         });
         // Keep singleton trusted-provenance policy; alternatives must combine
         // every independently matched leaf before classifying the occurrence.
-        if !matches!(&site.target, ResolvedCallTarget::Alternatives(_))
-            && (provenance.is_some() || returned)
-        {
+        let multiple = site.targets().len() > 1;
+        if !multiple && (provenance.is_some() || returned) {
             return Some(true);
         }
         let named = sink(self.config, &site.source_callee).filter(|transaction| {
@@ -115,6 +112,9 @@ impl<'a> Sinks<'a> {
                 _ => None,
             })
             .reduce(|left, right| left && right);
+        if !multiple {
+            return named.or(resolved);
+        }
         provenance
             .into_iter()
             .chain(returned.then_some(true))

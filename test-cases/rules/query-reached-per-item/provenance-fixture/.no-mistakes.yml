@@ -10,8 +10,17 @@ effects:
   valkey:
     targets:
       - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey-imported-receiver-mutations', export: primary.get }
+      - { module: '@vendor/valkey-default-origin-mutations', export: primary.get }
+      - { module: '@vendor/valkey-destructured-parameters', export: primary.get }
       - { module: '@vendor/valkey', export: session.info }
+      - { module: '@vendor/valkey-imported-receiver-mutations', export: session.info }
+      - { module: '@vendor/valkey-default-origin-mutations', export: session.info }
+      - { module: '@vendor/valkey-destructured-parameters', export: session.info }
       - { module: '@vendor/valkey', export: session.scan }
+      - { module: '@vendor/valkey-imported-receiver-mutations', export: session.scan }
+      - { module: '@vendor/valkey-default-origin-mutations', export: session.scan }
+      - { module: '@vendor/valkey-destructured-parameters', export: session.scan }
 rules:
   - rule: query-reached-per-item
     scope: repository

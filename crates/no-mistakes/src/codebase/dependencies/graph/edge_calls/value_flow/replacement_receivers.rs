@@ -19,8 +19,9 @@ impl ReceiverIdentities {
     pub(super) fn into_mutated_external(
         self,
         writers: &super::writers::ForeignWriters<'_>,
-    ) -> FxHashMap<String, FxHashMap<String, (FxHashSet<String>, bool)>> {
-        let mut mutated: FxHashMap<String, FxHashMap<String, (FxHashSet<String>, bool)>> = fx_map();
+    ) -> FxHashMap<String, FxHashMap<String, super::writers::PreparedWriters>> {
+        let mut mutated: FxHashMap<String, FxHashMap<String, super::writers::PreparedWriters>> =
+            fx_map();
         for (identity, receiver) in self.identities {
             if let ReceiverIdentity::External(module, export) = identity {
                 if let Some(summary) = writers.summary(receiver) {

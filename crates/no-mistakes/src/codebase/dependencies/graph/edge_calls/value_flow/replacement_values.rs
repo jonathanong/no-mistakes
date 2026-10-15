@@ -8,31 +8,57 @@ impl ValueFlowResolution<'_, '_> {
         path: &std::path::Path,
         offset: u32,
         context: Option<CallableId>,
-    ) -> (u32, Option<CallableId>) {
+    ) -> Option<(u32, Option<CallableId>)> {
         if let Some(read) = self.invocation_read.as_ref().filter(|read| {
             read.file == path && read.owner.0 == path && context == Some(read.owner.1)
         }) {
-            return (read.offset, read.context);
+            return Some((read.offset, read.context));
         }
-        // Pure synchronous method-return helpers acquire the method at their
-        // physical invocation. Borrow that already prepared frame directly;
-        // no read-local frames, sets, or retained origin traversal are needed.
-        if let Some(owner) = context {
-            if self
-                .replacements
-                .and_then(|catalog| catalog.file(path))
-                .is_some_and(|file| file.snapshot_owner(owner))
-            {
-                if let Some(OriginKind::ReceiverUse(_, read)) =
-                    self.acquisition_context.as_ref().map(|root| &root.kind)
+        if let (Some(owner), Some(catalog), Some(root)) = (
+            context,
+            self.replacements,
+            self.acquisition_context.as_ref(),
+        ) {
+            if let Some(file) = catalog.file(path) {
+                let Some((nonwriter, closed)) = file.snapshot_owner(owner) else {
+                    return Some((offset, context));
+                };
+                let direct = [Some(root.as_ref())];
+                let inherited;
+                let frames = if matches!(&root.kind, OriginKind::ReceiverUse(_, read)
+                    if read.owns(path, context))
                 {
-                    if read.file == path && read.owns(path, context) {
-                        return (read.offset, read.context);
+                    direct.as_slice()
+                } else {
+                    #[cfg(feature = "test-instrumentation")]
+                    file.record_inherited_frames();
+                    inherited = receiver_owned_contexts::frames(root, path, owner);
+                    inherited.as_slice()
+                };
+                // Select every relevant owner-qualified acquisition branch.
+                // Delegation adds no target: main still validates source reads,
+                // including nested helper calls and writes after a method copy.
+                let once = !self.foreign_acquisition && !frames.is_empty() && frames.iter().all(|frame| {
+                    matches!(frame.map(|frame| &frame.kind), Some(OriginKind::ReceiverUse(_, read))
+                        if read.file == path && read.owns(path, context) && read.context.is_none()
+                            && !catalog.possible_repeat(path, read.offset, read.context))
+                });
+                if once {
+                    return None;
+                }
+                // Only a pure closed getter may adopt a repeated caller phase.
+                if nonwriter && closed && frames.len() == 1 {
+                    if let Some(OriginKind::ReceiverUse(_, read)) =
+                        frames[0].map(|frame| &frame.kind)
+                    {
+                        if read.file == path && read.owns(path, context) {
+                            return Some((read.offset, read.context));
+                        }
                     }
                 }
             }
         }
-        (offset, context)
+        Some((offset, context))
     }
     pub(super) fn replacement_value(
         &mut self,
@@ -46,7 +72,7 @@ impl ValueFlowResolution<'_, '_> {
         if property.contains('.') || scope.is_some_and(|scope| scope != 0) {
             return None;
         }
-        let (offset, context) = self.replacement_coordinates(path, offset, context);
+        let (offset, context) = self.replacement_coordinates(path, offset, context)?;
         let target = self
             .replacements?
             .file(path)?
@@ -75,7 +101,7 @@ impl ValueFlowResolution<'_, '_> {
         // The collector normally flattens dotted reads into Named. Computed
         // static members retain their own projection and use the same lookup.
         let file = self.replacements?.file(path)?;
-        let (offset, context) = self.replacement_coordinates(path, *offset, *context);
+        let (offset, context) = self.replacement_coordinates(path, *offset, *context)?;
         if scope.is_some_and(|scope| scope != 0) {
             return None;
         }

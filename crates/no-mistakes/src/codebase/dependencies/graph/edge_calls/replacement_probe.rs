@@ -18,6 +18,8 @@ pub struct ReplacementProbeSnapshot {
     pub alternatives_candidate_leaves: usize,
     pub lookup_count: usize,
     pub prefix_searches: usize,
+    /// Calls to the existing allocating qualifier for inherited source frames.
+    pub inherited_frame_qualifications: usize,
     pub rhs: Vec<ReplacementRhsProbe>,
     pub incoming: Vec<ReplacementIncomingProbe>,
 }

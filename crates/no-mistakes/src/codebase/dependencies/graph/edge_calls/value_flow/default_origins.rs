@@ -90,13 +90,13 @@ impl ValueFlowResolution<'_, '_> {
         &self,
         file: &std::path::Path,
         offset: u32,
-        context: Option<CallableId>,
+        contexts: (Option<CallableId>, Option<CallableId>),
         projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> bool {
         self.default_origins
             .as_ref()
             .is_some_and(|origins| origins.has_defaults)
-            && self.origins_invalidated(file, offset, context, false, projection)
+            && self.origins_invalidated(file, offset, contexts, false, projection)
     }
     pub(super) fn receiver_origin_invalidated(&self) -> bool {
         if !self
@@ -106,6 +106,11 @@ impl ValueFlowResolution<'_, '_> {
         {
             return false;
         }
-        self.origins_invalidated(std::path::Path::new(""), 0, None, true, None)
+        let (file, offset, context) = self
+            .member_read
+            .as_ref()
+            .map(|(file, offset, context)| (file.as_path(), *offset, *context))
+            .unwrap_or((std::path::Path::new(""), 0, None));
+        self.origins_invalidated(file, offset, (context, context), true, None)
     }
 }

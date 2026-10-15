@@ -73,3 +73,41 @@ fn repeated_foreign_default_agreement_is_cached_once_for_all_reads() {
         .all(|site| site.has_unknown_target() && site.targets().next().is_none()));
     assert_eq!(benchmark_probe_parameter_agreements(), 1);
 }
+
+#[test]
+fn repeated_foreign_reads_preserve_owned_one_time_source_snapshots() {
+    let (root, graph) = foreign_parameter_graph("timing");
+    #[cfg(feature = "test-instrumentation")]
+    assert!(benchmark_probe_replacements().inherited_frame_qualifications > 0);
+    let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+    for (callee, expected) in [
+        ("localSaved", Some("localWriter.get")),
+        ("nestedSaved", Some("nestedWriter.get")),
+        ("nestedRepeated", None),
+        ("defaultSaved", Some("defaultReceiver.get")),
+        ("savedForeign", Some("foreignOnly.get")),
+        ("foreignOnly.set", Some("foreignOnly.set")),
+        ("lexical.info", Some("lexical.info")),
+        ("lexicalEarly.get", None),
+        ("foreignOnly.get", None),
+        ("repeatedSaved", None),
+        ("forwarded", None),
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.source_callee == callee)
+            .unwrap();
+        let targets: Vec<_> = site.targets().collect();
+        if let Some(expected) = expected {
+            assert_eq!(targets.len(), 1, "{site:#?}");
+            assert!(
+                matches!(targets[0].target,
+                KnownCallTargetRef::ModuleExport { export_path, .. } if export_path == expected),
+                "{site:#?}"
+            );
+            assert!(!site.has_unknown_target(), "{site:#?}");
+        } else {
+            assert!(targets.is_empty() && site.has_unknown_target(), "{site:#?}");
+        }
+    }
+}

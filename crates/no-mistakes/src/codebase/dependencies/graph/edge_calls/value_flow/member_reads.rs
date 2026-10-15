@@ -9,14 +9,20 @@ impl ValueFlowResolution<'_, '_> {
         location: Option<(u32, Option<CallableId>)>,
     ) -> FlowValue {
         let context = location.and_then(|(_, context)| context);
-        // A method read while executing a foreign callable cannot inherit the
-        // caller's repeated tail. Module/copy initializers have no callable
-        // source context and retain their acquisition snapshot.
-        if self.foreign_acquisition && context.is_some() {
+        // Source-file writers retain the existing timed/default-origin proof.
+        // Foreign writes have no ordering proof across repeated acquisitions.
+        let repeated_acquisition = self.foreign_acquisition && context.is_some()
+            || location.is_some_and(|(offset, context)| {
+                context.is_none()
+                    && self
+                        .replacements
+                        .is_some_and(|catalog| catalog.possible_repeat(file, offset, context))
+            });
+        if repeated_acquisition {
             if let FlowValue::Target(target) = base.executor() {
                 if self
                     .replacements
-                    .is_some_and(|catalog| catalog.mutated_member(target, member))
+                    .is_some_and(|catalog| catalog.mutated_member(file, target, member))
                 {
                     self.replacement_read = true;
                     return FlowValue::Unknown;

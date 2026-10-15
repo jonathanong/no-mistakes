@@ -121,10 +121,7 @@ pub(crate) fn check_with_graph(
                     .filter(|node| excluded.binary_search(node).is_err())
                     .filter_map(|node| reachable.get(node).cloned().flatten())
                     .reduce(prefer_nontransaction);
-                let reach = if matches!(
-                    &site.target,
-                    crate::codebase::dependencies::graph::ResolvedCallTarget::Alternatives(_)
-                ) {
+                let reach = if site.targets().len() > 1 {
                     direct
                         .into_iter()
                         .chain(transitive)

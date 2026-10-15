@@ -5,10 +5,11 @@ impl ValueFlowResolution<'_, '_> {
         &self,
         file: &std::path::Path,
         offset: u32,
-        context: Option<CallableId>,
+        contexts: (Option<CallableId>, Option<CallableId>),
         receivers_only: bool,
         hint: Option<&member_projection::MemberProjection<'_>>,
     ) -> bool {
+        let (context, source_context) = contexts;
         let Some(root) = &self.default_origins else {
             return false;
         };
@@ -111,7 +112,7 @@ impl ValueFlowResolution<'_, '_> {
                 origin @ OriginKind::InvocationReceiver { .. } => {
                     if self.invocation_receiver_invalidated(
                         origin,
-                        (file, context),
+                        (file, source_context),
                         receivers_only,
                         receivers,
                         (read, &reads),
@@ -152,9 +153,6 @@ impl ValueFlowResolution<'_, '_> {
         reader: (receiver_reads::ReadId, &receiver_reads::ReceiverReads<'_>),
         projection: &[&str],
     ) -> bool {
-        if self.invocation_read.is_some() {
-            return false;
-        }
         let OriginKind::InvocationReceiver {
             read,
             history_file,
@@ -163,11 +161,19 @@ impl ValueFlowResolution<'_, '_> {
         else {
             return false;
         };
+        if self.invocation_read.as_ref().is_some_and(|active| {
+            active.owner == read.owner
+                && active.owner.0 == query.0
+                && query.1 == Some(active.owner.1)
+        }) {
+            return false;
+        }
         // Supplier offsets only order their own history. Reader ownership is
         // file-qualified, while member writes follow the receiver projection.
         read.file != *history_file
             || if receivers_only {
-                receivers && history.assignment_invalidated_reads(projection, &|writer| {
+                receivers
+                    && history.assignment_invalidated_reads(projection, &|writer| {
                         if read.once
                             && read.owner.0 == *history_file
                             && writer == Some(read.owner.1)
@@ -176,7 +182,7 @@ impl ValueFlowResolution<'_, '_> {
                         } else {
                             (writer == read.context).then_some(read.offset)
                         }
-                })
+                    })
             } else {
                 read.owner.0 != query.0 || query.1 != Some(read.owner.1)
             }

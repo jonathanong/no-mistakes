@@ -83,6 +83,12 @@ fn mixed_alternatives_override_transaction_spelling_in_either_order() {
             ));
             // Unknown candidates do not invent query evidence.
             assert_eq!(sinks.match_site(&site), Some(true));
+            site.target = ResolvedCallTarget::Alternatives(std::sync::Arc::new(
+                ResolvedCallAlternatives::new(vec![leaf("replica.query")], has_unknown),
+            ));
+            // A singleton retains historical named transaction precedence,
+            // even when its physical call also has an unknown alternative.
+            assert_eq!(sinks.match_site(&site), Some(true));
         }
     }
     let node = graph
