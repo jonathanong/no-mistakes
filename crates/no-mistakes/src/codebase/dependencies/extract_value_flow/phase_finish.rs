@@ -17,21 +17,43 @@ impl ImportCollector {
         phases: Option<PreparedPhases>,
     ) {
         if let Some(phases) = phases {
-            self.receiver_root_phase_context = phases.previous_root_context;
-            if let Some(origins) = &mut self.receiver_only_bindings {
-                for (scope, name) in &phases.root_targets {
-                    origins.finish_pattern_root(
-                        (*scope, name),
-                        phases.catalog.start,
-                        phases.root_end,
-                        phases.owner,
-                        phases.root_guaranteed,
-                    );
+            if phases.root_capture {
+                if let Some(mut capture) = self.receiver_root_phases.take() {
+                    // The normal AST visitor records LHS before RHS. Restore
+                    // execution order before selecting any mutable receiver.
+                    capture.events.sort_by_key(|event| event.1);
+                    if let Some(origins) = &mut self.receiver_only_bindings {
+                        let mut targets = FxHashSet::default();
+                        for ((scope, name), phase, value, guaranteed) in capture.events {
+                            origins.record_pattern_root(
+                                (scope, &name),
+                                &capture.catalog,
+                                phase,
+                                phases.owner,
+                                value,
+                                guaranteed,
+                            );
+                            targets.insert((scope, name));
+                        }
+                        for (scope, name) in targets {
+                            origins.finish_pattern_root(
+                                (scope, &name),
+                                capture.catalog.start,
+                                phases.root_end,
+                                phases.owner,
+                                phases.root_guaranteed,
+                            );
+                        }
+                    }
                 }
+                self.receiver_root_phases = phases.previous_root_capture;
+            }
+            if phases.defer_mutable {
+                self.finish_deferred_mutable_writes(phases.previous_deferred);
             }
             #[cfg(feature = "test-instrumentation")]
             if let Some(identity) = &self.fresh_receiver_effects.phases {
-                identity.record_counts(&mut self.value_flow);
+                identity.borrow().record_counts(&mut self.value_flow);
             }
             self.fresh_receiver_effects.phases = phases.previous_identity;
             for write in phases.writes {

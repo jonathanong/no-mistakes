@@ -156,6 +156,11 @@ impl ImportCollector {
         if path.is_empty() || self.fresh_receiver_effects.rebound(key.0, &key.1) {
             return false;
         }
+        let phases = self
+            .fresh_receiver_effects
+            .phases
+            .as_ref()
+            .map(|phases| phases.borrow());
         self.prior_member_mutations
             .history(key)
             .is_some_and(|(history, complete)| {
@@ -166,9 +171,8 @@ impl ImportCollector {
                         self.receiver_conditional_region
                             .map(|(token, _)| token.get()),
                         Some(&self.fresh_receiver_effects),
-                        self.fresh_receiver_effects
-                            .phases
-                            .as_ref()
+                        phases
+                            .as_deref()
                             .filter(|_| {
                                 self.destructuring_phase_owner == Some(self.current_function_id())
                             })

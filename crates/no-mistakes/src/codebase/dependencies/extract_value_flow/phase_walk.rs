@@ -13,10 +13,9 @@ pub(super) struct ReferencePhaseEvents {
     pub(super) fresh: Option<std::collections::BTreeSet<u32>>,
 }
 pub(super) struct RootPhaseWrite {
-    pub(super) scope: usize,
+    pub(super) target: u32,
     pub(super) name: String,
     pub(super) phase: u32,
-    pub(super) value: ValueExpression,
     pub(super) guaranteed: bool,
 }
 pub(super) struct PhaseWalk<'c> {
@@ -26,6 +25,7 @@ pub(super) struct PhaseWalk<'c> {
     pub(super) segments: Vec<(u32, u32, u32)>,
     pub(super) writes: Vec<PhaseWrite>,
     pub(super) root_writes: Vec<RootPhaseWrite>,
+    pub(super) changed_roots: Option<FxHashSet<String>>,
     pub(super) collect_root_origins: bool,
     #[cfg(feature = "test-instrumentation")]
     pub(super) root_visits: usize,
@@ -75,9 +75,12 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
         }
         oxc_ast_visit::walk::walk_expression(self, expression);
         if self.collect_reference_effects
-            && !self
-                .collector
-                .is_some_and(|collector| collector.known_own_data_read(expression))
+            && !self.collector.is_some_and(|collector| {
+                collector.known_own_data_read(
+                    expression,
+                    phase_class_fields::allow_mutable(self, expression),
+                )
+            })
             && matches!(
                 expression,
                 Expression::CallExpression(_)
@@ -134,6 +137,18 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
         }
         self.cursor = assignment.span.end;
     }
+    fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
+        walk::walk_variable_declarator(self, declaration);
+        // Initializer reads precede this declaration's root replacement.
+        self.segment(declaration.span.end);
+        if declaration.init.is_none() {
+            return;
+        }
+        if let BindingPattern::BindingIdentifier(identifier) = &declaration.id {
+            self.phase += 1;
+            self.root_write(identifier.name.as_str(), identifier.span.start, true);
+        }
+    }
     fn visit_update_expression(&mut self, update: &oxc_ast::ast::UpdateExpression<'a>) {
         self.segment(update.span.start);
         let target = update.argument.as_assignment_target();
@@ -157,10 +172,15 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
         self.visit_expression(&expression.right);
         self.conditional = previous;
     }
+    fn visit_property_definition(&mut self, property: &oxc_ast::ast::PropertyDefinition<'a>) {
+        phase_class_fields::property(self, property);
+    }
+    fn visit_accessor_property(&mut self, property: &oxc_ast::ast::AccessorProperty<'a>) {
+        phase_class_fields::accessor(self, property);
+    }
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
-        // The normal collector owns class-local bindings and initializer
-        // execution contexts. This borrowed outer scope cannot resolve class
-        // assignments; do not turn deferred or shadowed writes into root facts.
+        // Only syntax coordinates are prepared here. Scope, values and eager
+        // execution identity come from the normal collector, including shadows.
         let collector = self.collector.take();
         walk::walk_class(self, class);
         self.collector = collector;

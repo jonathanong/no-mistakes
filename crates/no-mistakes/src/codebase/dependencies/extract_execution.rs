@@ -28,9 +28,11 @@ fn with_conditional_execution(
     let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
     collector.receiver_write_is_conditional |= conditional;
+    collector.receiver_write_conditional_depth += usize::from(conditional);
     visit(collector);
     collector.conditional_execution = previous;
     collector.receiver_write_is_conditional = previous_receiver;
+    collector.receiver_write_conditional_depth -= usize::from(conditional);
 }
 
 fn visit_binding_default_with_execution<'a>(
@@ -50,8 +52,10 @@ fn with_conditional_receiver_write(
     // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
     collector.receiver_conditional_region = None;
     let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
+    collector.receiver_write_conditional_depth += 1;
     visit(collector);
     collector.receiver_write_is_conditional = previous;
+    collector.receiver_write_conditional_depth -= 1;
 }
 
 fn with_repeat_execution<T>(
@@ -202,8 +206,10 @@ fn with_callable_receiver_execution(
     let fresh = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
     let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
     let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
+    let conditional_depth = std::mem::take(&mut collector.receiver_write_conditional_depth);
     visit(collector);
     collector.receiver_write_is_conditional = conditional;
+    collector.receiver_write_conditional_depth = conditional_depth;
     collector.fresh_receiver_effects.active = fresh;
     collector.fresh_receiver_effects.descriptor_call = descriptor_call;
 }

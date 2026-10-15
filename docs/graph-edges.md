@@ -585,12 +585,16 @@ Mutable object and array bindings retain receiver origins separately from callab
 value provenance. Nested writes through non-reassigned `let` containers invalidate
 the matching imported methods. Root assignments preserve acquisition snapshots
 for saved aliases and exclude overwritten roots from later direct reads.
-Conditional and foreign writers remain conservative; copied methods and untouched
-members retain their precision.
+Conditional root writes retain possible acquisitions. Copied methods and untouched
+members retain the precision covered by the saved controls.
 Assignment-pattern receiver reads use RHS-before-LHS execution order, including
-computed targets and conditional root writes. These root summaries do not model
-class-body runtime rebinding or infer receiver identity from a destructured RHS;
-existing scoped facts remain authoritative at those boundaries.
+computed targets and conditional root writes. Eager class writes borrow the normal
+collector's scoped binding facts; deferred field values retain their own execution
+owners. These summaries do not infer receiver identity from a destructured RHS.
+Known boundaries include aliases introduced by replacement assignment RHS
+([#2015](https://github.com/jonathanong/no-mistakes/issues/2015)) and root writes
+across callable declaration and runtime execution order
+([#2052](https://github.com/jonathanong/no-mistakes/issues/2052)).
 
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay

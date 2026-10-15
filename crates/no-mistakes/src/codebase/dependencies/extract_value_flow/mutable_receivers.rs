@@ -20,6 +20,7 @@ impl ImportCollector {
         let scope = self
             .callee_binding_scope(name)
             .unwrap_or(self.current_lexical_scope_id());
+        self.capture_mutable_root_phase((scope, name), identifier.span.start, &value, true);
         self.retain_receiver_origin(scope, name, value, completed_at, true);
     }
 
@@ -60,6 +61,12 @@ impl ImportCollector {
             if let Some(scope) = self.callee_binding_scope(name) {
                 if self.has_mutable_receiver_binding(scope, name) {
                     let value = self.value_expression(&assignment.right);
+                    self.capture_mutable_root_phase(
+                        (scope, name),
+                        assignment.left.span().start,
+                        &value,
+                        !assignment.operator.is_logical(),
+                    );
                     self.fresh_receiver_effects.rebind(scope, name);
                     self.retain_receiver_origin(
                         scope,
@@ -73,10 +80,17 @@ impl ImportCollector {
         } else {
             // Destructuring replaces lexical roots too. Its projected RHS is
             // intentionally unknown here; never keep a stale prior root.
-            for (name, path, _) in write_targets::targets(&assignment.left) {
+            for (name, path, target) in write_targets::targets(&assignment.left) {
                 if path.is_empty() {
                     if let Some(scope) = self.callee_binding_scope(&name) {
                         if self.has_mutable_receiver_binding(scope, &name) {
+                            self.fresh_receiver_effects.rebind(scope, &name);
+                            self.capture_mutable_root_phase(
+                                (scope, &name),
+                                target,
+                                &ValueExpression::Unknown,
+                                true,
+                            );
                             self.retain_receiver_origin(
                                 scope,
                                 &name,
@@ -112,17 +126,22 @@ impl ImportCollector {
             .and_then(|origins| origins.version(key, read))
     }
 
-    pub(super) fn append_mutable_receiver_references(
+    pub(super) fn mutable_receiver_origin_watermark(&self) -> usize {
+        self.receiver_only_bindings
+            .as_ref()
+            .map_or(0, |origins| origins.watermark())
+    }
+
+    pub(super) fn append_mutable_receiver_references_unchecked(
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
         output: &mut Vec<nested::ReceiverWrite>,
+        foreign_before: usize,
     ) {
         if let Some(origins) = &self.receiver_only_bindings {
-            if origins.contains(key.0, &key.1)
-                && !self.reference_path_may_be_replaced(key, coordinates.0, coordinates.1)
-            {
-                origins.append_references(key, coordinates, output);
+            if origins.contains(key.0, &key.1) {
+                origins.append_references(key, coordinates, output, foreign_before);
             }
         }
     }

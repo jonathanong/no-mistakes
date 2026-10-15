@@ -72,7 +72,8 @@ impl ReceiverBindingOrigins {
         // positions, which run before the LHS writes in an assignment pattern.
         let states = root.owners.entry(owner).or_default();
         states.snapshots.insert(end, selected);
-        states.possible.get_or_insert(selected);
+        // Normal collection already retained every leaf for foreign readers;
+        // execution snapshots need no duplicate possible-origin join.
         root.generation += 1;
     }
 }

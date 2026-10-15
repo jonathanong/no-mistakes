@@ -66,7 +66,7 @@ fn mutable_root_snapshots_bound_origin_projection_work() {
         .iter()
         .any(|binding| binding.name == "box"));
     assert_eq!(facts.value_flow.receiver_only_origins, 129);
-    assert_eq!(facts.value_flow.receiver_only_nodes, 257);
+    assert_eq!(facts.value_flow.receiver_only_nodes, 129);
     assert!(facts.value_flow.receiver_only_lookups <= 3 * 128);
     assert_eq!(facts.value_flow.receiver_only_visits, 128);
 }
@@ -89,7 +89,7 @@ fn nested_mutable_patterns_bound_rhs_phase_walk_work() {
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
     let visits = facts.value_flow.receiver_only_phase_visits;
     assert!(
-        visits >= 32 && visits <= 16 * 32,
+        (32..=16 * 32).contains(&visits),
         "root RHS visits: {visits}"
     );
     let imports = extract_import_facts_from_program_with_source_and_demands(
@@ -133,3 +133,7 @@ fn receiver_traversal_revisits_only_for_weaker_acquisition_evidence() {
         None
     );
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "mutable_receiver_scale_tests.rs"]
+mod scale;

@@ -67,6 +67,7 @@ fn visit_for_in_statement_with_scope<'a>(
                             init.span(),
                             collector.conditional_execution,
                             collector.receiver_write_is_conditional,
+                            collector.receiver_write_conditional_depth,
                         )
                     })
             }

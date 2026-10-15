@@ -1,0 +1,122 @@
+pub(super) const CASES: &[super::MutableCase] = &[
+    (
+        "mutable-let-pattern-static-fields",
+        "value.get",
+        Some("primary.get"),
+    ),
+    ("mutable-let-pattern-static-fields", "changed.get", None),
+    ("mutable-let-pattern-static-capture", "value.get", None),
+    (
+        "mutable-let-pattern-static-capture",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    (
+        "mutable-let-pattern-static-comma-capture",
+        "value.get",
+        None,
+    ),
+    (
+        "mutable-let-pattern-static-comma-capture",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    ("mutable-let-pattern-static-self-wrapper", "value.get", None),
+    (
+        "mutable-let-pattern-static-self-wrapper",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    (
+        "mutable-let-pattern-static-var-conditional",
+        "value.get",
+        None,
+    ),
+    (
+        "mutable-let-pattern-static-var-conditional",
+        "changed.get",
+        None,
+    ),
+    (
+        "mutable-let-pattern-replaced-earlier-lhs",
+        "value.get",
+        Some("primary.get"),
+    ),
+    (
+        "mutable-let-pattern-replaced-earlier-lhs",
+        "changed.get",
+        None,
+    ),
+    ("mutable-let-pattern-replaced-getter-rhs", "value.get", None),
+    (
+        "mutable-let-pattern-replaced-getter-rhs",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    (
+        "mutable-let-pattern-replaced-carrier",
+        "value.get",
+        Some("primary.get"),
+    ),
+    (
+        "mutable-let-pattern-replaced-carrier",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    (
+        "mutable-let-pattern-replaced-rhs-rebind",
+        "value.get",
+        Some("primary.get"),
+    ),
+    (
+        "mutable-let-pattern-replaced-rhs-rebind",
+        "changed.get",
+        None,
+    ),
+    (
+        "mutable-let-pattern-replaced-later-lhs",
+        "value.get",
+        Some("primary.get"),
+    ),
+    (
+        "mutable-let-pattern-replaced-later-lhs",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    (
+        "mutable-let-pattern-static-local",
+        "value.get",
+        Some("primary.get"),
+    ),
+    ("mutable-let-pattern-static-local", "changed.get", None),
+    (
+        "mutable-let-pattern-static-rebind",
+        "value.get",
+        Some("primary.get"),
+    ),
+    ("mutable-let-pattern-static-rebind", "changed.get", None),
+    ("mutable-let-pattern-static-nested", "value.get", None),
+    (
+        "mutable-let-pattern-static-nested",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    ("mutable-let-pattern-class-context", "value.get", None),
+    (
+        "mutable-let-pattern-class-context",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    ("mutable-let-pattern-cold-class", "value.get", None),
+    (
+        "mutable-let-pattern-cold-class",
+        "changed.get",
+        Some("replica.get"),
+    ),
+    ("mutable-let-pattern-shadowed-class", "value.get", None),
+    (
+        "mutable-let-pattern-shadowed-class",
+        "changed.get",
+        Some("replica.get"),
+    ),
+];

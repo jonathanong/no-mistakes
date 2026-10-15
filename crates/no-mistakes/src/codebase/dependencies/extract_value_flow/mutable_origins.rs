@@ -1,6 +1,8 @@
 use super::*;
 use std::collections::BTreeMap;
 
+#[path = "mutable_origin_data.rs"]
+mod data;
 #[path = "mutable_origin_phases.rs"]
 mod phases;
 
@@ -10,10 +12,15 @@ pub(super) struct RootVersion {
     selected: Option<usize>,
     generation: usize,
 }
+impl RootVersion {
+    pub(super) fn same_selected(&self, other: &Self) -> bool {
+        self.context == other.context && self.selected == other.selected
+    }
+}
 #[derive(Default)]
 struct RootStates {
     snapshots: BTreeMap<u32, usize>,
-    possible: Option<usize>,
+    possible: Vec<usize>,
 }
 #[derive(Default)]
 struct RootOrigins {
@@ -41,6 +48,9 @@ impl ReceiverBindingOrigins {
         facts.receiver_only_nodes = self.arena.len();
         facts.receiver_only_lookups = self.lookups.get();
         facts.receiver_only_visits = self.visits.get();
+    }
+    pub(super) fn watermark(&self) -> usize {
+        self.arena.len()
     }
     pub(super) fn contains(&self, scope: usize, name: &str) -> bool {
         self.roots
@@ -82,16 +92,8 @@ impl ReceiverBindingOrigins {
             }
             _ => leaf,
         };
-        let possible = match states.possible {
-            Some(previous) => {
-                let id = self.arena.len();
-                self.arena.push(Origin::Either(previous, leaf));
-                id
-            }
-            None => leaf,
-        };
         states.snapshots.insert(location.0, selected);
-        states.possible = Some(possible);
+        states.possible.push(leaf);
     }
     pub(super) fn version(
         &self,
@@ -121,6 +123,7 @@ impl ReceiverBindingOrigins {
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
         output: &mut Vec<nested::ReceiverWrite>,
+        foreign_before: usize,
     ) {
         let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {
             return;
@@ -132,31 +135,37 @@ impl ReceiverBindingOrigins {
             .as_ref()
             .and_then(|patterns| patterns.selected(root_read));
         if let Some(selected) = phase_selected {
-            pending.extend(selected);
+            pending.extend(selected.map(|id| (id, false)));
         }
         for (owner, states) in &root.owners {
-            let selected = if root_read.1 == *owner {
-                states
-                    .snapshots
-                    .range(..=root_read.0)
-                    .next_back()
-                    .map(|(_, id)| *id)
-            } else {
-                states.possible
-            };
-            if root_read.1 != *owner || phase_selected.is_none() {
-                pending.extend(selected);
+            if root_read.1 != *owner {
+                // Normal leaves append in arena order. Later foreign bodies
+                // cannot force replay to walk a suffix beyond this acquisition.
+                let end = states.possible.partition_point(|id| *id < foreign_before);
+                pending.extend(states.possible[..end].iter().map(|id| (*id, true)));
+            } else if phase_selected.is_none() {
+                pending.extend(
+                    states
+                        .snapshots
+                        .range(..=root_read.0)
+                        .next_back()
+                        .map(|(_, id)| (*id, false)),
+                );
             }
         }
         // Arena links share alternatives without recursive traversal or drop.
-        while let Some(id) = pending.pop() {
+        while let Some((id, foreign)) = pending.pop() {
             #[cfg(feature = "test-instrumentation")]
             self.visits.set(self.visits.get() + 1);
             match &self.arena[id] {
                 Origin::Value(value) => {
-                    nested::write_receiver_references(value, path, reads, output)
+                    if !foreign || id < foreign_before {
+                        nested::write_receiver_references(value, path, reads, output)
+                    }
                 }
-                Origin::Either(left, right) => pending.extend([*left, *right]),
+                Origin::Either(left, right) => {
+                    pending.extend([(*left, foreign), (*right, foreign)])
+                }
             }
         }
     }

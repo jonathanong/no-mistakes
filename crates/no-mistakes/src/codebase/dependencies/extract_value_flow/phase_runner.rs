@@ -8,14 +8,17 @@ mod finish;
 
 pub(in super::super) struct PreparedPhases {
     catalog: Arc<PhaseCatalog>,
+    previous_deferred: Option<Box<mutable_deferred::DeferredMutations>>,
+    defer_mutable: bool,
     writes: Vec<PhaseWrite>,
-    root_targets: Vec<(usize, String)>,
+    previous_root_capture: Option<Box<root_phase_capture::RootPhaseCapture>>,
+    root_capture: bool,
     root_end: u32,
     root_guaranteed: bool,
     owner: Option<CallableId>,
-    previous_root_context: Option<(Option<CallableId>, usize)>,
     previous: Option<Option<CallableId>>,
-    previous_identity: Option<Box<active_reference_phases::ActiveReferencePhases>>,
+    previous_identity:
+        Option<std::rc::Rc<std::cell::RefCell<active_reference_phases::ActiveReferencePhases>>>,
 }
 impl ImportCollector {
     pub(in super::super) fn begin_reference_destructuring_phases(
@@ -47,9 +50,11 @@ impl ImportCollector {
         {
             return None;
         }
-        let root_context = (owner, self.current_lexical_scope_id());
         let collect_root_origins = self.receiver_only_bindings.is_some()
-            && self.receiver_root_phase_context != Some(root_context);
+            && !self
+                .receiver_root_phases
+                .as_ref()
+                .is_some_and(|capture| capture.owner == owner);
         let mut walk = PhaseWalk {
             collector: self
                 .prior_member_mutations
@@ -60,6 +65,10 @@ impl ImportCollector {
             segments: Vec::new(),
             writes: Vec::new(),
             root_writes: Vec::new(),
+            changed_roots: self
+                .receiver_only_bindings
+                .as_ref()
+                .map(|_| Default::default()),
             collect_root_origins,
             #[cfg(feature = "test-instrumentation")]
             root_visits: 0,
@@ -95,7 +104,7 @@ impl ImportCollector {
         {
             self.value_flow.receiver_only_phase_visits += root_visits;
         }
-        let root_catalog = (!root_writes.is_empty()).then(|| {
+        let root_catalog = collect_root_origins.then(|| {
             Arc::new(PhaseCatalog {
                 start: target.span().start,
                 end: rhs.span().end.max(target.span().end),
@@ -110,25 +119,27 @@ impl ImportCollector {
                 .filter(|segment| segment.0 < target.span().end)
                 .collect(),
         });
-        let mut root_targets = Vec::new();
-        let mut seen_roots = FxHashSet::default();
-        if let (Some(origins), Some(root_catalog)) =
-            (&mut self.receiver_only_bindings, root_catalog)
-        {
-            for write in root_writes {
-                if seen_roots.insert((write.scope, write.name.clone())) {
-                    root_targets.push((write.scope, write.name.clone()));
-                }
-                origins.record_pattern_root(
-                    (write.scope, &write.name),
-                    &root_catalog,
-                    write.phase,
-                    owner,
-                    write.value,
-                    write.guaranteed,
-                );
-            }
+        let mut first_changes = fx_map();
+        for point in &root_writes {
+            first_changes
+                .entry(point.name.clone())
+                .and_modify(|phase: &mut u32| *phase = (*phase).min(point.phase))
+                .or_insert(point.phase);
         }
+        let previous_root_capture = root_catalog.and_then(|catalog| {
+            self.receiver_root_phases
+                .replace(Box::new(root_phase_capture::RootPhaseCapture {
+                    catalog,
+                    first_changes,
+                    points: root_writes
+                        .into_iter()
+                        .map(|point| (point.target, point))
+                        .collect(),
+                    owner,
+                    conditional_depth: self.receiver_write_conditional_depth,
+                    events: Vec::new(),
+                }))
+        });
         #[cfg(feature = "test-instrumentation")]
         {
             self.value_flow.early_assignment_catalogs += 1;
@@ -140,16 +151,18 @@ impl ImportCollector {
             .then(|| {
                 let inert = !nested_pattern
                     && inert_receiver_rhs::inert_rhs(rhs, &mut self.fresh_receiver_effects);
-                Box::new(active_reference_phases::ActiveReferencePhases::new(
-                    (&catalog, rhs.span().end),
-                    &writes,
-                    self.destructuring_phase_receipts
-                        .as_ref()
-                        .map(|receipts| &receipts.scopes),
-                    &self.prior_member_mutations,
-                    owner,
-                    inert,
-                    proof_events,
+                std::rc::Rc::new(std::cell::RefCell::new(
+                    active_reference_phases::ActiveReferencePhases::new(
+                        (&catalog, rhs.span().end),
+                        &writes,
+                        self.destructuring_phase_receipts
+                            .as_ref()
+                            .map(|receipts| &receipts.scopes),
+                        &self.prior_member_mutations,
+                        owner,
+                        inert,
+                        proof_events,
+                    ),
                 ))
             });
         let previous_identity =
@@ -157,21 +170,21 @@ impl ImportCollector {
         let previous = self
             .destructuring_phase_owner
             .replace(self.current_function_id());
-        let previous_root_context = self.receiver_root_phase_context;
-        if collect_root_origins {
-            // The enclosing walk already covers nested RHS root events, but
-            // another callable or lexical class/block scope needs its own facts.
-            self.receiver_root_phase_context = Some(root_context);
-        }
+        let defer_mutable = self.receiver_only_bindings.is_some();
+        let previous_deferred = defer_mutable
+            .then(|| self.begin_deferred_mutable_writes())
+            .flatten();
         Some(PreparedPhases {
             catalog,
+            previous_deferred,
+            defer_mutable,
             writes,
-            root_targets,
+            previous_root_capture,
+            root_capture: collect_root_origins,
             root_end: rhs.span().end.max(target.span().end),
             root_guaranteed: !self.receiver_write_is_conditional
                 && self.repeat_depth == self.call_repeat_base,
             owner,
-            previous_root_context,
             previous,
             previous_identity,
         })
