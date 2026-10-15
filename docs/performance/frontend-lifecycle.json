@@ -1,6 +1,6 @@
 {
   "issue": 2025,
-  "status": "full modes implemented; corrected fixture-inclusive ARM controls pending exact-diff review and measurement",
+  "status": "Lifecycle controls implemented and verified on ARM; raw lifetime ambiguities and stack limits explicitly retained. No runtime improvement or exact physical-heap claim.",
   "sourceBase": "d36ea2af42d7a2a6d20074e4cd8ac1d0bc89568a",
   "productionChanges": false,
   "pinnedApi": "codspeed-criterion-compat =5.0.1: iter_manual_unstable(IterManualOptions::new().rounds(1).iters(1).warmup(0), closure)",
@@ -17,7 +17,7 @@
     },
     "nativeBench": "One closure followed by a Criterion sample-length statistics panic. Native lifecycle modes therefore require --test; no native estimate is published.",
     "limitations": "Functional execution checks API call counts/order, not instrumented tracked memory. Actual ARM runner support requires the separately declared smoke.",
-    "scope": "Initial functional binaries were built at sourceBase d36ea2af with the candidate bench module. Final hosted candidate will be rebuilt at implementationBase; old binaries are not performance evidence."
+    "scope": "Historical initial functional binaries were built at sourceBase d36ea2af with the early candidate bench module. Full-mode local cfg/native functional controls were later validated with the final harness code. They are functional evidence only; actual ARM measurements use exact919a source and the recorded archive/binary hashes."
   },
   "preserved": {
     "rayonWorkers": 4,
@@ -50,7 +50,7 @@
     "measuredCollectors": 1,
     "postMarkerCollectors": 1,
     "postMarkerHelpers": ["edges preflight", "glob preflight"],
-    "excluded": ["OS exec/dynamic loading", "harness registration"],
+    "excluded": ["benchmark-process OS exec/dynamic loading", "harness registration"],
     "lifetimeAtStop": "Fixture data remains owned through stop; request fact maps have been destroyed; global workers and reusable regex pools remain alive.",
     "ledgerEvidence": "Closure calls are observed by the local counter; pool capacity is observed after the marker. Prior/helper collector counts come from inspected call paths and the order regression. Neither pool capacity nor fresh threads proves participation/cache state on every worker.",
     "included": [
@@ -75,12 +75,13 @@
     "runner": "ubuntu-24.04-arm; CodSpeed action c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5; runner5.4.0; criterion5.0.1; Rayon4",
     "build": "no default features; test-instrumentation; bench LTO=false; codegen-units=16; existing CI build",
     "identity": "Single upload-disabled official action; unique CI run/attempt/job + sample/target index + actual injected profile directory/PID + common binary SHA. All eight raw profiles remain separate.",
-    "retention": "All eight raw profiles/timelines/logs retained independently. Workflow requests30days; initial run observed repository cap7days. Durable local evidence preserves both the four historical and eight planned samples.",
+    "retention": "All eight completed diagnostic profiles/timelines/logs remain separate. Workflow requested30days; repository cap7days observed. Durable local storage preserves both the four historical and eight corrected samples.",
     "stop": "Missing marker/memory artifacts, duplicate raw profile directories/PIDs, changed binary hash, count drift, or runner mismatch; diagnose before any further authorized execution. No blind repeats.",
     "upload": "CODSPEED_SKIP_UPLOAD=true only for diagnostic repetitions; ordinary original and unique lifecycle uploads remain enabled.",
-    "pidAccounting": "Preserve all marker allocations. Attribute benchmark PID and proven discovery subprocess lineage separately; reject unexplained wrapper/helper PIDs. Distinguish actual allocator frees from process-exit reclamation. Offline interval tracking and curated per-process filtering must be reported explicitly."
+    "pidAccounting": "Preserve all marker allocations. Attribute benchmark PID and proven discovery subprocess lineage separately; reject unexplained wrapper/helper PIDs. Distinguish actual allocator frees from process-exit reclamation. Offline interval tracking and curated per-process filtering must be reported explicitly.",
+    "execution": "Completed one corrected eight-process diagnostic run; skip-upload retained all raw samples without duplicate server rows."
   },
-  "claims": "No runtime improvement, deterministic full warmness, scheduling cause, RSS equivalence, or retained-byte attribution. No subtraction or replacement of original measurements.",
+  "claims": "No runtime improvement, deterministic full warmness, scheduling cause, whole-process heap/RSS equivalence, complete event capture, or per-byte retained-cache attribution. No cost subtraction or replacement of original measurements.",
   "implementationBase": "61d9c463f2014e4987038589fb2f9cc0adb66c27",
   "executionAttempts": [
     {
@@ -168,6 +169,926 @@
         }
       ],
       "metricScope": "Live bytes reconstructed solely from observed marker-interval allocations, with a zero starting live map. These are not whole-process heap or total cache-retained bytes; pre-marker allocations have no recoverable size in this stream."
+    },
+    {
+      "head": "919a77c98e5303301447a5e1052386fbc60fb32b",
+      "measuredMerge": "20c83c96dee2e39bd3c93c65be216000d401be67",
+      "mergeTreeEqualsHead": true,
+      "workflow": "https://github.com/jonathanong/no-mistakes/actions/runs/38669326933",
+      "artifactId": 11943901369,
+      "binarySha256": "ac38d2f083b7b14459cae79f7785be33b219b171adff6b43e4fd404e9ade18b6",
+      "archiveSha256": "cdecaecd0cc78fa4c37c7052226329368af88542f2832f444b8406e2456b1944",
+      "measuredSamples": 8,
+      "samplesPerMode": 2,
+      "order": [
+        "original",
+        "cold_first_analysis",
+        "conditioning_inclusive",
+        "extract_after_recorded_prefix",
+        "extract_after_recorded_prefix",
+        "conditioning_inclusive",
+        "cold_first_analysis",
+        "original"
+      ],
+      "scopeProof": "All374 rawfile hashes match, eight unique PIDs/profile folders, indexes0..7, exact helper order/fixture/closure/preflight counts. Separate ordinary cold/inclusive profiles prove Registry::new and Thread::new in the marker.",
+      "rawLifetimeAudit": {
+        "model": 2,
+        "scriptSha256": "14c2cc772692a0f1becf542e3eca831870111422c9bd5582d49114a721eee162",
+        "frozenFirstModelSha256": "2461d2302c1dc8f4a81d7b148a70c8742323929a426a650f1c3fb9bff9e73b70",
+        "reportSha256": "649c80e2efa5e7d8d00323b4c60298cb3087c033a4917609fe85fcbb06da6850",
+        "scope": "Recorded marker-interval model, not complete/inherited process heap. Original and post-prefix replays are internally consistent; exact cold/inclusive peak/retained inference is unavailable after unresolved address reuse.",
+        "limits": [
+          "Raw allocation-event sums retain all overlapping observations; normalized non-alias sums exclude only source-supported same-thread adjacent Malloc/realloc(NULL) aliases, whose raw events/counts/bytes remain explicit. This is not a performance cost subtraction.",
+          "Return-side realloc events do not uniquely timestamp old-address release; other-thread address reuse can precede the combined old/new event. Exact peak/retained inference is unavailable once such an unresolved collision occurs.",
+          "Per-PID process Exit reclamation is separate from allocator Free. Public producer Exit semantics are known, private server heap-consumer semantics are not established.",
+          "Stack attribution is only observed frame-pointer/PC/LR symbols, not DWARF/inline unwinding; inclusive categories overlap and missing ancestry prevents absence proofs.",
+          "Only captured within-marker allocations are modeled, not entire/inherited process heap; unknown frees and nonzero realloc references remain separate counts."
+        ],
+        "regressions": "Five saved real event subsequences validate NULL overlap, non-alias reuse rejection, and Mapping/Exec ordering. Original v1 failures and all raw records remain preserved."
+      },
+      "normalControls": [
+        {
+          "mode": "original",
+          "resultId": "6ad03814ad9a6239bff3f336",
+          "runPartId": "6ad03787ad9a6239bff3ec44",
+          "peakCodSpeedBytes": 690235,
+          "sampledChartLastBytes": 475200,
+          "profileSha256": "87d041fd27a3e5e37bfded4fcf6f880f52766d4242ad8d5583593150c5b2f25d",
+          "timelineSha256": "4a10726c7970e7a44c4a5d7699a4a839541f766a94881c4cf674ddf2286596c0",
+          "scope": "One separate ordinary process per mode, not a curated profile of the eight paired diagnostic samples; chart last point is not actual marker-stop evidence."
+        },
+        {
+          "mode": "cold_first_analysis",
+          "resultId": "6ad0381aad9a6239bff3f3a8",
+          "runPartId": "6ad037d0ad9a6239bff3edac",
+          "peakCodSpeedBytes": 28319120,
+          "sampledChartLastBytes": 27999480,
+          "profileSha256": "062d54e3851933c362a2dc36f996f64981b4d2f232188577adddac32bf639597",
+          "timelineSha256": "10765e201b050dd554711d8bafaef0707882e7429a4c55706009839782794109",
+          "scope": "One separate ordinary process per mode, not a curated profile of the eight paired diagnostic samples; chart last point is not actual marker-stop evidence."
+        },
+        {
+          "mode": "conditioning_inclusive",
+          "resultId": "6ad0381aad9a6239bff3f3af",
+          "runPartId": "6ad037e1ad9a6239bff3edbe",
+          "peakCodSpeedBytes": 32673609,
+          "sampledChartLastBytes": 32521097,
+          "profileSha256": "ea86b21d2793414a1e5cc15205053d6686d9c64c84483d39164ab489c1b80768",
+          "timelineSha256": "2efe1f2c6f7a8638cec54cc40de82b0e87e478f09f92340813d68d78e1bf78fb",
+          "scope": "One separate ordinary process per mode, not a curated profile of the eight paired diagnostic samples; chart last point is not actual marker-stop evidence."
+        },
+        {
+          "mode": "extract_after_recorded_prefix",
+          "resultId": "6ad03814ad9a6239bff3f35a",
+          "runPartId": "6ad037edad9a6239bff3f0bc",
+          "peakCodSpeedBytes": 676313,
+          "sampledChartLastBytes": 461278,
+          "profileSha256": "9e91cc2879c5cd9ecc75f449b31e120b3256d39199093cd3b01b8c00d8c37516",
+          "timelineSha256": "0836fe09be7f11c124505891422edf92e28bac9772e586295b7be89bb3d18ac3",
+          "scope": "One separate ordinary process per mode, not a curated profile of the eight paired diagnostic samples; chart last point is not actual marker-stop evidence."
+        }
+      ],
+      "ordinaryComparison": {
+        "headRun": "6ad03781d1987b6a0a58f0be",
+        "expectedBase": "61d9c463f2014e4987038589fb2f9cc0adb66c27",
+        "actualFallbackBase": "4ddb9c08dbe8e06501a87ffce0ab8db4b10e76fc",
+        "fallbackRun": "6ad02a0893906da72c95dae7",
+        "rows": 227,
+        "improved": 1,
+        "unchanged": 223,
+        "new": 3,
+        "regressions": 0,
+        "incompatibilities": 0,
+        "checkSummary": "GatePassed:1improved219untouched3new4skipped;39syscall warnings retained.",
+        "limit": "Not an exact expected-base comparison and not runtime improvement evidence. Nine Git input objects for code/bench/dependencies/config/fixtures match4ddb to61d; only cspell/docs evidence changed. Original gates are not waived by the new controls."
+      },
+      "samples": [
+        {
+          "sample": 1,
+          "mode": "original",
+          "pid": 2565,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": {
+            "allocatorEventPeakBytes": 834021,
+            "processTreeLiveTracedPeakBytes": 834021,
+            "allocatorOutstandingBytes": 618986,
+            "processTreeLiveTracedBytes": 618986
+          },
+          "lifetimeLimit": null,
+          "nullOverlapObservations": {
+            "count": 0,
+            "bytes": 0
+          },
+          "unresolvedAddressReuse": {
+            "count": 0,
+            "newBytes": 0,
+            "previousBytes": 0
+          },
+          "perPid": {
+            "2565": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 5357,
+              "rawAllocationEventSizeSumBytes": 1374872,
+              "sourceProvenNullOverlapCount": 0,
+              "sourceProvenNullOverlapBytes": 0,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 755886,
+                "knownAllocatorFrees": 5014,
+                "allocatorOutstandingBytes": 618986,
+                "allocatorEventPeakBytes": 834021,
+                "allocatorRetainedCount": 343,
+                "processTreeLiveTracedBytes": 618986,
+                "processTreeLiveTracedPeakBytes": 834021,
+                "exitReclaimedBytes": 0,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 1374872,
+                "events": 5357,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 1321743,
+                "registersOnlyBytes": 53129,
+                "truncatedCopyBytes": 1374872,
+                "withAnyResolvedSymbolBytes": 1374872,
+                "withUnresolvedPcBytes": 1321743
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 1374872,
+                "events": 5357,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 1321743,
+                "registersOnlyBytes": 53129,
+                "truncatedCopyBytes": 1374872,
+                "withAnyResolvedSymbolBytes": 1374872,
+                "withUnresolvedPcBytes": 1321743
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "2565:2568": 206018,
+                "2565:2569": 137270,
+                "2565:2567": 705188,
+                "2565:2570": 67928
+              },
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 618986,
+                "events": 343,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 616990,
+                "registersOnlyBytes": 1996,
+                "truncatedCopyBytes": 618986,
+                "withAnyResolvedSymbolBytes": 618986,
+                "withUnresolvedPcBytes": 616990
+              }
+            }
+          }
+        },
+        {
+          "sample": 2,
+          "mode": "cold_first_analysis",
+          "pid": 2661,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": null,
+          "lifetimeLimit": "Unavailable past first unresolved non-alias overlap; no silent address overwrite or guessed timestamp/ownership.",
+          "nullOverlapObservations": {
+            "count": 17063,
+            "bytes": 1127841
+          },
+          "unresolvedAddressReuse": {
+            "count": 58,
+            "newBytes": 5084,
+            "previousBytes": 18188
+          },
+          "perPid": {
+            "2661": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 520256,
+              "rawAllocationEventSizeSumBytes": 144549908,
+              "sourceProvenNullOverlapCount": 9,
+              "sourceProvenNullOverlapBytes": 512,
+              "unresolvedAddressReuseEvents": 58,
+              "recordedLifetimeAvailable": false,
+              "recordedLifetime": null,
+              "rawEventStackCoverage": {
+                "bytes": 144549908,
+                "events": 520256,
+                "noStackHashBytes": 544,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 97005794,
+                "registersOnlyBytes": 47543570,
+                "truncatedCopyBytes": 144548620,
+                "withAnyResolvedSymbolBytes": 144549364,
+                "withUnresolvedPcBytes": 97005794
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 144549396,
+                "events": 520247,
+                "noStackHashBytes": 32,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 97005794,
+                "registersOnlyBytes": 47543570,
+                "truncatedCopyBytes": 144548620,
+                "withAnyResolvedSymbolBytes": 144549364,
+                "withUnresolvedPcBytes": 97005794
+              },
+              "observedRegistryNewGrossBytes": {
+                "2661:2661": 15425
+              },
+              "retainedAttributionAvailable": false,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "2661:2664": 8951516,
+                "2661:2665": 13264365,
+                "2661:2666": 18515983,
+                "2661:2667": 11290454
+              },
+              "mainThreadRuntimeRootGrossBytes": 1440,
+              "retainedStackCoverage": null
+            },
+            "2662": {
+              "role": "git-descendant",
+              "rawAllocationEventCount": 104241,
+              "rawAllocationEventSizeSumBytes": 403863869,
+              "sourceProvenNullOverlapCount": 17054,
+              "sourceProvenNullOverlapBytes": 1127329,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 395546166,
+                "knownAllocatorFrees": 51164,
+                "allocatorOutstandingBytes": 7190374,
+                "allocatorEventPeakBytes": 7633776,
+                "allocatorRetainedCount": 36023,
+                "processTreeLiveTracedBytes": 0,
+                "processTreeLiveTracedPeakBytes": 7633776,
+                "exitReclaimedBytes": 7190374,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 403863869,
+                "events": 104241,
+                "noStackHashBytes": 1127329,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 400427608,
+                "registersOnlyBytes": 2308932,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736540
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 402736540,
+                "events": 87187,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 400427608,
+                "registersOnlyBytes": 2308932,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736540
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {},
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 7190374,
+                "events": 36023,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 7190374,
+                "registersOnlyBytes": 0,
+                "truncatedCopyBytes": 7190374,
+                "withAnyResolvedSymbolBytes": 7190374,
+                "withUnresolvedPcBytes": 7190374
+              }
+            }
+          }
+        },
+        {
+          "sample": 3,
+          "mode": "conditioning_inclusive",
+          "pid": 2758,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": null,
+          "lifetimeLimit": "Unavailable past first unresolved non-alias overlap; no silent address overwrite or guessed timestamp/ownership.",
+          "nullOverlapObservations": {
+            "count": 17063,
+            "bytes": 1127841
+          },
+          "unresolvedAddressReuse": {
+            "count": 83,
+            "newBytes": 6970,
+            "previousBytes": 8242
+          },
+          "perPid": {
+            "2758": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 568758,
+              "rawAllocationEventSizeSumBytes": 159550860,
+              "sourceProvenNullOverlapCount": 9,
+              "sourceProvenNullOverlapBytes": 512,
+              "unresolvedAddressReuseEvents": 83,
+              "recordedLifetimeAvailable": false,
+              "recordedLifetime": null,
+              "rawEventStackCoverage": {
+                "bytes": 159550860,
+                "events": 568758,
+                "noStackHashBytes": 544,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 93339391,
+                "registersOnlyBytes": 66210925,
+                "truncatedCopyBytes": 159549572,
+                "withAnyResolvedSymbolBytes": 159550316,
+                "withUnresolvedPcBytes": 93339391
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 159550348,
+                "events": 568749,
+                "noStackHashBytes": 32,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 93339391,
+                "registersOnlyBytes": 66210925,
+                "truncatedCopyBytes": 159549572,
+                "withAnyResolvedSymbolBytes": 159550316,
+                "withUnresolvedPcBytes": 93339391
+              },
+              "observedRegistryNewGrossBytes": {
+                "2758:2758": 15425
+              },
+              "retainedAttributionAvailable": false,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "2758:2760": 12454925,
+                "2758:2761": 17023074,
+                "2758:2762": 8202762,
+                "2758:2763": 11627094
+              },
+              "mainThreadRuntimeRootGrossBytes": 1440,
+              "retainedStackCoverage": null
+            },
+            "2759": {
+              "role": "git-descendant",
+              "rawAllocationEventCount": 104241,
+              "rawAllocationEventSizeSumBytes": 403863869,
+              "sourceProvenNullOverlapCount": 17054,
+              "sourceProvenNullOverlapBytes": 1127329,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 395546166,
+                "knownAllocatorFrees": 51164,
+                "allocatorOutstandingBytes": 7190374,
+                "allocatorEventPeakBytes": 7633776,
+                "allocatorRetainedCount": 36023,
+                "processTreeLiveTracedBytes": 0,
+                "processTreeLiveTracedPeakBytes": 7633776,
+                "exitReclaimedBytes": 7190374,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 403863869,
+                "events": 104241,
+                "noStackHashBytes": 1127329,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 400406148,
+                "registersOnlyBytes": 2330392,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736540
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 402736540,
+                "events": 87187,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 400406148,
+                "registersOnlyBytes": 2330392,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736540
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {},
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 7190374,
+                "events": 36023,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 7190206,
+                "registersOnlyBytes": 168,
+                "truncatedCopyBytes": 7190374,
+                "withAnyResolvedSymbolBytes": 7190374,
+                "withUnresolvedPcBytes": 7190374
+              }
+            }
+          }
+        },
+        {
+          "sample": 4,
+          "mode": "extract_after_recorded_prefix",
+          "pid": 2855,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": {
+            "allocatorEventPeakBytes": 598639,
+            "processTreeLiveTracedPeakBytes": 598639,
+            "allocatorOutstandingBytes": 383604,
+            "processTreeLiveTracedBytes": 383604
+          },
+          "lifetimeLimit": null,
+          "nullOverlapObservations": {
+            "count": 0,
+            "bytes": 0
+          },
+          "unresolvedAddressReuse": {
+            "count": 0,
+            "newBytes": 0,
+            "previousBytes": 0
+          },
+          "perPid": {
+            "2855": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 5452,
+              "rawAllocationEventSizeSumBytes": 1122133,
+              "sourceProvenNullOverlapCount": 0,
+              "sourceProvenNullOverlapBytes": 0,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 738529,
+                "knownAllocatorFrees": 5085,
+                "allocatorOutstandingBytes": 383604,
+                "allocatorEventPeakBytes": 598639,
+                "allocatorRetainedCount": 367,
+                "processTreeLiveTracedBytes": 383604,
+                "processTreeLiveTracedPeakBytes": 598639,
+                "exitReclaimedBytes": 0,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 1122133,
+                "events": 5452,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 878799,
+                "registersOnlyBytes": 243334,
+                "truncatedCopyBytes": 1122133,
+                "withAnyResolvedSymbolBytes": 1122133,
+                "withUnresolvedPcBytes": 878799
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 1122133,
+                "events": 5452,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 878799,
+                "registersOnlyBytes": 243334,
+                "truncatedCopyBytes": 1122133,
+                "withAnyResolvedSymbolBytes": 1122133,
+                "withUnresolvedPcBytes": 878799
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "2855:2859": 68947,
+                "2855:2857": 439784,
+                "2855:2860": 67240,
+                "2855:2858": 93196
+              },
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 383604,
+                "events": 367,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 256892,
+                "registersOnlyBytes": 126712,
+                "truncatedCopyBytes": 383604,
+                "withAnyResolvedSymbolBytes": 383604,
+                "withUnresolvedPcBytes": 256892
+              }
+            }
+          }
+        },
+        {
+          "sample": 5,
+          "mode": "extract_after_recorded_prefix",
+          "pid": 2948,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": {
+            "allocatorEventPeakBytes": 451245,
+            "processTreeLiveTracedPeakBytes": 451245,
+            "allocatorOutstandingBytes": 236350,
+            "processTreeLiveTracedBytes": 236350
+          },
+          "lifetimeLimit": null,
+          "nullOverlapObservations": {
+            "count": 0,
+            "bytes": 0
+          },
+          "unresolvedAddressReuse": {
+            "count": 0,
+            "newBytes": 0,
+            "previousBytes": 0
+          },
+          "perPid": {
+            "2948": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 5289,
+              "rawAllocationEventSizeSumBytes": 868326,
+              "sourceProvenNullOverlapCount": 0,
+              "sourceProvenNullOverlapBytes": 0,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 631976,
+                "knownAllocatorFrees": 5010,
+                "allocatorOutstandingBytes": 236350,
+                "allocatorEventPeakBytes": 451245,
+                "allocatorRetainedCount": 279,
+                "processTreeLiveTracedBytes": 236350,
+                "processTreeLiveTracedPeakBytes": 451245,
+                "exitReclaimedBytes": 0,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 868326,
+                "events": 5289,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 724044,
+                "registersOnlyBytes": 144282,
+                "truncatedCopyBytes": 868326,
+                "withAnyResolvedSymbolBytes": 868326,
+                "withUnresolvedPcBytes": 724044
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 868326,
+                "events": 5289,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 724044,
+                "registersOnlyBytes": 144282,
+                "truncatedCopyBytes": 868326,
+                "withAnyResolvedSymbolBytes": 868326,
+                "withUnresolvedPcBytes": 724044
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "2948:2951": 56909,
+                "2948:2950": 217249,
+                "2948:2952": 189875,
+                "2948:2953": 66385
+              },
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 236350,
+                "events": 279,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 174318,
+                "registersOnlyBytes": 62032,
+                "truncatedCopyBytes": 236350,
+                "withAnyResolvedSymbolBytes": 236350,
+                "withUnresolvedPcBytes": 174318
+              }
+            }
+          }
+        },
+        {
+          "sample": 6,
+          "mode": "conditioning_inclusive",
+          "pid": 3042,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": null,
+          "lifetimeLimit": "Unavailable past first unresolved non-alias overlap; no silent address overwrite or guessed timestamp/ownership.",
+          "nullOverlapObservations": {
+            "count": 17063,
+            "bytes": 1127841
+          },
+          "unresolvedAddressReuse": {
+            "count": 58,
+            "newBytes": 5248,
+            "previousBytes": 47784
+          },
+          "perPid": {
+            "3042": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 569160,
+              "rawAllocationEventSizeSumBytes": 160157603,
+              "sourceProvenNullOverlapCount": 9,
+              "sourceProvenNullOverlapBytes": 512,
+              "unresolvedAddressReuseEvents": 58,
+              "recordedLifetimeAvailable": false,
+              "recordedLifetime": null,
+              "rawEventStackCoverage": {
+                "bytes": 160157603,
+                "events": 569160,
+                "noStackHashBytes": 512,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 94225560,
+                "registersOnlyBytes": 65931531,
+                "truncatedCopyBytes": 160156347,
+                "withAnyResolvedSymbolBytes": 160157091,
+                "withUnresolvedPcBytes": 94225560
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 160157091,
+                "events": 569151,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 94225560,
+                "registersOnlyBytes": 65931531,
+                "truncatedCopyBytes": 160156347,
+                "withAnyResolvedSymbolBytes": 160157091,
+                "withUnresolvedPcBytes": 94225560
+              },
+              "observedRegistryNewGrossBytes": {
+                "3042:3042": 15425
+              },
+              "retainedAttributionAvailable": false,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "3042:3047": 7686881,
+                "3042:3045": 7598523,
+                "3042:3046": 27535034,
+                "3042:3044": 8284732
+              },
+              "mainThreadRuntimeRootGrossBytes": 1440,
+              "retainedStackCoverage": null
+            },
+            "3043": {
+              "role": "git-descendant",
+              "rawAllocationEventCount": 104241,
+              "rawAllocationEventSizeSumBytes": 403863869,
+              "sourceProvenNullOverlapCount": 17054,
+              "sourceProvenNullOverlapBytes": 1127329,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 395546166,
+                "knownAllocatorFrees": 51164,
+                "allocatorOutstandingBytes": 7190374,
+                "allocatorEventPeakBytes": 7633776,
+                "allocatorRetainedCount": 36023,
+                "processTreeLiveTracedBytes": 0,
+                "processTreeLiveTracedPeakBytes": 7633776,
+                "exitReclaimedBytes": 7190374,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 403863869,
+                "events": 104241,
+                "noStackHashBytes": 1127329,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 402736540,
+                "registersOnlyBytes": 0,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736540
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 402736540,
+                "events": 87187,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 402736540,
+                "registersOnlyBytes": 0,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736540
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {},
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 7190374,
+                "events": 36023,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 7190374,
+                "registersOnlyBytes": 0,
+                "truncatedCopyBytes": 7190374,
+                "withAnyResolvedSymbolBytes": 7190374,
+                "withUnresolvedPcBytes": 7190374
+              }
+            }
+          }
+        },
+        {
+          "sample": 7,
+          "mode": "cold_first_analysis",
+          "pid": 3137,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": null,
+          "lifetimeLimit": "Unavailable past first unresolved non-alias overlap; no silent address overwrite or guessed timestamp/ownership.",
+          "nullOverlapObservations": {
+            "count": 17063,
+            "bytes": 1127841
+          },
+          "unresolvedAddressReuse": {
+            "count": 108,
+            "newBytes": 9430,
+            "previousBytes": 25562
+          },
+          "perPid": {
+            "3137": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 520265,
+              "rawAllocationEventSizeSumBytes": 144501014,
+              "sourceProvenNullOverlapCount": 9,
+              "sourceProvenNullOverlapBytes": 512,
+              "unresolvedAddressReuseEvents": 108,
+              "recordedLifetimeAvailable": false,
+              "recordedLifetime": null,
+              "rawEventStackCoverage": {
+                "bytes": 144501014,
+                "events": 520265,
+                "noStackHashBytes": 544,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 89698160,
+                "registersOnlyBytes": 54802310,
+                "truncatedCopyBytes": 144499726,
+                "withAnyResolvedSymbolBytes": 144500470,
+                "withUnresolvedPcBytes": 89698160
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 144500502,
+                "events": 520256,
+                "noStackHashBytes": 32,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 89698160,
+                "registersOnlyBytes": 54802310,
+                "truncatedCopyBytes": 144499726,
+                "withAnyResolvedSymbolBytes": 144500470,
+                "withUnresolvedPcBytes": 89698160
+              },
+              "observedRegistryNewGrossBytes": {
+                "3137:3137": 15425
+              },
+              "retainedAttributionAvailable": false,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "3137:3139": 13283388,
+                "3137:3140": 11646245,
+                "3137:3141": 6764924,
+                "3137:3142": 17970844
+              },
+              "mainThreadRuntimeRootGrossBytes": 1440,
+              "retainedStackCoverage": null
+            },
+            "3138": {
+              "role": "git-descendant",
+              "rawAllocationEventCount": 104241,
+              "rawAllocationEventSizeSumBytes": 403863869,
+              "sourceProvenNullOverlapCount": 17054,
+              "sourceProvenNullOverlapBytes": 1127329,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 395546166,
+                "knownAllocatorFrees": 51164,
+                "allocatorOutstandingBytes": 7190374,
+                "allocatorEventPeakBytes": 7633776,
+                "allocatorRetainedCount": 36023,
+                "processTreeLiveTracedBytes": 0,
+                "processTreeLiveTracedPeakBytes": 7633776,
+                "exitReclaimedBytes": 7190374,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 403863869,
+                "events": 104241,
+                "noStackHashBytes": 1127329,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 402484037,
+                "registersOnlyBytes": 252503,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736370
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 402736540,
+                "events": 87187,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 402484037,
+                "registersOnlyBytes": 252503,
+                "truncatedCopyBytes": 402736540,
+                "withAnyResolvedSymbolBytes": 402736540,
+                "withUnresolvedPcBytes": 402736370
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {},
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 7190374,
+                "events": 36023,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 7134788,
+                "registersOnlyBytes": 55586,
+                "truncatedCopyBytes": 7190374,
+                "withAnyResolvedSymbolBytes": 7190374,
+                "withUnresolvedPcBytes": 7190204
+              }
+            }
+          }
+        },
+        {
+          "sample": 8,
+          "mode": "original",
+          "pid": 3231,
+          "scopeErrors": [],
+          "recordedIntervalLifetime": {
+            "allocatorEventPeakBytes": 432187,
+            "processTreeLiveTracedPeakBytes": 432187,
+            "allocatorOutstandingBytes": 217292,
+            "processTreeLiveTracedBytes": 217292
+          },
+          "lifetimeLimit": null,
+          "nullOverlapObservations": {
+            "count": 0,
+            "bytes": 0
+          },
+          "unresolvedAddressReuse": {
+            "count": 0,
+            "newBytes": 0,
+            "previousBytes": 0
+          },
+          "perPid": {
+            "3231": {
+              "role": "benchmark",
+              "rawAllocationEventCount": 5189,
+              "rawAllocationEventSizeSumBytes": 835152,
+              "sourceProvenNullOverlapCount": 0,
+              "sourceProvenNullOverlapBytes": 0,
+              "unresolvedAddressReuseEvents": 0,
+              "recordedLifetimeAvailable": true,
+              "recordedLifetime": {
+                "allocatorFreedBytes": 617860,
+                "knownAllocatorFrees": 5015,
+                "allocatorOutstandingBytes": 217292,
+                "allocatorEventPeakBytes": 432187,
+                "allocatorRetainedCount": 174,
+                "processTreeLiveTracedBytes": 217292,
+                "processTreeLiveTracedPeakBytes": 432187,
+                "exitReclaimedBytes": 0,
+                "execReclaimedBytes": 0
+              },
+              "rawEventStackCoverage": {
+                "bytes": 835152,
+                "events": 5189,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 782467,
+                "registersOnlyBytes": 52685,
+                "truncatedCopyBytes": 835152,
+                "withAnyResolvedSymbolBytes": 835152,
+                "withUnresolvedPcBytes": 782467
+              },
+              "nonAliasObservedStackCoverage": {
+                "bytes": 835152,
+                "events": 5189,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 782467,
+                "registersOnlyBytes": 52685,
+                "truncatedCopyBytes": 835152,
+                "withAnyResolvedSymbolBytes": 835152,
+                "withUnresolvedPcBytes": 782467
+              },
+              "observedRegistryNewGrossBytes": {},
+              "retainedAttributionAvailable": true,
+              "workerRuntimeRootGrossBytesByPidTid": {
+                "3231:3234": 338359,
+                "3231:3236": 123923,
+                "3231:3233": 71711,
+                "3231:3235": 37707
+              },
+              "mainThreadRuntimeRootGrossBytes": 0,
+              "retainedStackCoverage": {
+                "bytes": 217292,
+                "events": 174,
+                "noStackHashBytes": 0,
+                "missingStackRecordBytes": 0,
+                "fpChainBytes": 204412,
+                "registersOnlyBytes": 12880,
+                "truncatedCopyBytes": 217292,
+                "withAnyResolvedSymbolBytes": 217292,
+                "withUnresolvedPcBytes": 204412
+              }
+            }
+          }
+        }
+      ],
+      "result": "All eight phase/PID/URI/build identities passed. Four cold/inclusive samples contain source-proven overlapping NULL allocator observations and unresolved return-order address reuse; their exact lifetime metrics remain unavailable. This unresolved event coverage is disclosed rather than hidden. Separate ordinary uploaded controls prove worker initialization and preserve official tracked-memory curves."
     }
   ],
   "conditioningInclusive": {
@@ -183,5 +1104,18 @@
     "fixtureInsideMarker": false,
     "samePrefixAsInclusive": true,
     "scope": "incremental interval-observed live bytes; preexisting retained allocations are excluded"
+  },
+  "validation": {
+    "codspeedCfgFunctionalPassed": 6,
+    "nativeFunctionalPassed": 7,
+    "ciChecksPassed": 37,
+    "rustCoverage": {
+      "lines": 99.35,
+      "functions": 99.41,
+      "regions": 98.49
+    },
+    "complexityGates": "CRAP and CC<=30 passed; existing builder_core/body.rs and finish.rs parser warnings retained",
+    "durableEvidence": "/home/jong/.cache/no-mistakes/evidence/frontend-lifecycle-2025",
+    "hostedRetention": "requested30days, actualrepositorycap7days"
   }
 }

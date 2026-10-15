@@ -387,8 +387,8 @@ Fixture discovery itself initializes Rayon through the production parallel
 inventory classifier. Cold and inclusive modes therefore create the fixture
 **inside** the marker and retain it through marker stop. These are first-analysis
 boundaries including discovery, inventory, configuration, Rayon, and regex work
-reached by the helpers. They exclude OS execution, dynamic loading, and harness
-registration; they do not measure whole-command startup. Discovery subprocess
+reached by the helpers. They exclude benchmark-process OS execution, dynamic
+loading, and harness registration; they do not measure whole-command startup. Discovery subprocess
 costs belong to this scope too: report their proven process lineage and per-PID
 allocations separately, including reclamation on process exit. Reject unexplained
 wrapper-process allocations; do not silently filter them from evidence.
@@ -449,6 +449,46 @@ those bytes. [The accounting record](performance/frontend-lifecycle.json) retain
 exact provenance, limitations, and all initial costs. These controls never waive
 original gates or establish retained-byte attribution, scheduling cause, RSS
 equivalence, or speedup.
+
+The completed ARM experiment used frozen head `919a77c98` (synthetic merge
+`20c83c96`, identical tree), one verified binary, and eight ordered fresh processes.
+All marker/URI/PID identities, 374 raw file hashes, one-closure/fixture counts,
+preflight summaries, and four-worker participation checks passed. The ordinary
+uploaded cold/inclusive profiles separately show `Registry::new` and thread
+creation. They are separate processes, not curated versions of the eight raw
+samples.
+
+| Evidence scope                                    | Peak bytes        | End evidence (bytes)                 |
+| ------------------------------------------------- | ----------------- | ------------------------------------ |
+| Original, two raw recorded-event replays          | 834,021 / 432,187 | Marker stop: 618,986 / 217,292       |
+| Post-prefix, two raw recorded-event replays       | 598,639 / 451,245 | Marker stop: 383,604 / 236,350       |
+| Cold, one separate ordinary CodSpeed control      | 28,319,120        | Sampled chart last point: 27,999,480 |
+| Inclusive, one separate ordinary CodSpeed control | 32,673,609        | Sampled chart last point: 32,521,097 |
+
+These figures establish no reduction or deterministic steady state. Each raw
+cold/inclusive sample contains 17,063 source-supported nested allocation and
+`realloc(NULL)` observations; all original events and their size sums remain
+recorded. Additional cross-thread address reuses (58/83/58/108 observations)
+prevent unique peak/retained reconstruction for those four samples, so those
+metrics are explicitly unavailable. Return-side profiler events need not
+linearize the allocator's old-address release and another thread's reuse.
+Observed stack categories overlap; truncated copies and unresolved ancestry are
+reported separately and cannot attribute every retained byte.
+
+The proven Git children each leave 7,190,374 traced bytes without allocator
+`Free` events before exiting. The process-tree model records that amount as
+exit reclamation and zero child traced bytes afterward; it does not invent
+frees. The private server's Exit accounting remains unverified. Official charts,
+recorded-event models, and physical process heap are distinct evidence scopes.
+
+The ordinary report passed with no reported regressions, three new controls,
+and 39 system call warnings retained. It used fallback base `4ddb9c08`, rather than
+expected `61d9c463`; code, benchmark, dependency, configuration, and physical
+fixture Git objects match between those bases (only spelling/docs evidence
+changed). This is a limited fallback check, not an exact-base comparison or a
+runtime improvement claim. The paired same-binary experiment validates harness
+boundaries; it does not waive original gates. Full manifests, coverage limits,
+initial rejected data, and model versions remain in the linked accounting record.
 
 ### Interpreting CodSpeed results
 
