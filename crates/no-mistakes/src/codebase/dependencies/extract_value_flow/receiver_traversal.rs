@@ -32,6 +32,17 @@ pub(super) struct ReceiverTraversal {
     mutable: Option<Box<MutableTraversal>>,
 }
 impl ReceiverTraversal {
+    /// An exit belongs to its sole active version; ambiguous states still
+    /// resolve the original source coordinate before removing their key.
+    pub(super) fn exit_single_version(&mut self, key: &(usize, String)) -> bool {
+        let Some(states) = self.mutable.as_mut() else {
+            return false;
+        };
+        states.other.is_empty()
+            && !self.ordinary.active.contains(key)
+            && states.first.1.active.remove(key)
+    }
+
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn version_table_capacity(&self) -> usize {
         self.mutable
@@ -82,6 +93,10 @@ impl ReceiverTraversal {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "receiver_traversal_tests.rs"]
+mod tests;
 
 /// One monotone cutoff summary per receiver/path, rather than one state per
 /// acquisition route. An ambiguous context can never prove replacement.

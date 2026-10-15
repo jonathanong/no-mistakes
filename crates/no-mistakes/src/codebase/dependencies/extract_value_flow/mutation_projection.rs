@@ -26,6 +26,9 @@ impl ImportCollector {
             pending.pop()
         {
             if exiting {
+                if root_read.read().is_some() && traversal.exit_single_version(&key) {
+                    continue;
+                }
                 let version = root_read.read().and_then(|read| {
                     #[cfg(feature = "test-instrumentation")]
                     {

@@ -16,6 +16,8 @@ fn single_version_receiver_writes_do_not_allocate_version_tables() {
     );
     assert!(facts.value_flow.reference_successor_bookkeeping >= 128);
     assert_eq!(facts.value_flow.reference_version_table_capacity, 0);
+    // A unique active version owns its exit; do not resolve the same root again.
+    assert_eq!(facts.value_flow.receiver_only_lookups, 128);
 }
 
 #[test]
