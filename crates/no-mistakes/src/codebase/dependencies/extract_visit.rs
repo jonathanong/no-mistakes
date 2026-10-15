@@ -2,7 +2,10 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_statements(&mut self, statements: &oxc_allocator::Vec<'a, Statement<'a>>) {
         visit_statements_with_receiver_region(self, statements);
     }
-    fn visit_expression(&mut self, expression: &Expression<'a>) { visit_expression_with_annex_b_initializer(self, expression); }
+    fn visit_expression(&mut self, expression: &Expression<'a>) {
+        self.record_callable_value_use(expression);
+        visit_expression_with_annex_b_initializer(self, expression);
+    }
 
     fn visit_statement(&mut self, statement: &Statement<'a>) { visit_statement_with_type_binding(self, statement); }
 

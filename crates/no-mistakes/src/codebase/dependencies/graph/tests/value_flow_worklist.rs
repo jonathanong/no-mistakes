@@ -215,3 +215,43 @@ fn repeated_module_snapshot_reads_share_the_closed_writer_proof() {
         benchmark_probe_execution_phase_steps()
     );
 }
+
+#[test]
+fn callable_value_use_facts_exclude_bare_callees_and_stay_cold_without_demand() {
+    for (file, expected) in [
+        ("callable-uses-cold.mts", None),
+        ("callable-uses-values.mts", Some("stored")),
+        ("callable-uses-jsx.tsx", Some("Stored")),
+    ] {
+        let source = std::fs::read_to_string(
+            fixture("value-flow-module-snapshot-work")
+                .join("src")
+                .join(file),
+        )
+        .unwrap();
+        let allocator = oxc_allocator::Allocator::default();
+        let parsed = oxc_parser::Parser::new(
+            &allocator,
+            &source,
+            oxc_span::SourceType::from_path(file).unwrap(),
+        )
+        .parse();
+        assert!(parsed.diagnostics.is_empty(), "{file}");
+        for enabled in [false, true] {
+            let facts = crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands(
+                &parsed.program, &source, false, false, enabled,
+            );
+            let uses = facts.value_flow.callable_value_uses.as_deref();
+            assert_eq!(
+                uses.is_some(),
+                enabled && expected.is_some(),
+                "{file} demand={enabled}"
+            );
+            if let Some(uses) = uses {
+                assert_eq!(uses.len(), 1, "shadowed parameter escaped into facts");
+                assert_eq!(uses[&0].len(), 1);
+                assert!(uses[&0].contains(expected.unwrap()));
+            }
+        }
+    }
+}
