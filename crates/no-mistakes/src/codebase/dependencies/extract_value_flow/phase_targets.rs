@@ -2,8 +2,17 @@ use super::*;
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
 use phase_walk::{PhaseWalk, PhaseWrite};
 
-impl PhaseWalk {
+impl PhaseWalk<'_> {
     pub(super) fn target(&mut self, target: &AssignmentTarget<'_>) {
+        let pattern = matches!(
+            target,
+            AssignmentTarget::ArrayAssignmentTarget(_)
+                | AssignmentTarget::ObjectAssignmentTarget(_)
+        );
+        if pattern {
+            self.nested_pattern |= self.pattern_depth > 0;
+            self.pattern_depth += 1;
+        }
         match target {
             AssignmentTarget::ArrayAssignmentTarget(array) => {
                 for element in array.elements.iter().flatten() {
@@ -39,6 +48,9 @@ impl PhaseWalk {
                 self.reference(target);
                 self.write(target);
             }
+        }
+        if pattern {
+            self.pattern_depth -= 1;
         }
     }
     fn maybe_default(&mut self, target: &AssignmentTargetMaybeDefault<'_>) {

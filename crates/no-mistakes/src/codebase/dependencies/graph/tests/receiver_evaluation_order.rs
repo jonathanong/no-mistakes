@@ -1,5 +1,7 @@
 #[path = "receiver_evaluation_order_cases.rs"]
 mod cases;
+#[path = "receiver_enclosing_init_cases.rs"]
+mod enclosing_init_cases;
 #[path = "receiver_parameter_order_cases.rs"]
 mod parameter_cases;
 
@@ -28,6 +30,7 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
     for (file, caller, callee, export) in cases::cases()
         .iter()
         .chain(parameter_cases::cases())
+        .chain(enclosing_init_cases::cases())
         .copied()
     {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));

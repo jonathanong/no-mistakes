@@ -1,0 +1,35 @@
+{
+  "label": "baseline",
+  "revision": "57c927df4c09f450f67248277d49070f9576ba3b",
+  "tree": "4deecf0efbb9c9c2478025434e4dbfb0ba2fc47f",
+  "profile": "opt0",
+  "cargo_profile": {
+    "opt_level": "0",
+    "debuginfo": 0,
+    "debug_assertions": true,
+    "overflow_checks": true,
+    "test": false
+  },
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "fresh": false,
+  "crate_version": "0.90.0",
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "probe_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+  "fixture_sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+  "library_sha256": "3348dbc4ab1b35189c46dd62b418673e3ba6efe225d6f282133bca010eb0411a",
+  "library_bytes": 701538060,
+  "binary_sha256": "16e6c867dec7aa3153c134be692f157fc908c63f0fd6f82f1a2b83c1b28638de",
+  "binary_bytes": 313803976,
+  "probe_flags": [
+    "--edition=2021",
+    "-C",
+    "opt-level=0"
+  ],
+  "lto": false,
+  "codegen_units": "dev default",
+  "workspace_manifest_sha256": "5a129f2bb649899a51778f2782a43bf30a494e980f3391831f69a1dd4b4aa782",
+  "crate_manifest_sha256": "c0269a22cb68c4dde6f217c1f6c249a3488194b0048dca38a4bf822823e57877"
+}

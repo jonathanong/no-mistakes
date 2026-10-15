@@ -1,0 +1,20 @@
+{
+  "free_disk_bytes": 88380567552,
+  "proc_available_memory_kib": 15047664,
+  "effective_available_memory_bytes": 15408807936,
+  "visible_cgroup_memory_limits": [],
+  "memory_budget_scope": "minimum of proc MemAvailable and visible cgroup ancestor headroom; hidden host limits unknown",
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "selected_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cpu_quota": null
+}

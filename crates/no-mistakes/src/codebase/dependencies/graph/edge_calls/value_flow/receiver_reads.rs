@@ -76,4 +76,13 @@ impl<'a> ReceiverReads<'a> {
         }
         offset.map_or(ReadOffset::Absent, ReadOffset::Exact)
     }
+    pub(super) fn default_owner(&self, id: ReadId, file: &std::path::Path) -> Option<CallableId> {
+        self.iter(id).find_map(|read| {
+            read.owned_context
+                .as_deref()
+                .and_then(|(owner_file, owner, preserve)| {
+                    (owner_file == file && *preserve).then_some(*owner)
+                })
+        })
+    }
 }

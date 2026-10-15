@@ -1,0 +1,33 @@
+{
+  "revision": "5b8710b4e0b044fd35b3c770332131ccb857e1b4",
+  "tree": "4428bd318e975dbfa55763b377e48eb60f3f2136",
+  "features": [
+    "default",
+    "mermaid-validation",
+    "test-instrumentation"
+  ],
+  "profile": {
+    "opt_level": "0",
+    "debuginfo": 0,
+    "debug_assertions": true,
+    "overflow_checks": true,
+    "test": false
+  },
+  "hashes": {
+    "receiver-current-targets": "1fa11a4991c27a7de8637faece3842e23e17285c64f05a8409dead6046ab4646",
+    "receiver-workcount-current": "f8c20a9bbf64863665a057938e129cf67e3f6cf028a6e1bd23b9f24ffc815bb1",
+    "no-mistakes/target/debug/libno_mistakes.rlib": "34ce95439bda05bba44b9ff17f92d4df823284475a284f20a6e252e7a516ce34"
+  },
+  "timing_expectations": 45,
+  "default_crossfile": 6,
+  "inline_context": 19,
+  "sharing": {
+    "sites": 129,
+    "unknown": 128,
+    "agreements": 1,
+    "origins": 1025,
+    "unchanged_bound": 1032
+  },
+  "complexity_before": 32,
+  "complexity_after": 28
+}

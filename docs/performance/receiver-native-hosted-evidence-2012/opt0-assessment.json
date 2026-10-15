@@ -1,0 +1,53 @@
+{
+  "status": "inconclusive",
+  "demands": {
+    "values": {
+      "status": "inconclusive",
+      "orders_percent": {
+        "ABBA": -1.8403582496755,
+        "BAAB": -0.3668125827432367
+      },
+      "paired_cpu_percent": -1.10704474879172,
+      "descriptive_bootstrap_95_percent": [
+        -2.5981397935963013,
+        0.17264788313649101
+      ],
+      "arm_cpu_cv": {
+        "baseline": 0.025780452352278355,
+        "candidate": 0.02090978654193414
+      },
+      "cpu_range_s": [
+        5.429123,
+        5.953499
+      ],
+      "mean_cpu_ms_per_collection": {
+        "baseline": 11.33518675,
+        "candidate": 11.208806
+      }
+    },
+    "imports": {
+      "status": "inconclusive",
+      "orders_percent": {
+        "ABBA": 0.042911809983814386,
+        "BAAB": -0.0796299605381856
+      },
+      "paired_cpu_percent": -0.020549954366215827,
+      "descriptive_bootstrap_95_percent": [
+        -0.566304799114256,
+        0.548236836834474
+      ],
+      "arm_cpu_cv": {
+        "baseline": 0.011280745365224434,
+        "candidate": 0.011203309558668908
+      },
+      "cpu_range_s": [
+        5.447462,
+        5.703986
+      ],
+      "mean_cpu_ms_per_collection": {
+        "baseline": 11.12404,
+        "candidate": 11.121986625
+      }
+    }
+  }
+}

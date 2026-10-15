@@ -1,6 +1,6 @@
 use super::{
     binding_identifier_name, binding_names, function_name, visit_type_parameter_constraints,
-    CallableId, ImportCollector,
+    with_callable_receiver_execution, CallableId, ImportCollector,
 };
 use crate::fx::{fx_set, FxHashSet};
 use oxc_ast::ast::{
@@ -13,24 +13,33 @@ pub(super) fn walk_function_with_body_bindings<'a>(
     function: &oxc_ast::ast::Function<'a>,
     owner_entered: bool,
 ) {
-    let previous_repeat_base = collector.call_repeat_base;
-    if owner_entered {
-        collector.call_repeat_base = collector.repeat_depth;
+    let enclosing_unreachable_binding_after = collector
+        .collect_value_flow
+        .then(|| collector.unreachable_value_binding_after.take());
+    with_callable_receiver_execution(collector, |collector| {
+        let previous_repeat_base = collector.call_repeat_base;
+        if owner_entered {
+            collector.call_repeat_base = collector.repeat_depth;
+        }
+        collector.record_callable_result_kind(function.r#async, function.generator);
+        // Default parameters run in the parameter environment, before the body
+        // lexical environment exists. Visit them before introducing body bindings.
+        visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
+        walk::walk_formal_parameters(collector, &function.params);
+        if let Some(return_type) = &function.return_type {
+            walk::walk_ts_type_annotation(collector, return_type);
+        }
+        if let Some(body) = &function.body {
+            let previous_cutoff = collector.record_value_fallthrough(&body.statements);
+            predeclare_function_declarations(collector, &body.statements);
+            walk::walk_function_body(collector, body);
+            collector.unreachable_value_binding_after = previous_cutoff;
+        }
+        collector.call_repeat_base = previous_repeat_base;
+    });
+    if let Some(previous) = enclosing_unreachable_binding_after {
+        collector.unreachable_value_binding_after = previous;
     }
-    collector.record_callable_result_kind(function.r#async, function.generator);
-    // Default parameters run in the parameter environment, before the body
-    // lexical environment exists. Visit them before introducing body bindings.
-    visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
-    walk::walk_formal_parameters(collector, &function.params);
-    if let Some(return_type) = &function.return_type {
-        walk::walk_ts_type_annotation(collector, return_type);
-    }
-    if let Some(body) = &function.body {
-        collector.record_value_fallthrough(&body.statements);
-        predeclare_function_declarations(collector, &body.statements);
-        walk::walk_function_body(collector, body);
-    }
-    collector.call_repeat_base = previous_repeat_base;
 }
 
 pub(super) fn walk_arrow_function_with_body_bindings<'a>(
@@ -38,31 +47,40 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     owner_entered: bool,
 ) {
-    let previous_repeat_base = collector.call_repeat_base;
-    if owner_entered {
-        collector.call_repeat_base = collector.repeat_depth;
-    }
-    collector.record_callable_result_kind(arrow.r#async, false);
-    // Default parameters run before the body lexical environment exists.
-    visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
-    walk::walk_formal_parameters(collector, &arrow.params);
-    if let Some(return_type) = &arrow.return_type {
-        walk::walk_ts_type_annotation(collector, return_type);
-    }
-    if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
-        collector.record_value_fallthrough(&body.statements);
-        predeclare_function_declarations(collector, &body.statements);
-        walk::walk_function_body(collector, body);
-    } else if let Some(expression) = arrow.body.as_expression() {
-        if collector.collect_value_flow {
-            if let Some(owner) = collector.current_function_id() {
-                let value = collector.value_expression(expression);
-                collector.value_flow.returns.push((owner, value));
-            }
+    let enclosing_unreachable_binding_after = collector
+        .collect_value_flow
+        .then(|| collector.unreachable_value_binding_after.take());
+    with_callable_receiver_execution(collector, |collector| {
+        let previous_repeat_base = collector.call_repeat_base;
+        if owner_entered {
+            collector.call_repeat_base = collector.repeat_depth;
         }
-        collector.visit_expression(expression);
+        collector.record_callable_result_kind(arrow.r#async, false);
+        // Default parameters run before the body lexical environment exists.
+        visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
+        walk::walk_formal_parameters(collector, &arrow.params);
+        if let Some(return_type) = &arrow.return_type {
+            walk::walk_ts_type_annotation(collector, return_type);
+        }
+        if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
+            let previous_cutoff = collector.record_value_fallthrough(&body.statements);
+            predeclare_function_declarations(collector, &body.statements);
+            walk::walk_function_body(collector, body);
+            collector.unreachable_value_binding_after = previous_cutoff;
+        } else if let Some(expression) = arrow.body.as_expression() {
+            if collector.collect_value_flow {
+                if let Some(owner) = collector.current_function_id() {
+                    let value = collector.value_expression(expression);
+                    collector.value_flow.returns.push((owner, value));
+                }
+            }
+            collector.visit_expression(expression);
+        }
+        collector.call_repeat_base = previous_repeat_base;
+    });
+    if let Some(previous) = enclosing_unreachable_binding_after {
+        collector.unreachable_value_binding_after = previous;
     }
-    collector.call_repeat_base = previous_repeat_base;
 }
 
 pub(super) fn predeclare_hoisted_var_bindings<'a>(

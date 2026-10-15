@@ -1,0 +1,20 @@
+# Explicit diagnostic repetitions never upload duplicate benchmark URIs.
+# Each ordered entrypoint retains its own runner profile directory/index.
+options: { "working-directory": ".." }
+benchmarks:
+  - name: "1 original"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 1 original
+  - name: "2 cold_first_analysis"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 2 cold_first_analysis
+  - name: "3 conditioning_inclusive"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 3 conditioning_inclusive
+  - name: "4 extract_after_recorded_prefix"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 4 extract_after_recorded_prefix
+  - name: "5 extract_after_recorded_prefix"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 5 extract_after_recorded_prefix
+  - name: "6 conditioning_inclusive"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 6 conditioning_inclusive
+  - name: "7 cold_first_analysis"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 7 cold_first_analysis
+  - name: "8 original"
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 8 original
