@@ -1,6 +1,8 @@
 use super::*;
 
-pub(super) type Affected = FxHashMap<usize, FxHashSet<String>>;
+#[path = "affected_receivers.rs"]
+mod affected;
+pub(super) use affected::Affected;
 pub(super) type PendingMutation<R = nested::RootRead> =
     (nested::ReceiverWrite<R>, bool, bool, bool);
 #[derive(Clone, Copy)]
@@ -65,7 +67,7 @@ impl ImportCollector {
             // No descriptor, component link, or mutable origin can enqueue a
             // successor. Mutation recording above and invalidation still apply.
             if terminal {
-                affected.entry(key.0).or_default().insert(key.1.clone());
+                affected.insert(key.0, key.1.clone());
                 continue;
             }
             let version = root_read.read().and_then(|read| {
@@ -97,7 +99,7 @@ impl ImportCollector {
                 false,
                 false,
             ));
-            affected.entry(key.0).or_default().insert(key.1.clone());
+            affected.insert(key.0, key.1.clone());
             for target in self
                 .value_reference_links
                 .as_ref()
