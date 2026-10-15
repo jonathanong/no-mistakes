@@ -1,6 +1,44 @@
 use super::*;
 
 #[test]
+fn rhs_acquisition_preserves_first_full_proof_demand_timing() {
+    let mut histories = ReceiverHistories::default();
+    let key = (0, "box".to_string());
+    histories.acquire_rhs_reference(0, "box");
+    assert!(histories.has_rhs_reference_demand(0, "box"));
+    assert!(!histories.has_reference_proof_demand());
+    assert_eq!(histories.proof_component(0, "box"), None);
+    assert!(!histories.history_mut(&key).1);
+    histories.require_reference_proof(0, "box");
+    histories.acquire_rhs_reference(0, "box");
+    assert!(histories.has_reference_proof_demand());
+    assert!(!histories.requires_proof(0, "box"));
+
+    histories.acquire_rhs_reference(0, "other");
+    histories.link((0, "box"), (0, "other"));
+    assert!(histories.has_rhs_reference_demand(0, "other"));
+    assert!(!histories.requires_proof(0, "other"));
+
+    let mut early = ReceiverHistories::default();
+    early.acquire_rhs_reference(0, "box");
+    early.require_reference_proof(0, "box");
+    assert!(early.history_mut(&key).1);
+    early.acquire_rhs_reference(0, "empty");
+    early.link((0, "box"), (0, "empty"));
+    assert!(early.requires_proof(0, "empty"));
+    assert!(early.has_rhs_reference_demand(0, "empty"));
+
+    let mut acquired = ReceiverHistories::default();
+    acquired.acquire_rhs_reference(0, "box");
+    acquired.acquire_rhs_reference(0, "other");
+    acquired.history_mut(&key).0.record(&[], 10, None);
+    acquired.link((0, "box"), (0, "other"));
+    assert!(!acquired.has_reference_proof_demand());
+    acquired.require_reference_proof(0, "other");
+    assert!(!acquired.requires_proof(0, "box"));
+}
+
+#[test]
 fn late_proof_demand_and_untracked_union_cannot_supply_missing_events() {
     let mut late = ReceiverHistories::default();
     let key = (0, "late".to_string());

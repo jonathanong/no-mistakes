@@ -1,3 +1,11 @@
+#[path = "extract_value_flow/assigned_receiver_origins.rs"]
+mod assigned_receiver_origins;
+#[path = "extract_value_flow/assigned_receiver_proof.rs"]
+mod assigned_receiver_proof;
+#[path = "extract_value_flow/assignment_member_values.rs"]
+mod assignment_member_values;
+#[path = "extract_value_flow/assignment_rhs_frame.rs"]
+pub(super) mod assignment_rhs_frame;
 use super::*;
 
 pub(super) type DefaultOriginIndex =
@@ -47,6 +55,8 @@ mod collect;
 #[path = "extract_value_flow/collect_helpers.rs"]
 mod collect_helpers;
 
+#[path = "extract_value_flow/assignment_root_values.rs"]
+mod assignment_root_values;
 #[path = "extract_value_flow/expressions.rs"]
 mod expressions;
 

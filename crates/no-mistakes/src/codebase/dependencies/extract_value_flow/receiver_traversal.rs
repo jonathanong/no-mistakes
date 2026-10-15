@@ -1,5 +1,7 @@
 use super::*;
 
+#[path = "assigned_receiver_traversal.rs"]
+mod assigned;
 #[path = "receiver_traversal_state.rs"]
 mod state;
 use state::TraversalState;
@@ -30,11 +32,31 @@ impl MutableTraversal {
 #[derive(Default)]
 pub(super) struct ReceiverTraversal {
     ordinary: TraversalState,
+    assigned: Option<Box<assigned::AssignedTraversal>>,
     #[cfg(feature = "test-instrumentation")]
     pub(super) version_dispatches: usize,
     mutable: Option<MutableTraversal>,
 }
 impl ReceiverTraversal {
+    pub(super) fn enter_assigned(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: Vec<nested::ReceiverRead>,
+        version: Option<mutable_origins::RootVersion>,
+        receipts: assigned_receiver_origins::Receipts,
+    ) -> Option<Vec<nested::ReceiverRead>> {
+        self.assigned
+            .get_or_insert_with(Default::default)
+            .enter(key, path, reads, version, receipts)
+    }
+    pub(super) fn exit_assigned(&mut self, key: &(usize, String)) {
+        self.assigned
+            .as_mut()
+            .expect("active RHS traversal")
+            .exit(key);
+    }
+
     pub(super) fn exit_ordinary(&mut self, key: &(usize, String)) {
         self.ordinary.remove_active(key);
     }
@@ -98,57 +120,7 @@ impl ReceiverTraversal {
 #[path = "receiver_traversal_tests.rs"]
 mod tests;
 
-impl ImportCollector {
-    pub(super) fn classify_receiver_successor(
-        &mut self,
-        key: &(usize, String),
-        root_read: Option<nested::RootRead>,
-    ) -> (bool, Option<mutable_origins::RootVersion>) {
-        #[cfg(all(test, feature = "test-instrumentation"))]
-        let old_lookup = mutable_origins::fusion_tests::OLD.with(std::cell::Cell::get);
-        #[cfg(not(all(test, feature = "test-instrumentation")))]
-        let old_lookup = false;
-        #[cfg(all(test, feature = "test-instrumentation"))]
-        let old_terminal =
-            old_lookup && root_read.is_some() && self.mutation_reference_is_terminal(key);
-        #[cfg(not(all(test, feature = "test-instrumentation")))]
-        let old_terminal = false;
-        let version = root_read.filter(|_| !old_terminal).and_then(|read| {
-            #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_root_probes += 1;
-            }
-            self.mutable_receiver_version(key, read)
-        });
-        let terminal = if old_lookup {
-            old_terminal
-        } else {
-            root_read.is_some()
-                && version.is_none()
-                && self.mutation_reference_has_no_value_successor(key)
-        };
-        (terminal, version)
-    }
-    pub(super) fn mutation_reference_has_no_value_successor(&self, key: &(usize, String)) -> bool {
-        #[cfg(all(test, feature = "test-instrumentation"))]
-        mutable_origins::fusion_tests::DESCRIPTORS.with(|n| n.set(n.get() + 1));
-        self.value_binding_indexes
-            .get(&key.0)
-            .and_then(|names| names.get(key.1.as_str()))
-            .is_none_or(Vec::is_empty)
-            && self
-                .value_reference_links
-                .as_ref()
-                .and_then(|links| links.get(&key.0))
-                .and_then(|names| names.get(key.1.as_str()))
-                .is_none_or(|links| links.is_empty())
-    }
-    #[cfg(all(test, feature = "test-instrumentation"))]
-    pub(super) fn mutation_reference_is_terminal(&self, key: &(usize, String)) -> bool {
-        self.mutation_reference_has_no_value_successor(key)
-            && !self.has_mutable_receiver_binding(key.0, &key.1)
-    }
-}
+include!("receiver_successor_classification.rs");
 
 #[cfg(test)]
 #[path = "receiver_traversal_inline_tests.rs"]

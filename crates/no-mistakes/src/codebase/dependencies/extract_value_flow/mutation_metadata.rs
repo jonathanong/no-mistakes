@@ -48,3 +48,9 @@ impl ImportCollector {
         }
     }
 }
+
+pub(super) struct Tracking<'a> {
+    pub(super) metadata: &'a MutationMetadata,
+    pub(super) propagated: bool,
+    pub(super) root_read: Option<nested::RootRead>,
+}

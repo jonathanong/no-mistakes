@@ -1259,6 +1259,13 @@ retain that declaring package and selector. When several selected packages
 declare the same entry, all enabled targets are returned deterministically.
 Configured package scopes still apply to the declaring packages; external
 entries do not make neighboring helpers or other packages eligible.
+The same prepared receiver facts track supported replacement RHS aliases for
+`effects`, call-graph reports, and checks. After `box.wrapper = retained`, a
+matching descendant write reaches the receiver held by `retained`; restored
+aliases, saved containers, and copied methods retain their acquisition order.
+Literal RHS object and array values project into mutable bare-root assignment
+patterns. Unknown and conditional stores keep possible origins. These local
+projections do not infer arbitrary heap transfers through function calls.
 
 ### Effect alternatives
 
@@ -1274,6 +1281,7 @@ several categories may describe one row. `categories` filters alternatives befor
 choosing scalar fields and counts, so a read-only request cannot expose a write
 scalar/category count. Unknown candidates add no evidence. The returned Promise,
 CommonJS/ESM facades and batched reports preserve this same projection.
+
 
 `check()` and `analyzeProject()` accept the same `forbidden-calls` argument
 predicates as the CLI through rule configuration. Both remain asynchronous and

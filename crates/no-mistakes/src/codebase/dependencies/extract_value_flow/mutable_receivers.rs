@@ -24,31 +24,6 @@ impl ImportCollector {
         self.retain_receiver_origin(scope, name, value, completed_at, true);
     }
 
-    pub(in super::super) fn prepare_mutable_pattern_roots(
-        &mut self,
-        target: &AssignmentTarget<'_>,
-    ) {
-        if self.receiver_only_bindings.is_none()
-            || !matches!(
-                target,
-                AssignmentTarget::ArrayAssignmentTarget(_)
-                    | AssignmentTarget::ObjectAssignmentTarget(_)
-            )
-        {
-            return;
-        }
-        let mut prepare = false;
-        root_targets::for_each_root(target, |name, _| {
-            prepare = prepare
-                || self
-                    .callee_binding_scope(name)
-                    .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name));
-        });
-        if prepare {
-            self.prepare_value_references();
-        }
-    }
-
     pub(in super::super) fn record_mutable_receiver_assignment(
         &mut self,
         assignment: &AssignmentExpression<'_>,
@@ -84,32 +59,36 @@ impl ImportCollector {
             AssignmentTarget::ArrayAssignmentTarget(_)
                 | AssignmentTarget::ObjectAssignmentTarget(_)
         ) {
-            // Destructuring replaces lexical roots too. Its projected RHS is
-            // intentionally unknown here; never keep a stale prior root.
+            // Select receiver identities from the same RHS facts used by this
+            // assignment; phase points retain each target's actual completion.
             #[cfg(feature = "test-instrumentation")]
             {
                 self.value_flow.receiver_root_target_decompositions += 1;
             }
-            root_targets::for_each_root(&assignment.left, |name, target| {
-                if let Some(scope) = self.callee_binding_scope(name) {
-                    if self.has_mutable_receiver_binding(scope, name) {
-                        self.fresh_receiver_effects.rebind(scope, name);
-                        self.capture_mutable_root_phase(
-                            (scope, name),
-                            target,
-                            &ValueExpression::Unknown,
-                            true,
-                        );
-                        self.retain_receiver_origin(
-                            scope,
-                            name,
-                            ValueExpression::Unknown,
-                            assignment.span.end,
-                            true,
-                        );
+            let mut has_root = false;
+            root_targets::for_each_root(&assignment.left, |name, _| {
+                has_root = has_root
+                    || self
+                        .callee_binding_scope(name)
+                        .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name));
+            });
+            if !has_root {
+                return;
+            }
+            let value = self.value_expression(&assignment.right);
+            for (name, target, value) in
+                assignment_root_values::roots(&assignment.left, value, &mut |expression| {
+                    self.value_expression(expression)
+                })
+            {
+                if let Some(scope) = self.callee_binding_scope(&name) {
+                    if self.has_mutable_receiver_binding(scope, &name) {
+                        self.fresh_receiver_effects.rebind(scope, &name);
+                        self.capture_mutable_root_phase((scope, &name), target, &value, true);
+                        self.retain_receiver_origin(scope, &name, value, assignment.span.end, true);
                     }
                 }
-            });
+            }
         }
     }
 
@@ -179,7 +158,7 @@ impl ImportCollector {
     }
 }
 
-fn mutable_root_name<'a>(target: &'a AssignmentTarget<'_>) -> Option<&'a str> {
+pub(super) fn mutable_root_name<'a>(target: &'a AssignmentTarget<'_>) -> Option<&'a str> {
     let expression = match target {
         AssignmentTarget::AssignmentTargetIdentifier(identifier) => {
             return Some(identifier.name.as_str())

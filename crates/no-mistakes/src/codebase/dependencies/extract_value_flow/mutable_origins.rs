@@ -16,7 +16,19 @@ pub(super) struct RootVersion {
     selected: Option<usize>,
     generation: usize,
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub(super) struct RootIdentity {
+    context: Option<CallableId>,
+    selected: Option<usize>,
+}
 impl RootVersion {
+    pub(super) fn identity(self) -> RootIdentity {
+        RootIdentity {
+            context: self.context,
+            selected: self.selected,
+        }
+    }
+
     pub(super) fn same_selected(&self, other: &Self) -> bool {
         self.context == other.context && self.selected == other.selected
     }

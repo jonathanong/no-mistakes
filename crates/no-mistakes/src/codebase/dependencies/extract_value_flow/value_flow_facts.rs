@@ -40,6 +40,14 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_rhs_visits: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub reference_rhs_origin_queries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_rhs_receipt_queries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_rhs_destinations: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_rhs_barriers: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_phase_indexes: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_phase_nodes: usize,

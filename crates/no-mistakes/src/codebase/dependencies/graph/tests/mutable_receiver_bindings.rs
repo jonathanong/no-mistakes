@@ -7,6 +7,8 @@ mod binding_cases;
 mod class_cases;
 #[path = "mutable_receiver_phase_cases.rs"]
 mod phase_cases;
+#[path = "assignment_receiver_rhs_cases.rs"]
+mod rhs_cases;
 
 #[test]
 fn mutable_receiver_origins_invalidate_without_becoming_value_bindings() {
@@ -33,6 +35,7 @@ fn mutable_receiver_origins_invalidate_without_becoming_value_bindings() {
         .iter()
         .chain(class_cases::CASES)
         .chain(binding_cases::CASES)
+        .chain(rhs_cases::CASES)
         .copied()
     {
         let sites = graph
@@ -52,4 +55,14 @@ fn mutable_receiver_origins_invalidate_without_becoming_value_bindings() {
             ),
         }
     }
+    let parameter_sites = graph.call_sites_in_file(
+        &root.join("src/nested-receiver-containers/assignment-rhs-parameter.mts"),
+    );
+    let inside = parameter_sites
+        .iter()
+        .find(|site| {
+            site.caller.as_deref() == Some("write") && site.source_callee == "receiver.get"
+        })
+        .unwrap();
+    assert!(matches!(inside.target, ResolvedCallTarget::Unknown));
 }

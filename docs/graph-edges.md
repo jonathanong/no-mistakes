@@ -599,10 +599,18 @@ members retain the precision covered by the saved controls.
 Assignment-pattern receiver reads use RHS-before-LHS execution order, including
 computed targets and conditional root writes. Eager class writes borrow the normal
 collector's scoped binding facts; deferred field values retain their own execution
-owners. These summaries do not infer receiver identity from a destructured RHS.
-Known boundaries include aliases introduced by replacement assignment RHS
-([#2015](https://github.com/jonathanong/no-mistakes/issues/2015)) and root writes
-across callable declaration and runtime execution order
+owners. Literal object and array RHS values also project into mutable bare-root
+assignment patterns, with target order, defaults, and literal rest selection.
+
+Supported replacement RHS aliases feed the same receiver mutation histories.
+For example, after `box.wrapper = retained`, a write through
+`box.wrapper.client.get` invalidates the imported method held by
+`retained.client`. Ordered prefix receipts distinguish restored aliases and
+saved containers from later replacement objects; methods copied before the
+write keep their acquisition snapshots. Unknown and conditional stores retain
+possible origins. Projection uses locally represented receiver values; arbitrary
+heap transfers through function calls remain unresolved. Root writes
+across callable declaration and runtime execution order remain a known boundary
 ([#2052](https://github.com/jonathanong/no-mistakes/issues/2052)).
 
 Repeated imported-member replacement alternatives require a closed execution
