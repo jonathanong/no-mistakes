@@ -1,0 +1,52 @@
+{
+  "scope": "Local x86 memtrack format/accounting only; not original ARM profiles or A/B performance evidence",
+  "memtrack_version": "1.6.0",
+  "memtrack_source": "0576920423ba512f75bc0d8dfc5ea09deebab165",
+  "memtrack_binary_sha256": "1d9eae25d982f7f51a9fd12c6247826f13875d3d2256efe12a315ec7be85edc4",
+  "compiler_flags": [
+    "-std=c11",
+    "-O0",
+    "-g",
+    "-fno-omit-frame-pointer",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-pthread"
+  ],
+  "capture_outer_timeout_seconds": 60,
+  "environment": "env -i PATH=/usr/bin:/bin SUDO_UID=1000 SUDO_GID=1000; target has no secret reads",
+  "captures": [
+    {
+      "probe": "ledger",
+      "compressed_bytes": 68714,
+      "raw_sha256": "ae8604e3a29af7a4125cbabb02340db09c4cc50c464693aa3f98aa49f109d12d",
+      "producer_events": 893,
+      "decoded_bytes": 3428368
+    },
+    {
+      "probe": "frames",
+      "compressed_bytes": 448060,
+      "raw_sha256": "8d187b48b20817fb09e6d5be4f3181f457d88129df770a6a72c990133bdb3efa",
+      "producer_events": 80404,
+      "decoded_bytes": 5308093
+    }
+  ],
+  "sources": {
+    "capture.c": "3bc45d0a1823b36cc95b1c8e1fecf0401fc71798ac5d98d4b9de085ab4f6cc7b",
+    "frame_stream.c": "b4ede45220e7caf522f0f4faf9f85b28731d52e3c555968d7faab73b219d886f"
+  },
+  "observations": [
+    "ledger has 3 backward global timestamp transitions",
+    "controlled subset uses known pre-window 101-byte allocation, cross-thread frees, reused address generations, in-place realloc",
+    "whole-process ledger window has 4 unmatched worker teardown frees: retention and peak unknown",
+    "two-frame input decodes 80404 events; removing final complete frame yields 65536 and rejects against producer count",
+    "truncating final compressed byte rejects zstd stream"
+  ],
+  "limitations": [
+    "raw files retained separately and are not committed as binary or encoded payloads",
+    "producer count does not prove absence of kernel drops or allocator interception gaps",
+    "failed and zero-size realloc behavior not validated",
+    "no original execution timestamps or raw profiles available",
+    "no regex-worker attribution or frozen-pair repeatability experiment"
+  ]
+}

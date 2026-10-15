@@ -1,0 +1,2 @@
+# Synthetic bin32 header advertising too many bytes, without payload.
+c6ffffffff

@@ -160,6 +160,13 @@ jobs:
         timeout-minutes: 2
         run: node --test .github/scripts/rust-disk-usage.test.cjs
 
+      - name: Test frontend memory accounting
+        timeout-minutes: 2
+        run: |
+          python3 -m venv "$RUNNER_TEMP/frontend-memory-accounting-venv"
+          "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/pip" install --disable-pip-version-check --only-binary=:all: --no-deps --retries 0 --timeout 20 -r .github/scripts/frontend-memory-accounting/requirements.txt
+          PYTHONDONTWRITEBYTECODE=1 "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/python" .github/scripts/frontend-memory-accounting/test_accounting.py
+
       - name: Test benchmark handoff guards
         timeout-minutes: 2
         run: node --test .github/scripts/benchmark-handoff.test.cjs
