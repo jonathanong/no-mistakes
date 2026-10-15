@@ -1,7 +1,10 @@
 "use strict";
 const { createBindingResolver } = require("./vitest-timeout-binding-resolver");
-// One resolver per rule/context; scopes and in-progress cycles never cross requests.
+// Hosts can reuse a rule context across files. Each create starts a fresh program.
 const resolvers = new WeakMap();
+function resetBindingResolver(context) {
+  resolvers.delete(context);
+}
 function resolver(context) {
   if (!resolvers.has(context)) resolvers.set(context, createBindingResolver(context));
   return resolvers.get(context);
@@ -40,6 +43,7 @@ function opaqueCallback(node, context) {
   return resolver(context).opaqueCallback(node);
 }
 module.exports = {
+  resetBindingResolver,
   configCall,
   overrideCall,
   staticPropertyName,
