@@ -1,4 +1,4 @@
-import { primary, session } from '@vendor/valkey';
+import { primary, session } from '@vendor/valkey-default-origin-mutations';
 const items = ['one'];
 const opts = { client: primary };
 function rootDefault({ client } = opts) { opts.client.get = unrelated; client.get('key'); }

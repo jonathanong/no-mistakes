@@ -1676,3 +1676,25 @@ test("Cargo warning declarations retain exported structured warning contracts", 
   assert.match(declarations, /export interface TestTargetWarning \{/);
   assert.match(declarations, /cargo-target-unresolved/);
 });
+
+test("effects alternatives expose a named optional public evidence type", () => {
+  const named = readFileSync(join(packageRoot, "named-query-types.d.ts"), "utf8");
+  assert.match(
+    named,
+    /export interface EffectCallAlternative \{\s+callee: string;\s+category\?: string;/,
+  );
+  assert.match(named, /alternatives\?: EffectCallAlternative\[\];/);
+  assert.match(named, /export interface EffectCallSite/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/named-query-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8"),
+    /effects\(options: WithInvocationOptions<EffectsOptions>\): Promise<EffectsReport>/,
+  );
+});

@@ -134,6 +134,12 @@ include!("class_resolution_index.rs");
 include!("symbol_runtime_edges.rs");
 include!("call_site_index.rs");
 
+#[path = "repeated_foreign_parameters.rs"]
+mod repeated_foreign_parameters;
+mod repeated_propagated_replacements;
+mod repeated_replacement_controls;
+#[path = "value_flow_repeated_replacements.rs"]
+mod value_flow_repeated_replacements;
 #[path = "value_flow_worklist.rs"]
 mod value_flow_worklist;
 

@@ -1,5 +1,9 @@
 use super::*;
 
+#[cfg(feature = "test-instrumentation")]
+#[path = "replacement_incoming.rs"]
+mod replacement_incoming;
+
 type FunctionKey = (std::path::PathBuf, CallableId);
 
 pub(in super::super::super) fn refine_value_calls(
@@ -11,17 +15,25 @@ pub(in super::super::super) fn refine_value_calls(
 ) {
     let base = pass.sites.clone();
     let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
+    let replacements = replacement_catalog::ReplacementCatalog::prepare(
+        inputs, facts, resolver, indexes, pass, &incoming,
+    );
     let mut pending: FxHashSet<usize> = base
         .iter()
         .enumerate()
         .filter(|(_, site)| {
-            site.target_node.is_none() && site.invocation != InvocationKind::Construct
+            site.invocation != InvocationKind::Construct
+                && (site.target_node.is_none()
+                    || site.invocation == InvocationKind::Call
+                        && replacements
+                            .as_ref()
+                            .and_then(|catalog| catalog.file(&site.file))
+                            .is_some())
         })
         .map(|(index, _)| index)
         .collect();
     let mut dependencies: FxHashMap<FunctionKey, FxHashSet<usize>> = fx_map();
     let mut previous_dependencies: FxHashMap<usize, FxHashSet<FunctionKey>> = fx_map();
-    let mut edges: FxHashMap<usize, Vec<Edge>> = fx_map();
     let mut visits: FxHashMap<usize, usize> = fx_map();
     while !pending.is_empty() {
         let mut batch: Vec<_> = pending.drain().collect();
@@ -35,7 +47,7 @@ pub(in super::super::super) fn refine_value_calls(
             .par_iter()
             .map(|index| {
                 let enabled = visits[index] <= base.len() + 1;
-                let (mut sites, edges, used) = refine_iteration(
+                let (mut sites, used) = refine_iteration(
                     inputs,
                     facts,
                     resolver,
@@ -46,14 +58,15 @@ pub(in super::super::super) fn refine_value_calls(
                         cache: &pass.parameter_cache,
                         incoming: &incoming,
                         supers: &pass.super_constructors,
+                        replacements: replacements.as_ref(),
                     },
                     enabled,
                 );
-                (*index, sites.remove(0), edges, used)
+                (*index, sites.remove(0), used)
             })
             .collect();
         let mut changed = fx_set();
-        for (index, site, resolved_edges, used) in results {
+        for (index, site, used) in results {
             for key in previous_dependencies.remove(&index).into_iter().flatten() {
                 if let Some(users) = dependencies.get_mut(&key) {
                     users.remove(&index);
@@ -63,14 +76,21 @@ pub(in super::super::super) fn refine_value_calls(
                 dependencies.entry(key.clone()).or_default().insert(index);
             }
             previous_dependencies.insert(index, used);
-            if pass.sites[index].target_node != site.target_node {
-                if let Some(key) = function_key(&pass.sites[index]) {
+            if pass.sites[index].target != site.target
+                || pass.sites[index].target_node != site.target_node
+            {
+                for key in function_keys(&pass.sites[index]) {
                     if let Some(arguments) = incoming.get_mut(&key) {
-                        arguments.retain(|argument| argument != &site_argument(&site, indexes, facts));
+                        let previous = site_argument(&pass.sites[index], indexes, facts);
+                        if let Some(position) =
+                            arguments.iter().position(|argument| argument == &previous)
+                        {
+                            arguments.remove(position);
+                        }
                     }
                     changed.insert(key);
                 }
-                if let Some(key) = function_key(&site) {
+                for key in function_keys(&site) {
                     incoming
                         .entry(key.clone())
                         .or_default()
@@ -79,7 +99,6 @@ pub(in super::super::super) fn refine_value_calls(
                 }
             }
             pass.sites[index] = site;
-            edges.insert(index, resolved_edges);
         }
         if !changed.is_empty() {
             changed = pass.parameter_cache.affected(changed);
@@ -98,25 +117,89 @@ pub(in super::super::super) fn refine_value_calls(
     }
     #[cfg(feature = "test-instrumentation")]
     super::super::super::value_flow_metrics::record(visits.values().sum());
-    let mut edges: Vec<_> = edges.into_iter().collect();
-    edges.sort_unstable_by_key(|(index, _)| *index);
-    for (_, edges) in edges {
-        pass.edges.extend(edges);
+    let mut processed: Vec<_> = visits.into_keys().collect();
+    processed.sort_unstable();
+    replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
+        site_source(inputs, site)
+    });
+    #[cfg(feature = "test-instrumentation")]
+    {
+        let mut snapshot = replacements
+            .as_ref()
+            .map_or_else(ReplacementProbeSnapshot::default, |catalog| {
+                catalog.snapshot()
+            });
+        replacement_incoming::capture(&mut snapshot, &incoming, &pass.sites, indexes, facts);
+        super::super::super::value_flow_metrics::record_replacements(snapshot);
     }
 }
-fn function_key(site: &ResolvedCallSite) -> Option<FunctionKey> {
-    if site.invocation == InvocationKind::Membership {
-        return None;
+fn replace_call_edges(
+    edges: &mut Vec<Edge>,
+    base: &[ResolvedCallSite],
+    sites: &[ResolvedCallSite],
+    processed: &[usize],
+    source: impl Fn(&ResolvedCallSite) -> NodeId,
+) {
+    // Initial edges contain one entry per physical occurrence (before the
+    // canonical adjacency dedupe). Remove exactly that occurrence's old Call
+    // edges; identical calls and implicit constructor routes must survive.
+    let mut removed: FxHashMap<Edge, usize> = fx_map();
+    for index in processed {
+        let site = &base[*index];
+        for node in site.target_nodes() {
+            *removed
+                .entry((source(site), node.clone(), EdgeKind::Call))
+                .or_default() += 1;
+        }
     }
-    match &site.target_node {
-        Some(NodeId::Symbol {
-            file,
-            callable_id: Some(id),
-            ..
-        }) => Some((file.to_path_buf(), *id)),
-        _ => None,
+    if !removed.is_empty() {
+        edges.retain(|edge| {
+            if let Some(count) = removed.get_mut(edge) {
+                if *count > 0 {
+                    *count -= 1;
+                    return false;
+                }
+            }
+            true
+        });
+    }
+    for index in processed {
+        let site = &sites[*index];
+        for node in site.target_nodes() {
+            edges.push((source(site), node.clone(), EdgeKind::Call));
+        }
     }
 }
-fn site_argument(site: &ResolvedCallSite, indexes: &CallableResolutionIndexes, facts: &dyn TsFactLookup) -> ParameterInput {
+fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> + '_ {
+    site.target_nodes().filter_map(move |node| {
+        if site.invocation == InvocationKind::Membership {
+            return None;
+        }
+        match node {
+            NodeId::Symbol {
+                file,
+                callable_id: Some(id),
+                ..
+            } => Some((file.to_path_buf(), *id)),
+            _ => None,
+        }
+    })
+}
+fn site_argument(
+    site: &ResolvedCallSite,
+    indexes: &CallableResolutionIndexes,
+    facts: &dyn TsFactLookup,
+) -> ParameterInput {
     ParameterInput::from_site(site, indexes, facts)
 }
+
+fn site_source(inputs: &GraphEdgeBuildInputs<'_>, site: &ResolvedCallSite) -> NodeId {
+    site.caller.as_deref().map_or_else(
+        || NodeId::file_in(&inputs.interner, &site.file),
+        |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
+    )
+}
+
+#[cfg(test)]
+#[path = "replacement_edges_tests.rs"]
+mod tests;

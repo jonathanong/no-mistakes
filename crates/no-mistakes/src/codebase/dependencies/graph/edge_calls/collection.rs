@@ -5,6 +5,10 @@
 struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
+    replacement_files: Vec<(
+        std::path::PathBuf,
+        std::sync::Arc<crate::codebase::dependencies::extract::ValueReplacementFacts>,
+    )>,
     classes: Vec<ClassDeclaration>,
     class_ids: Vec<(std::path::PathBuf, FxHashSet<CallableId>)>,
     constructor_bases: Vec<(NodeId, NodeId)>,
@@ -74,6 +78,11 @@ fn collect_call_edges_for_core(
                 }
             }
             if plan.calls {
+                if let Some(replacements) = &file.value_flow.replacements {
+                    output
+                        .replacement_files
+                        .push((path.clone(), std::sync::Arc::clone(replacements)));
+                }
                 value_flow::collect_constructors(&resolution, file, &mut output);
                 for call in file
                     .function_calls
@@ -123,6 +132,7 @@ fn collect_call_edges_for_core(
             all.modules.extend(part.modules);
             all.edges.extend(part.edges);
             all.sites.extend(part.sites);
+            all.replacement_files.extend(part.replacement_files);
             all.classes.extend(part.classes);
             all.class_ids.extend(part.class_ids);
             all.constructor_bases.extend(part.constructor_bases);

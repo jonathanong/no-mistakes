@@ -1,82 +1,3 @@
-pub(crate) fn selection_from_config(
-    config: &crate::config::v2::NoMistakesConfig,
-    kind: &str,
-    categories: &[String],
-) -> Result<EffectsSelection> {
-    let Some(kind_config) = config.effects.get(kind) else {
-        let available: Vec<&str> = config.effects.keys().map(String::as_str).collect();
-        bail!(
-            "unknown effects kind: {kind} (configured kinds: {})",
-            if available.is_empty() {
-                "<none>".to_string()
-            } else {
-                available.join(", ")
-            }
-        );
-    };
-    crate::effect_provenance::validate(kind_config, kind)?;
-    let provenance = crate::effect_provenance::EffectProvenance::new(kind_config, categories);
-    let mut names = HashMap::new();
-    for (category, functions) in &kind_config.categories {
-        if !categories.is_empty() && !categories.iter().any(|value| value == category) {
-            continue;
-        }
-        for function in functions {
-            names.insert(function.clone(), Some(category.clone()));
-        }
-    }
-    if categories.is_empty() {
-        for function in &kind_config.functions {
-            names.entry(function.clone()).or_insert(None);
-        }
-    }
-    for target in kind_config.targets.iter().chain(&kind_config.returned_executors) {
-        anyhow::ensure!(
-            !target.module.trim().is_empty() && !target.export.trim().is_empty(),
-            "effects kind `{kind}` targets require non-empty module and export"
-        );
-    }
-    let mut targets: crate::fx::FxHashMap<
-        String,
-        crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>,
-    > = crate::fx::FxHashMap::default();
-    for target in &kind_config.targets {
-        if categories.is_empty()
-            || target
-                .category
-                .as_ref()
-                .is_some_and(|category| categories.contains(category))
-        {
-            targets
-                .entry(target.module.clone())
-                .or_default()
-                .insert(target.export.clone(), target.clone());
-        }
-    }
-    let mut returned: crate::fx::FxHashMap<String, crate::fx::FxHashMap<String, crate::config::v2::schema::EffectTargetConfig>> = crate::fx::FxHashMap::default();
-    for target in &kind_config.returned_executors {
-        if categories.is_empty() || target.category.as_ref().is_some_and(|category| categories.contains(category)) {
-            returned.entry(target.module.clone()).or_default().insert(target.export.clone(), target.clone());
-        }
-    }
-    if names.is_empty() && targets.is_empty() && returned.is_empty() && provenance.is_empty() {
-        bail!("effects kind `{kind}` has no functions for the requested categories");
-    }
-    Ok(EffectsSelection {
-        kind: kind.to_string(),
-        names,
-        provenance,
-        targets,
-        returned,
-    })
-}
-
-pub(crate) fn selection_fact_functions(
-    selection: &EffectsSelection,
-) -> impl Iterator<Item = String> + '_ {
-    selection.names.keys().cloned()
-}
-
 pub(crate) fn run_with_prepared(
     root: &Path,
     selection: &EffectsSelection,
@@ -106,82 +27,89 @@ pub(crate) fn run_with_prepared(
             file_depths.entry(path.to_path_buf()).or_insert(entry.depth);
         }
     }
-    let target_nodes: crate::fx::FxHashMap<_, _> = selection.targets.iter().flat_map(|(module, exports)| exports.values().flat_map(|target| graph.module_export_nodes(module, &target.export).into_iter().map(move |node| (node, target)))).collect();
+    let target_nodes: crate::fx::FxHashMap<_, _> = selection
+        .targets
+        .iter()
+        .flat_map(|(module, exports)| {
+            exports.values().flat_map(|target| {
+                graph
+                    .module_export_nodes(module, &target.export)
+                    .into_iter()
+                    .map(move |node| (node, target))
+            })
+        })
+        .collect();
     let mut call_sites = Vec::new();
     for (path, depth) in &file_depths {
         let Some(file) = facts.get(path) else {
             continue;
         };
         let relative_path = relative_slash_path(root, path);
-        let mut matched_offsets = crate::fx::FxHashSet::default();
+        let mut matches = crate::fx::FxHashMap::<u32, EffectCallSite>::default();
         for call in &file.effect_calls {
             if let Some(category) = selection.names.get(&call.callee) {
-                call_sites.push(EffectCallSite {
-                    file: relative_path.clone(),
-                    line: call.line,
-                    callee: call.callee.clone(),
-                    category: category.clone(),
-                    caller: call.caller.clone(),
-                    depth: *depth,
-                });
-                matched_offsets.insert(call.offset);
+                matches
+                    .entry(call.offset)
+                    .or_insert_with(|| EffectCallSite {
+                        file: relative_path.clone(),
+                        line: call.line,
+                        callee: call.callee.clone(),
+                        category: category.clone(),
+                        caller: call.caller.clone(),
+                        depth: *depth,
+                        alternatives: None,
+                    });
             }
         }
-        if selection.targets.is_empty() && selection.returned.is_empty() && selection.provenance.is_empty() && !selection.names.keys().any(|name| name.contains('.')) {
-            continue;
-        }
-        let callers: crate::fx::FxHashMap<_, _> = file
-            .function_calls
-            .iter()
-            .map(|call| (call.offset, &call.syntactic_caller))
-            .collect();
-        for site in graph.call_sites_in_file(path) {
-            if !matches!(
-                site.invocation,
-                crate::codebase::dependencies::extract::InvocationKind::Call
-                    | crate::codebase::dependencies::extract::InvocationKind::Construct
-            ) {
-                continue;
-            }
-            if let crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { export_path, .. } = &site.target {
-                if export_path.contains('.') {
-                    if let Some(category) = selection.names.get(export_path) {
-                        if matched_offsets.insert(site.offset) {
-                            call_sites.push(EffectCallSite { file: relative_path.clone(), line: site.line as usize, callee: export_path.clone(), category: category.clone(), caller: callers.get(&site.offset).and_then(|caller| (*caller).clone()), depth: *depth });
-                        }
-                        continue;
-                    }
+        if needs_resolved_effects(selection) {
+            let callers: crate::fx::FxHashMap<_, _> = file
+                .function_calls
+                .iter()
+                .map(|call| (call.offset, &call.syntactic_caller))
+                .collect();
+            for site in graph.call_sites_in_file(path) {
+                if !matches!(
+                    site.invocation,
+                    crate::codebase::dependencies::extract::InvocationKind::Call
+                        | crate::codebase::dependencies::extract::InvocationKind::Construct
+                ) {
+                    continue;
                 }
+                let multiple = has_effect_alternatives(site);
+                // Keep the established spelling/config precedence for singleton identities.
+                if !multiple && matches.contains_key(&site.offset) {
+                    continue;
+                }
+                let mut record = |matched: EffectCallAlternative| match matches.entry(site.offset) {
+                    std::collections::hash_map::Entry::Occupied(mut entry) => {
+                        entry.get_mut().add_match(matched)
+                    }
+                    std::collections::hash_map::Entry::Vacant(entry) => {
+                        entry.insert(EffectCallSite {
+                            file: relative_path.clone(),
+                            line: site.line as usize,
+                            callee: matched.callee,
+                            category: matched.category,
+                            caller: callers
+                                .get(&site.offset)
+                                .and_then(|caller| (*caller).clone()),
+                            depth: *depth,
+                            alternatives: None,
+                        });
+                    }
+                };
+                visit_effect_matches(selection, site, &target_nodes, &mut record);
             }
-            let direct = match &site.target {
-                crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport { specifier, export_path, .. } => selection.targets.get(specifier).and_then(|exports| exports.get(export_path)),
-                _ => None,
-            };
-            let returned = site.returned_from.iter().find_map(|(module, export)| selection.returned.get(module).and_then(|exports| exports.get(export)));
-            let Some(target) = direct.or(returned).or_else(|| selection.provenance.match_site(site)).or_else(|| matches!(site.target, crate::codebase::dependencies::graph::ResolvedCallTarget::RepositoryFunction { .. }).then(|| site.target_node.as_ref().and_then(|node| target_nodes.get(node).copied())).flatten()) else { continue; };
-            if !matched_offsets.insert(site.offset) {
-                continue;
-            }
-            call_sites.push(EffectCallSite {
-                file: relative_path.clone(),
-                line: site.line as usize,
-                callee: target.export.clone(),
-                category: target.category.clone(),
-                caller: callers
-                    .get(&site.offset)
-                    .and_then(|caller| (*caller).clone()),
-                depth: *depth,
-            });
+        }
+        for mut site in matches.into_values() {
+            site.normalize_matches();
+            call_sites.push(site);
         }
     }
     call_sites.sort();
     let mut by_category: BTreeMap<String, usize> = BTreeMap::new();
     for site in &call_sites {
-        let label = site
-            .category
-            .clone()
-            .unwrap_or_else(|| "uncategorized".to_string());
-        *by_category.entry(label).or_insert(0) += 1;
+        site.count_categories(&mut by_category);
     }
     Ok(EffectsReport {
         kind: selection.kind.clone(),

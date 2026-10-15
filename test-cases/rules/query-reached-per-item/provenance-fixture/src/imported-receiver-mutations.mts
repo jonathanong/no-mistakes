@@ -1,4 +1,4 @@
-import { primary, session, primary as capturedPrimary, primary as nestedPrimary, primary as dynamicPrimary, primary as mergedPrimary } from '@vendor/valkey';
+import { primary, session, primary as capturedPrimary, primary as nestedPrimary, primary as dynamicPrimary, primary as mergedPrimary } from '@vendor/valkey-imported-receiver-mutations';
 const items = ['one'];
 const before = { client: primary };
 const copied = primary.get;

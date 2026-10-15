@@ -10,6 +10,9 @@ impl ValueFlowResolution<'_, '_> {
         context: Option<CallableId>,
         projection: Option<&member_projection::MemberProjection<'_>>,
     ) -> FlowValue {
+        if let Some(value) = self.replacement_value(path, name, scope, offset, context) {
+            return value;
+        }
         let source_offset = offset;
         let source_context = context;
         // Runtime body reads and supplied acquisition are distinct; the
@@ -66,51 +69,7 @@ impl ValueFlowResolution<'_, '_> {
                 self.visiting.remove(&key);
                 return FlowValue::Unknown;
             };
-            let imported_value = self
-                .resolver
-                .resolve(&binding.specifier, path)
-                .and_then(|target| {
-                    self.inputs
-                        .graph_files
-                        .visible_path(&target)
-                        .map(std::path::Path::to_path_buf)
-                })
-                .map(|target| {
-                    resolve_exported_callable(
-                        self.inputs,
-                        self.facts,
-                        self.resolver,
-                        &target,
-                        &binding.imported,
-                        self.indexes,
-                        &mut Vec::new(),
-                    )
-                });
-            match imported_value {
-                Some(ExportedCallableResolution::Value(target, local)) => {
-                    let value = self.named(&target, &local, Some(0), u32::MAX, None, None);
-                    value.map_executor(|value| match value {
-                        FlowValue::Callable {
-                            file: target,
-                            scope,
-                            id,
-                        } => FlowValue::Target(
-                            module_export_target(&file, base, Some((target, scope)), Some(id))
-                                .expect("import binding"),
-                        ),
-                        FlowValue::Returned { factory, executor, .. } => {
-                            let receiver = match self.imported_value(&file, base) { FlowValue::Target(target) => Some(target), _ => None };
-                            FlowValue::Returned { factory, executor, receiver }
-                        },
-                        value @ (FlowValue::Promise(_) | FlowValue::Bound { .. } | FlowValue::Uncallable) => value,
-                        _ => self.imported_value(&file, base),
-                    })
-                }
-                Some(ExportedCallableResolution::Callable(target, scope, id)) => FlowValue::Target(module_export_target(&file, base, Some((target, scope)), id).expect("import binding")),
-                Some(ExportedCallableResolution::ExternalModuleExport(specifier, export_path)) => FlowValue::Target(ResolvedCallTarget::ModuleExport { specifier, export_path, repository_target: None, callable_id: None }),
-                Some(ExportedCallableResolution::Unknown | ExportedCallableResolution::Absent) if binding.kind != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace => FlowValue::Unknown,
-                _ => self.imported_value(&file, base),
-            }
+            self.imported_named_value(path, &file, base, binding)
         } else {
             FlowValue::Unknown
         };
@@ -130,59 +89,35 @@ impl ValueFlowResolution<'_, '_> {
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, (offset, context, repeated));
         }
-        if let Some(read) = &self.invocation_read {
-            if let Some(history) = file
-                .values
-                .receiver_mutations
-                .as_ref()
-                .and_then(|histories| histories.get(&scope))
-                .and_then(|names| names.get(base))
-            {
-                let mut read = read.clone();
-                // Acquisition offsets only order a history in the same file.
-                if read.file == path {
-                    read.offset = offset;
-                    read.repeated = repeated;
-                }
-                let origin = self.cache.origin_node(
-                    OriginKind::InvocationReceiver {
-                        read,
-                        history_file: path.to_path_buf(),
-                        history: std::sync::Arc::clone(history),
-                    },
-                    1,
-                );
-                default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
-            }
+        let owned_invocation = self
+            .invocation_read
+            .as_ref()
+            .is_some_and(|read| read.owner.0 == path && source_context == Some(read.owner.1));
+        if owned_invocation {
+            self.record_invocation_receiver_origin(path, &file, scope, base, (offset, repeated));
         }
         // A member initializer has already checked its source at acquisition.
         // Reading descendants still validates the live receiver projection.
         let acquired_member = Self::acquired_binding_member(binding, member, projection);
         let value = if !acquired_member
-            && self.default_origin_invalidated(path, offset, context, projection)
+            && self.default_origin_invalidated(path, offset, (context, source_context), projection)
         {
             FlowValue::Unknown
         } else {
             value
         };
+        // Supplied live receivers acquire an escape guard after source
+        // validation. Copied methods keep their independent acquisition phase.
+        if !owned_invocation
+            && member.is_none()
+            && projection.is_none()
+            && scope == 0
+            && file.imported.contains_key(base)
+        {
+            self.record_invocation_receiver_origin(path, &file, scope, base, (offset, repeated));
+        }
         member.map_or(value.clone(), |member| {
             self.member_at(value, member, path, Some((offset, context)))
         })
-    }
-    fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
-        if let Some(binding) = file.imported.get(base).filter(|binding| {
-            binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
-        }) {
-            FlowValue::Target(ResolvedCallTarget::ModuleExport {
-                specifier: binding.specifier.clone(),
-                export_path: String::new(),
-                repository_target: None,
-                callable_id: None,
-            })
-        } else {
-            FlowValue::Target(
-                module_export_target(file, base, None, None).unwrap_or(ResolvedCallTarget::Unknown),
-            )
-        }
     }
 }

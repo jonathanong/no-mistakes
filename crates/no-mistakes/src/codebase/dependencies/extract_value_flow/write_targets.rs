@@ -86,7 +86,7 @@ fn expression_path(expression: &Expression<'_>) -> Option<(String, ValueMutation
         _ => None,
     }
 }
-pub(super) fn static_key(expression: &Expression<'_>) -> Option<String> {
+pub(in super::super) fn static_key(expression: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::NumericLiteral(literal) => Some(literal.value.to_string()),

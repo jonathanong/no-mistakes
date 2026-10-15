@@ -2,6 +2,10 @@ use super::*;
 use mutation_history::{ValueAssignedMutation, ValueAssignedWriter, ValueMutationHistory};
 
 impl ValueAssignedMutation {
+    /// A single module/callable writer, or no unique writer for mixed writes.
+    pub(in crate::codebase::dependencies) fn single_context(&self) -> Option<Option<CallableId>> {
+        (self.writer != ValueAssignedWriter::Mixed).then(|| self.writer.context())
+    }
     pub(super) fn merge(&mut self, source: Self) {
         self.offset = self.offset.min(source.offset);
         self.unconditional_offset = self

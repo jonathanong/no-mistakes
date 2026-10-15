@@ -1,4 +1,4 @@
-import { primary, session } from '@vendor/valkey';
+import { primary, session } from '@vendor/valkey-destructured-parameters';
 const items = ['one'];
 function object({ client }) { client.get('key'); }
 for (const item of items) { object({ client: primary, unused: item }); }

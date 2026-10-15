@@ -1,6 +1,29 @@
 use super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValueExpression {
+    Named {
+        name: String,
+        scope: Option<usize>,
+        offset: u32,
+        context: Option<CallableId>,
+    },
+    Call(u32, u32),
+    Awaited(std::sync::Arc<ValueExpression>),
+    Callable(CallableId),
+    Super(CallableId),
+    Member(std::sync::Arc<ValueExpression>, String),
+    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>, bool),
+    Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
+    Undefined,
+    Default(
+        std::sync::Arc<ValueExpression>,
+        std::sync::Arc<ValueExpression>,
+    ),
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueBinding {
     /// Declaring callable; distinct from a nested closure reading this binding.
     pub owner: Option<CallableId>,

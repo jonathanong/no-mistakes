@@ -90,7 +90,7 @@ impl ImportCollector {
                 self.exported_functions.insert(scope.clone());
             }
             self.function_stack.push(scope);
-            self.function_id_stack.push(id);
+            self.function_id_stack.push((id, false));
             self.var_scope_stack.push(self.local_stack.len());
             self.local_stack.push(fx_set());
             let lexical_scope_id = self.next_lexical_scope_id;
@@ -148,7 +148,7 @@ impl ImportCollector {
             static_cwd: None,
         });
         self.function_stack.push(scope);
-        self.function_id_stack.push(id);
+        self.function_id_stack.push((id, false));
         self.var_scope_stack.push(self.local_stack.len());
         self.local_stack.push(fx_set());
         let lexical_scope_id = self.next_lexical_scope_id;
@@ -177,7 +177,7 @@ impl ImportCollector {
     }
 
     fn current_function_id(&self) -> Option<CallableId> {
-        self.function_id_stack.last().copied()
+        self.function_id_stack.last().map(|(id, _)| *id)
     }
 
     fn callable_binding_id(&self, name: &str) -> Option<CallableId> {

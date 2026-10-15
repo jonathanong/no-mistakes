@@ -199,3 +199,10 @@ See the full documentation in [docs/](../../docs/README.md), the
 [CLI command index](../../docs/cli/README.md), and the
 [Node/N-API guide](../../docs/node-api.md). Agents can use the compact
 [packaged skill](../../skills/no-mistakes/SKILL.md).
+
+The async `effects()` report keeps one row per physical call occurrence. Multiple
+configured callable/category matches appear in optional `alternatives` using the
+exported `EffectCallAlternative` type; singleton rows omit it. Category filters
+project candidates before scalar selection and category counts. One occurrence
+counts once per matched category, so category totals can exceed row count. See
+[effect query details](../../docs/cli/effects.md).
