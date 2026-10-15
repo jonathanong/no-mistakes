@@ -18,7 +18,11 @@ impl ImportCollector {
                 {
                     let binding = &mut self.value_flow.bindings[*index];
                     binding.mutation_contexts.insert(metadata.context);
-                    mark_invalidated(&mut binding.invalidated_at, metadata.offset);
+                    let _stored = mark_invalidated(&mut binding.invalidated_at, metadata.offset);
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        self.value_flow.reference_invalidation_stores += usize::from(_stored);
+                    }
                 }
                 for index in self
                     .value_parameter_indexes
@@ -29,7 +33,11 @@ impl ImportCollector {
                 {
                     let parameter = &mut self.value_flow.parameters[*index];
                     parameter.mutation_contexts.insert(metadata.context);
-                    mark_invalidated(&mut parameter.invalidated_at, metadata.offset);
+                    let _stored = mark_invalidated(&mut parameter.invalidated_at, metadata.offset);
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        self.value_flow.reference_invalidation_stores += usize::from(_stored);
+                    }
                 }
             }
         }
@@ -45,7 +53,11 @@ impl ImportCollector {
                     .get(&alias.binding_scope)
                     .is_some_and(|names| names.contains(head))
             {
-                mark_invalidated(&mut alias.invalidated_at, metadata.offset);
+                let _stored = mark_invalidated(&mut alias.invalidated_at, metadata.offset);
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    self.value_flow.reference_invalidation_stores += usize::from(_stored);
+                }
                 invalidated.push((alias.binding_scope, alias.local.clone()));
             }
         }
@@ -55,7 +67,15 @@ impl ImportCollector {
     }
 }
 
-fn mark_invalidated(previous: &mut Option<u32>, offset: u32) {
+fn mark_invalidated(previous: &mut Option<u32>, offset: u32) -> bool {
     // Deferred projections can arrive after a physically later source write.
-    *previous = Some(previous.map_or(offset, |previous| previous.min(offset)));
+    if previous.is_some_and(|previous| previous <= offset) {
+        return false;
+    }
+    *previous = Some(offset);
+    true
 }
+
+#[cfg(test)]
+#[path = "mutation_invalidation_tests.rs"]
+mod tests;

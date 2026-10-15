@@ -129,6 +129,9 @@ fn late_defaults_share_one_indexed_mutation_history() {
         true,
     );
     assert_eq!(facts.value_flow.parameters.len(), 512);
+    // Later writes retain the same earliest offset instead of rewriting every alias.
+    #[cfg(feature = "test-instrumentation")]
+    assert_eq!(facts.value_flow.reference_invalidation_stores, 512);
     // Direct aliases have no projected value; eligibility must not cause a second scan.
     #[cfg(feature = "test-instrumentation")]
     assert_eq!(facts.value_flow.reference_binding_visits, 256 * 512);
