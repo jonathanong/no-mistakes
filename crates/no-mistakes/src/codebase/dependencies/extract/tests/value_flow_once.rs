@@ -9,7 +9,7 @@ fn synthetic_default_owner_is_distinct_from_nested_runtime_callables() {
     let source = std::fs::read_to_string(fixture).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.errors.is_empty());
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program,
         &source,

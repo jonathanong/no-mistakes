@@ -49,3 +49,19 @@ was run because the shared environment had about 1.7 GB free. Full remote semant
 tests, actual compiled-addon parity, quality and coverage gates, external Codecov
 statuses, performance review, and current-head review remain pending. The PR
 stays draft until those gates pass. No performance improvement or merge is claimed.
+
+## First draft CI correction
+
+The first draft at `b1c7226` failed Rust test compilation and lint checks because the
+new extraction assertion used `ParserReturn.errors`; this parser exposes
+`diagnostics`. The correction uses the neighboring test convention. No analyzer
+source changes are included in this correction.
+
+Inspection also found that the existing inline-owned-member parity script was
+omitted from CI's explicit compiled-addon invocation. The ordinary JavaScript
+run skips its native tests. This PR now requires the script from the real N-API
+test entrypoint, executed with the actual addon environment variable set on
+Linux, macOS, and Windows. Both tests assert a CJS
+promise, await CJS and ESM results, and compare all expected call-site counts.
+Prior #2014's manual compiled-addon reproduction does not establish that CI ran
+this previously omitted script. Fresh executed native results remain pending.
