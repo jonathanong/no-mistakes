@@ -31,7 +31,10 @@ impl ReplacementPayloads {
             .enumerate()
             .map(|(write_index, write)| {
                 flow.default_origins = None;
-                let admissible = write.unconditional
+                // A computed key may update another property. It supplies no
+                // definite member value, either as a prefix or an entry tail.
+                let admissible = write.property.is_some()
+                    && write.unconditional
                     && stable_leaf(file, &write.value, 0)
                     && !unstable_rhs(file, &write.value, receivers, index, foreign, path, 0);
                 let leaf = if admissible {

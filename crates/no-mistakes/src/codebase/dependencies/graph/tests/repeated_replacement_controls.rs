@@ -1,9 +1,11 @@
 use super::*;
 
 fn controls_graph() -> (PathBuf, DepGraph) {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
-        "value-flow-repeated-replacement-controls",
-    ));
+    replacement_graph("value-flow-repeated-replacement-controls")
+}
+
+fn replacement_graph(name: &str) -> (PathBuf, DepGraph) {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: vec![],
@@ -104,6 +106,80 @@ fn parameter_rhs_does_not_turn_parameter_agreement_into_a_stable_replacement_lea
     assert_targets(
         physical_site(&graph, &root, "parameter-rhs", "parameterDest.set"),
         &["parameterDest.set"],
+        false,
+    );
+}
+
+#[test]
+fn dynamic_member_writes_do_not_supply_definite_prefix_or_entry_targets() {
+    let (root, graph) = replacement_graph("value-flow-replacement-uncertain-execution");
+    for callee in ["dynamicMatch.get", "dynamicOther.get"] {
+        assert_targets(
+            physical_site(&graph, &root, "dynamic-prefix", callee),
+            &[],
+            true,
+        );
+    }
+    assert_targets(
+        physical_site(&graph, &root, "dynamic-prefix", "entryReceiver.get"),
+        &["entryReceiver.get"],
+        true,
+    );
+    for callee in ["beforeDynamic.get", "restoredReceiver.get"] {
+        assert_targets(
+            physical_site(&graph, &root, "dynamic-prefix", callee),
+            &["first"],
+            false,
+        );
+    }
+}
+
+#[test]
+fn executable_accessors_decline_only_the_relevant_new_repeat_proof() {
+    let (root, graph) = replacement_graph("value-flow-replacement-uncertain-execution");
+    #[cfg(feature = "test-instrumentation")]
+    {
+        let probe = benchmark_probe_replacements();
+        let writes: Vec<_> = probe
+            .rhs
+            .iter()
+            .filter(|row| row.file.ends_with("static-getter.mts"))
+            .collect();
+        // Both entry candidates were prepared from stable exact writes; the
+        // accessor admission, rather than an unsupported RHS, blocks the group.
+        assert_eq!(writes.len(), 2);
+        assert!(writes.iter().all(|row| row.resolved && row.known));
+        assert_eq!(probe.opaque_groups, 1);
+    }
+    for (file, callee, invocation) in [
+        ("static-getter", "Mutator.touch", InvocationKind::Get),
+        ("static-setter", "Setter.touch", InvocationKind::Set),
+    ] {
+        let path = root.join(format!("src/{file}.mts"));
+        let accessor = graph
+            .call_sites_in_file(&path)
+            .iter()
+            .find(|site| site.source_callee == callee && site.invocation == invocation)
+            .unwrap();
+        assert_eq!(accessor.target_nodes().count(), 1, "{accessor:#?}");
+        assert!(!accessor.has_unknown_target());
+        let source = std::fs::read_to_string(path).unwrap();
+        assert_eq!(accessor.offset as usize, source.find(callee).unwrap());
+    }
+    for (file, callee) in [
+        ("static-getter", "getterReceiver.get"),
+        ("static-setter", "setterReceiver.get"),
+    ] {
+        assert_targets(physical_site(&graph, &root, file, callee), &[], true);
+    }
+    assert_targets(
+        physical_site(&graph, &root, "static-getter", "safeReceiver.get"),
+        &["first", "safeReceiver.get"],
+        false,
+    );
+    assert_targets(
+        physical_site(&graph, &root, "static-getter", "getterReceiver.set"),
+        &["getterReceiver.set"],
         false,
     );
 }

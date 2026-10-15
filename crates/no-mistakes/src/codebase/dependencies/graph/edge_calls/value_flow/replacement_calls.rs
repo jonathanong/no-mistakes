@@ -45,7 +45,10 @@ pub(super) fn prepare(
     for site in sites {
         if !matches!(
             site.invocation,
-            InvocationKind::Call | InvocationKind::Construct
+            InvocationKind::Call
+                | InvocationKind::Construct
+                | InvocationKind::Get
+                | InvocationKind::Set
         ) {
             continue;
         }
