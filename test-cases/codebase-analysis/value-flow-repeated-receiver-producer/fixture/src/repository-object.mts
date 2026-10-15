@@ -1,3 +1,3 @@
-import { repositoryObjectSource } from '@vendor/producer';
-// A repository value export remains outside canonical receiver identity support.
-export const objectReceiver = repositoryObjectSource;
+import { repositoryObjectFactory } from '@vendor/producer';
+// A factory-created repository value has no supported canonical receiver identity.
+export const objectReceiver = repositoryObjectFactory();

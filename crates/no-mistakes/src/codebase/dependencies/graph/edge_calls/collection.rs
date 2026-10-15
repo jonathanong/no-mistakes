@@ -161,6 +161,8 @@ fn collect_call_edges_for_core(
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_origins(pass.parameter_cache.origin_nodes());
     #[cfg(feature = "test-instrumentation")]
+    value_flow_metrics::record_execution_steps(pass.parameter_cache.execution_steps());
+    #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_dependency_links(pass.parameter_cache.dependency_links());
     if namespaces_in_repo {
         let mut escapes = NamespaceEscapes::default();

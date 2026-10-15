@@ -520,6 +520,21 @@ known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
 
+Live receivers supplied to helpers are read after argument evaluation. For example,
+`run(primary, primary.get = replacement)` does not retain the original
+`primary.get` target inside `run`. A method copied in an earlier argument,
+`consume(primary.get, primary.get = replacement)`, keeps its acquisition-time
+target. Calls on an assignment's right-hand side still precede that assignment's
+write. This ordering uses the existing request-owned mutation summaries; dynamic
+spreads and uncertain execution remain conservative. Synchronous functions called
+from inline defaults read captured module and enclosing-function bindings at
+invocation, while stored
+initializers keep their acquisition time and local temporal dead zones remain
+unresolved. A supplied nested call still acquires its value before later arguments.
+This timing applies during inline invocation analysis, including lazy fields
+projected by parameter defaults. Later body projections without that invocation
+context retain the existing conservative behavior.
+
 Transparent aliases of default receiver parameters preserve the eventual member
 read. For example, `const alias = client; alias.get()` retains the original
 `get` target after only a sibling `set` write. Matching and dynamic writes still
@@ -527,7 +542,10 @@ invalidate live members. A copied method such as `const get = alias.get` keeps
 its acquisition snapshot; copying a container keeps descendant members live.
 For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
-Calls inside loops, repeatable functions, and instance initializers remain
-unresolved when a later execution could copy a replacement.
+This includes classic `for` initializers and `for-in`/`for-of` right-hand
+expressions, which execute once per loop statement. Tests, updates, bodies,
+per-item bindings, and sloppy-script Annex B initializers remain conservative.
+Setup nested in an outer loop, repeatable function, or instance initializer also
+remains unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.

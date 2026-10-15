@@ -8,6 +8,7 @@ fn default_factory_and_alias_cycles_are_classified_conservatively() {
     );
     assert!(index.factory_value(&fallback, &mut fx_set()));
     let binding = ValueBinding {
+        owner: None,
         name: "cycle".to_string(),
         scope: 0,
         declared_at: 0,

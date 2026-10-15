@@ -13,14 +13,11 @@ impl ValueFlowResolution<'_, '_> {
         if let Some(value) = self.replacement_value(path, name, scope, offset, context) {
             return value;
         }
+        let source_offset = offset;
         let source_context = context;
-        let (offset, context) = self
-            .invocation_read
-            .as_ref()
-            .filter(|read| {
-                read.file == path && read.owner.0 == path && source_context == Some(read.owner.1)
-            })
-            .map_or((offset, context), |read| (read.offset, read.context));
+        // Runtime body reads and supplied acquisition are distinct; the
+        // invocation identity still owns the separate escape guard below.
+        let (offset, context) = self.expression_read(path, offset, context);
         let Some(file) = self.indexes.file(self.facts, path) else {
             return FlowValue::Unknown;
         };
@@ -41,14 +38,22 @@ impl ValueFlowResolution<'_, '_> {
         }
         let binding = scoped_name(&file.values.bindings, scope, base);
         let value = if let Some(binding) = binding {
+            let (available_at, read_at, read_context) = self.binding_read(
+                path,
+                binding.owner,
+                source_offset,
+                source_context,
+                offset,
+                context,
+            );
             if binding
                 .mutation_contexts
                 .iter()
-                .any(|writer| *writer != context)
-                || offset < binding.declared_at
+                .any(|writer| *writer != read_context)
+                || available_at < binding.declared_at
                 || binding
                     .invalidated_at
-                    .is_some_and(|cutoff| offset >= cutoff)
+                    .is_some_and(|cutoff| read_at >= cutoff)
             {
                 FlowValue::Unknown
             } else {
@@ -149,34 +154,16 @@ impl ValueFlowResolution<'_, '_> {
         if scope == 0 && file.imported.contains_key(base) {
             self.record_receiver_origin(path, scope, base, offset, context);
         }
-        if let Some(read) = self
+        let owned_invocation = self
             .invocation_read
             .as_ref()
-            .filter(|read| read.owner.0 == path && source_context == Some(read.owner.1))
-        {
-            if let Some(history) = file
-                .values
-                .receiver_mutations
-                .as_ref()
-                .and_then(|histories| histories.get(&scope))
-                .and_then(|names| names.get(base))
-            {
-                let origin = self.cache.origin_node(
-                    OriginKind::InvocationReceiver {
-                        read: read.clone(),
-                        history_file: path.to_path_buf(),
-                        history: std::sync::Arc::clone(history),
-                    },
-                    1,
-                );
-                default_origins::merge(&mut self.default_origins, Some(origin), self.cache);
-            }
+            .is_some_and(|read| read.owner.0 == path && source_context == Some(read.owner.1));
+        if owned_invocation {
+            self.record_invocation_receiver_origin(path, &file, scope, base, offset);
         }
         // A member initializer has already checked its source at acquisition.
         // Reading descendants still validates the live receiver projection.
-        let acquired_member = projection.is_none()
-            && member.is_none()
-            && binding.is_some_and(|binding| matches!(binding.value, ValueExpression::Member(..)));
+        let acquired_member = Self::acquired_binding_member(binding, member, projection);
         let value = if !acquired_member
             && self.default_origin_invalidated(path, offset, (context, source_context), projection)
         {
@@ -184,24 +171,18 @@ impl ValueFlowResolution<'_, '_> {
         } else {
             value
         };
+        // Supplied live receivers acquire an escape guard after source
+        // validation. Copied methods keep their independent acquisition phase.
+        if !owned_invocation
+            && member.is_none()
+            && projection.is_none()
+            && scope == 0
+            && file.imported.contains_key(base)
+        {
+            self.record_invocation_receiver_origin(path, &file, scope, base, offset);
+        }
         member.map_or(value.clone(), |member| {
             self.member_at(value, member, path, Some((offset, context)))
         })
-    }
-    fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
-        if let Some(binding) = file.imported.get(base).filter(|binding| {
-            binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
-        }) {
-            FlowValue::Target(ResolvedCallTarget::ModuleExport {
-                specifier: binding.specifier.clone(),
-                export_path: String::new(),
-                repository_target: None,
-                callable_id: None,
-            })
-        } else {
-            FlowValue::Target(
-                module_export_target(file, base, None, None).unwrap_or(ResolvedCallTarget::Unknown),
-            )
-        }
     }
 }

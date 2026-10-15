@@ -175,3 +175,40 @@ fn mixed_member_reads_share_the_same_two_bootstrap_agreements() {
         }
     }
 }
+
+#[test]
+fn loop_setup_preserves_once_without_promoting_repeated_positions() {
+    let (root, graph) = graph("inline-member-precision");
+    for (name, expected) in [
+        ("loop-setup-annex.cjs", 0),
+        ("loop-setup-async.mts", 0),
+        ("loop-setup-for-declaration.mts", 1),
+        ("loop-setup-for-expression.mts", 1),
+        ("loop-setup-for-update.mts", 0),
+        ("loop-setup-function.mts", 0),
+        ("loop-setup-in-body.mts", 0),
+        ("loop-setup-in-default.mts", 0),
+        ("loop-setup-in-rhs.mts", 1),
+        ("loop-setup-in-target.mts", 0),
+        ("loop-setup-nested-for.mts", 0),
+        ("loop-setup-nested-in.mts", 0),
+        ("loop-setup-nested-of.mts", 0),
+        ("loop-setup-of-body.mts", 0),
+        ("loop-setup-of-default.mts", 0),
+        ("loop-setup-of-rhs.mts", 1),
+        ("loop-setup-of-target.mts", 0),
+    ] {
+        let sites = graph.call_sites_in_file(&root.join(format!("src/{name}")));
+        let reads = sites
+            .iter()
+            .filter(|site| site.source_callee == "get")
+            .collect::<Vec<_>>();
+        // Synthetic ownership projections may expose the same physical call twice.
+        assert!(!reads.is_empty(), "{name}: {sites:?}");
+        for site in reads {
+            let resolved = matches!(&site.target,
+                ResolvedCallTarget::ModuleExport { export_path, .. } if export_path == "primary.get");
+            assert_eq!(usize::from(resolved), expected, "{name}: {site:?}");
+        }
+    }
+}

@@ -231,3 +231,6 @@ pub use value_flow_metrics::{
     ReplacementPhysicalProbe, ReplacementProbeSnapshot, ReplacementRhsProbe,
     ReplacementSourceCallProbe,
 };
+
+#[cfg(feature = "test-instrumentation")]
+pub use value_flow_metrics::execution_steps as benchmark_probe_execution_phase_steps;

@@ -9,10 +9,14 @@ impl ValueFlowResolution<'_, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> Option<(u32, Option<CallableId>)> {
-        if let Some(read) = self.invocation_read.as_ref().filter(|read| {
-            read.file == path && read.owner.0 == path && context == Some(read.owner.1)
+        if self.invocation_read.as_ref().is_some_and(|read| {
+            read.file == path
+                && ((read.owner.0 == path && context == Some(read.owner.1))
+                    || self
+                        .executing_read
+                        .is_some_and(|(owner, _, _)| context == Some(owner)))
         }) {
-            return Some((read.offset, read.context));
+            return Some(self.expression_read(path, offset, context));
         }
         if let (Some(owner), Some(catalog), Some(root)) = (
             context,

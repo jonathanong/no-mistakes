@@ -47,6 +47,7 @@ impl ValueFlowResolution<'_, '_> {
                     default_origins: None,
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
+                    executing_read: None,
                     member_read: None,
                 };
                 flow.visiting

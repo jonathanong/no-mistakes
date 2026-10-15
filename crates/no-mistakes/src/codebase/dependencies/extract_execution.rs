@@ -35,7 +35,7 @@ fn with_repeat_execution<T>(
     statement: &T,
     visit: impl FnOnce(&mut ImportCollector, &T),
 ) {
-    // Include loop headers: tests and updates can invoke the same call again.
+    // Repeated child positions retain all enclosing execution guards.
     collector.repeat_depth += 1;
     visit(collector, statement);
     collector.repeat_depth -= 1;

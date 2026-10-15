@@ -81,6 +81,7 @@ struct ValueFlowResolution<'a, 'b> {
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
     invocation_read: Option<default_origins::InvocationRead>,
+    executing_read: Option<(CallableId, u32, Option<CallableId>)>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
@@ -174,3 +175,9 @@ mod replacement_catalog;
 
 #[path = "value_flow/replacement_values.rs"]
 mod replacement_values;
+
+#[path = "value_flow/binding_reads.rs"]
+mod binding_reads;
+
+#[path = "value_flow/execution_phases.rs"]
+mod execution_phases;

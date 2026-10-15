@@ -109,6 +109,7 @@ impl ReplacementCatalog {
             default_origins: None,
             acquisition_context: None,
             invocation_read: None,
+            executing_read: None,
             member_read: None,
         };
         for (path, file, receivers, repeated_owners, writes) in prepared {

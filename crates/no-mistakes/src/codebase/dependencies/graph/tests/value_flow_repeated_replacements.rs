@@ -174,11 +174,7 @@ fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
             "closedOnceReceiver.set",
             "closedOnceReceiver.set",
         ),
-        (
-            "repository",
-            "objectReceiver.set",
-            "repositoryObjectSource.set",
-        ),
+        ("repository", "objectReceiver.set", "objectReceiver.set"),
     ] {
         assert_eq!(
             producer_selectors(producer_site(&graph, &root, file, callee)),
@@ -186,7 +182,7 @@ fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
         );
     }
     let saved = producer_site(&graph, &root, "repository", "savedObject");
-    assert_eq!(producer_selectors(saved), ["repositoryObjectSource.get"]);
+    assert_eq!(producer_selectors(saved), ["objectReceiver.get"]);
     assert!(!saved.has_unknown_target());
 }
 

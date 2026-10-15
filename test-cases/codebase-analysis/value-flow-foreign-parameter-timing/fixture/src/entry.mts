@@ -22,7 +22,8 @@ function copyDefault(client = defaultReceiver, get = client.get) {
 }
 const defaultSaved = copyDefault();
 defaultSaved('outside');
-lexicalEarly.get = rhs.get;
+// An unsupported repeated writer prevents a stable entry snapshot.
+while (active) { lexicalEarly.get = rhs.get; }
 for (const item of ['a', 'b']) {
   lexical.info(item);
   lexicalEarly.get(item);

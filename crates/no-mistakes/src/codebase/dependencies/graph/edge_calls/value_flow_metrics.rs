@@ -1,4 +1,5 @@
 thread_local! {
+    static LAST_EXECUTION_STEPS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static LAST_DEPENDENCIES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static LAST_ORIGINS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static LAST_PARAMETERS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -36,3 +37,10 @@ pub fn dependency_links() -> usize {
 mod replacements;
 pub use replacements::*;
 pub(super) use replacements::{record_replacements, ReplacementLookupProbe};
+
+pub(super) fn record_execution_steps(count: usize) {
+    LAST_EXECUTION_STEPS.set(count);
+}
+pub fn execution_steps() -> usize {
+    LAST_EXECUTION_STEPS.get()
+}

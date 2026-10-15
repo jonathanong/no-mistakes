@@ -20,6 +20,7 @@ impl ImportCollector {
             .push(self.value_flow.bindings.len());
         self.record_value_reference(0, "default", &value);
         self.value_flow.bindings.push(ValueBinding {
+            owner: None,
             name: "default".to_string(),
             scope: 0,
             declared_at: export.span.start,

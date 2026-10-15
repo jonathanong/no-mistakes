@@ -89,4 +89,39 @@ impl ValueFlowResolution<'_, '_> {
                     })
             })
     }
+    pub(super) fn record_invocation_receiver_origin(
+        &mut self,
+        path: &std::path::Path,
+        file: &CallableFileIndex,
+        scope: usize,
+        base: &str,
+        offset: u32,
+    ) {
+        let Some(read) = &self.invocation_read else {
+            return;
+        };
+        let Some(history) = file
+            .values
+            .receiver_mutations
+            .as_ref()
+            .and_then(|histories| histories.get(&scope))
+            .and_then(|names| names.get(base))
+        else {
+            return;
+        };
+        let mut read = read.clone();
+        // Acquisition offsets only order a history in the same file.
+        if read.file == path {
+            read.offset = offset;
+        }
+        let origin = self.cache.origin_node(
+            OriginKind::InvocationReceiver {
+                read,
+                history_file: path.to_path_buf(),
+                history: std::sync::Arc::clone(history),
+            },
+            1,
+        );
+        merge(&mut self.default_origins, Some(origin), self.cache);
+    }
 }
