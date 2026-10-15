@@ -3,6 +3,8 @@ use super::*;
 #[path = "affected_receivers.rs"]
 mod affected;
 pub(super) use affected::Affected;
+#[path = "mutation_eligibility.rs"]
+mod eligibility;
 pub(super) type PendingMutation<R = nested::RootRead> =
     (nested::ReceiverWrite<R>, bool, bool, bool);
 #[derive(Clone, Copy)]
@@ -40,13 +42,7 @@ impl ImportCollector {
                 if root_read.read().is_some() && traversal.exit_single_version(&key) {
                     continue;
                 }
-                let version = root_read.read().and_then(|read| {
-                    #[cfg(feature = "test-instrumentation")]
-                    {
-                        self.value_flow.reference_root_probes += 1;
-                    }
-                    self.mutable_receiver_version(&key, read)
-                });
+                let version = self.projected_root_version(&key, root_read);
                 traversal.exit(&key, version);
                 continue;
             }
@@ -80,13 +76,7 @@ impl ImportCollector {
                 affected.insert(key.0, &key.1);
                 continue;
             }
-            let version = root_read.read().and_then(|read| {
-                #[cfg(feature = "test-instrumentation")]
-                {
-                    self.value_flow.reference_root_probes += 1;
-                }
-                self.mutable_receiver_version(&key, read)
-            });
+            let version = self.projected_root_version(&key, root_read);
             #[cfg(feature = "test-instrumentation")]
             {
                 self.value_flow.reference_successor_bookkeeping += 1;
@@ -153,21 +143,12 @@ impl ImportCollector {
             });
             // Direct component aliases have no value projection. Keep their
             // canonical proof lookup cold, as in the original traversal.
-            let first_projected = self
-                .value_binding_indexes
-                .get(&key.0)
-                .and_then(|names| names.get(key.1.as_str()))
-                .into_iter()
-                .flatten()
-                .position(|index| {
-                    #[cfg(feature = "test-instrumentation")]
-                    {
-                        binding_visits += 1;
-                    }
-                    let value = &self.value_flow.bindings[*index].value;
-                    !matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
-                        || (root_read.read().is_some() && self.references_mutable_receiver(value))
-                });
+            let first_projected = self.first_projected_receiver(
+                &key,
+                root_read.read().is_some(),
+                #[cfg(feature = "test-instrumentation")]
+                &mut binding_visits,
+            );
             let projects = version.is_some() || first_projected.is_some();
             let replaced = projects && self.mutation_reference_replaced(&key, &path, &reads, info);
             // The eligibility prefix contains only direct aliases. They have
@@ -177,9 +158,8 @@ impl ImportCollector {
                     .value_binding_indexes
                     .get(&key.0)
                     .and_then(|names| names.get(key.1.as_str()))
-                    .into_iter()
-                    .flatten()
-                    .skip(first)
+                    .map_or(&[][..], Vec::as_slice)[first..]
+                    .iter()
                     .map(|index| {
                         #[cfg(feature = "test-instrumentation")]
                         {
