@@ -1,0 +1,85 @@
+{
+  "scope": "exact public UTF-8 files; manifest excludes itself",
+  "files": [
+    {
+      "path": "opt0-assessment.json",
+      "bytes": 1273,
+      "sha256": "e30cd940782ab8535c819e60fb13244ab12f39090b883f98beaae433841bc313"
+    },
+    {
+      "path": "opt0-baseline-manifest.json",
+      "bytes": 1223,
+      "sha256": "9a8ef29a86434971189d57795aa54b2d50f17fb5244ff1435d2366183f61188e"
+    },
+    {
+      "path": "opt0-candidate-manifest.json",
+      "bytes": 1224,
+      "sha256": "22c2b7875cabb7512b7e05702ebb2b2409a17476ff802b1af75c8861af2b88b1"
+    },
+    {
+      "path": "opt0-long-rows.json",
+      "bytes": 40839,
+      "sha256": "045e7eab1908ebf6432b372855309df425c7e39205c67d249db95063f329b439"
+    },
+    {
+      "path": "opt0-original100-rows.json",
+      "bytes": 41028,
+      "sha256": "81454f75fcfee88105c35d0d60f122a7451d8db136af67450fa66ee8dcb0e938"
+    },
+    {
+      "path": "opt0-pilot-rows.json",
+      "bytes": 10249,
+      "sha256": "50b2cdfa9b310e24e301dd0dd11a0d40e548aa25a36fd5c4a2dcfda6896e2dba"
+    },
+    {
+      "path": "opt0-sample-resources.json",
+      "bytes": 415,
+      "sha256": "858a6833958227a1a5c3700f2e76544f2eea986dc1ca1111409be4a9c73ea99b"
+    },
+    {
+      "path": "opt3-assessment.json",
+      "bytes": 1345,
+      "sha256": "23547d5eecb24c434523c2661ef89fe866368dc74ddf93c68d550f4adb6ff173"
+    },
+    {
+      "path": "opt3-baseline-manifest.json",
+      "bytes": 1270,
+      "sha256": "3667a35127e8fe12270f4f343a4ba93909557d91c71c4e1680bfdbd2df998cbd"
+    },
+    {
+      "path": "opt3-candidate-manifest.json",
+      "bytes": 1271,
+      "sha256": "bba6fa4d4a75cb4e3a9b034ffad0dd127dc7e9da052c3851ee4c66183e0a48f7"
+    },
+    {
+      "path": "opt3-long-rows.json",
+      "bytes": 41079,
+      "sha256": "a2d9396d0f7da0b374e93289f313ae4e6d01e4c2a55e7ed2459223a0e4e36fa2"
+    },
+    {
+      "path": "opt3-original100-rows.json",
+      "bytes": 41339,
+      "sha256": "1635cd7778e430e34fa72de9803a252bc7eb809f55caada9aed39778e94f0a6b"
+    },
+    {
+      "path": "opt3-pilot-rows.json",
+      "bytes": 10343,
+      "sha256": "52fe8c96e3697288405d64b1a670e5b19aa61eefc642e56c8bc62df55ca7f93e"
+    },
+    {
+      "path": "opt3-sample-resources.json",
+      "bytes": 415,
+      "sha256": "ca71e1d2616ecb348d4a24fa40f6bf90b62afa4a08dc1fad42affb7fd1e6aa90"
+    },
+    {
+      "path": "preflight.json",
+      "bytes": 1239,
+      "sha256": "63820d3665bc94f31c95718f28b12c1a5e2a0ed3fc709392b5eb28fe1d7fd269"
+    },
+    {
+      "path": "summary.md",
+      "bytes": 2123,
+      "sha256": "dd18626a8a5ca8fc8eb4032d8c7041b8b8623e8a7aed6f682472856acdffc2ae"
+    }
+  ]
+}
