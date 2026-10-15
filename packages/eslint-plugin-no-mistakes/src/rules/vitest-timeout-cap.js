@@ -4,6 +4,7 @@ const { isFunction, unwrapExpression } = require("./async-ast");
 const { resolveVariable, isReassigned } = require("./async-target-bindings");
 const { ruleSuppression } = require("../rule-suppression");
 const {
+  resetBindingResolver,
   configCall,
   overrideCall,
   recordCall,
@@ -43,6 +44,7 @@ module.exports = rule(
     },
   },
   (context) => {
+    resetBindingResolver(context);
     const option = options(context);
     for (const name of ["defaultMax", "overrideMax"]) {
       if (option[name] !== undefined && (!Number.isFinite(option[name]) || option[name] <= 0))

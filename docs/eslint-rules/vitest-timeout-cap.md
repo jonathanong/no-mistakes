@@ -17,6 +17,9 @@ and spread arguments produce unknown findings under finding policy rather than
 silently dropping the framework call. Ordinary lookalike calls remain outside
 admission. This does not establish cross-file configured deadline/latch closure.
 
+Bindings and callback registrations are isolated to each file, including when
+Oxlint reuses a worker across multiple files.
+
 Very long test and hook timeouts can hide hangs and make CI spend minutes
 waiting on a test that should fail promptly. Keep normal timeouts small, and
 use a specific synchronization signal or test seam when work is legitimately
