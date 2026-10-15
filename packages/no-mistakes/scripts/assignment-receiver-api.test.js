@@ -6,8 +6,8 @@ const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node")
 const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/provenance-fixture");
 const config = join(root, "mutable-receivers.yml");
 const replacementConfig = join(root, "assignment-receivers.yml");
-// Each physical fixture has its own normal CI deadline, including both facades.
-for (const [name, expected] of [
+// Independent fixture queries share each facade's request-scoped analysis.
+const cases = [
   ["retained", ["replica.get"]],
   ["preindex-rebound-parent", ["primary.get"]],
   ["rebound-parent-sibling", ["primary.get"]],
@@ -44,25 +44,42 @@ for (const [name, expected] of [
   ["preindex-conditional", []],
   ["preindex-deep", ["primary.get"]],
   ["preindex-mutable", ["primary.get"]],
-]) {
+];
+const prepared = new Map();
+function preparedEffects(facade) {
+  if (!prepared.has(facade)) {
+    const promise = (async () => {
+      const api = facade === "cjs" ? require("../index.js") : await import("../index.mjs");
+      const pending = api.analyzeProject({
+        root,
+        config,
+        reports: cases.map(([name]) => ({
+          type: "effects",
+          id: name,
+          kind: "valkey",
+          entry: `src/nested-receiver-containers/assignment-rhs-${name}.mts`,
+        })),
+      });
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.equal(report.reports.length, cases.length);
+      return new Map(report.reports.map(({ id, result }) => [id, result]));
+    })();
+    prepared.set(facade, promise);
+  }
+  return prepared.get(facade);
+}
+for (const [name, expected] of cases) {
   test(
     `compiled async CJS and ESM preserve replacement RHS aliases: ${name}`,
     { skip: !compiled },
     async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const options = {
-        root,
-        config,
-        kind: "valkey",
-        entry: `src/nested-receiver-containers/assignment-rhs-${name}.mts`,
-      };
-      const cjsPending = cjs.effects(options);
+      const cjsPending = preparedEffects("cjs");
       assert.ok(cjsPending instanceof Promise);
-      const report = await cjsPending;
-      const esmPending = esm.effects(options);
+      const report = (await cjsPending).get(name);
+      const esmPending = preparedEffects("esm");
       assert.ok(esmPending instanceof Promise);
-      assert.deepEqual(await esmPending, report, name);
+      assert.deepEqual((await esmPending).get(name), report, name);
       assert.deepEqual(report.callSites.map((site) => site.callee).sort(), expected, name);
     },
   );
