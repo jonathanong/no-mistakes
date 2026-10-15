@@ -47,6 +47,7 @@ struct ImportCollector {
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
+    receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
     destructuring_phase_owner: Option<Option<CallableId>>,
     destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,

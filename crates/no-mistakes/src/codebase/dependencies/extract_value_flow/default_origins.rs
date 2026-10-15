@@ -79,6 +79,10 @@ impl ImportCollector {
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {
         #[cfg(feature = "test-instrumentation")]
+        if let Some(origins) = &self.receiver_only_bindings {
+            origins.record_counts(&mut self.value_flow);
+        }
+        #[cfg(feature = "test-instrumentation")]
         self.fresh_receiver_effects
             .record_counts(&mut self.value_flow);
         let Some(index) = self.parameter_default_origins.take() else {

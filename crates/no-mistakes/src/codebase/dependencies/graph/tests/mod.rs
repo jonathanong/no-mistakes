@@ -148,3 +148,6 @@ mod receiver_evaluation_order;
 #[path = "module_scope_receiver_reads.rs"]
 mod module_scope_receiver_reads;
 mod unique_execution_phases;
+
+#[path = "mutable_receiver_bindings.rs"]
+mod mutable_receiver_bindings;

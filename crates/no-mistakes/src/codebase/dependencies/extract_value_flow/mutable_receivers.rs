@@ -1,0 +1,114 @@
+use super::*;
+
+impl ImportCollector {
+    pub(super) fn record_mutable_receiver_binding(
+        &mut self,
+        pattern: &BindingPattern<'_>,
+        value: ValueExpression,
+        completed_at: u32,
+    ) {
+        let BindingPattern::BindingIdentifier(identifier) = pattern else {
+            return;
+        };
+        if !matches!(
+            value,
+            ValueExpression::Object(..) | ValueExpression::Array(..)
+        ) {
+            return;
+        }
+        let name = identifier.name.as_str();
+        let scope = self
+            .callee_binding_scope(name)
+            .unwrap_or(self.current_lexical_scope_id());
+        self.retain_receiver_origin(scope, name, value, completed_at, true);
+    }
+
+    pub(in super::super) fn record_mutable_receiver_assignment(
+        &mut self,
+        assignment: &AssignmentExpression<'_>,
+    ) {
+        if self.receiver_only_bindings.is_none() {
+            return;
+        }
+        let AssignmentTarget::AssignmentTargetIdentifier(identifier) = &assignment.left else {
+            return;
+        };
+        let name = identifier.name.as_str();
+        let Some(scope) = self.callee_binding_scope(name) else {
+            return;
+        };
+        if self.has_mutable_receiver_binding(scope, name) {
+            // Root rebinding never turns a mutable variable into ordinary value
+            // provenance. Retain possible receivers for saved aliases as well.
+            let value = self.value_expression(&assignment.right);
+            self.retain_receiver_origin(
+                scope,
+                name,
+                value,
+                assignment.span.end,
+                !assignment.operator.is_logical(),
+            );
+        }
+    }
+
+    pub(in super::super) fn has_mutable_receiver_binding(&self, scope: usize, name: &str) -> bool {
+        self.receiver_only_bindings
+            .as_ref()
+            .is_some_and(|origins| origins.contains(scope, name))
+    }
+
+    pub(super) fn references_mutable_receiver(&self, value: &ValueExpression) -> bool {
+        matches!(value, ValueExpression::Named { name, scope, .. }
+            if !name.contains('.') && self.has_mutable_receiver_binding(scope.unwrap_or(0), name))
+    }
+
+    pub(super) fn mutable_receiver_version(
+        &self,
+        key: &(usize, String),
+        read: nested::RootRead,
+    ) -> Option<mutable_origins::RootVersion> {
+        self.receiver_only_bindings
+            .as_ref()
+            .and_then(|origins| origins.version(key, read))
+    }
+
+    pub(super) fn append_mutable_receiver_references(
+        &self,
+        key: &(usize, String),
+        coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
+        output: &mut Vec<nested::ReceiverWrite>,
+    ) {
+        if let Some(origins) = &self.receiver_only_bindings {
+            if origins.contains(key.0, &key.1)
+                && !self.reference_path_may_be_replaced(key, coordinates.0, coordinates.1)
+            {
+                origins.append_references(key, coordinates, output);
+            }
+        }
+    }
+
+    fn retain_receiver_origin(
+        &mut self,
+        scope: usize,
+        name: &str,
+        value: ValueExpression,
+        completed_at: u32,
+        unconditional: bool,
+    ) {
+        if self.value_reference_links.is_some() {
+            self.prior_member_mutations
+                .require_reference_proof(scope, name);
+        }
+        let guaranteed = unconditional
+            && !self.receiver_write_is_conditional
+            && self.repeat_depth == self.call_repeat_base;
+        let owner = self.current_function_id();
+        self.receiver_only_bindings
+            .get_or_insert_with(Default::default)
+            .record((scope, name), (completed_at, owner), value, guaranteed);
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.receiver_only_origins += 1;
+        }
+    }
+}

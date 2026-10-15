@@ -581,6 +581,13 @@ it elsewhere can expose invocations outside the canonical caller chain. Repeated
 Earlier writes, exported or deferred writers, and live receiver aliases remain
 conservative.
 
+Mutable object and array bindings retain receiver origins separately from callable
+value provenance. Nested writes through non-reassigned `let` containers invalidate
+the matching imported methods. Root assignments preserve acquisition snapshots
+for saved aliases and exclude overwritten roots from later direct reads.
+Conditional and foreign writers remain conservative; copied methods and untouched
+members retain their precision.
+
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay
 conservative across loop executions. Direct arguments to inline helpers inherit

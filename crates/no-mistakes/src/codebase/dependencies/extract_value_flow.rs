@@ -11,6 +11,8 @@ pub use mutation_sources::{
     ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,
     ValueReceiverMutations,
 };
+pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
+
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
 /// Syntactic value flow retained by the import collector. Resolution uses the
@@ -22,6 +24,14 @@ pub struct ValueFlowFacts {
     pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_origins: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_nodes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_lookups: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_component_links: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -204,3 +214,12 @@ mod suspension_tests;
 
 #[path = "extract_value_flow/callable_uses.rs"]
 mod callable_uses;
+#[path = "extract_value_flow/mutable_receivers.rs"]
+mod mutable_receivers;
+
+#[cfg(test)]
+#[path = "extract_value_flow/mutable_receiver_tests.rs"]
+mod mutable_receiver_tests;
+
+#[path = "extract_value_flow/mutable_origins.rs"]
+mod mutable_origins;

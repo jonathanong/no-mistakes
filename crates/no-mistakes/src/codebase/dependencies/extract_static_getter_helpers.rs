@@ -147,6 +147,7 @@ fn visit_assignment_expression_with_calls<'a>(
         collector.visit_expression(&assignment.right);
     });
     collector.fresh_receiver_effects.active = previous_fresh_evaluation;
+    collector.record_mutable_receiver_assignment(assignment);
     collector.finish_destructuring_phases(phases);
     collector.end_phase_receipts(receipts);
 }

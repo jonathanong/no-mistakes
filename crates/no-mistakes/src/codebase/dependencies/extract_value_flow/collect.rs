@@ -24,6 +24,7 @@ impl ImportCollector {
             let factory_result = matches!(&value, ValueExpression::Call(_, _))
                 || matches!(&value, ValueExpression::Awaited(inner) if matches!(inner.as_ref(), ValueExpression::Call(_, _)));
             if !immutable && !factory_result {
+                self.record_mutable_receiver_binding(&declarator.id, value, declarator.span.end);
                 return;
             }
             self.record_value_pattern(&declarator.id, value, declarator.span.start);
