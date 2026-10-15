@@ -1,0 +1,22 @@
+[
+  "rustc",
+  "+stable",
+  "--edition=2021",
+  "--crate-name",
+  "nm_shared_analysis_probe",
+  "-C",
+  "opt-level=3",
+  "-C",
+  "lto=true",
+  "-C",
+  "codegen-units=1",
+  "-C",
+  "debuginfo=0",
+  "-L",
+  "dependency=<LOCAL>/no-mistakes-1972-final/target/release/deps",
+  "--extern",
+  "no_mistakes=<LOCAL>/nm2019-three-arm-evidence/C/lib.rlib",
+  "<LOCAL>/nm2019-three-arm-evidence/harness/main.rs",
+  "-o",
+  "<LOCAL>/nm2019-three-arm-evidence/C/probe"
+]

@@ -1,0 +1,21 @@
+{
+  "source_revision": "806968113ea5a3414b8baddff9a485777f86ad98",
+  "checkout_head": "91f329e0c434489c407cee77ff912d6b559c0eac",
+  "analyzer_tree": "5c6164e5e01e0c2f4bb89ee91d13e4f1d16bca52",
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "release_profile": {
+    "opt_level": 3,
+    "lto": true,
+    "codegen_units": 1,
+    "build_jobs": 2
+  },
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "fresh": false,
+  "library_sha256": "7b0858bbca19a04e5762223f337d2c368940fb697f35abf84ba047dd66d21588",
+  "harness_sha256": "0f4abc13910ef5c9186370d8d9f88378e29dae00a1cbeaf1bf8bbbf855ea8d66",
+  "binary_sha256": "202c609995787b9fc0399acfdd0180c4b7fa53fa6fd1be4027cf6c6906d64ef5"
+}

@@ -1,0 +1,29 @@
+{
+  "frozen_at_utc": "2026-10-15T09:48:08.194737+00:00",
+  "status": "FROZEN before first pilot",
+  "files": {
+    "measurement-protocol.json": "5d7ac0d32113d15c80af65b49d4c440c2057044c13c11de68b9a881d253e5981",
+    "measure.py": "411c89e1c42f5fb9378f0f7613699eedc132cbdb42b760ffd292b9ad9a497bbb",
+    "workloads.json": "cdd1b5e66757c37675876c30ad5e36e80657ce91843c7bbc6d28d56c739a6042",
+    "timing-signatures.json": "11a56206df54e9945e9f6e6045196eeb848713026439a4e0784c769a8f358164",
+    "semantic-manifest.json": "6f4191a77fbfb8f68a36e22c1049c034218172efa3f78cc3df91e2a902ea8ff5",
+    "semantic-diff-A-B.json": "b894499f083314fc528f8e1ceaa7e0e9d728a9c295c42f65878ef3a7765ebcfc",
+    "ab-semantic-diff.json": "f17621d2b32e46797aa0b50318ad3679cfc8733100ee5102292c5cbf41ee384e",
+    "input-manifest.json": "52ad1c2a371db1403f6a917d5786b3a51fc917b5de8881a50bb3ca8b7964bca1",
+    "workload-plan.json": "82b50d84b927a162f0ee215255cd5fbf6afdffee1384031fe81f1d210f4fccc3",
+    "batches-1972.json": "67ac0c0318e013fb4b79b6609c24fbd2b51b6ad327651ccfb7fb47f35b6eadcb",
+    "A/manifest.json": "ba65f315b25ed6eec3c28c85b298d8d7eac4f6c5fee91da1c5387beb81aa3366",
+    "A/source-manifest.json": "9d894f7356a5af671f960a1be19be774fbd3365eab87c6e0f65f6f50366903b2",
+    "A/probe": "9aa26d58ba101b50b4bd039f3ac2a1df301a715eff15cb58cd4d409bb9f71fc2",
+    "A/lib.rlib": "3b676cb5f11e582e42c3019ce74add84a68024bd84f4f265cabf10ae62102ecf",
+    "B/manifest.json": "350bbc9d6ed6079768f2a92735b7902b89f6875f13ca1a780653f5f76183bde8",
+    "B/source-manifest.json": "93f87d52b933358e95104e879c99e6d873251289ecd00fe0c285d6a16b84cf91",
+    "B/probe": "8d89701337bd375a104649b3306635107e3356ab5ac482a9e0d23fad2c0337b0",
+    "B/lib.rlib": "f97250e036b3b3dad35891a25c6c842d8762ec0119253e5f7f4fedb22e3330b6",
+    "C/manifest.json": "a09996592ff4a07d179c957ac0b09f670854ae9a3f3211f5f2d9e41dd8459ab6",
+    "C/source-manifest.json": "55874825e6e22bf02aa901840d651badbb97435c70b658d8179f23be9ef31b0f",
+    "C/probe": "12ada26ba950b97a40b4d5dc91ee466d9e4907a206acc46019937e18dac03116",
+    "C/lib.rlib": "26eb4e10244519ac534f429b3ec9148836bb36de2ce92d68a2c00d253ce9eea9"
+  },
+  "calibration": "112 pilot rows pooled; separate calibration manifest required before first long row"
+}

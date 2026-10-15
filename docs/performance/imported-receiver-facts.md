@@ -2,6 +2,10 @@
 
 <!-- cspell:ignore ABBA BAAB codegen rlib wait4 Callgrind LibVEX ENOENT PMU debuginfo stationarity Userland callgraphs -->
 
+Later status: [the bounded #1972 conclusion](no-writes-investigation.md) preserves
+this historical record and closes the investigation without claiming a runtime fix.
+The open-issue language below describes this earlier evidence submission.
+
 This transformed public evidence copy references [#1972](https://github.com/jonathanong/no-mistakes/issues/1972).
 The issue remains open: the historical unoptimized slowdown is unexplained,
 and optimized native CPU impact is not established reliably on this host.

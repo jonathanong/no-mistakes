@@ -1,0 +1,1250 @@
+[
+  {
+    "file": "src/nested-receiver-containers/guarded-root-conditional.mts",
+    "offset": 239,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/guarded-root-rhs.mts",
+    "offset": 217,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-array.mts",
+    "offset": 159,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-conditional-root.mts",
+    "offset": 202,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-cycle.mts",
+    "offset": 207,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-direct.mts",
+    "offset": 165,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-foreign-root.mts",
+    "offset": 283,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-guarded.mts",
+    "offset": 205,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-lhs-acquisition.mts",
+    "offset": 253,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-logical-root.mts",
+    "offset": 194,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-before.mts",
+    "offset": 308,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-class-context.mts",
+    "offset": 397,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-cold-class.mts",
+    "offset": 326,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+    "offset": 397,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+    "offset": 415,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+    "offset": 350,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+    "offset": 368,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+    "offset": 372,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+    "offset": 390,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-final-root.mts",
+    "offset": 357,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+    "offset": 354,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+    "offset": 372,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts",
+    "offset": 345,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+    "offset": 326,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+    "offset": 344,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts",
+    "offset": 378,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts",
+    "offset": 393,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts",
+    "offset": 380,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts",
+    "offset": 331,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-rhs.mts",
+    "offset": 291,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-self-copy.mts",
+    "offset": 315,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts",
+    "offset": 340,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-capture.mts",
+    "offset": 479,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts",
+    "offset": 478,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-fields.mts",
+    "offset": 540,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-local.mts",
+    "offset": 450,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-nested.mts",
+    "offset": 366,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts",
+    "offset": 344,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts",
+    "offset": 604,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+    "offset": 486,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+    "offset": 508,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+    "offset": 405,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+    "offset": 423,
+    "callee": "changed.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-rebound.mts",
+    "offset": 202,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-rhs-named.mts",
+    "offset": 219,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-rhs-rebound.mts",
+    "offset": 192,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "replica.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-let-self-copy.mts",
+    "offset": 176,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  },
+  {
+    "file": "src/nested-receiver-containers/mutable-rule-mutated.mts",
+    "offset": 196,
+    "callee": "value.get",
+    "fields": [
+      "known",
+      "unknown"
+    ],
+    "before": {
+      "known": [
+        {
+          "kind": "export",
+          "module": "@vendor/valkey",
+          "name": "primary.get",
+          "repository": null,
+          "callable_id": "None",
+          "node": null
+        }
+      ],
+      "unknown": false
+    },
+    "after": {
+      "known": [],
+      "unknown": true
+    }
+  }
+]

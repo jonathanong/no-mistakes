@@ -1,0 +1,162 @@
+[
+  {
+    "arm": "baseline",
+    "case": "no_writes",
+    "demand": "values",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+    "fixture_sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+    "fixture_bytes": 2454,
+    "fact_dump_bytes": 14789026,
+    "fact_dump_sha256": "c90642537826065726233ef8e28b915d6f4c330b01b415b62fcaef0ba0db735c"
+  },
+  {
+    "arm": "candidate",
+    "case": "no_writes",
+    "demand": "values",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+    "fixture_sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+    "fixture_bytes": 2454,
+    "fact_dump_bytes": 14789026,
+    "fact_dump_sha256": "c90642537826065726233ef8e28b915d6f4c330b01b415b62fcaef0ba0db735c"
+  },
+  {
+    "arm": "baseline",
+    "case": "no_writes",
+    "demand": "imports",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+    "fixture_sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+    "fixture_bytes": 2454,
+    "fact_dump_bytes": 9259009,
+    "fact_dump_sha256": "3cafb960c83b53ea5874d24e3f61c6819ef4edc9ed31d53dac61f94ff378b395"
+  },
+  {
+    "arm": "candidate",
+    "case": "no_writes",
+    "demand": "imports",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+    "fixture_sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+    "fixture_bytes": 2454,
+    "fact_dump_bytes": 9259009,
+    "fact_dump_sha256": "3cafb960c83b53ea5874d24e3f61c6819ef4edc9ed31d53dac61f94ff378b395"
+  },
+  {
+    "arm": "baseline",
+    "case": "writes",
+    "demand": "values",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+    "fixture_sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+    "fixture_bytes": 24398,
+    "fact_dump_bytes": 838579,
+    "fact_dump_sha256": "272e3a44b391042c67311960f319e89015dc7f8ac67d06d146eca1f758f6330f"
+  },
+  {
+    "arm": "candidate",
+    "case": "writes",
+    "demand": "values",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+    "fixture_sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+    "fixture_bytes": 24398,
+    "fact_dump_bytes": 838579,
+    "fact_dump_sha256": "272e3a44b391042c67311960f319e89015dc7f8ac67d06d146eca1f758f6330f"
+  },
+  {
+    "arm": "baseline",
+    "case": "writes",
+    "demand": "imports",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+    "fixture_sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+    "fixture_bytes": 24398,
+    "fact_dump_bytes": 325677,
+    "fact_dump_sha256": "4b81e722acefdf0561cd948e757b4c71776fb777171309f221df06a04aec55eb"
+  },
+  {
+    "arm": "candidate",
+    "case": "writes",
+    "demand": "imports",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+    "fixture_sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+    "fixture_bytes": 24398,
+    "fact_dump_bytes": 325677,
+    "fact_dump_sha256": "4b81e722acefdf0561cd948e757b4c71776fb777171309f221df06a04aec55eb"
+  },
+  {
+    "arm": "baseline",
+    "case": "shared_histories",
+    "demand": "values",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+    "fixture_sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+    "fixture_bytes": 59584,
+    "fact_dump_bytes": 883572047,
+    "fact_dump_sha256": "e9b194981c4ee33b75bae38e712787587eabe75b072a1d5bf31a456d0bdd0b9d"
+  },
+  {
+    "arm": "candidate",
+    "case": "shared_histories",
+    "demand": "values",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+    "fixture_sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+    "fixture_bytes": 59584,
+    "fact_dump_bytes": 883572047,
+    "fact_dump_sha256": "e9b194981c4ee33b75bae38e712787587eabe75b072a1d5bf31a456d0bdd0b9d"
+  },
+  {
+    "arm": "baseline",
+    "case": "shared_histories",
+    "demand": "imports",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+    "fixture_sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+    "fixture_bytes": 59584,
+    "fact_dump_bytes": 2820745,
+    "fact_dump_sha256": "1b230625737bfbfa20af9bc6e9de7e132cfa2fb2f8273a5ec66b6a406bb69b1f"
+  },
+  {
+    "arm": "candidate",
+    "case": "shared_histories",
+    "demand": "imports",
+    "fixture": "test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+    "fixture_sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+    "fixture_bytes": 59584,
+    "fact_dump_bytes": 2820745,
+    "fact_dump_sha256": "1b230625737bfbfa20af9bc6e9de7e132cfa2fb2f8273a5ec66b6a406bb69b1f"
+  },
+  {
+    "arm": "baseline",
+    "case": "jsx",
+    "demand": "values",
+    "fixture": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+    "fixture_sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+    "fixture_bytes": 9660,
+    "fact_dump_bytes": 34293,
+    "fact_dump_sha256": "67e66a255bdf1e92e391bb985a70a80c5ce3cb5b6ed60fc3310e88b3db2d70f9"
+  },
+  {
+    "arm": "candidate",
+    "case": "jsx",
+    "demand": "values",
+    "fixture": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+    "fixture_sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+    "fixture_bytes": 9660,
+    "fact_dump_bytes": 34293,
+    "fact_dump_sha256": "67e66a255bdf1e92e391bb985a70a80c5ce3cb5b6ed60fc3310e88b3db2d70f9"
+  },
+  {
+    "arm": "baseline",
+    "case": "jsx",
+    "demand": "imports",
+    "fixture": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+    "fixture_sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+    "fixture_bytes": 9660,
+    "fact_dump_bytes": 31779,
+    "fact_dump_sha256": "fc5e41a368373f30b41484732a976fe197db34f5bb34fb5656c444737aa1df99"
+  },
+  {
+    "arm": "candidate",
+    "case": "jsx",
+    "demand": "imports",
+    "fixture": "test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+    "fixture_sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+    "fixture_bytes": 9660,
+    "fact_dump_bytes": 31779,
+    "fact_dump_sha256": "fc5e41a368373f30b41484732a976fe197db34f5bb34fb5656c444737aa1df99"
+  }
+]

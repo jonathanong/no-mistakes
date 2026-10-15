@@ -1,0 +1,16 @@
+{
+  "hot-mutable-root-scale": 311,
+  "hot-mutable-pattern-phase-scale": 353,
+  "hot-mutable-pattern-deferred-diamond": 408,
+  "hot-mutable-pattern-eager-class-scale": 404,
+  "hot-mutable-pattern-cold-class-scale": 410,
+  "graph": 42,
+  "graph-observer": 42,
+  "graph-no-calls": 81,
+  "effects-mutable-let-direct-off": 37,
+  "effects-mutable-let-direct-observer": 36,
+  "effects-mutable-let-copied-off": 36,
+  "effects-mutable-let-copied-observer": 36,
+  "effects-mutable-pattern-deferred-diamond-off": 36,
+  "effects-mutable-pattern-deferred-diamond-observer": 35
+}
