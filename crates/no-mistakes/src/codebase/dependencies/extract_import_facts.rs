@@ -1,5 +1,5 @@
 pub use extract_value_flow::{
-    ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression, ValueFlowFacts,
+    CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression, ValueFlowFacts,
     ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,
     ValueReceiverMutations, ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts,
     ValueReplacementWrite, ValueType,

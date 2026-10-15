@@ -40,7 +40,7 @@ fn refine_iteration(
         module_writer_phases: data.module_writer_phases,
         writer_dependencies: Default::default(),
         module_snapshot: None,
-        repeated_initializer: None,
+        member_initializer: None,
         member_read: None,
     };
     let mut sites = base.to_vec();

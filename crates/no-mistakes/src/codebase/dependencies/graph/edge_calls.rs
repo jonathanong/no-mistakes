@@ -19,6 +19,7 @@ struct CallableFileIndex {
     exported_scopes: FxHashSet<String>,
     class_scopes: FxHashSet<String>,
     callable_bindings: ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
+    callable_assignments: ScopedNameMap<IndexedCallableAssignment>,
     imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     type_imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported: FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
@@ -34,13 +35,6 @@ struct CallableFileIndex {
     stars: Vec<String>,
     namespaces: NamespaceTable,
 }
-#[derive(Clone)]
-struct IndexedAlias {
-    target: String,
-    declared_at: u32,
-    invalidated_at: Option<u32>,
-}
-
 #[derive(Clone)]
 struct ClassBindingTarget {
     scope: String,
@@ -93,6 +87,7 @@ impl CallableFileIndex {
                 &file.function_calls,
             ),
             known_scopes: file.callable_scopes.iter().cloned().collect(),
+            callable_assignments: index_closed_callable_assignments(file),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes,
             callable_bindings,

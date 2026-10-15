@@ -41,6 +41,8 @@ struct ImportCollector {
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
+    callable_assignment_uses: FxHashSet<(usize, String)>,
+    mutable_module_bindings: FxHashSet<String>,
     /// Cutoff for the current callable's body when its suffix is unreachable.
     /// Saved and restored around body traversal; absent for ordinary bodies.
     unreachable_value_binding_after: Option<u32>,

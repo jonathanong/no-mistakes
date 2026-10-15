@@ -1,4 +1,4 @@
-import { directLive, directSaved, directOnce, directSibling, directNested } from "@vendor/valkey";
+import { directLive, directSaved, directOnce, directAfter, directSibling, directNested } from "@vendor/valkey";
 function replacement() {}
 
 const liveAlias = directLive;
@@ -28,6 +28,15 @@ function runOnce() {
   directOnce.get = replacement;
 }
 runOnce();
+
+// A direct argument acquired after a write cannot retain the original method.
+function runAfter() {
+  directAfter.get = replacement;
+  (function takeAfter(fn) {
+    fn("key");
+  })(directAfter.get);
+}
+runAfter();
 
 function runSibling() {
   (function takeSibling(fn) {

@@ -93,8 +93,8 @@ struct ValueFlowResolution<'a, 'b> {
     module_writer_phases: &'a execution_phases::ModuleWriterPhases,
     writer_dependencies: std::cell::RefCell<FxHashSet<(std::path::PathBuf, CallableId)>>,
     module_snapshot: Option<(std::path::PathBuf, u32)>,
-    // Only the current binding initializer owns this acquisition phase.
-    repeated_initializer: Option<(&'a std::path::Path, u32, Option<CallableId>)>,
+    // Only the current copied-member initializer owns this acquisition phase.
+    member_initializer: Option<(&'a std::path::Path, u32, Option<CallableId>, bool)>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 

@@ -54,7 +54,7 @@ impl ValueFlowResolution<'_, '_> {
                         module_writer_phases: self.module_writer_phases,
                         writer_dependencies: Default::default(),
                         module_snapshot: None,
-                        repeated_initializer: None,
+                        member_initializer: None,
                         member_read: None,
                     };
                     flow.visiting.insert((

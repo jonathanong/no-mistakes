@@ -130,6 +130,40 @@ fn visit_for_of_statement_with_scope<'a>(
             Expression::ArrayExpression(array) if array.elements.len() >= 2
                 && array.elements.iter().all(|element| !matches!(element, oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)))
         );
+    // A straight-line assignment executes on the first iteration of this
+    // literal, nonempty loop. The receiver replacement region remains unsafe
+    // for other purposes because assigning a mutable local invalidates it.
+    let guaranteed_assignment = if repeated
+        && !collector.conditional_execution
+        && collector.current_function_id().is_none()
+        && matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&statement.right),
+            Expression::ArrayExpression(array) if array.elements.iter().all(|element| {
+                matches!(element.as_expression(),
+                    Some(Expression::NumericLiteral(_)
+                        | Expression::StringLiteral(_)
+                        | Expression::BooleanLiteral(_)))
+            }))
+    {
+        match &statement.body {
+            Statement::BlockStatement(block) => match block.body.as_slice() {
+                [Statement::ExpressionStatement(expression)] => {
+                    match crate::codebase::ts_source::unwrap_ts_wrappers(&expression.expression) {
+                        Expression::AssignmentExpression(assignment)
+                            if assignment.operator == oxc_syntax::operator::AssignmentOperator::Assign
+                                && matches!(assignment.left, AssignmentTarget::AssignmentTargetIdentifier(_))
+                                && matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&assignment.right),
+                                    Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)) =>
+                        {
+                            Some(assignment.span.end)
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
+        }
+    } else { None };
     with_repeat_execution(collector, &statement.body, |collector, body| {
         with_conditional_execution(collector, true, |collector| {
             with_replacement_region(collector, body.span(), repeated, may_repeat, |collector| {
@@ -137,6 +171,13 @@ fn visit_for_of_statement_with_scope<'a>(
             });
         });
     });
+    if let Some(completed_at) = guaranteed_assignment {
+        for write in &mut collector.value_flow.callable_assignments {
+            if write.completed_at == completed_at && write.callable.is_some() {
+                write.guaranteed = true;
+            }
+        }
+    }
     collector.pop_lexical_scope(pushed);
 }
 
@@ -148,6 +189,7 @@ fn invalidate_for_statement_assignment_target(
     let Some(target) = left.as_assignment_target() else {
         return;
     };
+    collector.record_callable_assignment(target, None, false, completed_at);
     collector.record_replacement_target(target, ValueExpression::Unknown, completed_at);
     for (name, path, _) in extract_value_flow::write_targets::targets(target) {
         collector.record_reassigned_callable_alias_path(

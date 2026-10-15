@@ -113,4 +113,74 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
         );
         assert!(incoming[0].target_node.is_some(), "{scope}");
     }
+    // The deferred variable has one closed literal-function assignment. Its
+    // module call must be an ordinary canonical edge before phase analysis.
+    let deferred = repeated
+        .iter()
+        .filter(|site| site.caller.is_none() && site.source_callee == "deferred")
+        .collect::<Vec<_>>();
+    assert_eq!(deferred.len(), 1);
+    assert!(matches!(&deferred[0].target,
+        ResolvedCallTarget::RepositoryFunction { scope, .. } if scope == "oneShot"));
+    assert!(deferred[0].target_node.is_some());
+    let twice = graph.call_sites_in_file(&root.join("src/deferred-double-call.mts"));
+    let twice_calls = twice
+        .iter()
+        .filter(|site| site.caller.is_none() && site.source_callee == "deferred")
+        .collect::<Vec<_>>();
+    assert_eq!(twice_calls.len(), 2);
+    assert!(twice_calls.iter().all(|site| matches!(&site.target,
+        ResolvedCallTarget::RepositoryFunction { scope, .. } if scope == "calledTwice")
+        && site.target_node.is_some()));
+    let controls = graph.call_sites_in_file(&root.join("src/deferred-call-proof-controls.mts"));
+    for name in [
+        "emptyDeferred",
+        "conditionalDeferred",
+        "earlyDeferred",
+        "resetDeferred",
+        "escapedDeferred",
+        "unknownDeferred",
+        "returnedDeferred",
+        "passedDeferred",
+        "variableRecursiveDeferred",
+        "preuseDeferred",
+        "nestedReturnedDeferred",
+        "nestedPassedDeferred",
+    ] {
+        let site = controls
+            .iter()
+            .find(|site| site.caller.is_none() && site.source_callee == name)
+            .unwrap();
+        assert!(
+            matches!(site.target, ResolvedCallTarget::Unknown),
+            "{name}: {site:?}"
+        );
+        assert!(site.target_node.is_none(), "{name}: {site:?}");
+    }
+    let shadow = controls
+        .iter()
+        .filter(|site| site.source_callee == "shadowDeferred")
+        .collect::<Vec<_>>();
+    assert_eq!(shadow.len(), 2);
+    assert!(shadow.iter().any(|site| site.caller.is_none()
+        && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { scope, .. }
+            if scope == "outerShadow")
+        && site.target_node.is_some()));
+    for (name, scope) in [
+        ("recursiveDeferred", "recursiveSelf"),
+        ("selfShadowDeferred", "selfShadow"),
+        ("parameterShadowDeferred", "parameterShadow"),
+        ("nestedShadowDeferred", "nestedShadow"),
+    ] {
+        let site = controls
+            .iter()
+            .find(|site| site.caller.is_none() && site.source_callee == name)
+            .unwrap();
+        assert!(
+            matches!(&site.target,
+            ResolvedCallTarget::RepositoryFunction { scope: target, .. } if target == scope),
+            "{name}: {site:?}"
+        );
+        assert!(site.target_node.is_some(), "{name}: {site:?}");
+    }
 }

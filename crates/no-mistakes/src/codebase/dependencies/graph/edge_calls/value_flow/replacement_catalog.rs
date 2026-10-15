@@ -117,7 +117,7 @@ impl ReplacementCatalog {
             module_writer_phases: &module_writer_phases,
             writer_dependencies: Default::default(),
             module_snapshot: None,
-            repeated_initializer: None,
+            member_initializer: None,
             member_read: None,
         };
         for (path, file, receivers, repeated_owners, writes) in prepared {

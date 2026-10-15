@@ -43,6 +43,7 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
     let index = CallableFileIndex {
         type_imported: fx_map(),
         values: Default::default(),
+        callable_assignments: fx_map(),
         known_scopes: ["target".to_string()].into_iter().collect(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),

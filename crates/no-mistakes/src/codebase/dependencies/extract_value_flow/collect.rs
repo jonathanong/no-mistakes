@@ -6,6 +6,7 @@ impl ImportCollector {
             return;
         }
         if let Some(init) = &declarator.init {
+            self.record_callable_initializer(declarator, immutable, init);
             let value = if self
                 .unreachable_value_binding_after
                 .is_some_and(|cutoff| declarator.span.start >= cutoff)
@@ -188,3 +189,5 @@ impl ImportCollector {
         }
     }
 }
+
+include!("callable_assignment_initializers.rs");
