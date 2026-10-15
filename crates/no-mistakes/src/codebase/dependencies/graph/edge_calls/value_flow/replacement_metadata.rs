@@ -6,9 +6,8 @@ fn replacement_mutations(
     receivers: &FxHashMap<String, usize>,
     writes: &index::PreparedReplacements,
 ) -> (ReplacementMutations, UnsupportedMutations) {
-    let repeat_writer = |offset, context: Option<CallableId>, multiple| {
-        multiple
-            || context.is_some()
+    let repeat_writer = |offset, context: Option<CallableId>| {
+        context.is_some()
             || writes
                 .region_at(context, offset)
                 .is_some_and(|id| writes.facts.regions[id].may_repeat)
@@ -49,16 +48,16 @@ fn replacement_mutations(
                                 .members
                                 .iter()
                                 .filter(|(_, write)| {
-                                    repeat_writer(
-                                        write.offset,
-                                        write.context,
-                                        write.multiple_contexts,
-                                    )
+                                    write
+                                        .single_context()
+                                        .is_none_or(|context| repeat_writer(write.offset, context))
                                 })
                                 .map(|(property, _)| property.clone()),
                         );
                         *dynamic |= assigned.dynamic.as_ref().is_some_and(|write| {
-                            repeat_writer(write.offset, write.context, write.multiple_contexts)
+                            write
+                                .single_context()
+                                .is_none_or(|context| repeat_writer(write.offset, context))
                         });
                     }
                     *dynamic |= history
@@ -69,7 +68,7 @@ fn replacement_mutations(
                             summary
                                 .contexts
                                 .iter()
-                                .any(|context| repeat_writer(summary.offset, *context, false))
+                                .any(|context| repeat_writer(summary.offset, *context))
                         });
                 }
             }

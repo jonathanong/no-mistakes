@@ -28,12 +28,12 @@ fn persistence_barrier(
             .assigned
             .as_ref()
             .and_then(|assigned| assigned.members.get(property))
-            .is_some_and(|write| write.multiple_contexts || write.context != owner)
+            .is_some_and(|write| write.single_context() != Some(owner))
         || history
             .assigned
             .as_ref()
             .and_then(|assigned| assigned.dynamic.as_ref())
-            .is_some_and(|write| write.multiple_contexts || write.context != owner)
+            .is_some_and(|write| write.single_context() != Some(owner))
 }
 
 fn stable_leaf(file: &CallableFileIndex, expression: &ValueExpression, depth: usize) -> bool {

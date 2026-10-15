@@ -1,4 +1,3 @@
-include!("extract_loop_scopes.rs");
 include!("extract_expression_statement_walk.rs");
 
 fn visit_block_statement_with_scope<'a>(
