@@ -115,9 +115,9 @@ fn call_repetition_belongs_to_execution_not_callable_creation() {
         ("staticCall", true),
         ("staticBlockCall", true),
         ("loopAfterCall", true),
-        // Named-class instance fields use their class context rather than an
-        // extra legacy repeat-depth increment; preserve that authored metadata.
-        ("outsideFieldCall", false),
+        // The shared instance-field visitor marks per-instance evaluation as
+        // repeated; a deferred arrow body still enters its own scope below.
+        ("outsideFieldCall", true),
         ("outsideArrowBodyCall", false),
         ("outsideStaticCall", false),
         ("outsideStaticBlockCall", false),
