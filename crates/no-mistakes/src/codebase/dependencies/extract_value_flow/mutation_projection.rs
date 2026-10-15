@@ -19,6 +19,8 @@ impl ImportCollector {
         affected: &mut Affected,
     ) {
         let mut traversal = receiver_traversal::ReceiverTraversal::default();
+        #[cfg(feature = "test-instrumentation")]
+        let mut binding_visits = 0;
         while let Some((((key, path), reads, root_read), exiting, remember, propagated)) =
             pending.pop()
         {
@@ -79,37 +81,49 @@ impl ImportCollector {
             let mut references = Vec::new();
             // Direct component aliases have no value projection. Keep their
             // canonical proof lookup cold, as in the original traversal.
-            let projects = self.has_mutable_receiver_binding(key.0, &key.1)
-                || self
-                    .value_binding_indexes
-                    .get(&key.0)
-                    .and_then(|names| names.get(key.1.as_str()))
-                    .into_iter()
-                    .flatten()
-                    .any(|index| {
-                        let value = &self.value_flow.bindings[*index].value;
-                        !matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
-                            || self.references_mutable_receiver(value)
-                    });
-            let replaced = projects && self.mutation_reference_replaced(&key, &path, &reads, info);
-            for value in self
+            let first_projected = self
                 .value_binding_indexes
                 .get(&key.0)
                 .and_then(|names| names.get(key.1.as_str()))
                 .into_iter()
                 .flatten()
-                .map(|index| &self.value_flow.bindings[*index].value)
-            {
-                // Direct aliases are handled by the component links at finalization.
-                if matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
-                    && !self.references_mutable_receiver(value)
+                .position(|index| {
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        binding_visits += 1;
+                    }
+                    let value = &self.value_flow.bindings[*index].value;
+                    !matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
+                        || self.references_mutable_receiver(value)
+                });
+            let projects =
+                self.has_mutable_receiver_binding(key.0, &key.1) || first_projected.is_some();
+            let replaced = projects && self.mutation_reference_replaced(&key, &path, &reads, info);
+            // The eligibility prefix contains only direct aliases. They have
+            // already been handled by component links and need no second visit.
+            if let Some(first) = first_projected.filter(|_| !replaced) {
+                for value in self
+                    .value_binding_indexes
+                    .get(&key.0)
+                    .and_then(|names| names.get(key.1.as_str()))
+                    .into_iter()
+                    .flatten()
+                    .skip(first)
+                    .map(|index| {
+                        #[cfg(feature = "test-instrumentation")]
+                        {
+                            binding_visits += 1;
+                        }
+                        &self.value_flow.bindings[*index].value
+                    })
                 {
-                    continue;
+                    if matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
+                        && !self.references_mutable_receiver(value)
+                    {
+                        continue;
+                    }
+                    nested::write_receiver_references(value, &path, &reads, &mut references);
                 }
-                if replaced {
-                    continue;
-                }
-                nested::write_receiver_references(value, &path, &reads, &mut references);
             }
             if !self.defer_mutable_projection(&key, (&path, &reads, root_read), info, replaced)
                 && !replaced
@@ -126,6 +140,10 @@ impl ImportCollector {
                     .into_iter()
                     .map(|reference| (reference, false, true, true)),
             );
+        }
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.reference_binding_visits += binding_visits;
         }
     }
 }

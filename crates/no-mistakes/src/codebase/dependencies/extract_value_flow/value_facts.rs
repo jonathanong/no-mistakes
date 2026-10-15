@@ -28,6 +28,8 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_path_visits: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub reference_binding_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_identity_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_capture_nodes: usize,
