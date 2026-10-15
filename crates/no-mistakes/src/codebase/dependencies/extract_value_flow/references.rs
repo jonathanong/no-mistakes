@@ -41,6 +41,7 @@ impl ImportCollector {
         name: &str,
         value: &ValueExpression,
     ) {
+        self.record_rhs_acquisition(value);
         let mutable = self.references_mutable_receiver(value);
         if let Some(links) = &mut self.value_reference_links {
             if mutable {

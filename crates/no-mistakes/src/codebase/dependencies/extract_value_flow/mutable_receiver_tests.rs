@@ -181,6 +181,8 @@ fn imported_alias_successors_remain_active_with_an_unrelated_mutable_root() {
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
 }
 
+#[path = "assignment_receiver_tests.rs"]
+mod assignment_rhs;
 #[path = "mutable_receiver_version_tests.rs"]
 mod versions;
 

@@ -51,6 +51,7 @@ struct ImportCollector {
     receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
     destructuring_phase_owner: Option<Option<CallableId>>,
+    assignment_rhs_frame: Option<Box<extract_value_flow::assignment_rhs_frame::AssignmentRhsFrame>>,
     deferred_mutable_writes: Option<Box<extract_value_flow::mutable_deferred::DeferredMutations>>,
     receiver_root_phases: Option<Box<extract_value_flow::root_phase_capture::RootPhaseCapture>>,
     destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,

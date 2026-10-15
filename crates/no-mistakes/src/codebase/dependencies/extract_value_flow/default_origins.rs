@@ -27,9 +27,19 @@ impl ImportCollector {
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
         assigned: Option<(Option<String>, u32)>,
-        metadata: &mutation_metadata::MutationMetadata,
-        propagated: bool,
+        tracking: mutation_metadata::Tracking<'_>,
     ) {
+        let mutation_metadata::Tracking {
+            metadata,
+            propagated,
+            root_read,
+        } = tracking;
+        let rhs = self.retain_assignment_rhs_destination(
+            key,
+            (path, reads, root_read),
+            assigned.as_ref(),
+            metadata,
+        );
         let offset = metadata.offset;
         let context = metadata.context;
         let unconditional = metadata.unconditional;
@@ -65,7 +75,7 @@ impl ImportCollector {
                 assigned,
                 write,
                 propagated,
-                proof.then_some(metadata.fresh),
+                (proof || rhs).then_some(metadata.fresh),
                 (region, captured),
             );
         }
@@ -84,10 +94,7 @@ impl ImportCollector {
         let mut histories = std::mem::take(&mut self.prior_member_mutations);
         let components = histories.finish();
         #[cfg(feature = "test-instrumentation")]
-        {
-            self.value_flow.reference_component_links = histories.links;
-            self.value_flow.reference_component_root_steps = histories.root_steps.get();
-        }
+        histories.record_reference_counts(&mut self.value_flow);
         let mut retained = fx_map();
         for (component, mut history) in components {
             history.finish_early_assignments();

@@ -1,5 +1,7 @@
 use super::*;
 
+#[path = "assigned_receiver_traversal.rs"]
+mod assigned;
 #[path = "receiver_traversal_state.rs"]
 mod state;
 use state::TraversalState;
@@ -27,11 +29,31 @@ impl MutableTraversal {
 #[derive(Default)]
 pub(super) struct ReceiverTraversal {
     ordinary: TraversalState,
+    assigned: Option<Box<assigned::AssignedTraversal>>,
     #[cfg(feature = "test-instrumentation")]
     pub(super) version_dispatches: usize,
     mutable: Option<MutableTraversal>,
 }
 impl ReceiverTraversal {
+    pub(super) fn enter_assigned(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: Vec<nested::ReceiverRead>,
+        version: Option<mutable_origins::RootVersion>,
+        receipts: assigned_receiver_origins::Receipts,
+    ) -> Option<Vec<nested::ReceiverRead>> {
+        self.assigned
+            .get_or_insert_with(Default::default)
+            .enter(key, path, reads, version, receipts)
+    }
+    pub(super) fn exit_assigned(&mut self, key: &(usize, String)) {
+        self.assigned
+            .as_mut()
+            .expect("active RHS traversal")
+            .exit(key);
+    }
+
     pub(super) fn enter_ordinary(
         &mut self,
         key: &(usize, String),

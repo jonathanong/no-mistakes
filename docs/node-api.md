@@ -1247,3 +1247,10 @@ retain that declaring package and selector. When several selected packages
 declare the same entry, all enabled targets are returned deterministically.
 Configured package scopes still apply to the declaring packages; external
 entries do not make neighboring helpers or other packages eligible.
+The same prepared receiver facts track supported replacement RHS aliases for
+`effects`, call-graph reports, and checks. After `box.wrapper = retained`, a
+matching descendant write reaches the receiver held by `retained`; restored
+aliases, saved containers, and copied methods retain their acquisition order.
+Literal RHS object and array values project into mutable bare-root assignment
+patterns. Unknown and conditional stores keep possible origins. These local
+projections do not infer arbitrary heap transfers through function calls.

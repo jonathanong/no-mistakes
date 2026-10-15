@@ -116,6 +116,7 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
+    let rhs_frame = collector.begin_assignment_rhs(assignment);
     collector.prepare_mutable_pattern_roots(&assignment.left);
     let receipts = collector.begin_phase_receipts(&assignment.left);
     let mut phases =
@@ -148,6 +149,7 @@ fn visit_assignment_expression_with_calls<'a>(
         collector.visit_expression(&assignment.right);
     });
     collector.fresh_receiver_effects.active = previous_fresh_evaluation;
+    collector.finish_assignment_rhs(assignment, rhs_frame);
     collector.record_mutable_receiver_assignment(assignment);
     collector.finish_destructuring_phases(phases);
     collector.end_phase_receipts(receipts);

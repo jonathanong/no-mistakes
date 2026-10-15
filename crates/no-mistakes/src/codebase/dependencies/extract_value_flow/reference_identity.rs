@@ -59,7 +59,7 @@ pub(super) fn reference_replaced(
     }
     matching_ancestors(root, prefix, reads, capture, effects, phases)
 }
-fn matching_ancestors(
+pub(super) fn matching_ancestors(
     mut node: &ValueMutationHistory,
     path: &[Option<String>],
     reads: &[nested::ReceiverRead],
@@ -100,7 +100,7 @@ fn matching_ancestors(
     true
 }
 impl ValueAssignedMutations {
-    fn identity_changed(
+    pub(super) fn identity_changed(
         &self,
         member: &str,
         left: nested::ReceiverRead,

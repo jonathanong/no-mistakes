@@ -82,31 +82,34 @@ impl ImportCollector {
             AssignmentTarget::ArrayAssignmentTarget(_)
                 | AssignmentTarget::ObjectAssignmentTarget(_)
         ) {
-            // Destructuring replaces lexical roots too. Its projected RHS is
-            // intentionally unknown here; never keep a stale prior root.
+            // Select receiver identities from the same RHS facts used by this
+            // assignment; phase points retain each target's actual completion.
             #[cfg(feature = "test-instrumentation")]
             {
                 self.value_flow.receiver_root_target_decompositions += 1;
             }
-            for (name, path, target) in write_targets::targets(&assignment.left) {
-                if path.is_empty() {
-                    if let Some(scope) = self.callee_binding_scope(&name) {
-                        if self.has_mutable_receiver_binding(scope, &name) {
-                            self.fresh_receiver_effects.rebind(scope, &name);
-                            self.capture_mutable_root_phase(
-                                (scope, &name),
-                                target,
-                                &ValueExpression::Unknown,
-                                true,
-                            );
-                            self.retain_receiver_origin(
-                                scope,
-                                &name,
-                                ValueExpression::Unknown,
-                                assignment.span.end,
-                                true,
-                            );
-                        }
+            if !write_targets::targets(&assignment.left)
+                .iter()
+                .any(|(name, path, _)| {
+                    path.is_empty()
+                        && self
+                            .callee_binding_scope(name)
+                            .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name))
+                })
+            {
+                return;
+            }
+            let value = self.value_expression(&assignment.right);
+            for (name, target, value) in
+                assignment_root_values::roots(&assignment.left, value, &mut |expression| {
+                    self.value_expression(expression)
+                })
+            {
+                if let Some(scope) = self.callee_binding_scope(&name) {
+                    if self.has_mutable_receiver_binding(scope, &name) {
+                        self.fresh_receiver_effects.rebind(scope, &name);
+                        self.capture_mutable_root_phase((scope, &name), target, &value, true);
+                        self.retain_receiver_origin(scope, &name, value, assignment.span.end, true);
                     }
                 }
             }
@@ -179,7 +182,7 @@ impl ImportCollector {
     }
 }
 
-fn mutable_root_name<'a>(target: &'a AssignmentTarget<'_>) -> Option<&'a str> {
+pub(super) fn mutable_root_name<'a>(target: &'a AssignmentTarget<'_>) -> Option<&'a str> {
     let expression = match target {
         AssignmentTarget::AssignmentTargetIdentifier(identifier) => {
             return Some(identifier.name.as_str())
