@@ -8,6 +8,7 @@ const config = join(root, "mutable-receivers.yml");
 // Each native CJS/ESM pair has its own existing runner deadline on slower CI hosts.
 for (const [name, expected] of [
   ["mutable-affected-cross-scope", 2],
+  ["mutable-affected-alias-overflow", 2],
   ["terminal-receiver-history", 0],
   ["terminal-import-with-unrelated-root", 0],
   ["mutable-let-pattern-static-var-conditional", 0],
@@ -80,7 +81,7 @@ for (const [name, expected] of [
       const report = await pending;
       assert.deepEqual(await esm.effects(options), report, name);
       assert.equal(report.callSites.length, expected, name);
-      if (name === "mutable-affected-cross-scope") {
+      if (name === "mutable-affected-cross-scope" || name === "mutable-affected-alias-overflow") {
         // The copied method and untouched receiver remain; the changed read does not.
         assert.deepEqual(
           report.callSites.map(({ line, callee }) => [line, callee]).sort((a, b) => a[0] - b[0]),

@@ -35,7 +35,7 @@ impl ImportCollector {
             self.fresh_receiver_effects.rebind(scope, base);
         }
         let mut affected = mutation_projection::Affected::default();
-        affected.insert(scope, base.to_string());
+        affected.insert(scope, base);
         if member && self.collect_value_flow {
             let metadata = self.receiver_mutation_metadata(offset);
             self.record_phase_scope(scope);
