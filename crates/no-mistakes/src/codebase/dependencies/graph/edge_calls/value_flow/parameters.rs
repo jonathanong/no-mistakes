@@ -40,6 +40,9 @@ impl ValueFlowResolution<'_, '_> {
                     acquisition_context: None,
                     invocation_read: self.invocation_read.clone(),
                     executing_read: None,
+                    module_writer_phases: self.module_writer_phases,
+                    writer_dependencies: Default::default(),
+                    module_snapshot: None,
                     member_read: None,
                 };
                 flow.visiting
@@ -47,6 +50,7 @@ impl ValueFlowResolution<'_, '_> {
                 flow.used_parameters
                     .insert((path.to_path_buf(), parameter.owner));
                 let value = flow.compute_parameter(path, parameter);
+                flow.merge_writer_dependencies();
                 let cached = std::sync::Arc::new(CachedParameter {
                     value,
                     origins: flow.default_origins,

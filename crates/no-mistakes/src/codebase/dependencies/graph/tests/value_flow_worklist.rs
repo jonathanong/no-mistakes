@@ -177,3 +177,41 @@ fn fan_in_origins_remain_shared_across_receiver_fan_out() {
         "fan-out must add shared links, not clone 128 origins per receiver: {counts:?}"
     );
 }
+
+#[test]
+fn repeated_module_snapshot_reads_share_the_closed_writer_proof() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("value-flow-module-snapshot-work"));
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let sites = graph.call_sites_in_file(&root.join("src/saved.mts"));
+    assert_eq!(
+        sites
+            .iter()
+            .filter(|site| site.source_callee == "saved"
+                && matches!(&site.target, ResolvedCallTarget::ModuleExport { export_path, .. }
+            if export_path == "client.get"))
+            .count(),
+        128
+    );
+    // Count real chain steps: equal targets alone would allow 128 replays.
+    #[cfg(feature = "test-instrumentation")]
+    assert!(
+        benchmark_probe_execution_phase_steps() <= 4,
+        "snapshot queries replayed the same closed writer chain: {}",
+        benchmark_probe_execution_phase_steps()
+    );
+}

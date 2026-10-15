@@ -29,6 +29,8 @@ pub(in super::super::super) fn refine_value_calls(
         for index in &batch {
             *visits.entry(*index).or_default() += 1;
         }
+        // This projection belongs to one immutable incoming-call generation.
+        let module_writer_phases = execution_phases::ModuleWriterPhases::default();
         let results: Vec<_> = batch
             .par_iter()
             .map(|index| {
@@ -40,6 +42,7 @@ pub(in super::super::super) fn refine_value_calls(
                     indexes,
                     &base[*index..=*index],
                     ValueInputs {
+                        module_writer_phases: &module_writer_phases,
                         cache: &pass.parameter_cache,
                         incoming: &incoming,
                         supers: &pass.super_constructors,

@@ -78,6 +78,9 @@ struct ValueFlowResolution<'a, 'b> {
         CallableId,
         execution_quality::ExecutionPhase,
     )>,
+    module_writer_phases: &'a execution_phases::ModuleWriterPhases,
+    writer_dependencies: std::cell::RefCell<FxHashSet<(std::path::PathBuf, CallableId)>>,
+    module_snapshot: Option<(std::path::PathBuf, u32)>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
@@ -115,6 +118,7 @@ mod parameters;
 pub(super) type ConstructorRoutes = FxHashMap<std::path::PathBuf, FxHashMap<CallableId, NodeId>>;
 #[derive(Clone, Copy)]
 struct ValueInputs<'a> {
+    module_writer_phases: &'a execution_phases::ModuleWriterPhases,
     cache: &'a ParameterCache,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,

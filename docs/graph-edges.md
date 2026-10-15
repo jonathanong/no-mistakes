@@ -552,6 +552,12 @@ remains unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.
 
+A method copied into an immutable module binding keeps its acquisition target
+when a closed synchronous caller chain proves that the receiver writer starts
+after the copy. Repeated later execution does not reacquire that saved method.
+Earlier writes, exported or deferred writers, and live receiver aliases remain
+conservative.
+
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay
 conservative across loop executions, while methods copied before the loop keep
