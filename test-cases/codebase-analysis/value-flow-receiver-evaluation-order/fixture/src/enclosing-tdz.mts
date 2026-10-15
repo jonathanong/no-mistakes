@@ -52,6 +52,15 @@ function branchLocalCutoff(flag: boolean) {
 }
 branchLocalCutoff(false);
 
+function branchLocalUninitialized(flag: boolean) {
+  if (flag) {
+    function acquire() { return branchSaved; }
+    return function branchNeverRun(fn = acquire()) { fn('key'); };
+    const branchSaved = primary.get;
+  }
+}
+branchLocalUninitialized(true)?.();
+
 function bothBranchesReturn(flag: boolean) {
   function acquire() { return saved; }
   if (flag) return;

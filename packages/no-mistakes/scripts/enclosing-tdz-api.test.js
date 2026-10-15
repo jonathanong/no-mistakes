@@ -20,7 +20,13 @@ test(
     assert.deepEqual(await esm.effects(options), report);
 
     const sites = new Map(report.callSites.map((site) => [site.caller, site.callee]));
-    for (const caller of ["neverRun", "adjacentRun", "nestedRun", "unreachableRun"]) {
+    for (const caller of [
+      "neverRun",
+      "adjacentRun",
+      "nestedRun",
+      "branchNeverRun",
+      "unreachableRun",
+    ]) {
       assert.equal(sites.has(caller), false, caller);
     }
     for (const caller of [

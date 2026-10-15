@@ -40,6 +40,12 @@ pub(super) fn cases() -> &'static [Case] {
         ),
         (
             "enclosing-tdz",
+            Some("branchLocalUninitialized/branchNeverRun"),
+            "fn",
+            None,
+        ),
+        (
+            "enclosing-tdz",
             Some("bothBranchesReturn/unreachableRun"),
             "fn",
             None,
