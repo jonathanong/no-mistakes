@@ -134,7 +134,7 @@ impl ImportCollector {
                 .map(|reference| (reference, false, true, true))
                 .collect();
             let mut affected = fx_map();
-            self.project_member_mutation(pending, None, info, &mut affected);
+            self.project_member_mutation::<nested::RootRead>(pending, None, info, &mut affected);
             self.invalidate_mutation_bindings(&affected, info.metadata, true);
         }
     }

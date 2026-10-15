@@ -3,7 +3,28 @@ use super::*;
 type Receiver = ((usize, String), ValueMutationPath);
 pub(super) type ReceiverRead = Option<(u32, Option<CallableId>)>;
 pub(super) type RootRead = (u32, Option<CallableId>);
-pub(super) type ReceiverWrite = (Receiver, Vec<ReceiverRead>, RootRead);
+pub(super) type ReceiverWrite<R = RootRead> = (Receiver, Vec<ReceiverRead>, R);
+/// Root tracking is selected once per physical writer. Ordinary receiver-read
+/// timing remains present in both specializations.
+pub(super) trait RootCoordinate: Copy {
+    fn capture(read: RootRead) -> Self;
+    fn read(self) -> Option<RootRead>;
+}
+impl RootCoordinate for RootRead {
+    fn capture(read: RootRead) -> Self {
+        read
+    }
+    fn read(self) -> Option<RootRead> {
+        Some(self)
+    }
+}
+impl RootCoordinate for () {
+    fn capture(_: RootRead) -> Self {}
+    fn read(self) -> Option<RootRead> {
+        None
+    }
+}
+
 pub(super) fn receiver_references(
     value: &ValueExpression,
     path: &[Option<String>],
@@ -12,18 +33,18 @@ pub(super) fn receiver_references(
     walk_references(value, path, 0, &mut |receiver, _, _| output.push(receiver));
 }
 
-pub(super) fn write_receiver_references(
+pub(super) fn write_receiver_references<R: RootCoordinate>(
     value: &ValueExpression,
     path: &[Option<String>],
     reads: &[ReceiverRead],
-    output: &mut Vec<ReceiverWrite>,
+    output: &mut Vec<ReceiverWrite<R>>,
 ) {
     walk_references(value, path, 0, &mut |receiver, acquired, read| {
         let retained = receiver.1.len() - acquired;
         let reads = std::iter::repeat_n(Some(read), acquired)
             .chain(reads[reads.len() - retained..].iter().copied())
             .collect();
-        output.push((receiver, reads, read));
+        output.push((receiver, reads, R::capture(read)));
     });
 }
 

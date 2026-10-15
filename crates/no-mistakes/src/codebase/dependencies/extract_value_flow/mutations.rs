@@ -59,16 +59,6 @@ impl ImportCollector {
             let has_assignment = assigned.is_some();
             let acquired_at = self.receiver_acquisition_offset(offset);
             let reads = vec![Some((acquired_at, self.current_function_id())); parts.len()];
-            let pending = vec![(
-                (
-                    ((scope, base.to_string()), parts),
-                    reads,
-                    (acquired_at, self.current_function_id()),
-                ),
-                false,
-                true,
-                false,
-            )];
             let info = mutation_projection::MutationInfo {
                 metadata,
                 assigned_member,
@@ -76,7 +66,16 @@ impl ImportCollector {
                 has_assignment,
                 proof: None,
             };
-            self.project_member_mutation(pending, assigned, info, &mut affected);
+            let root_read = (acquired_at, self.current_function_id());
+            let receiver = ((scope, base.to_string()), parts);
+            if self.receiver_only_bindings.is_none() {
+                debug_assert!(self.deferred_mutable_writes.is_none());
+                let pending = vec![((receiver, reads, ()), false, true, false)];
+                self.project_member_mutation(pending, assigned, info, &mut affected);
+            } else {
+                let pending = vec![((receiver, reads, root_read), false, true, false)];
+                self.project_member_mutation(pending, assigned, info, &mut affected);
+            }
         }
         self.invalidate_mutation_bindings(&affected, metadata, member);
     }

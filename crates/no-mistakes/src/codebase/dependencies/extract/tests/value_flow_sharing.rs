@@ -56,6 +56,7 @@ fn member_writes_do_not_rebuild_reference_links() {
         true,
     );
     assert_eq!(facts.value_flow.reference_link_constructions, 515);
+    assert_no_mutable_root_work(&facts.value_flow);
     assert_eq!(facts.value_flow.reference_component_links, 3);
     assert_eq!(facts.value_flow.reference_link_visits, 2 * 2 * 256 + 2 * 3);
     assert!(facts.value_flow.reference_component_root_steps <= 2 * 257 + 3 * 3 + 4 * 2);
@@ -131,6 +132,8 @@ fn late_defaults_share_one_indexed_mutation_history() {
     // Direct aliases have no projected value; eligibility must not cause a second scan.
     #[cfg(feature = "test-instrumentation")]
     assert_eq!(facts.value_flow.reference_binding_visits, 256 * 512);
+    #[cfg(feature = "test-instrumentation")]
+    assert_no_mutable_root_work(&facts.value_flow);
 
     let histories = facts
         .value_flow
@@ -340,3 +343,16 @@ fn nested_writes_bound_existing_traversal_and_canonical_lookups() {
 #[cfg(feature = "test-instrumentation")]
 #[path = "replacement_demand.rs"]
 mod replacement_demand;
+
+#[cfg(feature = "test-instrumentation")]
+fn assert_no_mutable_root_work(facts: &ValueFlowFacts) {
+    // Ordinary aliases retain receiver-read timing without mutable-root coordinates.
+    type Receiver = ((usize, String), Vec<Option<String>>);
+    type Read = Option<(u32, Option<CallableId>)>;
+    let entry_bytes = std::mem::size_of::<((Receiver, Vec<Read>, ()), bool, bool, bool)>();
+    assert!(facts.reference_pending_capacity > 0);
+    assert_eq!(
+        (facts.reference_root_probes, facts.reference_pending_bytes),
+        (0, facts.reference_pending_capacity * entry_bytes),
+    );
+}
