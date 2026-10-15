@@ -1,3 +1,10 @@
+#[derive(Clone, Copy, Default)]
+struct DecoratorApplications {
+    member: bool,
+    any: bool,
+    static_started: bool,
+}
+
 struct AggregateAliasCandidate {
     binding_scope: usize,
     lexical_scope_depth: usize,
@@ -19,6 +26,7 @@ struct ImportCollector {
     receiver_replacement_is_fresh: bool,
     receiver_write_is_conditional: bool,
     fresh_receiver_effects: extract_value_flow::fresh_receiver_effects::FreshReceiverEffects,
+    decorator_applications: DecoratorApplications,
     /// Live straight-line guarded segment and its one admitted assignment.
     receiver_conditional_region: Option<(std::num::NonZeroU32, u32)>,
     repeat_depth: usize,

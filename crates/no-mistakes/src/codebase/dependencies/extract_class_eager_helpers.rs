@@ -3,8 +3,11 @@ fn walk_class_with_scoped_methods<'a>(
     class_name: &str,
     class_id: CallableId,
     class: &Class<'a>,
+    decorated_members: bool,
 ) {
-    walk_decorators_as_invocations(collector, &class.decorators);
+    let previous = begin_decorator_applications(collector, class, decorated_members);
+    record_decorator_invocations(collector, &class.decorators);
+    walk::walk_decorators(collector, &class.decorators);
     let pushed_class_scope = collector.push_lexical_scope();
     if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
         collector.add_binding_name(name);
@@ -21,7 +24,16 @@ fn walk_class_with_scoped_methods<'a>(
         }
     }
     collector.visit_ts_class_implements_list(&class.implements);
+    let mut pending = Vec::new();
     for element in &class.body.body {
+        if decorated_members {
+            if let Some(initializer) =
+                defer_decorated_static(collector, Some((class_name, class_id)), element)
+            {
+                pending.push(initializer);
+                continue;
+            }
+        }
         if let ClassElement::MethodDefinition(method) = element {
             let method_id = class_method_callable_id(class, method);
             record_class_computed_key_symbol_reference(
@@ -83,7 +95,9 @@ fn walk_class_with_scoped_methods<'a>(
             walk::walk_class_element(collector, element);
         }
     }
+    visit_deferred_decorated_static(collector, pending);
     collector.pop_lexical_scope(pushed_class_scope);
+    finish_decorator_applications(collector, class, previous);
 }
 
 fn record_class_computed_key_symbol_reference(
@@ -138,6 +152,7 @@ fn visit_class_static_block_with_scope<'a>(
     collector: &mut ImportCollector,
     block: &StaticBlock<'a>,
 ) {
+    begin_static_decorator_applications(collector, block.span.start);
     let pushed = collector.push_lexical_scope();
     if pushed {
         collector
@@ -150,51 +165,4 @@ fn visit_class_static_block_with_scope<'a>(
         collector.var_scope_stack.pop();
     }
     collector.pop_lexical_scope(pushed);
-}
-
-/// Decorators evaluate in the class's enclosing lexical scope, not inside the
-/// class or decorated member. A bare static decorator is still an invocation
-/// at runtime even though the AST represents it as an expression rather than
-/// a `CallExpression`.
-fn walk_decorators_as_invocations<'a>(
-    collector: &mut ImportCollector,
-    decorators: &oxc_allocator::Vec<'a, oxc_ast::ast::Decorator<'a>>,
-) {
-    record_decorator_invocations(collector, decorators);
-    walk::walk_decorators(collector, decorators);
-}
-
-fn record_decorator_invocations<'a>(
-    collector: &mut ImportCollector,
-    decorators: &oxc_allocator::Vec<'a, oxc_ast::ast::Decorator<'a>>,
-) {
-    for decorator in decorators {
-        let line = import_line_at(&collector.line_starts, decorator.span.start as usize);
-        if let Some(callee) = simple_callee_name(&decorator.expression) {
-            collector.mark_call_namespace_head(&decorator.expression);
-            let target_identity = collector.call_target_identity(&callee);
-            let callee_binding_scope = collector.callee_binding_scope(&callee);
-            collector.function_calls.push(FunctionCall {
-                caller: collector.current_function(),
-                caller_id: collector.current_function_id(),
-                syntactic_caller: collector.current_syntactic_caller(),
-                callee,
-                line,
-                offset: decorator.span.start,
-                is_callback: false,
-                invocation: InvocationKind::Call,
-                target_identity,
-                callee_binding_scope,
-                static_arg: None,
-                static_cwd: None,
-            });
-            if has_dynamic_static_member_receiver(&decorator.expression) {
-                collector.record_unknown_call(line, decorator.span.start, InvocationKind::Call);
-            }
-        } else {
-            // A decorator factory or computed member can execute, but its
-            // resulting decorator cannot be named without guessing.
-            collector.record_unknown_call(line, decorator.span.start, InvocationKind::Call);
-        }
-    }
 }

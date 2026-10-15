@@ -528,6 +528,16 @@ inside a separate deferred callable do not invalidate that acquisition; copied
 methods retain their acquisition snapshot. These barriers reuse the request's
 context- and execution-epoch-qualified receiver-effect index.
 
+Decorator application is an opaque invocation for captured receiver identity,
+including bare decorators and the result of decorator factories. The prepared
+receiver event index records application at class completion and a member
+application barrier before eager static initialization. For member-decorated
+classes, eager static initializer children are visited after decorator
+expressions and computed keys; each child is still visited once. Factory
+expressions keep their ordinary call ordering. Deferred callable and instance
+epochs stay separate, and a method copied before application keeps its acquired
+target.
+
 Live receivers supplied to helpers are read after argument evaluation. For example,
 `run(primary, primary.get = replacement)` does not retain the original
 `primary.get` target inside `run`. A method copied in an earlier argument,

@@ -201,12 +201,12 @@ fn walk_exported_default_class<'a>(
     scope: String,
 ) {
     collector.callable_scope_ids.insert((class_id, scope.clone()));
-    record_class_member_calls(collector, &scope, class_id, class);
+    let decorated_members = record_class_member_calls(collector, Some(&scope), class_id, class);
     record_class_base_construction(collector, &scope, class_id, class);
     collector.record_exported_resource_root(&scope);
     record_class_resource_scopes(collector, &scope, class);
     collector.exported_functions.insert(scope.clone());
     collector.callable_scopes.insert(scope.clone());
     collector.class_scopes.insert(scope.clone());
-    walk_class_with_scoped_methods(collector, &scope, class_id, class);
+    walk_class_with_scoped_methods(collector, &scope, class_id, class, decorated_members);
 }

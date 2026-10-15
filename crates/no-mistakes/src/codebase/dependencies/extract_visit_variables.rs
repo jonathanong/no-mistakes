@@ -82,7 +82,8 @@ fn visit_variable_declarator_with_scope<'a>(
                 let class_name = class.id.as_ref().map_or(name, |id| id.name.as_str());
                 let scope = collector.callable_scope_name(class_name);
                 collector.record_callable_binding_id(name, class_id);
-                record_class_member_calls(collector, &scope, class_id, class);
+                let decorated_members =
+                    record_class_member_calls(collector, Some(&scope), class_id, class);
                 record_class_base_construction(collector, &scope, class_id, class);
                 collector.known_function_scopes.insert(scope.clone());
                 collector
@@ -97,7 +98,13 @@ fn visit_variable_declarator_with_scope<'a>(
                 }
                 collector.visit_binding_pattern(&declarator.id);
                 walk_variable_type_annotation(collector, declarator);
-                walk_class_with_scoped_methods(collector, class_name, class_id, class);
+                walk_class_with_scoped_methods(
+                    collector,
+                    class_name,
+                    class_id,
+                    class,
+                    decorated_members,
+                );
             }
         }
         _ if name.is_some() && collector.function_stack.is_empty() && declarator.init.is_some() => {

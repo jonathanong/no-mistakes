@@ -107,6 +107,7 @@ fn visit_receiver_field_initializer<'a>(
     value: &Expression<'a>,
 ) {
     if is_static {
+        begin_static_decorator_applications(collector, value.span().start);
         collector.visit_expression(value);
     } else {
         // Deferred fields can run once per instance even with module context.
