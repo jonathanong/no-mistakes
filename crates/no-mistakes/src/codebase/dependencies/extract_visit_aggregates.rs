@@ -6,7 +6,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
         collector
             .callable_scope_ids
             .insert((class_id, scope.clone()));
-        record_class_member_calls(collector, &scope, class_id, class);
+        let decorated_members = record_class_member_calls(collector, Some(&scope), class_id, class);
         record_class_base_construction(collector, &scope, class_id, class);
         if collector.current_function().is_none() && collector.is_exported_top_level_name(name) {
             collector.record_exported_resource_root(name);
@@ -18,11 +18,25 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
         }
         collector.callable_scopes.insert(scope.clone());
         collector.class_scopes.insert(scope.clone());
-        walk_class_with_scoped_methods(collector, name, CallableId(class.span.start), class);
+        walk_class_with_scoped_methods(
+            collector,
+            name,
+            CallableId(class.span.start),
+            class,
+            decorated_members,
+        );
         return;
     }
+    let decorated_members =
+        record_class_member_calls(collector, None, CallableId(class.span.start), class);
+    let previous = begin_decorator_applications(collector, class, decorated_members);
     record_decorator_invocations(collector, &class.decorators);
-    walk::walk_class(collector, class);
+    if decorated_members {
+        walk_anonymous_member_decorated_class(collector, class);
+    } else {
+        walk::walk_class(collector, class);
+    }
+    finish_decorator_applications(collector, class, previous);
 }
 
 fn visit_export_default_declaration_with_scope<'a>(
@@ -101,40 +115,6 @@ fn visit_exported_enum_declaration<'a>(
     collector.exported_type_scopes.insert(scope);
     walk::walk_ts_enum_declaration(collector, declaration);
     collector.pop_function_scope(true);
-}
-
-fn record_class_member_calls(
-    collector: &mut ImportCollector,
-    class_name: &str,
-    class_id: CallableId,
-    class: &Class<'_>,
-) {
-    for element in &class.body.body {
-        match element {
-            ClassElement::MethodDefinition(method) => {
-                let name = crate::codebase::ts_source::static_property_key_name(&method.key);
-                record_member_call(collector, class_name, class_id, name);
-            }
-            ClassElement::PropertyDefinition(property)
-                if property.r#static
-                    && matches!(
-                        property.value,
-                        Some(
-                            Expression::FunctionExpression(_)
-                                | Expression::ArrowFunctionExpression(_)
-                        )
-                    ) =>
-            {
-                record_member_call(
-                    collector,
-                    class_name,
-                    class_id,
-                    crate::codebase::ts_source::static_property_key_name(&property.key),
-                );
-            }
-            _ => {}
-        }
-    }
 }
 
 fn record_object_member_calls(

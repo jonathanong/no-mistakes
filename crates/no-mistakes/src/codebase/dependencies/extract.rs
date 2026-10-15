@@ -202,6 +202,8 @@ include!("extract_class_heritage_helpers.rs");
 include!("extract_static_getter_helpers.rs");
 include!("extract_object_getter_helpers.rs");
 include!("extract_class_eager_helpers.rs");
+include!("extract_class_decorators.rs");
+include!("extract_class_static_decorators.rs");
 include!("extract_class_callable_helpers.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");

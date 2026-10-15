@@ -5,6 +5,7 @@ fn capture_suffixes_share_alias_chain_and_direct_writes_stay_cold() {
     for (case, nodes, logical, visits) in [
         ("global-capture-chain", 32, 528, None),
         ("global-direct-write", 0, 0, Some(0)),
+        ("global-decorator-cold", 0, 0, Some(0)),
         ("global-many-captures", 16, 16, Some(2063)),
     ] {
         let source = std::fs::read_to_string(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -29,7 +30,7 @@ fn capture_suffixes_share_alias_chain_and_direct_writes_stay_cold() {
             );
             assert_eq!(facts.value_flow.reference_capture_nodes, nodes, "{case}");
             assert_eq!(facts.value_flow.reference_phase_indexes, 0, "{case}");
-            if case == "global-direct-write" {
+            if nodes == 0 {
                 assert_eq!(facts.value_flow.reference_call_indexes, 0);
                 assert_eq!(facts.value_flow.reference_call_entries, 0);
             }
