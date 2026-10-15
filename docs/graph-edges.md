@@ -606,6 +606,10 @@ the matching imported methods. Root assignments preserve acquisition snapshots
 for saved aliases and exclude overwritten roots from later direct reads.
 Conditional and foreign writers remain conservative; copied methods and untouched
 members retain their precision.
+Assignment-pattern receiver reads use RHS-before-LHS execution order, including
+computed targets and conditional root writes. These root summaries do not model
+class-body runtime rebinding or infer receiver identity from a destructured RHS;
+existing scoped facts remain authoritative at those boundaries.
 
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay
