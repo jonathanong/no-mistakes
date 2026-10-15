@@ -36,7 +36,7 @@ impl ReplacementPayloads {
                 let admissible = write.property.is_some()
                     && write.unconditional
                     && stable_leaf(file, &write.value, 0)
-                    && !unstable_rhs(file, &write.value, receivers, index, foreign, path, 0);
+                    && !unstable_rhs(flow, file, &write.value, receivers, index, foreign, path, 0);
                 let leaf = if admissible {
                     let value = flow.value(path, &write.value);
                     replacement_candidate(flow, value)

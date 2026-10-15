@@ -32,6 +32,7 @@ impl ValueFlowResolution<'_, '_> {
                     });
                 call.is_some_and(|call| self.safe_inline_callee(&input.file, &call.callee))
             });
+        let unique = incoming.len() == 1;
         for input in incoming {
             let ParameterInput {
                 file: caller,
@@ -67,15 +68,14 @@ impl ValueFlowResolution<'_, '_> {
             }
             self.default_origins = None;
             let previous_foreign = self.foreign_acquisition;
-            self.foreign_acquisition = self
-                .replacements
-                .is_some_and(|catalog| catalog.possible_repeat(&caller, call.offset, call.context));
             let previous_read = self.invocation_read.clone();
             let previous_execution = self.executing_read;
             self.enter_inline_read(&caller, call, path, parameter.owner);
             if synchronous {
                 self.enter_parameter_read(&caller, call, path, parameter.owner);
             }
+            self.foreign_acquisition =
+                self.parameter_acquisition_repeats(&caller, call, path, parameter.owner, unique);
             let argument = self.invocation_argument(&caller, call, parameter.index);
             let from_default = argument.as_ref().is_none_or(FlowValue::is_undefined);
             let acquisition = self

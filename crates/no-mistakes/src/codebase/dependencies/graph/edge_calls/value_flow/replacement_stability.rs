@@ -58,6 +58,7 @@ fn stable_leaf(file: &CallableFileIndex, expression: &ValueExpression, depth: us
     }
 }
 fn unstable_rhs(
+    flow: &mut ValueFlowResolution<'_, '_>,
     file: &CallableFileIndex,
     expression: &ValueExpression,
     receivers: &FxHashMap<String, usize>,
@@ -81,6 +82,7 @@ fn unstable_rhs(
                 return scoped_name(&file.values.bindings, scope.unwrap_or(0), name).is_some_and(
                     |binding| {
                         unstable_rhs(
+                            flow,
                             file,
                             &binding.value,
                             receivers,
@@ -117,5 +119,47 @@ fn unstable_rhs(
         || repeated_acquisition
             && (index.reset(*receiver)
                 || index.repeat_mutated(*receiver, property)
-                || persistence_barrier(file, name, property, owner))
+                || persistence_barrier(file, name, property, owner)
+                || propagated_rhs_barrier(flow, file, name, property, offset, owner, path))
+}
+
+fn propagated_rhs_barrier(
+    flow: &mut ValueFlowResolution<'_, '_>,
+    file: &CallableFileIndex,
+    name: &str,
+    property: &str,
+    offset: u32,
+    owner: Option<CallableId>,
+    path: &std::path::Path,
+) -> bool {
+    let Some(assigned) = file
+        .values
+        .receiver_mutations
+        .as_ref()
+        .and_then(|histories| histories.get(&0))
+        .and_then(|names| names.get(name))
+        .and_then(|history| history.assigned.as_ref())
+        .and_then(|assigned| assigned.propagated.as_ref())
+        .map(|propagated| &propagated.aggregate)
+    else {
+        return false;
+    };
+    let writes = [assigned.members.get(property), assigned.dynamic.as_ref()];
+    if writes
+        .iter()
+        .flatten()
+        .any(|write| write.single_context() != Some(owner) || write.offset <= offset)
+    {
+        return true;
+    }
+    // A later same-owner alias write cannot change an already copied module
+    // method. A callable snapshot also needs one proven module execution;
+    // otherwise another invocation can observe the previous alias replacement.
+    writes.iter().any(Option::is_some)
+        && owner.is_some_and(|owner| {
+            !matches!(
+                flow.source_execution_phase(path, owner),
+                execution_quality::ExecutionPhase::Exact((_, None))
+            )
+        })
 }
