@@ -5,22 +5,27 @@ fn promotion_preserves_scoped_membership_and_moves_the_first_set() {
     let mut affected = Affected::default();
     assert_eq!(affected.iter().count(), 0);
     assert!(affected.get(&0).is_none());
-    affected.insert(4, "first".into());
-    affected.insert(4, "second".into());
-    affected.insert(4, "first".into());
-    assert_eq!(affected.get(&4).unwrap().len(), 2);
+    affected.insert(4, "first");
+    affected.insert(4, "first");
+    affected.insert(4, "second");
+    affected.insert(4, "first");
+    assert_eq!(affected.get(&4).unwrap().iter().count(), 2);
     assert!(affected.get(&9).is_none());
     let original = affected.get(&4).unwrap().get("first").unwrap().as_ptr();
-    affected.insert(9, "first".into());
+    affected.insert(4, "third");
+    affected.insert(4, "fourth");
+    affected.insert(4, "fourth");
+    affected.insert(9, "first");
     assert_eq!(
         affected.get(&4).unwrap().get("first").unwrap().as_ptr(),
         original
     );
-    affected.insert(12, "third".into());
-    affected.insert(9, "fourth".into());
-    assert_eq!(affected.get(&4).unwrap().len(), 2);
-    assert_eq!(affected.get(&9).unwrap().len(), 2);
+    affected.insert(12, "third");
+    affected.insert(9, "fourth");
+    assert_eq!(affected.get(&4).unwrap().iter().count(), 4);
+    assert_eq!(affected.get(&9).unwrap().iter().count(), 2);
     assert!(affected.get(&12).unwrap().contains("third"));
+    assert!(!affected.get(&4).unwrap().contains("missing"));
     assert!(affected.get(&99).is_none());
     let mut scopes: Vec<_> = affected.iter().map(|(scope, _)| *scope).collect();
     scopes.sort_unstable();
@@ -61,6 +66,7 @@ fn one_scope_physical_writers_need_no_outer_hash_buffers() {
     let source = receiver_source("mutable-root-scale.mts");
     let facts = flow(&source);
     assert_eq!(facts.reference_affected_scope_buffers, 0);
+    assert_eq!(facts.reference_affected_name_buffers, 0);
     let history = &facts.receiver_mutations.as_ref().unwrap()[&0]["client"];
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
     let source = std::fs::read_to_string(
@@ -88,4 +94,16 @@ fn cross_scope_receiver_projection_retains_its_required_promotion() {
     let history = &facts.receiver_mutations.as_ref().unwrap()[&0]["client"];
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, true));
     assert!(!history.assignment_invalidated(&["set"], source.len() as u32, None, true));
+}
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn alias_overflow_keeps_every_receiver_and_required_name_buffer() {
+    let source = receiver_source("mutable-affected-alias-overflow.mts");
+    let facts = flow(&source);
+    assert!(facts.reference_affected_name_buffers > 0);
+    assert_eq!(facts.reference_affected_scope_buffers, 0);
+    let history = &facts.receiver_mutations.as_ref().unwrap()[&0]["client"];
+    assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+    assert!(!history.assignment_invalidated(&["set"], source.len() as u32, None, false));
 }

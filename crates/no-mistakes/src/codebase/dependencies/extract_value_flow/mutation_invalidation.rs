@@ -11,7 +11,7 @@ impl ImportCollector {
         #[cfg(feature = "test-instrumentation")]
         affected.record_counts(&mut self.value_flow);
         for (scope, names) in affected.iter() {
-            for name in names {
+            for name in names.iter() {
                 for index in self
                     .value_binding_indexes
                     .get(scope)

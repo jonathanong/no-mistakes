@@ -67,7 +67,7 @@ impl ImportCollector {
             // No descriptor, component link, or mutable origin can enqueue a
             // successor. Mutation recording above and invalidation still apply.
             if terminal {
-                affected.insert(key.0, key.1.clone());
+                affected.insert(key.0, &key.1);
                 continue;
             }
             let version = root_read.read().and_then(|read| {
@@ -99,7 +99,7 @@ impl ImportCollector {
                 false,
                 false,
             ));
-            affected.insert(key.0, key.1.clone());
+            affected.insert(key.0, &key.1);
             for target in self
                 .value_reference_links
                 .as_ref()
