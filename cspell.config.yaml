@@ -2,6 +2,8 @@ version: "0.2"
 language: en
 useGitignore: true
 ignorePaths:
+  # Preserve the exact native artifact summary bytes and checksum.
+  - "docs/performance/receiver-native-hosted-evidence-2012/summary.md"
   - "Cargo.lock"
   - "pnpm-lock.yaml"
   - "target/**"
