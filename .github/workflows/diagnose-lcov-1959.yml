@@ -1,0 +1,93 @@
+name: "Temporary #1959 coverage artifact diagnostic"
+
+on:
+  push:
+    branches:
+      - diagnostic/1959-coverage-artifact
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout and validate the temporary diagnostic driver
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Verify driver parent and exact changed-path allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "f13f706c857458c1360a8be73605f694ff45369c"
+          actual=$(git diff-tree --no-commit-id --name-only -r HEAD | sort)
+          expected=$(printf '%s\n' \
+            '.github/scripts/diagnose-lcov-1959.py' \
+            '.github/workflows/diagnose-lcov-1959.yml' | sort)
+          test "$actual" = "$expected"
+          printf 'Driver commit: `%s`\nDriver parent: `f13f706c857458c1360a8be73605f694ff45369c`\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Checkout exact measured synthetic source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 0288f460c671d8e4db18dbb12d463234a31fd0ec
+          path: measured-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Fetch exact Codecov comparison base
+        shell: bash
+        run: git -C measured-source fetch --no-tags --depth=1 origin d36ea2af42d7a2a6d20074e4cd8ac1d0bc89568a
+
+      - name: Verify pinned artifact metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact=$(gh api repos/jonathanong/no-mistakes/actions/artifacts/11943593478)
+          jq -e \
+            --argjson run 38670741865 \
+            --arg digest "sha256:02089b7ad11128bda834abd4e618031f8274bf07fdff1a305bf235f9430d2052" \
+            '.id == 11943593478 and .name == "rust-quality-diagnostics" and .size_in_bytes == 2407080 and .digest == $digest and .workflow_run.id == $run and .expired == false' \
+            <<<"$artifact" >/dev/null
+          echo "Verified pinned artifact id, run, name, size, and digest."
+
+      - name: Download the existing coverage artifact only
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 11943593478
+          run-id: 38670741865
+          github-token: ${{ github.token }}
+          repository: jonathanong/no-mistakes
+          path: ${{ runner.temp }}/coverage-artifact
+
+      - name: Validate artifact bounds and identify LCOV
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find "$RUNNER_TEMP/coverage-artifact" -type f -print)
+          test "${#files[@]}" -gt 0
+          test "${#files[@]}" -le 1000
+          total=0
+          for file in "${files[@]}"; do
+            size=$(stat -c '%s' "$file")
+            total=$((total + size))
+          done
+          test "$total" -le 25000000
+          mapfile -t lcov < <(find "$RUNNER_TEMP/coverage-artifact" -type f -name lcov.info -print)
+          test "${#lcov[@]}" -eq 1
+          test "$(stat -c '%s' "${lcov[0]}")" -le 100000000
+          echo "path=${lcov[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Report zero-hit changed production lines
+        env:
+          LCOV_PATH: ${{ steps.artifact.outputs.path }}
+          SOURCE_DIR: ${{ github.workspace }}/measured-source
+        run: python3 .github/scripts/diagnose-lcov-1959.py "$LCOV_PATH"
