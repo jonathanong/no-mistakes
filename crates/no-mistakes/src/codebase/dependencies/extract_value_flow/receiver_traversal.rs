@@ -41,7 +41,7 @@ impl ReceiverTraversal {
         self.ordinary.enter(key, path, reads)
     }
     pub(super) fn exit_ordinary(&mut self, key: &(usize, String)) {
-        self.ordinary.active.remove(key);
+        self.ordinary.remove_active(key);
     }
 
     /// An exit belongs to its sole active version; ambiguous states still
@@ -51,8 +51,8 @@ impl ReceiverTraversal {
             return false;
         };
         states.other.is_empty()
-            && !self.ordinary.active.contains(key)
-            && states.first.1.active.remove(key)
+            && !self.ordinary.contains_active(key)
+            && states.first.1.remove_active(key)
     }
 
     #[cfg(feature = "test-instrumentation")]
@@ -117,7 +117,7 @@ impl ReceiverTraversal {
             None => Some(&mut self.ordinary),
         };
         if let Some(state) = state {
-            state.active.remove(key);
+            state.remove_active(key);
         }
     }
 }
@@ -141,3 +141,11 @@ impl ImportCollector {
             && !self.has_mutable_receiver_binding(key.0, &key.1)
     }
 }
+
+#[cfg(test)]
+#[path = "receiver_traversal_inline_tests.rs"]
+mod inline_tests;
+
+#[cfg(test)]
+#[path = "receiver_traversal_differential_tests.rs"]
+mod differential_tests;

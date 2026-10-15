@@ -1,115 +1,176 @@
 use super::*;
 
-type Key = (usize, String);
-type Paths = FxHashMap<(Key, ValueMutationPath), Vec<nested::ReceiverRead>>;
-#[derive(Default)]
-enum Visits {
-    #[default]
-    Empty,
-    First {
-        state: (Key, ValueMutationPath),
-        reads: Vec<nested::ReceiverRead>,
-    },
-    Many(Paths),
+#[cfg(feature = "test-instrumentation")]
+thread_local! {
+    pub(super) static FIRST_ALLOCATIONS: std::cell::Cell<[usize; 3]> = const { std::cell::Cell::new([0; 3]) };
 }
-impl Visits {
-    fn enter(
-        &mut self,
-        key: &Key,
-        path: &[Option<String>],
-        reads: Vec<nested::ReceiverRead>,
-    ) -> Option<Vec<nested::ReceiverRead>> {
-        let state = (key.clone(), path.to_vec());
-        match self {
-            Self::Empty => {
-                *self = Self::First {
-                    state,
-                    reads: reads.clone(),
-                };
-                Some(reads)
-            }
-            Self::First {
-                state: previous_state,
-                reads: previous,
-            } if *previous_state == state => {
-                merge_reads(previous, &reads).then(|| previous.clone())
-            }
-            Self::First {
-                state: previous_state,
-                reads: previous,
-            } => {
-                let previous_state = std::mem::take(previous_state);
-                let previous = std::mem::take(previous);
-                let mut entries = fx_map();
-                entries.insert(previous_state, previous);
-                entries.insert(state, reads.clone());
-                *self = Self::Many(entries);
-                Some(reads)
-            }
-            Self::Many(entries) => {
-                let Some(previous) = entries.get_mut(&state) else {
-                    entries.insert(state, reads.clone());
-                    return Some(reads);
-                };
-                merge_reads(previous, &reads).then(|| previous.clone())
-            }
-        }
-    }
+#[cfg(feature = "test-instrumentation")]
+fn first_allocation(index: usize, allocated: bool) {
+    FIRST_ALLOCATIONS.with(|counts| {
+        let mut values = counts.get();
+        values[index] += usize::from(allocated);
+        counts.set(values);
+    });
 }
 
-/// Cycle membership uses the binding key, independently of visited paths.
+type Key = (usize, String);
+type Paths = FxHashMap<(Key, ValueMutationPath), Vec<nested::ReceiverRead>>;
+
 #[derive(Default)]
-pub(super) struct ActiveKeys {
-    first: Option<Key>,
-    other: FxHashSet<Key>,
+pub(super) enum TraversalState {
+    #[default]
+    Empty,
+    FirstInline {
+        state: (Key, Option<Option<String>>),
+        read: Option<nested::ReceiverRead>,
+        active: bool,
+    },
+    FirstHeap {
+        state: (Key, ValueMutationPath),
+        reads: Vec<nested::ReceiverRead>,
+        active: bool,
+    },
+    Many {
+        visited: Paths,
+        active: ActiveKeys,
+    },
 }
-impl ActiveKeys {
-    pub(super) fn contains(&self, key: &Key) -> bool {
-        self.first.as_ref() == Some(key) || self.other.contains(key)
-    }
-    fn insert(&mut self, key: Key) {
-        if self.first.is_none() {
-            self.first = Some(key);
-        } else {
-            self.other.insert(key);
-        }
-    }
-    pub(super) fn remove(&mut self, key: &Key) -> bool {
-        if self.first.as_ref() == Some(key) {
-            self.first = None;
-            true
-        } else {
-            self.other.remove(key)
-        }
-    }
-}
-#[derive(Default)]
-pub(super) struct TraversalState {
-    pub(super) active: ActiveKeys,
-    visited: Visits,
-}
+
+#[path = "receiver_traversal_active.rs"]
+mod active;
+use active::ActiveKeys;
+
 impl TraversalState {
+    pub(super) fn contains_active(&self, key: &Key) -> bool {
+        match self {
+            Self::Empty => false,
+            Self::FirstInline { state, active, .. } => *active && state.0 == *key,
+            Self::FirstHeap { state, active, .. } => *active && state.0 == *key,
+            Self::Many { active, .. } => active.contains(key),
+        }
+    }
+    pub(super) fn remove_active(&mut self, key: &Key) -> bool {
+        match self {
+            Self::FirstInline { state, active, .. } if state.0 == *key => std::mem::take(active),
+            Self::FirstHeap { state, active, .. } if state.0 == *key => std::mem::take(active),
+            Self::Many { active, .. } => active.remove(key),
+            _ => false,
+        }
+    }
     pub(super) fn enter(
         &mut self,
         key: &Key,
         path: &[Option<String>],
         reads: Vec<nested::ReceiverRead>,
     ) -> Option<Vec<nested::ReceiverRead>> {
-        if self.active.contains(key) {
+        // Active identity is the binding alone, before path matching/promotion.
+        if self.contains_active(key) {
             return None;
         }
-        let reads = self.visited.enter(key, path, reads)?;
-        self.active.insert(key.clone());
-        Some(reads)
+        match self {
+            Self::Empty if path.len() <= 1 && reads.len() <= 1 => {
+                *self = Self::FirstInline {
+                    state: (key.clone(), path.first().cloned()),
+                    read: reads.first().copied(),
+                    active: true,
+                };
+                Some(reads)
+            }
+            Self::Empty => {
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    first_allocation(0, !reads.is_empty());
+                    first_allocation(1, !path.is_empty());
+                }
+                *self = Self::FirstHeap {
+                    state: (key.clone(), path.to_vec()),
+                    reads: reads.clone(),
+                    active: true,
+                };
+                Some(reads)
+            }
+            Self::FirstInline {
+                state,
+                read,
+                active,
+            } if state.0 == *key && state.1.as_slice() == path => {
+                let changed = merge_reads(read.as_mut_slice(), &reads);
+                *active = changed;
+                changed.then(|| read.as_slice().to_vec())
+            }
+            Self::FirstHeap {
+                state,
+                reads: previous,
+                active,
+            } if state.0 == *key && state.1 == path => {
+                let changed = merge_reads(previous, &reads);
+                *active = changed;
+                changed.then(|| previous.clone())
+            }
+            Self::FirstInline { .. } | Self::FirstHeap { .. } => {
+                self.promote();
+                self.enter(key, path, reads)
+            }
+            Self::Many { visited, active } => {
+                let state = (key.clone(), path.to_vec());
+                let selected = if let Some(previous) = visited.get_mut(&state) {
+                    merge_reads(previous, &reads).then(|| previous.clone())
+                } else {
+                    visited.insert(state, reads.clone());
+                    Some(reads)
+                }?;
+                active.insert(key.clone());
+                Some(selected)
+            }
+        }
+    }
+    fn promote(&mut self) {
+        let (state, reads, was_active) = match std::mem::take(self) {
+            Self::FirstInline {
+                state,
+                read,
+                active,
+            } => {
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    first_allocation(0, read.is_some());
+                    first_allocation(1, state.1.is_some());
+                }
+                (
+                    (state.0, state.1.into_iter().collect()),
+                    read.into_iter().collect(),
+                    active,
+                )
+            }
+            Self::FirstHeap {
+                state,
+                reads,
+                active,
+            } => (state, reads, active),
+            _ => unreachable!("only first visits promote"),
+        };
+        #[cfg(feature = "test-instrumentation")]
+        first_allocation(2, was_active && !state.0 .1.is_empty());
+        let mut active = ActiveKeys::default();
+        // The owned visited key is about to move. Materialize an independent
+        // active key first, only when its original traversal is still active.
+        if was_active {
+            active.insert(state.0.clone());
+        }
+        let mut visited = fx_map();
+        visited.insert(state, reads);
+        *self = Self::Many { visited, active };
     }
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn heap_buffers(&self) -> usize {
-        usize::from(matches!(self.visited, Visits::Many(_)))
-            + usize::from(self.active.other.capacity() > 0)
+        match self {
+            Self::Many { active, .. } => 1 + active.overflow_buffer(),
+            _ => 0,
+        }
     }
 }
-/// One monotone cutoff summary per receiver/path. Keep the original zip,
-/// minimum-offset, ambiguous-context and unchanged-arrival semantics.
+
+/// Preserve zip cardinality, minimum offsets and ambiguous owner semantics.
 fn merge_reads(previous: &mut [nested::ReceiverRead], reads: &[nested::ReceiverRead]) -> bool {
     let mut changed = false;
     for (previous, incoming) in previous.iter_mut().zip(reads) {
