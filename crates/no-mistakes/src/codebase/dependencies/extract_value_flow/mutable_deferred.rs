@@ -54,14 +54,11 @@ impl ImportCollector {
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
         info: MutationInfo<'_>,
         blocked: bool,
+        version: mutable_origins::RootVersion,
     ) -> bool {
-        if !self.has_mutable_receiver_binding(key.0, &key.1) {
-            return false;
-        }
         if self.deferred_mutable_writes.is_none() {
             return false;
         }
-        let version = self.mutable_receiver_version(key, coordinates.2);
         let proof = DeferredProof {
             phases: self.fresh_receiver_effects.phases.clone(),
             region: self
@@ -80,7 +77,7 @@ impl ImportCollector {
                     coordinates.1.to_vec(),
                     coordinates.2,
                 ),
-                version,
+                Some(version),
                 blocked,
             )],
             metadata: info.metadata,

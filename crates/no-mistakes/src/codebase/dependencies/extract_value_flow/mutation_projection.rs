@@ -138,9 +138,7 @@ impl ImportCollector {
                     !matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
                         || (root_read.read().is_some() && self.references_mutable_receiver(value))
                 });
-            let projects = (root_read.read().is_some()
-                && self.has_mutable_receiver_binding(key.0, &key.1))
-                || first_projected.is_some();
+            let projects = version.is_some() || first_projected.is_some();
             let replaced = projects && self.mutation_reference_replaced(&key, &path, &reads, info);
             // The eligibility prefix contains only direct aliases. They have
             // already been handled by component links and need no second visit.
@@ -167,13 +165,14 @@ impl ImportCollector {
                     nested::write_receiver_references(value, &path, &reads, &mut references);
                 }
             }
-            if let Some(read) = root_read.read() {
-                #[cfg(feature = "test-instrumentation")]
-                {
-                    self.value_flow.reference_root_probes += 1;
-                }
-                if !self.defer_mutable_projection(&key, (&path, &reads, read), info, replaced)
-                    && !replaced
+            if let (Some(read), Some(version)) = (root_read.read(), version) {
+                if !self.defer_mutable_projection(
+                    &key,
+                    (&path, &reads, read),
+                    info,
+                    replaced,
+                    version,
+                ) && !replaced
                 {
                     #[cfg(feature = "test-instrumentation")]
                     {

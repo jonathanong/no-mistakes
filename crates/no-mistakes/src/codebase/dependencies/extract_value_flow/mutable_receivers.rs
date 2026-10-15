@@ -148,9 +148,7 @@ impl ImportCollector {
         foreign_before: usize,
     ) {
         if let Some(origins) = &self.receiver_only_bindings {
-            if origins.contains(key.0, &key.1) {
-                origins.append_references(key, coordinates, output, foreign_before);
-            }
+            origins.append_references(key, coordinates, output, foreign_before);
         }
     }
 
