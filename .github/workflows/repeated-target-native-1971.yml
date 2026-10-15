@@ -1,0 +1,90 @@
+# PROPOSAL ONLY: place solely on the reviewed temporary diagnostic branch.
+name: Repeated targets current native pair
+on:
+  push:
+    branches: [diagnostics/repeated-targets-native-1971-edb31-current1]
+    paths:
+      - '.github/workflows/repeated-target-native-1971.yml'
+      - '.github/scripts/repeated-target-native-1971/**'
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  pull-requests: read
+concurrency:
+  group: repeated-target-native-1971-edb31-current1
+  cancel-in-progress: false
+jobs:
+  current-native:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    env:
+      RUSTUP_TOOLCHAIN: '1.99.0'
+      PYTHONDONTWRITEBYTECODE: '1'
+      DRIVER: .github/scripts/repeated-target-native-1971
+      EXPECTED_PR_HEAD: edb31fdf0307bbadf5ef141dec2dfcabf027312d
+    steps:
+      - name: Checkout exact diagnostic branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Set isolated output
+        run: printf 'EXPERIMENT_ROOT=%s/repeated-target-native-1971\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install fixed compiler
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.99.0'
+      - name: Verify diagnostic allowlist and exact successful CI pair
+        id: preflight
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 "$DRIVER/test_sampling.py"
+          python3 "$DRIVER/test_consumer_policy.py"
+          python3 "$DRIVER/test_current_pair.py"
+          python3 "$DRIVER/test_graph_semantics.py"
+          python3 "$DRIVER/pair.py" prepare --root "$EXPERIMENT_ROOT" --expected-pr-head "$EXPECTED_PR_HEAD"
+      - name: Build and freeze exact default-feature release pair
+        id: build
+        timeout-minutes: 90
+        run: python3 "$DRIVER/pair.py" build --root "$EXPERIMENT_ROOT"
+      - name: Validate common inputs and approved semantic deltas
+        id: semantics
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 "$DRIVER/semantics.py" --root "$EXPERIMENT_ROOT"
+      - name: Retain balanced native startup pilot and long rows
+        timeout-minutes: 60
+        run: python3 "$DRIVER/measure.py" --root "$EXPERIMENT_ROOT"
+      - name: Measure separate default and instrumented layouts
+        if: ${{ always() && steps.build.outcome == 'success' && steps.semantics.outcome == 'success' }}
+        timeout-minutes: 120
+        run: python3 "$DRIVER/pair.py" layout --root "$EXPERIMENT_ROOT"
+      - name: Summarize every retained outcome and curate manifest
+        if: ${{ always() }}
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          python3 "$DRIVER/report.py" --root "$EXPERIMENT_ROOT"
+          report_status=$?
+          set -e
+          if test -f "$EXPERIMENT_ROOT/public/summary.md"; then
+            cat "$EXPERIMENT_ROOT/public/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$report_status"
+      - name: Upload readable numeric evidence only
+        if: ${{ always() }}
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: repeated-target-native-1971-current-readable
+          path: ${{ env.EXPERIMENT_ROOT }}/public/
+          if-no-files-found: error
+          retention-days: 30
