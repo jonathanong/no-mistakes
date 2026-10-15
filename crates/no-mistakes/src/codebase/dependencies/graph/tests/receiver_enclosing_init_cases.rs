@@ -4,6 +4,18 @@ pub(super) fn cases() -> &'static [Case] {
     &[
         (
             "enclosing-tdz",
+            Some("initializedSwitchAlternate/switchRun"),
+            "fn",
+            Some("primary.get"),
+        ),
+        (
+            "enclosing-tdz",
+            Some("branchLocalUninitialized/branchNeverRun"),
+            "fn",
+            None,
+        ),
+        (
+            "enclosing-tdz",
             Some("neverInitialized/neverRun"),
             "fn",
             None,

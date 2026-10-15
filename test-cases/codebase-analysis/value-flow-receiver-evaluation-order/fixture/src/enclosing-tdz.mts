@@ -85,3 +85,29 @@ function hoistedStaticBlockAfterReturn() {
   }
 }
 hoistedStaticBlockAfterReturn();
+
+// Keep the throwing alternate: a completing alternate makes this control vacuous.
+function branchLocalUninitialized(flag: boolean) {
+  if (flag) {
+    function acquire() { return branchSaved; }
+    return function branchNeverRun(fn = acquire()) { fn('key'); };
+    const branchSaved = primary.get;
+  }
+  throw new Error('false path does not complete');
+}
+branchLocalUninitialized(true)?.();
+
+function initializedSwitchAlternate(flag: boolean) {
+  switch (flag) {
+    case true:
+      return;
+    default: {
+      // A terminal sibling case cannot cut off this initialized capture.
+      const saved = primary.get;
+      function acquire() { return saved; }
+      function switchRun(fn = acquire()) { fn('key'); }
+      switchRun();
+    }
+  }
+}
+initializedSwitchAlternate(false);

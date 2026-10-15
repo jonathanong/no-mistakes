@@ -437,7 +437,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   aliases and callable bindings are indexed by lexical `(binding scope, local
 name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
-  `invalidated_at`. Dotted aliases follow that same cycle-safe chain, so
+  `invalidated_at`. Value initializers after a direct `return` or `throw` in a
+  branch remain unknown for deferred captures. This cutoff stays within that
+  statement sequence, preserving initialized captures in reachable alternates.
+  Dotted aliases follow that same cycle-safe chain, so
   `calls.run` through `invoke` still reaches `target`. Export resolution carries
   the source binding's `CallableId` through local aliases, named re-exports, and
   unambiguous `export *`, so duplicate display names cannot select the wrong
