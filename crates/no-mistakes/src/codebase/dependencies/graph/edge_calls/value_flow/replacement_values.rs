@@ -14,9 +14,11 @@ impl ValueFlowResolution<'_, '_> {
                 && ((read.owner.0 == path && context == Some(read.owner.1))
                     || self
                         .executing_read
-                        .is_some_and(|(owner, _, _)| context == Some(owner)))
+                        .is_some_and(|(file, owner, _)| file == path && context == Some(owner)))
         }) {
-            return Some(self.expression_read(path, offset, context));
+            // A repeated phase without a proven location must delegate to the
+            // ordinary repeated-read guard, never fabricate lexical timing.
+            return self.expression_phase(path, offset, context).location();
         }
         if let (Some(owner), Some(catalog), Some(root)) = (
             context,
@@ -45,7 +47,7 @@ impl ValueFlowResolution<'_, '_> {
                 let once = !self.foreign_acquisition && !frames.is_empty() && frames.iter().all(|frame| {
                     matches!(frame.map(|frame| &frame.kind), Some(OriginKind::ReceiverUse(_, read))
                         if read.file == path && read.owns(path, context) && read.context.is_none()
-                            && !catalog.possible_repeat(path, read.offset, read.context))
+                            && !read.repeated && !catalog.possible_repeat(path, read.offset, read.context))
                 });
                 if once {
                     return None;

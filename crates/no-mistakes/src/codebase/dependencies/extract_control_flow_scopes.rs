@@ -68,13 +68,15 @@ fn visit_while_statement_per_item<'a>(
         collector,
         literal_truthiness(&statement.test) != Some(true),
         |collector| {
-            with_replacement_region(
-                collector,
-                statement.body.span(),
-                false,
-                literal_truthiness(&statement.test) != Some(false),
-                |collector| collector.visit_statement(&statement.body),
-            );
+            with_conditional_receiver_write(collector, |collector| {
+                with_replacement_region(
+                    collector,
+                    statement.body.span(),
+                    false,
+                    literal_truthiness(&statement.test) != Some(false),
+                    |collector| collector.visit_statement(&statement.body),
+                );
+            });
         },
     );
 }
@@ -83,13 +85,15 @@ fn visit_do_while_statement_per_item<'a>(
     statement: &oxc_ast::ast::DoWhileStatement<'a>,
 ) {
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "do");
-    with_replacement_region(
-        collector,
-        statement.body.span(),
-        false,
-        literal_truthiness(&statement.test) != Some(false),
-        |collector| collector.visit_statement(&statement.body),
-    );
+    with_conditional_receiver_write(collector, |collector| {
+        with_replacement_region(
+            collector,
+            statement.body.span(),
+            false,
+            literal_truthiness(&statement.test) != Some(false),
+            |collector| collector.visit_statement(&statement.body),
+        );
+    });
     // Only prove simple bodies: explicit exits can skip even the first test.
     with_conditional_execution(
         collector,

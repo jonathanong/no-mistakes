@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "mode": "cold_first_analysis",
+      "priorCollectors": 0,
+      "measuredCollectors": 1,
+      "postMarkerCollectors": 1,
+      "priorHelperEvents": 0,
+      "helperEvents": ["manual-start", "fixture", "probe", "manual-return", "edges", "globs"]
+    },
+    {
+      "mode": "conditioning_inclusive",
+      "priorCollectors": 0,
+      "measuredCollectors": 8,
+      "postMarkerCollectors": 0,
+      "priorHelperEvents": 0,
+      "helperEvents": [
+        "manual-start",
+        "fixture",
+        "facts",
+        "edges",
+        "globs",
+        "conditioning",
+        "conditioning",
+        "conditioning",
+        "conditioning",
+        "conditioning",
+        "probe",
+        "manual-return"
+      ]
+    },
+    {
+      "mode": "extract_after_recorded_prefix",
+      "priorCollectors": 7,
+      "measuredCollectors": 1,
+      "postMarkerCollectors": 0,
+      "priorHelperEvents": 9,
+      "helperEvents": [
+        "fixture",
+        "facts",
+        "edges",
+        "globs",
+        "conditioning",
+        "conditioning",
+        "conditioning",
+        "conditioning",
+        "conditioning",
+        "manual-start",
+        "probe",
+        "manual-return"
+      ]
+    }
+  ]
+}

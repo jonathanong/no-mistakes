@@ -210,9 +210,24 @@ fn effects_cli_retains_cross_file_inline_receiver_timing() {
 }
 
 #[test]
+fn effects_cli_respects_definite_enclosing_initialization() {
+    let root = fixture("value-flow-receiver-evaluation-order");
+    let report = run_json(
+        &root,
+        &["effects", "cache", "--entry", "src/enclosing-tdz.mts"],
+    );
+    let sites = report["callSites"].as_array().unwrap();
+    assert_eq!(sites.len(), 5, "{report}");
+    assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
+}
+
+#[test]
 fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
     let root = fixture("inline-member-precision");
     for (name, expected) in [
+        ("unique-helper-repeated", 0),
+        ("unique-helper-snapshot", 1),
+        ("unique-helper-setup", 1),
         ("alias-named", 1),
         ("alias-inline", 1),
         ("alias-chain", 1),
@@ -227,6 +242,27 @@ fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
         ("alias-inline-snapshot", 1),
         ("alias-inline-snapshot-owned", 1),
         ("inline-snapshot-owned", 1),
+        ("default-snapshot-owned", 1),
+        ("default-object-snapshot-owned", 1),
+        ("default-snapshot-write-first", 0),
+        ("default-snapshot-deferred-arrow", 0),
+        ("default-snapshot-deferred-function", 0),
+        ("default-snapshot-deferred-method", 0),
+        ("default-snapshot-nested", 0),
+        ("default-snapshot-loop", 0),
+        ("default-snapshot-field", 0),
+        ("default-snapshot-accessor", 0),
+        ("default-snapshot-async", 0),
+        ("default-snapshot-reentrant", 0),
+        ("default-computed-arrow", 0),
+        ("default-computed-function", 0),
+        ("default-computed-method", 0),
+        ("default-computed-class", 0),
+        ("default-computed-parameter", 0),
+        ("default-computed-key", 1),
+        ("default-computed-class-key", 1),
+        ("default-computed-restored", 1),
+        ("module-computed-arrow", 0),
         ("inline-snapshot-owned-write-first", 0),
         ("inline-snapshot-repeated-for", 0),
         ("inline-snapshot-repeated-header", 0),

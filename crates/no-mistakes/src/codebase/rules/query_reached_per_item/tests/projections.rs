@@ -200,3 +200,55 @@ fn imported_receivers_track_late_objects_and_supplied_arguments() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn nested_alias_writes_do_not_report_stale_imported_effects() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/nested-receiver-writes.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 16, 18, 20, 41, 55, 73, 81],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn conditional_and_unknown_reference_writes_do_not_sever_original_receivers() {
+    let root = root().with_file_name("provenance-fixture");
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/nested-receiver-cutoffs.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [93, 175, 184, 207, 217, 268, 275],
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/nested-receiver-owned-defaults.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [12, 30],
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file.starts_with("src/nested-receiver-containers/"))
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("src/nested-receiver-containers/copied-method.mts", 9),
+            ("src/nested-receiver-containers/replaced-terminal.mts", 8),
+            ("src/nested-receiver-containers/sibling.mts", 8),
+        ],
+        "{findings:#?}"
+    );
+}

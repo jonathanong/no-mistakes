@@ -1,0 +1,46 @@
+{
+  "free_disk_bytes": 91320979456,
+  "proc_available_memory_kib": 15044476,
+  "effective_available_memory_bytes": 15405543424,
+  "visible_cgroup_memory_limits": [],
+  "memory_budget_scope": "minimum of proc MemAvailable and visible cgroup ancestor headroom; hidden host limits unknown",
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "selected_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cpu_quota": null,
+  "architecture": "x86_64",
+  "kernel": "6.17.0-1022-azure",
+  "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+  "image_os": "ubuntu24",
+  "image_version": "20261012.334.1",
+  "rayon_workers": 4,
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1",
+  "pmu": {
+    "event": "instructions:u",
+    "host_settings_changed": false,
+    "devices": [
+      "breakpoint",
+      "kprobe",
+      "msr",
+      "software",
+      "tracepoint",
+      "uprobe"
+    ],
+    "paranoid": "4",
+    "available": false,
+    "errno": 13,
+    "error_name": "EACCES",
+    "reason": "Permission denied"
+  },
+  "historical_scope": "57c927d to 8d81aa1; not current main",
+  "issue": 2012
+}

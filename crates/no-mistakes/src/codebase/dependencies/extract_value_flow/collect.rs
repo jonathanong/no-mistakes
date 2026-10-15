@@ -6,7 +6,14 @@ impl ImportCollector {
             return;
         }
         if let Some(init) = &declarator.init {
-            let value = self.value_expression(init);
+            let value = if self
+                .unreachable_value_binding_after
+                .is_some_and(|cutoff| declarator.span.start >= cutoff)
+            {
+                ValueExpression::Unknown
+            } else {
+                self.value_expression(init)
+            };
             if !immutable {
                 for name in binding_names(&declarator.id) {
                     if let Some(scope) = self.callee_binding_scope(&name) {
@@ -135,7 +142,8 @@ impl ImportCollector {
             arguments: std::sync::Arc::new(arguments),
             bound,
             spread_at,
-            once: self.current_function_id().is_none()
+            repeated: self.repeat_depth > self.call_repeat_base,
+            once: self.current_function_id() == self.module_evaluation_owner
                 && self.repeat_depth == 0
                 && collect_helpers::direct_arrow(&call.callee),
         });
@@ -176,18 +184,6 @@ impl ImportCollector {
         );
         for declarator in &declaration.declarations {
             self.record_value_binding(declarator, immutable);
-        }
-    }
-}
-
-impl ImportCollector {
-    pub(in super::super) fn record_value_fallthrough(&mut self, statements: &[Statement<'_>]) {
-        if self.collect_value_flow && completion::sequence_completes(statements) {
-            if let Some(owner) = self.current_function_id() {
-                self.value_flow
-                    .returns
-                    .push((owner, ValueExpression::Unknown));
-            }
         }
     }
 }

@@ -1,6 +1,5 @@
 use crate::fx::{fx_map, fx_set, FxHashMap, FxHashSet};
 use anyhow::Result;
-use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     AccessorProperty, Argument, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
     BinaryExpression, BinaryOperator, BindingPattern, BlockStatement, CallExpression, CatchClause,
@@ -17,8 +16,7 @@ use oxc_ast::ast::{
     TaggedTemplateExpression, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::{GetSpan, SourceType};
-use std::path::Path;
+use oxc_span::GetSpan;
 
 /// Opaque source-local identity for a callable owner.
 ///
@@ -180,46 +178,7 @@ struct CallableAliasBinding {
 
 include!("extract_import_facts.rs");
 
-/// Holds parser configuration for TypeScript or TSX extraction.
-pub struct ImportExtractor {
-    is_tsx: bool,
-}
-
-impl ImportExtractor {
-    pub fn for_typescript() -> Result<Self> {
-        Ok(Self { is_tsx: false })
-    }
-
-    pub fn for_tsx() -> Result<Self> {
-        Ok(Self { is_tsx: true })
-    }
-
-    /// Extract import/export specifier strings from `source`, tagging each
-    /// with the syntax form that created the dependency.
-    pub fn extract(&self, source: &str) -> Result<Vec<ExtractedImport>> {
-        let allocator = Allocator::default();
-        let source_type = if self.is_tsx {
-            SourceType::tsx()
-        } else {
-            SourceType::ts()
-        };
-        let sentinel = if self.is_tsx {
-            "imports.tsx"
-        } else {
-            "imports.ts"
-        };
-        let ret = crate::ast::parse(Path::new(sentinel), &allocator, source, source_type);
-
-        Ok(
-            extract_import_facts_from_program_with_source_and_resource_roots(
-                &ret.program,
-                source,
-                false,
-            )
-            .imports,
-        )
-    }
-}
+include!("extract_import_extractor.rs");
 
 include!("extract_entrypoints.rs");
 include!("extract_entrypoints_predeclare.rs");
@@ -231,6 +190,7 @@ include!("extract_namespace_uses.rs");
 include!("extract_export_names.rs");
 include!("extract_collector.rs");
 include!("extract_visit.rs");
+include!("extract_visit_callables.rs");
 include!("extract_visit_modules.rs");
 include!("extract_visit_exports.rs");
 include!("extract_collector_scopes.rs");
@@ -252,7 +212,10 @@ include!("extract_collector_deferred_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
 include!("extract_control_flow_scopes.rs");
+include!("extract_loop_assignment_scopes.rs");
+include!("extract_receiver_regions.rs");
 include!("extract_execution.rs");
+include!("extract_receiver_assignment_helpers.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
 include!("extract_resource_scopes.rs");
@@ -263,8 +226,6 @@ use extract_visit_hoist::{
     walk_arrow_function_with_body_bindings, walk_function_with_body_bindings,
 };
 include!("extract_visit_types.rs");
-mod extract_binding_names;
-use extract_binding_names::{assignment_target_names, binding_names};
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
 

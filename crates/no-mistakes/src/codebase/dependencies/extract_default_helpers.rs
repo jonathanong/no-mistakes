@@ -29,6 +29,13 @@ fn walk_default_expression<'a>(
         );
         record_object_resource_scopes(collector, "default", object);
     }
+    let saved_module_owner = collector.module_evaluation_owner;
+    // The export keyword starts before every real callable in this expression,
+    // so its synthetic ID cannot equal a nested callable's parser span start.
+    collector.module_evaluation_owner = collector
+        .current_function_id()
+        .is_none()
+        .then_some(CallableId(export.span.start));
     collector.push_function_scope(Some("default".to_string()), CallableId(export.span.start));
     // Flag the runtime import in the callback directly forming the default value —
     // e.g. `export default dynamic(() => import('./Foo'))` — as reachable through
@@ -40,6 +47,7 @@ fn walk_default_expression<'a>(
     walk::walk_export_default_declaration(collector, export);
     collector.runtime_reachable_base_depth = saved_base_depth;
     collector.pop_function_scope(true);
+    collector.module_evaluation_owner = saved_module_owner;
 }
 
 fn parenthesized_default_function<'a>(
@@ -137,7 +145,7 @@ fn walk_default_arrow_with_scope<'a>(
     collector.callable_scopes.insert("default".to_string());
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
-    walk_arrow_function_with_body_bindings(collector, arrow);
+    walk_arrow_function_with_body_bindings(collector, arrow, true);
     collector.pop_function_scope(true);
 }
 
@@ -152,7 +160,7 @@ fn walk_default_function_with_scope<'a>(
     collector.callable_scopes.insert(scope.to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk_function_with_body_bindings(collector, function);
+    walk_function_with_body_bindings(collector, function, true);
     collector.pop_function_scope(true);
     collector.pop_syntactic_caller(pushed_syntactic_caller);
 }

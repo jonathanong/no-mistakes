@@ -46,13 +46,18 @@ fn visit_expression_with_annex_b_initializer<'a>(
     {
         collector.invalidate_replacement_execution();
     }
-    if let Some((_, outer_conditional)) = collector
+    if let Some((_, outer_conditional, outer_receiver_conditional)) = collector
         .annex_b_for_in_initializer
-        .filter(|(span, _)| !collector.suppress_imports && *span == expression.span())
+        .filter(|(span, _, _)| !collector.suppress_imports && *span == expression.span())
     {
         let initializer = collector.annex_b_for_in_initializer.take();
         let previous = std::mem::replace(&mut collector.conditional_execution, outer_conditional);
+        let previous_receiver = std::mem::replace(
+            &mut collector.receiver_write_is_conditional,
+            outer_receiver_conditional,
+        );
         walk::walk_expression(collector, expression);
+        collector.receiver_write_is_conditional = previous_receiver;
         collector.conditional_execution = previous;
         collector.annex_b_for_in_initializer = initializer;
     } else {

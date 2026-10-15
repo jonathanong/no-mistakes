@@ -144,6 +144,8 @@ mod value_flow_worklist;
 
 #[path = "imported_receiver_mutations.rs"]
 mod imported_receiver_mutations;
+#[path = "nested_receiver_cutoffs.rs"]
+mod nested_receiver_cutoffs;
 
 #[path = "receiver_evaluation_order.rs"]
 mod receiver_evaluation_order;

@@ -1,0 +1,39 @@
+{
+  "label": "baseline",
+  "revision": "57c927df4c09f450f67248277d49070f9576ba3b",
+  "tree": "4deecf0efbb9c9c2478025434e4dbfb0ba2fc47f",
+  "profile": "opt3",
+  "cargo_profile": {
+    "opt_level": "3",
+    "debuginfo": 0,
+    "debug_assertions": false,
+    "overflow_checks": false,
+    "test": false
+  },
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "fresh": false,
+  "crate_version": "0.90.0",
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "probe_sha256": "32cb4e841940366c284ceed4855c2936adee156485d2d4a8ea82dd718afaaa33",
+  "fixture_sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+  "library_sha256": "a2b93576008c736ae2e2817887ba750b8a46e6e6da94546bbfb9dfa16338828e",
+  "library_bytes": 393617580,
+  "binary_sha256": "bed0a0af141bcd15e273615dd37f7f77c33b240bf0d983cfca518d416ffd3a97",
+  "binary_bytes": 81846680,
+  "probe_flags": [
+    "--edition=2021",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "lto=true",
+    "-C",
+    "codegen-units=1"
+  ],
+  "lto": true,
+  "codegen_units": 1,
+  "workspace_manifest_sha256": "5a129f2bb649899a51778f2782a43bf30a494e980f3391831f69a1dd4b4aa782",
+  "crate_manifest_sha256": "c0269a22cb68c4dde6f217c1f6c249a3488194b0048dca38a4bf822823e57877"
+}

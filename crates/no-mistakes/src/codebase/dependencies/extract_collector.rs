@@ -16,13 +16,25 @@ struct ImportCollector {
     imports: Vec<ExtractedImport>,
     eager_require_specifiers: std::collections::BTreeSet<String>,
     conditional_execution: bool,
+    receiver_replacement_is_fresh: bool,
+    receiver_write_is_conditional: bool,
+    fresh_receiver_effects: extract_value_flow::fresh_receiver_effects::FreshReceiverEffects,
+    /// Live straight-line guarded segment and its one admitted assignment.
+    receiver_conditional_region: Option<(std::num::NonZeroU32, u32)>,
     repeat_depth: usize,
+    /// Repetition inherited from callable creation does not execute its body.
+    call_repeat_base: usize,
+    /// Synthetic ownership of a default value evaluated by the module itself.
+    module_evaluation_owner: Option<CallableId>,
     sloppy_script: bool,
     /// The Annex B for-in initializer runs before the first iteration. Its
     /// binding target still runs only when the right-hand side has a key.
-    annex_b_for_in_initializer: Option<(oxc_span::Span, bool)>,
+    annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
+    /// Cutoff for the current callable's body when its suffix is unreachable.
+    /// Saved and restored around body traversal; absent for ordinary bodies.
+    unreachable_value_binding_after: Option<u32>,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,

@@ -81,10 +81,18 @@ struct ValueFlowResolution<'a, 'b> {
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
     invocation_read: Option<default_origins::InvocationRead>,
-    executing_read: Option<(CallableId, u32, Option<CallableId>)>,
+    executing_read: Option<(
+        &'a std::path::Path,
+        CallableId,
+        execution_quality::ExecutionPhase,
+    )>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
+#[path = "value_flow/execution_quality.rs"]
+mod execution_quality;
+#[path = "value_flow/execution_reads.rs"]
+mod execution_reads;
 #[path = "value_flow/member_projection.rs"]
 mod member_projection;
 #[path = "value_flow/member_reads.rs"]
@@ -183,3 +191,7 @@ mod binding_reads;
 
 #[path = "value_flow/execution_phases.rs"]
 mod execution_phases;
+
+#[cfg(test)]
+#[path = "value_flow/execution_layout_tests.rs"]
+mod execution_layout_tests;

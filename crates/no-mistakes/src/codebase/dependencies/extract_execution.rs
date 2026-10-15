@@ -23,11 +23,36 @@ fn with_conditional_execution(
 ) {
     if conditional {
         collector.invalidate_replacement_execution();
+        collector.receiver_conditional_region = None;
     }
     let previous = collector.conditional_execution;
+    let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
+    collector.receiver_write_is_conditional |= conditional;
     visit(collector);
     collector.conditional_execution = previous;
+    collector.receiver_write_is_conditional = previous_receiver;
+}
+
+fn visit_binding_default_with_execution<'a>(
+    collector: &mut ImportCollector,
+    pattern: &oxc_ast::ast::AssignmentPattern<'a>,
+) {
+    collector.visit_binding_pattern(&pattern.left);
+    with_conditional_receiver_write(collector, |collector| {
+        collector.visit_expression(&pattern.right)
+    });
+}
+
+fn with_conditional_receiver_write(
+    collector: &mut ImportCollector,
+    visit: impl FnOnce(&mut ImportCollector),
+) {
+    // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
+    collector.receiver_conditional_region = None;
+    let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
+    visit(collector);
+    collector.receiver_write_is_conditional = previous;
 }
 
 fn with_repeat_execution<T>(
@@ -61,11 +86,11 @@ fn visit_if_with_execution<'a>(
     collector.visit_expression(&statement.test);
     let truthy = literal_truthiness(&statement.test);
     with_conditional_execution(collector, truthy != Some(true), |collector| {
-        collector.visit_statement(&statement.consequent);
+        visit_guarded_receiver_arm(collector, &statement.consequent, truthy.is_none());
     });
     if let Some(alternate) = &statement.alternate {
         with_conditional_execution(collector, truthy != Some(false), |collector| {
-            collector.visit_statement(alternate);
+            visit_guarded_receiver_arm(collector, alternate, truthy.is_none());
         });
     }
 }
@@ -126,4 +151,38 @@ fn has_optional_chain(expression: &Expression<'_>) -> bool {
     } else {
         false
     }
+}
+
+fn visit_try_with_receiver_execution<'a>(
+    collector: &mut ImportCollector,
+    statement: &oxc_ast::ast::TryStatement<'a>,
+) {
+    with_conditional_receiver_write(collector, |collector| {
+        collector.visit_block_statement(&statement.block)
+    });
+    if let Some(handler) = &statement.handler {
+        collector.visit_catch_clause(handler);
+    }
+    if let Some(finalizer) = &statement.finalizer {
+        collector.visit_block_statement(finalizer);
+    }
+}
+
+fn visit_label_with_receiver_execution<'a>(
+    collector: &mut ImportCollector,
+    statement: &oxc_ast::ast::LabeledStatement<'a>,
+) {
+    with_conditional_receiver_write(collector, |collector| {
+        collector.visit_statement(&statement.body)
+    });
+}
+
+fn visit_new_expression_with_imports_and_calls<'a>(
+    collector: &mut ImportCollector,
+    new: &NewExpression<'a>,
+) {
+    collector.record_unknown_fresh_call(new.span.end);
+    visit_new_expression_with_imports(collector, new);
+    walk::walk_new_expression(collector, new);
+    collector.record_descriptor_call(new.span.end);
 }

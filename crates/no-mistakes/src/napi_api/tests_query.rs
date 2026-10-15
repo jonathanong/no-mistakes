@@ -131,6 +131,9 @@ fn effects_json_retains_inline_invocation_context() {
 #[test]
 fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
     for (name, expected) in [
+        ("unique-helper-repeated", 0),
+        ("unique-helper-snapshot", 1),
+        ("unique-helper-setup", 1),
         ("alias-named", 1),
         ("alias-inline", 1),
         ("alias-chain", 1),
@@ -145,6 +148,18 @@ fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
         ("alias-inline-snapshot", 1),
         ("alias-inline-snapshot-owned", 1),
         ("inline-snapshot-owned", 1),
+        ("default-snapshot-owned", 1),
+        ("default-object-snapshot-owned", 1),
+        ("default-snapshot-write-first", 0),
+        ("default-snapshot-deferred-arrow", 0),
+        ("default-snapshot-deferred-function", 0),
+        ("default-snapshot-deferred-method", 0),
+        ("default-snapshot-nested", 0),
+        ("default-snapshot-loop", 0),
+        ("default-snapshot-field", 0),
+        ("default-snapshot-accessor", 0),
+        ("default-snapshot-async", 0),
+        ("default-snapshot-reentrant", 0),
         ("inline-snapshot-owned-write-first", 0),
         ("inline-snapshot-repeated-for", 0),
         ("inline-snapshot-repeated-header", 0),
@@ -193,5 +208,7 @@ fn effects_json_retains_cross_file_inline_receiver_timing() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+include!("tests_query_computed.rs");
 
 include!("tests_loop_setup.rs");

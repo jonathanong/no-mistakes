@@ -127,6 +127,7 @@ impl ImportCollector {
             bound: false,
             spread_at,
             once: false,
+            repeated: self.repeat_depth > self.call_repeat_base,
         });
     }
 }

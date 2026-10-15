@@ -26,8 +26,10 @@ fn visit_for_statement_with_scope<'a>(
         .as_ref()
         .is_some_and(|test| literal_truthiness(test) != Some(true));
     with_conditional_execution(collector, conditional, |collector| {
-        with_replacement_region(collector, statement.body.span(), false, true, |collector| {
-            collector.visit_statement(&statement.body)
+        with_conditional_receiver_write(collector, |collector| {
+            with_replacement_region(collector, statement.body.span(), false, true, |collector| {
+                collector.visit_statement(&statement.body)
+            });
         });
     });
     collector.repeat_depth -= 1;
@@ -62,7 +64,13 @@ fn visit_for_in_statement_with_scope<'a>(
                     .first()
                     .filter(|declarator| binding_identifier_name(&declarator.id).is_some())
                     .and_then(|declarator| declarator.init.as_ref())
-                    .map(|init| (init.span(), collector.conditional_execution))
+                    .map(|init| {
+                        (
+                            init.span(),
+                            collector.conditional_execution,
+                            collector.receiver_write_is_conditional,
+                        )
+                    })
             }
             _ => None,
         }

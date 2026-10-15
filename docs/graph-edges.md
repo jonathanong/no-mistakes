@@ -542,6 +542,8 @@ invalidate live members. A copied method such as `const get = alias.get` keeps
 its acquisition snapshot; copying a container keeps descendant members live.
 For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
+This includes an IIFE evaluated in `export default`, directly or as an object
+member value. Exported functions and object methods retain their callable guards.
 This includes classic `for` initializers and `for-in`/`for-of` right-hand
 expressions, which execute once per loop statement. Tests, updates, bodies,
 per-item bindings, and sloppy-script Annex B initializers remain conservative.
@@ -559,3 +561,9 @@ supported. Other calls and constructors make the new repeated-region proof
 unknown, including external calls whose effects are unspecified. Methods copied
 before the region retain their acquisition snapshot. This bounded proof does not
 infer general call purity or track receiver escapes through arbitrary functions.
+
+Repeated calls do not establish one runtime receiver-acquisition phase merely
+because their helper has one syntactic incoming call. Live helper defaults stay
+conservative across loop executions, while methods copied before the loop keep
+their acquisition snapshots. Loop initializer and iterable expressions retain
+their existing one-time timing proof.

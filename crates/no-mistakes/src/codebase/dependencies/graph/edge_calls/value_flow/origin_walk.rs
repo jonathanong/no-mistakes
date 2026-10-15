@@ -100,9 +100,11 @@ impl ValueFlowResolution<'_, '_> {
                             .and_then(|receivers| receivers.get(scope))
                             .and_then(|names| names.get(name))
                             .is_some_and(|history| {
-                                history.assignment_invalidated_reads(&projection, &|writer| {
-                                    reads.offset(read, source, writer)
-                                })
+                                history.assignment_invalidated_owned_reads(
+                                    &projection,
+                                    &|writer| reads.offset(read, source, writer).known(),
+                                    &|| reads.default_owner(read, source),
+                                )
                             })
                     }) {
                         return true;
@@ -130,7 +132,7 @@ impl ValueFlowResolution<'_, '_> {
                             file,
                             (offset, context),
                             &|writer| {
-                                reads.offset(read, &origin.file, writer).or_else(|| {
+                                reads.offset(read, &origin.file, writer).or_absent(|| {
                                     (origin.file == file && writer == context).then_some(offset)
                                 })
                             },
@@ -162,7 +164,9 @@ impl ValueFlowResolution<'_, '_> {
             return false;
         };
         if self.invocation_read.as_ref().is_some_and(|active| {
-            active.owner == read.owner
+            !read.repeated
+                && !active.repeated
+                && active.owner == read.owner
                 && active.owner.0 == query.0
                 && query.1 == Some(active.owner.1)
         }) {
@@ -174,11 +178,13 @@ impl ValueFlowResolution<'_, '_> {
             || if receivers_only {
                 receivers
                     && history.assignment_invalidated_reads(projection, &|writer| {
-                        if read.once
+                        if read.repeated {
+                            None
+                        } else if read.once
                             && read.owner.0 == *history_file
                             && writer == Some(read.owner.1)
                         {
-                            reader.1.offset(reader.0, history_file, writer)
+                            reader.1.offset(reader.0, history_file, writer).known()
                         } else {
                             (writer == read.context).then_some(read.offset)
                         }

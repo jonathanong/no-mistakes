@@ -9,7 +9,7 @@ fn visit_variable_declarator_with_scope<'a>(
             push_variable_function_scope(collector, declarator, name, CallableId(arrow.span.start));
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
-            walk_arrow_function_with_body_bindings(collector, arrow);
+            walk_arrow_function_with_body_bindings(collector, arrow, true);
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
@@ -43,7 +43,7 @@ fn visit_variable_declarator_with_scope<'a>(
             }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
-            walk_function_with_body_bindings(collector, function);
+            walk_function_with_body_bindings(collector, function, true);
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
@@ -123,4 +123,11 @@ fn visit_variable_declaration_with_bindings<'a>(
             collector.add_binding_names(&declarator.id);
         }
     }
+}
+fn visit_variable_declaration_with_values<'a>(collector: &mut ImportCollector, declaration: &VariableDeclaration<'a>) {
+    visit_variable_declaration_with_bindings(collector, declaration);
+    collector.record_callable_declaration_bindings(declaration);
+    collector.record_const_callable_aliases(declaration);
+    collector.record_value_declaration(declaration);
+    walk::walk_variable_declaration(collector, declaration);
 }

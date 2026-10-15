@@ -1,5 +1,5 @@
 use super::*;
-use default_origins::{ReceiverRead, merge};
+use default_origins::{merge, ReceiverRead};
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn record_receiver_origin(
@@ -7,9 +7,9 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         scope: usize,
         name: &str,
-        offset: u32,
-        context: Option<CallableId>,
+        phase: (u32, Option<CallableId>, bool),
     ) {
+        let (offset, context, repeated) = phase;
         if self.indexes.file(self.facts, file).is_some_and(|index| {
             index
                 .values
@@ -31,6 +31,7 @@ impl ValueFlowResolution<'_, '_> {
                         offset,
                         context,
                         invocation: false,
+                        repeated,
                         owned_context: None,
                     },
                 ),
@@ -147,7 +148,7 @@ impl ValueFlowResolution<'_, '_> {
         origins: default_origins::Origins,
         owned_context: Option<(&std::path::Path, CallableId, bool)>,
     ) -> std::sync::Arc<OriginNode> {
-        let (offset, context) =
+        let (offset, context, repeated) =
             self.expression_read(file, call.end.saturating_sub(1), call.context);
         self.cache.origin_node(
             OriginKind::ReceiverUse(
@@ -160,6 +161,10 @@ impl ValueFlowResolution<'_, '_> {
                     // Inline callees have no Named expression; facts own their caller context.
                     context,
                     invocation: true,
+                    // Named-only invocation timing retains its existing policy.
+                    // Inline entry and qualified caller proofs own this phase.
+                    repeated: repeated
+                        || (call.repeated && super::inline_inputs::inline_callee(&call.callee)),
                     owned_context: owned_context.map(|(file, owner, preserve)| {
                         Box::new((file.to_path_buf(), owner, preserve))
                     }),
