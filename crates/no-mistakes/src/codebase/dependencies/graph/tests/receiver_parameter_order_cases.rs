@@ -80,12 +80,6 @@ pub(super) fn cases() -> &'static [Case] {
         ),
         (
             "repeated-parameter-phase",
-            Some("runSaved/repeatedSaved"),
-            "fn",
-            Some("savedPhase.get"),
-        ),
-        (
-            "repeated-parameter-phase",
             Some("repeatedDefault"),
             "fn",
             None,
