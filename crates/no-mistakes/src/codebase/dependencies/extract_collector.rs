@@ -53,6 +53,7 @@ struct ImportCollector {
     receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
     destructuring_phase_owner: Option<Option<CallableId>>,
+    receiver_root_phase_context: Option<(Option<CallableId>, usize)>,
     destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,
     /// Present only while the normal visitor records this exact assignment leaf.
     assignment_target_start: Option<u32>,

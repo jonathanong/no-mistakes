@@ -1,6 +1,9 @@
 use super::*;
 use std::collections::BTreeMap;
 
+#[path = "mutable_origin_phases.rs"]
+mod phases;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(super) struct RootVersion {
     context: Option<CallableId>,
@@ -14,6 +17,7 @@ struct RootStates {
 }
 #[derive(Default)]
 struct RootOrigins {
+    patterns: Option<Box<mutable_patterns::PatternRoots>>,
     owners: FxHashMap<Option<CallableId>, RootStates>,
     generation: usize,
 }
@@ -104,7 +108,11 @@ impl ReceiverBindingOrigins {
             .map(|(_, id)| *id);
         Some(RootVersion {
             context: read.1,
-            selected,
+            selected: root
+                .patterns
+                .as_ref()
+                .and_then(|patterns| patterns.selected(read))
+                .unwrap_or(selected),
             generation: root.generation,
         })
     }
@@ -119,6 +127,13 @@ impl ReceiverBindingOrigins {
         };
         let (path, reads, root_read) = coordinates;
         let mut pending = Vec::new();
+        let phase_selected = root
+            .patterns
+            .as_ref()
+            .and_then(|patterns| patterns.selected(root_read));
+        if let Some(selected) = phase_selected {
+            pending.extend(selected);
+        }
         for (owner, states) in &root.owners {
             let selected = if root_read.1 == *owner {
                 states
@@ -129,7 +144,9 @@ impl ReceiverBindingOrigins {
             } else {
                 states.possible
             };
-            pending.extend(selected);
+            if root_read.1 != *owner || phase_selected.is_none() {
+                pending.extend(selected);
+            }
         }
         // Arena links share alternatives without recursive traversal or drop.
         while let Some(id) = pending.pop() {

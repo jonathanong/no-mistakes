@@ -27,8 +27,10 @@ impl PhaseWalk<'_> {
                     match property {
                         AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(property) => {
                             if let Some(init) = &property.init {
-                                self.expression(init);
+                                self.conditional_expression(init);
                             }
+                            self.phase += 1;
+                            self.root_write(property.binding.name.as_str(), None, true);
                         }
                         AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) => {
                             if property.computed {
@@ -46,7 +48,7 @@ impl PhaseWalk<'_> {
             }
             _ => {
                 self.reference(target);
-                self.write(target);
+                self.write(target, None, true);
             }
         }
         if pattern {
@@ -62,12 +64,12 @@ impl PhaseWalk<'_> {
                 AssignmentTarget::ArrayAssignmentTarget(_)
                     | AssignmentTarget::ObjectAssignmentTarget(_)
             ) {
-                self.expression(&default.init);
+                self.conditional_expression(&default.init);
                 self.target(&default.binding);
             } else {
                 self.reference(&default.binding);
-                self.expression(&default.init);
-                self.write(&default.binding);
+                self.conditional_expression(&default.init);
+                self.write(&default.binding, None, true);
             }
         } else if let Some(target) = target.as_assignment_target() {
             self.target(target);
@@ -83,17 +85,47 @@ impl PhaseWalk<'_> {
             _ => {}
         }
     }
-    pub(super) fn write(&mut self, target: &AssignmentTarget<'_>) {
+    pub(super) fn write(
+        &mut self,
+        target: &AssignmentTarget<'_>,
+        value: Option<&Expression<'_>>,
+        guaranteed: bool,
+    ) {
         self.phase += 1;
-        for (name, path, target) in write_targets::targets(target)
-            .into_iter()
-            .filter(|(_, path, _)| !path.is_empty())
-        {
+        for (name, path, target) in write_targets::targets(target) {
+            if path.is_empty() {
+                self.root_write(&name, value, guaranteed);
+                continue;
+            }
             self.writes.push(PhaseWrite {
                 target,
                 name,
                 path,
                 phase: self.phase,
+            });
+        }
+    }
+    fn root_write(&mut self, name: &str, value: Option<&Expression<'_>>, guaranteed: bool) {
+        if !self.collect_root_origins {
+            return;
+        }
+        let Some(collector) = self.collector else {
+            return;
+        };
+        let Some(scope) = collector.callee_binding_scope(name) else {
+            return;
+        };
+        if collector.has_mutable_receiver_binding(scope, name) {
+            self.root_writes.push(phase_walk::RootPhaseWrite {
+                scope,
+                name: name.to_string(),
+                phase: self.phase,
+                value: value.map_or(ValueExpression::Unknown, |value| {
+                    collector.value_expression(value)
+                }),
+                guaranteed: guaranteed
+                    && !self.conditional
+                    && collector.repeat_depth == collector.call_repeat_base,
             });
         }
     }

@@ -72,6 +72,37 @@ fn mutable_root_snapshots_bound_origin_projection_work() {
 }
 
 #[test]
+#[cfg(feature = "test-instrumentation")]
+fn nested_mutable_patterns_bound_rhs_phase_walk_work() {
+    let source = mutable_receiver_source("mutable-pattern-phase-scale.mts");
+    let allocator = Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
+    assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+    let visits = facts.value_flow.receiver_only_phase_visits;
+    assert!(
+        visits >= 32 && visits <= 16 * 32,
+        "root RHS visits: {visits}"
+    );
+    let imports = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        false,
+    );
+    assert_eq!(imports.value_flow.receiver_only_phase_visits, 0);
+}
+
+#[test]
 fn receiver_traversal_revisits_only_for_weaker_acquisition_evidence() {
     let mut traversal = receiver_traversal::ReceiverTraversal::default();
     let key = (0, "client".to_string());

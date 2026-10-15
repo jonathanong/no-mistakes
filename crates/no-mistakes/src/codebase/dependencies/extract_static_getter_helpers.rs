@@ -117,6 +117,7 @@ fn visit_assignment_expression_with_calls<'a>(
     assignment: &AssignmentExpression<'a>,
 ) {
     collector.record_replacement_assignment(assignment);
+    collector.prepare_mutable_pattern_roots(&assignment.left);
     let receipts = collector.begin_phase_receipts(&assignment.left);
     let mut phases =
         collector.begin_reference_destructuring_phases(&assignment.left, &assignment.right);
