@@ -1,0 +1,87 @@
+name: Historical receiver native experiment
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/receiver-fact-native.yml'
+      - '.github/scripts/receiver-fact-native/**'
+      - 'docs/performance/receiver-native-hosted.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: receiver-native-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  historical-x86:
+    name: Historical native x86 pair
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      # Exact historical compiler; source worktrees must not select their moving stable alias.
+      RUSTUP_TOOLCHAIN: '1.99.0'
+      DRIVER: .github/scripts/receiver-fact-native
+    steps:
+      - name: Checkout experiment and public probe
+        id: checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set isolated runtime output path
+        timeout-minutes: 1
+        run: printf 'EXPERIMENT_ROOT=%s/receiver-native-2012\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Test saved report fixtures
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s "$DRIVER" -p 'test_*.py'
+      - name: Install historical compiler
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: '1.99.0'
+      - name: Preflight and pin historical source pair
+        id: preflight
+        timeout-minutes: 3
+        run: python3 "$DRIVER/build.py" prepare --root "$EXPERIMENT_ROOT"
+      - name: Build exact release pair sequentially
+        timeout-minutes: 90
+        run: python3 "$DRIVER/build.py" opt3 --root "$EXPERIMENT_ROOT"
+      - name: Measure release pair after builds finish
+        id: release-samples
+        timeout-minutes: 15
+        run: python3 "$DRIVER/measure.py" opt3 --root "$EXPERIMENT_ROOT"
+      - name: Remove only owned release compilation target
+        if: ${{ always() && steps.preflight.outcome == 'success' }}
+        timeout-minutes: 2
+        run: python3 "$DRIVER/build.py" cleanup-opt3 --root "$EXPERIMENT_ROOT"
+      - name: Build separate original-profile opt0 pair
+        if: ${{ success() && steps.release-samples.outcome == 'success' }}
+        timeout-minutes: 25
+        run: python3 "$DRIVER/build.py" opt0 --root "$EXPERIMENT_ROOT"
+      - name: Measure separate opt0 control
+        timeout-minutes: 12
+        run: python3 "$DRIVER/measure.py" opt0 --root "$EXPERIMENT_ROOT"
+      - name: Remove only owned opt0 compilation target
+        if: ${{ always() && steps.preflight.outcome == 'success' }}
+        timeout-minutes: 2
+        run: python3 "$DRIVER/build.py" cleanup-opt0 --root "$EXPERIMENT_ROOT"
+      - name: Verify and summarize every retained row
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        timeout-minutes: 2
+        run: |
+          status=0
+          python3 "$DRIVER/report.py" --root "$EXPERIMENT_ROOT" || status=$?
+          cat "$EXPERIMENT_ROOT/public/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - name: Retain curated readable measurements only
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: receiver-native-2012-x86-readable
+          path: ${{ env.EXPERIMENT_ROOT }}/public/
+          if-no-files-found: error
+          retention-days: 30

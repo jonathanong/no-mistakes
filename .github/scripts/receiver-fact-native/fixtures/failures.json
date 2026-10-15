@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "code": "insufficient_free_disk",
+      "stage": "opt3",
+      "arm": "candidate",
+      "profile": "opt3",
+      "details": {
+        "observed_bytes": 100,
+        "required_bytes": 8589934592
+      }
+    },
+    {
+      "code": "compiler_profile_mismatch",
+      "stage": "opt0",
+      "arm": "baseline",
+      "profile": "opt0",
+      "details": {}
+    },
+    {
+      "code": "sample_fact_signature_mismatch",
+      "stage": "measure",
+      "arm": "candidate",
+      "profile": "opt3",
+      "details": {
+        "expected": "128"
+      }
+    }
+  ]
+}
