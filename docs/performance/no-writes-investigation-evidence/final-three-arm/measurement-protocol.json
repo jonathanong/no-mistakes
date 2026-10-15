@@ -1,0 +1,70 @@
+{
+  "status": "FROZEN: parent reviewed controller and semantic outputs; coordinated compute-idle window approved before first pilot",
+  "pilot": {
+    "new_2019_workloads_only": true,
+    "orders": [
+      "ABBA",
+      "BAAB"
+    ],
+    "collections_per_process": 1,
+    "rows_per_workload": 8,
+    "batch_rule": "max(1,min(100000,floor(1.2 / median(pooled pilot CPU seconds))))",
+    "startup_subtraction": false,
+    "arm_selection": false,
+    "retain_every_row": true
+  },
+  "long": {
+    "orders": [
+      "ABBA",
+      "BAAB",
+      "ABBA",
+      "BAAB",
+      "ABBA",
+      "BAAB",
+      "ABBA",
+      "BAAB"
+    ],
+    "rows_per_workload": 32,
+    "fixed_batches_before_first_long_row": true,
+    "metrics": [
+      "user_cpu",
+      "system_cpu",
+      "total_cpu",
+      "raw_wall",
+      "peak_rss"
+    ],
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "rayon_workers": 4,
+    "retain_every_row": true,
+    "outlier_removal": false
+  },
+  "planned_window_groups": [
+    {
+      "pair": "A/B",
+      "workloads": "original eight fixed1972 controls",
+      "count": 8
+    },
+    {
+      "pair": "A/B",
+      "workloads": "five2019 extraction hot files, value flow on and calls on",
+      "count": 5
+    },
+    {
+      "pair": "A/B",
+      "workloads": "three graph modes plus three effects entries off/observer",
+      "count": 9
+    },
+    {
+      "pair": "B/C",
+      "workloads": "original eight fixed1972 controls",
+      "count": 8
+    }
+  ],
+  "baseline_binary_reuse": "B binary identity shared across comparisons; observations remain separately paired in each window",
+  "semantic_gate": "pin/review full per-arm graph/effects outputs; B/C full fact parity; counts alone insufficient"
+}

@@ -1,0 +1,2031 @@
+{
+  "A_B_changed_site_count": 48,
+  "changed_sites": [
+    {
+      "file": "src/nested-receiver-containers/guarded-root-conditional.mts",
+      "offset": 239,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/guarded-root-conditional.mts",
+        "offset": 239,
+        "line": 5,
+        "caller": "guardedRootConditional",
+        "caller_id": "Some(CallableId(198))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/guarded-root-conditional.mts",
+        "offset": 239,
+        "line": 5,
+        "caller": "guardedRootConditional",
+        "caller_id": "Some(CallableId(198))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/guarded-root-rhs.mts",
+      "offset": 217,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/guarded-root-rhs.mts",
+        "offset": 217,
+        "line": 5,
+        "caller": "guardedRootRhs",
+        "caller_id": "Some(CallableId(184))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/guarded-root-rhs.mts",
+        "offset": 217,
+        "line": 5,
+        "caller": "guardedRootRhs",
+        "caller_id": "Some(CallableId(184))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-array.mts",
+      "offset": 159,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-array.mts",
+        "offset": 159,
+        "line": 5,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(133))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-array.mts",
+        "offset": 159,
+        "line": 5,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(133))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-conditional-root.mts",
+      "offset": 202,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-conditional-root.mts",
+        "offset": 202,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(176))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-conditional-root.mts",
+        "offset": 202,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(176))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-cycle.mts",
+      "offset": 207,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-cycle.mts",
+        "offset": 207,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(181))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-cycle.mts",
+        "offset": 207,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(181))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-direct.mts",
+      "offset": 165,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-direct.mts",
+        "offset": 165,
+        "line": 5,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(139))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-direct.mts",
+        "offset": 165,
+        "line": 5,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(139))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-foreign-root.mts",
+      "offset": 283,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-foreign-root.mts",
+        "offset": 283,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(257))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-foreign-root.mts",
+        "offset": 283,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(257))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-guarded.mts",
+      "offset": 205,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-guarded.mts",
+        "offset": 205,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(179))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-guarded.mts",
+        "offset": 205,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(179))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-lhs-acquisition.mts",
+      "offset": 253,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-lhs-acquisition.mts",
+        "offset": 253,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(227))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-lhs-acquisition.mts",
+        "offset": 253,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(227))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-logical-root.mts",
+      "offset": 194,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-logical-root.mts",
+        "offset": 194,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(168))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-logical-root.mts",
+        "offset": 194,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(168))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-before.mts",
+      "offset": 308,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-before.mts",
+        "offset": 308,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(282))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-before.mts",
+        "offset": 308,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(282))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-class-context.mts",
+      "offset": 397,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-class-context.mts",
+        "offset": 397,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(362))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-class-context.mts",
+        "offset": 397,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(362))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-cold-class.mts",
+      "offset": 326,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-cold-class.mts",
+        "offset": 326,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-cold-class.mts",
+        "offset": 326,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+      "offset": 397,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+        "offset": 397,
+        "line": 11,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(362))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+        "offset": 397,
+        "line": 11,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(362))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+      "offset": 415,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+        "offset": 415,
+        "line": 11,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(362))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+        "offset": 415,
+        "line": 11,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(362))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+      "offset": 350,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+        "offset": 350,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(315))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+        "offset": 350,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(315))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+      "offset": 368,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+        "offset": 368,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(315))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+        "offset": 368,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(315))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+      "offset": 372,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+        "offset": 372,
+        "line": 9,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(337))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+        "offset": 372,
+        "line": 9,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(337))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+      "offset": 390,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+        "offset": 390,
+        "line": 9,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(337))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+        "offset": 390,
+        "line": 9,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(337))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-final-root.mts",
+      "offset": 357,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-final-root.mts",
+        "offset": 357,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(304))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-final-root.mts",
+        "offset": 357,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(304))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+      "offset": 354,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+        "offset": 354,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(319))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+        "offset": 354,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(319))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+      "offset": 372,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+        "offset": 372,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(319))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+        "offset": 372,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(319))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts",
+      "offset": 345,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts",
+        "offset": 345,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(292))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts",
+        "offset": 345,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(292))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+      "offset": 326,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+        "offset": 326,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+        "offset": 326,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+      "offset": 344,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+        "offset": 344,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+        "offset": 344,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts",
+      "offset": 378,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts",
+        "offset": 378,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(352))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts",
+        "offset": 378,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(352))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts",
+      "offset": 393,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts",
+        "offset": 393,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(340))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts",
+        "offset": 393,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(340))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts",
+      "offset": 380,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts",
+        "offset": 380,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(327))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts",
+        "offset": 380,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(327))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts",
+      "offset": 331,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts",
+        "offset": 331,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(278))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts",
+        "offset": 331,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(278))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-rhs.mts",
+      "offset": 291,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-rhs.mts",
+        "offset": 291,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(265))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-rhs.mts",
+        "offset": 291,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(265))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-self-copy.mts",
+      "offset": 315,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-self-copy.mts",
+        "offset": 315,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(289))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-self-copy.mts",
+        "offset": 315,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(289))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts",
+      "offset": 340,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts",
+        "offset": 340,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(305))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts",
+        "offset": 340,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(305))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-capture.mts",
+      "offset": 479,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-capture.mts",
+        "offset": 479,
+        "line": 14,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(444))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-capture.mts",
+        "offset": 479,
+        "line": 14,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(444))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts",
+      "offset": 478,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts",
+        "offset": 478,
+        "line": 12,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(443))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts",
+        "offset": 478,
+        "line": 12,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(443))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-fields.mts",
+      "offset": 540,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-fields.mts",
+        "offset": 540,
+        "line": 12,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(483))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-fields.mts",
+        "offset": 540,
+        "line": 12,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(483))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-local.mts",
+      "offset": 450,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-local.mts",
+        "offset": 450,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(397))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-local.mts",
+        "offset": 450,
+        "line": 10,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(397))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-nested.mts",
+      "offset": 366,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-nested.mts",
+        "offset": 366,
+        "line": 9,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(331))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-nested.mts",
+        "offset": 366,
+        "line": 9,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(331))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts",
+      "offset": 344,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts",
+        "offset": 344,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts",
+        "offset": 344,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(291))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts",
+      "offset": 604,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts",
+        "offset": 604,
+        "line": 16,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(569))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts",
+        "offset": 604,
+        "line": 16,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(569))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+      "offset": 486,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+        "offset": 486,
+        "line": 14,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(451))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+        "offset": 486,
+        "line": 14,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(451))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+      "offset": 508,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+        "offset": 508,
+        "line": 14,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(451))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+        "offset": 508,
+        "line": 14,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(451))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+      "offset": 405,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+        "offset": 405,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(370))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+        "offset": 405,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(370))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+      "offset": 423,
+      "callee": "changed.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+        "offset": 423,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(370))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+        "offset": 423,
+        "line": 8,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(370))",
+        "invocation": "Call",
+        "callee": "changed.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-rebound.mts",
+      "offset": 202,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-rebound.mts",
+        "offset": 202,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(176))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-rebound.mts",
+        "offset": 202,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(176))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-rhs-named.mts",
+      "offset": 219,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-rhs-named.mts",
+        "offset": 219,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(193))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-rhs-named.mts",
+        "offset": 219,
+        "line": 7,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(193))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-rhs-rebound.mts",
+      "offset": 192,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-rhs-rebound.mts",
+        "offset": 192,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(166))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "replica.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-rhs-rebound.mts",
+        "offset": 192,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(166))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-let-self-copy.mts",
+      "offset": 176,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-let-self-copy.mts",
+        "offset": 176,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(150))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-let-self-copy.mts",
+        "offset": 176,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(150))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    },
+    {
+      "file": "src/nested-receiver-containers/mutable-rule-mutated.mts",
+      "offset": 196,
+      "callee": "value.get",
+      "before": {
+        "file": "src/nested-receiver-containers/mutable-rule-mutated.mts",
+        "offset": 196,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(170))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [
+          {
+            "kind": "export",
+            "module": "@vendor/valkey",
+            "name": "primary.get",
+            "repository": null,
+            "callable_id": "None",
+            "node": null
+          }
+        ],
+        "unknown": false,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      },
+      "after": {
+        "file": "src/nested-receiver-containers/mutable-rule-mutated.mts",
+        "offset": 196,
+        "line": 6,
+        "caller": "consume",
+        "caller_id": "Some(CallableId(170))",
+        "invocation": "Call",
+        "callee": "value.get",
+        "known": [],
+        "unknown": true,
+        "returned_from": "[]",
+        "typed_from": "[]",
+        "returned_members": "[]"
+      }
+    }
+  ],
+  "added_edges": [],
+  "removed_edges": [],
+  "changed_fact_snapshots": [
+    "facts-mutable-root-scale-values",
+    "facts-mutable-pattern-phase-scale-values",
+    "facts-mutable-pattern-deferred-diamond-values",
+    "facts-mutable-pattern-eager-class-scale-values",
+    "facts-mutable-pattern-cold-class-scale-values"
+  ],
+  "A_B_node_equality": true
+}

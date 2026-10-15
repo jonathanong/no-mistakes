@@ -1,0 +1,7 @@
+{
+  "series": "long",
+  "status": "contaminated diagnostic; not an idle-window gate",
+  "event": "Other agent ran cargo fmt for approximately3.9 seconds wall at approximately2026-10-15T07:27Z. Exact affected rows are not identified. All observations retained unchanged; no sample deletion or effect-based selection.",
+  "planned_action": "Complete first matrix, then repeat the entire fixed matrix under a new coordinated window; identical batches and artifacts, adjacent order reversed.",
+  "first_driver_sha256": "043b0926c3fbf26cae01a6e707cae1a6bc5c55841c91490cb24131bc4284081b"
+}

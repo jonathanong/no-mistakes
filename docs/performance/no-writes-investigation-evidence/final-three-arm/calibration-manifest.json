@@ -1,0 +1,9 @@
+{
+  "frozen_at_utc": "2026-10-15T09:48:30.881878+00:00",
+  "status": "FROZEN before first long row",
+  "files": {
+    "calibration-batches.json": "0b677685f4f8ce94229c0f0295f57695914180d8d1aca55cbcb22a1a68cc995d",
+    "A_B-pilot-new-rows.json": "59e80f5e41904d21614c14cd5bb48c9c6310a1fa6be053f2a3b9371ce09b7387",
+    "run-manifest.json": "977e2eece3008031caa2fbbb67e925d1e72fec85d1916bf1a1deab2151bc5680"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "revision": "8db445d14ddc61b836e9315e69f18681e9555f50",
+  "tree": "0be5ce8c0165d6c46a51e5ddcb465f2d1d8a0c85",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1",
+  "lock_sha256": "bb9bf453fde21cda4e892358e38325def3b39046309538eacf5cfaac75e36d6c",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "release_profile": {
+    "opt_level": 3,
+    "lto": true,
+    "codegen_units": 1,
+    "debug": 0,
+    "build_jobs": 2,
+    "incremental": 0
+  },
+  "source_manifest_sha256": "93f87d52b933358e95104e879c99e6d873251289ecd00fe0c285d6a16b84cf91",
+  "harness": [
+    {
+      "path": "effects.rs",
+      "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+    },
+    {
+      "path": "facts.rs",
+      "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+    },
+    {
+      "path": "graph_semantics.rs",
+      "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+    },
+    {
+      "path": "graph_timing.rs",
+      "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+    },
+    {
+      "path": "main.rs",
+      "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+    }
+  ],
+  "library_sha256": "f97250e036b3b3dad35891a25c6c842d8762ec0119253e5f7f4fedb22e3330b6",
+  "binary_sha256": "8d89701337bd375a104649b3306635107e3356ab5ac482a9e0d23fad2c0337b0",
+  "compiler_artifact": {
+    "reason": "compiler-artifact",
+    "package_id": "path+file://<LOCAL>/no-mistakes-1972-base-2019/crates/no-mistakes#0.90.0",
+    "manifest_path": "<LOCAL>/no-mistakes-1972-base-2019/crates/no-mistakes/Cargo.toml",
+    "target": {
+      "kind": [
+        "rlib"
+      ],
+      "crate_types": [
+        "rlib"
+      ],
+      "name": "no_mistakes",
+      "src_path": "<LOCAL>/no-mistakes-1972-base-2019/crates/no-mistakes/src/lib.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": true,
+      "test": true
+    },
+    "profile": {
+      "opt_level": "3",
+      "debuginfo": 0,
+      "debug_assertions": false,
+      "overflow_checks": false,
+      "test": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "filenames": [
+      "<LOCAL>/no-mistakes-1972-base-2019/target/release/libno_mistakes.rlib",
+      "<LOCAL>/no-mistakes-1972-base-2019/target/release/deps/libno_mistakes-4966ae64c343fd2f.rmeta"
+    ],
+    "executable": null,
+    "fresh": false
+  }
+}

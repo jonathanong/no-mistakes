@@ -1,0 +1,26 @@
+{
+  "files": [
+    {
+      "path": "effects.rs",
+      "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+    },
+    {
+      "path": "facts.rs",
+      "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+    },
+    {
+      "path": "graph_semantics.rs",
+      "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+    },
+    {
+      "path": "graph_timing.rs",
+      "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+    },
+    {
+      "path": "main.rs",
+      "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+    }
+  ],
+  "sha256": "19c30252577b56e753c3a054d0e9387da568c38cf6c271b5745c46a57e32218e",
+  "production_library_changes": "none; shared public-library harness"
+}
