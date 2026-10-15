@@ -30,20 +30,7 @@ impl ImportCollector {
             pending.pop()
         {
             if exiting {
-                // RHS exits own their separate receipt-qualified active stack.
-                if propagated {
-                    traversal.exit_assigned(&key);
-                    continue;
-                }
-                if root_read.read().is_none() {
-                    traversal.exit_ordinary(&key);
-                    continue;
-                }
-                if root_read.read().is_some() && traversal.exit_single_version(&key) {
-                    continue;
-                }
-                let version = self.projected_root_version(&key, root_read);
-                traversal.exit(&key, version);
+                self.finish_projected_receiver(&mut traversal, &key, root_read, propagated);
                 continue;
             }
             if remember {
