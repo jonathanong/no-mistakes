@@ -34,6 +34,7 @@ fn real_replacement_alternatives_keep_reached_nontransaction_evidence() {
         &tsconfig,
         GraphBuildPlan {
             calls: true,
+            effect_selectors: true,
             ..Default::default()
         },
     )
@@ -55,13 +56,35 @@ fn real_replacement_alternatives_keep_reached_nontransaction_evidence() {
             ..
         }
     )));
-    assert!(site.targets().any(|candidate| matches!(
-        candidate.target,
-        KnownCallTargetRef::RepositoryFunction {
-            scope: "queryHelper",
-            ..
-        }
-    ) && candidate.node.is_some()));
+    let helper_file = root.join("src/helpers.mts");
+    let helper_nodes = graph.module_export_nodes("./helpers.mjs", "queryHelper");
+    assert_eq!(helper_nodes.len(), 1, "{helper_nodes:#?}");
+    let helper_node = &helper_nodes[0];
+    let crate::codebase::dependencies::graph::NodeId::Symbol {
+        file,
+        symbol,
+        callable_id: Some(helper_id),
+        ..
+    } = helper_node
+    else {
+        panic!("missing exact canonical helper: {helper_node:#?}");
+    };
+    assert_eq!(file.as_ref(), helper_file.as_path());
+    assert_eq!(symbol.as_ref(), "queryHelper");
+    // An imported callable preserves its module selector and repository
+    // backing. Same-file Callable values use RepositoryFunction instead.
+    assert!(
+        site.targets().any(|candidate| matches!(
+            candidate.target,
+            KnownCallTargetRef::ModuleExport {
+                specifier: "./helpers.mjs",
+                export_path: "queryHelper",
+                repository_target: Some((file, "queryHelper")),
+                callable_id: Some(id),
+            } if file == helper_file.as_path() && id == *helper_id
+        ) && candidate.node == Some(helper_node)),
+        "{site:#?}"
+    );
     assert_eq!(site.target_nodes().count(), 1);
     let source = std::fs::read_to_string(root.join("src/entry.mts")).unwrap();
     assert_eq!(
