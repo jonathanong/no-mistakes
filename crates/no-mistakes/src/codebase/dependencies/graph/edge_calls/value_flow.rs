@@ -5,6 +5,7 @@ use crate::codebase::dependencies::extract::{
 
 #[derive(Clone, Default)]
 pub(super) struct FlowFileIndex {
+    callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     synthetic_callbacks: FxHashSet<String>,
     immediate_factory_results: FxHashSet<(u32, u32)>,
     receiver_mutations: Option<std::sync::Arc<prepared_receivers::PreparedReceiverMutations>>,

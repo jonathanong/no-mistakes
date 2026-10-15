@@ -158,7 +158,13 @@ impl ValueFlowResolution<'_, '_> {
         self.cache.record_execution_step();
         let index = self.indexes.file(self.facts, &key.0)?;
         let scope = index.values.scopes.get(&key.1)?;
-        if index.exported_scopes.contains(scope) || !self.synchronous_callable(&key.0, key.1) {
+        // Named module bindings without value uses have closed invocation facts.
+        // Nested/object callables and stored/returned values can escape opaquely.
+        if index.callable_bindings.get(&0).and_then(|names| names.get(scope)) != Some(&key.1)
+            || index.values.callable_value_uses.as_ref()
+                .and_then(|uses| uses.get(&0)).is_some_and(|uses| uses.contains(scope))
+            || index.exported_scopes.contains(scope)
+            || !self.synchronous_callable(&key.0, key.1) {
             return None;
         }
         let [input] = self.incoming.get(key)?.as_slice() else { return None; };

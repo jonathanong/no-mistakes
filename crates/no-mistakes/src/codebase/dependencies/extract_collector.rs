@@ -10,6 +10,7 @@ struct AggregateAliasCandidate {
 
 #[derive(Default)]
 struct ImportCollector {
+    bare_callable_callee: Option<u32>,
     /// 0-based byte offsets of each line start. Empty when line numbers are
     /// unused so the collector does not retain a full source copy.
     line_starts: Vec<u32>,

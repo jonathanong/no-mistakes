@@ -562,7 +562,9 @@ an exact assigned member history also retains the conservative default guard.
 
 A method copied into an immutable module binding keeps its acquisition target
 when a closed synchronous caller chain proves that the receiver writer starts
-after the copy. Repeated later execution does not reacquire that saved method.
+after the copy. Qualified writers must be module lexical callables without
+non-call value uses; storing a writer in a container, returning it, or assigning
+it elsewhere can expose invocations outside the canonical caller chain. Repeated later execution does not reacquire that saved method.
 Earlier writes, exported or deferred writers, and live receiver aliases remain
 conservative.
 

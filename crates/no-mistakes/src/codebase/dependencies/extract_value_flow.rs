@@ -17,6 +17,9 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    /// Local callable values can escape through containers, returns, or stores.
+    /// Bare call callees are represented by canonical invocation facts instead.
+    pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -198,3 +201,6 @@ mod inert_receiver_rhs;
 #[cfg(test)]
 #[path = "extract_value_flow/suspension_tests.rs"]
 mod suspension_tests;
+
+#[path = "extract_value_flow/callable_uses.rs"]
+mod callable_uses;

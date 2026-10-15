@@ -128,7 +128,13 @@ fn visit_logical_with_execution<'a>(
 
 fn walk_call_with_execution<'a>(collector: &mut ImportCollector, call: &CallExpression<'a>) {
     // The callee executes even when an optional call skips its arguments.
+    let previous = collector.bare_callable_callee;
+    collector.bare_callable_callee = match crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee) {
+        Expression::Identifier(identifier) => Some(identifier.span.start),
+        _ => None,
+    };
     collector.visit_expression(&call.callee);
+    collector.bare_callable_callee = previous;
     if let Some(type_arguments) = &call.type_arguments {
         collector.visit_ts_type_parameter_instantiation(type_arguments);
     }

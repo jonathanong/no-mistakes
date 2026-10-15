@@ -2,6 +2,18 @@ use super::cases::Case;
 
 pub(super) fn cases() -> &'static [Case] {
     &[
+        (
+            "module-snapshot-escape",
+            Some("savedObjectEscape"),
+            "fn",
+            None,
+        ),
+        (
+            "module-snapshot-escape",
+            Some("savedReturnedEscape"),
+            "fn",
+            None,
+        ),
         ("module-snapshot-phase", Some("savedRefined"), "fn", None),
         ("module-snapshot-phase", Some("savedVarLoop"), "fn", None),
         (
