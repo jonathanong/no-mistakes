@@ -68,12 +68,15 @@ class Accounting(unittest.TestCase):
 
     def test_saved_missing_duplicate_legacy_and_prewindow_histories_fail_closed(self):
         for name in ('missing-cross-allocation', 'duplicate-live-address',
-                     'missing-old-realloc', 'missing-prewindow-history', 'null-realloc-result'):
+                     'missing-old-realloc', 'missing-prewindow-history', 'null-realloc-result',
+                     'zero-size-realloc', 'prewindow-exit', 'prewindow-fork'):
             with self.subTest(name=name):
                 result = selected(fixture(name))
                 self.assertFalse(result['retention_complete'])
                 self.assertIsNone(result['retained_objects'])
                 self.assertIsNone(result['observed_stream_peak_bytes'])
+                self.assertIsNone(result['known_live_at_end_bytes'])
+                self.assertIsNone(result['known_live_at_begin_bytes'])
 
     def test_object_boundaries_are_independent_of_input_chunk_boundaries(self):
         data = encoded('valid-event')

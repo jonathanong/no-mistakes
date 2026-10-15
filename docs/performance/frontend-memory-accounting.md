@@ -57,8 +57,9 @@ Replay requires an observed preceding process image. Object identity is process
 plus address with successive generations, so cross-thread frees and address reuse
 work. Successful realloc releases the known old size and allocates the new size,
 including a same-address resize. Legacy missing old addresses, unmatched frees,
-duplicate live addresses, null results, and process lifecycle changes make
-retention and peak unknown. Failed or zero-size realloc behavior is not validated
+duplicate live addresses, null or zero-size realloc results, and process lifecycle changes make
+retention, known endpoints, and peak unknown. The latest pre-window lifecycle
+boundary must also be an observed Exec. Failed or zero-size realloc behavior is not validated
 by the current real probe; do not assert complete history for those operations.
 
 `--continuous-capture` and `--object-history-verified` are separate external

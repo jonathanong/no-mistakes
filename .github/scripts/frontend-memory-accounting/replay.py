@@ -11,15 +11,18 @@ def replay(events, pid, begin, end, *, addresses=None, continuous_capture=False,
     require(type(pid) is int and pid > 0, 'invalid selected process')
     require(0 <= begin < end <= len(events), 'invalid marker window')
     # Restrict initialization to the last observed image, never join reused process images.
-    image = max((i for i, event in enumerate(events[:begin])
-                 if event['pid'] == pid and event['type'] == 'Exec'), default=-1)
+    boundary = max((i for i, event in enumerate(events[:begin])
+                    if event['pid'] == pid and event['type'] in ('Exec', 'Fork', 'Exit')), default=-1)
+    image = boundary if boundary >= 0 and events[boundary]['type'] == 'Exec' else -1
     live = {}
     live_bytes = 0
     generations = 0
     problems = Counter()
     allocated = freed = alloc_calls = free_calls = unknown_window_frees = 0
     before = peak = None
-    for index in range(max(image, 0), end):
+    if boundary >= 0 and image < 0:
+        problems['last pre-window lifecycle boundary is not Exec'] += 1
+    for index in range(max(boundary, 0), end):
         if index == begin:
             before = live_bytes
             peak = before
@@ -42,6 +45,11 @@ def replay(events, pid, begin, end, *, addresses=None, continuous_capture=False,
             continue
         # A null free is a no-op. Null allocation results are not emitted by memtrack1.6.
         if kind == 'Free' and not address:
+            continue
+        if kind == 'Realloc' and event['size'] == 0:
+            problems['zero-size realloc disposition is unvalidated'] += 1
+            if inside:
+                unknown_window_frees += 1
             continue
         if kind == 'Realloc' and not address:
             problems['null realloc result: old object disposition unknown'] += 1
@@ -97,8 +105,10 @@ def replay(events, pid, begin, end, *, addresses=None, continuous_capture=False,
         'window_allocation_calls': alloc_calls,
         'window_release_calls': free_calls,
         'window_net_bytes': None if unknown_window_frees else allocated - freed,
-        'known_live_at_begin_bytes': before,
-        'known_live_at_end_bytes': live_bytes,
+        'known_live_at_begin_bytes': before if complete else None,
+        'observed_begin_object_sum_bytes': before,
+        'known_live_at_end_bytes': live_bytes if complete else None,
+        'observed_current_object_sum_bytes': live_bytes,
         'observed_stream_peak_bytes': peak if complete else None,
         'observed_live_sum_max_bytes': peak,
         'retained_objects': len(live) if complete else None,
