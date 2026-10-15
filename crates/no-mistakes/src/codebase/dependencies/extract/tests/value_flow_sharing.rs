@@ -351,6 +351,7 @@ fn assert_no_mutable_root_work(facts: &ValueFlowFacts) {
     let entry_bytes = std::mem::size_of::<((Receiver, Vec<Read>, ()), bool, bool, bool)>();
     assert!(facts.reference_pending_capacity > 0);
     assert_eq!(facts.reference_version_dispatches, 0);
+    assert_eq!(facts.receiver_only_pending_spills, 0);
     assert_eq!(
         (facts.reference_root_probes, facts.reference_pending_bytes),
         (0, facts.reference_pending_capacity * entry_bytes),

@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 
 #[path = "mutable_origin_data.rs"]
 mod data;
+#[path = "mutable_origin_pending.rs"]
+mod pending;
 #[path = "mutable_origin_phases.rs"]
 mod phases;
 
@@ -41,6 +43,8 @@ pub(in super::super) struct ReceiverBindingOrigins {
     lookups: std::cell::Cell<usize>,
     #[cfg(feature = "test-instrumentation")]
     visits: std::cell::Cell<usize>,
+    #[cfg(feature = "test-instrumentation")]
+    spills: std::cell::Cell<usize>,
 }
 impl ReceiverBindingOrigins {
     #[cfg(feature = "test-instrumentation")]
@@ -48,6 +52,7 @@ impl ReceiverBindingOrigins {
         facts.receiver_only_nodes = self.arena.len();
         facts.receiver_only_lookups = self.lookups.get();
         facts.receiver_only_visits = self.visits.get();
+        facts.receiver_only_pending_spills = self.spills.get();
     }
     pub(super) fn watermark(&self) -> usize {
         self.arena.len()
@@ -129,7 +134,7 @@ impl ReceiverBindingOrigins {
             return;
         };
         let (path, reads, root_read) = coordinates;
-        let mut pending = Vec::new();
+        let mut pending = pending::PendingOrigins::default();
         let phase_selected = root
             .patterns
             .as_ref()
@@ -168,5 +173,8 @@ impl ReceiverBindingOrigins {
                 }
             }
         }
+        #[cfg(feature = "test-instrumentation")]
+        self.spills
+            .set(self.spills.get() + usize::from(pending.spilled()));
     }
 }
