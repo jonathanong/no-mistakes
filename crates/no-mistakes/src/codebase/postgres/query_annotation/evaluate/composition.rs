@@ -72,7 +72,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         value
     }
 
-    pub(super) fn container(
+    pub(super) fn container_with_roots(
         &mut self,
         expr: &Expr,
         children: &[Expr],
@@ -82,7 +82,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) -> Value {
         let mut values: super::value::Values = children
             .iter()
-            .map(|child| self.operand(child, path, env, context))
+            .map(|child| {
+                let value = self.operand(child, path, env, context);
+                self.retain_temporary_roots(&value);
+                value
+            })
             .collect::<Vec<_>>()
             .into();
         if self.files[path].facts.precise_records {

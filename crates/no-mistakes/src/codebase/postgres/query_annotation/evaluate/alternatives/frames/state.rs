@@ -7,6 +7,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    transient: &[super::super::super::temporaries::TransientRoot],
 ) {
     // Scalar-only branches have no heap or mutation state to discard.
     if arena.objects.is_empty()
@@ -19,9 +20,14 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     {
         return;
     }
-    let reachable = reachable::collect(
+    let roots = (0..scopes.len()).collect::<Vec<_>>();
+    let reachable = reachable::collect_from_roots(
         scopes,
-        scopes.len(),
+        reachable::RootSeeds {
+            environments: &roots,
+            transient,
+            ..Default::default()
+        },
         returned,
         arena.read(),
         mapped,
@@ -65,6 +71,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
             environments: &roots,
             arguments: &[],
             preserved: 0,
+            transient: &[],
         },
         &mut [],
         mapped,

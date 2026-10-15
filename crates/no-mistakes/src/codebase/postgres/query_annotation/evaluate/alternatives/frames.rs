@@ -8,6 +8,7 @@ struct Roots<'a> {
     environments: &'a [Environment],
     arguments: &'a [u64],
     preserved: Environment,
+    transient: &'a [super::super::temporaries::TransientRoot],
 }
 
 pub(super) struct Compaction {
@@ -36,6 +37,7 @@ pub(super) struct ModuleRoots<'a> {
     pub original: usize,
     pub modules: &'a mut FxHashMap<std::path::PathBuf, Environment>,
     pub initials: &'a mut [super::modules::Initials],
+    pub transient: &'a [super::super::temporaries::TransientRoot],
 }
 
 pub(super) fn compact(
@@ -61,6 +63,7 @@ pub(super) fn compact(
             environments: &roots,
             arguments: &argument_roots,
             preserved: original,
+            transient: cache.transient,
         },
         returned,
         mapped,
@@ -90,8 +93,11 @@ fn compact_from_roots(
 ) -> Compaction {
     let reachable = reachable::collect_from_roots(
         scopes,
-        roots.environments,
-        roots.arguments,
+        reachable::RootSeeds {
+            environments: roots.environments,
+            arguments: roots.arguments,
+            transient: roots.transient,
+        },
         returned,
         arena.read(),
         mapped,

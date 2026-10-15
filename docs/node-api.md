@@ -98,8 +98,10 @@ TypeScript/JavaScript text through the same executor and embedded SQL extractor.
 Each source is `{ fileName, source }`; optional `executorNames`,
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` select the same
 bindings as the annotation rule. It returns one record per executor call or
-recoverable conditional alternative, in source order. Records include `fileName`,
-the one-based executor `line`, `annotation`, `sqlText`, `kind`, and `complete`.
+recoverable conditional alternative, in source order. Sources without a configured
+executor call return an empty array, including when import-aware analysis evaluates
+nested SQL-building helpers. Records include `fileName`, the one-based executor
+`line`, `annotation`, `sqlText`, `kind`, and `complete`.
 Recovered conditional alternatives have `kind: "composed"`. The named
 `ExecutedPostgresTrustedSqlTag` type describes each `trustedSqlTags` entry.
 Template interpolations appear as `sql_placeholder_N` markers and remain

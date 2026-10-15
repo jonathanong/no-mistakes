@@ -32,6 +32,7 @@ fn lazy_module_argument_ids_use_shared_definite_intersections() {
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
+        transient_roots: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,

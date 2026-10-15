@@ -42,6 +42,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             scopes: Vec::new(),
             modules: Default::default(),
             active_module_initials: Default::default(),
+            transient_roots: Default::default(),
             active_callback_functions: Default::default(),
             active_callback_executions: Default::default(),
             untrusted_array_intrinsics: false,

@@ -3,6 +3,29 @@ use super::{arena, frames};
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn compact_alternative_frames(
+        &mut self,
+        original: usize,
+        returned: &mut [super::super::Value],
+    ) -> frames::Compaction {
+        frames::compact(
+            &mut self.scopes,
+            frames::ModuleRoots {
+                original,
+                modules: &mut self.modules,
+                initials: &mut self.active_module_initials,
+                transient: &self.transient_roots,
+            },
+            returned,
+            &mut self.mapped_arguments,
+            arena::ArenaMut {
+                objects: &mut self.argument_objects,
+                extras: &mut self.argument_extra_slots,
+            },
+            &mut self.fresh_mapped_parameters,
+            &mut self.captured_bindings,
+        )
+    }
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn prune_snapshot_state(
         &mut self,
     ) {
@@ -50,6 +73,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 extras: &mut self.argument_extra_slots,
             },
             &self.captured_bindings,
+            &self.transient_roots,
         );
     }
     pub(super) fn install_disconnected_slots(
