@@ -77,5 +77,15 @@
     "stop": "Missing marker/memory artifacts, duplicate raw profile directories/PIDs, changed binary hash, count drift, or runner mismatch; diagnose before any further authorized execution. No blind repeats."
   },
   "claims": "No runtime improvement, deterministic full warmness, scheduling cause, RSS equivalence, or retained-byte attribution. No subtraction or replacement of original measurements.",
-  "implementationBase": "4ddb9c08dbe8e06501a87ffce0ab8db4b10e76fc"
+  "implementationBase": "4ddb9c08dbe8e06501a87ffce0ab8db4b10e76fc",
+  "executionAttempts": [
+    {
+      "head": "19a4781a152ac70a2941b837b50d7b331466dcb8",
+      "workflow": "https://github.com/jonathanong/no-mistakes/actions/runs/38665046852",
+      "result": "Canceled during producer CPU build, before memory build/package or any smoke measurement.",
+      "measuredSamples": 0,
+      "diagnosis": "Runner5.4 ConfigTargets defaults working directory to the config directory; repository-relative scripts under .github require explicit options.working-directory=.. .",
+      "correction": "Explicit parent working directory plus saved path-resolution regression; only the corrected attempt may produce the declared four samples."
+    }
+  ]
 }

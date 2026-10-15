@@ -1,6 +1,7 @@
 # Explicitly selected by the opt-in smoke action; ordinary runs never load this.
 # One runner invocation gives each entrypoint its own profile folder and unique
 # run-part-index suffix while preserving the original benchmark URI.
+options: {"working-directory": ".."}
 benchmarks:
   - name: '1 original'
     entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 1 original
