@@ -146,9 +146,10 @@ impl ImportCollector {
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
         output: &mut impl Extend<nested::ReceiverWrite<R>>,
         foreign_before: usize,
+        version: mutable_origins::RootVersion,
     ) {
         if let Some(origins) = &self.receiver_only_bindings {
-            origins.append_references(key, coordinates, output, foreign_before);
+            origins.append_references(key, coordinates, output, foreign_before, version);
         }
     }
 

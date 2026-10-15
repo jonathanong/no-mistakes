@@ -15,13 +15,10 @@ impl ReceiverBindingOrigins {
             .get_mut(&key.0)
             .and_then(|names| names.get_mut(key.1))
         {
-            let initial = root.owners.get(&owner).and_then(|states| {
-                states
-                    .snapshots
-                    .range(..catalog.start)
-                    .next_back()
-                    .map(|(_, id)| *id)
-            });
+            let initial = root
+                .owners
+                .get(&owner)
+                .and_then(|states| states.snapshots.before(catalog.start).map(|(_, id)| *id));
             let patterns = root.patterns.get_or_insert_with(Default::default);
             let previous = patterns.previous(catalog, phase, owner).or(initial);
             let leaf = self.arena.len();
@@ -71,6 +68,8 @@ impl ReceiverBindingOrigins {
         // The final execution version wins over physically later RHS source
         // positions, which run before the LHS writes in an assignment pattern.
         let states = root.owners.entry(owner).or_default();
+        #[cfg(feature = "test-instrumentation")]
+        states.observe_insertion(end);
         states.snapshots.insert(end, selected);
         // Normal collection already retained every leaf for foreign readers;
         // execution snapshots need no duplicate possible-origin join.

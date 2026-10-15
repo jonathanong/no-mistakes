@@ -183,6 +183,7 @@ impl ImportCollector {
                         (&path, &reads, read),
                         &mut references,
                         info.metadata.foreign_before,
+                        version,
                     );
                 }
             }

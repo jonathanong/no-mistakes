@@ -16,6 +16,14 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub receiver_only_lookups: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_snapshot_queries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_predecessor_queries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_insertion_order: [usize; 3],
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_only_snapshot_tree_buffers: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub receiver_only_membership_probes: usize,
     #[cfg(feature = "test-instrumentation")]
     pub receiver_only_owned_keys: usize,
