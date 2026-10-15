@@ -114,3 +114,34 @@ fn http_only_graph_excludes_config_only_playwright_owned_routes() {
         "http/custom-owned.test.mts",
     );
 }
+
+#[test]
+fn cargo_filters_without_projects_reuse_the_prepared_source_store() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/cargo-target-ownership"),
+    );
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible = snapshot.paths_for(&root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible).unwrap();
+    let sources = snapshot.source_store_for(&root);
+    let config = crate::config::v2::NoMistakesConfig::default();
+    let filters = super::super::test_filters_from_prepared(
+        &root, "cargo", &config, &tsconfig, &snapshot, None,
+    );
+    assert!(filters.contains(&"crates/custom/harness/suite/entry.rs".to_string()));
+    let reads = sources.physical_read_count();
+    assert!(reads > 0);
+    assert_eq!(
+        super::super::test_filters_from_prepared(
+            &root, "cargo", &config, &tsconfig, &snapshot, None
+        ),
+        filters
+    );
+    assert_eq!(
+        sources.physical_read_count(),
+        reads,
+        "repeated compatibility lookup shares manifest reads"
+    );
+}

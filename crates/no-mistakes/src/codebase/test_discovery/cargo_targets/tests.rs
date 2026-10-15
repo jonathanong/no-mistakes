@@ -297,3 +297,26 @@ fn cargo_absent_manifest_keeps_preparation_cold_and_scope_explicit() {
     assert!(scoped.discover(&root, &files).tests.is_empty());
     assert_eq!(sources.physical_read_count(), 0);
 }
+
+#[test]
+fn cargo_inventory_compatibility_discovery_retains_explicit_target_identity() {
+    let root = fixture();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible = snapshot.paths_for(&root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible).unwrap();
+    let discovered = crate::codebase::test_discovery::discover_tests_from_visible(
+        &root,
+        &NoMistakesConfig::default(),
+        super::super::TestRunner::Cargo,
+        &visible,
+        &tsconfig,
+    )
+    .unwrap();
+    let target = &discovered.targets_by_path[&root.join("crates/custom/harness/suite/entry.rs")][0];
+    assert_eq!(target.project.as_deref(), Some("renamed-package"));
+    assert!(target
+        .runner_args
+        .ends_with(&["--test".into(), "declared-suite".into()]));
+    assert!(!discovered.used_fallback);
+}

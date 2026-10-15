@@ -56,13 +56,14 @@ fn rails_picks_rspec_or_minitest_from_filename() {
 }
 
 #[test]
-fn language_target_for_rejects_js_runners() {
+fn language_target_for_rejects_js_and_cargo_runners() {
     for runner in [
         TestRunner::Vitest,
         TestRunner::Playwright,
         TestRunner::Jest,
         TestRunner::Dotnet,
         TestRunner::Swift,
+        TestRunner::Cargo,
     ] {
         assert!(
             super::language_target_for(runner, None, None, "src/value.test.ts").is_none(),
