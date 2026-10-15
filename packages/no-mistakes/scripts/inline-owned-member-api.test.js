@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const { join } = require("node:path");
+const { readFileSync } = require("node:fs");
 const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
@@ -64,3 +65,20 @@ test(
     }
   },
 );
+
+// Ordinary discovery skips native behavior; keep its real-addon CI bridge explicit.
+test("CI registers inline method acquisitions with the compiled addon", () => {
+  const workflow = readFileSync(join(__dirname, "../../../.github/workflows/ci.yml"), "utf8");
+  const steps = workflow
+    .split("      - name: Run real N-API API test")
+    .slice(1)
+    .map((section) => section.split("\n      - name:")[0]);
+  const bridge = readFileSync(join(__dirname, "real-napi-api.test.js"), "utf8");
+  assert.ok(bridge.includes('require("./inline-owned-member-api.test.js");'));
+  assert.equal(steps.length, 2, "Linux and native platform addon steps");
+  for (const step of steps) {
+    assert.match(step, /NO_MISTAKES_TEST_NAPI_ADDON_PATH=/u);
+    assert.match(step, /pnpm exec vitest run/u);
+    assert.ok(step.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+  }
+});

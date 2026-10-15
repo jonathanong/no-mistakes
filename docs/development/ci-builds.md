@@ -21,6 +21,11 @@ Release job environment overrides enforce the same symbol-free
 profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
 working directory.
 
+The real-addon API steps load `inline-owned-member-api.test.js` through
+`real-napi-api.test.js` on Linux, macOS, and Windows with
+`NO_MISTAKES_TEST_NAPI_ADDON_PATH` pointing to the compiled addon. This exercises async CJS/ESM method-acquisition parity; ordinary
+JavaScript discovery alone skips the native behavior test without that addon.
+
 ## Hosted measurement
 
 [Run 38332918032](https://github.com/jonathanong/no-mistakes/actions/runs/38332918032)
