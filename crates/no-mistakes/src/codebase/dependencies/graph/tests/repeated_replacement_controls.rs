@@ -183,3 +183,21 @@ fn executable_accessors_decline_only_the_relevant_new_repeat_proof() {
         false,
     );
 }
+
+#[test]
+fn local_member_writes_do_not_acquire_imported_replacement_identity() {
+    let (root, graph) = controls_graph();
+    assert_targets(
+        physical_site(&graph, &root, "local-receiver", "tracked.get"),
+        &["rhs.get", "tracked.get"],
+        false,
+    );
+    let local = physical_site(&graph, &root, "local-receiver", "local.get");
+    assert!(local.has_unknown_target(), "{local:#?}");
+    assert!(
+        local
+            .targets()
+            .all(|candidate| !matches!(candidate.target, KnownCallTargetRef::ModuleExport { .. })),
+        "{local:#?}"
+    );
+}
