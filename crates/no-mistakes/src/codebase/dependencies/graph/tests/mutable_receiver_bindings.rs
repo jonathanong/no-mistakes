@@ -22,6 +22,8 @@ fn mutable_receiver_origins_invalidate_without_becoming_value_bindings() {
     )
     .unwrap();
     for (case, callee, expected) in [
+        ("mutable-let-pattern-ternary-rebind", "value.get", None),
+        ("mutable-let-pattern-ternary-rebind", "changed.get", None),
         ("mutable-let-pattern-class-context", "value.get", None),
         (
             "mutable-let-pattern-class-context",

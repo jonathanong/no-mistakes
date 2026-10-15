@@ -37,15 +37,6 @@ impl PatternRoots {
         guaranteed: bool,
     ) {
         let writes = self.writes.entry(owner).or_default();
-        // An enclosing catalog already describes nested RHS/LHS execution.
-        // A later physical nested completion must not hide its earlier RHS.
-        if writes
-            .range(..catalog.start)
-            .next_back()
-            .is_some_and(|(_, entry)| entry.catalog.end >= catalog.end)
-        {
-            return;
-        }
         let entry = writes.entry(catalog.start).or_insert_with(|| RootPhases {
             catalog: Arc::clone(catalog),
             initial,

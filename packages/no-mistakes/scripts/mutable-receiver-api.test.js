@@ -15,6 +15,7 @@ test(
     );
     const config = join(root, "mutable-receivers.yml");
     for (const [name, expected] of [
+      ["mutable-let-pattern-ternary-rebind", 0],
       ["mutable-let-pattern-final-foreign", 0],
       ["mutable-let-pattern-conditional-whole", 1],
       ["mutable-let-pattern-conditional-final", 0],
