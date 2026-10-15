@@ -1,5 +1,5 @@
 use super::*;
-use identity_metadata::{FreshCapture, map_between};
+use identity_metadata::{map_between, FreshCapture};
 use mutation_history::{ValueAssignedMutations, ValueAssignedWriter, ValueMutationHistory};
 
 pub(super) fn reference_replaced(

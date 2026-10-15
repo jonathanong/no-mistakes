@@ -20,13 +20,11 @@ fn singleton_promotes_and_merges_without_losing_context_projections() {
     assert_eq!(target.context(None).unwrap(), target.aggregate());
     target.record(None, write(30, Some(CallableId(1))));
     assert!(target.context(None).unwrap().dynamic.is_none());
-    assert!(
-        target
-            .context(Some(CallableId(1)))
-            .unwrap()
-            .dynamic
-            .is_some()
-    );
+    assert!(target
+        .context(Some(CallableId(1)))
+        .unwrap()
+        .dynamic
+        .is_some());
     assert!(target.context(Some(CallableId(2))).is_none());
     let mut other = ValuePropagatedMutations::default();
     other.record(Some("get".into()), write(10, Some(CallableId(2))));
@@ -148,13 +146,11 @@ fn callable_singleton_retains_owner_through_mixed_summary_merge() {
         20
     );
     assert_eq!(target.context(None).unwrap().members["get"].offset, 10);
-    assert!(
-        target
-            .context(Some(CallableId(2)))
-            .unwrap()
-            .members
-            .contains_key("set")
-    );
+    assert!(target
+        .context(Some(CallableId(2)))
+        .unwrap()
+        .members
+        .contains_key("set"));
 }
 
 #[test]
@@ -167,11 +163,9 @@ fn distinct_singletons_merge_into_separate_contexts() {
     assert!(module.single.is_none());
     assert_eq!(module.contexts.len(), 2);
     assert!(module.context(None).unwrap().dynamic.is_none());
-    assert!(
-        module
-            .context(Some(CallableId(1)))
-            .unwrap()
-            .dynamic
-            .is_some()
-    );
+    assert!(module
+        .context(Some(CallableId(1)))
+        .unwrap()
+        .dynamic
+        .is_some());
 }
