@@ -1,5 +1,5 @@
 use super::*;
-use default_origins::{DefaultOriginUse, merge};
+use default_origins::{merge, DefaultOriginUse};
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn record_default_origin(

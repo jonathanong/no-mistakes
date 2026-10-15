@@ -34,13 +34,11 @@ fn effects_typed_and_returned_members_preserve_category_filters() {
     );
     assert_eq!(value["callSites"].as_array().unwrap().len(), 5);
     assert_eq!(value["byCategory"]["transaction"], 5);
-    assert!(
-        value["callSites"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|site| site["callee"] == "writePool.connect().query")
-    );
+    assert!(value["callSites"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|site| site["callee"] == "writePool.connect().query"));
     let output = run_in(
         &root,
         &[
@@ -53,10 +51,8 @@ fn effects_typed_and_returned_members_preserve_category_filters() {
         ],
     );
     assert!(!output.status.success());
-    assert!(
-        String::from_utf8_lossy(&output.stderr)
-            .contains("no functions for the requested categories")
-    );
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("no functions for the requested categories"));
 }
 
 #[test]
