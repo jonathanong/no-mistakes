@@ -85,6 +85,7 @@ pub struct ValueFlowFacts {
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
     pub type_exports: Vec<ExportedBinding>,
+    pub type_sources: Option<Box<ValueTypeSources>>,
     pub async_callables: FxHashSet<CallableId>,
     pub generator_callables: FxHashSet<CallableId>,
 }
@@ -204,3 +205,7 @@ mod suspension_tests;
 
 #[path = "extract_value_flow/callable_uses.rs"]
 mod callable_uses;
+
+#[path = "extract_value_flow/type_sources.rs"]
+mod type_sources;
+pub use type_sources::{ValueTypeSource, ValueTypeSources};

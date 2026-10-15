@@ -6,6 +6,22 @@ impl ImportCollector {
         expression: &Expression<'_>,
     ) -> ValueExpression {
         match expression {
+            Expression::LogicalExpression(logical)
+                if logical.operator == oxc_syntax::operator::LogicalOperator::Coalesce =>
+            {
+                match &logical.left {
+                    Expression::NullLiteral(_) => self.value_expression(&logical.right),
+                    Expression::StringLiteral(_)
+                    | Expression::NumericLiteral(_)
+                    | Expression::BooleanLiteral(_)
+                    | Expression::BigIntLiteral(_)
+                    | Expression::RegExpLiteral(_) => self.value_expression(&logical.left),
+                    _ => ValueExpression::Nullish(
+                        std::sync::Arc::new(self.value_expression(&logical.left)),
+                        std::sync::Arc::new(self.value_expression(&logical.right)),
+                    ),
+                }
+            }
             Expression::Identifier(identifier)
                 if identifier.name == "undefined"
                     && self.callee_binding_scope("undefined").is_none()

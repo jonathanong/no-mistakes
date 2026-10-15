@@ -83,6 +83,10 @@ fn refine_iteration(
         let mut value = value;
         loop {
             value = match value {
+                FlowValue::Annotated { executor, file, source } => {
+                    if let Some(origin) = flow.annotation_origin(&file, &source) { site.typed_from.push(origin); }
+                    *executor
+                },
                 FlowValue::Provenance {
                     executor,
                     typed,

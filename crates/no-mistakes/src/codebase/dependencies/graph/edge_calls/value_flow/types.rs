@@ -3,6 +3,12 @@ use super::*;
 #[derive(Clone, PartialEq, Eq)]
 pub(super) enum FlowValue {
     Uncallable,
+    Nullish { value: Box<FlowValue>, fallback: Box<FlowValue> },
+    Annotated {
+        executor: Box<FlowValue>,
+        file: std::path::PathBuf,
+        source: std::sync::Arc<crate::codebase::dependencies::extract::ValueTypeSource>,
+    },
     Provenance {
         executor: Box<FlowValue>,
         typed: Vec<(String, String)>,
@@ -49,6 +55,9 @@ impl FlowValue {
     // Metadata must not change ordinary value-flow operations.
     pub(super) fn map_executor(self, operation: impl FnOnce(Self) -> Self) -> Self {
         match self {
+            Self::Annotated { executor, file, source } => Self::Annotated {
+                executor: Box::new(executor.map_executor(operation)), file, source,
+            },
             Self::Provenance {
                 executor,
                 typed,
@@ -65,7 +74,7 @@ impl FlowValue {
     }
     pub(super) fn executor(&self) -> &Self {
         match self {
-            Self::Provenance { executor, .. } => executor.executor(),
+            Self::Provenance { executor, .. } | Self::Annotated { executor, .. } => executor.executor(),
             value => value,
         }
     }
