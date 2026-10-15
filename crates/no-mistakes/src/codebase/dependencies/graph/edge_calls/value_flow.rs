@@ -91,6 +91,8 @@ mod member_projection;
 mod member_reads;
 #[path = "value_flow/named.rs"]
 mod named;
+#[path = "value_flow/named_imports.rs"]
+mod named_imports;
 #[path = "value_flow/refine.rs"]
 mod refine;
 #[path = "value_flow/returned.rs"]
