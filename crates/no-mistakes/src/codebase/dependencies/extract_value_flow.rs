@@ -20,6 +20,10 @@ pub struct ValueFlowFacts {
     /// Local callable values can escape through containers, returns, or stores.
     /// Bare call callees are represented by canonical invocation facts instead.
     pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
+    /// Literal callable assignments to a mutable lexical name, including
+    /// unknown writes that prevent a closed canonical call edge.
+    pub callable_assignments: Vec<CallableAssignment>,
+    pub callable_assignment_uses: FxHashSet<(usize, String)>,
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
     #[cfg(feature = "test-instrumentation")]
@@ -83,6 +87,16 @@ pub struct ValueFlowFacts {
     pub type_exports: Vec<ExportedBinding>,
     pub async_callables: FxHashSet<CallableId>,
     pub generator_callables: FxHashSet<CallableId>,
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CallableAssignment {
+    pub scope: usize,
+    pub name: String,
+    pub completed_at: u32,
+    pub callable: Option<CallableId>,
+    pub owner: Option<CallableId>,
+    pub region_start: Option<u32>,
+    pub guaranteed: bool,
 }
 #[path = "extract_value_flow/value_descriptors.rs"]
 mod value_descriptors;

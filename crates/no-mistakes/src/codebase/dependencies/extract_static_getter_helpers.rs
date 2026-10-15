@@ -172,6 +172,7 @@ fn visit_update_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     update: &oxc_ast::ast::UpdateExpression<'a>,
 ) {
+    collector.record_callable_assignment(update.argument.as_assignment_target(), None, false, update.span.end);
     collector.record_replacement_target(
         update.argument.as_assignment_target(),
         ValueExpression::Unknown,

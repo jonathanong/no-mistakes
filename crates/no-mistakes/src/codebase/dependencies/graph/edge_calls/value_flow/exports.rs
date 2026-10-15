@@ -40,7 +40,7 @@ pub(in super::super) fn resolve_value_exports(
                 module_writer_phases: &module_writer_phases,
                 writer_dependencies: Default::default(),
                 module_snapshot: None,
-                repeated_initializer: None,
+                member_initializer: None,
                 member_read: None,
             };
             let mut value = flow.named(file, local, Some(0), u32::MAX, None, None);

@@ -181,6 +181,7 @@ include!("extract_import_facts.rs");
 include!("extract_import_extractor.rs");
 
 include!("extract_entrypoints.rs");
+include!("extract_callable_assignments_finish.rs");
 include!("extract_entrypoints_predeclare.rs");
 include!("extract_namespace_facts.rs");
 include!("extract_namespace_scan.rs");

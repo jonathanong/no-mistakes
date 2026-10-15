@@ -3,6 +3,9 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.record_callable_assignment(&assignment.left, Some(&assignment.right),
+            assignment.operator == oxc_syntax::operator::AssignmentOperator::Assign,
+            assignment.span.end);
         let Some((name, property)) = self.replacement_target(&assignment.left) else {
             self.invalidate_unrepresented_write(&assignment.left, assignment.span.end);
             return;
@@ -174,3 +177,5 @@ fn stable_replacement_rhs(expression: &Expression<'_>) -> bool {
         _ => false,
     }
 }
+
+include!("extract_callable_assignment.rs");

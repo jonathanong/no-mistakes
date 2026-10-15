@@ -51,6 +51,12 @@ impl ReplacementCatalog {
 }
 
 impl ReplacementFile {
+    pub(super) fn acquisition_repeats(&self, offset: u32, owner: Option<CallableId>) -> bool {
+        self.writes
+            .region_at(owner, offset)
+            .is_some_and(|region| self.writes.facts.regions[region].may_repeat)
+    }
+
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn record_inherited_frames(&self) {
         self.inherited_frames.record(1);

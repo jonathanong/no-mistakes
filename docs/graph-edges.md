@@ -437,7 +437,16 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   aliases and callable bindings are indexed by lexical `(binding scope, local
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
-  `invalidated_at`. Value initializers after a direct `return` or `throw` in a
+  `invalidated_at`. A mutable module binding assigned one literal function in
+  the single straight-line body of a guaranteed nonempty literal `for-of` loop
+  can also produce a canonical `call` edge for a later direct module call. The
+  proof requires one assignment site, one callable identity, and no value escape or
+  nested call through the binding. Empty or conditional loops, early exits,
+  unknown or later writes, and exported or escaped bindings remain unresolved.
+  Two later calls retain two incoming edges, so receiver acquisitions in their
+  callable body still account for the earlier invocation's write. The
+  [deferred-call fixtures](../test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-call-proof-controls.mts)
+  cover these limits. Value initializers after a direct `return` or `throw` in a
   branch remain unknown for deferred captures. This cutoff stays within that
   statement sequence, preserving initialized captures in reachable alternates.
   Dotted aliases follow that same cycle-safe chain, so

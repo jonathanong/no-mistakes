@@ -20,6 +20,16 @@ struct CallSiteResolution<'a, 'b> {
 impl CallSiteResolution<'_, '_> {
     fn resolve(&self, call: &FunctionCall) -> (Option<Edge>, ResolvedCallSite) {
         let (index, path) = (self.index, self.path);
+        if let Some(assignment) = (call.invocation == InvocationKind::Call
+            && call.caller_id.is_none() && !call.callee.contains('.'))
+            .then(|| call.callee_binding_scope
+                .and_then(|scope| scoped_name(&index.callable_assignments, scope, &call.callee)))
+            .flatten()
+            .filter(|assignment| assignment.completed_at <= call.offset) {
+            return self.finish(call, ResolvedCallTarget::RepositoryFunction {
+                file: path.to_path_buf(), scope: assignment.scope.clone(),
+            }, Some(assignment.id));
+        }
         let resolved_callee = index
             .resolve_alias(
                 call.caller.as_deref(),
