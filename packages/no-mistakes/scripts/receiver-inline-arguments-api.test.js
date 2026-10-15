@@ -23,6 +23,9 @@ test(
     assert.deepEqual(await esm.effects(options), report);
     assert.deepEqual(report.callSites.map((site) => [site.caller, site.callee]).sort(), [
       ["takeCopied", "directSaved.get"],
+      ["takeFactory", "factoryLoopSaved.get"],
+      ["takeLocalOuter", "localOuterSaved.get"],
+      ["takeModuleSaved", "moduleLoopSaved.get"],
       ["takeOnce", "directOnce.get"],
       ["takeSibling", "directSibling.set"],
     ]);

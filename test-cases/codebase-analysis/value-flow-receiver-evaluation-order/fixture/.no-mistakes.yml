@@ -15,3 +15,13 @@ effects:
         export: directSibling.set
       - module: "@vendor/valkey"
         export: directNested.get
+      - module: "@vendor/valkey"
+        export: moduleLoopLive.get
+      - module: "@vendor/valkey"
+        export: moduleLoopSaved.get
+      - module: "@vendor/valkey"
+        export: localLoopSaved.get
+      - module: "@vendor/valkey"
+        export: localOuterSaved.get
+      - module: "@vendor/valkey"
+        export: factoryLoopSaved.get

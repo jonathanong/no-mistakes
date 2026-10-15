@@ -23,6 +23,7 @@ impl<'a> ValueFlowResolution<'a, '_> {
         owner: CallableId,
     ) {
         if super::inline_inputs::inline_callee(&call.callee) {
+            self.invocation_start = Some(call.offset);
             self.invocation_read = Some(default_origins::InvocationRead {
                 file: caller.to_path_buf(),
                 offset: call.end.saturating_sub(1),
@@ -48,6 +49,7 @@ impl<'a> ValueFlowResolution<'a, '_> {
         // Arguments execute in the caller, while the derived parameter phase is
         // owned by the inline callee. Preserve the argument's authored position,
         // but carry repetition from that same invocation's canonical callers.
+        // A transitive binding initializer outside this call acquires separately.
         let repeated = self.executing_read.is_some_and(|(file, owner, phase)| {
             file == path
                 && phase.is_repeated()
@@ -56,6 +58,8 @@ impl<'a> ValueFlowResolution<'a, '_> {
                         && read.owner.0 == path
                         && read.owner.1 == owner
                         && read.context == context
+                        && self.invocation_start.is_some_and(|start| start <= offset)
+                        && offset <= read.offset
                 })
         });
         let source = ExecutionPhase::Exact((offset, context)).repeated(repeated);

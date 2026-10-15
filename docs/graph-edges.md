@@ -585,7 +585,9 @@ Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay
 conservative across loop executions. Direct arguments to inline helpers inherit
 that same repeated caller evidence while retaining their source acquisition
-position; an earlier argument copied before a later write remains independent.
+position. Only reads inside that invocation inherit its repetition; resolving a
+saved binding does not reacquire its initializer. An earlier argument copied
+before a later write remains independent.
 Methods copied before the loop keep
 their acquisition snapshots. Loop initializer and iterable expressions retain
 their existing one-time timing proof.

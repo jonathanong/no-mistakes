@@ -65,6 +65,7 @@ fn refine_iteration(
         default_origins: None,
         acquisition_context: None,
         invocation_read: None,
+        invocation_start: None,
         executing_read: None,
         module_writer_phases: data.module_writer_phases,
         writer_dependencies: Default::default(),

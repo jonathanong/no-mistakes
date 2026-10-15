@@ -4,6 +4,36 @@ pub(super) fn cases() -> &'static [Case] {
     &[
         (
             "direct-inline-arguments",
+            Some("takeModuleLive"),
+            "fn",
+            None,
+        ),
+        (
+            "direct-inline-arguments",
+            Some("takeModuleSaved"),
+            "fn",
+            Some("moduleLoopSaved.get"),
+        ),
+        (
+            "direct-inline-arguments",
+            Some("runLocalLoop/takeLocalLoop"),
+            "fn",
+            None,
+        ),
+        (
+            "direct-inline-arguments",
+            Some("runLocalOuter/takeLocalOuter"),
+            "fn",
+            Some("localOuterSaved.get"),
+        ),
+        (
+            "direct-inline-arguments",
+            Some("makeTake/takeFactory"),
+            "fn",
+            Some("factoryLoopSaved.get"),
+        ),
+        (
+            "direct-inline-arguments",
             Some("runDirect/takeLive"),
             "fn",
             None,

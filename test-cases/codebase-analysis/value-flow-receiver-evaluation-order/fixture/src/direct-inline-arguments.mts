@@ -47,3 +47,65 @@ function forwardNested() {
   runNested();
 }
 for (const value of [0, 1]) forwardNested(value);
+
+import {
+  moduleLoopLive,
+  moduleLoopSaved,
+  localLoopSaved,
+  localOuterSaved,
+  factoryLoopSaved,
+} from "@vendor/valkey";
+for (const value of [0, 1]) {
+  (function takeModuleLive(fn) {
+    fn(value);
+  })(moduleLoopLive.get);
+  moduleLoopLive.get = replacement;
+}
+
+// The saved method acquires once before this module-level repeated invocation.
+const moduleMethod = moduleLoopSaved.get;
+for (const value of [0, 1]) {
+  (function takeModuleSaved(fn) {
+    fn(value);
+  })(moduleMethod);
+  moduleLoopSaved.get = replacement;
+}
+
+// Default forwarding retains its existing repeated acquisition evidence.
+function acquireLocalLoop(fn = localLoopSaved.get) {
+  return fn;
+}
+function runLocalLoop() {
+  for (const value of [0, 1]) {
+    const localMethod = acquireLocalLoop();
+    (function takeLocalLoop(fn) {
+      fn(value);
+    })(localMethod);
+    localLoopSaved.get = replacement;
+  }
+}
+runLocalLoop();
+
+function runLocalOuter() {
+  // Same callable context, but acquisition happens before its inner loop.
+  const localMethod = localOuterSaved.get;
+  for (const value of [0, 1]) {
+    (function takeLocalOuter(fn) {
+      fn(value);
+    })(localMethod);
+    localOuterSaved.get = replacement;
+  }
+}
+runLocalOuter();
+
+// A returned inline callee's callable identity predates the saved initializer.
+function makeTake() {
+  return function takeFactory(fn) {
+    fn("key");
+  };
+}
+const factoryMethod = factoryLoopSaved.get;
+for (const value of [0, 1]) {
+  makeTake()(factoryMethod);
+  factoryLoopSaved.get = replacement;
+}
