@@ -488,3 +488,58 @@ test(
     }
   },
 );
+
+// Bare setup literals must select the same project as explicit relative paths.
+test(
+  "compiled Vitest setup literals retain project roots and prepared parity",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(__dirname, "../../../fixtures/test-plan/vitest-literal-setups");
+    for (const [file, expected] of [
+      ["web/setup/start.ts", "web/example.test.ts"],
+      ["web/setup/helper.ts", "web/example.test.ts"],
+      ["web/setup/explicit.ts", "web/example.test.ts"],
+      ["web/setup/global.ts", "web/example.test.ts"],
+      ["node/setup/start.ts", "node/example.test.ts"],
+    ]) {
+      const options = {
+        root,
+        framework: "vitest",
+        changedFiles: [file],
+        globalConfigFallback: false,
+      };
+      const plan = await cjs.testsPlan(options);
+      assert.deepEqual(await esm.testsPlan(options), plan);
+      assert.deepEqual(
+        plan.selectedTests.map((selected) => selected.testFile),
+        [expected],
+        file,
+      );
+      assert.equal(plan.fallbackTriggered, false);
+      assert.equal(plan.warnings.length, 1);
+      assert.match(plan.warnings[0].message, /setup\/deleted\.ts/);
+      const impactOptions = { root, changedFiles: [file] };
+      const direct = await cjs.impactedChecks(impactOptions);
+      assert.deepEqual(await esm.impactedChecks(impactOptions), direct);
+      const prepared = await cjs.analyzeProject({
+        root,
+        reports: [{ type: "impactedChecks", changedFiles: [file] }],
+      });
+      assert.deepEqual(prepared.reports[0].result, direct);
+    }
+    // Deleted bare setup paths retain a bounded fallback to their own project.
+    const deleted = await cjs.testsPlan({
+      root,
+      framework: "vitest",
+      diff: require("node:fs").readFileSync(join(root, "deleted.diff"), "utf8"),
+      globalConfigFallback: false,
+    });
+    assert.deepEqual(
+      deleted.selectedTests.map((selected) => selected.testFile),
+      ["missing/example.test.ts"],
+    );
+    assert.equal(deleted.fallbackTriggered, true);
+  },
+);

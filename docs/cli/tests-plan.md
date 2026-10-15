@@ -185,7 +185,9 @@ and parses static `testMatch` / `testRegex` literals. Empty `configs: []`
 disables Jest discovery; there is no default-on `jest.config.*` scan. Jest
 plans do not follow Vitest `setupFiles` / `globalSetup` edges.
 Vitest `setupFiles` and `globalSetup` are included in the test dependency
-graph automatically. A change to either configured module, or to a static
+graph automatically. Literal setup paths resolve from each effective Vitest project
+root, with or without a leading `./`; package and tsconfig alias resolution takes
+precedence over a project-relative fallback. A change to either configured module, or to a static
 import/re-export reachable from one, selects only the tests owned by that
 Vitest project. Explicit `tests.vitest.projects.<name>.setup_files` declarations
 also add setup dependencies from repository-relative paths, scoped to the

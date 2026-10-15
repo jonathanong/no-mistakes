@@ -1,0 +1,5 @@
+diff --git a/missing/setup/deleted.ts b/missing/setup/deleted.ts
+--- a/missing/setup/deleted.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-export const removed = true;
