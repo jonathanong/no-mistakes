@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "report_sha256": "061d16dcb264b238d320e72d5d1f6c0ce0dabd2f851edbb0396d42eae6c1f456",
+    "exit": 1,
+    "rule_count": 1,
+    "trace": "transaction-only"
+  },
+  "candidate": {
+    "report_sha256": "3539d38f1be6205f8dd1dfcb313b11aa7236432b6a885567dd56c1b7fc11e72b",
+    "exit": 1,
+    "rule_count": 1,
+    "trace": "query"
+  }
+}
