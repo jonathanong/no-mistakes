@@ -161,7 +161,10 @@ impl ValueFlowResolution<'_, '_> {
                     // Inline callees have no Named expression; facts own their caller context.
                     context,
                     invocation: true,
-                    repeated: repeated || call.repeated,
+                    // Named-only invocation timing retains its existing policy.
+                    // Inline entry and qualified caller proofs own this phase.
+                    repeated: repeated
+                        || (call.repeated && super::inline_inputs::inline_callee(&call.callee)),
                     owned_context: owned_context.map(|(file, owner, preserve)| {
                         Box::new((file.to_path_buf(), owner, preserve))
                     }),

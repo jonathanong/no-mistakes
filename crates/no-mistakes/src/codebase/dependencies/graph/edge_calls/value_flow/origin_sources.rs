@@ -73,9 +73,10 @@ impl ValueFlowResolution<'_, '_> {
                                         } else if acquired {
                                             reader(writer).known()
                                         } else {
-                                            reader(writer)
-                                                .or_absent(|| (writer == read.1).then_some(read.0))
-                                                .known()
+                                            match reader(writer) {
+                                                receiver_reads::ReadOffset::Repeated => None,
+                                                _ => (writer == read.1).then_some(read.0),
+                                            }
                                         }
                                     })
                             } else {
