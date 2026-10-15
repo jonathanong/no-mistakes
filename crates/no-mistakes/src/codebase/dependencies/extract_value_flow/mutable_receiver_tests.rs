@@ -207,3 +207,6 @@ fn imported_alias_successors_remain_active_with_an_unrelated_mutable_root() {
     let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
 }
+
+#[path = "mutable_receiver_version_tests.rs"]
+mod versions;

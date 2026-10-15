@@ -114,8 +114,8 @@ impl ImportCollector {
                 .value_binding_indexes
                 .get(&key.0)
                 .and_then(|names| names.get(key.1.as_str()))
-                .into_iter()
-                .flatten()
+                .map_or(&[][..], Vec::as_slice)
+                .iter()
                 .position(|index| {
                     #[cfg(feature = "test-instrumentation")]
                     {
@@ -136,9 +136,8 @@ impl ImportCollector {
                     .value_binding_indexes
                     .get(&key.0)
                     .and_then(|names| names.get(key.1.as_str()))
-                    .into_iter()
-                    .flatten()
-                    .skip(first)
+                    .map_or(&[][..], Vec::as_slice)[first..]
+                    .iter()
                     .map(|index| {
                         #[cfg(feature = "test-instrumentation")]
                         {
@@ -183,6 +182,7 @@ impl ImportCollector {
         }
         #[cfg(feature = "test-instrumentation")]
         {
+            self.value_flow.reference_version_table_capacity += traversal.version_table_capacity();
             self.value_flow.reference_binding_visits += binding_visits;
             self.value_flow.reference_pending_capacity += pending.capacity();
             self.value_flow.reference_pending_bytes +=
