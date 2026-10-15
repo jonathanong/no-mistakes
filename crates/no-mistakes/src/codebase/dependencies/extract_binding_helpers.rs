@@ -1,4 +1,4 @@
-#[path = "extract_binding_names.rs"]
+#[path = "extract/extract_binding_names.rs"]
 mod extract_binding_names;
 use extract_binding_names::{assignment_target_names, binding_names};
 fn visit_binding_defaults_for_name<'a>(
@@ -12,7 +12,9 @@ fn visit_binding_defaults_for_name<'a>(
                 .iter()
                 .any(|binding| binding == name)
             {
-                with_conditional_receiver_write(collector, |collector| collector.visit_expression(&assignment.right));
+                with_conditional_receiver_write(collector, |collector| {
+                    collector.visit_expression(&assignment.right)
+                });
             }
             visit_binding_defaults_for_name(collector, &assignment.left, name);
         }
