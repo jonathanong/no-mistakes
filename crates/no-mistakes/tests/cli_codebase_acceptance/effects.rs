@@ -217,7 +217,22 @@ fn effects_cli_respects_definite_enclosing_initialization() {
         &["effects", "cache", "--entry", "src/enclosing-tdz.mts"],
     );
     let sites = report["callSites"].as_array().unwrap();
-    assert_eq!(sites.len(), 5, "{report}");
+    assert_eq!(sites.len(), 6, "{report}");
+    let callers = sites
+        .iter()
+        .map(|site| site["caller"].as_str().unwrap())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(
+        callers,
+        std::collections::BTreeSet::from([
+            "initializedRun",
+            "conditionalRun",
+            "branchRun",
+            "hoistedRun",
+            "staticInvoke",
+            "switchRun",
+        ])
+    );
     assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
 }
 

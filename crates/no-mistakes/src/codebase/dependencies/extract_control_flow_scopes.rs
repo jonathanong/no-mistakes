@@ -3,7 +3,18 @@ fn visit_statement_with_type_binding<'a>(
     statement: &Statement<'a>,
 ) {
     record_statement_type_binding(collector, statement);
+    let previous_cutoff = collector.unreachable_value_binding_after;
     walk::walk_statement(collector, statement);
+    // A terminal statement only cuts off its own sequential siblings. Restore
+    // the enclosing cutoff so one branch cannot poison a reachable alternate.
+    collector.unreachable_value_binding_after = previous_cutoff;
+    if collector.collect_value_flow
+        && matches!(statement, Statement::ReturnStatement(_) | Statement::ThrowStatement(_))
+    {
+        collector.unreachable_value_binding_after = Some(
+            previous_cutoff.map_or(statement.span().end, |cutoff| cutoff.min(statement.span().end)),
+        );
+    }
 }
 
 fn visit_expression_with_annex_b_initializer<'a>(
@@ -62,11 +73,13 @@ fn visit_switch_statement_with_scope<'a>(
         }
     }
     for case in &switch.cases {
+        let previous_cutoff = collector.unreachable_value_binding_after;
         with_conditional_execution(collector, true, |collector| {
             for statement in &case.consequent {
                 collector.visit_statement(statement);
             }
         });
+        collector.unreachable_value_binding_after = previous_cutoff;
     }
     collector.pop_lexical_scope(pushed);
 }
