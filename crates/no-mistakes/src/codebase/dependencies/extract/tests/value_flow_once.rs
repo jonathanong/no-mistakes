@@ -107,13 +107,17 @@ fn call_repetition_belongs_to_execution_not_callable_creation() {
         ("defaultBodyCall", false),
         ("defaultLoopCall", true),
         ("outsideKeyCall", false),
-        ("outsideUnknownBodyCall", true),
+        // The named-class specialized path has no extra legacy depth here;
+        // preserving zero does not prove that an unqualified body executes once.
+        ("outsideUnknownBodyCall", false),
         ("fieldCall", true),
         ("fieldArrowCall", false),
         ("staticCall", true),
         ("staticBlockCall", true),
         ("loopAfterCall", true),
-        ("outsideFieldCall", true),
+        // Named-class instance fields use their class context rather than an
+        // extra legacy repeat-depth increment; preserve that authored metadata.
+        ("outsideFieldCall", false),
         ("outsideArrowBodyCall", false),
         ("outsideStaticCall", false),
         ("outsideStaticBlockCall", false),
