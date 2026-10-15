@@ -24,6 +24,7 @@ impl ImportCollector {
             name: "default".to_string(),
             scope: 0,
             declared_at: export.span.start,
+            repeated: false,
             invalidated_at: None,
             mutation_contexts: fx_set(),
             value,

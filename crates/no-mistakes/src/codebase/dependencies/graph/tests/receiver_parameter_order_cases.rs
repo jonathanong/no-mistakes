@@ -3,6 +3,66 @@ use super::cases::Case;
 pub(super) fn cases() -> &'static [Case] {
     &[
         (
+            "repeated-binding-acquisitions",
+            Some("runRepeated/takeRepeated"),
+            "fn",
+            None,
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("runBefore/takeBefore"),
+            "fn",
+            Some("beforeLoop.get"),
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("runAlias/takeAlias"),
+            "fn",
+            Some("earlierAlias.get"),
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("runSibling/takeSibling"),
+            "fn",
+            Some("localSibling.set"),
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("takeModuleRepeated"),
+            "fn",
+            None,
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("takeModuleSavedAlias"),
+            "fn",
+            Some("moduleSaved.get"),
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("oneShot/takeDeferred"),
+            "fn",
+            Some("deferredCopy.get"),
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("runUnrelated/takeUnrelated"),
+            "fn",
+            Some("unrelatedCopy.get"),
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("runNested/takeNested"),
+            "fn",
+            None,
+        ),
+        (
+            "repeated-binding-acquisitions",
+            Some("runInitializer/takeInitializer"),
+            "fn",
+            Some("loopInitializer.get"),
+        ),
+        (
             "direct-inline-arguments",
             Some("takeModuleLive"),
             "fn",

@@ -16,6 +16,7 @@ require("./nextjs-tracked-routes.test.js");
 require("./inline-owned-member-api.test.js");
 require("./enclosing-tdz-api.test.js");
 require("./decorator-receiver-api.test.js");
+require("./receiver-inline-arguments-api.test.js");
 require("./postgres-do-constraint-api.test.js");
 require("./postgres-metadata-api.test.js");
 require("./tests-audit-native-api.test.js");

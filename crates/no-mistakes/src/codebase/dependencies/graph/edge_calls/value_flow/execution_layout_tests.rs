@@ -8,6 +8,15 @@ use std::{
 // Compare with the actual parent field contracts on this target/compiler, in
 // both ordinary native tests and the instrumented coverage build. The added
 // execution-quality bits must fit existing padding rather than grow each fact.
+struct ParentBinding {
+    _owner: Option<CallableId>,
+    _name: String,
+    _scope: usize,
+    _declared_at: u32,
+    _invalidated_at: Option<u32>,
+    _mutation_contexts: FxHashSet<Option<CallableId>>,
+    _value: ValueExpression,
+}
 struct ParentCall {
     _offset: u32,
     _end: u32,
@@ -36,6 +45,8 @@ struct ParentInvocationRead {
 
 #[test]
 fn repeated_execution_metadata_preserves_fact_and_frame_layouts() {
+    assert_eq!((size_of::<ValueBinding>(), align_of::<ValueBinding>()),
+        (size_of::<ParentBinding>(), align_of::<ParentBinding>()));
     // Transient request state is separate from retained call facts and frames.
     eprintln!(
         "execution layouts: ValueCall={} ReceiverRead={} InvocationRead={} transient-parent={} transient-qualified={}",

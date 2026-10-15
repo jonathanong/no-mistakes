@@ -7,6 +7,8 @@ pub struct ValueBinding {
     pub name: String,
     pub scope: usize,
     pub declared_at: u32,
+    /// The initializer is reacquired within this callable execution scope.
+    pub repeated: bool,
     pub invalidated_at: Option<u32>,
     pub mutation_contexts: FxHashSet<Option<CallableId>>,
     pub value: ValueExpression,

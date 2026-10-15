@@ -588,6 +588,8 @@ that same repeated caller evidence while retaining their source acquisition
 position. Only reads inside that invocation inherit its repetition; resolving a
 saved binding does not reacquire its initializer. An earlier argument copied
 before a later write remains independent.
-Methods copied before the loop keep
-their acquisition snapshots. Loop initializer and iterable expressions retain
+A method copied into a binding inside a loop is reacquired on each iteration,
+so writes from earlier iterations invalidate its original target. A loop-local
+alias of an earlier copied method does not reacquire the property. Methods copied
+before the loop keep their acquisition snapshots. Loop initializer and iterable expressions retain
 their existing one-time timing proof.

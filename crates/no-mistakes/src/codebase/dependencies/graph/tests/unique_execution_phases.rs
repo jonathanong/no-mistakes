@@ -69,3 +69,55 @@ fn unique_caller_phase_work_is_shared_across_repeated_parameter_reads() {
         assert_eq!(counts[0], counts[1], "per-read phase work must stay shared");
     }
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn repeated_binding_acquisition_work_is_shared_across_physical_reads() {
+    let mut counts = Vec::new();
+    for (name, expected) in [
+        ("value-flow-binding-repeat-small", 16),
+        ("value-flow-binding-repeat-large", 128),
+    ] {
+        let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
+        let config = TsConfig {
+            dir: root.clone(),
+            paths: vec![],
+            paths_dir: root.clone(),
+            base_url: None,
+        };
+        let graph = DepGraph::build_with_plan(
+            &root,
+            &config,
+            GraphBuildPlan {
+                calls: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
+        let calls = sites
+            .iter()
+            .filter(|site| {
+                site.source_callee == "fn" && site.caller.as_deref() == Some("run/consume")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(calls.len(), expected);
+        assert!(
+            calls
+                .iter()
+                .all(|site| matches!(site.target, ResolvedCallTarget::Unknown)
+                    && site.invocation
+                        == crate::codebase::dependencies::extract::InvocationKind::Call),
+            "{calls:?}"
+        );
+        counts.push((
+            benchmark_probe_parameter_agreements(),
+            benchmark_probe_execution_phase_steps(),
+        ));
+    }
+    assert_eq!(counts[0], counts[1], "per-read work must remain shared");
+    assert!(
+        counts[1].0 <= 4 && counts[1].1 > 0 && counts[1].1 <= 384,
+        "{counts:?}"
+    );
+}

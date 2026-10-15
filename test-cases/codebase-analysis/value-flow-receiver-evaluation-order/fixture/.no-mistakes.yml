@@ -25,3 +25,25 @@ effects:
         export: localOuterSaved.get
       - module: "@vendor/valkey"
         export: factoryLoopSaved.get
+  repeated-binding:
+    targets:
+      - module: "@vendor/valkey"
+        export: repeatedLocal.get
+      - module: "@vendor/valkey"
+        export: beforeLoop.get
+      - module: "@vendor/valkey"
+        export: earlierAlias.get
+      - module: "@vendor/valkey"
+        export: localSibling.set
+      - module: "@vendor/valkey"
+        export: moduleRepeated.get
+      - module: "@vendor/valkey"
+        export: moduleSaved.get
+      - module: "@vendor/valkey"
+        export: deferredCopy.get
+      - module: "@vendor/valkey"
+        export: unrelatedCopy.get
+      - module: "@vendor/valkey"
+        export: nestedLoop.get
+      - module: "@vendor/valkey"
+        export: loopInitializer.get
