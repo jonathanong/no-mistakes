@@ -1669,3 +1669,10 @@ test("active progress exposes named public snapshot contracts and a live-only po
   assert.match(declarations, /export function diagnosticsSnapshot\(/);
   assert.match(declarations, /DiagnosticsProgressSnapshot \| null/);
 });
+
+test("Cargo warning declarations retain exported structured warning contracts", () => {
+  const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface TestPlanWarning \{/);
+  assert.match(declarations, /export interface TestTargetWarning \{/);
+  assert.match(declarations, /cargo-target-unresolved/);
+});

@@ -138,6 +138,14 @@ fn test_filters_from_prepared(
                     tsconfig,
                 )
             }
+            None if runner == crate::codebase::test_discovery::TestRunner::Cargo => {
+                crate::codebase::test_discovery::discover_cargo_tests_with_sources(
+                    root,
+                    config,
+                    &root_visible_paths,
+                    &visible_paths.source_store_for(root),
+                )
+            }
             None => crate::codebase::test_discovery::discover_tests_from_visible(
                 root,
                 config,

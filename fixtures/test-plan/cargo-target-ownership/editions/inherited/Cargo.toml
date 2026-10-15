@@ -1,0 +1,12 @@
+[package]
+name = "inherited-package"
+version = "0.1.0"
+edition.workspace = true
+workspace = "../.."
+
+[[test]]
+name = "manual"
+path = "tests/manual.rs"
+
+[[bin]]
+name = "inherited-package"

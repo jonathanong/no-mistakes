@@ -1,0 +1,6 @@
+[workspace]
+members = ["crates/engine", "crates/custom", "tools/console", "editions/e2015", "editions/e2024", "editions/inherited", "editions/implicit-workspace"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"

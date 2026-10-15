@@ -139,10 +139,12 @@ fn test_plan_cargo_sibling_and_integration_commands() {
             parts.join(" ")
         })
         .collect::<Vec<_>>();
-    assert!(commands.iter().any(|cmd| cmd == "cargo test -p app"));
     assert!(commands
         .iter()
-        .any(|cmd| cmd == "cargo test -p app --test integration"));
+        .any(|cmd| cmd == "cargo test --manifest-path app/Cargo.toml -p app --lib"));
+    assert!(commands
+        .iter()
+        .any(|cmd| cmd == "cargo test --manifest-path app/Cargo.toml -p app --test integration"));
 }
 
 #[test]
@@ -261,4 +263,68 @@ fn test_plan_vitest_fields_unchanged_when_jest_configs_configured() {
     );
     let without_jest: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(with_jest, without_jest);
+}
+
+#[test]
+fn cargo_manifest_targets_and_ambiguous_helpers_match_cli_contract() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/cargo-target-ownership"),
+    );
+    let root_arg = root.to_str().unwrap();
+    let output = run(&[
+        "tests",
+        "targets",
+        "cargo",
+        "--root",
+        root_arg,
+        "crates/custom/library/tests.rs",
+        "crates/engine/src/tests.rs",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let known = report["tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|test| test["testFile"] == "crates/custom/library/tests.rs")
+        .unwrap();
+    assert_eq!(
+        known["targets"][0]["runner_args"],
+        serde_json::json!([
+            "--manifest-path",
+            "crates/custom/Cargo.toml",
+            "-p",
+            "renamed-package",
+            "--lib"
+        ])
+    );
+    assert_eq!(report["warnings"][0]["type"], "cargo-target-unresolved");
+    let ambiguous = plan("cargo", &root, "crates/engine/src/tests.rs");
+    assert!(ambiguous.get("execution_targets").is_none());
+    assert!(ambiguous["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|warning| warning["type"] == "cargo-target-unresolved"));
+    let commands = run(&[
+        "tests",
+        "targets",
+        "cargo",
+        "--root",
+        root_arg,
+        "crates/engine/src/tests.rs",
+        "--format",
+        "commands",
+    ]);
+    assert!(!commands.status.success());
+    assert!(
+        commands.stdout.is_empty(),
+        "ambiguous ownership must not print runnable commands"
+    );
 }

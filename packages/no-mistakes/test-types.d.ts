@@ -186,6 +186,7 @@ export interface TestPlanGroup {
 }
 
 export interface TestPlanWarning {
+  /** Includes cargo-target-unresolved when a Rust test has no unambiguous enabled Cargo target. */
   type: string;
   message: string;
   file: string;
@@ -204,6 +205,7 @@ export interface TestTargetRow {
 }
 
 export interface TestTargetWarning {
+  /** Includes cargo-target-unresolved; such files retain an empty targets array. */
   type: string;
   message: string;
   file: string;

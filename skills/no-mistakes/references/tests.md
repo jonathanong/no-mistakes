@@ -301,3 +301,7 @@ before collecting traces. Whole-suite aggregate coverage is unsupported.
 without changed-code hits are investigation candidates. Missing or incomplete
 traces remain unknown. No observed misses, and passing test outcomes, never prove
 completeness. Async `testsAudit()` and `analyzeProject()` expose the same comparison.
+
+For Cargo plans, inspect `cargo-target-unresolved` warnings before executing
+commands: ambiguous helpers or disabled/missing manifest targets intentionally
+have empty `targets`. Package-wide fallback requires `tests.rust.packages`.

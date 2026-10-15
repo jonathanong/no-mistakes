@@ -1,0 +1,23 @@
+[package]
+name = "edge-package"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+test = false
+
+[[bin]]
+name = "edge-package"
+
+[[bin]]
+name = "explicit"
+
+[[bin]]
+name = "folder"
+
+[[bin]]
+name = "missing"
+
+[[test]]
+name = "missing-suite"
+path = "absent.rs"

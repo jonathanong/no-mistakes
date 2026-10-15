@@ -9,6 +9,7 @@ pub struct PreparedTestProjects {
     graph_route_occurrences: BTreeMap<PathBuf, Vec<crate::playwright::integration_routes::RouteOccurrence>>,
     dotnet_facts: Option<crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<crate::codebase::swift::SwiftFactMap>,
+    cargo_targets: Option<cargo_targets::CargoTargets>,
 }
 
 /// Request-local graph inputs and framework demand used during test-project preparation.
@@ -73,6 +74,8 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
                 Some(&sources),
             )
         });
+    let cargo_targets = preparation_plan.runners.contains(&TestRunner::Cargo)
+        .then(|| cargo_targets::CargoTargets::prepare(root, config, visible_paths, &sources));
     let runner_configs = crate::integration_tests::runner_config::prepare_with_catalog_and_sources(
         root,
         config,
@@ -103,6 +106,8 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
                             .expect("requested Dotnet projects are prepared")
                             .0
                             .clone()
+                    } else if runner == TestRunner::Cargo {
+                        Ok(cargo_targets.as_ref().expect("requested Cargo projects are prepared").projects(root))
                     } else if runner == TestRunner::Swift {
                         Ok(swift_projects::swift_projects_from_facts(
                             root,
@@ -131,6 +136,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         discovery_files,
         dotnet_facts: prepared_dotnet.map(|(_, facts)| facts),
         swift_facts: prepared_swift,
+        cargo_targets,
         graph_facts: crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(
             helper_facts
                 .iter()

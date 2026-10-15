@@ -36,34 +36,6 @@ fn go_target_is_relative_to_module() {
 }
 
 #[test]
-fn cargo_sibling_tests_omits_test_flag() {
-    let target = target_for(
-        TestRunner::Cargo,
-        Some("app"),
-        false,
-        Some("app"),
-        "app/src/tests.rs",
-    );
-    assert_eq!(target.base_command, vec!["cargo", "test"]);
-    assert_eq!(target.runner_args, vec!["-p", "app"]);
-}
-
-#[test]
-fn cargo_integration_target_uses_test_flag() {
-    let target = target_for(
-        TestRunner::Cargo,
-        Some("app"),
-        false,
-        Some("app"),
-        "app/tests/integration.rs",
-    );
-    assert_eq!(
-        target.runner_args,
-        vec!["-p", "app", "--test", "integration"]
-    );
-}
-
-#[test]
 fn rails_picks_rspec_or_minitest_from_filename() {
     let spec = target_for(
         TestRunner::Rails,
@@ -84,13 +56,14 @@ fn rails_picks_rspec_or_minitest_from_filename() {
 }
 
 #[test]
-fn language_target_for_rejects_js_runners() {
+fn language_target_for_rejects_js_and_cargo_runners() {
     for runner in [
         TestRunner::Vitest,
         TestRunner::Playwright,
         TestRunner::Jest,
         TestRunner::Dotnet,
         TestRunner::Swift,
+        TestRunner::Cargo,
     ] {
         assert!(
             super::language_target_for(runner, None, None, "src/value.test.ts").is_none(),

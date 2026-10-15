@@ -2,6 +2,9 @@ pub fn discover_tests(root: &Path, config: &NoMistakesConfig, runner: TestRunner
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
     let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible_paths)?;
+    if runner == TestRunner::Cargo {
+        return discover_cargo_tests_with_sources(root, config, &visible_paths, &snapshot.source_store_for(root));
+    }
     discover_tests_from_visible(root, config, runner, &visible_paths, &tsconfig)
 }
 
@@ -13,6 +16,12 @@ pub fn discover_tests_from_visible(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<DiscoveredTests> {
+    if runner == TestRunner::Cargo {
+        // This compatibility entrypoint owns its supplied visible inventory.
+        // Prepared callers use the existing owner/store below.
+        let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible_paths);
+        return discover_cargo_tests_with_sources(root, config, visible_paths, &snapshot.source_store_for(root));
+    }
     let projects = projects::runner_projects_from_visible(root, config, runner, visible_paths, tsconfig)?;
     discover_from_projects_from_visible(
         DiscoveryRequest::new(root, config, runner, visible_paths, tsconfig),
@@ -30,6 +39,10 @@ pub fn discover_tests_from_prepared_projects(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<DiscoveredTests> {
+    if runner == TestRunner::Cargo {
+        return Ok(prepared.cargo_targets.as_ref().map(|catalog| catalog.discover(root, prepared.discovery_files()))
+            .unwrap_or_else(|| DiscoveredTests { tests: Vec::new(), targets_by_path: Default::default(), used_fallback: false }));
+    }
     // Test planning may inspect a secondary framework only to classify changed test files. Its
     // explicit policy is sufficient for that ownership check and avoids parsing an unrequested
     // runner config; requested runners still surface their prepared parse failures.
@@ -67,10 +80,8 @@ pub fn discover_tests_from_prepared_projects(
 }
 
 pub fn discovered_test_globs(root: &Path, config: &NoMistakesConfig, runner: TestRunner) -> Result<Option<Vec<String>>> {
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
-    let visible_paths = snapshot.paths_for(root);
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible_paths)?;
-    discovered_test_globs_from_visible(root, config, runner, &visible_paths, &tsconfig)
+    let discovered = discover_tests(root, config, runner)?;
+    Ok(discovered_globs(root, discovered))
 }
 
 #[doc(hidden)]
@@ -82,12 +93,14 @@ pub fn discovered_test_globs_from_visible(
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<Option<Vec<String>>> {
     let discovered = discover_tests_from_visible(root, config, runner, visible_paths, tsconfig)?;
-    if discovered.tests.is_empty() {
-        return Ok(None);
-    }
-    Ok(Some(discovered.tests.iter().map(|path| {
+    Ok(discovered_globs(root, discovered))
+}
+
+fn discovered_globs(root: &Path, discovered: DiscoveredTests) -> Option<Vec<String>> {
+    if discovered.tests.is_empty() { return None; }
+    Some(discovered.tests.iter().map(|path| {
         literal_path_glob(&crate::codebase::ts_source::relative_slash_path(root, path))
-    }).collect()))
+    }).collect())
 }
 
 pub fn project_filters(root: &Path, config: &NoMistakesConfig) -> Vec<(TestRunner, ProjectTestFilter)> {
@@ -172,4 +185,10 @@ pub(crate) fn named_project_filters_from_visible(
         .filter(|project| project.policy_name.as_ref().is_some_and(|name| names.contains(name)))
         .filter_map(ProjectTestFilter::from_project)
         .collect()
+}
+
+#[doc(hidden)]
+pub fn discover_cargo_tests_with_sources(root: &Path, config: &NoMistakesConfig, visible_paths: &[PathBuf], sources: &crate::codebase::ts_source::SourceStore) -> Result<DiscoveredTests> {
+    let files = crate::codebase::ts_source::discover_files_from_visible(root, &config.filesystem.skip_directories, visible_paths);
+    Ok(cargo_targets::CargoTargets::prepare(root, config, visible_paths, sources).discover(root, &files))
 }

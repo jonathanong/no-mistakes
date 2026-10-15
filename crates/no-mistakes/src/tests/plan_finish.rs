@@ -4,6 +4,21 @@ use std::collections::BTreeMap;
 
 impl TestPlan {
     pub(crate) fn finish(&mut self, include_comment: bool, prefixes: &[String]) {
+        for test in &self.selected_tests {
+            if test.test_file.ends_with(".rs") && test.targets.is_empty() {
+                let message = format!("No unambiguous enabled Cargo test target could be established from visible manifests for `{}`; no execution command was generated. Check its owning Cargo.toml and target entrypoints; shared source directories and disabled targets do not establish ownership.", test.test_file);
+                if !self.warnings.iter().any(|warning| {
+                    warning.r#type == "cargo-target-unresolved" && warning.file == test.test_file
+                }) {
+                    self.warnings.push(super::Warning {
+                        r#type: "cargo-target-unresolved".into(),
+                        message,
+                        file: test.test_file.clone(),
+                        line: None,
+                    });
+                }
+            }
+        }
         self.execution_targets = grouped_execution_targets(&self.selected_tests, prefixes);
         if include_comment {
             self.comment = Some(super::comment::render_markdown_plan(self));
