@@ -37,6 +37,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
+        transient_roots: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,

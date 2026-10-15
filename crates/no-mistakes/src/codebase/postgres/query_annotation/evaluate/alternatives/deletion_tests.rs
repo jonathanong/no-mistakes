@@ -46,6 +46,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             scopes: Vec::new(),
             modules: Default::default(),
             active_module_initials: Default::default(),
+            transient_roots: Default::default(),
             active_callback_functions: Default::default(),
             active_callback_executions: Default::default(),
             untrusted_array_intrinsics: false,

@@ -2,6 +2,7 @@ mod dependencies;
 mod imports;
 mod memo;
 mod state;
+mod values;
 use super::{calls::scopes, Environment, Evaluator, Value};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
@@ -17,7 +18,7 @@ pub(in crate::codebase::postgres::query_annotation) type CallbackIdentity =
     (PathBuf, u32, Environment, Vec<String>);
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
-    pub(super) fn opaque_callbacks(&mut self, arguments: &[Value], depth: u8) {
+    pub(super) fn opaque_callbacks_with_roots(&mut self, arguments: &[Value], depth: u8) {
         let outermost = self.active_callback_functions.is_none();
         self.active_callback_functions
             .get_or_insert_with(FxHashSet::default);
@@ -36,6 +37,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     (live != *previous).then_some((*id, (*budget).min(revisit_depth), live))
                 })
                 .collect::<Vec<_>>();
+            // All snapshots remain live while an earlier callback can replace
+            // the parent slots from which a later snapshot was captured.
+            for (_, _, live) in &changed {
+                self.retain_temporary_values(live);
+            }
             let functions = state
                 .functions
                 .iter()
@@ -79,115 +85,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if outermost {
             self.active_callback_functions = None;
             self.active_callback_executions = None;
-        }
-    }
-
-    pub(super) fn live_callbacks(&self, id: u64) -> Vec<Value> {
-        self.argument_slots(id)
-            .filter(|(index, _)| !self.definite_deleted_argument_slots.contains(&(id, *index)))
-            .map(|(_, value)| value.clone())
-            .collect()
-    }
-
-    fn callback_values(&mut self, values: &[Value], depth: u8, visited: &mut CallbackState) {
-        for value in values {
-            match value {
-                Value::Aggregate(values)
-                | Value::References(values)
-                | Value::Object(values)
-                | Value::Record(values, _)
-                | Value::Joined(values)
-                | Value::Possible(values) => self.callback_values(values, depth, visited),
-                Value::Promise(value) | Value::Evaluated(value, _) => {
-                    self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
-                }
-                Value::Arguments(id) | Value::Array(id)
-                    if visited
-                        .objects
-                        .get(id)
-                        .is_none_or(|(budget, _)| *budget < depth) =>
-                {
-                    let live = self.live_callbacks(*id);
-                    visited.objects.insert(*id, (depth, live.clone()));
-                    self.callback_values(&live, depth, visited);
-                }
-                Value::Function(function, path, captured) => {
-                    let taints = self.invalidated_builders.len();
-                    self.invalidate_captured(*captured, function);
-                    if self.invalidated_builders.len() != taints {
-                        visited.memo.clear();
-                    }
-                    for next_depth in depth.checked_sub(1).into_iter() {
-                        let key = (
-                            path.clone(),
-                            function.start,
-                            *captured,
-                            function.params.clone(),
-                        );
-                        if self
-                            .active_callback_executions
-                            .as_ref()
-                            .unwrap()
-                            .contains(&key)
-                        {
-                            continue;
-                        }
-                        if self
-                            .active_callback_functions
-                            .as_mut()
-                            .expect("active opaque consumer")
-                            .insert(key.clone())
-                        {
-                            self.active_callback_executions
-                                .as_mut()
-                                .unwrap()
-                                .insert(key.clone());
-                            let snapshot = self.memoized_callback_snapshot(
-                                path,
-                                *captured,
-                                function,
-                                depth,
-                                &mut visited.memo,
-                            );
-                            visited
-                                .functions
-                                .insert(key.clone(), (depth, value.clone(), snapshot));
-                            let mut locals = scopes::locals(&self.scopes[*captured], function);
-                            if let Some(name) = &function.self_name {
-                                locals.insert(name.clone(), Value::Unknown);
-                            }
-                            scopes::arguments(&mut locals, function, Value::Unknown);
-                            for name in &function.params {
-                                locals.insert(name.clone(), Value::Unknown);
-                            }
-                            // Opaque consumers do not supply a reference receiver.
-                            scopes::bind_this(&mut locals, function, None);
-                            let mut scope = self.environment(locals);
-                            self.register_mappings(scope, *captured, function, None);
-                            self.register_captured_bindings(scope, *captured, function);
-                            let mutating = self.callback_may_mutate(function, path, scope);
-                            if mutating {
-                                visited.memo.clear();
-                            }
-                            let returned =
-                                self.steps(&function.body, path, &mut scope, next_depth, false);
-                            if mutating {
-                                visited.memo.clear();
-                            }
-                            self.callback_values(
-                                std::slice::from_ref(&returned),
-                                next_depth,
-                                visited,
-                            );
-                            self.active_callback_executions
-                                .as_mut()
-                                .unwrap()
-                                .remove(&key);
-                        }
-                    }
-                }
-                _ => {}
-            }
         }
     }
 }

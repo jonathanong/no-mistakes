@@ -139,22 +139,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.argument_extra_slots
                 .clone_from(joined_extras.as_ref().unwrap());
             self.accumulate_callback_seen(&mut joined_seen, arm_index == 0);
-            let indices = super::frames::compact(
-                &mut self.scopes,
-                super::frames::ModuleRoots {
-                    original: scopes.len(),
-                    modules: &mut self.modules,
-                    initials: &mut self.active_module_initials,
-                },
-                &mut returned,
-                &mut self.mapped_arguments,
-                super::arena::ArenaMut {
-                    objects: &mut self.argument_objects,
-                    extras: &mut self.argument_extra_slots,
-                },
-                &mut self.fresh_mapped_parameters,
-                &mut self.captured_bindings,
-            );
+            let indices = self.compact_alternative_frames(scopes.len(), &mut returned);
             self.remap_active_callbacks(scopes.len(), &indices.indices);
             super::callback_seen::remap(&mut joined_seen, scopes.len(), &indices.indices);
             modules.clone_from(&self.modules);

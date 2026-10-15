@@ -14,6 +14,7 @@ fn evaluator<'a>(
         scopes: vec![scope.into()],
         modules: Default::default(),
         active_module_initials: Default::default(),
+        transient_roots: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,

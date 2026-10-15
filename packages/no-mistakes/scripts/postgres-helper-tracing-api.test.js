@@ -4,6 +4,75 @@ const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
+const executedSource = (name) => ({
+  fileName: name,
+  source: readFileSync(
+    join(__dirname, "../../../fixtures/postgres-facts/executed-source", name),
+    "utf8",
+  ),
+});
+
+test(
+  "compiled nested helpers without executors return no SQL and preserve other sources",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const resolveImports of [false, true]) {
+      const options = {
+        sources: [executedSource("nested-builder-no-executor.mts")],
+        importSpecifier: "@data-stores/psql",
+        executorNames: ["query", "read", "write"],
+        resolveImports,
+      };
+      const pending = cjs.extractExecutedPostgresSql(options);
+      assert.ok(pending instanceof Promise);
+      assert.deepEqual(await pending, []);
+      assert.deepEqual(await esm.extractExecutedPostgresSql(options), []);
+      const mixed = {
+        ...options,
+        sources: [...options.sources, executedSource("nested-builder-control.mts")],
+      };
+      const rows = await cjs.extractExecutedPostgresSql(mixed);
+      assert.deepEqual(await esm.extractExecutedPostgresSql(mixed), rows);
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].fileName, "nested-builder-control.mts");
+      assert.equal(rows[0].sqlText, "SELECT 99");
+      assert.equal(rows[0].complete, true);
+    }
+  },
+);
+
+test(
+  "compiled temporary callback operands survive nested branches",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const options = {
+      sources: [executedSource("transient-array-callbacks.mts")],
+      importSpecifier: "@example/db",
+      resolveImports: true,
+      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+    };
+    const rows = await cjs.extractExecutedPostgresSql(options);
+    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
+    for (const annotation of [
+      "transient/argument",
+      "transient/element",
+      "transient/private",
+      "transient/worklist",
+    ]) {
+      assert.ok(
+        rows.some(
+          (row) => row.annotation === annotation && row.sqlText?.endsWith("; DELETE FROM records"),
+        ),
+        JSON.stringify(rows),
+      );
+    }
+  },
+);
+
 const fixtureRoot = join(
   __dirname,
   "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing",
@@ -256,3 +325,28 @@ for (const scenario of [
     },
   );
 }
+
+test(
+  "compiled removed child callbacks survive an earlier worklist branch",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const options = {
+      sources: [executedSource("transient-replaced-child.mts")],
+      importSpecifier: "@example/db",
+      resolveImports: true,
+      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+    };
+    const rows = await cjs.extractExecutedPostgresSql(options);
+    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
+    assert.ok(
+      rows.some(
+        (row) =>
+          row.annotation === "transient/replaced-child" &&
+          row.sqlText?.endsWith("; DELETE FROM records"),
+      ),
+      JSON.stringify(rows),
+    );
+  },
+);

@@ -21,6 +21,7 @@ mod slot_write;
 mod slots;
 mod statements;
 mod tagged;
+mod temporaries;
 mod value;
 use super::modules::Module;
 use super::{Expr, Function, QueryAnnotationFileFacts};
@@ -46,6 +47,7 @@ pub(super) struct Evaluator<'a, F> {
     pub scopes: Vec<Scope>,
     pub modules: FxHashMap<PathBuf, Environment>,
     pub active_module_initials: Vec<alternatives::modules::Initials>,
+    pub transient_roots: Vec<temporaries::TransientRoot>,
     pub active_callback_functions: Option<FxHashSet<callbacks::CallbackIdentity>>,
     pub active_callback_executions: Option<FxHashSet<callbacks::CallbackIdentity>>,
     pub next_builder: u64,

@@ -1,7 +1,15 @@
+use super::super::temporaries::TransientRoot;
 use super::super::{Environment, Value};
 use super::arena::Arena;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
+
+#[derive(Default)]
+pub(super) struct RootSeeds<'a> {
+    pub environments: &'a [Environment],
+    pub arguments: &'a [u64],
+    pub transient: &'a [TransientRoot],
+}
 
 #[derive(Default)]
 pub(super) struct Reachable {
@@ -46,24 +54,9 @@ impl Reachable {
 #[path = "reachable/tests.rs"]
 mod tests;
 
-/// Scope and argument identities are separate visited sets, so mutually captured
-/// callbacks and self-referential arguments remain finite.
-pub(super) fn collect(
-    scopes: &[Scope],
-    originals: usize,
-    returned: &[Value],
-    arena: Arena<'_>,
-    mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
-) -> Reachable {
-    let roots = (0..originals).collect::<Vec<_>>();
-    collect_from_roots(scopes, &roots, &[], returned, arena, mapped, captured)
-}
-
 pub(super) fn collect_from_roots(
     scopes: &[Scope],
-    roots: &[Environment],
-    argument_roots: &[u64],
+    roots: RootSeeds<'_>,
     returned: &[Value],
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
@@ -73,8 +66,17 @@ pub(super) fn collect_from_roots(
         observer.increment("postgres.annotation.reachability_walks", 1);
     }
     let mut found = Reachable::default();
-    found.pending_env.extend(roots.iter().copied());
-    found.pending_args.extend(argument_roots.iter().copied());
+    found.pending_env.extend(roots.environments.iter().copied());
+    found.pending_args.extend(roots.arguments.iter().copied());
+    for root in roots.transient {
+        match root {
+            TransientRoot::Argument(id) => found.pending_args.push(*id),
+            TransientRoot::Builder(id) => {
+                found.identities.insert(*id);
+            }
+            TransientRoot::Environment(env) => found.pending_env.push(*env),
+        }
+    }
     for value in returned {
         found.value(value);
     }

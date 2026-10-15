@@ -15,6 +15,7 @@ pub(super) fn new<'a, F>(
         scopes: Vec::new(),
         modules: crate::fx::fx_map(),
         active_module_initials: Default::default(),
+        transient_roots: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
         next_builder: 0,

@@ -13,7 +13,7 @@ use crate::codebase::postgres::query_annotation::Expr;
 use std::path::Path;
 
 impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
-    pub(super) fn call(
+    pub(super) fn call_with_roots(
         &mut self,
         callee: &Expr,
         args: &[Expr],
@@ -27,13 +27,19 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         // Keep the member/index base so a non-arrow callee receives it as `this`.
         // Evaluating the callee expression alone would drop that reference.
         let (target, mut receiver, callee_handled) = self.call_target(callee, path, env, context);
+        self.retain_temporary_roots(&target);
+        self.retain_temporary_values(receiver.as_slice());
         self.guard_budget_callee(&target, callee, path, *env, depth);
         if self.files[path].facts.precise_records && !callee_handled {
             self.invalidate_live_builders();
         }
         let mut raw_arguments = args
             .iter()
-            .map(|arg| self.operand(arg, path, env, context))
+            .map(|arg| {
+                let value = self.operand(arg, path, env, context);
+                self.retain_temporary_roots(&value);
+                value
+            })
             .collect::<Vec<_>>();
         // Later arguments run before the executor. A getter or opaque call can
         // mutate the SQL builder already evaluated as the first argument.

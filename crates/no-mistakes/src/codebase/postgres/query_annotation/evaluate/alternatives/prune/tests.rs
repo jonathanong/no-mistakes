@@ -23,6 +23,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         ],
         modules: FxHashMap::from_iter([(path.clone(), 1)]),
         active_module_initials: Default::default(),
+        transient_roots: Default::default(),
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,

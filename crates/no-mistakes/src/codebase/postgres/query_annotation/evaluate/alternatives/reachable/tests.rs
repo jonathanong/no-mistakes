@@ -137,3 +137,56 @@ fn detached_function_only_container_retains_its_environment() {
     assert_eq!(previous.visited_values.len(), 0);
     assert!(previous.pending_env.is_empty());
 }
+
+#[test]
+fn transient_roots_keep_private_environments_sparse_slots_and_argument_cycles() {
+    let scopes = vec![
+        Scope::default(),
+        FxHashMap::from_iter([("args".into(), Value::Arguments(8))]).into(),
+    ];
+    let objects = FxHashMap::from_iter([(8, vec![Value::Arguments(8)]), (99, vec![])]);
+    let extras = FxHashMap::from_iter([(
+        8,
+        std::collections::BTreeMap::from_iter([(
+            4,
+            Value::Prefix("SELECT 1".into(), true, Some(7)),
+        )]),
+    )]);
+    let transient = [
+        TransientRoot::Environment(1),
+        TransientRoot::Argument(8),
+        TransientRoot::Builder(9),
+    ];
+    let found = collect_from_roots(
+        &scopes,
+        RootSeeds {
+            transient: &transient,
+            ..Default::default()
+        },
+        &[],
+        Arena {
+            objects: &objects,
+            extras: &extras,
+        },
+        &Default::default(),
+        &Default::default(),
+    );
+    assert_eq!(found.environments, FxHashSet::from_iter([1]));
+    assert_eq!(found.arguments, FxHashSet::from_iter([8]));
+    assert_eq!(found.identities, FxHashSet::from_iter([7, 8, 9]));
+    // Once operand evaluation completes, those otherwise unreachable identities die.
+    let released = collect_from_roots(
+        &scopes,
+        RootSeeds::default(),
+        &[],
+        Arena {
+            objects: &objects,
+            extras: &extras,
+        },
+        &Default::default(),
+        &Default::default(),
+    );
+    assert!(released.environments.is_empty());
+    assert!(released.arguments.is_empty());
+    assert!(released.identities.is_empty());
+}
