@@ -1,0 +1,6 @@
+{
+  "plugins": [],
+  "jsPlugins": ["../../../../packages/eslint-plugin-no-mistakes/src/index.js"],
+  "categories": {"correctness":"off","suspicious":"off","pedantic":"off","perf":"off","style":"off","restriction":"off","nursery":"off"},
+  "rules": {"no-mistakes/vitest-timeout-cap": ["error", {"defaultMax":30000,"overrideMax":30000,"unknownValues":"finding"}]}
+}
