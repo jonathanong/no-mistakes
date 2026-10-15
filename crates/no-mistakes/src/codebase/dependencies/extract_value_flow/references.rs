@@ -82,6 +82,9 @@ fn nested_reference_container(value: &ValueExpression) -> bool {
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
             fields.values().any(has_reference)
         }
+        ValueExpression::Nullish(value, fallback) => {
+            has_reference(value) || has_reference(fallback)
+        }
         ValueExpression::Default(value, fallback) => {
             nested_reference_container(value) || nested_reference_container(fallback)
         }

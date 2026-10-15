@@ -121,6 +121,18 @@ impl ImportCollector {
                 Vec::new(),
             );
             if matches!(pattern, BindingPattern::BindingIdentifier(_)) {
+                if let Some(annotation) = &param.type_annotation {
+                    if !matches!(annotation.type_annotation, oxc_ast::ast::TSType::TSTypeReference(ref reference) if reference.type_arguments.is_none())
+                    {
+                        if let Some(source) = self.value_type_source(&annotation.type_annotation) {
+                            self.value_flow
+                                .type_sources
+                                .get_or_insert_with(Default::default)
+                                .parameters
+                                .insert((owner, index), source);
+                        }
+                    }
+                }
                 let reference = self.parameter_type_reference(param);
                 for parameter in &mut self.value_flow.parameters[first..] {
                     parameter.type_reference.clone_from(&reference);

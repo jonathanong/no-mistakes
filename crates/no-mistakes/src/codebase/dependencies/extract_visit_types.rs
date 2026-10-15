@@ -2,6 +2,7 @@ fn visit_ts_type_alias_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     declaration: &TSTypeAliasDeclaration<'a>,
 ) {
+    collector.record_type_source_declaration(declaration);
     if collector.function_stack.is_empty()
         && collector.is_exported_top_level_type_name(declaration.id.name.as_str())
     {

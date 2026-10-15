@@ -3,6 +3,7 @@ pub use extract_value_flow::{
     ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,
     ValueReceiverMutations, ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts,
     ValueReplacementWrite,
+    ValueTypeSource, ValueTypeSources,
 };
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {

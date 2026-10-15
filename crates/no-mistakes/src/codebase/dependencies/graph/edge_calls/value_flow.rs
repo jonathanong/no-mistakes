@@ -207,3 +207,9 @@ mod parameter_repeat;
 #[cfg(test)]
 #[path = "value_flow/execution_layout_tests.rs"]
 mod execution_layout_tests;
+
+#[path = "value_flow/type_sources.rs"]
+mod type_sources;
+
+#[path = "value_flow/contextual_types.rs"]
+mod contextual_types;

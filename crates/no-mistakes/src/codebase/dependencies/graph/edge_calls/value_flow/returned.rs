@@ -31,7 +31,8 @@ impl ValueFlowResolution<'_, '_> {
                 let mut target = target;
                 loop {
                     target = match target {
-                        FlowValue::Bound { target, .. }
+                        FlowValue::Annotated { executor: target, .. }
+                        | FlowValue::Bound { target, .. }
                         | FlowValue::Provenance {
                             executor: target, ..
                         } => *target,

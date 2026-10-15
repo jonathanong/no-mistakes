@@ -1,0 +1,13 @@
+effects:
+  postgres:
+    targets:
+      - { module: './database.mts', export: write }
+    returnedExecutors:
+      - { module: './database.mts', export: beginTransaction }
+    typedExecutors:
+      - { module: './database.mts', export: TransactionQuery }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

@@ -59,6 +59,13 @@ impl ValueFlowResolution<'_, '_> {
                 fields: std::sync::Arc::clone(fields),
             },
             ValueExpression::Undefined => FlowValue::Undefined,
+            ValueExpression::Nullish(value, fallback) => {
+                let value = self.value(path, value);
+                if value.is_undefined() { self.value(path, fallback) }
+                else if matches!(value.executor(), FlowValue::Unknown | FlowValue::Nullish { .. } | FlowValue::Returned { .. } | FlowValue::Target(ResolvedCallTarget::Unknown)) {
+                    FlowValue::Nullish { value: Box::new(value), fallback: Box::new(self.value(path, fallback)) }
+                } else { value }
+            },
             ValueExpression::Default(value, fallback) => {
                 let value = self.value(path, value);
                 if value.is_undefined() {
@@ -99,6 +106,13 @@ impl ValueFlowResolution<'_, '_> {
     }
     pub(super) fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
+            FlowValue::Nullish { value, fallback } => FlowValue::Nullish {
+                value: Box::new(self.member_value(*value, member)), fallback: Box::new(self.member_value(*fallback, member)),
+            },
+            FlowValue::Annotated { executor, file, source } => FlowValue::Annotated {
+                executor: Box::new(self.member_value(*executor, member)), file,
+                source: std::sync::Arc::new(crate::codebase::dependencies::extract::ValueTypeSource::Indexed(Box::new((*source).clone()), member.to_owned())),
+            },
             FlowValue::Returned {
                 factory,
                 executor,
