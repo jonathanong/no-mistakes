@@ -549,3 +549,13 @@ Setup nested in an outer loop, repeatable function, or instance initializer also
 remains unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.
+
+Repeated imported-member replacement alternatives require a closed execution
+region: a guaranteed multi-item literal `for-of` body or the supported closed
+sequence of synchronous owner invocations. Calls within that proof must be to
+the same region or owner's tracked receiver members, immutable aliases of those methods, or
+closed synchronous getters returning them. Ordinary method arguments remain
+supported. Other calls and constructors make the new repeated-region proof
+unknown, including external calls whose effects are unspecified. Methods copied
+before the region retain their acquisition snapshot. This bounded proof does not
+infer general call purity or track receiver escapes through arbitrary functions.

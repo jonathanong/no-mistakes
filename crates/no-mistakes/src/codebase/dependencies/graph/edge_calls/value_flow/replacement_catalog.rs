@@ -1,5 +1,7 @@
 use super::*;
 
+#[path = "replacement_calls.rs"]
+mod calls;
 #[path = "replacement_index.rs"]
 mod index;
 #[path = "replacement_owners.rs"]
@@ -113,7 +115,19 @@ impl ReplacementCatalog {
             member_read: None,
         };
         for (path, file, receivers, repeated_owners, writes) in prepared {
-            let payloads = payloads::ReplacementPayloads::prepare(
+            let snapshot_owners = replacement_snapshot_owners(
+                &file,
+                sites.get(path.as_path()).map_or(&[], Vec::as_slice),
+            );
+            let admission = calls::prepare(
+                &file,
+                &receivers,
+                &writes,
+                &snapshot_owners,
+                &repeated_owners,
+                sites.get(path.as_path()).map_or(&[], Vec::as_slice),
+            );
+            let mut payloads = payloads::ReplacementPayloads::prepare(
                 &mut flow,
                 path,
                 &file,
@@ -122,6 +136,7 @@ impl ReplacementCatalog {
                 &repeated_owners,
                 &foreign,
             );
+            payloads.block_regions(&writes, &admission);
             #[cfg(feature = "test-instrumentation")]
             let payloads = {
                 let mut payloads = payloads;
@@ -133,10 +148,6 @@ impl ReplacementCatalog {
                 payloads
             };
             let (mutations, unsupported) = replacement_mutations(&file, &receivers, &writes);
-            let snapshot_owners = replacement_snapshot_owners(
-                &file,
-                sites.get(path.as_path()).map_or(&[], Vec::as_slice),
-            );
             files.insert(
                 path.clone(),
                 ReplacementFile {

@@ -125,6 +125,28 @@ impl ReplacementPayloads {
             probe,
         }
     }
+    pub(super) fn block_regions(
+        &mut self,
+        index: &PreparedReplacements,
+        admission: &super::calls::CallAdmission,
+    ) {
+        for (receiver, owner, region, property, _) in index.properties() {
+            if admission.blocked.contains(&(owner, region))
+                || owner.is_some() && admission.blocked.contains(&(owner, None))
+            {
+                self.blocked
+                    .entry((receiver, owner, region))
+                    .or_default()
+                    .insert(property.to_owned());
+            }
+        }
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.probe.call_admission_checks += admission.checks;
+            self.probe.call_proof_steps += admission.steps;
+            self.probe.opaque_groups += admission.blocked.len();
+        }
+    }
     pub(super) fn target(
         &self,
         receiver: usize,

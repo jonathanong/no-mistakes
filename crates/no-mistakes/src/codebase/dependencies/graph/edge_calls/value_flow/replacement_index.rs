@@ -110,6 +110,17 @@ impl PreparedReplacements {
             self.regions.segment_count(),
         )
     }
+    pub(super) fn tracks_member(
+        &self,
+        receiver: usize,
+        property: &str,
+        owner: Option<CallableId>,
+        region: Option<usize>,
+    ) -> bool {
+        self.groups
+            .get(&(receiver, owner, region))
+            .is_some_and(|group| group.exact.contains_key(property))
+    }
     pub(super) fn tail(
         &self,
         receiver: usize,

@@ -348,6 +348,9 @@ mod typed_clients;
 
 mod alternatives;
 
+#[path = "tests/alternative_traversal.rs"]
+mod alternative_traversal;
+
 #[path = "tests/provenance_clients.rs"]
 mod provenance_clients;
 

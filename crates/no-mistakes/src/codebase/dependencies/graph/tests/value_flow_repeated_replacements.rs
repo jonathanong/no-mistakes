@@ -72,6 +72,23 @@ fn repeated_replacement_prefix_tail_and_closed_owner() {
             vec!["dynamicReceiver.get", "rhs.get"],
         ),
         ("controls", "onceReceiver.get", vec!["onceReceiver.get"]),
+        ("opaque", "savedOpaque", vec!["opaqueBeforeReceiver.get"]),
+        ("opaque", "alias", vec!["matchedReceiver.get", "rhs.get"]),
+        (
+            "opaque",
+            "matchedReceiver.get",
+            vec!["matchedReceiver.get", "rhs.get"],
+        ),
+        (
+            "opaque-owner",
+            "regionOwnerReceiver.get",
+            vec!["regionOwnerReceiver.get", "rhs.get"],
+        ),
+        (
+            "opaque",
+            "unrelatedOpaqueReceiver.get",
+            vec!["rhs.get", "unrelatedOpaqueReceiver.get"],
+        ),
     ] {
         let site = producer_site(&graph, &root, file, callee);
         assert_eq!(
@@ -135,6 +152,15 @@ fn repeated_replacement_snapshots_keep_acquisition_phase() {
 fn repeated_replacement_unsupported_contexts_cannot_keep_original() {
     let (root, graph) = producer_graph();
     for (file, callee) in [
+        ("opaque", "opaqueBeforeReceiver.get"),
+        ("opaque", "opaqueAfterReceiver.get"),
+        ("opaque", "memberBeforeReceiver.get"),
+        ("opaque", "memberAfterReceiver.get"),
+        ("opaque", "aliasEscapeReceiver.get"),
+        ("opaque", "externalEscapeReceiver.get"),
+        ("opaque", "constructorReceiver.get"),
+        ("opaque-owner", "closedOpaqueReceiver.get"),
+        ("opaque-owner", "nestedOpaqueReceiver.get"),
         ("controls", "unsupportedReceiver.get"),
         ("controls", "nestedReceiver.get"),
         ("controls", "resetReceiver.get"),
@@ -254,6 +280,10 @@ fn repeated_replacement_prepares_states_once_independent_of_read_count() {
         assert_eq!(probe.candidate_leaves, 3);
         assert_eq!(probe.alternatives_payloads, 1);
         assert_eq!(probe.alternatives_candidate_leaves, 2);
+        assert_eq!(probe.call_admission_checks, count);
+        // Ordinary member callees visit the Member and its Named receiver.
+        assert_eq!(probe.call_proof_steps, 2 * count);
+        assert_eq!(probe.opaque_groups, 0);
         assert_eq!(probe.lookup_count, count);
         assert_eq!(probe.prefix_searches, 2 * count);
         assert_eq!(probe.inherited_frame_qualifications, 0);
@@ -356,4 +386,23 @@ fn repeated_replacement_probe_is_request_scoped_and_resets_without_calls() {
     assert_eq!(no_calls.catalog_builds, 0);
     assert_eq!(no_calls.normalized_state_payloads, 0);
     assert!(no_calls.incoming.is_empty());
+}
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn opaque_module_calls_without_writes_keep_replacement_construction_cold() {
+    let probe = producer_probe_fixture("value-flow-replacement-opaque-cold", true);
+    assert_eq!(probe.catalog_builds, 0);
+    assert_eq!(probe.hot_file_indexes, 0);
+    assert_eq!(probe.receiver_normalizations, 0);
+    assert_eq!(probe.canonical_receiver_ids, 0);
+    assert_eq!(probe.rhs_attempts, 0);
+    assert_eq!(probe.retained_write_indices, 0);
+    assert_eq!(probe.region_segments, 0);
+    assert_eq!(probe.normalized_state_payloads, 0);
+    assert_eq!(probe.lookup_count, 0);
+    assert_eq!(probe.call_admission_checks, 0);
+    assert_eq!(probe.call_proof_steps, 0);
+    assert_eq!(probe.opaque_groups, 0);
+    assert!(probe.rhs.is_empty());
 }

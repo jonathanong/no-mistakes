@@ -16,6 +16,11 @@ pub struct ReplacementProbeSnapshot {
     pub candidate_leaves: usize,
     pub alternatives_payloads: usize,
     pub alternatives_candidate_leaves: usize,
+    /// Actual prepared supported Call/Construct occurrences classified.
+    pub call_admission_checks: usize,
+    /// Prepared-expression matcher entries, including rejected/depth-limit entries.
+    pub call_proof_steps: usize,
+    pub opaque_groups: usize,
     pub lookup_count: usize,
     pub prefix_searches: usize,
     /// Calls to the existing allocating qualifier for inherited source frames.
@@ -89,6 +94,9 @@ impl ReplacementProbeSnapshot {
         }
     }
     pub(in super::super) fn append(&mut self, other: Self) {
+        self.call_admission_checks += other.call_admission_checks;
+        self.call_proof_steps += other.call_proof_steps;
+        self.opaque_groups += other.opaque_groups;
         self.rhs_attempts += other.rhs_attempts;
         self.rhs_resolutions += other.rhs_resolutions;
         self.rhs_known += other.rhs_known;
