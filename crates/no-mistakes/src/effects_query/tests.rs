@@ -2,6 +2,7 @@ use super::*;
 
 mod alternative_consumers;
 mod alternatives;
+mod plain_call_demand;
 mod resolution;
 use crate::codebase::ts_resolver::{find_tsconfig_from_visible, load_tsconfig, TsConfig};
 use std::path::PathBuf;

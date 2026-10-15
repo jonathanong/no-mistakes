@@ -36,7 +36,7 @@ pub(crate) fn prepare_query_graph<Selection, Select, Validate, Plan, Configure>(
 where
     Select: FnOnce(Option<&crate::config::v2::schema::NoMistakesConfig>) -> Result<Selection>,
     Validate: FnOnce(&Selection, &mut GraphFiles) -> Result<()>,
-    Plan: FnOnce(&Selection) -> GraphBuildPlan,
+    Plan: FnOnce(&Selection, &GraphFiles, &TsFactMap) -> GraphBuildPlan,
     Configure: FnOnce(&Selection, &mut TsFactContext),
 {
     let QueryGraphRequest {
@@ -69,8 +69,6 @@ where
     let selection = select(config.as_deref())?;
     validate_root(&selection, &mut graph_files)?;
     graph_files.add_explicit_root(explicit_root);
-    let plan = graph_plan(&selection);
-
     let explicit_tsconfig = tsconfig_path;
     let (tsconfig, tsconfig_catalog) = match explicit_tsconfig {
         None => {
@@ -113,6 +111,7 @@ where
             &sources,
         );
     crate::invocation::check_timeout()?;
+    let plan = graph_plan(&selection, &graph_files, &facts);
 
     if config.is_none() {
         config = Some(dataset.config(config_path)?);

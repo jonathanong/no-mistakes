@@ -51,6 +51,34 @@ fn needs_resolved_effects(selection: &EffectsSelection) -> bool {
         || !selection.names.is_empty()
 }
 
+fn needs_effect_call_graph(
+    selection: &EffectsSelection,
+    graph_files: &crate::codebase::dependencies::graph::GraphFiles,
+    facts: &crate::codebase::ts_source::facts::TsFactMap,
+) -> bool {
+    if !needs_resolved_effects(selection) {
+        return false;
+    }
+    if !selection.targets.is_empty()
+        || !selection.returned.is_empty()
+        || !selection.provenance.is_empty()
+        || selection.names.keys().any(|name| name.contains('.'))
+    {
+        return true;
+    }
+    // Plain names need resolved calls only when a prepared replacement may
+    // create alternatives. Failures retain the full graph path, so a missing
+    // or partial fact set cannot silently suppress a configured effect.
+    graph_files.indexable().iter().any(|path| {
+        facts.get(path).is_none_or(|file| {
+            file.operational_error.is_some()
+                || file.parse_error.is_some()
+                || file.fatal_parse_error
+                || file.value_flow.replacements.is_some()
+        })
+    })
+}
+
 fn visit_effect_matches(
     selection: &EffectsSelection,
     site: &crate::codebase::dependencies::graph::ResolvedCallSite,
@@ -83,12 +111,14 @@ fn visit_effect_matches(
                 // Explicit module categories keep precedence over a plain
                 // name admitted only by the alternatives projection.
                 .or_else(|| {
-                    selection.names.get(export_path).filter(|_| multiple).map(
-                        |category| EffectCallAlternative {
+                    selection
+                        .names
+                        .get(export_path)
+                        .filter(|_| multiple)
+                        .map(|category| EffectCallAlternative {
                             callee: export_path.to_string(),
                             category: category.clone(),
-                        },
-                    )
+                        })
                 }),
             KnownCallTargetRef::RepositoryFunction { .. } => candidate
                 .node
