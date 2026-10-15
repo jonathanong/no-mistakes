@@ -9,15 +9,29 @@ impl ValueFlowResolution<'_, '_> {
         index: &CallableFileIndex,
         executor: FlowValue,
     ) -> FlowValue {
-        if let Some(source) = self.facts.get_ts_facts(path)
+        if let Some(source) = self
+            .facts
+            .get_ts_facts(path)
             .and_then(|facts| facts.value_flow.type_sources.as_ref())
-            .and_then(|sources| sources.parameters.get(&(parameter.owner, parameter.index))) {
-            return FlowValue::Annotated { executor: Box::new(executor), file: path.to_path_buf(), source: std::sync::Arc::new(source.clone()) };
+            .and_then(|sources| sources.parameters.get(&(parameter.owner, parameter.index)))
+        {
+            return FlowValue::Annotated {
+                executor: Box::new(executor),
+                file: path.to_path_buf(),
+                source: std::sync::Arc::new(source.clone()),
+            };
         }
         let Some(reference) = &parameter.type_reference else {
             return if let Some(origin) = self.contextual_parameter_origin(path, parameter) {
-                FlowValue::Provenance { executor: Box::new(executor), typed: vec![origin], members: Vec::new(), receiver_factories: Vec::new() }
-            } else { executor };
+                FlowValue::Provenance {
+                    executor: Box::new(executor),
+                    typed: vec![origin],
+                    members: Vec::new(),
+                    receiver_factories: Vec::new(),
+                }
+            } else {
+                executor
+            };
         };
         let (local, member) = reference
             .split_once('.')
@@ -28,13 +42,33 @@ impl ValueFlowResolution<'_, '_> {
         let Some(export) = type_export(binding, member) else {
             return executor;
         };
-        let object_annotation = self.resolver.resolve(&binding.specifier, path)
-            .and_then(|target| self.inputs.graph_files.visible_path(&target).map(std::path::Path::to_path_buf))
+        let object_annotation = self
+            .resolver
+            .resolve(&binding.specifier, path)
+            .and_then(|target| {
+                self.inputs
+                    .graph_files
+                    .visible_path(&target)
+                    .map(std::path::Path::to_path_buf)
+            })
             .and_then(|target| self.facts.get_ts_facts(&target))
             .and_then(|facts| facts.value_flow.type_sources.as_ref())
-            .is_some_and(|sources| matches!(sources.declarations.get(&export), Some(crate::codebase::dependencies::extract::ValueTypeSource::Object(_))));
+            .is_some_and(|sources| sources.declarations.contains_key(&export));
         if object_annotation {
-            return FlowValue::Annotated { executor: Box::new(executor), file: path.to_path_buf(), source: std::sync::Arc::new(crate::codebase::dependencies::extract::ValueTypeSource::Reference(reference.clone())) };
+            return FlowValue::Annotated {
+                executor: Box::new(executor),
+                file: path.to_path_buf(),
+                source: std::sync::Arc::new(
+                    crate::codebase::dependencies::extract::ValueTypeSource::Scoped {
+                        scope: parameter.scope,
+                        source: Box::new(
+                            crate::codebase::dependencies::extract::ValueTypeSource::Reference(
+                                reference.clone(),
+                            ),
+                        ),
+                    },
+                ),
+            };
         }
         let origin = self
             .cache

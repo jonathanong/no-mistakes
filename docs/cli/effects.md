@@ -82,7 +82,9 @@ factory paths, and member names are never inferred. Their categories filter
 normally. A returned-member callee displays the configured factory path and
 returned member, such as `writePool.connect().query`; a typed executor callee
 displays its configured type export, such as `TransactionQuery`.
-See [effects configuration](../configuration/effects.md).
+Static indexed type fields, unshadowed global `NonNullable`, agreeing annotated
+callback contexts, and nullish executor branches preserve exact binding evidence;
+see [effects configuration](../configuration/effects.md).
 
 Synchronous inline arrows, function expressions, and returned helpers retain their enclosing
 invocation context when resolving supplied receiver arguments and defaults. A

@@ -4,7 +4,7 @@ pub(super) type Location = (u32, Option<CallableId>);
 
 /// Repetition preserves availability evidence, but cannot order live writes by
 /// one lexical execution. Missing evidence and known repetition stay distinct.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub(super) enum ExecutionPhase {
     Absent,
     Exact(Location),

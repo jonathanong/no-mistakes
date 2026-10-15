@@ -51,29 +51,54 @@ impl ValueFlowResolution<'_, '_> {
             matches!(&binding.value, ValueExpression::Named { name, .. } if !name.contains('.'))
         });
         let receiver_writers = self.indexes.file(self.facts, path).is_some_and(|index| {
-            index.values.receiver_mutations.as_ref().is_some_and(|receivers| {
-                !receivers.writer_contexts.is_empty()
-            })
+            index
+                .values
+                .receiver_mutations
+                .as_ref()
+                .is_some_and(|receivers| !receivers.writer_contexts.is_empty())
         });
         let previous = self.module_snapshot.take();
         // Only a module binding's own copied-member initializer is acquired once.
         // Live object aliases and callable-local acquisitions retain their timing.
-        self.module_snapshot = (receiver_writers && binding.scope == 0
+        self.module_snapshot = (receiver_writers
+            && binding.scope == 0
             && binding.owner.is_none()
             && matches!(binding.value, ValueExpression::Member(..))
-            && Self::member_read_location(&binding.value).is_some_and(|(_, owner)| owner.is_none()))
-            .then(|| (path.to_path_buf(), Self::member_read_location(&binding.value)
-                .expect("qualified static member initializer").0));
+            && Self::member_read_location(&binding.value)
+                .is_some_and(|(_, owner)| owner.is_none()))
+        .then(|| {
+            (
+                path.to_path_buf(),
+                Self::member_read_location(&binding.value)
+                    .expect("qualified static member initializer")
+                    .0,
+            )
+        });
         let previous_initializer = self.member_initializer.take();
-        self.member_initializer =
-            ((binding.repeated || self.replacements.is_some())
-                && matches!(binding.value, ValueExpression::Member(..)))
-                .then(|| {
-                    let (offset, context) = Self::member_read_location(&binding.value)?;
-                    Some((self.inputs.graph_files.visible_path(path)?, offset, context, binding.repeated))
-                })
-                .flatten();
-        let value = self.value_projected(path, &binding.value, projection);
+        self.member_initializer = ((binding.repeated || self.replacements.is_some())
+            && matches!(binding.value, ValueExpression::Member(..)))
+        .then(|| {
+            let (offset, context) = Self::member_read_location(&binding.value)?;
+            Some((
+                self.inputs.graph_files.visible_path(path)?,
+                offset,
+                context,
+                binding.repeated,
+            ))
+        })
+        .flatten();
+        let value = self.memoized_nullish_binding(
+            path,
+            binding,
+            nullish_key::BindingRead {
+                source,
+                location,
+                available_at,
+                read_at,
+                read_context,
+            },
+            projection,
+        );
         self.member_initializer = previous_initializer;
         self.module_snapshot = previous;
         value

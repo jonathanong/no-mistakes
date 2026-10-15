@@ -4,6 +4,7 @@ impl ValueFlowResolution<'_, '_> {
     pub(super) fn returned(&mut self, path: &std::path::Path, offset: u32, end: u32) -> FlowValue {
         let key = (path.to_path_buf(), offset, end);
         if !self.calls_visiting.insert(key.clone()) {
+            self.mark_nullish_cycle();
             return FlowValue::Unknown;
         }
         let mut factory = None;
@@ -31,7 +32,9 @@ impl ValueFlowResolution<'_, '_> {
                 let mut target = target;
                 loop {
                     target = match target {
-                        FlowValue::Annotated { executor: target, .. }
+                        FlowValue::Annotated {
+                            executor: target, ..
+                        }
                         | FlowValue::Bound { target, .. }
                         | FlowValue::Provenance {
                             executor: target, ..

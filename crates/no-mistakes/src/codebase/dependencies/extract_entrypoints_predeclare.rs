@@ -1,3 +1,11 @@
+fn initialize_program_value_scope(collector: &mut ImportCollector, program: &Program<'_>) {
+    collector.local_stack.push(fx_set());
+    collector.lexical_scope_ids.push(0);
+    collector.lexical_scope_parents.insert(0, None);
+    collector.next_lexical_scope_id = 1;
+    predeclare_program_value_bindings(collector, program);
+}
+
 fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, program: &Program<'a>) {
     for statement in &program.body {
         predeclare_hoisted_function_identity(collector, statement);

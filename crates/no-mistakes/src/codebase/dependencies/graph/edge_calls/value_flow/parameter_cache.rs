@@ -35,6 +35,8 @@ type TypeOrigins =
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
     state: Mutex<State>,
+    #[cfg(feature = "test-instrumentation")]
+    nullish_work: [std::sync::atomic::AtomicUsize; 11],
     ready: Condvar,
     type_origins: OnceLock<TypeOrigins>,
     #[cfg(feature = "test-instrumentation")]
@@ -52,24 +54,6 @@ pub(super) struct Lease<'a> {
     key: Option<ParameterKey>,
 }
 impl ParameterCache {
-    pub(super) fn type_origin(
-        &self,
-        key: (std::path::PathBuf, String),
-        resolve: impl FnOnce() -> (String, String),
-    ) -> (String, String) {
-        // Keep cold shard construction small; resolutions run outside guards,
-        // so the shard count does not cap concurrent independent resolutions.
-        let origins = self
-            .type_origins
-            .get_or_init(|| DashMap::with_hasher_and_shard_amount(FxBuildHasher, 8));
-        if let Some(value) = origins.get(&key).and_then(|slot| slot.get().cloned()) {
-            return value;
-        }
-        let slot = Arc::clone(origins.entry(key).or_default().value());
-        // Release the shard guard before walking prepared type re-exports. Even
-        // unrelated keys in the same shard must be able to resolve concurrently.
-        slot.get_or_init(resolve).clone()
-    }
     pub(super) fn origin_node(&self, kind: OriginKind, height: usize) -> Arc<OriginNode> {
         #[cfg(feature = "test-instrumentation")]
         self.origin_nodes
@@ -171,6 +155,10 @@ fn waits_for(
     false
 }
 impl Lease<'_> {
+    pub(super) fn parameter_key(&self) -> Option<&ParameterKey> {
+        self.key.as_ref()
+    }
+
     pub(super) fn publish(
         mut self,
         value: Arc<CachedParameter>,
@@ -207,3 +195,10 @@ mod dependencies;
 #[cfg(test)]
 #[path = "parameter_cache_tests.rs"]
 mod tests;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "nullish_metrics.rs"]
+mod nullish_metrics;
+
+#[path = "type_origins.rs"]
+mod type_origins;

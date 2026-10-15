@@ -72,11 +72,13 @@ struct ValueFlowResolution<'a, 'b> {
     supers: &'a ConstructorRoutes,
     replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
     replacement_read: bool,
+    nullish_memo: Option<nullish_memo::NullishMemoHandle>,
     foreign_acquisition: bool,
     used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
     initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
     cache: &'a ParameterCache,
+    parameter_frame: Option<&'a ParameterKey>,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
     default_origins: default_origins::Origins,
@@ -213,3 +215,22 @@ mod type_sources;
 
 #[path = "value_flow/contextual_types.rs"]
 mod contextual_types;
+
+#[path = "value_flow/nullish_calls.rs"]
+mod nullish_calls;
+
+#[path = "value_flow/nullish_guards.rs"]
+mod nullish_guards;
+#[path = "value_flow/nullish_key.rs"]
+mod nullish_key;
+#[path = "value_flow/nullish_memo.rs"]
+mod nullish_memo;
+
+#[path = "value_flow/nullish_eq.rs"]
+mod nullish_eq;
+
+#[path = "value_flow/member_values.rs"]
+mod member_values;
+
+#[path = "value_flow/type_scopes.rs"]
+mod type_scopes;

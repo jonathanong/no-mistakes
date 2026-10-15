@@ -222,10 +222,9 @@ pub use value_flow_metrics::dependency_links as benchmark_probe_parameter_depend
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::{
+    execution_steps as benchmark_probe_execution_phase_steps,
+    nullish_work as benchmark_probe_nullish_work,
     replacement_snapshot as benchmark_probe_replacements, ReplacementIncomingProbe,
     ReplacementPhysicalProbe, ReplacementProbeSnapshot, ReplacementRhsProbe,
     ReplacementSourceCallProbe,
 };
-
-#[cfg(feature = "test-instrumentation")]
-pub use value_flow_metrics::execution_steps as benchmark_probe_execution_phase_steps;

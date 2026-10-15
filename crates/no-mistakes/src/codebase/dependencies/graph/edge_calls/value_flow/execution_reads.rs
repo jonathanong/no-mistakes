@@ -40,9 +40,12 @@ impl<'a> ValueFlowResolution<'a, '_> {
         offset: u32,
         context: Option<CallableId>,
     ) -> ExecutionPhase {
-        if self.member_initializer.is_some_and(|(file, start, owner, repeated)| {
-            repeated && file == path && start == offset && owner == context
-        }) {
+        if self
+            .member_initializer
+            .is_some_and(|(file, start, owner, repeated)| {
+                repeated && file == path && start == offset && owner == context
+            })
+        {
             return ExecutionPhase::Exact((offset, context)).repeated(true);
         }
         if let Some((_, _, phase)) = self

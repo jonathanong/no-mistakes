@@ -16,7 +16,10 @@ pub enum ValueExpression {
     Object(std::sync::Arc<FxHashMap<String, ValueExpression>>, bool),
     Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
     Undefined,
-    Nullish(std::sync::Arc<ValueExpression>, std::sync::Arc<ValueExpression>),
+    Nullish(
+        std::sync::Arc<ValueExpression>,
+        std::sync::Arc<ValueExpression>,
+    ),
     Default(
         std::sync::Arc<ValueExpression>,
         std::sync::Arc<ValueExpression>,

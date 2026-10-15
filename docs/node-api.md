@@ -709,7 +709,10 @@ paths are reflected in effects query results. Returned-member callees display
 as the factory path plus `().member` (for example,
 `writePool.connect().query`); typed executor callees display the configured type
 export. These are configuration additions to existing exports and introduce no
-new Node functions or option types.
+new Node functions or option types. Static indexed annotations, unshadowed global
+`NonNullable`, agreeing contextual callback types, and nullish executor branches
+use the same prepared provenance in CLI and async Node reports. Unknown branches
+never acquire another branch's type identity or ordinary call target.
 `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
