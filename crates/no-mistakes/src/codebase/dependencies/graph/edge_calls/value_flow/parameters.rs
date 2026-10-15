@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "parameter_agreement.rs"]
+mod agreement;
+
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn parameter(
         &mut self,
@@ -33,6 +36,10 @@ impl ValueFlowResolution<'_, '_> {
                         indexes: self.indexes,
                         incoming: self.incoming,
                         supers: self.supers,
+                        replacements: self.replacements,
+                        replacement_read: false,
+                        // Agreement is independent of the ambient cache-filling query.
+                        foreign_acquisition: false,
                         cache: self.cache,
                         parameters_enabled: true,
                         initializing: self.initializing.clone(),

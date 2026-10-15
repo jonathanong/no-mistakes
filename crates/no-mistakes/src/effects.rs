@@ -76,10 +76,11 @@ pub(crate) fn run(args: EffectsArgs) -> Result<ExitCode> {
 fn print_human(report: &EffectsReport) {
     println!("{} effects reachable from {}", report.kind, report.entry);
     for site in &report.call_sites {
+        let alternatives = alternatives_label(site);
         let category = site.category.as_deref().unwrap_or("-");
         let caller = site.caller.as_deref().unwrap_or("-");
         println!(
-            "  {}:{} {} [{}] caller={} (depth {})",
+            "  {}:{} {} [{}] caller={} (depth {}){alternatives}",
             site.file, site.line, site.callee, category, caller, site.depth
         );
     }
@@ -88,11 +89,30 @@ fn print_human(report: &EffectsReport) {
 fn print_md(report: &EffectsReport) {
     println!("# effects `{}` from `{}`", report.kind, report.entry);
     for site in &report.call_sites {
+        let alternatives = alternatives_label(site);
         let category = site.category.as_deref().unwrap_or("-");
         let caller = site.caller.as_deref().unwrap_or("-");
         println!(
-            "- `{}:{}` `{}` ({}) caller={} depth {}",
+            "- `{}:{}` `{}` ({}) caller={} depth {}{alternatives}",
             site.file, site.line, site.callee, category, caller, site.depth
         );
     }
+}
+
+fn alternatives_label(site: &effects_query::EffectCallSite) -> String {
+    site.alternatives
+        .as_ref()
+        .map_or_else(String::new, |alternatives| {
+            let labels = alternatives
+                .iter()
+                .map(|candidate| {
+                    format!(
+                        "{} ({})",
+                        candidate.callee,
+                        candidate.category.as_deref().unwrap_or("-")
+                    )
+                })
+                .collect::<Vec<_>>();
+            format!(" alternatives=[{}]", labels.join(", "))
+        })
 }

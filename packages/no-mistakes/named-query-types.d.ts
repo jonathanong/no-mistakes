@@ -47,6 +47,12 @@ export interface EffectsOptions {
   depth?: number;
 }
 
+/** One distinct configured match for a physical call occurrence. */
+export interface EffectCallAlternative {
+  callee: string;
+  category?: string;
+}
+
 export interface EffectCallSite {
   file: string;
   line: number;
@@ -54,12 +60,15 @@ export interface EffectCallSite {
   category?: string;
   caller?: string;
   depth: number;
+  /** Sorted distinct matches, omitted unless multiple matches remain after category projection. */
+  alternatives?: EffectCallAlternative[];
 }
 
 export interface EffectsReport {
   kind: string;
   entry: string;
   callSites: EffectCallSite[];
+  /** Physical occurrence count per matched category; sums can exceed callSites.length. */
   byCategory: Record<string, number>;
 }
 

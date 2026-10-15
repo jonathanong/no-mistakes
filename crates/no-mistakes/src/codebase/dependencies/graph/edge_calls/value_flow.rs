@@ -20,6 +20,11 @@ pub(super) struct FlowFileIndex {
 }
 #[path = "value_flow/types.rs"]
 mod types;
+#[cfg(feature = "test-instrumentation")]
+use super::value_flow_metrics::{
+    ReplacementIncomingProbe, ReplacementLookupProbe, ReplacementPhysicalProbe,
+    ReplacementProbeSnapshot, ReplacementRhsProbe, ReplacementSourceCallProbe,
+};
 use types::{BoundArguments, FlowValue};
 
 type ParameterInputs = FxHashMap<(std::path::PathBuf, CallableId), Vec<ParameterInput>>;
@@ -65,6 +70,9 @@ struct ValueFlowResolution<'a, 'b> {
     indexes: &'a CallableResolutionIndexes,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,
+    replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
+    replacement_read: bool,
+    foreign_acquisition: bool,
     used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
     initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
@@ -100,6 +108,8 @@ mod member_projection;
 mod member_reads;
 #[path = "value_flow/named.rs"]
 mod named;
+#[path = "value_flow/named_imports.rs"]
+mod named_imports;
 #[path = "value_flow/refine.rs"]
 mod refine;
 #[path = "value_flow/returned.rs"]
@@ -128,6 +138,7 @@ struct ValueInputs<'a> {
     cache: &'a ParameterCache,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,
+    replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
 }
 #[path = "value_flow/constructors.rs"]
 mod constructors;
@@ -179,11 +190,19 @@ use agreement::agreed_value;
 #[path = "value_flow/invocation_argument.rs"]
 mod invocation_argument;
 
+#[path = "value_flow/replacement_catalog.rs"]
+mod replacement_catalog;
+
+#[path = "value_flow/replacement_values.rs"]
+mod replacement_values;
+
 #[path = "value_flow/binding_reads.rs"]
 mod binding_reads;
 
 #[path = "value_flow/execution_phases.rs"]
 mod execution_phases;
+#[path = "value_flow/parameter_repeat.rs"]
+mod parameter_repeat;
 
 #[cfg(test)]
 #[path = "value_flow/execution_layout_tests.rs"]

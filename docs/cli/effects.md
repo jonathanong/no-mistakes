@@ -48,9 +48,10 @@ Output shape:
 }
 ```
 
-`functions` and `categories` retain spelling-based matching: an aliased import
-called under another name is not matched, and a same-named local binding can
-match. Use `targets` for binding-aware matching by exact import `module` and
+`functions` and `categories` retain spelling-based matching for ordinary
+singleton calls: an aliased import called under another name is not matched,
+and a same-named local binding can match. Use `targets` for binding-aware
+matching by exact import `module` and
 `export` path. These selectors follow named/default imports, namespace members,
 and statically resolvable lexical aliases, while excluding shadowed bindings.
 `category` is optional; selectors without one are uncategorized. A target-only
@@ -114,3 +115,34 @@ Setup nested in an outer loop, repeatable function, or instance initializer also
 remains unresolved when a later execution could copy a replacement.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.
+
+
+A physical call with multiple known callable possibilities still occupies one
+`callSites` row. Only when multiple distinct configured `(callee, category)`
+matches remain, the row includes `alternatives: EffectCallAlternative[]`, sorted
+by callee and then category. Scalar `callee`/`category` select the first sorted
+match deterministically. Ordinary singleton rows omit `alternatives` and retain
+their existing shape and spelling-versus-target configuration precedence.
+Unknown candidates add no invented effects. Trusted typed/returned executor
+provenance is retained alongside matched callable alternatives.
+
+For callable alternatives, `functions` and `categories` also match retained
+export paths, including a plain imported name such as `read` after
+`receiver.get = read`. When a plain export also matches an explicit `targets`
+selector, that selector keeps its category; the configured name is a fallback.
+Ordinary singleton aliases retain their spelling-based matching policy.
+
+For example, one occurrence alternating between `primary.read` (read) and
+`replica.write` (write) produces one row with both alternatives and
+`byCategory: { read: 1, write: 1 }`. Each category counts that physical occurrence
+once, even if several alternatives match the category; category totals may sum
+to more than `callSites.length`. Human and Markdown output append the sorted
+alternatives to the same physical row.
+
+`--category read` (or `categories: ["read"]` in the async Node API) projects
+candidate evidence before choosing scalar fields and counts. That example then
+has scalar `primary.read`/read, one read count, no write evidence, and no
+`alternatives` because only one match remains. Category projection preserves
+physical source position and occurrence count for selected sites. Existing
+single-identity configuration ambiguity is unchanged; this does not infer new
+execution ordering or resolve unknown callees.

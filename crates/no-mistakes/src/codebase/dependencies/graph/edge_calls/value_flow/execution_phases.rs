@@ -26,15 +26,35 @@ impl ValueFlowResolution<'_, '_> {
         let Some(read) = self.invocation_read.as_ref() else {
             return ExecutionPhase::Absent;
         };
-        let mut repeated = read.repeated;
+        let repeated = read.repeated;
         if read.file != path || read.owner.0 != path {
             return ExecutionPhase::Absent.repeated(repeated);
         }
+        self.walk_execution_phase(path, owner, repeated, true)
+    }
+
+    /// A source acquisition without an inline frame still needs a closed,
+    /// unique same-file caller chain before claiming one module execution.
+    pub(super) fn source_execution_phase(
+        &mut self,
+        path: &std::path::Path,
+        owner: CallableId,
+    ) -> ExecutionPhase {
+        self.walk_execution_phase(path, owner, false, false)
+    }
+
+    fn walk_execution_phase(
+        &mut self,
+        path: &std::path::Path,
+        owner: CallableId,
+        mut repeated: bool,
+        active: bool,
+    ) -> ExecutionPhase {
         let mut key = (path.to_path_buf(), owner);
         let (mut slow, mut fast) = (owner, owner);
         loop {
             key.1 = slow;
-            slow = match self.execution_step(&key, &mut repeated) {
+            slow = match self.execution_step(&key, &mut repeated, active) {
                 Some(Step::Owner(owner)) => owner,
                 Some(Step::Phase(offset, context)) => {
                     return ExecutionPhase::Exact((offset, context)).repeated(repeated);
@@ -43,7 +63,7 @@ impl ValueFlowResolution<'_, '_> {
             };
             for _ in 0..2 {
                 key.1 = fast;
-                fast = match self.execution_step(&key, &mut repeated) {
+                fast = match self.execution_step(&key, &mut repeated, active) {
                     Some(Step::Owner(owner)) => owner,
                     Some(Step::Phase(offset, context)) => {
                         return ExecutionPhase::Exact((offset, context)).repeated(repeated);
@@ -61,6 +81,7 @@ impl ValueFlowResolution<'_, '_> {
         &mut self,
         key: &(std::path::PathBuf, CallableId),
         repeated: &mut bool,
+        active: bool,
     ) -> Option<Step> {
         #[cfg(feature = "test-instrumentation")]
         self.cache.record_execution_step();
@@ -91,8 +112,11 @@ impl ValueFlowResolution<'_, '_> {
         match call.context {
             None => Some(Step::Phase(call.end.saturating_sub(1), None)),
             Some(owner) => {
-                let read = self.invocation_read.as_ref()?;
-                if read.owner.0 == key.0 && read.owner.1 == owner {
+                if let Some(read) = self
+                    .invocation_read
+                    .as_ref()
+                    .filter(|read| active && read.owner.0 == key.0 && read.owner.1 == owner)
+                {
                     Some(Step::Phase(read.offset, read.context))
                 } else {
                     Some(Step::Owner(owner))

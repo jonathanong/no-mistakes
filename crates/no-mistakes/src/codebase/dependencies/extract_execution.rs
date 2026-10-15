@@ -22,6 +22,7 @@ fn with_conditional_execution(
     visit: impl FnOnce(&mut ImportCollector),
 ) {
     if conditional {
+        collector.invalidate_replacement_execution();
         collector.receiver_conditional_region = None;
     }
     let previous = collector.conditional_execution;
@@ -190,20 +191,4 @@ fn visit_new_expression_with_imports_and_calls<'a>(
     visit_new_expression_with_imports(collector, new);
     walk::walk_new_expression(collector, new);
     collector.record_descriptor_call(new.span.end);
-}
-
-fn with_callable_receiver_execution(
-    collector: &mut ImportCollector,
-    visit: impl FnOnce(&mut ImportCollector),
-) {
-    // A deferred body has its own execution conditions; surrounding guards only
-    // decide whether the callable is created or invoked.
-    collector.receiver_conditional_region = None;
-    let fresh = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
-    let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
-    let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
-    visit(collector);
-    collector.receiver_write_is_conditional = conditional;
-    collector.fresh_receiver_effects.active = fresh;
-    collector.fresh_receiver_effects.descriptor_call = descriptor_call;
 }

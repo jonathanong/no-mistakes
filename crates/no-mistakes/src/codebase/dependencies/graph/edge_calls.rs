@@ -87,7 +87,11 @@ impl CallableFileIndex {
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
-            values: FlowFileIndex::new(&file.value_flow, &file.callable_scope_ids, &file.function_calls),
+            values: FlowFileIndex::new(
+                &file.value_flow,
+                &file.callable_scope_ids,
+                &file.function_calls,
+            ),
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes,
@@ -98,7 +102,11 @@ impl CallableFileIndex {
                 .filter(|binding| !binding.is_type_only)
                 .map(|binding| (binding.local.clone(), binding.clone()))
                 .collect(),
-            type_imported: file.imported_bindings.iter().map(|binding| (binding.local.clone(), binding.clone())).collect(),
+            type_imported: file
+                .imported_bindings
+                .iter()
+                .map(|binding| (binding.local.clone(), binding.clone()))
+                .collect(),
             exported: file
                 .exported_bindings
                 .iter()
@@ -216,6 +224,13 @@ pub use value_flow_metrics::origin_nodes as benchmark_probe_origin_nodes;
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::dependency_links as benchmark_probe_parameter_dependency_links;
+
+#[cfg(feature = "test-instrumentation")]
+pub use value_flow_metrics::{
+    replacement_snapshot as benchmark_probe_replacements, ReplacementIncomingProbe,
+    ReplacementPhysicalProbe, ReplacementProbeSnapshot, ReplacementRhsProbe,
+    ReplacementSourceCallProbe,
+};
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::execution_steps as benchmark_probe_execution_phase_steps;

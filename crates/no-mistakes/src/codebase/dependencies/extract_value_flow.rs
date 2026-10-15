@@ -75,6 +75,7 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub early_assignment_normalization_visits: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
+    pub replacements: Option<std::sync::Arc<replacements::ValueReplacementFacts>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
@@ -93,36 +94,11 @@ pub enum ValueType {
     Unknown,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ValueExpression {
-    Named {
-        name: String,
-        scope: Option<usize>,
-        offset: u32,
-        context: Option<CallableId>,
-    },
-    Call(u32, u32),
-    Awaited(std::sync::Arc<ValueExpression>),
-    Callable(CallableId),
-    Super(CallableId),
-    Member(std::sync::Arc<ValueExpression>, String),
-    Object(std::sync::Arc<FxHashMap<String, ValueExpression>>, bool),
-    Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
-    Undefined,
-    Null,
-    Nullish(
-        std::sync::Arc<ValueExpression>,
-        std::sync::Arc<ValueExpression>,
-    ),
-    Default(
-        std::sync::Arc<ValueExpression>,
-        std::sync::Arc<ValueExpression>,
-    ),
-    Unknown,
-}
 #[path = "extract_value_flow/value_descriptors.rs"]
 mod value_descriptors;
-pub use value_descriptors::{ValueBinding, ValueCall, ValueParameter, ValueProjection};
+pub use value_descriptors::{
+    ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
+};
 #[path = "extract_value_flow/collect.rs"]
 mod collect;
 #[path = "extract_value_flow/collect_helpers.rs"]
@@ -174,6 +150,11 @@ mod destructuring_order;
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
 
+#[path = "extract_value_flow/replacements.rs"]
+mod replacements;
+pub use replacements::{
+    ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts, ValueReplacementWrite,
+};
 #[path = "extract_value_flow/reference_replacements.rs"]
 mod reference_replacements;
 

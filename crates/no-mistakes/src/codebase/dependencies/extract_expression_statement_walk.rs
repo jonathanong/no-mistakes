@@ -1,0 +1,76 @@
+fn visit_statement_with_type_binding<'a>(
+    collector: &mut ImportCollector,
+    statement: &Statement<'a>,
+) {
+    if matches!(
+        statement,
+        Statement::ThrowStatement(_)
+            | Statement::BreakStatement(_)
+            | Statement::ContinueStatement(_)
+    ) || (collector.current_function_id().is_some() || collector.replacement_region.is_some())
+        && !matches!(
+            statement,
+            Statement::BlockStatement(_)
+                | Statement::ExpressionStatement(_)
+                | Statement::VariableDeclaration(_)
+                | Statement::FunctionDeclaration(_)
+                | Statement::EmptyStatement(_)
+                | Statement::DebuggerStatement(_)
+        )
+    {
+        collector.invalidate_replacement_execution();
+    }
+    let direct = match statement {
+        Statement::ExpressionStatement(statement) => {
+            match crate::codebase::ts_source::unwrap_ts_wrappers(&statement.expression) {
+                Expression::CallExpression(call) => Some((call.span.start, call.span.end)),
+                _ => None,
+            }
+        }
+        _ => None,
+    };
+    let previous = std::mem::replace(&mut collector.replacement_statement_call, direct);
+    record_statement_type_binding(collector, statement);
+    let previous_cutoff = collector.unreachable_value_binding_after;
+    walk::walk_statement(collector, statement);
+    collector.replacement_statement_call = previous;
+    // A terminal only cuts off its own sequential siblings, not another branch.
+    collector.unreachable_value_binding_after = previous_cutoff;
+    if collector.collect_value_flow
+        && matches!(statement, Statement::ReturnStatement(_) | Statement::ThrowStatement(_))
+    {
+        collector.unreachable_value_binding_after = Some(
+            previous_cutoff.map_or(statement.span().end, |cutoff| cutoff.min(statement.span().end)),
+        );
+    }
+}
+
+fn visit_expression_with_annex_b_initializer<'a>(
+    collector: &mut ImportCollector,
+    expression: &Expression<'a>,
+) {
+    if matches!(
+        expression,
+        Expression::AwaitExpression(_) | Expression::YieldExpression(_)
+    ) || matches!(expression, Expression::UnaryExpression(unary) if unary.operator == oxc_syntax::operator::UnaryOperator::Delete)
+    {
+        collector.invalidate_replacement_execution();
+    }
+    if let Some((_, outer_conditional, outer_receiver_conditional)) = collector
+        .annex_b_for_in_initializer
+        .filter(|(span, _, _)| !collector.suppress_imports && *span == expression.span())
+    {
+        let initializer = collector.annex_b_for_in_initializer.take();
+        let previous = std::mem::replace(&mut collector.conditional_execution, outer_conditional);
+        let previous_receiver = std::mem::replace(
+            &mut collector.receiver_write_is_conditional,
+            outer_receiver_conditional,
+        );
+        walk::walk_expression(collector, expression);
+        collector.receiver_write_is_conditional = previous_receiver;
+        collector.conditional_execution = previous;
+        collector.annex_b_for_in_initializer = initializer;
+    } else {
+        walk::walk_expression(collector, expression);
+    }
+}

@@ -64,9 +64,7 @@ pub(crate) fn check_with_graph(
                     excluded.push(source_node(site));
                 }
                 if exempt(effect, &site.source_callee) {
-                    if let Some(node) = &site.target_node {
-                        excluded.push(node.clone());
-                    }
+                    excluded.extend(site.target_nodes().cloned());
                 } else if let Some(transaction) = configured_sinks.match_site(site) {
                     sinks
                         .entry(source_node(site))
@@ -95,7 +93,7 @@ pub(crate) fn check_with_graph(
                 .collect::<Vec<_>>();
             let mut roots = candidates
                 .iter()
-                .filter_map(|(site, _)| site.target_node.clone())
+                .flat_map(|(site, _)| site.target_nodes().cloned())
                 .collect::<Vec<_>>();
             roots.sort();
             roots.dedup();
@@ -105,10 +103,12 @@ pub(crate) fn check_with_graph(
                 if !filter.is_match(&site.file)
                     || exempt(effect, &site.source_callee)
                     || excluded.binary_search(&source_node(site)).is_ok()
-                    || site
-                        .target_node
-                        .as_ref()
-                        .is_some_and(|node| excluded.binary_search(node).is_ok())
+                    || (site.targets().len() > 0
+                        && site.targets().all(|candidate| {
+                            candidate
+                                .node
+                                .is_some_and(|node| excluded.binary_search(node).is_ok())
+                        }))
                 {
                     continue;
                 }
@@ -116,13 +116,19 @@ pub(crate) fn check_with_graph(
                     path: vec![site.source_callee.clone()],
                     transaction,
                 });
-                let reach = direct.or_else(|| {
-                    site.target_node
-                        .as_ref()
-                        .and_then(|node| reachable.get(node))
-                        .cloned()
-                        .flatten()
-                });
+                let transitive = site
+                    .target_nodes()
+                    .filter(|node| excluded.binary_search(node).is_err())
+                    .filter_map(|node| reachable.get(node).cloned().flatten())
+                    .reduce(prefer_nontransaction);
+                let reach = if site.targets().len() > 1 {
+                    direct
+                        .into_iter()
+                        .chain(transitive)
+                        .reduce(prefer_nontransaction)
+                } else {
+                    direct.or(transitive)
+                };
                 let Some(reach) = reach else {
                     continue;
                 };
@@ -166,6 +172,14 @@ pub(crate) fn check_with_graph(
         }
     }
     Ok(traces::finalize_findings(findings))
+}
+
+fn prefer_nontransaction(left: Reach, right: Reach) -> Reach {
+    if left.transaction && !right.transaction {
+        right
+    } else {
+        left
+    }
 }
 
 #[cfg(test)]

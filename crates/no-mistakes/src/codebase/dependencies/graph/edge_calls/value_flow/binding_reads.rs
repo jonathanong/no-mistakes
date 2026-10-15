@@ -140,4 +140,20 @@ impl ValueFlowResolution<'_, '_> {
         }
         context.map(|context| (available_at, read_at, context))
     }
+    pub(super) fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
+        if let Some(binding) = file.imported.get(base).filter(|binding| {
+            binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+        }) {
+            FlowValue::Target(ResolvedCallTarget::ModuleExport {
+                specifier: binding.specifier.clone(),
+                export_path: String::new(),
+                repository_target: None,
+                callable_id: None,
+            })
+        } else {
+            FlowValue::Target(
+                module_export_target(file, base, None, None).unwrap_or(ResolvedCallTarget::Unknown),
+            )
+        }
+    }
 }

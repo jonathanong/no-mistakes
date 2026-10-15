@@ -1,6 +1,6 @@
 use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::dependencies::graph::{
-    ClassDeclaration, DepGraph, EdgeKind, NodeId, ResolvedCallSite, ResolvedCallTarget,
+    ClassDeclaration, DepGraph, EdgeKind, KnownCallTargetRef, NodeId, ResolvedCallSite,
 };
 use crate::fx::{fx_map, FxHashMap};
 use std::path::Path;
@@ -43,31 +43,27 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
         .any(|extension| name.ends_with(extension))
 }
 
-/// The repository class a resolved target names, when it names one.
-fn class_key(target: &ResolvedCallTarget) -> Option<ClassKey<'_>> {
-    match target {
-        ResolvedCallTarget::RepositoryFunction { file, scope }
-        | ResolvedCallTarget::ModuleExport {
-            repository_target: Some((file, scope)),
-            ..
-        } => Some((file.as_path(), scope.as_str())),
-        _ => None,
-    }
-}
-
-/// The class a `new` expression builds. An unresolved `new` inside a class
-/// member, such as `new this()` in a static factory, is credited to that class:
-/// the graph cannot say what it builds, and the rule prefers silence to a false
-/// finding.
-fn constructed_class(site: &ResolvedCallSite) -> Option<ClassKey<'_>> {
-    match &site.target {
-        ResolvedCallTarget::Unknown => site
-            .caller
-            .as_deref()
-            .and_then(|caller| caller.split('/').next())
-            .map(|scope| (site.file.as_path(), scope)),
-        target => class_key(target),
-    }
+/// Possible constructed classes, credited without duplicating source calls.
+fn constructed_classes(site: &ResolvedCallSite) -> impl Iterator<Item = ClassKey<'_>> {
+    site.targets()
+        .filter_map(|candidate| match candidate.target {
+            KnownCallTargetRef::RepositoryFunction { file, scope }
+            | KnownCallTargetRef::ModuleExport {
+                repository_target: Some((file, scope)),
+                ..
+            } => Some((file, scope)),
+            _ => None,
+        })
+        .chain(
+            site.has_unknown_target()
+                .then(|| {
+                    site.caller
+                        .as_deref()
+                        .and_then(|caller| caller.split('/').next())
+                        .map(|scope| (site.file.as_path(), scope))
+                })
+                .flatten(),
+        )
 }
 
 /// A repository class an `Extends` edge names: its file and display scope, and
@@ -182,7 +178,7 @@ pub(super) fn unconstructed<'a>(
         .iter()
         .filter(|site| site.invocation == InvocationKind::Construct)
     {
-        if let Some(key) = constructed_class(site) {
+        for key in constructed_classes(site) {
             credit(key, &site.file);
         }
     }

@@ -109,12 +109,18 @@ impl ValueFlowResolution<'_, '_> {
                 self.acquisition_context = index.values.receiver_mutations.as_ref().map(|_| {
                     self.make_receiver_use(path, &call, previous.clone(), Some((&file, id, false)))
                 });
+                let previous_foreign = self.foreign_acquisition;
+                self.foreign_acquisition |= file != path
+                    && self.replacements.is_some_and(|catalog| {
+                        catalog.possible_repeat(path, call.offset, call.context)
+                    });
                 let value = agreed_value(
                     returns
                         .iter()
                         .map(|value| self.value(&file, value))
                         .collect(),
                 );
+                self.foreign_acquisition = previous_foreign;
                 if self.acquisition_context.is_some() {
                     self.seal_receiver_acquisition();
                 }

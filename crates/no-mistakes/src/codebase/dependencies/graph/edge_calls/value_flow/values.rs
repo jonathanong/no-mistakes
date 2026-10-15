@@ -38,6 +38,9 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Callable(id) => self.callable(path, *id),
             ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
+                if let Some(value) = self.replacement_member(path, base, member) {
+                    return value;
+                }
                 let read_location = Self::member_read_location(base);
                 let hint = member_projection::MemberProjection {
                     member,
