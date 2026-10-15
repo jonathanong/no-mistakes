@@ -12,6 +12,9 @@ pub(super) fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
 ) {
+    let enclosing_unreachable_binding_after = collector
+        .collect_value_flow
+        .then(|| collector.unreachable_value_binding_after.take());
     with_callable_receiver_execution(collector, |collector| {
         collector.record_callable_result_kind(function.r#async, function.generator);
         // Default parameters run in the parameter environment, before the body
@@ -22,17 +25,24 @@ pub(super) fn walk_function_with_body_bindings<'a>(
             walk::walk_ts_type_annotation(collector, return_type);
         }
         if let Some(body) = &function.body {
-            collector.record_value_fallthrough(&body.statements);
+            let previous_cutoff = collector.record_value_fallthrough(&body.statements);
             predeclare_function_declarations(collector, &body.statements);
             walk::walk_function_body(collector, body);
+            collector.unreachable_value_binding_after = previous_cutoff;
         }
     });
+    if let Some(previous) = enclosing_unreachable_binding_after {
+        collector.unreachable_value_binding_after = previous;
+    }
 }
 
 pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
+    let enclosing_unreachable_binding_after = collector
+        .collect_value_flow
+        .then(|| collector.unreachable_value_binding_after.take());
     with_callable_receiver_execution(collector, |collector| {
         collector.record_callable_result_kind(arrow.r#async, false);
         // Default parameters run before the body lexical environment exists.
@@ -42,9 +52,10 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
             walk::walk_ts_type_annotation(collector, return_type);
         }
         if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
-            collector.record_value_fallthrough(&body.statements);
+            let previous_cutoff = collector.record_value_fallthrough(&body.statements);
             predeclare_function_declarations(collector, &body.statements);
             walk::walk_function_body(collector, body);
+            collector.unreachable_value_binding_after = previous_cutoff;
         } else if let Some(expression) = arrow.body.as_expression() {
             if collector.collect_value_flow {
                 if let Some(owner) = collector.current_function_id() {
@@ -55,6 +66,9 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
             collector.visit_expression(expression);
         }
     });
+    if let Some(previous) = enclosing_unreachable_binding_after {
+        collector.unreachable_value_binding_after = previous;
+    }
 }
 
 pub(super) fn predeclare_hoisted_var_bindings<'a>(
