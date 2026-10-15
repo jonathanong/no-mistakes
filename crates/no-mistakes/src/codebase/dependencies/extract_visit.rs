@@ -166,6 +166,20 @@ impl<'a> Visit<'a> for ImportCollector {
         self.visit_receiver_call(call);
     }
 
+    fn visit_await_expression(&mut self, expression: &oxc_ast::ast::AwaitExpression<'a>) {
+        self.record_unknown_fresh_call(expression.span.end);
+        walk::walk_await_expression(self, expression);
+        // Operand evaluation can create the first capture; completion must
+        // invalidate it even when the pre-operand path was still cold.
+        self.record_descriptor_call(expression.span.end);
+    }
+
+    fn visit_yield_expression(&mut self, expression: &oxc_ast::ast::YieldExpression<'a>) {
+        self.record_unknown_fresh_call(expression.span.end);
+        walk::walk_yield_expression(self, expression);
+        self.record_descriptor_call(expression.span.end);
+    }
+
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
         visit_new_expression_with_imports_and_calls(self, new);
     }

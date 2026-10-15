@@ -194,3 +194,7 @@ mod active_reference_phases;
 
 #[path = "extract_value_flow/inert_receiver_rhs.rs"]
 mod inert_receiver_rhs;
+
+#[cfg(test)]
+#[path = "extract_value_flow/suspension_tests.rs"]
+mod suspension_tests;

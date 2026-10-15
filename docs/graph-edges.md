@@ -520,6 +520,14 @@ known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
 
+Suspension through `await` or `yield` invalidates nested receiver detachment
+proofs acquired before suspension completes, including captures created while
+evaluating its operand. A thenable or generator caller may restore a container
+before a later descendant write. Suspensions before acquisition and suspensions
+inside a separate deferred callable do not invalidate that acquisition; copied
+methods retain their acquisition snapshot. These barriers reuse the request's
+context- and execution-epoch-qualified receiver-effect index.
+
 Live receivers supplied to helpers are read after argument evaluation. For example,
 `run(primary, primary.get = replacement)` does not retain the original
 `primary.get` target inside `run`. A method copied in an earlier argument,
