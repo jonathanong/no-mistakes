@@ -30,28 +30,17 @@ pub(crate) fn resolve_setup_dependencies<'a>(
             .retain(|path| !dependency.resolver_candidate_paths.contains(path));
         dependency.resolver_candidate_paths.clear();
         for specifier in &dependency.conservative_specifiers {
-            let candidates = resolver
-                .resolution_candidates(specifier, &resolution_source)
-                .into_iter()
-                .filter(|candidate| is_runtime_module(candidate))
-                .collect::<BTreeSet<_>>();
+            let (_, candidates) = resolve_setup_specifier(specifier, &resolution_source, resolver);
             dependency.trigger_paths.extend(candidates.iter().cloned());
             dependency.resolver_candidate_paths.extend(candidates);
         }
         if let Some(specifier) = dependency.specifier.as_deref() {
-            let candidates = resolver
-                .resolution_candidates(specifier, &resolution_source)
-                .into_iter()
-                .filter(|candidate| is_runtime_module(candidate))
-                .collect::<BTreeSet<_>>();
+            let (resolved, candidates) =
+                resolve_setup_specifier(specifier, &resolution_source, resolver);
             dependency.trigger_paths.extend(candidates.iter().cloned());
             dependency.resolver_candidate_paths = candidates;
+            dependency.resolved_path = resolved;
         }
-        dependency.resolved_path = dependency.specifier.as_deref().and_then(|specifier| {
-            resolver
-                .resolve(specifier, &resolution_source)
-                .filter(|path| is_runtime_module(path))
-        });
         if let Some(path) = dependency.resolved_path.as_ref() {
             runtime_setup_candidates(
                 path,
@@ -61,6 +50,29 @@ pub(crate) fn resolve_setup_dependencies<'a>(
             );
         }
     }
+}
+
+/// Vitest tries module resolution first, then treats an unresolved literal as
+/// relative to its effective project root. Use the same prepared resolver for
+/// both interpretations so visibility and deleted-file candidates stay shared.
+fn resolve_setup_specifier(
+    specifier: &str,
+    source: &Path,
+    resolver: &dyn ImportResolution,
+) -> (Option<PathBuf>, BTreeSet<PathBuf>) {
+    let mut resolved = resolver.resolve(specifier, source);
+    let mut candidates = resolver.resolution_candidates(specifier, source);
+    if resolved.is_none()
+        && !Path::new(specifier).is_absolute()
+        && !specifier.starts_with("./")
+        && !specifier.starts_with("../")
+    {
+        let relative = format!("./{specifier}");
+        resolved = resolver.resolve(&relative, source);
+        candidates.extend(resolver.resolution_candidates(&relative, source));
+    }
+    candidates.retain(|candidate| is_runtime_module(candidate));
+    (resolved.filter(|path| is_runtime_module(path)), candidates)
 }
 
 /// Retain runtime import candidates for resolved setup modules too. A deleted

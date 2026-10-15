@@ -99,3 +99,37 @@ fn json_setup_import_stays_a_trigger_candidate_through_a_real_resolver() {
         "{candidates:#?}"
     );
 }
+
+#[test]
+fn vitest_literal_setup_resolution_preserves_aliases_absolute_paths_and_missing_candidates() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-literal-setups"),
+    );
+    let mut tsconfig = crate::integration_tests::test_support::tsconfig_without_config(&root);
+    tsconfig.paths = vec![("@setup/*".into(), vec!["aliases/*".into()])];
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    let source = root.join("web/.no-mistakes-vitest-setup.ts");
+    for (specifier, expected) in [
+        ("setup/start.ts".to_string(), "web/setup/start.ts"),
+        ("./setup/start.ts".to_string(), "web/setup/start.ts"),
+        ("../node/setup/start.ts".to_string(), "node/setup/start.ts"),
+        (
+            root.join("web/setup/start.ts")
+                .to_string_lossy()
+                .into_owned(),
+            "web/setup/start.ts",
+        ),
+        ("@setup/start.ts".to_string(), "aliases/start.ts"),
+    ] {
+        let (resolved, candidates) = resolve_setup_specifier(&specifier, &source, &resolver);
+        assert_eq!(resolved, Some(root.join(expected)), "{specifier}");
+        assert!(
+            candidates.contains(&root.join(expected)),
+            "{specifier}: {candidates:?}"
+        );
+    }
+    let (resolved, candidates) = resolve_setup_specifier("setup/deleted.ts", &source, &resolver);
+    assert!(resolved.is_none());
+    assert!(candidates.contains(&root.join("web/setup/deleted.ts")));
+}

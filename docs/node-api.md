@@ -556,6 +556,9 @@ The TypeScript declaration models this as a discriminated option: direct-owner
 plans require `framework`, while ordinary plans omit `directTestOwner` or set it
 to `false`.
 
+Vitest literal setup paths use each effective project root, including paths
+without `./`. Package and tsconfig aliases take precedence over relative fallback.
+
 `testsPlan(options)` returns `fallbackTriggered` and `fallbackReason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a

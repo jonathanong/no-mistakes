@@ -529,3 +529,6 @@ mod deadline_uncertainty;
 
 #[path = "parser_coverage/review_deadlines.rs"]
 mod review_deadlines;
+
+#[path = "parser_coverage/vitest_literal_setups.rs"]
+mod vitest_literal_setups;
