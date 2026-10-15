@@ -146,8 +146,17 @@ fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
         ("alias-inline-snapshot-owned", 1),
         ("inline-snapshot-owned", 1),
         ("inline-snapshot-owned-write-first", 0),
+        ("inline-snapshot-for-init", 1),
+        ("inline-snapshot-for-in-rhs", 1),
+        ("inline-snapshot-for-of-rhs", 1),
+        ("inline-snapshot-for-in-default", 0),
+        ("inline-snapshot-for-of-default", 0),
+        ("inline-snapshot-nested-for-init", 0),
+        ("inline-snapshot-nested-for-in-rhs", 0),
+        ("inline-snapshot-nested-for-of-rhs", 0),
         ("inline-snapshot-repeated-for", 0),
         ("inline-snapshot-repeated-header", 0),
+        ("inline-snapshot-repeated-update", 0),
         ("inline-snapshot-repeated-function", 0),
         ("inline-snapshot-repeated-while", 0),
         ("inline-snapshot-repeated-do", 0),
@@ -168,6 +177,14 @@ fn effects_json_preserves_transparent_default_aliases_and_member_snapshots() {
         assert_eq!(sites.len(), expected, "{name}: {report}");
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
+    let options = json!({
+        "root": fixture_root("inline-member-precision"),
+        "kind": "cache", "entry": "src/inline-snapshot-annex-b-for-in.js"
+    })
+    .to_string();
+    let output = effects_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(report["callSites"].as_array().unwrap().len(), 0);
 }
 
 #[test]

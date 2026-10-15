@@ -682,7 +682,9 @@ visible file outside configured check candidates and a file with no exports.
 returned helpers imported directly or through re-exports. Later receiver writes
 do not erase an earlier proven call; prior writes, escaping helpers, and
 conflicting inputs remain conservative. CLI and async CJS/ESM APIs share this
-prepared analysis.
+prepared analysis. A classic `for` initializer and a `for-in`/`for-of`
+iterable expression preserve one-time execution precision, while loop tests,
+updates, bodies, and per-item binding defaults remain repeatable.
 
 `effects` also supports binding-aware
 `effects.<kind>.targets` config

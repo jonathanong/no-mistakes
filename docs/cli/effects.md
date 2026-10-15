@@ -104,5 +104,9 @@ For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
 Calls inside loops, repeatable functions, and instance initializers remain
 unresolved when a later execution could copy a replacement.
+One-time loop setup expressions—the classic `for` initializer and the iterable
+expression of `for-in`/`for-of`—retain their single-execution proof. Loop tests,
+updates, bodies, and per-item binding defaults remain repeatable and
+conservative.
 Captured and suspended helpers remain conservative. Nested propagation without
 an exact assigned member history also retains the conservative default guard.

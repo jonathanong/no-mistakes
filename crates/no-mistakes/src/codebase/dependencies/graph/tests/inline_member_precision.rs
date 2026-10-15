@@ -97,9 +97,18 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
         ("alias-inline-snapshot-owned", "get", Some("primary.get")),
         ("inline-snapshot-owned", "get", Some("primary.get")),
         ("inline-snapshot-owned-write-first", "get", None),
+        ("inline-snapshot-for-init", "get", Some("primary.get")),
+        ("inline-snapshot-for-in-rhs", "get", Some("primary.get")),
+        ("inline-snapshot-for-of-rhs", "get", Some("primary.get")),
+        ("inline-snapshot-for-in-default", "get", None),
+        ("inline-snapshot-for-of-default", "get", None),
+        ("inline-snapshot-nested-for-init", "get", None),
+        ("inline-snapshot-nested-for-in-rhs", "get", None),
+        ("inline-snapshot-nested-for-of-rhs", "get", None),
         // Repeated execution can acquire the replacement on a later pass.
         ("inline-snapshot-repeated-for", "get", None),
         ("inline-snapshot-repeated-header", "get", None),
+        ("inline-snapshot-repeated-update", "get", None),
         ("inline-snapshot-repeated-function", "get", None),
         ("inline-snapshot-repeated-while", "get", None),
         ("inline-snapshot-repeated-do", "get", None),
@@ -131,6 +140,9 @@ fn inline_receivers_validate_the_member_read_without_losing_escape_guards() {
             );
         }
     }
+    let sites = graph.call_sites_in_file(&root.join("src/inline-snapshot-annex-b-for-in.js"));
+    assert_eq!(sites.len(), 1, "Annex B initializer: {sites:?}");
+    assert_eq!(sites[0].target, ResolvedCallTarget::Unknown);
 }
 
 #[test]

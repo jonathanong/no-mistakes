@@ -69,7 +69,7 @@ fn visit_for_statement_with_scope<'a>(
     collector.record_per_item_range(statement.body.span(), collector.current_function_id(), "for");
     let pushed = collector.push_lexical_scope();
     if let Some(init) = &statement.init {
-        collector.visit_for_statement_init(init);
+        with_loop_setup_execution(collector, |collector| collector.visit_for_statement_init(init));
     }
     if let Some(test) = &statement.test {
         collector.visit_expression(test);
@@ -109,7 +109,7 @@ fn visit_for_in_statement_with_scope<'a>(
     let previous_initializer = std::mem::replace(&mut collector.annex_b_for_in_initializer, initializer);
     with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
     collector.annex_b_for_in_initializer = previous_initializer;
-    collector.visit_expression(&statement.right);
+    with_loop_setup_execution(collector, |collector| collector.visit_expression(&statement.right));
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
 }
@@ -122,7 +122,7 @@ fn visit_for_of_statement_with_scope<'a>(
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(collector, &statement.left, statement.right.span().end);
     with_conditional_execution(collector, true, |collector| collector.visit_for_statement_left(&statement.left));
-    collector.visit_expression(&statement.right);
+    with_loop_setup_execution(collector, |collector| collector.visit_expression(&statement.right));
     with_conditional_execution(collector, true, |collector| collector.visit_statement(&statement.body));
     collector.pop_lexical_scope(pushed);
 }

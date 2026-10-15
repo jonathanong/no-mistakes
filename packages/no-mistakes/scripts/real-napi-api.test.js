@@ -13,6 +13,7 @@ require("./typescript-module-api.test.js");
 require("./conditional-workspace-api.test.js");
 require("./workspace-resolve-api.test.js");
 require("./nextjs-tracked-routes.test.js");
+require("./inline-owned-member-api.test.js");
 require("./postgres-do-constraint-api.test.js");
 require("./postgres-metadata-api.test.js");
 require("./tests-audit-native-api.test.js");

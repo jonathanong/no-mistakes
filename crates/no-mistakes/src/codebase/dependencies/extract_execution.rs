@@ -31,6 +31,14 @@ fn with_repeat_execution<T>(
     collector.repeat_depth -= 1;
 }
 
+fn with_loop_setup_execution(collector: &mut ImportCollector, visit: impl FnOnce(&mut ImportCollector)) {
+    let previous = collector.repeat_depth;
+    // Remove only the surrounding loop's guard; nested outer loops remain repeated.
+    collector.repeat_depth = previous.saturating_sub(1);
+    visit(collector);
+    collector.repeat_depth = previous;
+}
+
 // Literal conditions can prove one branch executes. Unknown conditions remain
 // conservative; these facts do not evaluate bindings or replace syntactic edges.
 fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {
