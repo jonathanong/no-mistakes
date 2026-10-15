@@ -153,6 +153,11 @@ fn nullish_cycles_preserve_fallbacks_and_report_work() {
         .canonicalize()
         .unwrap();
     for case in [
+        "call-cycle-diamond-2",
+        "call-cycle-diamond-4",
+        "call-cycle-diamond-8",
+        "call-cycle-diamond-16",
+        "call-cycle-diamond-32",
         "forwarding-parameters",
         "default-forwarding",
         "caller-read-overwrite",
@@ -219,7 +224,10 @@ fn nullish_cycles_preserve_fallbacks_and_report_work() {
         if case.starts_with("entry-ancestry-") {
             assert!(work[10] > 0, "case={case} work={work:?}");
         }
-        if let Some(layers) = case.strip_prefix("cycle-includes-diamond-") {
+        if let Some(layers) = case
+            .strip_prefix("cycle-includes-diamond-")
+            .or_else(|| case.strip_prefix("call-cycle-diamond-"))
+        {
             let layers = layers.parse::<usize>().unwrap();
             assert!(work[0] <= 64 * (layers + 1), "case={case} work={work:?}");
             // Include guard-log scans and sorting, not just binding evaluations.

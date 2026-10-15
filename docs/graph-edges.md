@@ -336,7 +336,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   Static indexed annotations and agreeing contextual callback types supply effect
   provenance without fabricating an ordinary callable target. Nullish branches
   retain independent receipts and use the same canonical callable alternatives;
-  an unknown branch adds no target or edge.
+  an unknown branch adds no target or edge. Rust callers can inspect optional
+  `ValueFlowFacts::type_sources` (`ValueTypeSources`/`ValueTypeSource`), collected
+  with value-flow demand. These declarative annotations retain lexical ownership
+  and resolve through the prepared catalog; CLI and Node call-site schemas gain
+  no fields.
 - `extends` edges are opt-in like `call`, but no `--relationship` value selects
   them: only a rule that reads class hierarchy asks the graph for them, through
   the build plan. The `dependencies` graph never builds them, so unfiltered

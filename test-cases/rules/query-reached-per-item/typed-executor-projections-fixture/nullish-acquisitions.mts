@@ -25,3 +25,13 @@ export async function entry(ids: string[], typed: TransactionQuery, unknown) {
   const query = unknown ?? acquire(typed, unknown);
   for (const id of ids) await query(id);
 }
+// The positive candidate must come from the copied member, not another leaf.
+export async function copiedMember(ids: string[], unknown) {
+  const box = { query: write };
+  const alias = box;
+  for (const id of ids) {
+    const copy = alias.query;
+    const query = copy ?? unknown;
+    await query(id);
+  }
+}
