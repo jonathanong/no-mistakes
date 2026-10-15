@@ -51,7 +51,6 @@ impl ImportCollector {
         let (history, proof) = self.prior_member_mutations.history_mut(key);
         // Projected default reads retain guards for writes without an exact leaf.
         history.has_unassigned |= assigned.is_none();
-        history.record(path, offset, context);
         if let Some((assigned, completed_at)) = assigned {
             let write = mutation_history::ValueAssignedMutation {
                 offset: completed_at,
@@ -63,11 +62,17 @@ impl ImportCollector {
             history.record_assignment(
                 path,
                 assigned,
-                write,
+                mutation_assignments::AssignmentTiming {
+                    started_at: offset,
+                    context,
+                    completed: write,
+                },
                 propagated,
                 proof.then_some(metadata.fresh),
                 (region, captured),
             );
+        } else {
+            history.record(path, offset, context);
         }
     }
     pub(in super::super) fn finish_default_mutations(&mut self) {
