@@ -94,10 +94,10 @@ the `effects` query, with the configured category. Its callee display uses the
 configured type export for typed executors and the factory path plus returned
 member for returned members (for example, `writePool.connect().query`).
 
-Indexed imported type fields, unshadowed global `NonNullable`, and agreeing
+Indexed imported type fields, global `NonNullable`, and agreeing
 explicit callback annotations retain the configured type identity. For
 `options.query ?? write`, each possible branch contributes its own configured
-evidence; unknown/unconfigured branches gain no selected identity. A configured
+evidence; unknown or unselected branches gain no selected identity. A configured
 ordinary `write` candidate prevents a transaction-client-only diagnostic even
 when another candidate is a typed transaction executor.
 
