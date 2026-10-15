@@ -6,6 +6,7 @@ pub enum BenchShard {
     Named(&'static str),
 }
 
+pub const FRONTEND_CACHE_LIFETIMES: &str = "frontend-cache-lifetimes";
 pub const CHECK: &str = "check";
 pub const OBSERVER: &str = "observer";
 pub const TESTS_PLAN: &str = "tests-plan";
@@ -19,6 +20,7 @@ pub const QUERY: &str = "query";
 pub const GENERAL_MEMORY: &str = "general-memory";
 
 const NAMED_SHARDS: &[&str] = &[
+    FRONTEND_CACHE_LIFETIMES,
     CHECK,
     OBSERVER,
     TESTS_PLAN,
@@ -49,7 +51,7 @@ pub fn parse_bench_shard(value: Option<&str>) -> Result<BenchShard, String> {
 
 pub fn shard_should_run(requested: &str, current: Option<&str>) -> Result<bool, String> {
     Ok(match parse_bench_shard(current)? {
-        BenchShard::All => true,
+        BenchShard::All => requested != FRONTEND_CACHE_LIFETIMES,
         BenchShard::Named(name) => name == requested,
     })
 }

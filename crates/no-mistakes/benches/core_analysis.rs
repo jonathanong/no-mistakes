@@ -12,6 +12,8 @@ mod dependency_checks;
 mod extract;
 #[path = "core_analysis/fixtures.rs"]
 mod fixtures;
+#[path = "core_analysis/frontend_cache.rs"]
+mod frontend_cache;
 #[path = "core_analysis/graph.rs"]
 mod graph;
 #[path = "core_analysis/graph_gates.rs"]
@@ -91,6 +93,7 @@ fn bench_workflow_artifact_values(c: &mut criterion::Criterion) {
 
 criterion_group!(
     benches,
+    frontend_cache::bench_frontend_cache_lifetimes,
     resolver_catalog::bench_resolver_catalog,
     bench_sql_source_positions,
     bench_lazy_traversal,

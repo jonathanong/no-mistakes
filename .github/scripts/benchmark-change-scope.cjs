@@ -57,6 +57,7 @@ function benchmarkChangeScope(changes, forceAll = false) {
       selected.add(NATIVE_FRONTENDS);
     } else if (path.startsWith("fixtures/lang-frontends/")) {
       selected.add(LANGUAGE_FRONTENDS);
+      selected.add("frontend-cache-lifetimes");
     } else if (affectsEveryBenchmark(path)) {
       return { changed: true, scope: ALL_SHARDS };
     }

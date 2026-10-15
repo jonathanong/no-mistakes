@@ -25,7 +25,7 @@ test("routes general language fixtures independently from native fixtures", () =
     benchmarkChangeScope(modified(["fixtures/lang-frontends/go-http/handlers.go"])),
     {
       changed: true,
-      scope: "language-frontends",
+      scope: "frontend-cache-lifetimes,language-frontends",
     },
   );
   assert.deepEqual(
@@ -35,7 +35,7 @@ test("routes general language fixtures independently from native fixtures", () =
         "test-cases/codebase-analysis/swift-test-plan/fixture/swift-clients/core/Package.swift",
       ]),
     ),
-    { changed: true, scope: "language-frontends,native-frontends" },
+    { changed: true, scope: "frontend-cache-lifetimes,language-frontends,native-frontends" },
   );
 });
 
@@ -90,7 +90,7 @@ test("only a modified regular release validation guard is unrelated to benchmark
   });
   assert.deepEqual(
     benchmarkChangeScope(modified([guard, "fixtures/lang-frontends/go-http/handlers.go"])),
-    { changed: true, scope: "language-frontends" },
+    { changed: true, scope: "frontend-cache-lifetimes,language-frontends" },
   );
   assert.deepEqual(
     benchmarkChangeScope([

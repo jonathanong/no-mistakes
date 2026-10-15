@@ -10,6 +10,8 @@ use std::path::Path;
 
 mod annotation_modules;
 mod bench_shard;
+mod frontend_cache;
+pub use frontend_cache::FrontendCacheLifecycle;
 mod call_index;
 mod language_frontends;
 mod native_frontends;
@@ -23,9 +25,9 @@ mod resolve_check;
 mod scoped_callable;
 mod scoped_resolver;
 pub use bench_shard::{
-    parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH_CORE,
-    GRAPH_FINALIZATION, GRAPH_GATES, GRAPH_PRODUCTION, LANGUAGE_FRONTENDS, NATIVE_FRONTENDS,
-    OBSERVER, QUERY, TESTS_PLAN,
+    parse_bench_shard, shard_should_run, BenchShard, CHECK, FRONTEND_CACHE_LIFETIMES,
+    GENERAL_MEMORY, GRAPH_CORE, GRAPH_FINALIZATION, GRAPH_GATES, GRAPH_PRODUCTION,
+    LANGUAGE_FRONTENDS, NATIVE_FRONTENDS, OBSERVER, QUERY, TESTS_PLAN,
 };
 pub use call_index::{
     callable_file_index_fixture, construct_callable_file_index, probe_call_site_files,

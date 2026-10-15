@@ -863,6 +863,10 @@ jobs:
             mode: memory
             filter: ""
             benchmark-shard: graph-gates
+          - name: memory frontend cache lifetimes
+            mode: memory
+            filter: ""
+            benchmark-shard: frontend-cache-lifetimes
           - name: memory language frontends
             mode: memory
             filter: ""
