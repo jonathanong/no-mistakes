@@ -59,17 +59,17 @@ fn stable_leaf(file: &CallableFileIndex, expression: &ValueExpression, depth: us
 }
 fn unstable_rhs(
     flow: &mut ValueFlowResolution<'_, '_>,
-    file: &CallableFileIndex,
+    source: (&CallableFileIndex, &std::path::Path),
     expression: &ValueExpression,
     receivers: &FxHashMap<String, usize>,
     index: &PreparedReplacements,
     foreign: &super::writers::ForeignWriters<'_>,
-    path: &std::path::Path,
     depth: usize,
 ) -> bool {
     if depth > 32 {
         return true;
     }
+    let (file, path) = source;
     let (name, property, offset, owner) = match expression {
         ValueExpression::Named {
             name,
@@ -83,12 +83,11 @@ fn unstable_rhs(
                     |binding| {
                         unstable_rhs(
                             flow,
-                            file,
+                            source,
                             &binding.value,
                             receivers,
                             index,
                             foreign,
-                            path,
                             depth + 1,
                         )
                     },

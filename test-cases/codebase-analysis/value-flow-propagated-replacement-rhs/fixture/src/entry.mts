@@ -17,8 +17,8 @@ for (const item of ["a", "b"]) {
   dest.get = source.get;
   const after = dest.get;
   after(item);
-  dest.set(item, "value");
 }
+dest.set("outside", "value");
 
 // A different propagated member does not replace the RHS method.
 const unrelated = { client: unrelatedSource };
