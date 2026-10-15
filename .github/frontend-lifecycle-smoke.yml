@@ -1,0 +1,12 @@
+# Explicitly selected by the opt-in smoke action; ordinary runs never load this.
+# One runner invocation gives each entrypoint its own profile folder and unique
+# run-part-index suffix while preserving the original benchmark URI.
+benchmarks:
+  - name: '1 original'
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 1 original
+  - name: '2 cold first analysis'
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 2 cold_first_analysis
+  - name: '3 cold first analysis'
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 3 cold_first_analysis
+  - name: '4 original'
+    entrypoint: bash .github/scripts/frontend-lifecycle-smoke.sh 4 original

@@ -16,6 +16,16 @@ function isNativeFixture(path) {
   return nativeFixtureRoots.some((root) => path.startsWith(root));
 }
 
+function isFrontendLifecycleHarness(path) {
+  return (
+    path === ".github/frontend-lifecycle-smoke.yml" ||
+    path === ".github/scripts/frontend-lifecycle-smoke.sh" ||
+    path === ".github/scripts/frontend-lifecycle-profile.py" ||
+    path === ".github/scripts/test_frontend_lifecycle_profile.py" ||
+    path === ".github/scripts/frontend-lifecycle.test.cjs"
+  );
+}
+
 function affectsEveryBenchmark(path) {
   return (
     path === "Cargo.toml" ||
@@ -55,7 +65,7 @@ function benchmarkChangeScope(changes, forceAll = false) {
     }
     if (isNativeFixture(path)) {
       selected.add(NATIVE_FRONTENDS);
-    } else if (path.startsWith("fixtures/lang-frontends/")) {
+    } else if (path.startsWith("fixtures/lang-frontends/") || isFrontendLifecycleHarness(path)) {
       selected.add(LANGUAGE_FRONTENDS);
     } else if (affectsEveryBenchmark(path)) {
       return { changed: true, scope: ALL_SHARDS };

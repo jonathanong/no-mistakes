@@ -1,0 +1,81 @@
+{
+  "issue": 2025,
+  "status": "first API gate validated; ARM memory gate not yet executed",
+  "sourceBase": "d36ea2af42d7a2a6d20074e4cd8ac1d0bc89568a",
+  "productionChanges": false,
+  "pinnedApi": "codspeed-criterion-compat =5.0.1: iter_manual_unstable(IterManualOptions::new().rounds(1).iters(1).warmup(0), closure)",
+  "firstGate": {
+    "nativeTest": {
+      "closureCalls": 1,
+      "registrations": 1,
+      "priorCalls": 0
+    },
+    "codspeedCfgFunctional": {
+      "closureCalls": 1,
+      "registrations": 1,
+      "priorCalls": 0
+    },
+    "nativeBench": "One closure followed by a Criterion sample-length statistics panic. Native lifecycle modes therefore require --test; no native estimate is published.",
+    "limitations": "Functional execution checks API call counts/order, not instrumented tracked memory. Actual ARM runner support requires the separately declared smoke.",
+    "scope": "Initial functional binaries were built at sourceBase d36ea2af with the candidate bench module. Final hosted candidate will be rebuilt at implementationBase; old binaries are not performance evidence."
+  },
+  "preserved": {
+    "rayonWorkers": 4,
+    "facts": {
+      "files": 117,
+      "parsed": 69,
+      "imports": 66,
+      "enqueues": 7,
+      "workers": 6,
+      "routes": 41
+    },
+    "edges": {
+      "edges": 125,
+      "queueEdges": 14
+    },
+    "globMatches": 117,
+    "originalExtractPrefixCollectors": 7,
+    "originalPrefix": [
+      "facts preflight",
+      "edges preflight (one full collector)",
+      "glob preflight",
+      "five adapter fact warmups"
+    ],
+    "originalUri": "crates/no-mistakes/benches/core_analysis.rs::benches::bench_language_frontends::language_frontends::extract",
+    "gates": "Original CPU/memory rows, profiles, thresholds, ubuntu-24.04-arm expected-base rules, fixture, flags, and dependency pins remain unchanged."
+  },
+  "cold": {
+    "priorCollectors": 0,
+    "measuredClosures": 1,
+    "measuredCollectors": 1,
+    "postMarkerCollectors": 1,
+    "postMarkerHelpers": [
+      "edges preflight",
+      "glob preflight"
+    ],
+    "excluded": [
+      "OS exec/dynamic loading",
+      "harness registration",
+      "fixture inventory/config preparation"
+    ],
+    "lifetimeAtStop": "Request facts have been destroyed; global Rayon workers and reusable regex scratch objects remain alive.",
+    "ledgerEvidence": "Closure calls are observed by the local counter; pool capacity is observed after the marker. Prior/helper collector counts come from inspected call paths and the order regression. Neither pool capacity nor fresh threads proves participation/cache state on every worker."
+  },
+  "declaredArmSmoke": {
+    "order": [
+      "original",
+      "cold_first_analysis",
+      "cold_first_analysis",
+      "original"
+    ],
+    "samplesPerMode": 2,
+    "artifact": "One same-run digest-verified core_analysis executable; source/archive/dependency/binary hashes retained.",
+    "runner": "ubuntu-24.04-arm; CodSpeed action c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5; runner5.4.0; criterion5.0.1; Rayon4",
+    "build": "no default features; test-instrumentation; bench LTO=false; codegen-units=16; existing CI build",
+    "identity": "One action/shared Run ID; four ordered entrypoints, each with unique runner upload run-part-index0..3, an injected exact CODSPEED_PROFILE_FOLDER, benchmark PID, sample number, and exact binary hash. Raw marker PID/URI and backend RunPart/object mapping must be audited before interpreting pairs.",
+    "retention": "All four raw profiles/timelines/logs retained independently for30days. Repeated original URIs must not collapse sample evidence.",
+    "stop": "Missing marker/memory artifacts, duplicate raw profile directories/PIDs, changed binary hash, count drift, or runner mismatch; diagnose before any further authorized execution. No blind repeats."
+  },
+  "claims": "No runtime improvement, deterministic full warmness, scheduling cause, RSS equivalence, or retained-byte attribution. No subtraction or replacement of original measurements.",
+  "implementationBase": "4ddb9c08dbe8e06501a87ffce0ab8db4b10e76fc"
+}

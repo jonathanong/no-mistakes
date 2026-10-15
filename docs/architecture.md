@@ -316,8 +316,9 @@ The `query` shard also measures prepared PostgreSQL bound evaluation and catalog
 fallback/load costs using `fixtures/performance/postgres-bounds`. Reversed pin
 chains and unseeded cycles at 16, 64, and 256 items protect both scaling and the
 least-fixed-point contract; SQL parsing is outside the evaluation timing loop.
-Every workload runs a preflight that validates stable, fixture-specific
-output invariants before the measured loop.
+Workloads validate stable, fixture-specific output invariants. The original
+benchmarks run their preflight before measurement; the opt-in first-analysis
+control validates its returned counts and edge/glob preflight after its marker.
 
 CI builds the harness once, then runs each semantic shard in both CodSpeed CPU
 simulation and memory modes: `check`, `observer`, `tests-plan`, `graph-core`,
@@ -367,6 +368,55 @@ workflow keys the cache directory by the installed libc6 version, so the first
 run after an update saves a fresh entry. That entry matches only while the
 Ubuntu archive's `libc6-dbg` is the image's libc6 version; until images catch
 up to a newer archive release, runs may still reinstall.
+
+### Frontend first-analysis allocation control
+
+`NO_MISTAKES_FRONTEND_LIFECYCLE=cold_first_analysis` requires the explicit
+`language-frontends` shard and `RAYON_NUM_THREADS=4`. It selects a separate
+`language_frontend_lifecycle::cold_first_analysis` identity in the same
+`core_analysis` executable. Unset leaves the original extract, edges, and glob
+registration, preflight, identities, profiles, and gates intact.
+
+The first Criterion target rejects invalid selections before any fixture or
+collector setup. The cold path prepares only the physical inventory and config,
+then uses pinned Criterion compatibility API 5.0.1's
+`iter_manual_unstable(rounds=1, iters=1, warmup=0)` for exactly one production
+fact collection. The CodSpeed adapter runs one measured closure without its
+usual five warmups. The boundary excludes OS execution, dynamic loading,
+harness registration, and fixture preparation: it is **first-analysis cold**.
+Worker/regex initialization reached by this first collection belongs inside the
+marker; its raw stacks must substantiate any initialization attribution.
+
+The post-marker ledger distinguishes an observed closure count and observed
+four-worker pool capacity from source-accounted collector/helper counts. Capacity
+does not prove all four workers participated. Request facts are destroyed before
+the marker stops; global workers and reusable regex scratch pools remain alive.
+The returned fact counts and subsequent edge/glob preflight protect the same
+117/69/66/7/6/41 and 125/14/117 invariants as the original workload. Regex scratch
+pools are shared and reusable; fresh threads cannot establish cache freshness.
+
+Native execution requires `--test` for a functional call-count/order control.
+The pinned wall-clock adapter executes one round but its statistical analyzer
+then panics on a single sample in ordinary `--bench` mode. These controls provide
+no native timing estimate or speedup claim.
+
+The optional `Frontend lifecycle memory smoke` job runs only on a same-repository
+PR whose body explicitly contains `<!-- frontend-lifecycle-smoke: v1 -->`. It reuses the
+existing exact archive digest handoff on `ubuntu-24.04-arm`, then runs the same
+binary in four separate processes, original/cold/cold/original, two samples per
+mode. One official CodSpeed action loads four ordered entrypoint targets from an
+explicit smoke configuration. The pinned runner gives each target its own
+profile directory and upload `run-part-index` suffix; its injected
+`CODSPEED_PROFILE_FOLDER` ties each sample to that raw directory. The shared
+action run ID, per-target suffix, actual benchmark PID, raw memory events, marker
+timeline, logs, binary hash, and provenance are retained for 30 days. Missing
+profiles, duplicate profile directories/PIDs, or a hash mismatch stop the
+sequence; an aggregate row or latest-by-URI report is insufficient to identify
+four samples.
+The body marker is an opt-in diagnostic control, and should be removed after
+the declared run. [The accounting record](performance/frontend-lifecycle.json)
+records scope and limitations. Original thresholds and expected-base/runner
+requirements remain authoritative.
 
 ### Interpreting CodSpeed results
 

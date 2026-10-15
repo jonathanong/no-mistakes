@@ -21,7 +21,11 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
     // Keep this wrapper stable: criterion_group includes its name in CodSpeed
     // identities. The shard gates only isolate setup and measurement work.
     if shard::should_run(shard::LANGUAGE_FRONTENDS) {
-        register_language_frontends(c);
+        if super::frontend_lifecycle::selected() {
+            super::frontend_lifecycle::register_cold(c);
+        } else {
+            register_language_frontends(c);
+        }
     }
 
     if shard::should_run(shard::NATIVE_FRONTENDS) {

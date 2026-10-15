@@ -723,6 +723,16 @@ jobs:
           --bench core_analysis
           -m simulation
 
+      - name: Verify fresh-process frontend call counts
+        timeout-minutes: 2
+        env:
+          CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
+        run: |
+          mapfile -t binaries < <(find target/codspeed/analysis -type f -perm -111)
+          [[ ${#binaries[@]} -eq 1 ]]
+          NO_MISTAKES_BENCH_EXECUTABLE="$(realpath "${binaries[0]}")" node --test .github/scripts/frontend-lifecycle.test.cjs
+          python3 -m unittest discover -s .github/scripts -p test_frontend_lifecycle_profile.py
+
       - name: Build memory benchmarks
         timeout-minutes: 5
         run: >-
@@ -972,6 +982,102 @@ jobs:
             else
               "${benchmarks[0]}"
             fi
+
+  frontend-lifecycle-smoke:
+    name: Frontend lifecycle memory smoke
+    needs: [changes, bench]
+    if: >-
+      ${{ github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          contains(github.event.pull_request.body, '<!-- frontend-lifecycle-smoke: v1 -->') &&
+          needs.changes.outputs.benchmarks == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RAYON_NUM_THREADS: '4'
+      NO_MISTAKES_BENCH_SHARD: language-frontends
+      CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore exact benchmark executable cache
+        id: cache
+        if: ${{ needs.bench.outputs.cache-ready == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+        with:
+          key: ${{ needs.bench.outputs.cache-key }}
+          path: codspeed-analysis.tar
+      - name: Verify cache
+        id: verify-cache
+        if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 1
+        env:
+          BENCHMARK_SHA256: ${{ needs.bench.outputs.sha256 }}
+        run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
+      - name: Download exact same-run fallback
+        if: ${{ steps.verify-cache.outcome != 'success' }}
+        timeout-minutes: 10
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: codspeed-analysis
+      - name: Verify handoff and freeze provenance
+        id: provenance
+        timeout-minutes: 2
+        env:
+          BENCHMARK_SHA256: ${{ needs.bench.outputs.sha256 }}
+          FRONTEND_SMOKE_ROOT: ${{ runner.temp }}/frontend-lifecycle-smoke
+        run: |
+          echo "FRONTEND_SMOKE_ROOT=$FRONTEND_SMOKE_ROOT" >> "$GITHUB_ENV"
+          bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
+          mkdir -p target/codspeed "$FRONTEND_SMOKE_ROOT"/{profiles,sample-1,sample-2,sample-3,sample-4}
+          tar -C target/codspeed -xf codspeed-analysis.tar
+          mapfile -t binaries < <(find target/codspeed/analysis -type f -perm -111)
+          [[ ${#binaries[@]} -eq 1 ]]
+          sha256sum "${binaries[0]}" | cut -d ' ' -f 1 > "$FRONTEND_SMOKE_ROOT/executable.sha256"
+          git rev-parse HEAD > "$FRONTEND_SMOKE_ROOT/source.txt"
+          sha256sum Cargo.lock codspeed-analysis.tar > "$FRONTEND_SMOKE_ROOT/inputs.sha256"
+          uname -a > "$FRONTEND_SMOKE_ROOT/machine.txt"
+          lscpu >> "$FRONTEND_SMOKE_ROOT/machine.txt"
+          cat /etc/os-release >> "$FRONTEND_SMOKE_ROOT/machine.txt"
+          printf 'order=original,cold_first_analysis,cold_first_analysis,original\nsamplesPerMode=2\nrayonWorkers=4\nrunner=5.4.0\ncriterion=5.0.1\nbenchLto=false\nbenchCodegenUnits=16\nfeatures=test-instrumentation\nnoDefaultFeatures=true\n' > "$FRONTEND_SMOKE_ROOT/design.txt"
+          echo "libc=$(dpkg-query --showformat='${Version}' --show libc6)" >> "$GITHUB_OUTPUT"
+      - name: Measure the declared four fresh processes
+        id: samples
+        timeout-minutes: 6
+        uses: CodSpeedHQ/action@c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5 # v5.4.0
+        env:
+          TMPDIR: ${{ runner.temp }}/frontend-lifecycle-smoke/profiles
+        with:
+          mode: memory
+          runner-version: '5.4.0'
+          instruments-cache-dir: ~/.cache/codspeed-action/libc6-${{ steps.provenance.outputs.libc }}
+          config: .github/frontend-lifecycle-smoke.yml
+      - name: Verify all raw profiles and shared run identity
+        timeout-minutes: 1
+        env:
+          SAMPLE_RUN_ID: ${{ steps.samples.outputs.run-id }}
+        run: python3 .github/scripts/frontend-lifecycle-profile.py all
+      - name: Retain all separate sample profiles and timelines
+        if: ${{ always() && steps.provenance.outcome == 'success' }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: frontend-lifecycle-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/frontend-lifecycle-smoke/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 1
 
   benchmark-gate:
     name: Benchmarks

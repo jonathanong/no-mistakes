@@ -1,0 +1,14 @@
+{
+  "previous": [
+    {"sample": 1, "runPartIndex": 0, "pid": 101, "binarySha256": "same-binary", "profileDirectory": "profile-a", "runId": "shared-run", "exit": 0}
+  ],
+  "cases": [
+    {"name": "shared logical run with distinct raw sample", "valid": true, "record": {"sample": 2, "runPartIndex": 1, "pid": 102, "binarySha256": "same-binary", "profileDirectory": "profile-b", "runId": "shared-run", "exit": 0}},
+    {"name": "reused process", "valid": false, "record": {"sample": 2, "runPartIndex": 1, "pid": 101, "binarySha256": "same-binary", "profileDirectory": "profile-b", "exit": 0}},
+    {"name": "raw profile overwrite", "valid": false, "record": {"sample": 2, "runPartIndex": 1, "pid": 102, "binarySha256": "same-binary", "profileDirectory": "profile-a", "exit": 0}},
+    {"name": "changed binary", "valid": false, "record": {"sample": 2, "runPartIndex": 1, "pid": 102, "binarySha256": "different-binary", "profileDirectory": "profile-b", "exit": 0}},
+    {"name": "changed sample order", "valid": false, "record": {"sample": 3, "runPartIndex": 1, "pid": 102, "binarySha256": "same-binary", "profileDirectory": "profile-b", "exit": 0}},
+    {"name": "changed upload index", "valid": false, "record": {"sample": 2, "runPartIndex": 0, "pid": 102, "binarySha256": "same-binary", "profileDirectory": "profile-b", "exit": 0}},
+    {"name": "failed benchmark", "valid": false, "record": {"sample": 2, "runPartIndex": 1, "pid": 102, "binarySha256": "same-binary", "profileDirectory": "profile-b", "exit": 1}}
+  ]
+}
