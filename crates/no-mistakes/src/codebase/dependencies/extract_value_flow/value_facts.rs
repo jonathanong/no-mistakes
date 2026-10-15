@@ -30,6 +30,16 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_binding_visits: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub reference_root_probes: usize,
+    /// Sum of each mutation traversal's peak pending capacity, in entries.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_pending_capacity: usize,
+    /// Sum of those peak buffers in bytes, not allocation traffic or RSS.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_pending_bytes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub receiver_root_target_decompositions: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_identity_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_capture_nodes: usize,

@@ -118,11 +118,11 @@ impl ReceiverBindingOrigins {
             generation: root.generation,
         })
     }
-    pub(super) fn append_references(
+    pub(super) fn append_references<R: nested::RootCoordinate>(
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut Vec<nested::ReceiverWrite>,
+        output: &mut Vec<nested::ReceiverWrite<R>>,
         foreign_before: usize,
     ) {
         let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {

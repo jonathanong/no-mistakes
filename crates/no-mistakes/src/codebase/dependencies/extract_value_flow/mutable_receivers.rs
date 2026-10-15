@@ -77,9 +77,17 @@ impl ImportCollector {
                     );
                 }
             }
-        } else {
+        } else if matches!(
+            assignment.left,
+            AssignmentTarget::ArrayAssignmentTarget(_)
+                | AssignmentTarget::ObjectAssignmentTarget(_)
+        ) {
             // Destructuring replaces lexical roots too. Its projected RHS is
             // intentionally unknown here; never keep a stale prior root.
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.receiver_root_target_decompositions += 1;
+            }
             for (name, path, target) in write_targets::targets(&assignment.left) {
                 if path.is_empty() {
                     if let Some(scope) = self.callee_binding_scope(&name) {
@@ -132,11 +140,11 @@ impl ImportCollector {
             .map_or(0, |origins| origins.watermark())
     }
 
-    pub(super) fn append_mutable_receiver_references_unchecked(
+    pub(super) fn append_mutable_receiver_references_unchecked<R: nested::RootCoordinate>(
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut Vec<nested::ReceiverWrite>,
+        output: &mut Vec<nested::ReceiverWrite<R>>,
         foreign_before: usize,
     ) {
         if let Some(origins) = &self.receiver_only_bindings {

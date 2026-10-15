@@ -137,3 +137,29 @@ fn receiver_traversal_revisits_only_for_weaker_acquisition_evidence() {
 #[cfg(feature = "test-instrumentation")]
 #[path = "mutable_receiver_scale_tests.rs"]
 mod scale;
+
+#[test]
+#[cfg(feature = "test-instrumentation")]
+fn mutable_root_target_decomposition_excludes_member_writes() {
+    for (name, patterns) in [
+        ("mutable-let-direct.mts", 0),
+        ("mutable-let-pattern-rhs-rebind.mts", 1),
+    ] {
+        let source = mutable_receiver_source(name);
+        let allocator = Allocator::default();
+        let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+        assert!(parsed.diagnostics.is_empty());
+        let facts = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            true,
+        );
+        assert!(facts.value_flow.reference_root_probes > 0);
+        assert_eq!(
+            facts.value_flow.receiver_root_target_decompositions, patterns,
+            "{name}"
+        );
+    }
+}

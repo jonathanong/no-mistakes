@@ -1,7 +1,8 @@
 use super::*;
 
 pub(super) type Affected = FxHashMap<usize, FxHashSet<String>>;
-pub(super) type PendingMutation = (nested::ReceiverWrite, bool, bool, bool);
+pub(super) type PendingMutation<R = nested::RootRead> =
+    (nested::ReceiverWrite<R>, bool, bool, bool);
 #[derive(Clone, Copy)]
 pub(super) struct MutationInfo<'a> {
     pub(super) metadata: mutation_metadata::MutationMetadata,
@@ -11,9 +12,9 @@ pub(super) struct MutationInfo<'a> {
     pub(super) proof: Option<&'a mutable_deferred::DeferredProof>,
 }
 impl ImportCollector {
-    pub(super) fn project_member_mutation(
+    pub(super) fn project_member_mutation<R: nested::RootCoordinate>(
         &mut self,
-        mut pending: Vec<PendingMutation>,
+        mut pending: Vec<PendingMutation<R>>,
         mut assigned: Option<(Option<String>, u32)>,
         info: MutationInfo<'_>,
         affected: &mut Affected,
@@ -24,7 +25,13 @@ impl ImportCollector {
         while let Some((((key, path), reads, root_read), exiting, remember, propagated)) =
             pending.pop()
         {
-            let version = self.mutable_receiver_version(&key, root_read);
+            let version = root_read.read().and_then(|read| {
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    self.value_flow.reference_root_probes += 1;
+                }
+                self.mutable_receiver_version(&key, read)
+            });
             if exiting {
                 traversal.exit(&key, version);
                 continue;
@@ -94,10 +101,11 @@ impl ImportCollector {
                     }
                     let value = &self.value_flow.bindings[*index].value;
                     !matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
-                        || self.references_mutable_receiver(value)
+                        || (root_read.read().is_some() && self.references_mutable_receiver(value))
                 });
-            let projects =
-                self.has_mutable_receiver_binding(key.0, &key.1) || first_projected.is_some();
+            let projects = (root_read.read().is_some()
+                && self.has_mutable_receiver_binding(key.0, &key.1))
+                || first_projected.is_some();
             let replaced = projects && self.mutation_reference_replaced(&key, &path, &reads, info);
             // The eligibility prefix contains only direct aliases. They have
             // already been handled by component links and need no second visit.
@@ -118,22 +126,32 @@ impl ImportCollector {
                     })
                 {
                     if matches!(value, ValueExpression::Named { name, .. } if !name.contains('.'))
-                        && !self.references_mutable_receiver(value)
+                        && (root_read.read().is_none() || !self.references_mutable_receiver(value))
                     {
                         continue;
                     }
                     nested::write_receiver_references(value, &path, &reads, &mut references);
                 }
             }
-            if !self.defer_mutable_projection(&key, (&path, &reads, root_read), info, replaced)
-                && !replaced
-            {
-                self.append_mutable_receiver_references_unchecked(
-                    &key,
-                    (&path, &reads, root_read),
-                    &mut references,
-                    info.metadata.foreign_before,
-                );
+            if let Some(read) = root_read.read() {
+                #[cfg(feature = "test-instrumentation")]
+                {
+                    self.value_flow.reference_root_probes += 1;
+                }
+                if !self.defer_mutable_projection(&key, (&path, &reads, read), info, replaced)
+                    && !replaced
+                {
+                    #[cfg(feature = "test-instrumentation")]
+                    {
+                        self.value_flow.reference_root_probes += 1;
+                    }
+                    self.append_mutable_receiver_references_unchecked(
+                        &key,
+                        (&path, &reads, read),
+                        &mut references,
+                        info.metadata.foreign_before,
+                    );
+                }
             }
             pending.extend(
                 references
@@ -144,6 +162,9 @@ impl ImportCollector {
         #[cfg(feature = "test-instrumentation")]
         {
             self.value_flow.reference_binding_visits += binding_visits;
+            self.value_flow.reference_pending_capacity += pending.capacity();
+            self.value_flow.reference_pending_bytes +=
+                pending.capacity() * std::mem::size_of::<PendingMutation<R>>();
         }
     }
 }
