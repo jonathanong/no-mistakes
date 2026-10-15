@@ -1,6 +1,12 @@
 use super::*;
 use mutation_history::{ValueAssignedMutation, ValueAssignedWriter, ValueMutationHistory};
 
+pub(super) struct AssignmentTiming {
+    pub(super) started_at: u32,
+    pub(super) context: Option<CallableId>,
+    pub(super) completed: ValueAssignedMutation,
+}
+
 impl ValueAssignedMutation {
     pub(super) fn merge(&mut self, source: Self) {
         self.offset = self.offset.min(source.offset);
@@ -34,15 +40,23 @@ impl ValueMutationHistory {
         &mut self,
         path: &[Option<String>],
         member: Option<String>,
-        initial: ValueAssignedMutation,
+        timing: AssignmentTiming,
         propagated: bool,
         replacement: Option<bool>,
         proof: (Option<u32>, Option<identity_metadata::FreshCapture>),
     ) {
+        let AssignmentTiming {
+            started_at,
+            context,
+            completed: initial,
+        } = timing;
         let (region, capture) = proof;
         self.has_assignments = true;
         let mut node = self;
+        // Coarse histories use the write start; exact leaves and replacement
+        // proofs use completion. Share only their path descent, not their clock.
         for segment in path {
+            node.record_summary(started_at, context);
             if segment.is_none() && replacement.is_some() {
                 node.assigned
                     .get_or_insert_with(Default::default)
@@ -53,11 +67,9 @@ impl ValueMutationHistory {
                     .unknown
                     .record(initial.offset, initial.writer);
             }
-            node = match segment {
-                Some(member) => node.members.entry(member.clone()).or_default(),
-                None => node.dynamic.get_or_insert_with(Default::default),
-            };
+            node = node.record_child(segment);
         }
+        node.record_summary(started_at, context);
         let assigned = node.assigned.get_or_insert_with(Default::default);
         if let Some(fresh) = replacement {
             assigned
