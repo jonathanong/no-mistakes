@@ -15,6 +15,8 @@ pub(super) struct CargoTargets {
     packages: BTreeMap<PathBuf, Package>,
     manifests: BTreeSet<PathBuf>,
     scopes: BTreeSet<PathBuf>,
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    membership_index_builds: usize,
 }
 impl CargoTargets {
     pub(super) fn prepare(
@@ -23,8 +25,6 @@ impl CargoTargets {
         files: &[PathBuf],
         sources: &SourceStore,
     ) -> Self {
-        let visible: BTreeSet<_> = files.iter().map(PathBuf::as_path).collect();
-        let mut manifests = manifests::Manifests::new(sources);
         let mut result = Self {
             scopes: config
                 .tests
@@ -35,10 +35,20 @@ impl CargoTargets {
                 .collect(),
             ..Self::default()
         };
-        for path in files
+        let paths: Vec<_> = files
             .iter()
             .filter(|path| path.file_name().is_some_and(|name| name == "Cargo.toml"))
+            .collect();
+        if paths.is_empty() {
+            return result;
+        }
+        let visible: BTreeSet<_> = files.iter().map(PathBuf::as_path).collect();
+        #[cfg(any(test, feature = "test-instrumentation"))]
         {
+            result.membership_index_builds += 1;
+        }
+        let mut manifests = manifests::Manifests::new(sources);
+        for path in paths {
             let directory = path.parent().expect("manifest filenames have a parent");
             result.manifests.insert(directory.to_path_buf());
             if !result.scopes.is_empty() && !result.scopes.contains(directory) {

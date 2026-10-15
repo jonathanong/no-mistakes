@@ -22,6 +22,7 @@ fn cargo_manifests_define_package_and_real_target_identity() {
         catalog.projects(&root).is_empty(),
         "source fallback requires configured packages"
     );
+    assert_eq!(catalog.membership_index_builds, 1);
     let discovered = catalog.discover(&root, &visible);
     for (file, package, flags) in [
         (
@@ -270,4 +271,29 @@ fn cargo_invalid_workspace_edition_keeps_unknown_identity() {
         }
     }
     assert_eq!(sources.physical_read_count(), 5);
+}
+
+#[test]
+fn cargo_absent_manifest_keeps_preparation_cold_and_scope_explicit() {
+    let root = fixture();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let files: Vec<_> = snapshot
+        .paths_for(&root)
+        .iter()
+        .filter(|path| path.file_name().is_none_or(|name| name != "Cargo.toml"))
+        .cloned()
+        .collect();
+    let sources = snapshot.source_store_for(&root);
+    let mut config = NoMistakesConfig::default();
+    let catalog = CargoTargets::prepare(&root, &config, &files, &sources);
+    assert_eq!(catalog.membership_index_builds, 0);
+    let unknown = catalog.discover(&root, &files);
+    assert!(!unknown.tests.is_empty());
+    assert!(unknown.targets_by_path.values().all(Vec::is_empty));
+    config.tests.rust.packages = vec!["crates/engine".into()];
+    let scoped = CargoTargets::prepare(&root, &config, &files, &sources);
+    assert_eq!(scoped.membership_index_builds, 0);
+    assert!(scoped.scopes.contains(&root.join("crates/engine")));
+    assert!(scoped.discover(&root, &files).tests.is_empty());
+    assert_eq!(sources.physical_read_count(), 0);
 }
