@@ -1,0 +1,10 @@
+effects:
+  database:
+    functions: [get]
+    categories:
+      read: [get]
+projects:
+  library:
+    type: library
+    root: .
+    include: [src/**/*.mts]

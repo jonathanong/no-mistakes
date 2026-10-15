@@ -143,11 +143,16 @@ pub fn run(
                     }
                     Ok(())
                 },
-            graph_plan: |selection: &EffectsSelection| GraphBuildPlan {
-                calls: needs_resolved_effects(selection),
-                effect_selectors: !selection.targets.is_empty(),
-                ..GraphBuildPlan::from_allowed(Some(&allowed))
-            },
+            graph_plan:
+                |selection: &EffectsSelection,
+                 graph_files: &crate::codebase::dependencies::graph::GraphFiles,
+                 facts: &crate::codebase::ts_source::facts::TsFactMap| {
+                    GraphBuildPlan {
+                        calls: needs_effect_call_graph(selection, graph_files, facts),
+                        effect_selectors: !selection.targets.is_empty(),
+                        ..GraphBuildPlan::from_allowed(Some(&allowed))
+                    }
+                },
             configure_context:
                 |selection: &EffectsSelection,
                  context: &mut crate::codebase::ts_source::facts::TsFactContext| {

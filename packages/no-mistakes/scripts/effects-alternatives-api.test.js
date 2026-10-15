@@ -28,3 +28,41 @@ test(
     }
   },
 );
+
+test(
+  "compiled plain effects preserve alternatives and the no-write report in standalone and prepared calls",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [root, kind, entry, expectedName] of [
+      [
+        join(
+          __dirname,
+          "../../../test-cases/rules/query-reached-per-item/plain-alternatives-fixture",
+        ),
+        "plain",
+        "src/entry.mts",
+        "expected-plain.json",
+      ],
+      [
+        join(__dirname, "../../../test-cases/codebase-analysis/effects-plain-no-write/fixture"),
+        "database",
+        "src/defaults.mts",
+        "expected.json",
+      ],
+    ]) {
+      const expected = JSON.parse(readFileSync(join(root, expectedName), "utf8"));
+      for (const api of [cjs, esm]) {
+        const pending = api.effects({ root, kind, entry });
+        assert.equal(typeof pending.then, "function");
+        assert.deepEqual(await pending, expected);
+        const batch = await api.analyzeProject({
+          root,
+          reports: [{ type: "effects", kind, entry }],
+        });
+        assert.deepEqual(batch.reports[0].result, expected);
+      }
+    }
+  },
+);

@@ -39,7 +39,11 @@ pub fn run(
             },
             select: |_: Option<&crate::config::v2::schema::NoMistakesConfig>| anyhow::Ok(()),
             validate_root: |_: &(), _: &mut crate::codebase::dependencies::graph::GraphFiles| Ok(()),
-            graph_plan: |_: &()| GraphBuildPlan::from_allowed(Some(&runtime_edges())),
+            graph_plan: |_: &(),
+                         _: &crate::codebase::dependencies::graph::GraphFiles,
+                         _: &crate::codebase::ts_source::facts::TsFactMap| {
+                GraphBuildPlan::from_allowed(Some(&runtime_edges()))
+            },
             configure_context:
                 |_: &(), _: &mut crate::codebase::ts_source::facts::TsFactContext| {},
             selection: std::marker::PhantomData,

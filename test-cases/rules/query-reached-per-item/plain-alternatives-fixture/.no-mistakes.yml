@@ -1,4 +1,6 @@
 effects:
+  plain:
+    functions: [transaction, read]
   database:
     functions: [read]
     transactionFunctions: [primary.transaction]
