@@ -1,7 +1,7 @@
 use super::*;
 use crate::benchmark_support::{
-    language_frontend_fixture, shard_should_run, FRONTEND_CACHE_LIFETIMES, GENERAL_MEMORY,
-    LANGUAGE_FRONTENDS,
+    language_frontend_fixture, shard_should_run, FRONTEND_CACHE_LIFETIMES, FRONTEND_CACHE_ORIGINAL,
+    GENERAL_MEMORY, LANGUAGE_FRONTENDS,
 };
 
 #[test]
@@ -47,6 +47,34 @@ fn cache_lifetimes_is_explicit_only_and_excludes_original_preflights() {
     );
     assert_eq!(
         shard_should_run(LANGUAGE_FRONTENDS, Some(FRONTEND_CACHE_LIFETIMES)),
+        Ok(false)
+    );
+}
+
+#[test]
+fn original_alias_is_explicit_only_and_isolates_the_same_workload_registration() {
+    for selected in [
+        None,
+        Some(""),
+        Some(GENERAL_MEMORY),
+        Some(LANGUAGE_FRONTENDS),
+        Some(FRONTEND_CACHE_LIFETIMES),
+    ] {
+        assert_eq!(
+            shard_should_run(FRONTEND_CACHE_ORIGINAL, selected),
+            Ok(false)
+        );
+    }
+    assert_eq!(
+        shard_should_run(FRONTEND_CACHE_ORIGINAL, Some(FRONTEND_CACHE_ORIGINAL)),
+        Ok(true)
+    );
+    assert_eq!(
+        shard_should_run(LANGUAGE_FRONTENDS, Some(FRONTEND_CACHE_ORIGINAL)),
+        Ok(false)
+    );
+    assert_eq!(
+        shard_should_run(FRONTEND_CACHE_LIFETIMES, Some(FRONTEND_CACHE_ORIGINAL)),
         Ok(false)
     );
 }

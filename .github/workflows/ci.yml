@@ -867,6 +867,7 @@ jobs:
             mode: memory
             filter: ""
             benchmark-shard: frontend-cache-lifetimes
+            paired-frontend-control: true
           - name: memory language frontends
             mode: memory
             filter: ""
@@ -893,6 +894,7 @@ jobs:
             benchmark-shard: query
     env:
       BENCHMARK_FILTER: ${{ matrix.filter }}
+      PAIRED_FRONTEND_CONTROL: ${{ matrix.paired-frontend-control || false }}
       BENCHMARK_SELECTED: ${{ needs.changes.outputs.benchmark-scope == 'all' || contains(needs.changes.outputs.benchmark-scope, matrix.benchmark-shard) }}
       CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
       NO_MISTAKES_BENCH_SHARD: ${{ matrix.benchmark-shard }}
@@ -971,7 +973,19 @@ jobs:
               echo "Expected one benchmark executable, found ${#benchmarks[@]}" >&2
               exit 1
             fi
-            if [[ -n "$BENCHMARK_FILTER" ]]; then
+            if [[ "$PAIRED_FRONTEND_CONTROL" == "true" ]]; then
+              binary_sha="$(sha256sum "${benchmarks[0]}" | cut -d ' ' -f 1)"
+              printf 'frontend-pair binary-sha256=%s checkout=%s archive-sha256=%s rayon=%s arch=%s\n' \
+                "$binary_sha" "$(git rev-parse HEAD)" "${{ needs.bench.outputs.sha256 }}" "$RAYON_NUM_THREADS" "$(uname -m)"
+              printf 'frontend-pair image=%s/%s kernel=%s\n' "${ImageOS:-unknown}" "${ImageVersion:-unknown}" "$(uname -r)"
+              # Separate fresh processes, one VM, one frozen executable. The alias
+              # retains the original preflights/iter workload under a distinct URI.
+              NO_MISTAKES_BENCH_SHARD=frontend-cache-original "${benchmarks[0]}" 'frontend_cache_original_control::extract$'
+              NO_MISTAKES_BENCH_SHARD=frontend-cache-lifetimes "${benchmarks[0]}"
+              after_sha="$(sha256sum "${benchmarks[0]}" | cut -d ' ' -f 1)"
+              [[ "$binary_sha" == "$after_sha" ]] || { echo 'Frontend pair binary changed' >&2; exit 1; }
+              printf 'frontend-pair verified-binary-sha256=%s\n' "$after_sha"
+            elif [[ -n "$BENCHMARK_FILTER" ]]; then
               "${benchmarks[0]}" "$BENCHMARK_FILTER"
             else
               "${benchmarks[0]}"

@@ -21,7 +21,7 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
     // Keep this wrapper stable: criterion_group includes its name in CodSpeed
     // identities. The shard gates only isolate setup and measurement work.
     if shard::should_run(shard::LANGUAGE_FRONTENDS) {
-        register_language_frontends(c);
+        register_language_frontends(c, "language_frontends");
     }
 
     if shard::should_run(shard::NATIVE_FRONTENDS) {
@@ -29,7 +29,7 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
     }
 }
 
-fn register_language_frontends(c: &mut Criterion) {
+pub(super) fn register_language_frontends(c: &mut Criterion, group_name: &str) {
     let fixture = language_frontend_fixture();
     let facts = collect_language_frontend_facts(&fixture);
     let edges = collect_language_frontend_edges(&fixture);
@@ -67,7 +67,7 @@ fn register_language_frontends(c: &mut Criterion) {
         "language-frontend glob preflight drifted: {globs:?}"
     );
 
-    let mut group = c.benchmark_group("language_frontends");
+    let mut group = c.benchmark_group(group_name);
     group.throughput(Throughput::Elements(
         EXPECTED_LANGUAGE_FRONTEND_FILES as u64,
     ));

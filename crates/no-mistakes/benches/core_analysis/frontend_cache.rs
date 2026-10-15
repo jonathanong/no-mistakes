@@ -27,6 +27,11 @@ fn verify(summary: LanguageFrontendSummary) {
 
 #[cfg(codspeed)]
 pub(super) fn bench_frontend_cache_lifetimes(c: &mut Criterion) {
+    if shard::should_run(shard::FRONTEND_CACHE_ORIGINAL) {
+        // Naming-only alias: exactly the original preflights and iter workload.
+        register_language_frontends(c, "frontend_cache_original_control");
+        return;
+    }
     if !shard::should_run(shard::FRONTEND_CACHE_LIFETIMES) {
         return;
     }
@@ -45,9 +50,23 @@ pub(super) fn bench_frontend_cache_lifetimes(c: &mut Criterion) {
             lifecycle.cold_collections, lifecycle.broadcast_workers, lifecycle.warm_collections
         );
     });
-    group.bench_function("warm_after_worker_broadcast", |b| {
-        for summary in lifecycle.exercise_workers() {
+    group.bench_function("worker_broadcast_transition", |b| {
+        let mut observed = None;
+        b.iter_manual_unstable(IterManualOptions::new(), || {
+            observed = Some(black_box(lifecycle.exercise_workers()));
+        });
+        for summary in observed.expect("broadcast measurement did not execute") {
             verify(summary);
+        }
+        println!(
+            "frontend-cache-ledger cold={} broadcast={:?} warm={}",
+            lifecycle.cold_collections, lifecycle.broadcast_workers, lifecycle.warm_collections
+        );
+    });
+    group.bench_function("warm_after_worker_broadcast", |b| {
+        if lifecycle.broadcast_workers.is_empty() {
+            eprintln!("warm_after_worker_broadcast unavailable: measured worker_broadcast_transition was filtered out; no hidden preparation executed");
+            return;
         }
         let mut observed = None;
         b.iter_manual_unstable(IterManualOptions::new(), || {
@@ -64,7 +83,9 @@ pub(super) fn bench_frontend_cache_lifetimes(c: &mut Criterion) {
 
 #[cfg(not(codspeed))]
 pub(super) fn bench_frontend_cache_lifetimes(_c: &mut Criterion) {
-    if shard::should_run(shard::FRONTEND_CACHE_LIFETIMES) {
+    if shard::should_run(shard::FRONTEND_CACHE_LIFETIMES)
+        || shard::should_run(shard::FRONTEND_CACHE_ORIGINAL)
+    {
         eprintln!("frontend-cache-lifetimes unavailable: requires isolated CodSpeed instrumentation; no collections executed");
     }
 }
