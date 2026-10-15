@@ -1,14 +1,19 @@
 /// A leaf callable identity. Alternative sets cannot contain nested sets.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum KnownCallTarget {
-    Global { name: String },
+    Global {
+        name: String,
+    },
     ModuleExport {
         specifier: String,
         export_path: String,
         repository_target: Option<(std::path::PathBuf, String)>,
         callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
     },
-    RepositoryFunction { file: std::path::PathBuf, scope: String },
+    RepositoryFunction {
+        file: std::path::PathBuf,
+        scope: String,
+    },
 }
 
 /// A callable candidate and its existing canonical repository node, if any.
@@ -30,14 +35,19 @@ pub struct ResolvedCallAlternatives {
 /// Borrowed target identity; ordinary iteration does not clone names or paths.
 #[derive(Debug, Clone, Copy)]
 pub enum KnownCallTargetRef<'a> {
-    Global { name: &'a str },
+    Global {
+        name: &'a str,
+    },
     ModuleExport {
         specifier: &'a str,
         export_path: &'a str,
         repository_target: Option<(&'a std::path::Path, &'a str)>,
         callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
     },
-    RepositoryFunction { file: &'a std::path::Path, scope: &'a str },
+    RepositoryFunction {
+        file: &'a std::path::Path,
+        scope: &'a str,
+    },
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -50,13 +60,22 @@ impl KnownCallTarget {
     pub fn as_ref(&self) -> KnownCallTargetRef<'_> {
         match self {
             Self::Global { name } => KnownCallTargetRef::Global { name },
-            Self::ModuleExport { specifier, export_path, repository_target, callable_id } => {
-                KnownCallTargetRef::ModuleExport {
-                    specifier, export_path, callable_id: *callable_id,
-                    repository_target: repository_target.as_ref().map(|(file, scope)| (file.as_path(), scope.as_str())),
-                }
+            Self::ModuleExport {
+                specifier,
+                export_path,
+                repository_target,
+                callable_id,
+            } => KnownCallTargetRef::ModuleExport {
+                specifier,
+                export_path,
+                callable_id: *callable_id,
+                repository_target: repository_target
+                    .as_ref()
+                    .map(|(file, scope)| (file.as_path(), scope.as_str())),
+            },
+            Self::RepositoryFunction { file, scope } => {
+                KnownCallTargetRef::RepositoryFunction { file, scope }
             }
-            Self::RepositoryFunction { file, scope } => KnownCallTargetRef::RepositoryFunction { file, scope },
         }
     }
 }
@@ -65,13 +84,22 @@ impl ResolvedCallTarget {
     pub fn as_known(&self) -> Option<KnownCallTargetRef<'_>> {
         Some(match self {
             Self::Global { name } => KnownCallTargetRef::Global { name },
-            Self::ModuleExport { specifier, export_path, repository_target, callable_id } => {
-                KnownCallTargetRef::ModuleExport {
-                    specifier, export_path, callable_id: *callable_id,
-                    repository_target: repository_target.as_ref().map(|(file, scope)| (file.as_path(), scope.as_str())),
-                }
+            Self::ModuleExport {
+                specifier,
+                export_path,
+                repository_target,
+                callable_id,
+            } => KnownCallTargetRef::ModuleExport {
+                specifier,
+                export_path,
+                callable_id: *callable_id,
+                repository_target: repository_target
+                    .as_ref()
+                    .map(|(file, scope)| (file.as_path(), scope.as_str())),
+            },
+            Self::RepositoryFunction { file, scope } => {
+                KnownCallTargetRef::RepositoryFunction { file, scope }
             }
-            Self::RepositoryFunction { file, scope } => KnownCallTargetRef::RepositoryFunction { file, scope },
             Self::Unknown | Self::Alternatives(_) => return None,
         })
     }
@@ -86,9 +114,14 @@ pub struct ResolvedCallTargets<'a> {
 impl<'a> Iterator for ResolvedCallTargets<'a> {
     type Item = ResolvedCallCandidateRef<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.single.take().or_else(|| self.alternatives.next().map(|candidate| {
-            ResolvedCallCandidateRef { target: candidate.target.as_ref(), node: candidate.node.as_ref() }
-        }))
+        self.single.take().or_else(|| {
+            self.alternatives
+                .next()
+                .map(|candidate| ResolvedCallCandidateRef {
+                    target: candidate.target.as_ref(),
+                    node: candidate.node.as_ref(),
+                })
+        })
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         let length = usize::from(self.single.is_some()) + self.alternatives.len();
@@ -100,10 +133,19 @@ impl ExactSizeIterator for ResolvedCallTargets<'_> {}
 impl ResolvedCallSite {
     pub fn targets(&self) -> ResolvedCallTargets<'_> {
         if let ResolvedCallTarget::Alternatives(alternatives) = &self.target {
-            ResolvedCallTargets { single: None, alternatives: alternatives.known.iter() }
+            ResolvedCallTargets {
+                single: None,
+                alternatives: alternatives.known.iter(),
+            }
         } else {
             ResolvedCallTargets {
-                single: self.target.as_known().map(|target| ResolvedCallCandidateRef { target, node: self.target_node.as_ref() }),
+                single: self
+                    .target
+                    .as_known()
+                    .map(|target| ResolvedCallCandidateRef {
+                        target,
+                        node: self.target_node.as_ref(),
+                    }),
                 alternatives: [].iter(),
             }
         }

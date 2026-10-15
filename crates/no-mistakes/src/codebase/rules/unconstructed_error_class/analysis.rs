@@ -1,6 +1,6 @@
 use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::dependencies::graph::{
-    ClassDeclaration, DepGraph, EdgeKind, NodeId, ResolvedCallSite, KnownCallTargetRef,
+    ClassDeclaration, DepGraph, EdgeKind, KnownCallTargetRef, NodeId, ResolvedCallSite,
 };
 use crate::fx::{fx_map, FxHashMap};
 use std::path::Path;
@@ -45,14 +45,25 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
 
 /// Possible constructed classes, credited without duplicating source calls.
 fn constructed_classes(site: &ResolvedCallSite) -> impl Iterator<Item = ClassKey<'_>> {
-    site.targets().filter_map(|candidate| match candidate.target {
-        KnownCallTargetRef::RepositoryFunction { file, scope }
-        | KnownCallTargetRef::ModuleExport { repository_target: Some((file, scope)), .. } => Some((file, scope)),
-        _ => None,
-    }).chain(site.has_unknown_target().then(|| {
-        site.caller.as_deref().and_then(|caller| caller.split('/').next())
-            .map(|scope| (site.file.as_path(), scope))
-    }).flatten())
+    site.targets()
+        .filter_map(|candidate| match candidate.target {
+            KnownCallTargetRef::RepositoryFunction { file, scope }
+            | KnownCallTargetRef::ModuleExport {
+                repository_target: Some((file, scope)),
+                ..
+            } => Some((file, scope)),
+            _ => None,
+        })
+        .chain(
+            site.has_unknown_target()
+                .then(|| {
+                    site.caller
+                        .as_deref()
+                        .and_then(|caller| caller.split('/').next())
+                        .map(|scope| (site.file.as_path(), scope))
+                })
+                .flatten(),
+        )
 }
 
 /// A repository class an `Extends` edge names: its file and display scope, and

@@ -45,8 +45,12 @@ fn target_matches(root: &Path, selector: &Target, site: &ResolvedCallSite) -> bo
         return site.source_callee == selector.exact;
     }
     if let Target::Terminal(selector) = selector {
-        if site.has_unknown_target() && site.source_callee.rsplit_once('.')
-            .is_some_and(|(_, terminal)| terminal == selector.terminal) {
+        if site.has_unknown_target()
+            && site
+                .source_callee
+                .rsplit_once('.')
+                .is_some_and(|(_, terminal)| terminal == selector.terminal)
+        {
             return true;
         }
     }
@@ -72,8 +76,12 @@ fn target_matches(root: &Path, selector: &Target, site: &ResolvedCallSite) -> bo
 fn terminal_name(target: KnownCallTargetRef<'_>) -> &str {
     match target {
         KnownCallTargetRef::Global { name } => name.rsplit('.').next().unwrap_or(name),
-        KnownCallTargetRef::ModuleExport { export_path, .. } => export_path.rsplit('.').next().unwrap_or(export_path),
-        KnownCallTargetRef::RepositoryFunction { scope, .. } => scope.rsplit('/').next().unwrap_or(scope),
+        KnownCallTargetRef::ModuleExport { export_path, .. } => {
+            export_path.rsplit('.').next().unwrap_or(export_path)
+        }
+        KnownCallTargetRef::RepositoryFunction { scope, .. } => {
+            scope.rsplit('/').next().unwrap_or(scope)
+        }
     }
 }
 fn describe_target(selector: &Target) -> String {

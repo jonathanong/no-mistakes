@@ -1,11 +1,18 @@
-fn record_eager_require(collector: &mut ImportCollector, specifier: &str, kind: ImportKind, computed: bool) {
+fn record_eager_require(
+    collector: &mut ImportCollector,
+    specifier: &str,
+    kind: ImportKind,
+    computed: bool,
+) {
     if kind == ImportKind::Require
         && !computed
         && collector.function_stack.is_empty()
         && collector.current_function_id().is_none()
         && !collector.conditional_execution
     {
-        collector.eager_require_specifiers.insert(specifier.to_string());
+        collector
+            .eager_require_specifiers
+            .insert(specifier.to_string());
     }
 }
 
@@ -14,7 +21,9 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
-    if conditional { collector.invalidate_replacement_execution(); }
+    if conditional {
+        collector.invalidate_replacement_execution();
+    }
     let previous = collector.conditional_execution;
     collector.conditional_execution |= conditional;
     visit(collector);
@@ -45,7 +54,10 @@ fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {
     }
 }
 
-fn visit_if_with_execution<'a>(collector: &mut ImportCollector, statement: &oxc_ast::ast::IfStatement<'a>) {
+fn visit_if_with_execution<'a>(
+    collector: &mut ImportCollector,
+    statement: &oxc_ast::ast::IfStatement<'a>,
+) {
     collector.visit_expression(&statement.test);
     let truthy = literal_truthiness(&statement.test);
     with_conditional_execution(collector, truthy != Some(true), |collector| {
@@ -58,7 +70,10 @@ fn visit_if_with_execution<'a>(collector: &mut ImportCollector, statement: &oxc_
     }
 }
 
-fn visit_conditional_with_execution<'a>(collector: &mut ImportCollector, expression: &oxc_ast::ast::ConditionalExpression<'a>) {
+fn visit_conditional_with_execution<'a>(
+    collector: &mut ImportCollector,
+    expression: &oxc_ast::ast::ConditionalExpression<'a>,
+) {
     collector.visit_expression(&expression.test);
     let truthy = literal_truthiness(&expression.test);
     with_conditional_execution(collector, truthy != Some(true), |collector| {
@@ -69,7 +84,10 @@ fn visit_conditional_with_execution<'a>(collector: &mut ImportCollector, express
     });
 }
 
-fn visit_logical_with_execution<'a>(collector: &mut ImportCollector, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+fn visit_logical_with_execution<'a>(
+    collector: &mut ImportCollector,
+    expression: &oxc_ast::ast::LogicalExpression<'a>,
+) {
     collector.visit_expression(&expression.left);
     let unconditional = match expression.operator {
         oxc_ast::ast::LogicalOperator::And => literal_truthiness(&expression.left) == Some(true),

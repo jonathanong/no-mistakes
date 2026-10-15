@@ -32,11 +32,9 @@ fn configured_types_and_factory_members_preserve_exact_binding_provenance() {
         ],
         "{findings:#?}"
     );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.message.contains("transaction client only"))
-    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.message.contains("transaction client only")));
 }
 
 #[test]

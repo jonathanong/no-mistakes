@@ -62,11 +62,9 @@ fn configured_baseline_and_effect_categories_preserve_occurrences() {
     let run =
         |name| crate::codebase::rules::run_check(&root, Some(&root.join(name)), None).unwrap();
     let allowed = run("allow.yml");
-    assert!(
-        !allowed
-            .iter()
-            .any(|finding| finding.file == "src/entry.mts" && finding.line == 5)
-    );
+    assert!(!allowed
+        .iter()
+        .any(|finding| finding.file == "src/entry.mts" && finding.line == 5));
     assert!(!allowed.iter().any(
         |finding| finding.file == "src/entry.mts" && finding.import.as_deref() == Some("read")
     ));
@@ -77,19 +75,15 @@ fn configured_baseline_and_effect_categories_preserve_occurrences() {
         "{allowed:#?}"
     );
     assert_eq!(run("category.yml"), run(".no-mistakes.yml"));
-    assert!(
-        run("filtered.yml")
-            .iter()
-            .all(|finding| finding.file == "src/entry.mts")
-    );
+    assert!(run("filtered.yml")
+        .iter()
+        .all(|finding| finding.file == "src/entry.mts"));
     assert!(run("disabled.yml").is_empty());
     let unknown = crate::codebase::rules::run_check(&root, Some(&root.join("unknown.yml")), None)
         .unwrap_err();
-    assert!(
-        unknown
-            .to_string()
-            .contains("unknown effects kind `absent`")
-    );
+    assert!(unknown
+        .to_string()
+        .contains("unknown effects kind `absent`"));
     for name in [
         "missing.yml",
         "unknown.yml",
@@ -148,27 +142,19 @@ fn transaction_only_and_alternate_batch_paths_have_distinct_diagnostics() {
             })
             .unwrap()
     };
-    assert!(
-        lookup("transactional")
-            .message
-            .contains("transaction client only")
-    );
+    assert!(lookup("transactional")
+        .message
+        .contains("transaction client only"));
     assert!(!lookup("mixed").message.contains("transaction client only"));
-    assert!(
-        lookup("batchAndRead")
-            .message
-            .contains("batchAndRead → read")
-    );
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| matches!(finding.import.as_deref(), Some("batchAlias" | "onlyBatch")))
-    );
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| finding.file == "src/disabled.mts")
-    );
+    assert!(lookup("batchAndRead")
+        .message
+        .contains("batchAndRead → read"));
+    assert!(!findings
+        .iter()
+        .any(|finding| matches!(finding.import.as_deref(), Some("batchAlias" | "onlyBatch"))));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "src/disabled.mts"));
     assert_eq!(node_label(&NodeId::file("module.mts")), "module");
 }
 #[test]
@@ -200,25 +186,19 @@ fn per_item_metadata_is_explicit_demand_and_display_roots_remain_supported() {
 #[test]
 fn batch_wrappers_do_not_exempt_eager_queries_or_shadowed_aliases() {
     let findings = crate::codebase::rules::run_check(&root(), None, None).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file == "src/entry.mts" && finding.line == 60)
-    );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file == "src/entry.mts" && finding.line == 63)
-    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "src/entry.mts" && finding.line == 60));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "src/entry.mts" && finding.line == 63));
     // The loop header is evaluated before the per-item body; only the helper
     // invocation in the body should be reported on this source line.
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| finding.file == "src/entry.mts"
-                && finding.line == 68
-                && finding.import.as_deref() == Some("read"))
-    );
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "src/entry.mts"
+            && finding.line == 68
+            && finding.import.as_deref() == Some("read")));
 }
 #[test]
 fn repeated_calls_and_named_callbacks_on_one_line_remain_distinct() {
@@ -236,13 +216,11 @@ fn repeated_calls_and_named_callbacks_on_one_line_remain_distinct() {
 #[test]
 fn statically_named_configured_member_callbacks_are_effect_occurrences() {
     let findings = crate::codebase::rules::run_check(&root(), None, None).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file == "src/entry.mts"
-                && finding.line == 72
-                && finding.import.as_deref() == Some("client.read"))
-    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "src/entry.mts"
+            && finding.line == 72
+            && finding.import.as_deref() == Some("client.read")));
 }
 #[test]
 fn named_const_alias_callbacks_keep_their_actual_binding_use_offset() {
@@ -268,16 +246,12 @@ fn binding_targets_match_imports_callbacks_and_transitive_sinks_without_name_col
             .iter()
             .map(|finding| (finding.file.as_str(), finding.line))
             .collect::<Vec<_>>(),
-        [
-            11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29
-        ]
-        .map(|line| ("src/entry.mts", line))
+        [11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29]
+            .map(|line| ("src/entry.mts", line))
     );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.line == 28 && finding.message.contains("lookup → inner → load"))
-    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 28 && finding.message.contains("lookup → inner → load")));
     assert!(findings.iter().any(
         |finding| finding.line == 29 && finding.message.contains("cachedLookup → valkey.hget")
     ));
@@ -308,17 +282,12 @@ fn legacy_transaction_spellings_take_precedence_over_binding_targets() {
         crate::codebase::rules::run_check(&root, Some(&root.join("transaction.yml")), None)
             .unwrap();
     assert_eq!(findings.len(), 2, "{findings:#?}");
-    assert!(
-        findings.iter().any(
-            |finding| finding.line == 13 && finding.message.contains("transaction client only")
-        )
-    );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.line == 18
-                && !finding.message.contains("transaction client only"))
-    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 13 && finding.message.contains("transaction client only")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 18 && !finding.message.contains("transaction client only")));
 }
 
 #[test]
@@ -340,11 +309,9 @@ fn adding_binding_targets_retains_legacy_lists_without_duplicate_occurrences() {
 fn callback_occurrences_keep_their_own_bindings_within_one_caller() {
     let root = root().with_file_name("callbacks-fixture");
     let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.file == "src/entry.mts")
-    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == "src/entry.mts"));
     assert_eq!(
         findings
             .iter()
@@ -365,14 +332,12 @@ fn callback_occurrences_keep_their_own_bindings_within_one_caller() {
         .collect::<Vec<_>>();
     assert!(repeated[0].message.ends_with("(occurrence 1)"));
     assert!(repeated[1].message.ends_with("(occurrence 2)"));
-    assert!(
-        findings
-            .iter()
-            .find(|finding| finding.line == 29)
-            .unwrap()
-            .message
-            .contains("map callback")
-    );
+    assert!(findings
+        .iter()
+        .find(|finding| finding.line == 29)
+        .unwrap()
+        .message
+        .contains("map callback"));
 }
 
 #[path = "tests/projections.rs"]

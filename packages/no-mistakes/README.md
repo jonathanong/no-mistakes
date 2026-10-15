@@ -200,7 +200,6 @@ See the full documentation in [docs/](../../docs/README.md), the
 [Node/N-API guide](../../docs/node-api.md). Agents can use the compact
 [packaged skill](../../skills/no-mistakes/SKILL.md).
 
-
 The async `effects()` report keeps one row per physical call occurrence. Multiple
 configured callable/category matches appear in optional `alternatives` using the
 exported `EffectCallAlternative` type; singleton rows omit it. Category filters

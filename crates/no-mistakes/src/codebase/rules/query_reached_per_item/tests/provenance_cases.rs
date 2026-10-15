@@ -51,11 +51,9 @@ fn returned_executor_selectors_mark_visible_factories_without_selecting_creation
         [8, 9],
         "{findings:#?}"
     );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.message.contains("transaction client only"))
-    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.message.contains("transaction client only")));
 }
 
 #[test]
@@ -75,12 +73,10 @@ fn review_regressions_preserve_call_inputs_returns_mutations_and_factory_origins
         [9, 25, 26, 28],
         "{findings:#?}"
     );
-    assert!(
-        review
-            .iter()
-            .filter(|finding| finding.line != 9)
-            .all(|finding| finding.message.contains("transaction client only"))
-    );
+    assert!(review
+        .iter()
+        .filter(|finding| finding.line != 9)
+        .all(|finding| finding.message.contains("transaction client only")));
     let wrapper =
         crate::codebase::rules::run_check(&root, Some(&root.join("wrapper-only.yml")), None)
             .unwrap();

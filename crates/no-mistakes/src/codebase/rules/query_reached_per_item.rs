@@ -11,8 +11,8 @@ use std::path::Path;
 mod config;
 mod traces;
 pub(crate) use config::graph_plan;
-use config::{Options, Sinks, exempt};
-use traces::{Reach, source_node};
+use config::{exempt, Options, Sinks};
+use traces::{source_node, Reach};
 
 pub const RULE_ID: &str = "query-reached-per-item";
 

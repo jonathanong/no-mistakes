@@ -2,8 +2,8 @@ use super::RULE_ID;
 use crate::codebase::dependencies::graph::{
     GraphBuildPlan, KnownCallTargetRef, ResolvedCallSite, ResolvedCallTarget,
 };
-use crate::config::v2::{NoMistakesConfig, schema::EffectKindConfig};
-use anyhow::{Result, bail};
+use crate::config::v2::{schema::EffectKindConfig, NoMistakesConfig};
+use anyhow::{bail, Result};
 use serde::Deserialize;
 
 #[derive(Default, Deserialize)]

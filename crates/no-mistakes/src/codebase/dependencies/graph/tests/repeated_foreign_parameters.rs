@@ -68,10 +68,8 @@ fn repeated_foreign_default_agreement_is_cached_once_for_all_reads() {
         .filter(|site| site.source_callee == "outside" || site.source_callee.starts_with("method"))
         .collect();
     assert_eq!(reads.len(), 129);
-    assert!(
-        reads
-            .iter()
-            .all(|site| site.has_unknown_target() && site.targets().next().is_none())
-    );
+    assert!(reads
+        .iter()
+        .all(|site| site.has_unknown_target() && site.targets().next().is_none()));
     assert_eq!(benchmark_probe_parameter_agreements(), 1);
 }

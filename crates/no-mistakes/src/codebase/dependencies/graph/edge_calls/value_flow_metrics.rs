@@ -35,4 +35,4 @@ pub fn dependency_links() -> usize {
 #[path = "replacement_probe.rs"]
 mod replacements;
 pub use replacements::*;
-pub(super) use replacements::{ReplacementLookupProbe, record_replacements};
+pub(super) use replacements::{record_replacements, ReplacementLookupProbe};

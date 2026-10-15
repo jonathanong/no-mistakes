@@ -80,9 +80,7 @@ fn sites_for_file(
         .call_sites_in_file(path)
         .iter()
         .filter(|site| site.invocation == InvocationKind::Call)
-        .filter(|site| {
-            site.target_nodes().any(|node| targets.contains(node))
-        })
+        .filter(|site| site.target_nodes().any(|node| targets.contains(node)))
         .map(|site| site.offset)
         .collect();
     facts

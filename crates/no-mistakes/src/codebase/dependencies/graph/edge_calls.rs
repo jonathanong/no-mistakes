@@ -62,7 +62,7 @@ struct ResolvedLocalCallee {
 include!("edge_calls/index_build.rs");
 #[path = "edge_calls/value_flow.rs"]
 mod value_flow;
-use value_flow::{FlowFileIndex, refine_value_calls};
+use value_flow::{refine_value_calls, FlowFileIndex};
 include!("edge_calls/scoped_names.rs");
 include!("edge_calls/namespace_table.rs");
 
@@ -227,7 +227,7 @@ pub use value_flow_metrics::dependency_links as benchmark_probe_parameter_depend
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::{
-    ReplacementIncomingProbe, ReplacementPhysicalProbe, ReplacementProbeSnapshot,
-    ReplacementRhsProbe, ReplacementSourceCallProbe,
-    replacement_snapshot as benchmark_probe_replacements,
+    replacement_snapshot as benchmark_probe_replacements, ReplacementIncomingProbe,
+    ReplacementPhysicalProbe, ReplacementProbeSnapshot, ReplacementRhsProbe,
+    ReplacementSourceCallProbe,
 };

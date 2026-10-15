@@ -195,24 +195,20 @@ fn repeated_replacement_repository_nodes_fan_out_once() {
     assert_eq!(nodes.len(), 1, "{site:#?}");
     let node = nodes[0];
     let source = NodeId::file(&root.join("src/repository.mts"));
-    assert!(
-        graph
-            .dependencies_of_node(&source)
-            .unwrap()
-            .iter()
-            .any(|(target, kind)| target == node && *kind == EdgeKind::Call)
-    );
+    assert!(graph
+        .dependencies_of_node(&source)
+        .unwrap()
+        .iter()
+        .any(|(target, kind)| target == node && *kind == EdgeKind::Call));
     let calls = graph.call_sites_in_file(&root.join("src/repository.mts"));
     let direct: Vec<_> = calls
         .iter()
         .filter(|site| site.source_callee == "replacement")
         .collect();
     assert_eq!(direct.len(), 2);
-    assert!(
-        direct
-            .iter()
-            .all(|site| site.target_nodes().any(|target| target == node))
-    );
+    assert!(direct
+        .iter()
+        .all(|site| site.target_nodes().any(|target| target == node)));
 }
 
 #[cfg(feature = "test-instrumentation")]
