@@ -40,6 +40,9 @@ pub struct ValueFlowFacts {
     /// Allocated overflow version buckets in mutable receiver traversals.
     #[cfg(feature = "test-instrumentation")]
     pub reference_version_table_capacity: usize,
+    /// Actual stores to earliest binding/parameter/callable invalidation offsets.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_invalidation_stores: usize,
     /// Sum of each mutation traversal's peak pending capacity, in entries.
     #[cfg(feature = "test-instrumentation")]
     pub reference_pending_capacity: usize,
