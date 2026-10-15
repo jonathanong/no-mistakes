@@ -128,3 +128,31 @@ fn saved_root_snapshot_insertion_orders() {
         }
     }
 }
+
+#[test]
+fn imported_terminal_identity_keeps_local_and_recovered_roots() {
+    for name in [
+        "mutable-import-local-recovery.mts",
+        "mutable-import-var-recovery.mts",
+        "mutable-import-local-shadow.mts",
+        "mutable-import-namespace-shadow.mts",
+    ] {
+        let source = mutable_receiver_source(name);
+        let facts = flow(&source);
+        assert_eq!(facts.receiver_only_owned_keys, 1, "{name}");
+        assert!(
+            facts
+                .receiver_mutations
+                .as_ref()
+                .and_then(|scopes| scopes.get(&0))
+                .and_then(|names| names.get("replica"))
+                .is_some_and(|history| history.assignment_invalidated(
+                    &["get"],
+                    source.len() as u32,
+                    None,
+                    false
+                )),
+            "{name}"
+        );
+    }
+}

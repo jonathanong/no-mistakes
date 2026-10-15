@@ -160,6 +160,9 @@ impl ImportCollector {
                 .and_then(|links| links.get(&key.0))
                 .and_then(|names| names.get(key.1.as_str()))
                 .is_none_or(|links| links.is_empty())
-            && !self.has_mutable_receiver_binding(key.0, &key.1)
+            && ((key.0 == 0
+                && self.imported_bindings.contains(&key.1)
+                && !self.has_lexical_binding_at(0, &key.1))
+                || !self.has_mutable_receiver_binding(key.0, &key.1))
     }
 }
