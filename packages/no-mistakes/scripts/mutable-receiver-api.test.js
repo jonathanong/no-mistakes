@@ -7,6 +7,8 @@ const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/p
 const config = join(root, "mutable-receivers.yml");
 // Each native CJS/ESM pair has its own existing runner deadline on slower CI hosts.
 for (const [name, expected] of [
+  ["terminal-receiver-history", 0],
+  ["terminal-import-with-unrelated-root", 0],
   ["mutable-let-pattern-static-var-conditional", 0],
   ["mutable-let-pattern-replaced-earlier-lhs", 1],
   ["mutable-let-pattern-replaced-rhs-rebind", 1],

@@ -31,6 +31,12 @@ pub struct ValueFlowFacts {
     pub reference_binding_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_root_probes: usize,
+    /// Proven terminal paths in the mutable-coordinate traversal.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_terminal_paths: usize,
+    /// Actual active/visited bookkeeping attempts, including rejected revisits.
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_successor_bookkeeping: usize,
     /// Sum of each mutation traversal's peak pending capacity, in entries.
     #[cfg(feature = "test-instrumentation")]
     pub reference_pending_capacity: usize,
