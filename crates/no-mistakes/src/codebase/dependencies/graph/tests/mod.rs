@@ -136,6 +136,7 @@ include!("call_site_index.rs");
 
 #[path = "repeated_foreign_parameters.rs"]
 mod repeated_foreign_parameters;
+mod repeated_replacement_controls;
 #[path = "value_flow_repeated_replacements.rs"]
 mod value_flow_repeated_replacements;
 #[path = "value_flow_worklist.rs"]
