@@ -255,3 +255,38 @@ fn callable_value_use_facts_exclude_bare_callees_and_stay_cold_without_demand() 
         }
     }
 }
+
+#[test]
+fn binding_repetition_is_local_to_each_initializer_execution_scope() {
+    let source = std::fs::read_to_string(
+        fixture("value-flow-receiver-evaluation-order")
+            .join("src/repeated-binding-acquisitions.mts"),
+    )
+    .unwrap();
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, oxc_span::SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    for enabled in [false, true] {
+        let facts = crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands(&parsed.program, &source, false, false, enabled);
+        if !enabled {
+            assert!(facts.value_flow.bindings.is_empty());
+            continue;
+        }
+        for (prefix, repeated) in [
+            ("saved = repeatedLocal.get", true),
+            ("saved = beforeLoop.get", false),
+            ("alias = earlySaved", true),
+            ("saved = deferredCopy.get", false),
+            ("saved = nestedLoop.get", true),
+            ("saved = loopInitializer.get", false),
+        ] {
+            let binding = facts
+                .value_flow
+                .bindings
+                .iter()
+                .find(|binding| source[binding.declared_at as usize..].starts_with(prefix))
+                .unwrap();
+            assert_eq!(binding.repeated, repeated, "{prefix}");
+        }
+    }
+}

@@ -53,6 +53,7 @@ impl ImportCollector {
                     name,
                     scope,
                     declared_at,
+                    repeated: self.repeat_depth > self.call_repeat_base,
                     invalidated_at: None,
                     mutation_contexts: fx_set(),
                     value,

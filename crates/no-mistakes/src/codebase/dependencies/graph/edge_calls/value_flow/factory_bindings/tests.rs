@@ -12,6 +12,7 @@ fn default_factory_and_alias_cycles_are_classified_conservatively() {
         name: "cycle".to_string(),
         scope: 0,
         declared_at: 0,
+        repeated: false,
         invalidated_at: None,
         mutation_contexts: fx_set(),
         value: ValueExpression::Named {

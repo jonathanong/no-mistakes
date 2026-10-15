@@ -64,7 +64,16 @@ impl ValueFlowResolution<'_, '_> {
             && Self::member_read_location(&binding.value).is_some_and(|(_, owner)| owner.is_none()))
             .then(|| (path.to_path_buf(), Self::member_read_location(&binding.value)
                 .expect("qualified static member initializer").0));
+        let previous_initializer = self.repeated_initializer.take();
+        self.repeated_initializer =
+            (binding.repeated && matches!(binding.value, ValueExpression::Member(..)))
+                .then(|| {
+                    let (offset, context) = Self::member_read_location(&binding.value)?;
+                    Some((self.inputs.graph_files.visible_path(path)?, offset, context))
+                })
+                .flatten();
         let value = self.value_projected(path, &binding.value, projection);
+        self.repeated_initializer = previous_initializer;
         self.module_snapshot = previous;
         value
     }

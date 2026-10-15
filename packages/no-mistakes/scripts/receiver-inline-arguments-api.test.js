@@ -31,3 +31,33 @@ test(
     ]);
   },
 );
+
+test(
+  "compiled repeated local method copies retain acquisition timing",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const options = {
+      root: join(
+        __dirname,
+        "../../../test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture",
+      ),
+      kind: "repeated-binding",
+      entry: "src/repeated-binding-acquisitions.mts",
+    };
+    const pending = cjs.effects(options);
+    assert.ok(pending instanceof Promise);
+    const report = await pending;
+    assert.deepEqual(await esm.effects(options), report);
+    assert.deepEqual(report.callSites.map((site) => [site.caller, site.callee]).sort(), [
+      ["takeAlias", "earlierAlias.get"],
+      ["takeBefore", "beforeLoop.get"],
+      ["takeDeferred", "deferredCopy.get"],
+      ["takeInitializer", "loopInitializer.get"],
+      ["takeModuleSavedAlias", "moduleSaved.get"],
+      ["takeSibling", "localSibling.set"],
+      ["takeUnrelated", "unrelatedCopy.get"],
+    ]);
+  },
+);

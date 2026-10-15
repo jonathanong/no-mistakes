@@ -52,7 +52,10 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
                     && line.is_none_or(|line| site.line == line)
             })
             .unwrap_or_else(|| panic!("{file} {caller:?} {callee}: {sites:?}"));
-        if file == "direct-inline-arguments" {
+        if matches!(
+            file,
+            "direct-inline-arguments" | "repeated-binding-acquisitions"
+        ) {
             assert_eq!(
                 site.invocation,
                 crate::codebase::dependencies::extract::InvocationKind::Call
@@ -91,6 +94,19 @@ fn imported_receiver_reads_follow_assignment_and_invocation_order() {
                 && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { scope: target, .. } if target == scope)
         }).collect::<Vec<_>>();
         assert_eq!(incoming.len(), 1, "{scope}: {direct:?}");
+        assert_eq!(
+            incoming[0].invocation,
+            crate::codebase::dependencies::extract::InvocationKind::Call
+        );
+        assert!(incoming[0].target_node.is_some(), "{scope}");
+    }
+    let repeated = graph.call_sites_in_file(&root.join("src/repeated-binding-acquisitions.mts"));
+    for (caller, scope) in [
+        (None, "runRepeated"),
+        (Some("runRepeated"), "runRepeated/takeRepeated"),
+    ] {
+        let incoming = repeated.iter().filter(|site| site.caller.as_deref() == caller && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { scope: target, .. } if target == scope)).collect::<Vec<_>>();
+        assert_eq!(incoming.len(), 1, "{scope}: {repeated:?}");
         assert_eq!(
             incoming[0].invocation,
             crate::codebase::dependencies::extract::InvocationKind::Call
