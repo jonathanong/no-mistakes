@@ -64,3 +64,42 @@ test(
     );
   },
 );
+
+test(
+  "compiled imported utility identity keeps both declaration orders",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const utilityRoot = join(root, "../imported-utility-order-fixture");
+    const entries = [
+      ["early.mts", [5]],
+      ["late.mts", [4]],
+      ["late-shapes.mts", [4, 9]],
+      ["shadows.mts", []],
+    ];
+    const reports = entries.map(([entry], index) => ({
+      type: "effects",
+      id: `utility-${index}`,
+      kind: "postgres",
+      entry,
+    }));
+    reports.push({ type: "check", id: "check" });
+    const pending = cjs.analyzeProject({ root: utilityRoot, reports });
+    assert.ok(pending instanceof Promise);
+    const report = await pending;
+    assert.deepEqual(await esm.analyzeProject({ root: utilityRoot, reports }), report);
+    for (const [index, [entry, lines]] of entries.entries()) {
+      const effects = report.reports.find((item) => item.id === `utility-${index}`).result;
+      assert.deepEqual(
+        effects.callSites.map((site) => site.line),
+        lines,
+        entry,
+      );
+      assert.ok(effects.callSites.every((site) => site.callee === "NonNullable"));
+    }
+    const check = report.reports.find((item) => item.id === "check").result;
+    assert.deepEqual(check.warnings, []);
+    assert.equal(check.rules.length, 4);
+  },
+);

@@ -61,10 +61,14 @@ impl ValueFlowResolution<'_, '_> {
                 },
                 guards,
             ),
-            ValueTypeSource::NonNullable(source) => self
-                .global_non_nullable(file, scope.lexical)?
-                .then(|| self.annotation_view(file, source, scope, guards))
-                .flatten(),
+            ValueTypeSource::NonNullable(source) => {
+                if self.global_non_nullable(file, scope.lexical)? {
+                    self.annotation_view(file, source, scope, guards)
+                } else {
+                    // A later import owns the wrapper itself, not its argument.
+                    self.annotation_reference_view(file, "NonNullable", scope, guards)
+                }
+            }
             ValueTypeSource::Indexed(base, member) => {
                 let base = self.annotation_view(file, base, scope, guards)?;
                 let AnnotationView::Object {

@@ -191,3 +191,41 @@ fn nullish_receipts_preserve_factory_member_bound_and_async_admission() {
         );
     }
 }
+
+#[test]
+fn imported_utility_owns_its_executor_identity_regardless_of_import_order() {
+    let root = projections_fixture().with_file_name("imported-utility-order-fixture");
+    for (entry, expected) in [
+        ("early.mts", vec![5]),
+        ("late.mts", vec![4]),
+        ("late-shapes.mts", vec![4, 9]),
+        ("shadows.mts", vec![]),
+    ] {
+        let report = crate::effects_query::run(
+            &root,
+            None,
+            None,
+            "postgres",
+            std::path::Path::new(entry),
+            &[],
+            None,
+        )
+        .unwrap();
+        assert_eq!(
+            report
+                .call_sites
+                .iter()
+                .map(|site| site.line)
+                .collect::<Vec<_>>(),
+            expected,
+            "{entry}: {report:#?}"
+        );
+        assert!(
+            report
+                .call_sites
+                .iter()
+                .all(|site| site.callee == "NonNullable"),
+            "{report:#?}"
+        );
+    }
+}
