@@ -48,9 +48,10 @@ Output shape:
 }
 ```
 
-`functions` and `categories` retain spelling-based matching: an aliased import
-called under another name is not matched, and a same-named local binding can
-match. Use `targets` for binding-aware matching by exact import `module` and
+`functions` and `categories` retain spelling-based matching for ordinary
+singleton calls: an aliased import called under another name is not matched,
+and a same-named local binding can match. Use `targets` for binding-aware
+matching by exact import `module` and
 `export` path. These selectors follow named/default imports, namespace members,
 and statically resolvable lexical aliases, while excluding shadowed bindings.
 `category` is optional; selectors without one are uncategorized. A target-only
@@ -119,6 +120,12 @@ match deterministically. Ordinary singleton rows omit `alternatives` and retain
 their existing shape and spelling-versus-target configuration precedence.
 Unknown candidates add no invented effects. Trusted typed/returned executor
 provenance is retained alongside matched callable alternatives.
+
+For callable alternatives, `functions` and `categories` also match retained
+export paths, including a plain imported name such as `read` after
+`receiver.get = read`. When a plain export also matches an explicit `targets`
+selector, that selector keeps its category; the configured name is a fallback.
+Ordinary singleton aliases retain their spelling-based matching policy.
 
 For example, one occurrence alternating between `primary.read` (read) and
 `replica.write` (write) produces one row with both alternatives and

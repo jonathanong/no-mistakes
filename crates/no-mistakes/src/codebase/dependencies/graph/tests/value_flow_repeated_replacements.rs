@@ -254,6 +254,7 @@ fn producer_probe_fixture(name: &str, calls: bool) -> ReplacementProbeSnapshot {
         &tsconfig,
         GraphBuildPlan {
             calls,
+            imports: true,
             ..Default::default()
         },
     )

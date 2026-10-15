@@ -72,6 +72,10 @@ impl<'a> Sinks<'a> {
         // Keep singleton trusted-provenance policy; alternatives must combine
         // every independently matched leaf before classifying the occurrence.
         let multiple = site.targets().len() > 1;
+        // Unknown possibilities add no query evidence, but a known plain
+        // export remains selectable without changing singleton precedence.
+        let alternative_identity =
+            multiple || (site.targets().len() > 0 && site.has_unknown_target());
         if !multiple && (provenance.is_some() || returned) {
             return Some(true);
         }
@@ -108,6 +112,11 @@ impl<'a> Sinks<'a> {
                         .get(specifier)
                         .is_some_and(|exports| exports.contains(export_path))
                         .then_some(false)
+                        .or_else(|| {
+                            alternative_identity
+                                .then(|| sink(self.config, export_path))
+                                .flatten()
+                        })
                 }
                 _ => None,
             })

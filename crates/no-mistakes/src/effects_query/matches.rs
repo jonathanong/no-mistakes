@@ -48,7 +48,7 @@ fn needs_resolved_effects(selection: &EffectsSelection) -> bool {
     !selection.targets.is_empty()
         || !selection.returned.is_empty()
         || !selection.provenance.is_empty()
-        || selection.names.keys().any(|name| name.contains('.'))
+        || !selection.names.is_empty()
 }
 
 fn visit_effect_matches(
@@ -79,6 +79,16 @@ fn visit_effect_matches(
                         .get(specifier)
                         .and_then(|exports| exports.get(export_path))
                         .map(effect_alternative)
+                })
+                // Explicit module categories keep precedence over a plain
+                // name admitted only by the alternatives projection.
+                .or_else(|| {
+                    selection.names.get(export_path).filter(|_| multiple).map(
+                        |category| EffectCallAlternative {
+                            callee: export_path.to_string(),
+                            category: category.clone(),
+                        },
+                    )
                 }),
             KnownCallTargetRef::RepositoryFunction { .. } => candidate
                 .node

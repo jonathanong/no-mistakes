@@ -144,10 +144,7 @@ pub fn run(
                     Ok(())
                 },
             graph_plan: |selection: &EffectsSelection| GraphBuildPlan {
-                calls: !selection.targets.is_empty()
-                    || !selection.returned.is_empty()
-                    || !selection.provenance.is_empty()
-                    || selection.names.keys().any(|name| name.contains('.')),
+                calls: needs_resolved_effects(selection),
                 effect_selectors: !selection.targets.is_empty(),
                 ..GraphBuildPlan::from_allowed(Some(&allowed))
             },

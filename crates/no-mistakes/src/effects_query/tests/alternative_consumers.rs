@@ -194,3 +194,100 @@ fn global_alternatives_match_configured_names_without_inventing_effects() {
         assert_eq!((site.line, site.offset), (original.line, original.offset));
     }
 }
+
+#[test]
+fn plain_import_alternatives_match_plain_only_function_and_category_requests() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/query-reached-per-item/plain-alternatives-fixture");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    for (kind, categories, expected_category) in [
+        ("database", vec![], None),
+        ("categorized", vec!["query".into()], Some("query")),
+    ] {
+        crate::ast::begin_parse_count(fixture.path());
+        let report = run(
+            fixture.path(),
+            None,
+            None,
+            kind,
+            Path::new("src/entry.mts"),
+            &categories,
+            None,
+        )
+        .unwrap();
+        let parses = crate::ast::finish_parse_count(fixture.path());
+        assert_eq!(
+            parses.get(&fixture.path().join("src/entry.mts")),
+            Some(&1),
+            "{parses:#?}"
+        );
+        assert_eq!(report.call_sites.len(), 1, "{report:#?}");
+        let site = &report.call_sites[0];
+        assert_eq!(
+            (site.file.as_str(), site.line, site.callee.as_str()),
+            ("src/entry.mts", 3, "read")
+        );
+        assert_eq!(site.category.as_deref(), expected_category);
+        assert!(site.alternatives.is_none());
+        assert_eq!(
+            report.by_category,
+            BTreeMap::from([(expected_category.unwrap_or("uncategorized").into(), 1)])
+        );
+    }
+    let other = run(
+        fixture.path(),
+        None,
+        None,
+        "categorized",
+        Path::new("src/entry.mts"),
+        &["other".into()],
+        None,
+    )
+    .unwrap();
+    assert_eq!(other.call_sites.len(), 1, "{other:#?}");
+    assert_eq!(
+        (
+            other.call_sites[0].line,
+            other.call_sites[0].callee.as_str()
+        ),
+        (6, "ignored")
+    );
+    assert_eq!(other.by_category, BTreeMap::from([("other".into(), 1)]));
+}
+
+#[test]
+fn plain_alternative_fallback_preserves_explicit_module_categories() {
+    let (_fixture, graph, config) = contract_fixture();
+    let original = graph
+        .resolved_call_sites()
+        .iter()
+        .find(|site| site.source_callee == "save")
+        .unwrap();
+    for (explicit, unknown, expected) in [
+        (true, false, vec![Some("storage")]),
+        (true, true, vec![Some("storage")]),
+        (false, false, vec![]),
+        (false, true, vec![None]),
+    ] {
+        let mut selection = selection_from_config(&config, "mixed", &[]).unwrap();
+        if !explicit {
+            selection.targets.clear();
+        }
+        let mut site = original.clone();
+        site.target = ResolvedCallTarget::Alternatives(std::sync::Arc::new(
+            ResolvedCallAlternatives::new(vec![module_write()], unknown),
+        ));
+        let mut matched = Vec::new();
+        visit_effect_matches(&selection, &site, &crate::fx::fx_map(), &mut |value| {
+            matched.push(value)
+        });
+        assert_eq!(
+            matched
+                .iter()
+                .map(|value| value.category.as_deref())
+                .collect::<Vec<_>>(),
+            expected
+        );
+        assert_eq!((site.line, site.offset), (original.line, original.offset));
+    }
+}

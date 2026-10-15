@@ -1,0 +1,13 @@
+effects:
+  database:
+    functions: [read]
+    transactionFunctions: [primary.transaction]
+  categorized:
+    categories:
+      query: [read]
+      other: [ignored]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [database]
