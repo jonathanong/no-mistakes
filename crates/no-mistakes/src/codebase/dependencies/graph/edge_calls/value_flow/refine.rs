@@ -25,6 +25,7 @@ fn refine_iteration(
         supers: data.supers,
         replacements: data.replacements,
         replacement_read: false,
+        nullish_memo: None,
         foreign_acquisition: false,
         used_parameters: fx_set(),
         parameters_enabled,
@@ -34,6 +35,7 @@ fn refine_iteration(
         calls_visiting: fx_set(),
         default_origins: None,
         acquisition_context: None,
+        parameter_frame: None,
         invocation_read: None,
         invocation_start: None,
         executing_read: None,
@@ -79,14 +81,21 @@ fn refine_iteration(
             continue;
         }
         flow.replacement_read = false;
+        flow.nullish_memo = None;
         let value = flow.value(&site.file, &call.callee);
         let mut value = value;
         loop {
             value = match value {
-                FlowValue::Annotated { executor, file, source } => {
-                    if let Some(origin) = flow.annotation_origin(&file, &source) { site.typed_from.push(origin); }
+                FlowValue::Annotated {
+                    executor,
+                    file,
+                    source,
+                } => {
+                    if let Some(origin) = flow.annotation_origin(&file, &source) {
+                        site.typed_from.push(origin);
+                    }
                     *executor
-                },
+                }
                 FlowValue::Provenance {
                     executor,
                     typed,
@@ -109,6 +118,9 @@ fn refine_iteration(
                     break;
                 }
             };
+        }
+        if matches!(value, FlowValue::Nullish(_)) {
+            value = flow.nullish_call_value(value, site);
         }
         if matches!(
             value,

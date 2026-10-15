@@ -162,6 +162,7 @@ impl ImportCollector {
 
     fn pop_function_scope(&mut self, pushed: bool) {
         if pushed {
+            self.capture_value_type_scope();
             self.function_stack.pop();
             self.function_id_stack.pop();
             self.var_scope_stack.pop();
@@ -217,6 +218,7 @@ impl ImportCollector {
 
     fn pop_lexical_scope(&mut self, pushed: bool) {
         if pushed {
+            self.capture_value_type_scope();
             self.local_stack.pop();
             self.lexical_scope_ids.pop();
             self.type_local_stack.pop();

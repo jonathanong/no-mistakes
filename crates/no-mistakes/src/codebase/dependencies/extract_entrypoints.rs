@@ -18,11 +18,21 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     source: &str,
     collect_resource_roots: bool,
 ) -> ImportFacts {
-    extract_import_facts_from_program_with_source_and_demands(program, source, collect_resource_roots, false, false)
+    extract_import_facts_from_program_with_source_and_demands(
+        program,
+        source,
+        collect_resource_roots,
+        false,
+        false,
+    )
 }
 
 pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
-    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
+    program: &Program<'_>,
+    source: &str,
+    collect_resource_roots: bool,
+    collect_per_item_calls: bool,
+    collect_value_flow: bool,
 ) -> ImportFacts {
     let mut collector = ImportCollector {
         collect_per_item_calls,
@@ -38,11 +48,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     // later declaration cannot make an earlier global-looking call resolve to
     // a built-in. This is collection from the already parsed Program, not a
     // second source pass.
-    collector.local_stack.push(fx_set());
-    collector.lexical_scope_ids.push(0);
-    collector.lexical_scope_parents.insert(0, None);
-    collector.next_lexical_scope_id = 1;
-    predeclare_program_value_bindings(&mut collector, program);
+    initialize_program_value_scope(&mut collector, program);
     let local_type_names = local_type_declaration_names(program);
     collector
         .exported_functions
@@ -58,6 +64,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     collector.materialize_deferred_simple_aliases();
     collector.finish_default_mutations();
     finish_callable_assignment_facts(&mut collector);
+    collector.capture_value_type_scope();
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids

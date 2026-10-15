@@ -333,6 +333,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   can also select call sites by imported callable parameter type or by a member
   of a receiver returned from an exact imported factory path. These selectors
   use call-site provenance and do not add separate graph edge kinds.
+  Static indexed annotations and agreeing contextual callback types supply effect
+  provenance without fabricating an ordinary callable target. Nullish branches
+  retain independent receipts and use the same canonical callable alternatives;
+  an unknown branch adds no target or edge.
 - `extends` edges are opt-in like `call`, but no `--relationship` value selects
   them: only a rule that reads class hierarchy asks the graph for them, through
   the build plan. The `dependencies` graph never builds them, so unfiltered

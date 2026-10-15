@@ -358,3 +358,6 @@ mod provenance_clients;
 mod provenance_cases;
 #[path = "tests/typed_projections.rs"]
 mod typed_projections;
+
+#[path = "tests/typed_projection_graph.rs"]
+mod typed_projection_graph;

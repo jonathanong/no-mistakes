@@ -124,7 +124,10 @@ For explicit imported callable parameter types, configure
 imported factory, configure `effects.<kind>.returnedMembers` with the exact
 factory export path and member path. Both selectors are opt-in and preserve
 category filtering; no type or method names are inferred. The async Node APIs
-`effects()`, `check()`, and `analyzeProject()` share these selectors.
+`effects()`, `check()`, and `analyzeProject()` share these selectors. Static indexed
+callable types, unshadowed global `NonNullable`, agreeing contextual callback
+annotations, and nullish executor branches preserve exact binding provenance;
+unknown branches never borrow a configured type identity.
 
 ```bash
 no-mistakes effects storage --entry src/server.ts --root . --format json

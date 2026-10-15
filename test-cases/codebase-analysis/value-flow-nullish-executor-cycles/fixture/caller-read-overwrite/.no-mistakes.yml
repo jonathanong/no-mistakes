@@ -1,0 +1,13 @@
+effects:
+  postgres:
+    targets:
+      - { module: './entry.mts', export: fallbackA }
+      - { module: './entry.mts', export: fallbackB }
+      - { module: './entry.mts', export: independent }
+    typedExecutors:
+      - { module: './types.mts', export: Executor }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

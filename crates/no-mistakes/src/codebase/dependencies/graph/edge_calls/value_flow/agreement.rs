@@ -5,7 +5,10 @@ struct Provenance {
     typed: Vec<(String, String)>,
     members: Vec<(String, String, String)>,
     factories: Vec<(String, String)>,
-    annotations: Vec<(std::path::PathBuf, std::sync::Arc<crate::codebase::dependencies::extract::ValueTypeSource>)>,
+    annotations: Vec<(
+        std::path::PathBuf,
+        std::sync::Arc<crate::codebase::dependencies::extract::ValueTypeSource>,
+    )>,
 }
 
 pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
@@ -20,7 +23,9 @@ pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
         if value != first {
             return FlowValue::Unknown;
         }
-        shared.annotations.retain(|origin| provenance.annotations.contains(origin));
+        shared
+            .annotations
+            .retain(|origin| provenance.annotations.contains(origin));
         shared
             .typed
             .retain(|origin| provenance.typed.contains(origin));
@@ -31,16 +36,23 @@ pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
             .factories
             .retain(|origin| provenance.factories.contains(origin));
     }
-    let mut result = if shared.typed.is_empty() && shared.members.is_empty() && shared.factories.is_empty() {
-        first
-    } else {
-        FlowValue::Provenance {
-            executor: Box::new(first), typed: shared.typed, members: shared.members,
-            receiver_factories: shared.factories,
-        }
-    };
+    let mut result =
+        if shared.typed.is_empty() && shared.members.is_empty() && shared.factories.is_empty() {
+            first
+        } else {
+            FlowValue::Provenance {
+                executor: Box::new(first),
+                typed: shared.typed,
+                members: shared.members,
+                receiver_factories: shared.factories,
+            }
+        };
     for (file, source) in shared.annotations {
-        result = FlowValue::Annotated { executor: Box::new(result), file, source };
+        result = FlowValue::Annotated {
+            executor: Box::new(result),
+            file,
+            source,
+        };
     }
     result
 }
@@ -49,10 +61,14 @@ pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
 // Only origins common to every input can select a configured effect afterward.
 fn normalize(value: FlowValue, provenance: &mut Provenance) -> FlowValue {
     match value {
-        FlowValue::Annotated { executor, file, source } => {
+        FlowValue::Annotated {
+            executor,
+            file,
+            source,
+        } => {
             provenance.annotations.push((file, source));
             normalize(*executor, provenance)
-        },
+        }
         FlowValue::Provenance {
             executor,
             typed,

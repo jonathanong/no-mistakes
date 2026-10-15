@@ -33,10 +33,18 @@ impl ValueFlowResolution<'_, '_> {
             self.used_parameters
                 .insert((path.to_path_buf(), parameter.owner));
         }
+        let binding = scoped_name(&file.values.bindings, scope, base);
+        if binding.is_some() {
+            self.record_nullish_guard(&key);
+        }
         if !self.visiting.insert(key.clone()) {
+            // Binding receipts validate exact ancestor membership. Other guard
+            // kinds retain the conservative cycle-publication veto.
+            if binding.is_none() {
+                self.mark_nullish_cycle();
+            }
             return FlowValue::Unknown;
         }
-        let binding = scoped_name(&file.values.bindings, scope, base);
         let value = if let Some(binding) = binding {
             self.binding_value(
                 path,

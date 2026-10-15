@@ -24,7 +24,10 @@ impl ValueFlowResolution<'_, '_> {
         };
         let cached = match self.cache.acquire(key) {
             CacheAccess::Ready(value) => value,
-            CacheAccess::Cycle => return FlowValue::Unknown,
+            CacheAccess::Cycle => {
+                self.mark_nullish_cycle();
+                return FlowValue::Unknown;
+            }
             CacheAccess::Compute(lease) => {
                 let mut flow = ValueFlowResolution {
                     inputs: self.inputs,
@@ -35,6 +38,7 @@ impl ValueFlowResolution<'_, '_> {
                     supers: self.supers,
                     replacements: self.replacements,
                     replacement_read: false,
+                    nullish_memo: self.nullish_memo.clone(),
                     // Agreement values depend only on indexed incoming sources,
                     // never on the ambient query which first fills the cache.
                     foreign_acquisition: false,
@@ -46,6 +50,8 @@ impl ValueFlowResolution<'_, '_> {
                     calls_visiting: fx_set(),
                     default_origins: None,
                     acquisition_context: None,
+                    // Preserve the entry key even when caller-read receipts advance.
+                    parameter_frame: lease.parameter_key(),
                     invocation_read: self.invocation_read.clone(),
                     invocation_start: self.invocation_start,
                     executing_read: None,
@@ -65,10 +71,11 @@ impl ValueFlowResolution<'_, '_> {
                     value,
                     origins: flow.default_origins,
                 });
+                let dependencies = flow.used_parameters;
                 lease.publish(
                     std::sync::Arc::clone(&cached),
                     (path.to_path_buf(), parameter.owner),
-                    flow.used_parameters,
+                    dependencies,
                 );
                 cached
             }

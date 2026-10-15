@@ -159,6 +159,8 @@ fn collect_call_edges_for_core(
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_parameters(pass.parameter_cache.computations());
     #[cfg(feature = "test-instrumentation")]
+    value_flow_metrics::record_nullish_work(pass.parameter_cache.nullish_work());
+    #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_origins(pass.parameter_cache.origin_nodes());
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_execution_steps(pass.parameter_cache.execution_steps());
