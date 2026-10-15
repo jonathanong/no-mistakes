@@ -31,6 +31,11 @@ fn root_rebinding_is_scoped_and_monotone() {
     assert!(effects.rebound.is_none());
     effects.rebind(1, "holder");
     effects.rebind(1, "holder");
+    #[cfg(feature = "test-instrumentation")]
+    {
+        assert_eq!(effects.rebind_calls, 2);
+        assert_eq!(effects.rebind_name_allocations, 1);
+    }
     assert!(effects.rebound(1, "holder"));
     assert!(!effects.rebound(0, "holder"));
     assert!(!effects.rebound(1, "sibling"));

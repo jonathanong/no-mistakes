@@ -1,6 +1,36 @@
 use super::*;
 
 #[test]
+fn mutable_root_snapshots_bound_origin_projection_work() {
+    let source = mutable_receiver_source("mutable-root-scale.mts");
+    let allocator = Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let facts = extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program,
+        &source,
+        false,
+        false,
+        true,
+    );
+    let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
+    assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
+    assert!(!facts
+        .value_flow
+        .bindings
+        .iter()
+        .any(|binding| binding.name == "box"));
+    assert_eq!(facts.value_flow.receiver_only_origins, 129);
+    assert_eq!(facts.value_flow.receiver_only_nodes, 129);
+    assert!(facts.value_flow.receiver_only_lookups <= 3 * 128);
+    assert_eq!(facts.value_flow.receiver_only_visits, 128);
+    // Early invalidation and post-RHS completion both rebind, but the name
+    // needs storage only on the first event.
+    assert_eq!(facts.value_flow.reference_rebind_calls, 256);
+    assert_eq!(facts.value_flow.reference_rebind_name_allocations, 1);
+}
+
+#[test]
 #[cfg(feature = "test-instrumentation")]
 fn nested_class_patterns_bound_root_phase_walk_work() {
     for name in [

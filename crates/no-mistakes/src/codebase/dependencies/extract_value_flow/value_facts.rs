@@ -31,6 +31,10 @@ pub struct ValueFlowFacts {
     pub reference_binding_visits: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_root_probes: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_rebind_calls: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_rebind_name_allocations: usize,
     /// Proven terminal paths in the mutable-coordinate traversal.
     #[cfg(feature = "test-instrumentation")]
     pub reference_terminal_paths: usize,

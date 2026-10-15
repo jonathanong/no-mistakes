@@ -11,6 +11,10 @@ pub(in super::super) struct FreshReceiverEffects {
     #[cfg(feature = "test-instrumentation")]
     identity_visits: std::cell::Cell<usize>,
     #[cfg(feature = "test-instrumentation")]
+    rebind_calls: usize,
+    #[cfg(feature = "test-instrumentation")]
+    rebind_name_allocations: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub(super) rhs_visits: usize,
     captures: Option<Box<capture_reads::CaptureInterner>>,
     calls: Option<Box<FreshCalls>>,
@@ -22,6 +26,8 @@ impl FreshReceiverEffects {
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn record_counts(&self, facts: &mut ValueFlowFacts) {
         facts.reference_rhs_visits = self.rhs_visits;
+        facts.reference_rebind_calls = self.rebind_calls;
+        facts.reference_rebind_name_allocations = self.rebind_name_allocations;
         facts.reference_identity_visits = self.identity_visits();
         (
             facts.reference_capture_nodes,
@@ -99,11 +105,22 @@ impl FreshReceiverEffects {
             .is_some_and(|names| names.contains(name))
     }
     pub(super) fn rebind(&mut self, scope: usize, name: &str) {
-        self.rebound
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.rebind_calls += 1;
+        }
+        let names = self
+            .rebound
             .get_or_insert_with(Default::default)
             .entry(scope)
-            .or_default()
-            .insert(name.to_string());
+            .or_default();
+        if !names.contains(name) {
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.rebind_name_allocations += 1;
+            }
+            names.insert(name.to_string());
+        }
     }
 }
 impl ImportCollector {
