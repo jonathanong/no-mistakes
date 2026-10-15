@@ -44,6 +44,12 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_phase_pending_tokens: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_write_entries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_original_entries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_phase_prepared_fresh_entries: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_phase_effects: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_phase_queries: usize,

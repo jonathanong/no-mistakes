@@ -24,7 +24,7 @@ impl<'a> PhaseCursor<'a> {
             .filter(|(catalog, _)| *catalog == self.phases.catalog.start)
             .map(|(_, phase)| (phase, capture.completed_at))
             .or_else(|| self.phases.coordinate(offset));
-        self.changed_from_phase(member, coordinate, owner, right)
+        self.changed_from_phase(member, coordinate, owner, right, true)
     }
     fn changed_from_phase(
         &self,
@@ -32,6 +32,7 @@ impl<'a> PhaseCursor<'a> {
         left: Option<(u32, u32)>,
         owner: Option<CallableId>,
         right: nested::ReceiverRead,
+        terminal: bool,
     ) -> bool {
         #[cfg(feature = "test-instrumentation")]
         self.phases
@@ -60,7 +61,15 @@ impl<'a> PhaseCursor<'a> {
             || self.node.is_some_and(|node| {
                 identity_metadata::between(&node.dynamic, left.0, right.0)
                     || node.children.get(member).is_some_and(|child| {
-                        identity_metadata::between(&child.writes, left.0, right.0)
+                        identity_metadata::between(
+                            if terminal {
+                                &child.possible_original
+                            } else {
+                                &child.writes
+                            },
+                            left.0,
+                            right.0,
+                        )
                     })
             })
     }
@@ -73,6 +82,28 @@ impl<'a> PhaseCursor<'a> {
         let Some((left, owner)) = left else {
             return true;
         };
-        self.changed_from_phase(member, self.phases.coordinate(left), owner, right)
+        self.changed_from_phase(member, self.phases.coordinate(left), owner, right, false)
+    }
+}
+
+impl ActiveReferencePhases {
+    fn coordinate(&self, offset: u32) -> Option<(u32, u32)> {
+        self.phase(offset).map(|phase| {
+            (
+                phase,
+                if offset >= self.catalog.start && offset < self.catalog.end {
+                    offset
+                } else {
+                    0
+                },
+            )
+        })
+    }
+    fn phase(&self, offset: u32) -> Option<u32> {
+        if offset < self.catalog.start || (offset >= self.catalog.end && offset < self.rhs_end) {
+            Some(0)
+        } else {
+            self.catalog.phase(offset)
+        }
     }
 }

@@ -176,6 +176,12 @@ pub(super) const CASES: &[(&str, &str, &str, Option<&str>)] = &[
         Some("primary.get"),
     ),
     (
+        "global-phase-original-restore",
+        "globalPhaseOriginalRestore",
+        "value.get",
+        None,
+    ),
+    (
         "global-phase-descriptor-call",
         "globalPhaseDescriptorCall",
         "value.get",

@@ -345,3 +345,23 @@ writes retain no capture or phase index. These assertions are pending remote
 execution. Shared nodes and indexes have allocation and metadata costs; operation
 counts do not establish CPU, latency or RSS improvement. Earlier CI/performance
 results in this file remain historical and are not carried to this runtime.
+
+The first compiled identity correction at25ca1cd passed11,290 library tests,
+including the saved capture-sharing, cold-index, nested-RHS work bounds and deep
+capture comparison/drop guards. One aggregate graph test failed at the existing
+global-phase-preserved-fresh positive: a conditional fresh replacement preserved
+detachment, but the new terminal phase query treated it as a possible restoration.
+The Known expectation remains unchanged. Quality/coverage gates did not run after
+that semantic failure. Run38667260591/job116201941392 records this result.
+
+The focused correction keeps every phase write for proper-ancestor identity, and
+indexes possible-original writes separately for terminal detachment queries.
+The existing freshness classifier runs only during the already prepared hot phase
+walk. Its optional fresh-phase set is consumed during index construction and then
+dropped; no per-read replay or scan is added. PhaseWrite retains its prior field
+layout. PhaseWalk has an additional optional set header on its transient stack
+state, including cold walks, but allocates its set only for hot fresh writes.
+Each hot trie node adds one empty BTreeSet header and at most one additional entry
+per non-fresh static write. Actual retained-entry and temporary-classification
+counters, layout comparison, cold controls, and paired fresh/original restoration
+fixtures require fresh remote execution. No measured CPU/RSS conclusion is claimed.

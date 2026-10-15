@@ -17,6 +17,7 @@ pub(super) struct PhaseWalk<'c> {
     pub(super) pattern_depth: usize,
     pub(super) collect_reference_effects: bool,
     pub(super) effects: Option<std::collections::BTreeSet<(u32, u32)>>,
+    pub(super) fresh_phases: Option<std::collections::BTreeSet<u32>>,
 }
 impl PhaseWalk<'_> {
     pub(super) fn segment(&mut self, end: u32) {
@@ -91,6 +92,11 @@ impl<'a> Visit<'a> for PhaseWalk<'_> {
             self.reference(&assignment.left);
             self.expression(&assignment.right);
             self.write(&assignment.left);
+            if self.collect_reference_effects && receiver_replacement_is_fresh(assignment) {
+                self.fresh_phases
+                    .get_or_insert_with(Default::default)
+                    .insert(self.phase);
+            }
         }
         self.cursor = assignment.span.end;
     }
