@@ -2,9 +2,30 @@
   "configDirectory": ".github",
   "script": ".github/scripts/frontend-lifecycle-smoke.sh",
   "fixture": "fixtures/lang-frontends",
-  "orderedModes": ["original", "cold_first_analysis", "cold_first_analysis", "original"],
+  "orderedModes": [
+    "original",
+    "cold_first_analysis",
+    "conditioning_inclusive",
+    "extract_after_recorded_prefix",
+    "extract_after_recorded_prefix",
+    "conditioning_inclusive",
+    "cold_first_analysis",
+    "original"
+  ],
   "cases": [
-    {"name": "omitted option keeps commands below .github", "options": {}, "expectedDirectory": ".github", "pathsExist": false},
-    {"name": "explicit parent resolves checked-in script and fixture", "options": {"working-directory": ".."}, "expectedDirectory": ".", "pathsExist": true}
+    {
+      "name": "omitted option keeps commands below .github",
+      "options": {},
+      "expectedDirectory": ".github",
+      "pathsExist": false
+    },
+    {
+      "name": "explicit parent resolves checked-in script and fixture",
+      "options": {
+        "working-directory": ".."
+      },
+      "expectedDirectory": ".",
+      "pathsExist": true
+    }
   ]
 }

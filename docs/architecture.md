@@ -369,54 +369,86 @@ run after an update saves a fresh entry. That entry matches only while the
 Ubuntu archive's `libc6-dbg` is the image's libc6 version; until images catch
 up to a newer archive release, runs may still reinstall.
 
-### Frontend first-analysis allocation control
+### Frontend lifecycle allocation controls
 
-`NO_MISTAKES_FRONTEND_LIFECYCLE=cold_first_analysis` requires the explicit
-`language-frontends` shard and `RAYON_NUM_THREADS=4`. It selects a separate
-`language_frontend_lifecycle::cold_first_analysis` identity in the same
-`core_analysis` executable. Unset leaves the original extract, edges, and glob
-registration, preflight, identities, profiles, and gates intact.
+`NO_MISTAKES_FRONTEND_LIFECYCLE` requires the explicit `language-frontends`
+shard and `RAYON_NUM_THREADS=4`. Each selection runs one fresh process of the
+same `core_analysis` executable under its own `language_frontend_lifecycle`
+identity. Unset preserves the original extract, edges, and glob registration,
+preflight, identities, profiles, thresholds, and gates.
 
-The first Criterion target rejects invalid selections before any fixture or
-collector setup. The cold path prepares only the physical inventory and config,
-then uses pinned Criterion compatibility API 5.0.1's
-`iter_manual_unstable(rounds=1, iters=1, warmup=0)` for exactly one production
-fact collection. The CodSpeed adapter runs one measured closure without its
-usual five warmups. The boundary excludes OS execution, dynamic loading,
-harness registration, and fixture preparation: it is **first-analysis cold**.
-Worker/regex initialization reached by this first collection belongs inside the
-marker; its raw stacks must substantiate any initialization attribution.
+| Mode                            | Before the marker                                | Inside the marker                                                             |
+| ------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `cold_first_analysis`           | Harness registration only                        | Fixture discovery/config and one production facts collection                  |
+| `conditioning_inclusive`        | Harness registration only                        | Fixture discovery/config, the recorded prefix, and one final facts collection |
+| `extract_after_recorded_prefix` | Fixture discovery/config and the recorded prefix | One final facts collection using that same fixture                            |
 
-The post-marker ledger distinguishes an observed closure count and observed
-four-worker pool capacity from source-accounted collector/helper counts. Capacity
-does not prove all four workers participated. Request facts are destroyed before
-the marker stops; global workers and reusable regex scratch pools remain alive.
-The returned fact counts and subsequent edge/glob preflight protect the same
-117/69/66/7/6/41 and 125/14/117 invariants as the original workload. Regex scratch
-pools are shared and reusable; fresh threads cannot establish cache freshness.
+Fixture discovery itself initializes Rayon through the production parallel
+inventory classifier. Cold and inclusive modes therefore create the fixture
+**inside** the marker and retain it through marker stop. These are first-analysis
+boundaries including discovery, inventory, configuration, Rayon, and regex work
+reached by the helpers. They exclude OS execution, dynamic loading, and harness
+registration; they do not measure whole-command startup. Discovery subprocess
+costs belong to this scope too: report their proven process lineage and per-PID
+allocations separately, including reclamation on process exit. Reject unexplained
+wrapper-process allocations; do not silently filter them from evidence.
 
-Native execution requires `--test` for a functional call-count/order control.
-The pinned wall-clock adapter executes one round but its statistical analyzer
-then panics on a single sample in ordinary `--bench` mode. These controls provide
-no native timing estimate or speedup claim.
+The shared recorded prefix is facts preflight, edge preflight, glob preflight,
+and five production facts calls matching the pinned CodSpeed adapter's original
+warmups. The edge helper internally collects facts once; the glob helper does
+not. This is seven full collections before the final probe, eight in total.
+Inclusive mode reports all eight and their initialization/retention costs;
+post-prefix mode reports incremental tracked allocations and does **not** report
+preexisting retained heap. Bounded conditioning does not prove every shared
+regex scratch object or worker is fully warm or deterministically scheduled.
 
-The optional `Frontend lifecycle memory smoke` job runs only on a same-repository
-PR whose body explicitly contains `<!-- frontend-lifecycle-smoke: v1 -->`. It reuses the
-existing exact archive digest handoff on `ubuntu-24.04-arm`, then runs the same
-binary in four separate processes, original/cold/cold/original, two samples per
-mode. One official CodSpeed action loads four ordered entrypoint targets from an
-explicit smoke configuration. The pinned runner gives each target its own
-profile directory and upload `run-part-index` suffix; its injected
-`CODSPEED_PROFILE_FOLDER` ties each sample to that raw directory. The shared
-action run ID, per-target suffix, actual benchmark PID, raw memory events, marker
-timeline, logs, binary hash, and provenance are retained for 30 days. Missing
-profiles, duplicate profile directories/PIDs, or a hash mismatch stop the
-sequence; an aggregate row or latest-by-URI report is insufficient to identify
-four samples.
-The body marker is an opt-in diagnostic control, and should be removed after
-the declared run. [The accounting record](performance/frontend-lifecycle.json)
-records scope and limitations. Original thresholds and expected-base/runner
-requirements remain authoritative.
+The first Criterion target validates selection before fixture/collector work.
+Pinned compatibility API 5.0.1's
+`iter_manual_unstable(rounds=1, iters=1, warmup=0)` runs exactly one measured
+closure without adapter warmups. A fixed array records helper order; only Copy
+summaries survive helper returns. Counter/trace overhead remains in the measured
+scope and is not subtracted. Assertions and ledger formatting happen after stop.
+The ledger labels observed closure/helper events separately from full-collector
+counts derived from inspected nested helper call paths. Four-worker capacity is
+checked after stop; profiles must substantiate worker initialization/participation.
+
+All modes validate the same 117/69/66/7/6/41 fact and 125/14/117 edge/glob counts.
+Cold mode keeps edge/glob preflight after stop; the other modes validate their
+recorded prefix after stop. Request fact maps are destroyed within each helper;
+fixture data, global workers, and reusable regex pools remain alive at stop.
+Native controls require `--test` and supply functional call-count/order evidence
+only: pinned Criterion's ordinary statistical analyzer panics on one sample.
+No native timing estimate or runtime improvement is claimed.
+
+The normal language-frontend memory shard preserves its original action and adds
+three fresh-process lifecycle targets with unique URIs. The optional `Frontend
+lifecycle memory smoke` job requires a same-repository PR with the fixed body
+marker `<!-- frontend-lifecycle-smoke: v1 -->`. Remove the marker after its declared
+run. It uses the exact digest-verified ARM artifact in balanced eight-process
+order: original, cold, inclusive, post-prefix, post-prefix, inclusive, cold,
+original (two samples per mode). The pinned runner's `CODSPEED_SKIP_UPLOAD=true`
+is scoped to this diagnostic job: repeated URIs otherwise invalidate the shared
+CodSpeed comparison report. Ordinary uploads and gates remain enabled.
+
+Each diagnostic target retains its actual injected `CODSPEED_PROFILE_FOLDER`,
+benchmark PID, binary hash, CI run/attempt/job, and runner target index. The
+previous target's completed raw marker/memory files are required before the next
+starts. Separate raw events, marker timelines, symbols/unwind maps, logs, and
+provenance request 30 days of hosted retention; the observed repository cap
+was seven days. Keep a durable local copy before hosted artifacts expire. Missing artifacts, reused PIDs/folders,
+changed hashes/order, or mismatched runner settings stop the sequence. No shared
+Run ID or aggregate latest-by-URI row can replace individual sample identity.
+
+The initial four-process experiment exposed the fixture boundary error and is
+retained as first-collector evidence with the pool already prepared, not an
+accepted cold-worker control. Its chart's sampled final point precedes marker
+stop; raw interval reconstruction reconciles the intervening frees. Keep chart
+points and actual marker-stop live bytes distinct. Marker-observed live bytes
+exclude allocations made before the marker; unmatched frees cannot recover
+those bytes. [The accounting record](performance/frontend-lifecycle.json) retains
+exact provenance, limitations, and all initial costs. These controls never waive
+original gates or establish retained-byte attribution, scheduling cause, RSS
+equivalence, or speedup.
 
 ### Interpreting CodSpeed results
 

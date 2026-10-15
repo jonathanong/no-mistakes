@@ -1,6 +1,6 @@
 {
   "issue": 2025,
-  "status": "first API gate validated; ARM memory gate not yet executed",
+  "status": "full modes implemented; corrected fixture-inclusive ARM controls pending exact-diff review and measurement",
   "sourceBase": "d36ea2af42d7a2a6d20074e4cd8ac1d0bc89568a",
   "productionChanges": false,
   "pinnedApi": "codspeed-criterion-compat =5.0.1: iter_manual_unstable(IterManualOptions::new().rounds(1).iters(1).warmup(0), closure)",
@@ -49,22 +49,24 @@
     "measuredClosures": 1,
     "measuredCollectors": 1,
     "postMarkerCollectors": 1,
-    "postMarkerHelpers": [
-      "edges preflight",
-      "glob preflight"
-    ],
-    "excluded": [
-      "OS exec/dynamic loading",
-      "harness registration",
-      "fixture inventory/config preparation"
-    ],
-    "lifetimeAtStop": "Request facts have been destroyed; global Rayon workers and reusable regex scratch objects remain alive.",
-    "ledgerEvidence": "Closure calls are observed by the local counter; pool capacity is observed after the marker. Prior/helper collector counts come from inspected call paths and the order regression. Neither pool capacity nor fresh threads proves participation/cache state on every worker."
+    "postMarkerHelpers": ["edges preflight", "glob preflight"],
+    "excluded": ["OS exec/dynamic loading", "harness registration"],
+    "lifetimeAtStop": "Fixture data remains owned through stop; request fact maps have been destroyed; global workers and reusable regex pools remain alive.",
+    "ledgerEvidence": "Closure calls are observed by the local counter; pool capacity is observed after the marker. Prior/helper collector counts come from inspected call paths and the order regression. Neither pool capacity nor fresh threads proves participation/cache state on every worker.",
+    "included": [
+      "fixture discovery/inventory/config",
+      "production analysis and reached Rayon/regex initialization",
+      "discovery subprocess allocations, separately attributed by proven Fork/Exec/Mapping lineage"
+    ]
   },
   "declaredArmSmoke": {
     "order": [
       "original",
       "cold_first_analysis",
+      "conditioning_inclusive",
+      "extract_after_recorded_prefix",
+      "extract_after_recorded_prefix",
+      "conditioning_inclusive",
       "cold_first_analysis",
       "original"
     ],
@@ -72,12 +74,14 @@
     "artifact": "One same-run digest-verified core_analysis executable; source/archive/dependency/binary hashes retained.",
     "runner": "ubuntu-24.04-arm; CodSpeed action c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5; runner5.4.0; criterion5.0.1; Rayon4",
     "build": "no default features; test-instrumentation; bench LTO=false; codegen-units=16; existing CI build",
-    "identity": "One action/shared Run ID; four ordered entrypoints, each with unique runner upload run-part-index0..3, an injected exact CODSPEED_PROFILE_FOLDER, benchmark PID, sample number, and exact binary hash. Raw marker PID/URI and backend RunPart/object mapping must be audited before interpreting pairs.",
-    "retention": "All four raw profiles/timelines/logs retained independently for30days. Repeated original URIs must not collapse sample evidence.",
-    "stop": "Missing marker/memory artifacts, duplicate raw profile directories/PIDs, changed binary hash, count drift, or runner mismatch; diagnose before any further authorized execution. No blind repeats."
+    "identity": "Single upload-disabled official action; unique CI run/attempt/job + sample/target index + actual injected profile directory/PID + common binary SHA. All eight raw profiles remain separate.",
+    "retention": "All eight raw profiles/timelines/logs retained independently. Workflow requests30days; initial run observed repository cap7days. Durable local evidence preserves both the four historical and eight planned samples.",
+    "stop": "Missing marker/memory artifacts, duplicate raw profile directories/PIDs, changed binary hash, count drift, or runner mismatch; diagnose before any further authorized execution. No blind repeats.",
+    "upload": "CODSPEED_SKIP_UPLOAD=true only for diagnostic repetitions; ordinary original and unique lifecycle uploads remain enabled.",
+    "pidAccounting": "Preserve all marker allocations. Attribute benchmark PID and proven discovery subprocess lineage separately; reject unexplained wrapper/helper PIDs. Distinguish actual allocator frees from process-exit reclamation. Offline interval tracking and curated per-process filtering must be reported explicitly."
   },
   "claims": "No runtime improvement, deterministic full warmness, scheduling cause, RSS equivalence, or retained-byte attribution. No subtraction or replacement of original measurements.",
-  "implementationBase": "4ddb9c08dbe8e06501a87ffce0ab8db4b10e76fc",
+  "implementationBase": "61d9c463f2014e4987038589fb2f9cc0adb66c27",
   "executionAttempts": [
     {
       "head": "19a4781a152ac70a2941b837b50d7b331466dcb8",
@@ -86,6 +90,98 @@
       "measuredSamples": 0,
       "diagnosis": "Runner5.4 ConfigTargets defaults working directory to the config directory; repository-relative scripts under .github require explicit options.working-directory=.. .",
       "correction": "Explicit parent working directory plus saved path-resolution regression; only the corrected attempt may produce the declared four samples."
+    },
+    {
+      "head": "134e8b517bdb7da662e6ebee8e5e769311d227ca",
+      "measuredMerge": "a8b3ecd42135830d7681e11e55886585b12d201b",
+      "mergeTreeEqualsHead": true,
+      "workflow": "https://github.com/jonathanong/no-mistakes/actions/runs/38666308116",
+      "artifactId": 11942046293,
+      "artifactSha256": "c669deb23178e9a2447396bcce52729bb4f78aac48e32a3bdb751b423266b6ef",
+      "binarySha256": "8784c31c6c0080f455dff4b01ac622d8dadf2f5531e6f046439d448520292daf",
+      "codspeedRun": "6ad02f7412dfa1c37dc92607",
+      "measuredSamples": 4,
+      "result": "Functional/manual marker and PID isolation passed; cold worker boundary rejected. Fixture discovery initialized Rayon before marker. Samples are first-collector with pool already prepared, not accepted cold-worker controls. Repeated URIs prevented shared comparison report generation. No speedup/gate acceptance.",
+      "sourcePath": "language_frontend_fixture -> discover_visible_paths -> try_discover_classified_path_views -> classify_git_listed_paths -> into_par_iter",
+      "correction": "Create and retain the same fixture inside cold/inclusive manual marker. Scope skip-upload to diagnostic repetitions.",
+      "accounting": "All peaks agree with curated rows. Raw interval live at each exact last curated timestamp equals chart bytes; subsequent frees explain every chart-to-marker-stop difference. Unmatched original frees have unknown pre-marker size/identity; do not assign a cause.",
+      "samples": [
+        {
+          "sample": 1,
+          "mode": "original",
+          "pid": 2736,
+          "peakTrackedHeapBytes": 733167,
+          "finalTrackedHeapBytes": 518132,
+          "unknownFrees": 54,
+          "curatedLastTimestamp": 643598023559,
+          "curatedLastBytes": 520180,
+          "rawBytesAtCuratedLastTimestamp": 520180,
+          "runPartId": "6ad02fa1ad9a6239bff38917",
+          "resultId": "6ad03007ad9a6239bff38dd1",
+          "profileSha256": "f50cfde4d32736f047aaf42c07234ca3f875f6b2ec424839e10a1cac4211ca4b",
+          "timelineSha256": "a9060db2dada04b9e52a6780599d2d8fbe22c1a56ac1a482b437e33e692f181e"
+        },
+        {
+          "sample": 2,
+          "mode": "cold_first_analysis",
+          "pid": 2834,
+          "peakTrackedHeapBytes": 18995734,
+          "finalTrackedHeapBytes": 18637289,
+          "unknownFrees": 0,
+          "curatedLastTimestamp": 657613853271,
+          "curatedLastBytes": 18659345,
+          "rawBytesAtCuratedLastTimestamp": 18659345,
+          "runPartId": "6ad02fa7ad9a6239bff3891b",
+          "resultId": "6ad03008ad9a6239bff38e35",
+          "profileSha256": "965963a7626db61c01355df61061274993a3cec9c69accb547bebc893c5a22a0",
+          "timelineSha256": "929bf9395f049fd1bfc46a4438ced40985d3cfdacbcb5a55cf71789dd34bbc45"
+        },
+        {
+          "sample": 3,
+          "mode": "cold_first_analysis",
+          "pid": 2928,
+          "peakTrackedHeapBytes": 19174730,
+          "finalTrackedHeapBytes": 18823471,
+          "unknownFrees": 0,
+          "curatedLastTimestamp": 674376571306,
+          "curatedLastBytes": 18830405,
+          "rawBytesAtCuratedLastTimestamp": 18830405,
+          "runPartId": "6ad02facad9a6239bff3891f",
+          "resultId": "6ad03008ad9a6239bff38e34",
+          "profileSha256": "b630ad60e30e21f948cb39e927ece74a65a64b434fe99ccb75dba83152824b3c",
+          "timelineSha256": "bafbb575d52be17c21505db35e1ecc17fa5b85ae9b45dd654db77135459a8304"
+        },
+        {
+          "sample": 4,
+          "mode": "original",
+          "pid": 3021,
+          "peakTrackedHeapBytes": 1126695,
+          "finalTrackedHeapBytes": 911800,
+          "unknownFrees": 107,
+          "curatedLastTimestamp": 690778764372,
+          "curatedLastBytes": 911800,
+          "rawBytesAtCuratedLastTimestamp": 911800,
+          "runPartId": "6ad02fb1ad9a6239bff38944",
+          "resultId": "6ad03007ad9a6239bff38dce",
+          "profileSha256": "efe8cb16784047b5d19389d850ee9f589d37098c79edc7ecdc4b7b5a8808a31b",
+          "timelineSha256": "05a23c5e5e1746cfa78f28642d2bc49c9da3f0c621ea66a5116cecd9f2b740d9"
+        }
+      ],
+      "metricScope": "Live bytes reconstructed solely from observed marker-interval allocations, with a zero starting live map. These are not whole-process heap or total cache-retained bytes; pre-marker allocations have no recoverable size in this stream."
     }
-  ]
+  ],
+  "conditioningInclusive": {
+    "priorCollectors": 0,
+    "measuredCollectors": 8,
+    "fixtureInsideMarker": true,
+    "prefix": "facts -> edges (one nested collection) -> globs -> five facts calls -> final facts probe",
+    "conditioning": "bounded; no full-warmness guarantee"
+  },
+  "extractAfterRecordedPrefix": {
+    "priorCollectors": 7,
+    "measuredCollectors": 1,
+    "fixtureInsideMarker": false,
+    "samePrefixAsInclusive": true,
+    "scope": "incremental interval-observed live bytes; preexisting retained allocations are excluded"
+  }
 }

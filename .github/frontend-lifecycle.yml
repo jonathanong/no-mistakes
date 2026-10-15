@@ -1,0 +1,9 @@
+# These unique URIs supplement the unchanged original memory invocation.
+options: { "working-directory": ".." }
+benchmarks:
+  - name: cold first analysis
+    entrypoint: bash .github/scripts/frontend-lifecycle-run.sh cold_first_analysis
+  - name: conditioning inclusive
+    entrypoint: bash .github/scripts/frontend-lifecycle-run.sh conditioning_inclusive
+  - name: extract after recorded prefix
+    entrypoint: bash .github/scripts/frontend-lifecycle-run.sh extract_after_recorded_prefix

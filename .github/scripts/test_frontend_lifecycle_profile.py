@@ -33,13 +33,21 @@ class ProfileIdentityTests(unittest.TestCase):
         directory = (config_directory / options["working-directory"]).resolve()
         self.assertEqual(directory, ROOT)
         commands = re.findall(r"^\s+entrypoint: (.+)$", config, re.MULTILINE)
-        self.assertEqual(len(commands), 4)
+        self.assertEqual(len(commands), len(fixture["orderedModes"]))
         for index, command in enumerate(commands):
             arguments = shlex.split(command)
             self.assertEqual(arguments[0], "bash")
             self.assertTrue((directory / arguments[1]).is_file())
             self.assertEqual(arguments[2:], [str(index + 1), fixture["orderedModes"][index]])
         self.assertTrue((directory / fixture["fixture"]).is_dir())
+
+        normal = (ROOT / ".github/frontend-lifecycle.yml").read_text()
+        normal_options = json.loads(re.findall(r"^options: (\{.*\})$", normal, re.MULTILINE)[0])
+        self.assertEqual((config_directory / normal_options["working-directory"]).resolve(), ROOT)
+        normal_commands = re.findall(r"^\s+entrypoint: (.+)$", normal, re.MULTILINE)
+        modes = [shlex.split(command)[-1] for command in normal_commands]
+        self.assertEqual(modes, ["cold_first_analysis", "conditioning_inclusive", "extract_after_recorded_prefix"])
+        self.assertEqual(len(set(modes)), len(modes))
 
     def test_saved_sample_identity_cases(self):
         fixture = json.loads((ROOT / "fixtures/performance/frontend-lifecycle/profile-cases.json").read_text())

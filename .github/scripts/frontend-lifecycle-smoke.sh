@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Four fresh processes of one artifact; never use these controls to waive gates.
+# Eight fresh processes of one artifact; never use these controls to waive gates.
 set -euo pipefail
 
 sample=${1:?sample id required}
-mode=${2:?original or cold_first_analysis required}
+mode=${2:?lifecycle mode required}
 case "$sample:$mode" in
-  1:original|2:cold_first_analysis|3:cold_first_analysis|4:original) ;;
+  1:original|2:cold_first_analysis|3:conditioning_inclusive|4:extract_after_recorded_prefix|5:extract_after_recorded_prefix|6:conditioning_inclusive|7:cold_first_analysis|8:original) ;;
   *) echo "Unexpected sample/order: $sample:$mode" >&2; exit 1 ;;
 esac
 root=${FRONTEND_SMOKE_ROOT:?evidence root required}
@@ -23,8 +23,8 @@ if [[ "$mode" == original ]]; then
   unset NO_MISTAKES_FRONTEND_LIFECYCLE
   filter='language_frontends::extract$'
 else
-  export NO_MISTAKES_FRONTEND_LIFECYCLE=cold_first_analysis
-  filter='language_frontend_lifecycle::cold_first_analysis$'
+  export NO_MISTAKES_FRONTEND_LIFECYCLE="$mode"
+  filter="language_frontend_lifecycle::$mode\$"
 fi
 "$binary" "$filter" > "$directory/benchmark.log" 2>&1 &
 benchmark_pid=$!
@@ -40,6 +40,8 @@ record = dict(sample=int(sample), mode=mode, pid=int(pid), binarySha256=digest,
 import os
 record['profileDirectory'] = os.environ['CODSPEED_PROFILE_FOLDER']
 record['runPartIndex'] = int(sample) - 1
+record['ciExecution'] = {key: os.environ[key] for key in ['GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_JOB']}
+assert os.environ['CODSPEED_SKIP_UPLOAD'] == 'true'
 if mode != 'original':
     ledgers = [json.loads(line.removeprefix('FRONTEND_LIFECYCLE '))
                for line in (path / 'benchmark.log').read_text().splitlines()
@@ -47,8 +49,10 @@ if mode != 'original':
     assert len(ledgers) == 1
     record['ledger'] = ledger = ledgers[0]
     assert ledger['pid'] == int(pid)
-    assert ledger['priorCollectors'] == 0 and ledger['measuredClosures'] == 1
-    assert ledger['measuredCollectors'] == 1 and ledger['rayonWorkers'] == 4
+    assert ledger['measuredClosures'] == 1 and ledger['rayonWorkers'] == 4
+    assert ledger['fixtureInitializations'] == 1
+    assert ledger['priorCollectors'] == (7 if mode == 'extract_after_recorded_prefix' else 0)
+    assert ledger['measuredCollectors'] == (8 if mode == 'conditioning_inclusive' else 1)
 (path / 'sample.json').write_text(json.dumps(record, indent=2) + '\n')
 PY
 exit "$status"

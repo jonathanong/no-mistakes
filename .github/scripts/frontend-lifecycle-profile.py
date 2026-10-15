@@ -13,6 +13,7 @@ def validate_records(record, previous):
     for other in previous:
         assert other["pid"] != record["pid"], "benchmark process was reused"
         assert other["binarySha256"] == record["binarySha256"]
+        assert other.get("ciExecution") == record.get("ciExecution"), "CI execution changed"
         assert other["profileDirectory"] != record["profileDirectory"], "raw folder reused"
 
 
@@ -39,9 +40,15 @@ def record_sample(root, sample):
 if __name__ == "__main__":
     root = Path(os.environ["FRONTEND_SMOKE_ROOT"])
     if sys.argv[1] == "all":
-        assert os.environ["SAMPLE_RUN_ID"], "CodSpeed action did not return its shared run ID"
-        for sample in range(1, 5):
+        assert not os.environ["SAMPLE_RUN_ID"], "diagnostic results unexpectedly uploaded"
+        for sample in range(1, 9):
             record_sample(root, sample)
-        (root / "codspeed-run-id.txt").write_text(os.environ["SAMPLE_RUN_ID"] + "\n")
+        identity = {key: os.environ[key] for key in ["SAMPLE_CI_RUN", "SAMPLE_CI_ATTEMPT", "SAMPLE_CI_JOB"]}
+        assert all(identity.values()), "missing CI execution identity"
+        expected = dict(zip(["GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_JOB"], identity.values()))
+        for sample in range(1, 9):
+            record = json.loads((root / f"sample-{sample}" / "sample.json").read_text())
+            assert record["ciExecution"] == expected
+        (root / "ci-execution.json").write_text(json.dumps(identity, indent=2) + "\n")
     else:
         record_sample(root, int(sys.argv[1]))

@@ -19,6 +19,8 @@ function isNativeFixture(path) {
 function isFrontendLifecycleHarness(path) {
   return (
     path === ".github/frontend-lifecycle-smoke.yml" ||
+    path === ".github/frontend-lifecycle.yml" ||
+    path === ".github/scripts/frontend-lifecycle-run.sh" ||
     path === ".github/scripts/frontend-lifecycle-smoke.sh" ||
     path === ".github/scripts/frontend-lifecycle-profile.py" ||
     path === ".github/scripts/test_frontend_lifecycle_profile.py" ||

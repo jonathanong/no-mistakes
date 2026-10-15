@@ -24,31 +24,43 @@ function run(overrides = {}, filter = "") {
   });
 }
 
-test("fresh cold process runs one closure and retains full fixture preflight", options, () => {
-  const result = run();
-  assert.equal(result.status, 0, result.stdout + result.stderr);
-  const lines = result.stdout.split("\n").filter((line) => line.startsWith("FRONTEND_LIFECYCLE "));
-  assert.equal(lines.length, 1);
-  const ledger = JSON.parse(lines[0].slice("FRONTEND_LIFECYCLE ".length));
-  assert.deepEqual(ledger, {
-    mode: "cold_first_analysis",
-    pid: result.pid,
-    priorCollectors: 0,
-    measuredClosures: 1,
-    measuredCollectors: 1,
-    postMarkerCollectors: 1,
-    rayonWorkers: 4,
-    files: 117,
-    parsed: 69,
-    imports: 66,
-    enqueues: 7,
-    workers: 6,
-    routes: 41,
-    edges: 125,
-    queueEdges: 14,
-    globMatches: 117,
-  });
-});
+const cases = require("../../fixtures/performance/frontend-lifecycle/lifecycle-cases.json").cases;
+
+for (const expected of cases) {
+  test(
+    `fresh ${expected.mode} process preserves helper order and one marker closure`,
+    options,
+    () => {
+      const result = run({ NO_MISTAKES_FRONTEND_LIFECYCLE: expected.mode });
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      const lines = result.stdout
+        .split("\n")
+        .filter((line) => line.startsWith("FRONTEND_LIFECYCLE "));
+      assert.equal(lines.length, 1);
+      const ledger = JSON.parse(lines[0].slice("FRONTEND_LIFECYCLE ".length));
+      assert.deepEqual(ledger, {
+        ...expected,
+        pid: result.pid,
+        measuredClosures: 1,
+        collectorCountsSource: "inspected helper call paths",
+        fixtureInitializations: 1,
+        rayonWorkers: 4,
+        files: 117,
+        parsed: 69,
+        imports: 66,
+        enqueues: 7,
+        workers: 6,
+        routes: 41,
+        edges: 125,
+        queueEdges: 14,
+        globMatches: 117,
+      });
+    },
+  );
+}
+
+// A saved expected sequence protects fixture initialization's marker boundary.
+// Fixture discovery itself uses Rayon, even before any frontend collector.
 
 test("selection rejects unknown modes, broad shards, and a different worker count", options, () => {
   // Selection is the first Criterion target: invalid modes must fail before
@@ -66,12 +78,12 @@ test("selection rejects unknown modes, broad shards, and a different worker coun
 });
 
 test(
-  "a filter that skips the cold closure fails instead of reporting fabricated work",
+  "a filter that skips the selected closure fails instead of reporting fabricated work",
   options,
   () => {
     const result = run({}, "no-such-benchmark");
     assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /cold benchmark was filtered out or repeated/);
+    assert.match(result.stderr, /lifecycle benchmark was filtered out or repeated/);
   },
 );
 

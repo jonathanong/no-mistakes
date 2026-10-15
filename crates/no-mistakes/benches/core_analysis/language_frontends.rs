@@ -22,7 +22,7 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
     // identities. The shard gates only isolate setup and measurement work.
     if shard::should_run(shard::LANGUAGE_FRONTENDS) {
         if super::frontend_lifecycle::selected() {
-            super::frontend_lifecycle::register_cold(c);
+            super::frontend_lifecycle::register(c);
         } else {
             register_language_frontends(c);
         }
