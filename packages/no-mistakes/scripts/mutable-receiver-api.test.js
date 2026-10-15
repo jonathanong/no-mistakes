@@ -108,12 +108,23 @@ test(
         name,
       );
     }
-    for (const name of ["mutable-let-pattern-replaced-later-lhs", "mutable-let-pattern-replaced-carrier"]) {
-      const detached = { root, config, kind: "valkey",
-        entry: `src/nested-receiver-containers/${name}.mts` };
+    for (const name of [
+      "mutable-let-pattern-replaced-later-lhs",
+      "mutable-let-pattern-replaced-carrier",
+    ]) {
+      const detached = {
+        root,
+        config,
+        kind: "valkey",
+        entry: `src/nested-receiver-containers/${name}.mts`,
+      };
       const detachedReport = await cjs.effects(detached);
       assert.deepEqual(await esm.effects(detached), detachedReport);
-      assert.deepEqual(detachedReport.callSites.map((site) => site.callee).sort(), ["primary.get", "replica.get"], name);
+      assert.deepEqual(
+        detachedReport.callSites.map((site) => site.callee).sort(),
+        ["primary.get", "replica.get"],
+        name,
+      );
     }
     const report = await cjs.check({ root, config });
     assert.deepEqual(await esm.check({ root, config }), report);
