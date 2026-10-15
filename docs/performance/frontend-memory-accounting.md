@@ -6,8 +6,9 @@ The scripts in `.github/scripts/frontend-memory-accounting/` validate small
 CodSpeed memtrack 1.6.0 captures and replay observed allocator object lifetimes.
 They do not reproduce CodSpeed server metrics, native RSS, or the historical
 frontend comparison in [issue #2037](https://github.com/jonathanong/no-mistakes/issues/2037).
-That issue remains open: its original raw profiles and matching benchmark windows
-are unavailable, and no frozen-pair repeatability experiment has been performed.
+The [historical investigation](frontend-memory-comparison-conclusion.md) concludes
+inconclusive: its original raw profiles and matching benchmark windows are
+unavailable, and no frozen-pair repeatability experiment has been performed.
 
 ## Format and scope
 
