@@ -12,6 +12,9 @@ impl<'a> Visit<'a> for ImportCollector {
         function: &oxc_ast::ast::Function<'a>,
         _flags: oxc_syntax::scope::ScopeFlags,
     ) {
+        let enclosing_unreachable_binding_after = self
+            .collect_value_flow
+            .then(|| self.unreachable_value_binding_after.take());
         let name = function_name(function);
         let callable_id = name
             .as_deref()
@@ -43,14 +46,23 @@ impl<'a> Visit<'a> for ImportCollector {
         walk_function_with_body_bindings(self, function);
         self.pop_function_scope(true);
         self.pop_syntactic_caller(pushed_syntactic_caller);
+        if let Some(previous) = enclosing_unreachable_binding_after {
+            self.unreachable_value_binding_after = previous;
+        }
     }
 
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        let enclosing_unreachable_binding_after = self
+            .collect_value_flow
+            .then(|| self.unreachable_value_binding_after.take());
         self.push_anonymous_function_scope(CallableId(arrow.span.start));
         self.add_type_parameter_names(arrow.type_parameters.as_deref());
         self.add_formal_parameters(&arrow.params);
         walk_arrow_function_with_body_bindings(self, arrow);
         self.pop_function_scope(true);
+        if let Some(previous) = enclosing_unreachable_binding_after {
+            self.unreachable_value_binding_after = previous;
+        }
     }
 
     fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
