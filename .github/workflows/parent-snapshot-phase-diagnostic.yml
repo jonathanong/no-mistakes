@@ -1,0 +1,44 @@
+name: Parent snapshot phase diagnostic
+on:
+  push:
+    branches: [diagnostic/2021-parent-snapshot-4ddb]
+permissions:
+  contents: read
+jobs:
+  parent-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: "4"
+      CARGO_INCREMENTAL: "0"
+      RUSTFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.99.0"
+      - uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16
+        with:
+          key: parent-phase-diagnostic
+          save-if: "false"
+      - name: Verify exact parent runtime and record bounded provenance
+        run: python3 .github/scripts/parent-snapshot-phase-provenance.py
+      - name: Run one target-agnostic graph diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostic-private
+          set +e
+          cargo test --locked --package no-mistakes --all-features --lib parent_snapshot_phase_diagnostic -- --nocapture > diagnostic-private/cargo.log 2>&1
+          probe_status=$?
+          set -e
+          PROBE_EXIT_STATUS="$probe_status" python3 .github/scripts/parent-snapshot-phase-provenance.py --collect
+          exit "$probe_status"
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: parent-snapshot-phase-result
+          path: diagnostic-result.json
+          retention-days: 7
