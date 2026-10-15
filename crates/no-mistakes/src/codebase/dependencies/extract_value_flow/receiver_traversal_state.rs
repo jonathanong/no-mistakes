@@ -3,7 +3,7 @@ use super::*;
 type Key = (usize, String);
 type Paths = FxHashMap<(Key, ValueMutationPath), Vec<nested::ReceiverRead>>;
 #[derive(Default)]
-enum Visits {
+pub(super) enum Visits {
     #[default]
     Empty,
     First {
@@ -13,7 +13,7 @@ enum Visits {
     Many(Paths),
 }
 impl Visits {
-    fn enter(
+    pub(super) fn enter(
         &mut self,
         key: &Key,
         path: &[Option<String>],
