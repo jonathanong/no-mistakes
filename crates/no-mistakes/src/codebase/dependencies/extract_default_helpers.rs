@@ -29,7 +29,11 @@ fn walk_default_expression<'a>(
         );
         record_object_resource_scopes(collector, "default", object);
     }
+    let runtime_depth = collector.runtime_callable_depth;
     collector.push_function_scope(Some("default".to_string()), CallableId(export.span.start));
+    // This frame owns graph relationships; evaluating the expression does not
+    // enter a deferred callable. Nested functions still push runtime frames.
+    collector.runtime_callable_depth = runtime_depth;
     // Flag the runtime import in the callback directly forming the default value —
     // e.g. `export default dynamic(() => import('./Foo'))` — as reachable through
     // the `default` binding instead of dropping it with its anonymous callback

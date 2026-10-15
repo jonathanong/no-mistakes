@@ -91,6 +91,8 @@ impl ImportCollector {
             }
             self.function_stack.push(scope);
             self.function_id_stack.push(id);
+            self.runtime_callable_depth_stack.push(self.runtime_callable_depth);
+            self.runtime_callable_depth += 1;
             self.var_scope_stack.push(self.local_stack.len());
             self.local_stack.push(fx_set());
             let lexical_scope_id = self.next_lexical_scope_id;
@@ -149,6 +151,8 @@ impl ImportCollector {
         });
         self.function_stack.push(scope);
         self.function_id_stack.push(id);
+        self.runtime_callable_depth_stack.push(self.runtime_callable_depth);
+        self.runtime_callable_depth += 1;
         self.var_scope_stack.push(self.local_stack.len());
         self.local_stack.push(fx_set());
         let lexical_scope_id = self.next_lexical_scope_id;
@@ -164,6 +168,7 @@ impl ImportCollector {
         if pushed {
             self.function_stack.pop();
             self.function_id_stack.pop();
+            self.runtime_callable_depth = self.runtime_callable_depth_stack.pop().unwrap_or_default();
             self.var_scope_stack.pop();
             self.local_stack.pop();
             self.lexical_scope_ids.pop();
