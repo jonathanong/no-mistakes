@@ -34,11 +34,13 @@ fn effects_typed_and_returned_members_preserve_category_filters() {
     );
     assert_eq!(value["callSites"].as_array().unwrap().len(), 5);
     assert_eq!(value["byCategory"]["transaction"], 5);
-    assert!(value["callSites"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|site| site["callee"] == "writePool.connect().query"));
+    assert!(
+        value["callSites"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|site| site["callee"] == "writePool.connect().query")
+    );
     let output = run_in(
         &root,
         &[
@@ -51,8 +53,10 @@ fn effects_typed_and_returned_members_preserve_category_filters() {
         ],
     );
     assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("no functions for the requested categories"));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("no functions for the requested categories")
+    );
 }
 
 #[test]
@@ -213,6 +217,9 @@ fn effects_cli_retains_cross_file_inline_receiver_timing() {
 fn effects_cli_preserves_transparent_default_aliases_and_member_snapshots() {
     let root = fixture("inline-member-precision");
     for (name, expected) in [
+        ("unique-helper-repeated", 0),
+        ("unique-helper-snapshot", 1),
+        ("unique-helper-setup", 1),
         ("alias-named", 1),
         ("alias-inline", 1),
         ("alias-chain", 1),
