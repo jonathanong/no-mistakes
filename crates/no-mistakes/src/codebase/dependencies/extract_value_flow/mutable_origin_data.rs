@@ -19,8 +19,11 @@ impl ReceiverBindingOrigins {
             .as_ref()
             .and_then(|patterns| patterns.selected(read))
             .unwrap_or(Some(*selected))?;
-        matches!(&self.arena[selected], Origin::Value(ValueExpression::Object(fields, _))
-            if fields.contains_key(member))
-        .then_some(*completed_at)
+        let own_data = match &self.arena[selected] {
+            Origin::Value(ValueExpression::Object(fields, _)) => fields.contains_key(member),
+            Origin::SingleNamedField(value) => self.single_has_field(value, member),
+            _ => false,
+        };
+        own_data.then_some(*completed_at)
     }
 }

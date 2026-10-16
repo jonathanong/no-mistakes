@@ -155,3 +155,10 @@ mod mutation_proof;
 
 #[path = "extract_value_flow/own_data_reads.rs"]
 mod own_data_reads;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "extract_value_flow/ordinary_demand_metrics.rs"]
+pub(super) mod ordinary_demand_metrics;
+
+#[path = "extract_value_flow/mutable_root_single.rs"]
+mod mutable_root_single;

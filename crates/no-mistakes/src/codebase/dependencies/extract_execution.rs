@@ -21,18 +21,26 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
-    if conditional {
-        collector.receiver_conditional_region = None;
-    }
+    let previous_receiver = collector.collect_value_flow.then(|| {
+        #[cfg(feature = "test-instrumentation")]
+        extract_value_flow::ordinary_demand_metrics::site(1);
+        if conditional {
+            collector.receiver_conditional_region = None;
+        }
+        collector.receiver_write_is_conditional
+    });
     let previous = collector.conditional_execution;
-    let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
-    collector.receiver_write_is_conditional |= conditional;
-    collector.receiver_write_conditional_depth += usize::from(conditional);
+    if previous_receiver.is_some() {
+        collector.receiver_write_is_conditional |= conditional;
+        collector.receiver_write_conditional_depth += usize::from(conditional);
+    }
     visit(collector);
     collector.conditional_execution = previous;
-    collector.receiver_write_is_conditional = previous_receiver;
-    collector.receiver_write_conditional_depth -= usize::from(conditional);
+    if let Some(previous_receiver) = previous_receiver {
+        collector.receiver_write_is_conditional = previous_receiver;
+        collector.receiver_write_conditional_depth -= usize::from(conditional);
+    }
 }
 
 fn visit_binding_default_with_execution<'a>(
@@ -43,19 +51,6 @@ fn visit_binding_default_with_execution<'a>(
     with_conditional_receiver_write(collector, |collector| {
         collector.visit_expression(&pattern.right)
     });
-}
-
-fn with_conditional_receiver_write(
-    collector: &mut ImportCollector,
-    visit: impl FnOnce(&mut ImportCollector),
-) {
-    // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
-    collector.receiver_conditional_region = None;
-    let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
-    collector.receiver_write_conditional_depth += 1;
-    visit(collector);
-    collector.receiver_write_is_conditional = previous;
-    collector.receiver_write_conditional_depth -= 1;
 }
 
 fn with_repeat_execution<T>(
@@ -194,22 +189,4 @@ fn visit_new_expression_with_imports_and_calls<'a>(
     visit_new_expression_with_imports(collector, new);
     walk::walk_new_expression(collector, new);
     collector.record_descriptor_call(new.span.end);
-}
-
-fn with_callable_receiver_execution(
-    collector: &mut ImportCollector,
-    visit: impl FnOnce(&mut ImportCollector),
-) {
-    // A deferred body has its own execution conditions; surrounding guards only
-    // decide whether the callable is created or invoked.
-    collector.receiver_conditional_region = None;
-    let fresh = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
-    let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
-    let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
-    let conditional_depth = std::mem::take(&mut collector.receiver_write_conditional_depth);
-    visit(collector);
-    collector.receiver_write_is_conditional = conditional;
-    collector.receiver_write_conditional_depth = conditional_depth;
-    collector.fresh_receiver_effects.active = fresh;
-    collector.fresh_receiver_effects.descriptor_call = descriptor_call;
 }

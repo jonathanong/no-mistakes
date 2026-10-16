@@ -244,3 +244,7 @@ mod extra_tests;
 mod import_metadata_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract/ordinary_demand_tests.rs"]
+mod ordinary_demand_tests;

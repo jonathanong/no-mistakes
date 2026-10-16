@@ -60,7 +60,10 @@ impl ImportCollector {
         if let Some(name) = mutable_root_name(&assignment.left) {
             if let Some(scope) = self.callee_binding_scope(name) {
                 if self.has_mutable_receiver_binding(scope, name) {
-                    let value = self.value_expression(&assignment.right);
+                    if self.record_single_named_root(scope, name, assignment) {
+                        return;
+                    }
+                    let value = self.root_value_expression(&assignment.right);
                     self.capture_mutable_root_phase(
                         (scope, name),
                         assignment.left.span().start,
@@ -153,11 +156,11 @@ impl ImportCollector {
         }
     }
 
-    fn retain_receiver_origin(
+    pub(super) fn retain_receiver_origin(
         &mut self,
         scope: usize,
         name: &str,
-        value: ValueExpression,
+        value: impl Into<mutable_origins::Origin>,
         completed_at: u32,
         unconditional: bool,
     ) {
