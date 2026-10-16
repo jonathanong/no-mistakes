@@ -43,16 +43,27 @@ def restore(arm,previous):
     with tarfile.open(transfer/'state.tar')as tar:
         members=tar.getmembers();require({m.name for m in members}==set(manifest['files']),'state entry set changed')
         require(len(members)==len(manifest['files']),'duplicate state entry')
+        restored_regular=set()
         for item in members:
             path=Path(item.name);target=root/path;row=manifest['files'][item.name]
             require(not path.is_absolute()and'..'not in path.parts and path.parts[0]in
                     ['source','target','binaries','proof'],'unsafe state entry')
-            require(item.isfile()or item.issym(),'unsupported state type')
+            require(item.isfile()or item.issym()or item.islnk(),'unsupported state type')
             require(target.parent.resolve().is_relative_to(root),'state parent escaped owned arm')
             if path.parts[0]=='source':
                 require(str(Path(*path.parts[1:]))in tracked,'untracked source/credential entry')
                 require(metadata(target)['sha256']==row['sha256'],'source differs from fresh Git checkout')
             else:require(not target.exists()and not target.is_symlink(),'state overwrites output')
+            if item.islnk():
+                link=Path(item.linkname)
+                require(not link.is_absolute()and '..'not in link.parts and item.linkname in restored_regular,
+                        'hardlink target is not a prior authenticated owned regular entry')
+                require(item.linkname in manifest['files']and (root/link).is_file()and not(root/link).is_symlink(),
+                        'hardlink target is not an existing owned regular file')
+                prior=metadata(root/link)
+                require(all(prior[k]==row[k]for k in ['sha256','bytes','kind','mode']),'hardlink producer metadata mismatch')
+                require(math.isfinite(prior['mtime'])and math.isfinite(row['mtime'])
+                        and abs(prior['mtime']-row['mtime'])<0.000001,'hardlink producer timestamp mismatch')
             if item.issym():
                 link=Path(item.linkname)
                 require(not link.is_absolute()and(target.parent/link).resolve().is_relative_to(root),
@@ -64,7 +75,7 @@ def restore(arm,previous):
             require(type(row['mtime'])in(int,float)and math.isfinite(row['mtime'])and math.isfinite(item.mtime)
                     and abs(row['mtime']-item.mtime)<0.000001,'archive timestamp differs from producer')
             tar.extract(item,path=root,filter='data')
-            if item.isfile():
+            if item.isfile()or item.islnk():
                 require(type(row['mode'])is int and 0<=row['mode']<=0o777,'unsafe authenticated mode')
                 # data_filter strips group/other write bits; restore producer permissions only.
                 os.chmod(target,row['mode'],follow_symlinks=False)
@@ -74,6 +85,7 @@ def restore(arm,previous):
             actual=metadata(target)
             require(all(actual[k]==row[k]for k in ['sha256','bytes','kind','mode']),'state payload mismatch')
             require(abs(actual['mtime']-item.mtime)<0.000001,'producer archive metadata lost')
+            if item.isfile()or item.islnk():restored_regular.add(item.name)
     require(not git('status','--porcelain',cwd=root/'source'),'restored source differs from Git')
     return manifest
 
