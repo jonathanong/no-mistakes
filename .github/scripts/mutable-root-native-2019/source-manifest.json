@@ -1,7 +1,7 @@
 {
   "status": "REVIEWED source only; external exact diagnostic SHA approval required",
   "files": {
-    ".github/scripts/mutable-root-native-2019/README.md": "f1d1b1deb1d4ea4b9152c83903c295fb8a9c7b1bb941fca511dada84d7f1c332",
+    ".github/scripts/mutable-root-native-2019/README.md": "a49419c21a0ba80eee71744569a673cc98f4289d2ab71b1c9820ac83b3748b30",
     ".github/scripts/mutable-root-native-2019/budgets.py": "3c30dc294de5217208b20ddff38af8b0b94a05aa0373795fd0c68a3a5daeb4cb",
     ".github/scripts/mutable-root-native-2019/build.py": "130bd162482ea03cdb76a4e8203abdad5e63321929ba7d29ea4e7bf7a88a2e18",
     ".github/scripts/mutable-root-native-2019/common.py": "93f558efc1cab3d75b766a311e477144f3dcda3decae8996c617a32a1c4d455b",
@@ -279,7 +279,7 @@
     ".github/scripts/mutable-root-native-2019/payload/selector-fixtures/baseline-host-and-production.json": "56b747291de5ff8a31931310b146ba0ac61aa86681ae9c69673dadd824f3bef2",
     ".github/scripts/mutable-root-native-2019/payload/selector-fixtures/candidate-host-and-production.json": "32124ed09c0d0f9f8005135551bbbe460834ed04784979a848d64b7bda812cdb",
     ".github/scripts/mutable-root-native-2019/payload/source-baseline.json": "0e9545bc9c15c597e77ecfeca3789de902cdbac6bd76864e65a4c39baf59f062",
-    ".github/scripts/mutable-root-native-2019/payload/source-candidate.json": "68f98e75f62de06bfaeed61782cc31c635aa7c059d1ddc04520fece02ffeb95c",
+    ".github/scripts/mutable-root-native-2019/payload/source-candidate.json": "fccc1998624659983f6da742242966ec30632c5435a6c4f42ab2c624b88104d4",
     ".github/scripts/mutable-root-native-2019/payload/sql/inputs/index-identity-feature-parity.expected.json": "6bdfcd22de8f994d7d3fb7f9adb0e3feed9c8d059cc8a0ae1281b8240990e5aa",
     ".github/scripts/mutable-root-native-2019/payload/sql/inputs/index-identity-feature-parity.sql": "1e685a552cce974be7765850a3cd5640ef0d99ba3ec7736d19b6bd1b4e72f843",
     ".github/scripts/mutable-root-native-2019/payload/sql/inputs/legacy-default-full-facts.json": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8",
@@ -287,7 +287,7 @@
     ".github/scripts/mutable-root-native-2019/runtime.py": "14784ebb57996cfb970b38faaa8fab3519e46fc41d102f7e24d0854534fcb039",
     ".github/scripts/mutable-root-native-2019/sample.py": "889eda635f9bf26acfde191ff785c8c3a72215d5af7d85525d2ce31e8f2773e8",
     ".github/scripts/mutable-root-native-2019/source.py": "90e8c690f8226e06cc03008a7aa00b0cf3a610b481ff56fb7a25b15a71aac629",
-    ".github/scripts/mutable-root-native-2019/spec.json": "0576ab09e94c7a4f4b5789ec8f7917c1619f26e0fc9baff9098434ab22ccdfac",
+    ".github/scripts/mutable-root-native-2019/spec.json": "fc0a20aab649d36e51cb563d6dc6539d5439878e78584a0535f73bd4ffe78fdf",
     ".github/scripts/mutable-root-native-2019/state.py": "3c7b994cba5841d98f139ec11b2e1bb552030a776eb547edae2e1fbf2e6e76be",
     ".github/scripts/mutable-root-native-2019/test-fixtures/full-fact-debug-cases.json": "6b12fc019f14eefba4afe3bdc81496d9c3b3cc6a986c19c72952f1aa789f93c3",
     ".github/scripts/mutable-root-native-2019/test-fixtures/full-fact-debug/anonymous-map-order.after.debug": "fad4e7a4d86f67b52e7a9ae21e89c3e8611d7203b39a63073c33cc41fa180ad2",

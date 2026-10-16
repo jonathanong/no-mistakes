@@ -25,14 +25,14 @@
     "calibration-batches.json": "0b677685f4f8ce94229c0f0295f57695914180d8d1aca55cbcb22a1a68cc995d"
   },
   "ci": {
-    "run": 38876026084,
-    "rust_job": 116891170498,
-    "raw_log_sha256": "8b33d1913b65b664938675857b856658a7ae1f8eb54ab4de0a286637aa7346a1",
+    "run": 38912067412,
+    "rust_job": 117010122266,
+    "raw_log_sha256": "4685ecf3aafcc92bbb129f703160ddb219b4c134bdbbd40f2fb0b0b50fe3c096",
     "codecov": {
-      "codecov/patch/rust": 116894814532,
-      "codecov/project/rust": 116894807185,
-      "codecov/patch/javascript": 116892991450,
-      "codecov/project/javascript": 116892979258
+      "codecov/patch/rust": 117014834698,
+      "codecov/project/rust": 117014823766,
+      "codecov/patch/javascript": 117012681182,
+      "codecov/project/javascript": 117012663960
     }
   },
   "baseline": {
@@ -41,9 +41,9 @@
     "source_manifest_sha256": "0e9545bc9c15c597e77ecfeca3789de902cdbac6bd76864e65a4c39baf59f062"
   },
   "candidate": {
-    "revision": "577d79ae4896e76557cd34395f20041b72374fe7",
-    "tree": "e05ec953f22966a72fbb4ab477527a393d662e5d",
-    "source_manifest_sha256": "68f98e75f62de06bfaeed61782cc31c635aa7c059d1ddc04520fece02ffeb95c"
+    "revision": "11c0490064bc4676f1b379c78b228d1416347d5b",
+    "tree": "d7ad74a9bc7747a313654196899b7c05391171ef",
+    "source_manifest_sha256": "fccc1998624659983f6da742242966ec30632c5435a6c4f42ab2c624b88104d4"
   },
   "lock_sha256": "979f81a3253a901f9033e25fccbda73fbe32c463e3f402198596b990933171b9",
   "acceptance": {
@@ -54,5 +54,52 @@
     "all_five_metrics_retained": true,
     "no_threshold_relaxation": true,
     "supplementary_only_not_x86_gate_replacement": true
+  },
+  "review_provenance": {
+    "status": "REVIEWED source activation: full exact-head Test CI, global98 and four Codecov PASS; exact diagnostic commit/push/dispatch pending",
+    "technical_coverage": {
+      "path": "/tmp/nm2019-head11c-phase2-audit/actual-technical-phase-receipt.json",
+      "sha256": "c412fbfeacd3b52410d91e0ced521044011ed032d0ff0da4e3918fb44bc506c2"
+    },
+    "raw_rust_job_log": {
+      "path": "/tmp/nm2019-head11c-phase2-audit/rust-job-api-escaped.raw.log",
+      "sha256": "4685ecf3aafcc92bbb129f703160ddb219b4c134bdbbd40f2fb0b0b50fe3c096"
+    },
+    "processed_codecov": {
+      "path": "/tmp/nm2019-head11c-codecov-processing/actual-codecov-processing-receipt.json",
+      "sha256": "25cf1f3b3122a6386c4001501cef6f95e269e3d69af08d32b6cde9b1496df108"
+    },
+    "actual_candidate_source_carry": {
+      "path": "/tmp/nm2019-b25-source-proof/B25-clone-source-proof.json",
+      "sha256": "8425023d8a452e5068106155756dc9fbcbcbd24dcf3b1bb604fdb7f5339b6846"
+    },
+    "native_carry_reviews": [
+      {
+        "path": "/tmp/nm2019-final19-publication/root-native-and-cfg-review.json",
+        "sha256": "b29ca3f6e069b094c57668c11980ad49a6edcf06267326c7e674e2d371faa83c"
+      },
+      {
+        "path": "/tmp/nm2019-final19-clippy-followup/root-lint-metadata-source-review.json",
+        "sha256": "b17c5217ce5a5524849bc058c213d21520a396cf3aad671fd0200b7ca414367e"
+      },
+      {
+        "path": "/tmp/nm2019-final19-type-alias-followup/root-test-alias-source-review.json",
+        "sha256": "c60fbc1666e9a6b9aa6b6b27bbc3171de15479a89c6922baeb693b2eb495235e"
+      },
+      {
+        "path": "/tmp/nm2019-final19-type-alias-followup/actual-published-head-receipt.json",
+        "sha256": "e01325b8ae87faa615782ed6bd325ebddd582aebd12d841c2411b7f0a75fca8c"
+      }
+    ],
+    "native_validation_label": "Actual7790 DEFAULTDEV validation on compiled source, carried through reviewed cfg-only/lint metadata/test-alias changes; not a fresh11c or release build. Fresh both-arm ARM build/full semantics still mandatory.",
+    "historical_semantic_expectations": "Original immutable prior manifest and canonical sidecar retained unchanged; no ARM rebaseline.",
+    "actual_native_receipt": {
+      "path": "/tmp/nm2019-combined-defaultdev-functional-continuation/actual-final-native-parity.json",
+      "sha256": "e18465f889b84c2b3e54cf7912d967c141fcb85aa4b095ef3cc8b09f54e98f58"
+    },
+    "full_test_ci": {
+      "path": "/tmp/nm2019-b25-activation-source-plan/exact11c-test-run.json",
+      "sha256": "d1758dd3a08b31d5bc1890bd78b904d45636ba1d5c492452db79f698707b3db7"
+    }
   }
 }

@@ -1145,7 +1145,7 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_entrypoints.rs",
-    "sha256": "04e15ae87b2519ce3725fed91f335662fc4a1c58c4d9a7dc5a479ae879f810e9"
+    "sha256": "11fd079f5cb084f98a6e06771166271701d08607e10f9f59d7b866757f7bb1bd"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_entrypoints_import_line_tests.rs",
@@ -1170,6 +1170,10 @@
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_import_facts.rs",
     "sha256": "6387df80a872ea8fa0f7d62d7ed2224033b605d1b656f247faf7ff478e3dc291"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_import_lines.rs",
+    "sha256": "b3c3f8dfade71fbeb9bd9f144aaa1df8a927e3b1896c30e28425930f3aebfbb5"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_kinds.rs",
@@ -1241,7 +1245,7 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow.rs",
-    "sha256": "b137d84b702009d199d5c54692ef78856468123a1f47b9a2edb670a08db20272"
+    "sha256": "1fa751a3a51f56d5db1f4a9d8a56f4d1f20e1c0e5620b365c2f17f09d8343f8b"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/active_phase_cursor.rs",
@@ -1329,7 +1333,7 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/fresh_receiver_effects.rs",
-    "sha256": "90c89f39c12605315b1e88edf1813e24d82c19c64f0e022cfdfea5b9e3dda5a3"
+    "sha256": "60c1d181ec7ae6766ddb96c2b9af6eb6fb80f42edd433dbf96dc40ec5b7af62f"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/fresh_receiver_effects_tests.rs",
@@ -1345,7 +1349,15 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/inert_receiver_rhs.rs",
-    "sha256": "2dd842d79c4095edf8d917fb22be09919038731d61522d4a520f58e12915203b"
+    "sha256": "358bfe23ca1303637acd984d22d5c1c1ffdb74497734fbb5c5cc67a613316a9e"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/inert_rhs_probe.rs",
+    "sha256": "daa22c34dd65047c09856602108eb6ddf62912e7bfbe7fa45117a435055cc2e6"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/inert_rhs_tests.rs",
+    "sha256": "ff698309f529b81e9f07520da94115fa92a89ab5ce916c357e3b103924e62313"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_deferred.rs",
@@ -1366,6 +1378,14 @@
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_origin_phases.rs",
     "sha256": "c6d53ab92ea5a04ece2cb56f204acb3e835bbd579ed5878ea7090aa34647014f"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_origin_possible.rs",
+    "sha256": "dbad6b03eac6d5fc3d6be9ad8e6a6b3d34378f5edbdbad4858387c8553f6ee7d"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_origin_possible_tests.rs",
+    "sha256": "4d583de0ed2f1988f8bc6d5e0cca2343ae5803f9924cce14c285f06c0ff2dc30"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_origin_records.rs",
@@ -1389,7 +1409,7 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_origins.rs",
-    "sha256": "c92ee7997d4a4e2c3ee9363b512f5c738f2db0d56ec854eef98c9a14c2d77af1"
+    "sha256": "7d5069bc9cb35103ac1f60684fc8b88066a5942c531cc70b1d56651b98998a35"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/mutable_patterns.rs",
@@ -1532,8 +1552,20 @@
     "sha256": "64475557c66159a56ad4bcc6c56c7ae11abbe5ab35861e7f80f4cc39732a99dd"
   },
   {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_changed_roots.rs",
+    "sha256": "ebd502c52b8b92b0f2295134707345539aa70c018f2f9e8e911044c407370dfc"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_changed_roots_tests.rs",
+    "sha256": "0a20c8bbb8ea7c2a5a541963f3fb9d8eca17bca676fcfc4e9d066bfc398e8ba6"
+  },
+  {
+    "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_changed_roots_unit_tests.rs",
+    "sha256": "e81163872f31e975e4d3584cdedafc9da1ec1dee97be0d8d4de2f9ec5f689ab4"
+  },
+  {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_class_fields.rs",
-    "sha256": "2d94a04a439842dc8a0b3fa49ec881059c7a526a54cedcde11fc0c86579ebede"
+    "sha256": "fee020cdc2ca5e4bdc6451ffcb6b5edeb3910ac998a5f37ef96e2424967b113f"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_finish.rs",
@@ -1549,7 +1581,7 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_runner.rs",
-    "sha256": "9dc3a748a923ca3edf1f9d1beb4c08f68211876b2cb6911e0bb0c6d05d44b3c3"
+    "sha256": "bcde2e9a097de3ce0d23f4cc49bb8002d1cb698d3944fc8a0bd8dd3ec1538e42"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_targets.rs",
@@ -1557,7 +1589,7 @@
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/phase_walk.rs",
-    "sha256": "6792fba49f2e4f7bfabc9e2d78cb097d4bca0c3980d2e8a83d75947d441a6357"
+    "sha256": "fe693e98d60966942b8ee6c868122a0ad53e003c3532b8f8751c6ae0a97874e1"
   },
   {
     "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/post_capture_call_tests.rs",
