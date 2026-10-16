@@ -8,6 +8,7 @@ mod do_constraints;
 mod expression_predicates;
 mod expression_roots;
 mod expression_spans;
+mod index_identity_features;
 mod indexes;
 mod locations;
 mod metadata;

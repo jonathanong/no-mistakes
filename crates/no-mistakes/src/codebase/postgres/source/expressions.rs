@@ -81,22 +81,7 @@ pub(super) fn expression_with_arrays(
 pub(super) fn identity(expr: &Expr) -> String {
     let mut expr = expr.clone();
     let _ = VisitMut::visit(&mut expr, &mut Canonical);
-    let mut structure = serde_json::to_value(&expr).expect("serializable SQL expression");
-    remove_locations(&mut structure);
-    structure.to_string()
-}
-
-fn remove_locations(value: &mut serde_json::Value) {
-    match value {
-        serde_json::Value::Object(fields) => {
-            fields.remove("span");
-            for value in fields.values_mut() {
-                remove_locations(value);
-            }
-        }
-        serde_json::Value::Array(values) => values.iter_mut().for_each(remove_locations),
-        _ => {}
-    }
+    super::expression_identity::identity(&expr)
 }
 
 struct References<'a, 's> {
