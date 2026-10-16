@@ -1,4 +1,5 @@
 thread_local! {
+    pub(super) static PHASE_IDENTIFIERS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     pub(super) static PHASE_KEYS: std::cell::Cell<[usize; 4]> = const { std::cell::Cell::new([0; 4]) };
     pub(super) static DEFERRED_FRAMES: std::cell::Cell<[usize; 4]> = const { std::cell::Cell::new([0; 4]) };
     pub(super) static RHS_DISCARDED_WRITES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };

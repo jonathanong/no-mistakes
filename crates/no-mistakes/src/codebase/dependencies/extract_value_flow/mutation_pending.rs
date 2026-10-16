@@ -7,15 +7,12 @@ pub(super) fn append<R: nested::RootCoordinate>(
     root_read: R,
     references: reference_output::ReferenceOutput<nested::ReceiverWrite<R>>,
 ) {
-    let references = references
-        .into_iter()
-        .map(|reference| (reference, false, true, true));
-    // The old exit occupied this slot before successors were appended. Retain
-    // its capacity headroom as well as its LIFO position, including wide fans.
-    pending.reserve(references.size_hint().0.saturating_add(1));
-    pending.extend(references);
-    pending.insert(
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    super::queue::work_counts::record(4);
+    pending.append_with_exit(
         exit_position,
+        references.into_parts(),
+        |reference| (reference, false, true, true),
         (
             ((key, Vec::new()), Vec::new(), root_read),
             true,
