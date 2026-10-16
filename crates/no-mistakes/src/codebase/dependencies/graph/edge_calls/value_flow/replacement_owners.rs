@@ -25,6 +25,9 @@ pub(super) fn repeated_owners(
                     .is_some_and(|scope| !index.exported_scopes.contains(scope))
         })
         .collect();
+    if candidates.is_empty() {
+        return fx_set();
+    }
     // Other repository execution and unresolved callees would require proving
     // recursion, reentrancy and effects. They are outside this bounded proof.
     for site in sites.iter().filter(|site| site.file == path) {
@@ -36,6 +39,9 @@ pub(super) fn repeated_owners(
                 candidates.remove(&owner);
             }
         }
+    }
+    if candidates.is_empty() {
+        return fx_set();
     }
     let mut events: Vec<_> = sites
         .iter()

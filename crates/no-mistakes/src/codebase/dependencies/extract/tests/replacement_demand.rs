@@ -106,3 +106,83 @@ fn for_of_callable_proofs_keep_opaque_and_noncallable_fallbacks_conservative() {
     assert!(!capsule.writes.is_empty());
     assert_eq!(facts.value_flow.replacement_loop_classifications, 5);
 }
+
+#[test]
+fn ordinary_import_fixtures_skip_per_expression_replacement_guards() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let mut entries = Vec::new();
+    for relative in [
+        "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "fixtures/performance/react-traits/many-components.tsx",
+    ] {
+        let path = root.join(relative);
+        let source = std::fs::read_to_string(&path).unwrap();
+        let allocator = Allocator::default();
+        let parsed =
+            Parser::new(&allocator, &source, SourceType::from_path(&path).unwrap()).parse();
+        assert!(parsed.diagnostics.is_empty(), "{relative}");
+        let facts = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            false,
+        );
+        let values = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            true,
+        );
+        assert_eq!(facts.imports, values.imports, "{relative}");
+        assert_eq!(facts.function_calls, values.function_calls, "{relative}");
+        assert_eq!(
+            facts.callable_scope_ids, values.callable_scope_ids,
+            "{relative}"
+        );
+        // Count entry before the demand guard: post-guard counters hide ordinary-path work.
+        entries.push((
+            relative,
+            facts.value_flow.replacement_expression_guard_entries,
+        ));
+    }
+    assert!(entries.iter().all(|(_, count)| *count == 0), "{entries:?}");
+}
+
+#[test]
+fn typed_invalidations_preserve_owner_semantics_and_ordinary_unary_walks() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/replacement-typed-invalidations.mts");
+    let source = std::fs::read_to_string(fixture).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let extract = |demand| extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program, &source, false, false, demand,
+    );
+    let imports = extract(false);
+    let values = extract(true);
+    assert_eq!(imports.imports, values.imports);
+    assert_eq!(imports.function_calls, values.function_calls);
+    assert_eq!(imports.callable_scope_ids, values.callable_scope_ids);
+    assert_eq!(values.value_flow.replacement_expression_checks, 3);
+    let capsule = values.value_flow.replacements.as_ref().unwrap();
+    assert_eq!(capsule.writes.len(), 4);
+    for (name, invalidated) in [
+        ("awaited", true),
+        ("yielded", true),
+        ("deleted", true),
+        ("ordinary", false),
+    ] {
+        let (owner, _) = values
+            .callable_scope_ids
+            .iter()
+            .find(|(_, scope)| scope == name)
+            .unwrap();
+        let write = capsule.writes.iter().find(|write| write.owner == Some(*owner)).unwrap();
+        assert_eq!(write.unconditional, !invalidated, "{name}");
+        // Cold await precedes capsule creation; warm yield/delete also record unsafe ownership.
+        assert_eq!(capsule.unsafe_owners.contains(owner), invalidated && name != "awaited", "{name}");
+    }
+}

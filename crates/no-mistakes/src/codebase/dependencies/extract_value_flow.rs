@@ -25,6 +25,8 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub replacement_expression_checks: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub replacement_expression_guard_entries: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub replacement_region_frames: usize,
     #[cfg(feature = "test-instrumentation")]
     pub replacement_loop_classifications: usize,

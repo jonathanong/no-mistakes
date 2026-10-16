@@ -170,6 +170,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_await_expression(&mut self, expression: &oxc_ast::ast::AwaitExpression<'a>) {
+        self.invalidate_replacement_expression();
         self.record_unknown_fresh_call(expression.span.end);
         walk::walk_await_expression(self, expression);
         // Operand evaluation can create the first capture; completion must
@@ -178,9 +179,17 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_yield_expression(&mut self, expression: &oxc_ast::ast::YieldExpression<'a>) {
+        self.invalidate_replacement_expression();
         self.record_unknown_fresh_call(expression.span.end);
         walk::walk_yield_expression(self, expression);
         self.record_descriptor_call(expression.span.end);
+    }
+
+    fn visit_unary_expression(&mut self, expression: &oxc_ast::ast::UnaryExpression<'a>) {
+        if expression.operator == oxc_syntax::operator::UnaryOperator::Delete {
+            self.invalidate_replacement_expression();
+        }
+        walk::walk_unary_expression(self, expression);
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {

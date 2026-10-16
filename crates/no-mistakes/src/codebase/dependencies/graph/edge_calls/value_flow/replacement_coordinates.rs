@@ -29,15 +29,21 @@ impl ValueFlowResolution<'_, '_> {
                 };
                 let direct = [Some(root.as_ref())];
                 let inherited;
+                let bounded;
                 let frames = if matches!(&root.kind, OriginKind::ReceiverUse(_, read)
                     if read.owns(path, context))
                 {
                     direct.as_slice()
                 } else {
-                    #[cfg(feature = "test-instrumentation")]
-                    file.record_inherited_frames();
-                    inherited = receiver_owned_contexts::frames(root, path, owner);
-                    inherited.as_slice()
+                    bounded = receiver_owned_contexts::bounded_frames(root, path, owner);
+                    if let Some(frames) = bounded.as_ref() {
+                        frames.as_slice()
+                    } else {
+                        #[cfg(feature = "test-instrumentation")]
+                        file.record_inherited_frames();
+                        inherited = receiver_owned_contexts::frames(root, path, owner);
+                        inherited.as_slice()
+                    }
                 };
                 // Select every relevant owner-qualified acquisition branch.
                 // Delegation adds no target: main still validates source reads,
