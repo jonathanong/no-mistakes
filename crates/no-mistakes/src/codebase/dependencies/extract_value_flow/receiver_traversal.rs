@@ -149,3 +149,7 @@ mod inline_tests;
 #[cfg(test)]
 #[path = "receiver_traversal_differential_tests.rs"]
 mod differential_tests;
+
+#[cfg(test)]
+#[path = "receiver_traversal_oracle_tests.rs"]
+mod oracle;

@@ -1,8 +1,7 @@
 use super::*;
 
-// This is the original f126 ownership algorithm, kept as a test-only oracle.
-#[path = "receiver_traversal_oracle_tests.rs"]
-mod oracle;
+// The shared oracle retains the original f126 ownership algorithm.
+use super::oracle;
 
 #[test]
 fn fused_traversal_matches_original_deterministic_operation_traces() {
