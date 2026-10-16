@@ -173,6 +173,25 @@ test(
 );
 
 test(
+  "compiled CJS and ESM retain legacy nested index identity strings across feature modes",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("index-identity-feature-parity.sql");
+    const pending = cjs.parsePostgresSql({ sql });
+    assert.ok(pending instanceof Promise);
+    const facts = await pending;
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.deepEqual(
+      facts.statements.map(({ index }) => index.structuralIdentity),
+      JSON.parse(fixture("index-identity-feature-parity.expected.json")),
+    );
+  },
+);
+
+test(
   "compiled CJS and ESM expose exact source spans for PostgreSQL constraints",
   { skip: !compiled },
   async () => {

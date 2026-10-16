@@ -19,3 +19,9 @@ fn multiple_extensions_keep_all_branches_in_order() {
     assert!(output.overflow.capacity() > 0);
     assert_eq!(output.into_iter().collect::<Vec<_>>(), [1, 2, 3, 4]);
 }
+
+impl<T> ReferenceOutput<T> {
+    pub(in super::super) fn into_iter(self) -> impl Iterator<Item = T> {
+        self.first.into_iter().chain(self.overflow)
+    }
+}

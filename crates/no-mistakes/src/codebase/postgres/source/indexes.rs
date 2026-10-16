@@ -62,17 +62,53 @@ pub(super) fn index(
             .map(|part| (part.identity.clone(), part.quoted))
             .collect::<Vec<_>>()
     };
-    let mut identity = serde_json::json!({
-        "table": names(&result.table), "method":result.method, "unique":result.unique,
-        "nullsDistinct":result.nulls_distinct,
-        "keys":result.keys.iter().map(|key| serde_json::json!([key.expression.identity,key.ascending,key.nulls_first,key.operator_class.as_ref().map(names)])).collect::<Vec<_>>(),
-        "include":result.include.iter().map(|part| (&part.identity,part.quoted)).collect::<Vec<_>>(),
-        "predicate":result.predicate.as_ref().map(|expr| &expr.identity), "options":result.options
-    });
-    if result.only {
-        identity["only"] = serde_json::Value::Bool(true);
-    }
+    let identity = IndexIdentity {
+        table: names(&result.table),
+        method: &result.method,
+        unique: result.unique,
+        nulls_distinct: result.nulls_distinct,
+        keys: result
+            .keys
+            .iter()
+            .map(|key| {
+                (
+                    key.expression.identity.as_str(),
+                    key.ascending,
+                    key.nulls_first,
+                    key.operator_class.as_ref().map(names),
+                )
+            })
+            .collect(),
+        include: result
+            .include
+            .iter()
+            .map(|part| (part.identity.as_str(), part.quoted))
+            .collect(),
+        predicate: result.predicate.as_ref().map(|expr| expr.identity.as_str()),
+        options: &result.options,
+        only: result.only.then_some(true),
+    };
     result.structural_identity =
         serde_json::to_string(&identity).expect("serializable index identity");
     result
+}
+
+// Field order is the legacy public string contract, independent of serde_json's
+// optional preserve_order feature. ONLY remains an additive final discriminator.
+type IdentityName = Vec<(String, bool)>;
+type IdentityKey<'a> = (&'a str, bool, bool, Option<IdentityName>);
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct IndexIdentity<'a> {
+    table: IdentityName,
+    method: &'a str,
+    unique: bool,
+    nulls_distinct: bool,
+    keys: Vec<IdentityKey<'a>>,
+    include: Vec<(&'a str, bool)>,
+    predicate: Option<&'a str>,
+    options: &'a [String],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    only: Option<bool>,
 }

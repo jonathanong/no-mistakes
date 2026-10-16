@@ -86,10 +86,10 @@ pub struct ValueFlowFacts {
     /// Actual stores to earliest binding/parameter/callable invalidation offsets.
     #[cfg(feature = "test-instrumentation")]
     pub reference_invalidation_stores: usize,
-    /// Sum of each mutation traversal's peak pending capacity, in entries.
+    /// Sum of each mutation traversal's peak pending heap capacity, in entries.
     #[cfg(feature = "test-instrumentation")]
     pub reference_pending_capacity: usize,
-    /// Sum of those peak buffers in bytes, not allocation traffic or RSS.
+    /// Sum of those peak heap buffers in bytes, excluding inline stack storage.
     #[cfg(feature = "test-instrumentation")]
     pub reference_pending_bytes: usize,
     #[cfg(feature = "test-instrumentation")]

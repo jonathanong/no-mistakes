@@ -4,26 +4,34 @@ mod affected;
 pub(super) use affected::Affected;
 #[path = "mutation_eligibility.rs"]
 mod eligibility;
-pub(super) type PendingMutation<R = nested::RootRead> =
-    (nested::ReceiverWrite<R>, bool, bool, bool);
 pub(super) use eligibility::MutationInfo;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "mutation_projection_differential_tests.rs"]
 mod differential_tests;
 #[path = "mutation_pending.rs"]
 mod pending_work;
+#[path = "mutation_pending_queue.rs"]
+mod queue;
+pub(super) use queue::{PendingMutation, Queue as PendingQueue};
 impl ImportCollector {
     pub(super) fn project_member_mutation<R: nested::RootCoordinate>(
         &mut self,
-        mut pending: Vec<PendingMutation<R>>,
+        mut pending: PendingQueue<PendingMutation<R>>,
         mut assigned: Option<(Option<String>, u32)>,
         info: MutationInfo<'_>,
         affected: &mut Affected,
     ) {
         #[cfg(all(test, feature = "test-instrumentation"))]
         if differential_tests::LEGACY.with(std::cell::Cell::get) {
-            return self.project_member_mutation_legacy(pending, assigned, info, affected);
+            return self.project_member_mutation_legacy(
+                pending.into_vec(),
+                assigned,
+                info,
+                affected,
+            );
         }
+        #[cfg(feature = "test-instrumentation")]
+        pending_work::record_queue(pending.len(), 0);
         let mut traversal = receiver_traversal::ReceiverTraversal::default();
         #[cfg(feature = "test-instrumentation")]
         let mut binding_visits = 0;
@@ -51,10 +59,9 @@ impl ImportCollector {
                     },
                 );
             }
-            let terminal = self.projected_receiver_is_terminal(&key, root_read.read().is_some());
             // RHS facts are another possible successor source. Keep their
             // canonical projection whenever that request-owned index exists.
-            if terminal {
+            if self.projected_receiver_is_terminal(&key, root_read.read().is_some()) {
                 affected.insert_owned(key.0, key.1);
                 continue;
             }
@@ -120,8 +127,7 @@ impl ImportCollector {
             let has_assigned_origin = assigned_capture.is_some_and(|(prefix, capture)| {
                 self.assignment_rhs_reference_intact(&key, (&path, &reads, prefix, &capture), info)
             });
-            // Direct component aliases have no value projection. Keep their
-            // canonical proof lookup cold, as in the original traversal.
+            // Direct component aliases have no value projection; keep their proof lookup cold.
             let first_projected = self.first_projected_receiver(
                 &key,
                 root_read.read().is_some(),
@@ -189,12 +195,6 @@ impl ImportCollector {
             );
         }
         #[cfg(feature = "test-instrumentation")]
-        {
-            traversal.record_counts(&mut self.value_flow);
-            self.value_flow.reference_binding_visits += binding_visits;
-            self.value_flow.reference_pending_capacity += pending.capacity();
-            self.value_flow.reference_pending_bytes +=
-                pending.capacity() * std::mem::size_of::<PendingMutation<R>>();
-        }
+        self.record_projection_counts::<R>(traversal, binding_visits, pending.capacity());
     }
 }

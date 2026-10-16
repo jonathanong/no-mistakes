@@ -189,3 +189,7 @@ mod versions;
 #[cfg(feature = "test-instrumentation")]
 #[path = "mutable_root_probe_tests.rs"]
 mod probes;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "deferred_frame_tests.rs"]
+pub(super) mod deferred_frames;

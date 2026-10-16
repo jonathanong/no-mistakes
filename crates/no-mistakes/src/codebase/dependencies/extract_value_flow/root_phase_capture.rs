@@ -9,6 +9,25 @@ pub(in super::super) struct RootPhaseCapture {
     pub(super) conditional_depth: usize,
     pub(super) events: Vec<((usize, String), u32, ValueExpression, bool)>,
 }
+impl RootPhaseCapture {
+    pub(super) fn first_changes(
+        root_writes: &[phase_walk::RootPhaseWrite],
+    ) -> FxHashMap<String, u32> {
+        let mut first_changes: FxHashMap<String, u32> = fx_map();
+        for point in root_writes {
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::phase_key(2);
+            if let Some(phase) = first_changes.get_mut(point.name.as_str()) {
+                *phase = (*phase).min(point.phase);
+            } else {
+                #[cfg(feature = "test-instrumentation")]
+                root_target_metrics::phase_key(3);
+                first_changes.insert(point.name.clone(), point.phase);
+            }
+        }
+        first_changes
+    }
+}
 impl ImportCollector {
     pub(super) fn prepared_mutable_root_write(&self, scope: usize, name: &str) -> bool {
         self.has_mutable_receiver_binding(scope, name)

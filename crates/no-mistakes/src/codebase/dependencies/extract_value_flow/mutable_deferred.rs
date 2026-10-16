@@ -29,6 +29,12 @@ impl DeferredMutations {
     fn push(&mut self, mut mutation: DeferredMutation) {
         // One normal AST visit supplies one physical writer's metadata. Group
         // its alias paths so replay retains one shared traversal, not one per path.
+        #[cfg(feature = "test-instrumentation")]
+        root_target_metrics::DEFERRED_FRAMES.with(|counts| {
+            let mut c = counts.get();
+            c[2] += 1;
+            counts.set(c);
+        });
         let key = (
             mutation.metadata.offset,
             mutation.metadata.context,
@@ -46,6 +52,12 @@ impl ImportCollector {
     pub(in super::super) fn begin_deferred_mutable_writes(
         &mut self,
     ) -> Option<Box<DeferredMutations>> {
+        #[cfg(feature = "test-instrumentation")]
+        root_target_metrics::DEFERRED_FRAMES.with(|counts| {
+            let mut c = counts.get();
+            c[0] += 1;
+            counts.set(c);
+        });
         self.deferred_mutable_writes.replace(Box::default())
     }
     pub(super) fn defer_mutable_projection(
@@ -96,12 +108,24 @@ impl ImportCollector {
         self.deferred_mutable_writes = previous;
         let Some(frame) = frame else { return };
         if let Some(parent) = self.deferred_mutable_writes.as_mut() {
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::DEFERRED_FRAMES.with(|counts| {
+                let mut c = counts.get();
+                c[1] += 1;
+                counts.set(c);
+            });
             for mutation in frame.pending {
                 parent.push(mutation);
             }
             return;
         }
         for deferred in frame.pending {
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::DEFERRED_FRAMES.with(|counts| {
+                let mut c = counts.get();
+                c[3] += 1;
+                counts.set(c);
+            });
             let mut references = Vec::new();
             let info = MutationInfo {
                 metadata: deferred.metadata,
@@ -135,7 +159,12 @@ impl ImportCollector {
                 .map(|reference| (reference, false, true, true))
                 .collect();
             let mut affected = mutation_projection::Affected::default();
-            self.project_member_mutation::<nested::RootRead>(pending, None, info, &mut affected);
+            self.project_member_mutation::<nested::RootRead>(
+                mutation_projection::PendingQueue::from_vec(pending),
+                None,
+                info,
+                &mut affected,
+            );
             self.invalidate_mutation_bindings(
                 &affected,
                 info.metadata.context,
@@ -145,3 +174,7 @@ impl ImportCollector {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "deferred_grouping_tests.rs"]
+mod tests;

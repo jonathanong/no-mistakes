@@ -149,3 +149,35 @@ fn mutable_root_alternatives_keep_lazy_pending_overflow() {
         assert!(facts.value_flow.receiver_only_visits > 1, "{name}");
     }
 }
+
+#[test]
+fn nested_rhs_patterns_share_one_deferred_frame() {
+    // LHS ownership ends before visiting each nested RHS, but all nested writes
+    // must remain deferred until the outer root capture has been committed.
+    let mut observed = Vec::new();
+    for name in [
+        "mutable-pattern-phase-scale.mts",
+        "mutable-pattern-eager-class-scale.mts",
+        "mutable-pattern-cold-class-scale.mts",
+    ] {
+        root_target_metrics::DEFERRED_FRAMES.with(|counts| counts.set([0; 4]));
+        let source = mutable_receiver_source(name);
+        let allocator = Allocator::default();
+        let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
+        assert!(parsed.diagnostics.is_empty());
+        let _facts = extract_import_facts_from_program_with_source_and_demands(
+            &parsed.program,
+            &source,
+            false,
+            false,
+            true,
+        );
+        let counts = root_target_metrics::DEFERRED_FRAMES.with(std::cell::Cell::get);
+        eprintln!("{name}: deferred frames/merges/pushes/replays {counts:?}");
+        observed.push((name, counts));
+    }
+    assert!(
+        observed.iter().all(|(_, c)| *c == [1, 0, 1, 1]),
+        "outermost frame only: {observed:?}"
+    );
+}

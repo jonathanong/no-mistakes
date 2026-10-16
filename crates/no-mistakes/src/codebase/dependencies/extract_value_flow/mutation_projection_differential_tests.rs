@@ -31,6 +31,11 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
         "mutable-root-scale.mts",
         "mutable-let-cycle.mts",
         "mutable-pattern-deferred-diamond.mts",
+        "mutable-pattern-phase-scale.mts",
+        "mutable-pattern-eager-class-scale.mts",
+        "mutable-pattern-cold-class-scale.mts",
+        "mutable-pattern-future-foreign-32.mts",
+        "mutable-pattern-future-foreign-128.mts",
         "mutable-let-conditional-root.mts",
         "mutable-let-foreign-root.mts",
         "mutable-root-target-metadata.ts",
@@ -43,7 +48,7 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
         let file = root.join("src/nested-receiver-containers").join(name);
         let source = std::fs::read_to_string(&file).unwrap();
         for demand in [false, true] {
-            let old = collect(&source, SourceType::from_path(&file).unwrap(), true, demand);
+            let mut old = collect(&source, SourceType::from_path(&file).unwrap(), true, demand);
             let new = collect(
                 &source,
                 SourceType::from_path(&file).unwrap(),
@@ -58,6 +63,16 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
                 );
                 assert!(old.value_flow.reference_pending_capacity >= 32);
             }
+            // Only cfg-only heap diagnostics change; every semantic field stays exact.
+            assert!(
+                new.value_flow.reference_pending_capacity
+                    <= old.value_flow.reference_pending_capacity
+            );
+            assert!(
+                new.value_flow.reference_pending_bytes <= old.value_flow.reference_pending_bytes
+            );
+            old.value_flow.reference_pending_capacity = new.value_flow.reference_pending_capacity;
+            old.value_flow.reference_pending_bytes = new.value_flow.reference_pending_bytes;
             assert_eq!(new, old, "{name} demand={demand}");
         }
     }

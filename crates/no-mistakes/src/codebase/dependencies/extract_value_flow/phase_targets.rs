@@ -102,6 +102,21 @@ impl PhaseWalk<'_> {
             });
             return;
         }
+        if let AssignmentTarget::AssignmentTargetIdentifier(identifier) = target {
+            #[cfg(all(test, feature = "test-instrumentation"))]
+            let legacy = mutable_receiver_tests::deferred_frames::LEGACY_IDENTIFIER
+                .with(std::cell::Cell::get);
+            #[cfg(not(all(test, feature = "test-instrumentation")))]
+            let legacy = false;
+            if !legacy {
+                self.root_write(identifier.name.as_str(), target.span().start, guaranteed);
+                return;
+            }
+        }
+        #[cfg(feature = "test-instrumentation")]
+        if matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {
+            root_target_metrics::PHASE_IDENTIFIERS.with(|count| count.set(count.get() + 1));
+        }
         for (name, path, target) in write_targets::targets(target) {
             if path.is_empty() {
                 self.root_write(&name, target, guaranteed);
@@ -117,7 +132,13 @@ impl PhaseWalk<'_> {
     }
     pub(super) fn root_write(&mut self, name: &str, target: u32, guaranteed: bool) {
         if let Some(changed) = &mut self.changed_roots {
-            changed.insert(name.to_string());
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::phase_key(0);
+            if !changed.contains(name) {
+                #[cfg(feature = "test-instrumentation")]
+                root_target_metrics::phase_key(1);
+                changed.insert(name.to_string());
+            }
         }
         if self.collect_root_origins {
             self.root_writes.push(phase_walk::RootPhaseWrite {

@@ -90,3 +90,19 @@ impl ImportCollector {
         terminal
     }
 }
+
+#[cfg(feature = "test-instrumentation")]
+impl ImportCollector {
+    pub(in super::super) fn record_projection_counts<R: nested::RootCoordinate>(
+        &mut self,
+        traversal: receiver_traversal::ReceiverTraversal,
+        binding_visits: usize,
+        capacity: usize,
+    ) {
+        traversal.record_counts(&mut self.value_flow);
+        self.value_flow.reference_binding_visits += binding_visits;
+        self.value_flow.reference_pending_capacity += capacity;
+        self.value_flow.reference_pending_bytes +=
+            capacity * std::mem::size_of::<mutation_projection::PendingMutation<R>>();
+    }
+}
