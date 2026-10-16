@@ -40,3 +40,50 @@ test(
     assert.deepEqual(await esm.analyzeProject({ root, reports }), aggregate);
   },
 );
+
+test(
+  "compiled typed executors respect namespace and class type shadows",
+  { skip: !compiled },
+  async () => {
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/namespace-shadow-fixture",
+    );
+    const expected = require(join(root, "expected.json"));
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const reports = [];
+    const results = [];
+    for (const [entry, lines] of Object.entries(expected)) {
+      const options = { root, kind: "postgres", entry };
+      const pending = cjs.effects(options);
+      assert.equal(typeof pending.then, "function");
+      const result = await pending;
+      assert.deepEqual(
+        result.callSites.map(({ line }) => line),
+        lines,
+      );
+      assert.ok(result.callSites.every(({ file }) => file === entry));
+      assert.deepEqual(await esm.effects(options), result);
+      reports.push({ type: "effects", kind: "postgres", entry });
+      results.push(result);
+    }
+    const check = await cjs.check({ root });
+    const wanted = Object.entries(expected).flatMap(([file, lines]) =>
+      lines.map((line) => [file, line]),
+    );
+    assert.deepEqual(
+      check.rules.map(({ file, line }) => [file, line]),
+      wanted,
+    );
+    assert.deepEqual(await esm.check({ root }), check);
+    reports.push({ type: "check" });
+    results.push(check);
+    const aggregate = await cjs.analyzeProject({ root, reports });
+    assert.deepEqual(
+      aggregate.reports.map(({ result }) => result),
+      results,
+    );
+    assert.deepEqual(await esm.analyzeProject({ root, reports }), aggregate);
+  },
+);

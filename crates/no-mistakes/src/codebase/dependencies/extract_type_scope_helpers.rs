@@ -93,14 +93,26 @@ impl ImportCollector {
 }
 
 fn record_statement_type_binding(collector: &mut ImportCollector, statement: &Statement<'_>) {
-    match statement {
-        Statement::TSTypeAliasDeclaration(declaration) => {
-            collector.add_type_binding_name(declaration.id.name.as_str());
+    let name = match statement {
+        Statement::ClassDeclaration(declaration) => {
+            declaration.id.as_ref().map(|id| id.name.as_str())
         }
-        Statement::TSInterfaceDeclaration(declaration) => {
-            collector.add_type_binding_name(declaration.id.name.as_str());
-        }
-        _ => {}
+        Statement::TSTypeAliasDeclaration(declaration) => Some(declaration.id.name.as_str()),
+        Statement::TSInterfaceDeclaration(declaration) => Some(declaration.id.name.as_str()),
+        Statement::TSEnumDeclaration(declaration) => Some(declaration.id.name.as_str()),
+        Statement::ExportDeclaration(export) => match &export.declaration {
+            Declaration::ClassDeclaration(declaration) => {
+                declaration.id.as_ref().map(|id| id.name.as_str())
+            }
+            Declaration::TSTypeAliasDeclaration(declaration) => Some(declaration.id.name.as_str()),
+            Declaration::TSInterfaceDeclaration(declaration) => Some(declaration.id.name.as_str()),
+            Declaration::TSEnumDeclaration(declaration) => Some(declaration.id.name.as_str()),
+            _ => None,
+        },
+        _ => None,
+    };
+    if let Some(name) = name {
+        collector.add_type_binding_name(name);
     }
 }
 
