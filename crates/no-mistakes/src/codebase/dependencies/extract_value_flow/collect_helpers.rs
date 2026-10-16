@@ -39,6 +39,7 @@ impl ImportCollector {
                     return ValueType::Unknown;
                 }
                 if name == "NonNullable"
+                    && !self.hoisted_non_nullable_type_import
                     && !self.type_binding_shadows(root)
                     && !self.imported_bindings.contains(root)
                     && !self.predeclared_imported_bindings.contains(root)
