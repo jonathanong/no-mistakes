@@ -125,6 +125,7 @@ struct ImportCollector {
     known_function_scopes: FxHashSet<String>,
     imported_bindings: FxHashSet<String>,
     predeclared_imported_bindings: FxHashSet<String>,
+    hoisted_non_nullable_type_import: bool,
     call_import_bindings: Vec<ImportedBinding>,
     call_export_bindings: Vec<ExportedBinding>,
     callable_aliases: Vec<CallableAliasBinding>,

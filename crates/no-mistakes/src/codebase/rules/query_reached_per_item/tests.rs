@@ -496,3 +496,5 @@ mod projections;
 mod typed_clients;
 
 mod namespace_shadows;
+#[path = "tests/type_import_order.rs"]
+mod type_import_order;
