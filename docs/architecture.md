@@ -738,3 +738,15 @@ The integration prepared catalog owns this check projection and its importer-sco
 Runner selection is `notRequested`, `prepared`, or `failed`. Requested empty lists are prepared empty selections. Config failures retain diagnostics separately from prepared project records. Each project exposes `case`, `hook`, and `fixture` as explicit `absent`, `known`, or `unknown` tagged slots. Known invalid values survive unchanged. Unknown reasons are exhaustive typed projections. Provenance paths use the existing request-root-relative slash formatter, byte spans are half-open offsets (or null), and inheritance order is retained. Outside-root sources retain their path rather than being silently re-rooted.
 
 Ordinary fields and integration errors remain unchanged. Missing inputs retain evidence failure records without satisfying the legacy integration coverage invariant. Suppression affects findings, not evidence. Batched requests prepare the union demand once and expose evidence only on check reports that requested it; JSON/YAML share the ordinary check renderer. This projection does not prove registration packages, browser/custom runner behavior, SDK defaults, runtime latches or transitive package closure.
+
+Receiver replacement and mutable callable-assignment evidence share a sparse
+`ValueReplacementFacts` capsule in each file's prepared `ValueFlowFacts`.
+`callable_assignments()` and `callable_assignment_is_used(scope, name)` borrow
+that evidence without adding empty vectors or sets to every file. Pending
+callable assignments stay in one private lazy collector box until the existing
+finalization moves retained evidence into the capsule. Discarded assignments
+without a callable value never allocate a public capsule. Callable-only
+capsules carry an explicit marker; default externally prepared capsules remain
+conservative. Any receiver write, region, call proof, or unsafe owner requires
+receiver resolution. This representation preserves the single request-owned
+fact pass and canonical dependency graph; it adds no persistent cache.

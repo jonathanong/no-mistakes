@@ -20,10 +20,16 @@ pub struct ValueFlowFacts {
     /// Local callable values can escape through containers, returns, or stores.
     /// Bare call callees are represented by canonical invocation facts instead.
     pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
-    /// Literal callable assignments to a mutable lexical name, including
-    /// unknown writes that prevent a closed canonical call edge.
-    pub callable_assignments: Vec<CallableAssignment>,
-    pub callable_assignment_uses: FxHashSet<(usize, String)>,
+    #[cfg(feature = "test-instrumentation")]
+    pub replacement_statement_checks: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub replacement_expression_checks: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub replacement_region_frames: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub replacement_loop_classifications: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub callable_assignment_name_clones: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
     #[cfg(feature = "test-instrumentation")]

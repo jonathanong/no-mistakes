@@ -78,7 +78,8 @@ fn collect_call_edges_for_core(
                 }
             }
             if plan.calls {
-                if let Some(replacements) = &file.value_flow.replacements {
+                if let Some(replacements) = file.value_flow.replacements.as_ref()
+                    .filter(|facts| facts.requires_receiver_proof()) {
                     output
                         .replacement_files
                         .push((path.clone(), std::sync::Arc::clone(replacements)));

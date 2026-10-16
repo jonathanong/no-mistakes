@@ -11,12 +11,13 @@ impl ImportCollector {
         if self.bare_callable_callee == Some(identifier.span.start) {
             return;
         }
-        if self
-            .mutable_module_bindings
-            .contains(identifier.name.as_str())
+        if self.is_mutable_module_binding(identifier.name.as_str())
             && self.callee_binding_scope(identifier.name.as_str()) == Some(0)
         {
-            self.callable_assignment_uses
+            self.callable_assignment_state
+                .as_mut()
+                .expect("mutable module state")
+                .uses
                 .insert((0, identifier.name.to_string()));
         }
         self.record_callable_name_value_use(identifier.name.as_str());

@@ -68,12 +68,13 @@ fn index_callable_aliases(
 fn index_closed_callable_assignments(
     file: &crate::codebase::ts_source::facts::TsFileFacts,
 ) -> ScopedNameMap<IndexedCallableAssignment> {
-    if file.value_flow.callable_assignments.is_empty() {
+    if file.value_flow.callable_assignments().is_empty() {
         return fx_map();
     }
-    let Some(replacements) = file.value_flow.replacements.as_ref() else { return fx_map(); };
+    let Some(replacements) = file.value_flow.replacements.as_ref()
+        .filter(|facts| facts.requires_receiver_proof()) else { return fx_map(); };
     let mut grouped: FxHashMap<(usize, String), Vec<&crate::codebase::dependencies::extract::CallableAssignment>> = fx_map();
-    for write in &file.value_flow.callable_assignments {
+    for write in file.value_flow.callable_assignments() {
         grouped.entry((write.scope, write.name.clone())).or_default().push(write);
     }
     let scopes: FxHashMap<_, _> = file.callable_scope_ids.iter().cloned().collect();
@@ -81,7 +82,7 @@ fn index_closed_callable_assignments(
         let [write] = writes.as_slice() else { return None; };
         let id = write.callable?;
         if scope != 0 || write.owner.is_some() || !write.guaranteed
-            || file.value_flow.callable_assignment_uses.contains(&(scope, name.clone()))
+            || file.value_flow.callable_assignment_is_used(scope, &name)
             || file.exported_bindings.iter().any(|binding| binding.local == name)
             || file.callable_bindings.iter().any(|(binding_scope, binding, bound_id)| {
                 *bound_id == id && file.value_flow.callable_value_uses.as_ref()

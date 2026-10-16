@@ -26,7 +26,7 @@ impl ImportCollector {
             })
             .flatten();
         for (name, _, _) in extract_value_flow::write_targets::targets(target) {
-            if !self.mutable_module_bindings.contains(&name) {
+            if !self.is_mutable_module_binding(&name) {
                 continue;
             }
             let Some(scope) = self.callee_binding_scope(&name) else {
@@ -35,14 +35,17 @@ impl ImportCollector {
             if scope != 0 || self.imported_bindings.contains(&name) {
                 continue;
             }
-            self.value_flow
-                .callable_assignments
+            let owner = self.current_function_id();
+            self.callable_assignment_state
+                .as_mut()
+                .expect("mutable module state")
+                .assignments
                 .push(extract_value_flow::CallableAssignment {
                     scope,
                     name,
                     completed_at,
                     callable,
-                    owner: self.current_function_id(),
+                    owner,
                     region_start: self.replacement_region.map(|region| region.start),
                     guaranteed: false,
                 });

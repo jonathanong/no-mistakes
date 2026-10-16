@@ -36,7 +36,8 @@ impl ImportCollector {
             .value_flow
             .replacements
             .as_mut()
-            .and_then(std::sync::Arc::get_mut)?;
+            .and_then(std::sync::Arc::get_mut)
+            .filter(|facts| facts.requires_receiver_proof())?;
         let index = facts.regions.len();
         facts.regions.push(ValueRepeatRegion {
             start: region.start,
@@ -112,7 +113,9 @@ impl ImportCollector {
                 .as_mut()
                 .and_then(std::sync::Arc::get_mut),
         ) {
-            facts.unsafe_owners.insert(owner);
+            if facts.requires_receiver_proof() {
+                facts.unsafe_owners.insert(owner);
+            }
         }
     }
 }
@@ -124,6 +127,14 @@ fn with_replacement_region(
     may_repeat: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
+    if !collector.collect_value_flow {
+        visit(collector);
+        return;
+    }
+    #[cfg(feature = "test-instrumentation")]
+    {
+        collector.value_flow.replacement_region_frames += 1;
+    }
     let owner = collector.current_function_id();
     // Nested control is unsupported, rather than replayed as an interpreter.
     if collector
@@ -143,7 +154,7 @@ fn with_replacement_region(
     visit(collector);
     // Retain an enclosing region even when its writes were recorded in a
     // nested/unsupported region. Reads there must not reuse a stale original.
-    if collector.value_flow.replacements.is_some() {
+    if collector.value_flow.has_receiver_replacement_facts() {
         collector.replacement_region_index();
     }
     let region = collector

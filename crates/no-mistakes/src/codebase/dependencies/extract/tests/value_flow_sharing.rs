@@ -332,3 +332,7 @@ fn nested_writes_bound_existing_traversal_and_canonical_lookups() {
         .unwrap();
     assert!(std::sync::Arc::ptr_eq(primary, &defaults[&0][0].history));
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "replacement_demand.rs"]
+mod replacement_demand;

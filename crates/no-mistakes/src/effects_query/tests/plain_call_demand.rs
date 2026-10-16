@@ -142,3 +142,54 @@ fn saved_plain_only_replacement_alternatives_and_foreign_write_survive() {
         (4, "transaction")
     );
 }
+
+#[test]
+fn saved_callable_only_facts_keep_plain_report_without_receiver_call_graph() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/effects-plain-callable-only/fixture");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let path = fixture.path().join("src/entry.mts");
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
+        std::slice::from_ref(&path),
+        TsFactPlan {
+            imports: true,
+            function_calls: true,
+            value_flow: true,
+            ..Default::default()
+        },
+    );
+    let flow = &facts.get(&path).unwrap().value_flow;
+    let capsule = flow
+        .replacements
+        .as_ref()
+        .expect("saved callable assignment");
+    assert!(capsule.callable_only);
+    assert_eq!(flow.callable_assignments().len(), 1);
+    assert!(flow.callable_assignment_is_used(0, "callback"));
+    assert!(!flow.callable_assignment_is_used(0, "unrelated"));
+    assert!(!flow.has_receiver_replacement_facts());
+    assert!(capsule.regions.is_empty() && capsule.unsafe_owners.is_empty());
+    let files = GraphFiles::from_files(vec![path]);
+    assert!(!needs_effect_call_graph(&plain_selection(), &files, &facts));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let actual = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        run(
+            fixture.path(),
+            None,
+            None,
+            "database",
+            Path::new("src/entry.mts"),
+            &[],
+            None,
+        )
+    })
+    .unwrap();
+    let expected: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(saved.join("expected.json")).unwrap())
+            .unwrap();
+    assert_eq!(serde_json::to_value(actual).unwrap(), expected);
+    let work = observer.snapshot().work;
+    assert_eq!(work["parse.files"], 1);
+    assert_eq!(work["resolver.requests"], 1, "{work:#?}");
+    assert_eq!(work.get("resolver.cache_hits").copied().unwrap_or(0), 0);
+}

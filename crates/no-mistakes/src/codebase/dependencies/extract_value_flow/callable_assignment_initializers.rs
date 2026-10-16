@@ -7,17 +7,20 @@ impl ImportCollector {
     ) {
         if !immutable {
             for name in binding_names(&declarator.id) {
-                if self.mutable_module_bindings.contains(&name)
+                if self.is_mutable_module_binding(&name)
                     && self.callee_binding_scope(&name) == Some(0)
                 {
-                    self.value_flow
-                        .callable_assignments
+                    let owner = self.current_function_id();
+                    self.callable_assignment_state
+                        .as_mut()
+                        .expect("mutable module state")
+                        .assignments
                         .push(CallableAssignment {
                             scope: 0,
                             name,
                             completed_at: init.span().end,
                             callable: None,
-                            owner: self.current_function_id(),
+                            owner,
                             region_start: self.replacement_region.map(|region| region.start),
                             guaranteed: false,
                         });

@@ -612,3 +612,11 @@ so writes from earlier iterations invalidate its original target. A loop-local
 alias of an earlier copied method does not reacquire the property. Methods copied
 before the loop keep their acquisition snapshots. Loop initializer and iterable expressions retain
 their existing one-time timing proof.
+
+Prepared mutable callable facts can exist without receiver replacement demand.
+`ValueFlowFacts::has_receiver_replacement_facts()` distinguishes an explicitly
+callable-only capsule from conservative/default or populated receiver evidence.
+Plain effect-name queries retain their scoped path for callable-only facts;
+missing, partial, failed, default, and foreign receiver facts keep conservative
+canonical call resolution. Callable-only storage does not create repeat regions
+or unsafe receiver owners. CLI and asynchronous Node report shapes are unchanged.

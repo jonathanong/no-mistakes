@@ -74,7 +74,7 @@ fn needs_effect_call_graph(
             file.operational_error.is_some()
                 || file.parse_error.is_some()
                 || file.fatal_parse_error
-                || file.value_flow.replacements.is_some()
+                || file.value_flow.has_receiver_replacement_facts()
         })
     })
 }

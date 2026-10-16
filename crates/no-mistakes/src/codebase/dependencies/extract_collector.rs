@@ -41,8 +41,7 @@ struct ImportCollector {
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
-    callable_assignment_uses: FxHashSet<(usize, String)>,
-    mutable_module_bindings: FxHashSet<String>,
+    callable_assignment_state: Option<Box<CallableAssignmentState>>,
     /// Cutoff for the current callable's body when its suffix is unreachable.
     /// Saved and restored around body traversal; absent for ordinary bodies.
     unreachable_value_binding_after: Option<u32>,
@@ -147,3 +146,17 @@ struct ImportCollector {
 }
 
 include!("extract_collector_maps.rs");
+
+#[derive(Default)]
+struct CallableAssignmentState {
+    assignments: Vec<extract_value_flow::CallableAssignment>,
+    uses: FxHashSet<(usize, String)>,
+    module_bindings: FxHashSet<String>,
+}
+impl ImportCollector {
+    fn is_mutable_module_binding(&self, name: &str) -> bool {
+        self.callable_assignment_state
+            .as_ref()
+            .is_some_and(|state| state.module_bindings.contains(name))
+    }
+}

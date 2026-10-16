@@ -73,7 +73,14 @@ fn predeclare_variable_bindings(
             && collector.current_lexical_scope_id() == 0
             && declaration.kind != VariableDeclarationKind::Const
         {
-            collector.mutable_module_bindings.extend(binding_names(&declarator.id));
+            let names = binding_names(&declarator.id);
+            if !names.is_empty() {
+                collector
+                    .callable_assignment_state
+                    .get_or_insert_with(Default::default)
+                    .module_bindings
+                    .extend(names);
+            }
         }
         collector.add_binding_names(&declarator.id);
     }
