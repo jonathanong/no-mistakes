@@ -45,6 +45,7 @@ impl ScopeVisitor<'_> {
                 scope.insert(
                     name,
                     BindingState {
+                        executor_alias: None,
                         builder_identity: None,
                         builder_effect_revision: 0,
                         condition_key: None,
@@ -73,6 +74,7 @@ impl ScopeVisitor<'_> {
             scope.insert(
                 name.to_string(),
                 BindingState {
+                    executor_alias: None,
                     builder_identity: None,
                     builder_effect_revision: 0,
                     condition_key: None,
@@ -92,6 +94,7 @@ impl ScopeVisitor<'_> {
     pub(super) fn mark_dynamic(&mut self, name: &str) {
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
+                binding.executor_alias = None;
                 binding.initialized = true;
                 binding.kind = EmbeddedSqlKind::Dynamic;
                 binding.condition_key = None;
@@ -184,6 +187,7 @@ fn param_is_sql_statement(
 }
 
 pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingState) {
+    binding.executor_alias = None;
     binding.kind = EmbeddedSqlKind::Dynamic;
     binding.pending_imported_helper = None;
     binding.condition_key = None;

@@ -73,6 +73,12 @@ rules:
       executorNames: [query, read, write]
 ```
 
+Immutable `const` executor aliases and direct conditional callees are recognized
+when both alternatives are configured imported executors or already initialized
+immutable aliases. Local shadows and unproven alternatives do not establish an
+executor binding; mutable executor aliases are not inferred. SQL classification
+remains independent of executor selection.
+
 `importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
 
 Counterexample: `query(\`SELECT id FROM posts\`)`.

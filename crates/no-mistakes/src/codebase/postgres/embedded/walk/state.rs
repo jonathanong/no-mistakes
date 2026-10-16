@@ -11,6 +11,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 #[derive(Clone)]
 pub(crate) struct BindingState {
+    // None: ineligible; Some(false): const awaiting its initializer; Some(true): proven.
+    pub(super) executor_alias: Option<bool>,
     pub(super) builder_identity: Option<u32>,
     pub(super) builder_effect_revision: u64,
     pub(super) condition_key: Option<(u64, u32)>,
