@@ -12,14 +12,24 @@
       "sha256": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0"
     },
     {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/orphan_child.py",
+      "bytes": 181,
+      "sha256": "bfdd6b890e9c0d069028c758452730bffda7e83a7e6fd9c68a33a2331d9328d6"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/orphan_helper.py",
+      "bytes": 471,
+      "sha256": "483783ae4ae8e584219aea10b9c993c00767a6191b744cbac8b8625336b93e11"
+    },
+    {
       "path": ".github/scripts/parameter-cache-isolated/functional-once.py",
       "bytes": 3416,
       "sha256": "6711cb16263823989965c572899591a9e8ee5958a9eb8aba7f8d5798d96f7fc9"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/hosted.py",
-      "bytes": 8726,
-      "sha256": "2c1e7b67a377940925adc471a0a7e92cfea40de29399a004f9fe3d2f91d68bec"
+      "bytes": 8907,
+      "sha256": "ebb66b3b8405018dc74491eea39cd511537204d2b6ea0f4ae48cee22279b1418"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/measure-once.py",
@@ -517,9 +527,19 @@
       "sha256": "ea4885a5e1ae0fff1a1f9806c5e06f827e110df1160f2ef314505002f758a11a"
     },
     {
+      "path": ".github/scripts/parameter-cache-isolated/subreaper.py",
+      "bytes": 3253,
+      "sha256": "2b25cba07ebba72941337722e6c5b756454f6ad13a5a50fe62756f4915b95f9d"
+    },
+    {
       "path": ".github/scripts/parameter-cache-isolated/test_source.py",
       "bytes": 2405,
       "sha256": "8289008de4f0bb17ee198f09400951b5b0cc60c24ab0a911811b460b497257b8"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/test_subreaper.py",
+      "bytes": 1956,
+      "sha256": "b6a772bece1c788a7b95e4f0bb2cb1bc695817d3d49be8e6bd5e1c93f25735f3"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/transport-DRAFT.json",

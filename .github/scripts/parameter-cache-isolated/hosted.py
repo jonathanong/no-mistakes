@@ -10,6 +10,9 @@ import subprocess
 import time
 
 from process_owner import OwnedProcess
+import subreaper
+
+subreaper.enable()
 
 D = pathlib.Path(__file__).resolve().parent
 O = pathlib.Path(os.environ['RUNNER_TEMP']) / 'parameter-cache-isolated'
@@ -23,6 +26,7 @@ def sha(path):
 
 
 def run(argv, label, seconds=120, env=None, cwd=None):
+    subreaper.require_empty()
     process = owner = None
     record = {'argv': argv, 'label': label, 'exit': None}
     try:
@@ -36,11 +40,13 @@ def run(argv, label, seconds=120, env=None, cwd=None):
             assert process.returncode == 0
             assert time.monotonic() < min(deadline, started + seconds)
     finally:
-        if owner:
-            owner.finish()
-            assert not owner.members()
-        ledger.append(record)
-        (O / 'ledger.json').write_text(json.dumps(ledger, indent=2))
+        try:
+            if owner:
+                record['cleanup'] = subreaper.finish(process, owner)
+        finally:
+            record['exit'] = process.returncode if process else None
+            ledger.append(record)
+            (O / 'ledger.json').write_text(json.dumps(ledger, indent=2))
 
 
 def command(argv, label, seconds=120, env=None, cwd=None):
