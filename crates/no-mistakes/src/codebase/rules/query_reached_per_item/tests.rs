@@ -496,5 +496,8 @@ mod projections;
 mod typed_clients;
 
 mod namespace_shadows;
+
+#[path = "tests/superseded_provenance.rs"]
+mod superseded_provenance;
 #[path = "tests/type_import_order.rs"]
 mod type_import_order;
