@@ -1,4 +1,7 @@
 use super::*;
+#[path = "replacement_member_key.rs"]
+mod member_key;
+use member_key::same_member_root;
 
 pub(super) struct CallAdmission {
     // (Some(owner), None) blocks every group of that file-local owner.
@@ -13,6 +16,7 @@ struct Proof<'a> {
     receivers: &'a FxHashMap<String, usize>,
     writes: &'a index::PreparedReplacements,
     snapshots: &'a FxHashMap<CallableId, (bool, bool)>,
+    last_member: Option<(&'a ValueExpression, Option<CallableId>, Option<usize>, bool)>,
     #[cfg(feature = "test-instrumentation")]
     steps: usize,
 }
@@ -39,6 +43,7 @@ pub(super) fn prepare(
         receivers,
         writes,
         snapshots,
+        last_member: None,
         #[cfg(feature = "test-instrumentation")]
         steps: 0,
     };
@@ -74,7 +79,7 @@ pub(super) fn prepare(
         let admitted = site.invocation == InvocationKind::Call
             && call.is_some_and(|call| {
                 !call.bound
-                    && (proof.member(&call.callee, None, owner, region, 0)
+                    && (proof.root_member(&call.callee, owner, region)
                         || proof.getter(call, owner, region, 0))
             });
         if !admitted {
@@ -87,7 +92,28 @@ pub(super) fn prepare(
     }
     result
 }
-impl Proof<'_> {
+impl<'a> Proof<'a> {
+    fn root_member(
+        &mut self,
+        value: &'a ValueExpression,
+        owner: Option<CallableId>,
+        region: Option<usize>,
+    ) -> bool {
+        if let Some((previous, previous_owner, previous_region, result)) = self.last_member {
+            if previous_owner == owner
+                && previous_region == region
+                && same_member_root(previous, value)
+            {
+                return result;
+            }
+        }
+        let result = self.member(value, None, owner, region, 0);
+        if same_member_root(value, value) {
+            self.last_member = Some((value, owner, region, result));
+        }
+        result
+    }
+
     // Bounded prepared-expression matching, not a second value resolver. Cyclic
     // aliases and unsupported projections decline the new closed-region proof.
     fn member(

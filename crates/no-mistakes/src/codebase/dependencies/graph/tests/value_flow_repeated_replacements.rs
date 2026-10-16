@@ -282,8 +282,8 @@ fn repeated_replacement_prepares_states_once_independent_of_read_count() {
         assert_eq!(probe.alternatives_payloads, 1);
         assert_eq!(probe.alternatives_candidate_leaves, 2);
         assert_eq!(probe.call_admission_checks, count);
-        // Ordinary member callees visit the Member and its Named receiver.
-        assert_eq!(probe.call_proof_steps, 2 * count);
+        // Immutable member matching is shared; every physical admission stays checked.
+        assert_eq!(probe.call_proof_steps, 2);
         assert_eq!(probe.opaque_groups, 0);
         assert_eq!(probe.lookup_count, count);
         assert_eq!(probe.prefix_searches, 2 * count);

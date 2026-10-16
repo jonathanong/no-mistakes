@@ -89,6 +89,20 @@ impl ImportCollector {
             .calls
             .insert(offset, call);
     }
+    // Typed suspension/delete hooks avoid replacement work on ordinary expressions.
+    fn invalidate_replacement_expression(&mut self) {
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.replacement_expression_guard_entries += 1;
+        }
+        if self.collect_value_flow {
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.replacement_expression_checks += 1;
+            }
+            self.invalidate_replacement_execution();
+        }
+    }
     fn invalidate_replacement_execution(&mut self) {
         if !self.collect_value_flow {
             return;

@@ -104,6 +104,9 @@ fn replacement_snapshot_owners(
             )
         })
         .collect();
+    if snapshot_owners.is_empty() {
+        return snapshot_owners;
+    }
     for site in sites {
         if let Some(owner) = site.caller_id {
             if let Some((_, closed)) = snapshot_owners.get_mut(&owner) {

@@ -62,19 +62,6 @@ fn visit_expression_with_annex_b_initializer<'a>(
     collector: &mut ImportCollector,
     expression: &Expression<'a>,
 ) {
-    if collector.collect_value_flow {
-        #[cfg(feature = "test-instrumentation")]
-        {
-            collector.value_flow.replacement_expression_checks += 1;
-        }
-        if matches!(
-            expression,
-            Expression::AwaitExpression(_) | Expression::YieldExpression(_)
-        ) || matches!(expression, Expression::UnaryExpression(unary) if unary.operator == oxc_syntax::operator::UnaryOperator::Delete)
-        {
-            collector.invalidate_replacement_execution();
-        }
-    }
     if let Some((_, outer_conditional, outer_receiver_conditional)) = collector
         .annex_b_for_in_initializer
         .filter(|(span, _, _)| !collector.suppress_imports && *span == expression.span())
