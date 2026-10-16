@@ -1,0 +1,40 @@
+import { query, sql } from "@example/db";
+const { text: destructured } = configuration;
+query(destructured);
+const holder = {};
+holder.text = "SELECT 1";
+query(holder.text);
+let multiplied = "SELECT 2";
+multiplied *= "LIMIT 1";
+query(multiplied);
+let scalar = "SELECT 3";
+scalar.append(" LIMIT 1"); // A string binding does not become a SQL builder.
+query(scalar);
+let captured = sql`SELECT 4`;
+function mutate() { captured = sql`SELECT 5`; }
+query(captured);
+let noArgument = sql`SELECT 6`;
+noArgument.append();
+query(noArgument);
+unknownBuilder.append("SELECT 7");
+query(getBuilder().append(flag ? " LIMIT 1" : " LIMIT 2"));
+query(sql`SELECT 9 ${sql.raw()}`);
+query(sql`SELECT 10 ${sql.join("WHERE active")}`);
+query(sql`SELECT 11 ${sql.join([sql`WHERE active`], ...separators)}`);
+query(sql`SELECT 12 ${sql()}`);
+query(sql`SELECT 13 ${sql(...fragments)}`);
+query(unknownLeft || "SELECT 14");
+query(unknownLeft ?? "SELECT 15");
+query(true && "SELECT 16");
+query(unknownFlag && "SELECT 17");
+query(false && sql`SELECT 18`);
+query("SELECT 19" + null);
+let addBoolean = "SELECT 20";
+addBoolean += true;
+query(addBoolean);
+query(("SELECT 21").append(flag ? " LIMIT 1" : " LIMIT 2"));
+let outer = sql`SELECT 22`;
+function appendCaptured() { outer.append(" LIMIT 1"); }
+query(outer);
+missing = "SELECT 23";
+query(missing);

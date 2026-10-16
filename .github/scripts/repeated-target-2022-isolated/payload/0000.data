@@ -1,0 +1,102 @@
+{
+  "status": "PASS: two actual completed compiler producers; original post-CLI selector wrapper failure retained explicitly",
+  "head": "c896db3775411e9b7867260db420a73965b91a9e",
+  "equivalent_merged_main": "b9476931aeecc3e24f43a276bf1c6a2088bebe3b",
+  "tree": "80a21e61065e68b69afb7ed4e5fd91cb79688f23",
+  "artifacts": {
+    "cli": {
+      "sha256": "4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/no-mistakes",
+      "actual_command_exit": 0,
+      "stage_closure_sha256": "e5c8f5d0393208f7045ec18ba4203a4cfb1d2792a6f5837681d9a600e0d1cc70"
+    },
+    "addon": {
+      "sha256": "f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/libno_mistakes.so"
+    }
+  },
+  "cli_original_wrapper_exit": 1,
+  "cli_command_exit": 0,
+  "addon_actual_session": 67363,
+  "addon_actual_terminal_exit": 0,
+  "addon_actual_terminal_chunk": "5d5635",
+  "source_equivalence_receipt_sha256": "6a5e3a947e82db53b53843809b81c3d5f127c792fad0436953e0474829e3da7d",
+  "original_failure_sha256": "e5c8f5d0393208f7045ec18ba4203a4cfb1d2792a6f5837681d9a600e0d1cc70",
+  "addon_cleanup_sha256": "6e49dd29f0a71f73a2d033e3c38de64028a40ec8f7a5d101ee67efcdcc76ce76",
+  "library_retention_sha256": "91f1a7424169e9ce3ad9a82547631257ea5d18c7ce348566844b3ec3e2a9ef08",
+  "note": "No original CLI rebuild or stale analyzer reuse; addon is a separately fresh own compiler producer"
+}

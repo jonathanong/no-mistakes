@@ -1,0 +1,137 @@
+{
+  "head": "4c24e9718081e36afd061389fadc465913b223d7",
+  "root": "/tmp/no-mistakes-2022-region-production",
+  "artifacts": {
+    "cli": {
+      "sha256": "6e714c5fbf93b639eb179c68bb5601223f443eb46eff9d4a8590e6f0a8c382ff",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2022-region-production/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2022-region-production/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2022-region-production/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2022-region-production/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2022-region-production/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2022-region-production/target/release/no-mistakes"
+    },
+    "addon": {
+      "sha256": "2fea5a08dfb0b74b8a468c0104824264525ccf9bb9bf7534eb6bc81af4da2e6e",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2022-region-production/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2022-region-production/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2022-region-production/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2022-region-production/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2022-region-production/target/release/libno_mistakes.so"
+    },
+    "rlib": {
+      "sha256": "6b11419ec2f66eac90a954c63a8d1c3ead74778b6af7f31933c1aa994d3987ad",
+      "producer": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///tmp/no-mistakes-2022-region-production/crates/no-mistakes#0.91.2",
+        "manifest_path": "/tmp/no-mistakes-2022-region-production/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "/tmp/no-mistakes-2022-region-production/crates/no-mistakes/src/lib.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "/tmp/no-mistakes-2022-region-production/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+          "/tmp/no-mistakes-2022-region-production/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      }
+    },
+    "graph-probe": {
+      "sha256": "855f4956c22cc967cb6332dd47952b7089e77122acc0c69955c90b365b9324dd",
+      "source": "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs",
+      "source_sha256": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451"
+    },
+    "timing-probe": {
+      "sha256": "555c2f76924376ddf483b60e332a8c53893fd557db2bcc7948dd8cda1ea9dfcb",
+      "source": "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs",
+      "source_sha256": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44"
+    }
+  }
+}

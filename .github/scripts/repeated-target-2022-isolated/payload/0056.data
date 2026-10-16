@@ -1,0 +1,7 @@
+projects:
+  fixture:
+    type: nextjs
+    root: .
+rules:
+  - rule: nextjs-no-caching
+    projects: [fixture]

@@ -1,0 +1,30 @@
+{
+  "status": "Actual closed local artifact compatibility layout; no new producer/build",
+  "actual_producer": "4c24e9718081e36afd061389fadc465913b223d7",
+  "files": {
+    "cli": {
+      "sha256": "6e714c5fbf93b639eb179c68bb5601223f443eb46eff9d4a8590e6f0a8c382ff",
+      "actual_source_path": "/tmp/nm2022-2084-release/candidate/cli"
+    },
+    "addon.node": {
+      "sha256": "2fea5a08dfb0b74b8a468c0104824264525ccf9bb9bf7534eb6bc81af4da2e6e",
+      "actual_source_path": "/tmp/nm2022-2084-release/candidate/addon.node"
+    },
+    "graph-probe": {
+      "sha256": "91433f5610f5139bc490cf8b86562a8efc937e88b6b655b9522a380baea8f160",
+      "actual_source_path": "/tmp/nm2022-matched-LTO-probes/candidate/graph-probe"
+    },
+    "timing-probe": {
+      "sha256": "6d227bfc3d37e3a74004fe98410b4fd0c413d48281dedab208e527e9fee6004b",
+      "actual_source_path": "/tmp/nm2022-matched-LTO-probes/candidate/timing-probe"
+    }
+  },
+  "original_closure": {
+    "path": "/tmp/nm2022-2084-release/candidate/closed-artifacts.json",
+    "sha256": "e228473809d7736e4e48e47cd84104d980b9b65624b7aa258c4d17756f152be8"
+  },
+  "proper_helper_closure": {
+    "path": "/tmp/nm2022-matched-LTO-probes/candidate/PASS.json",
+    "sha256": "bfb1675f721e1791ec950c29765594a348121f593e85556097890a828b632c9e"
+  }
+}

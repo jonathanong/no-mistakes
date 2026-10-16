@@ -1,0 +1,7 @@
+name: Edited
+on: push
+jobs:
+  edited:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo edited

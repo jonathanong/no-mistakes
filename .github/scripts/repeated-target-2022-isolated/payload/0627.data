@@ -1,0 +1,6 @@
+DO $body$
+BEGIN
+  EXECUTE $sql$INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING RETURNING id;$sql$;
+  EXECUTE $sql$WITH added AS (INSERT INTO t(id) VALUES (2) ON CONFLICT (id) DO NOTHING RETURNING id) SELECT id FROM added;$sql$;
+END
+$body$;

@@ -1,0 +1,1 @@
+{"last":{"b":false,"a":"keep","quoted\"key":[]},"first":[{"before":1,"after":2},{},{"value":"quoted\"text","quote_style":"\""}],"middle":{"a":true,"z":null},"numbers":[1.234567890123456789,1e+100,-0.0]}

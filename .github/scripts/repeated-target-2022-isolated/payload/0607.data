@@ -1,0 +1,11 @@
+CREATE INDEX first ON accounts (ID);
+CREATE INDEX second ON accounts USING btree (id ASC NULLS LAST);
+CREATE INDEX reversed ON accounts (id DESC);
+CREATE INDEX explicit_reversed ON accounts (id DESC NULLS FIRST);
+CREATE UNIQUE INDEX expression_index ON app."Accounts" USING btree ((lower("Name")) text_pattern_ops DESC NULLS LAST) INCLUDE (id) NULLS NOT DISTINCT WITH (fillfactor = 80) WHERE active = true;
+CREATE INDEX different_case ON accounts ("ID");
+CREATE INDEX different_literal ON accounts ((coalesce(name, 'UPPER')));
+CREATE INDEX different_lower_literal ON accounts ((coalesce(name, 'upper')));
+CREATE INDEX grouped_arithmetic ON accounts (((a + b) * c));
+CREATE INDEX precedence_arithmetic ON accounts ((a + b * c));
+CREATE INDEX redundant_parens ON accounts (((id)));

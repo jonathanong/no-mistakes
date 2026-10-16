@@ -1,0 +1,55 @@
+{
+  "free_disk_bytes": 354736340992,
+  "proc_available_memory_kib": 56944976,
+  "effective_available_memory_bytes": 58311655424,
+  "visible_cgroup_memory_limits": [],
+  "memory_budget_scope": "minimum of proc MemAvailable and visible cgroup ancestor headroom; hidden host limits unknown",
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "selected_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cpu_quota": null,
+  "architecture": "x86_64",
+  "kernel": "7.0.0-38-generic",
+  "cpu_model": "Intel(R) Core(TM) Ultra 7 270K Plus",
+  "image_os": null,
+  "image_version": null,
+  "rayon_workers": 4,
+  "status": "Readback compatibility preflight, no new native execution",
+  "actual_producers": {
+    "baseline": "c896db3775411e9b7867260db420a73965b91a9e",
+    "candidate": "4c24e9718081e36afd061389fadc465913b223d7"
+  },
+  "semantic_receipt": {
+    "path": "/tmp/nm2022-2084-release/current-pair-collector-actual.json",
+    "sha256": "f1a440dce06c19e7d93ed112faaf640958b77b5cb741ba770bc9aa410b4d50e8"
+  }
+}

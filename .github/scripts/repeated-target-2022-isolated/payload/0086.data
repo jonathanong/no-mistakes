@@ -1,0 +1,7 @@
+name: Added
+on: push
+jobs:
+  added:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo added

@@ -1,0 +1,15 @@
+{
+  "status": "PASS root final DRAFT review; activate metadata then normalpublication, no dispatch yet",
+  "utc": "2026-10-16T19:22:03.430853+00:00",
+  "closed_source_checkpoint_sha256": "537f321585400760fabd13a03bda57ca58f27142e3ce5adf20f3050ca3926b45",
+  "source_manifest_sha256": "70407ad061756729bef5f2d907b9b20d76ad8dbfa92d35b0e80c1f5dcf840dd2",
+  "source_files": 2048,
+  "original_protocol_bytes_identical": [
+    "measure.py",
+    "paired_summary.py",
+    "semantics.py"
+  ],
+  "actual_native_assets": 8,
+  "review": "5completeworkloadcohorts/704rows/16workloads/48metrics; same-runverifiedassets; actualjobdeadline; full182+SQLcontrols; allrawretention+archivevalidator; runtimeAPPROVED_SHA withoutselfGitSHA",
+  "activation": "Setnon-nullroot_review/artifact_input_freeze/execution_approval with authentic newsource/inputfreeze; statusREVIEWED; preserveDRAFTreceipt; refreshexactsource-manifest; run11source tests+actionlint; normalpublication; rootfinalexactcommitreview beforeone dispatch"
+}

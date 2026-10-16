@@ -1,0 +1,2 @@
+# Opaque byte-exact fixture transport, including intentional CRLF and spaces.
+*.data binary

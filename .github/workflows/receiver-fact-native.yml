@@ -1,4 +1,4 @@
-name: Parameter annotation isolated x86 measurement
+name: Repeated target five isolated x86 cohorts
 
 on:
   workflow_dispatch:
@@ -15,19 +15,19 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: parameter-cache-isolated-${{ github.ref }}
+  group: repeated-target-2022-isolated-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   native-download:
     name: Trusted fixed native asset download only
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 18
     permissions:
       contents: write
     steps:
-      - name: Fetch only the four reviewed draft asset IDs
-        timeout-minutes: 7
+      - name: Fetch only the eight reviewed draft asset IDs
+        timeout-minutes: 15
         env:
           GH_TOKEN: ${{ github.token }}
           APPROVED_SHA: ${{ inputs.approved_sha }}
@@ -39,10 +39,14 @@ jobs:
           out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'native-stage'
           out.mkdir(exist_ok=False)
           assets = [
+              ('2022-baseline-graph-probe', 648313117, 82358336, '6f25dfbaaa1b000eadb8f0a26efe668abfcbd796e884f2297ef419be6ca6a345'),
+              ('2022-baseline-timing-probe', 648313116, 82347568, '59df17cb1ad86ce30e68462c2d2f6ccb488bb0b6d2cfe0b1a2afac92633d5079'),
+              ('2022-candidate-graph-probe', 648313114, 82686024, '91433f5610f5139bc490cf8b86562a8efc937e88b6b655b9522a380baea8f160'),
+              ('2022-candidate-timing-probe', 648313309, 82674840, '6d227bfc3d37e3a74004fe98410b4fd0c413d48281dedab208e527e9fee6004b'),
+              ('2022-candidate-cli', 648313350, 82685800, '6e714c5fbf93b639eb179c68bb5601223f443eb46eff9d4a8590e6f0a8c382ff'),
+              ('2022-candidate-addon.node', 648313415, 79113240, '2fea5a08dfb0b74b8a468c0104824264525ccf9bb9bf7534eb6bc81af4da2e6e'),
               ('baseline-cli', 648246434, 82354432, '4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107'),
               ('baseline-addon.node', 648246432, 78789848, 'f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e'),
-              ('candidate-cli', 648246435, 82354464, '1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f'),
-              ('candidate-addon.node', 648246436, 78789816, 'ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc'),
           ]
           proof = {'repository': os.environ['GITHUB_REPOSITORY'], 'run_id': os.environ['GITHUB_RUN_ID'],
                    'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'workflow_sha': os.environ['GITHUB_SHA'],
@@ -78,13 +82,17 @@ jobs:
         timeout-minutes: 2
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: parameter-cache-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          name: repeated-target-2022-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/native-stage/
           if-no-files-found: error
           retention-days: 7
 
   measure:
-    name: Existing native pair on isolated Ubuntu x86
+    name: Complete workload cohort ${{ matrix.cohort }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [0, 1, 2, 3, 4]
     needs: native-download
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -93,7 +101,7 @@ jobs:
         timeout-minutes: 2
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: parameter-cache-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          name: repeated-target-2022-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/native-stage/
       - name: Checkout reviewed diagnostic package
         timeout-minutes: 1
@@ -104,7 +112,8 @@ jobs:
         timeout-minutes: 1
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 099cfed26a23050aee6e9e8427af4de9b7eab4ef
+          ref: b9afe305b2d94014406ccfe2537492fe3552a032
+          fetch-depth: 0
           path: candidate-source
           persist-credentials: false
       - name: Install matching Node runtime
@@ -112,23 +121,26 @@ jobs:
         uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
         with:
           node-version: '26.11.1'
-      - name: Validate source-only adapter tests
-        timeout-minutes: 1
-        run: python3 -m unittest discover -s .github/scripts/parameter-cache-isolated -p 'test_*.py'
       - name: Verify transferred pair, run controls and fixed measurement
         timeout-minutes: 22
         env:
           GH_TOKEN: ${{ github.token }}
           APPROVED_SHA: ${{ inputs.approved_sha }}
+          COHORT: ${{ matrix.cohort }}
         run: |
           test "$APPROVED_SHA" = "$GITHUB_SHA"
-          python3 .github/scripts/parameter-cache-isolated/hosted.py
+          python3 .github/scripts/repeated-target-2022-isolated/hosted.py
       - name: Retain all completed and partial evidence
         if: ${{ always() }}
         timeout-minutes: 1
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: parameter-cache-isolated-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/parameter-cache-isolated/
+          name: repeated-target-2022-cohort-${{ matrix.cohort }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022-isolated/
+            /tmp/nm2022-2084-release/current-pair-semantics/public/
+            /tmp/nm2022-2084-release/current-pair-semantics/private/
+            /tmp/nm2022-2084-release/current-pair-semantics/semantic-manifest.json
+            /tmp/nm2022-2084-release/current-pair-semantics/reviewed-expected-parity.json
           if-no-files-found: warn
           retention-days: 30

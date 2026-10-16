@@ -1,0 +1,30 @@
+{
+  "status": "Actual closed local artifact compatibility layout; no new producer/build",
+  "actual_producer": "c896db3775411e9b7867260db420a73965b91a9e",
+  "files": {
+    "cli": {
+      "sha256": "4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107",
+      "actual_source_path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli"
+    },
+    "addon.node": {
+      "sha256": "f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e",
+      "actual_source_path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/addon.node"
+    },
+    "graph-probe": {
+      "sha256": "6f25dfbaaa1b000eadb8f0a26efe668abfcbd796e884f2297ef419be6ca6a345",
+      "actual_source_path": "/tmp/nm2022-matched-LTO-probes/baseline/graph-probe"
+    },
+    "timing-probe": {
+      "sha256": "59df17cb1ad86ce30e68462c2d2f6ccb488bb0b6d2cfe0b1a2afac92633d5079",
+      "actual_source_path": "/tmp/nm2022-matched-LTO-probes/baseline/timing-probe"
+    }
+  },
+  "original_closure": {
+    "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/closed-artifacts.json",
+    "sha256": "c8b72fe9d0c27718b35c9c9d355012f4bebc1cea1dc082c92b6f60c15a4c9bac"
+  },
+  "proper_helper_closure": {
+    "path": "/tmp/nm2022-matched-LTO-probes/baseline/PASS.json",
+    "sha256": "1dd31af0b124540ccf05e2725336bfb8adb14f6379cd45585c8ca3b3701a074f"
+  }
+}

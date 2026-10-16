@@ -1,0 +1,22 @@
+{
+  "status": "CLOSED REVIEWED source activation; normal publication authorized, no dispatch",
+  "root": "/tmp/nm2022-isolated-five-cohort-source-draft",
+  "files": 2052,
+  "manifest_sha256": "80829c9fd30bc08461fe2830b17b5faf0c5a1585e05e1ca0e774ae0c551a7188",
+  "plan_sha256": "a8d399e78b0a873c5144c9ac1f177736b6dddf026122977b8721e024171bd965",
+  "source_tests": {
+    "methods": 11,
+    "exit": 0,
+    "stderr_sha256": "5d367da43996f4a19f339bdfc14aee4cbe6a82d48c9dddadaa506cb261880337",
+    "actual_log": "/tmp/nm2022-isolated-five-cohort-activation/source-tests.stderr"
+  },
+  "actionlint_shellcheck_exit": 0,
+  "no_native_execution": true,
+  "remaining": [
+    "normal publication and exact approved diagnostic SHA",
+    "explicit root dispatch; no local quiet coordination"
+  ],
+  "numerical_protocol": "original16workloads/90inputs/704rows/48metric outcomes, copied sampler and assessor unchanged from reviewed local deadline adapter",
+  "transport_actual_source": "32e9f76ed570ddbafba132a0201e9ecd9d13bee0",
+  "publication_fix": "Only opaque payload .gitattributes binary marker; original CRLF/trailing-space fixture bytes unchanged"
+}

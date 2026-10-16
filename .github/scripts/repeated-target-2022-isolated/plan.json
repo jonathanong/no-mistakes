@@ -1,0 +1,196 @@
+{
+  "status": "REVIEWED_ISOLATED_FIVE_COHORTS",
+  "baseline_actual_compiler": "c896db3775411e9b7867260db420a73965b91a9e",
+  "baseline_equivalent_main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "baseline_prior_equivalent_main": "b9476931aeecc3e24f43a276bf1c6a2088bebe3b",
+  "candidate_actual_compiler": "4c24e9718081e36afd061389fadc465913b223d7",
+  "candidate_current_source": "b9afe305b2d94014406ccfe2537492fe3552a032",
+  "rounds": [
+    {
+      "id": 0,
+      "indices": [
+        0,
+        7,
+        9
+      ],
+      "workloads": [
+        "shared-imports",
+        "hot-16",
+        "inherited"
+      ],
+      "historical_child_wall_s": 446.12169018500055,
+      "historical_remaining_to_600_s": 153.87830981499945,
+      "rows": 132
+    },
+    {
+      "id": 1,
+      "indices": [
+        1,
+        2,
+        3,
+        13
+      ],
+      "workloads": [
+        "shared-values",
+        "jsx-imports",
+        "jsx-values",
+        "effects-plain-cold-diagnostics"
+      ],
+      "historical_child_wall_s": 460.4282635680023,
+      "historical_remaining_to_600_s": 139.5717364319977,
+      "rows": 176
+    },
+    {
+      "id": 2,
+      "indices": [
+        5,
+        6,
+        11
+      ],
+      "workloads": [
+        "cold-calls",
+        "default-cold",
+        "hot-rule-check"
+      ],
+      "historical_child_wall_s": 435.095241384,
+      "historical_remaining_to_600_s": 164.90475861599998,
+      "rows": 132
+    },
+    {
+      "id": 3,
+      "indices": [
+        4,
+        8,
+        14
+      ],
+      "workloads": [
+        "cold-no-calls",
+        "hot-256",
+        "effects-plain-hot-off"
+      ],
+      "historical_child_wall_s": 430.96765239500075,
+      "historical_remaining_to_600_s": 169.03234760499925,
+      "rows": 132
+    },
+    {
+      "id": 4,
+      "indices": [
+        10,
+        12,
+        15
+      ],
+      "workloads": [
+        "configured-check",
+        "effects-plain-cold-off",
+        "effects-plain-hot-diagnostics"
+      ],
+      "historical_child_wall_s": 435.06653857200104,
+      "historical_remaining_to_600_s": 164.93346142799896,
+      "rows": 132
+    }
+  ],
+  "round_hard_cap_seconds": 600,
+  "child_bound_seconds": 60,
+  "cleanup_reserve_seconds": 5,
+  "workload_start_required_remaining_seconds": 65,
+  "minimum_round_count_with_60s_historical_reserve": 5,
+  "historical_total_child_wall_s": 2207.6793861040046,
+  "fit_scope": "Historical child-time projection only; not current local fit proof or measurement. No successful retry/exclusion after timeout.",
+  "unchanged": "All16 workloads,90inputs,704rows; startup1/arm,calibration128probe/16CLI,pilot2CPU target and1block/order,long5CPU target and4blocks/order; iterationscap,stability,assessor,all48CPU/wall/RSS classifications and adverse history unchanged.",
+  "changed": "Fixed whole-workload LPT partition over5 actual independent samehost rounds; per-round deadline replacesARM25min deadline,65s start reserve replaces300s multiworkload reserve; unique round resource/assessment filenames.",
+  "proper_LTO_helpers": {
+    "baseline": "/tmp/nm2022-matched-LTO-probes/baseline/PASS.json",
+    "candidate": "/tmp/nm2022-matched-LTO-probes/candidate/PASS.json"
+  },
+  "source_carry": {
+    "path": "/tmp/nm2022-local-five-round-source-draft/actual-compiled-source-carry.json",
+    "sha256": "99b0b7ff53d2709f6d7db8b18fca480ee8715857701c3f3bc8a116d5db7726c2"
+  },
+  "root_review": {
+    "path": "activation-root-review.json",
+    "sha256": "3aef9677d5c22839888044b9d031fb80911919fd3f8199bd6131054ed42a32b2"
+  },
+  "preflight_layout_root": "/tmp/nm2022-local-five-round-source-draft/prepared-layout",
+  "artifact_input_freeze": {
+    "path": "immutable-input-freeze.json",
+    "sha256": "1c93db4f805902a3dd81eb4291150cfef1c9efe21fcfdded4e1fbe18a8df4937"
+  },
+  "full_semantic_preflight": {
+    "path": "/tmp/nm2022-local-five-round-source-draft/actual-semantic-readback.json",
+    "sha256": "c046e1e165bdf3cf92b435c5d80f359922e664e60e3b86fa832f65d256b2863f"
+  },
+  "current_head_ci": {
+    "path": "/tmp/nm2022-local-five-round-source-draft/actual-current-head-ci-review.json",
+    "sha256": "fb476997c78243434c0fc295417642f07f8be55bdd474d80b276d71a12c7f9e2"
+  },
+  "machine_identity": {
+    "architecture": "x86_64",
+    "kernel": "7.0.0-38-generic",
+    "cpu_model": "Intel(R) Core(TM) Ultra 7 270K Plus",
+    "allowed_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "selected_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "cpu_quota": null,
+    "rayon_workers": 4,
+    "boot_id": "10eb541a-84b7-426a-944a-de548165bb8c"
+  },
+  "activation": "All NULL pins must be actual reviewed proofs before root changes status; fresh independent main/head/CI/resource/idle eligibility and actual START perround; no automatic next round or future reservation.",
+  "artifact_input_inventory": {
+    "path": "/tmp/nm2022-local-five-round-source-draft/actual-artifact-input-inventory.json",
+    "sha256": "0b68de81d135d89168b4a606043045384dfb2f135f4b6c9f514a1089bb8d79b6"
+  },
+  "layout_gate": {
+    "status": "PASS exact current compiler layouts",
+    "required": [
+      "baseline-default",
+      "baseline-instrumented",
+      "candidate-default",
+      "candidate-instrumented"
+    ],
+    "proof": {
+      "path": "/tmp/nm2022-metadata-layout-source-prototype/actual-complete24-layouts.json",
+      "sha256": "0cb093728b971e38d0b505331ff0542293db0bbdfb8a6d73b5456ab5c293280e"
+    },
+    "not_consumed_by_sampler_but_mandatory_completion_prerequisite": true,
+    "root_review": {
+      "path": "/tmp/nm2022-root-actual-layout-readback.json",
+      "sha256": "b4d29544c5a54654be191dc19881d626b78b0405358f021f0470f0e1f48f9c25"
+    }
+  },
+  "execution_approval": {
+    "path": "execution-approval.json",
+    "sha256": "5c3257ec66467d14cf740173c737ca6cb64ba35a025c4f4ca915a035d8916be4"
+  },
+  "transport_source": "32e9f76ed570ddbafba132a0201e9ecd9d13bee0",
+  "cross_runner_pooling": false,
+  "workflow_identity": "Exact approved_sha dispatch input must equal actual GITHUB_SHA; same-run transfer binds that immutable workflow commit (no self-referential committed SHA)."
+}

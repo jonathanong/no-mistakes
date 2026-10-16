@@ -1,0 +1,56 @@
+{
+  "status": "PASS correct frozen fullLTO/cgu1 helper linking; no measurement claim",
+  "arm": "baseline",
+  "core_producer_commit": "c896db3775411e9b7867260db420a73965b91a9e",
+  "library_manifest_sha256": "91f1a7424169e9ce3ad9a82547631257ea5d18c7ce348566844b3ec3e2a9ef08",
+  "commands": [
+    {
+      "argv": [
+        "rustc",
+        "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-L",
+        "dependency=/tmp/nm-shared-baseline-2087-c896/baseline/completed-library-dependencies",
+        "--extern",
+        "no_mistakes=/tmp/nm-shared-baseline-2087-c896/baseline/completed-library-dependencies/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "-o",
+        "/tmp/nm2022-matched-LTO-probes/baseline/graph-probe"
+      ],
+      "source_sha256": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451",
+      "start_utc": "2026-10-16T17:45:04.338051+00:00",
+      "exit": 0,
+      "artifact_sha256": "6f25dfbaaa1b000eadb8f0a26efe668abfcbd796e884f2297ef419be6ca6a345",
+      "ended_utc": "2026-10-16T17:48:52.460234+00:00"
+    },
+    {
+      "argv": [
+        "rustc",
+        "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-L",
+        "dependency=/tmp/nm-shared-baseline-2087-c896/baseline/completed-library-dependencies",
+        "--extern",
+        "no_mistakes=/tmp/nm-shared-baseline-2087-c896/baseline/completed-library-dependencies/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "-o",
+        "/tmp/nm2022-matched-LTO-probes/baseline/timing-probe"
+      ],
+      "source_sha256": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44",
+      "start_utc": "2026-10-16T17:48:52.460478+00:00",
+      "exit": 0,
+      "artifact_sha256": "59df17cb1ad86ce30e68462c2d2f6ccb488bb0b6d2cfe0b1a2afac92633d5079",
+      "ended_utc": "2026-10-16T17:52:36.576033+00:00"
+    }
+  ]
+}

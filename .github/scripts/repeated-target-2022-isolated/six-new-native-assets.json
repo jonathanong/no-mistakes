@@ -1,0 +1,60 @@
+{
+  "status": "ACTUAL6closedbinaries for root draft-only staging; no build or publishedrelease claim",
+  "draft_release": 415271391,
+  "assets": [
+    {
+      "role": "baseline-graph-probe",
+      "name": "2022-baseline-graph-probe",
+      "path": "/tmp/nm2022-matched-LTO-probes/baseline/graph-probe",
+      "bytes": 82358336,
+      "sha256": "6f25dfbaaa1b000eadb8f0a26efe668abfcbd796e884f2297ef419be6ca6a345",
+      "actual_producer": "c896db3775411e9b7867260db420a73965b91a9e",
+      "asset_id": null
+    },
+    {
+      "role": "baseline-timing-probe",
+      "name": "2022-baseline-timing-probe",
+      "path": "/tmp/nm2022-matched-LTO-probes/baseline/timing-probe",
+      "bytes": 82347568,
+      "sha256": "59df17cb1ad86ce30e68462c2d2f6ccb488bb0b6d2cfe0b1a2afac92633d5079",
+      "actual_producer": "c896db3775411e9b7867260db420a73965b91a9e",
+      "asset_id": null
+    },
+    {
+      "role": "candidate-cli",
+      "name": "2022-candidate-cli",
+      "path": "/tmp/nm2022-2084-release/candidate/cli",
+      "bytes": 82685800,
+      "sha256": "6e714c5fbf93b639eb179c68bb5601223f443eb46eff9d4a8590e6f0a8c382ff",
+      "actual_producer": "4c24e9718081e36afd061389fadc465913b223d7",
+      "asset_id": null
+    },
+    {
+      "role": "candidate-addon.node",
+      "name": "2022-candidate-addon.node",
+      "path": "/tmp/nm2022-2084-release/candidate/addon.node",
+      "bytes": 79113240,
+      "sha256": "2fea5a08dfb0b74b8a468c0104824264525ccf9bb9bf7534eb6bc81af4da2e6e",
+      "actual_producer": "4c24e9718081e36afd061389fadc465913b223d7",
+      "asset_id": null
+    },
+    {
+      "role": "candidate-graph-probe",
+      "name": "2022-candidate-graph-probe",
+      "path": "/tmp/nm2022-matched-LTO-probes/candidate/graph-probe",
+      "bytes": 82686024,
+      "sha256": "91433f5610f5139bc490cf8b86562a8efc937e88b6b655b9522a380baea8f160",
+      "actual_producer": "4c24e9718081e36afd061389fadc465913b223d7",
+      "asset_id": null
+    },
+    {
+      "role": "candidate-timing-probe",
+      "name": "2022-candidate-timing-probe",
+      "path": "/tmp/nm2022-matched-LTO-probes/candidate/timing-probe",
+      "bytes": 82674840,
+      "sha256": "6d227bfc3d37e3a74004fe98410b4fd0c413d48281dedab208e527e9fee6004b",
+      "actual_producer": "4c24e9718081e36afd061389fadc465913b223d7",
+      "asset_id": null
+    }
+  ]
+}

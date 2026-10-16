@@ -1,0 +1,7 @@
+{
+  "status": "ROOT APPROVED source activation and normal diagnostic publication only",
+  "root_review_sha256": "3aef9677d5c22839888044b9d031fb80911919fd3f8199bd6131054ed42a32b2",
+  "input_freeze_sha256": "1c93db4f805902a3dd81eb4291150cfef1c9efe21fcfdded4e1fbe18a8df4937",
+  "dispatch": "NOT AUTHORIZED until root reviews actual published diagnostic SHA",
+  "approved_runtime_identity": "APPROVED_SHA must equal GITHUB_SHA; never embedded self commit SHA"
+}
