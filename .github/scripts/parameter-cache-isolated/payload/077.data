@@ -1,0 +1,90 @@
+{
+  "head": "0076d3d7068ca2bc51d6957e25ee3c288a2e3415",
+  "uncommitted_tree": "d410d13cf450f5e5b7b2b9b98e167d526cf4b8ee",
+  "prospective_base": "c896db3775411e9b7867260db420a73965b91a9e",
+  "root": "/tmp/no-mistakes-2076-prospective2087",
+  "artifacts": {
+    "cli": {
+      "sha256": "1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2076-prospective2087/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2076-prospective2087/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2076-prospective2087/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2076-prospective2087/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2076-prospective2087/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2076-prospective2087/target/release/no-mistakes"
+    },
+    "addon": {
+      "sha256": "ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2076-prospective2087/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2076-prospective2087/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2076-prospective2087/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2076-prospective2087/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2076-prospective2087/target/release/libno_mistakes.so"
+    }
+  }
+}

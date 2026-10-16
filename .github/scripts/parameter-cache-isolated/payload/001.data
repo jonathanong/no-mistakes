@@ -1,0 +1,9 @@
+{
+  "status": "PASS: exact whole-tree source equivalence; build still active and no measurement claim",
+  "actual_producer_commit": "c896db3775411e9b7867260db420a73965b91a9e",
+  "merged_main": "b9476931aeecc3e24f43a276bf1c6a2088bebe3b",
+  "identical_tree": "80a21e61065e68b69afb7ed4e5fd91cb79688f23",
+  "all_git_live_regular_files": 22809,
+  "includes": "Production, Cargo and lockfiles, build scripts, compiler configuration, facades and fixtures all share the exact Git tree",
+  "raw_commit_sha256": "a2e925613d8414aa5ab7ff4b6580731a9af05548d0079ab3b660e5ed15dfcf1e"
+}

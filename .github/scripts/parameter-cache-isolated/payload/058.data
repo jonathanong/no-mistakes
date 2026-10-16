@@ -1,0 +1,282 @@
+[
+  {
+    "argv": [
+      "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+      "--test",
+      "packages/no-mistakes/scripts/query-reached-per-item-api.test.js",
+      "packages/no-mistakes/scripts/namespace-types-api.test.js",
+      "packages/no-mistakes/scripts/type-import-order-api.test.js"
+    ],
+    "label": "baseline-api",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+      "/tmp/nm2076-prospective2087-functional/public-reports.cjs",
+      "/tmp/nm2076-prospective2087-functional/functional/baseline-prepared-result.json"
+    ],
+    "label": "baseline-prepared",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold",
+      "--format",
+      "json"
+    ],
+    "label": "baseline-cold",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "baseline-cold-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json"
+    ],
+    "label": "baseline-scale",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "baseline-scale-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.mts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture",
+      "--format",
+      "json"
+    ],
+    "label": "baseline-mixed",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.mts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "baseline-mixed-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "dependents",
+      "types.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json"
+    ],
+    "label": "baseline-non-consuming",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "dependents",
+      "types.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "baseline-non-consuming-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+      "--test",
+      "packages/no-mistakes/scripts/query-reached-per-item-api.test.js",
+      "packages/no-mistakes/scripts/namespace-types-api.test.js",
+      "packages/no-mistakes/scripts/type-import-order-api.test.js"
+    ],
+    "label": "candidate-api",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+      "/tmp/nm2076-prospective2087-functional/public-reports.cjs",
+      "/tmp/nm2076-prospective2087-functional/functional/candidate-prepared-result.json"
+    ],
+    "label": "candidate-prepared",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold",
+      "--format",
+      "json"
+    ],
+    "label": "candidate-cold",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "candidate-cold-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json"
+    ],
+    "label": "candidate-scale",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "candidate-scale-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.mts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture",
+      "--format",
+      "json"
+    ],
+    "label": "candidate-mixed",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "effects",
+      "postgres",
+      "--entry",
+      "entry.mts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "candidate-mixed-timings",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "dependents",
+      "types.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json"
+    ],
+    "label": "candidate-non-consuming",
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "dependents",
+      "types.ts",
+      "--root",
+      "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+      "--format",
+      "json",
+      "--timings"
+    ],
+    "label": "candidate-non-consuming-timings",
+    "exit": 0
+  }
+]

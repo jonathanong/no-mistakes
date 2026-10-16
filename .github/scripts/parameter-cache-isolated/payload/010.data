@@ -1,0 +1,46 @@
+{
+  "status": "PASS: current-head Rust/global98 and all four Codecov; overall Test CI still in progress",
+  "head": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+  "run": 38941195465,
+  "overall_run_status": "in_progress",
+  "overall_run_conclusion": null,
+  "raw_TOTAL": "2026-10-16T17:46:42.3315429Z TOTAL                                                                                                      332077              4999    98.49%       23979               147    99.39%      224751              1454    99.35%           0                 0         -",
+  "actual_percentages": {
+    "regions": 98.49462624632238,
+    "functions": 99.386963593144,
+    "lines": 99.35306183287283
+  },
+  "floors": {
+    "regions": 98,
+    "functions": 98,
+    "lines": 98
+  },
+  "rust_job": 117108970591,
+  "codecov": [
+    {
+      "id": 117113173074,
+      "name": "codecov/patch/rust",
+      "conclusion": "success"
+    },
+    {
+      "id": 117113165000,
+      "name": "codecov/project/rust",
+      "conclusion": "success"
+    },
+    {
+      "id": 117110856880,
+      "name": "codecov/patch/javascript",
+      "conclusion": "success"
+    },
+    {
+      "id": 117110841903,
+      "name": "codecov/project/javascript",
+      "conclusion": "success"
+    }
+  ],
+  "raw_pins": {
+    "rust-job.raw.log": "7042e98aecee70c0129d8b09c8b99b657ff86fc7a38c72e52e47284ea919f5b2",
+    "checks.json": "7549fb0f98c38934ed428960625b3d77b62e65e0b1bc4188783b8c3861f8fa0d",
+    "run.json": "a44cd99a472c0e4e998245ce201b5ebadf87f31d0322d8e7ebe637e0bf3a748d"
+  }
+}

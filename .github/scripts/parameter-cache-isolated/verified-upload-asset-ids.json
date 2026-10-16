@@ -1,0 +1,44 @@
+{
+  "release_id": 415271391,
+  "draft": true,
+  "published_at": null,
+  "tag_name": "diagnostic-native-2076-099cfed-20261016",
+  "assets": [
+    {
+      "name": "baseline-cli",
+      "source": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+      "path": "/tmp/nm2076-staged-assets/baseline-cli",
+      "bytes": 82354432,
+      "sha256": "4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107",
+      "asset_id": 648246434,
+      "api_digest": "sha256:4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107"
+    },
+    {
+      "name": "baseline-addon.node",
+      "source": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/addon.node",
+      "path": "/tmp/nm2076-staged-assets/baseline-addon.node",
+      "bytes": 78789848,
+      "sha256": "f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e",
+      "asset_id": 648246432,
+      "api_digest": "sha256:f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e"
+    },
+    {
+      "name": "candidate-cli",
+      "source": "/tmp/nm2076-prospective2087-native/candidate/cli",
+      "path": "/tmp/nm2076-staged-assets/candidate-cli",
+      "bytes": 82354464,
+      "sha256": "1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f",
+      "asset_id": 648246435,
+      "api_digest": "sha256:1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f"
+    },
+    {
+      "name": "candidate-addon.node",
+      "source": "/tmp/nm2076-prospective2087-native/candidate/addon.node",
+      "path": "/tmp/nm2076-staged-assets/candidate-addon.node",
+      "bytes": 78789816,
+      "sha256": "ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc",
+      "asset_id": 648246436,
+      "api_digest": "sha256:ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc"
+    }
+  ]
+}

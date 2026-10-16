@@ -1,0 +1,9 @@
+{
+  "status": "PASS: both compiled native arms, CJS/ESM/prepared full reports and CLI raw equality",
+  "native_tests_per_arm": 8,
+  "prepared_bytes": 15424,
+  "artifact_manifests": {
+    "baseline": "c8b72fe9d0c27718b35c9c9d355012f4bebc1cea1dc082c92b6f60c15a4c9bac",
+    "candidate": "5968665c34948e8a46c20dddc85a7a343c702152be8e710bd88377d2c812c40a"
+  }
+}

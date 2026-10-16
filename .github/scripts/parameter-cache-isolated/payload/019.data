@@ -1,0 +1,1 @@
+{"kind":"postgres","entry":"entry.ts","callSites":[{"file":"entry.ts","line":5,"callee":"Query","caller":"queryMany","depth":0}],"byCategory":{"uncategorized":1}}

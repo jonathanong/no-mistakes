@@ -1,0 +1,4 @@
+{
+  "status": "PASS: explicit import-only controls; four exits0, full bytes equal, nonempty two-file closure",
+  "commands": 4
+}
