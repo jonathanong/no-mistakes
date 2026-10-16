@@ -717,6 +717,11 @@ as the factory path plus `().member` (for example,
 `writePool.connect().query`); typed executor callees display the configured type
 export. These are configuration additions to existing exports and introduce no
 new Node functions or option types.
+Namespace-local classes, interfaces, type aliases, enums, and type parameters
+shadow imported types, including declarations later in the same lexical body.
+A value-only local binding does not shadow a type import. Leaving that scope
+restores the imported annotation; matching still requires the configured module
+and export identity.
 `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
 `resolveCheck` also resolves recognized workspace package imports through the
