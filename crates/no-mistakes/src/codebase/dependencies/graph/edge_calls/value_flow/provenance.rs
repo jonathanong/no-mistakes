@@ -2,6 +2,23 @@ use super::*;
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 
 impl ValueFlowResolution<'_, '_> {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn test_computation_scope() -> impl Drop {
+        tests::lifetime::scope()
+    }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn test_old_annotation_lifetime() -> bool {
+        tests::lifetime::old_mode()
+    }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn test_retiring_computation_buffers(&self) {
+        tests::lifetime::retiring(
+            self.visiting.capacity()
+                + self.calls_visiting.capacity()
+                + self.initializing.capacity(),
+        );
+    }
+
     pub(super) fn typed_parameter(
         &self,
         path: &std::path::Path,
@@ -12,6 +29,8 @@ impl ValueFlowResolution<'_, '_> {
         let Some(reference) = &parameter.type_reference else {
             return executor;
         };
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        tests::record_annotation();
         let annotation = self.annotation_value(path, reference, None, &mut fx_set());
         Self::annotate(executor, annotation)
     }
@@ -129,3 +148,7 @@ pub(super) fn type_export(
         }
     }
 }
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "parameter_annotation_tests.rs"]
+mod tests;

@@ -136,3 +136,78 @@ test(
     assert.ok(suppressed.suppressed.length >= 2);
   },
 );
+
+test(
+  "compiled repeated parameter annotations preserve indexed contextual and prepared reports",
+  { skip: !compiled },
+  async () => {
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/executor-paths-fixture",
+    );
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const options = { root, kind: "postgres", entry: "entry.mts" };
+    const pending = cjs.effects(options);
+    assert.equal(typeof pending.then, "function");
+    const effects = await pending;
+    assert.deepEqual(
+      effects.callSites.filter(({ file }) => file === "entry.mts").map(({ line }) => line),
+      [5, 8, 16, 21, 39, 42],
+    );
+    assert.deepEqual(
+      effects.callSites.filter(({ file }) => file === "coverage.mts").map(({ line }) => line),
+      [17, 25, 31, 35],
+    );
+    const check = await cjs.check({ root });
+    const calls = await cjs.callSites({ root, file: "entry.mts", exportName: "options" });
+    assert.ok(calls.callSites.length > 0);
+    const reports = [
+      { type: "effects", kind: "postgres", entry: "entry.mts" },
+      { type: "check" },
+      { type: "callSites", file: "entry.mts", exportName: "options" },
+    ];
+    const prepared = await cjs.analyzeProject({ root, reports });
+    assert.deepEqual(
+      prepared.reports.map(({ result }) => result),
+      [effects, check, calls],
+    );
+    assert.deepEqual(await esm.effects(options), effects);
+    assert.deepEqual(await esm.check({ root }), check);
+    assert.deepEqual(
+      await esm.callSites({ root, file: "entry.mts", exportName: "options" }),
+      calls,
+    );
+    assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
+    // A fresh request must neither reuse another request's catalog nor mutate
+    // any previously returned annotation/report objects.
+    assert.deepEqual(await cjs.effects(options), effects);
+  },
+);
+
+test(
+  "compiled annotation cache controls keep cold and repeated requests isolated",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [scenario, expected] of [
+      ["cold", 1],
+      ["scale", 128],
+    ]) {
+      const root = join(
+        __dirname,
+        "../../../fixtures/benchmarks/parameter-annotation-cache",
+        scenario,
+      );
+      const options = { root, kind: "postgres", entry: "entry.ts" };
+      const effects = await cjs.effects(options);
+      assert.equal(effects.callSites.length, expected);
+      assert.deepEqual(await esm.effects(options), effects);
+      const reports = [{ type: "effects", kind: "postgres", entry: "entry.ts" }];
+      const prepared = await cjs.analyzeProject({ root, reports });
+      assert.deepEqual(prepared.reports[0].result, effects);
+      assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
+    }
+  },
+);
