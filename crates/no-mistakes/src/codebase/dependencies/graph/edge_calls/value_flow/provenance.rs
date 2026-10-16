@@ -12,6 +12,8 @@ impl ValueFlowResolution<'_, '_> {
         let Some(reference) = &parameter.type_reference else {
             return executor;
         };
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        tests::record_annotation();
         let annotation = self.annotation_value(path, reference, None, &mut fx_set());
         Self::annotate(executor, annotation)
     }
@@ -129,3 +131,7 @@ pub(super) fn type_export(
         }
     }
 }
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "parameter_annotation_tests.rs"]
+mod tests;

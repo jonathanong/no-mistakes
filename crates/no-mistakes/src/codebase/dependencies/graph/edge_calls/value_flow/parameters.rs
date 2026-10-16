@@ -66,6 +66,9 @@ impl ValueFlowResolution<'_, '_> {
                 } else {
                     value
                 };
+                // The prepared catalog is immutable for this cache generation.
+                // Publish annotation provenance once with the agreed runtime value.
+                let value = flow.typed_parameter(path, parameter, index, value);
                 flow.merge_writer_dependencies();
                 let cached = std::sync::Arc::new(CachedParameter {
                     value,
@@ -80,6 +83,6 @@ impl ValueFlowResolution<'_, '_> {
             }
         };
         self.extend_default_origins(cached.origins.as_ref());
-        self.typed_parameter(path, parameter, index, cached.value.clone())
+        cached.value.clone()
     }
 }
