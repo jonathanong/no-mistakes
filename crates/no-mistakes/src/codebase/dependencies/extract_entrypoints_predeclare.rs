@@ -80,16 +80,27 @@ fn predeclare_class_binding(collector: &mut ImportCollector, class: &Class<'_>) 
 }
 
 fn predeclare_import_bindings(collector: &mut ImportCollector, import: &ImportDeclaration<'_>) {
-    if import.import_kind.is_type() {
-        return;
-    }
     let Some(specifiers) = &import.specifiers else {
         return;
     };
+    if import.import_kind.is_type() {
+        // Type imports are hoisted too. Retain this annotation-only shadow
+        // without introducing a runtime import binding.
+        for specifier in specifiers {
+            let local = match specifier {
+                ImportDeclarationSpecifier::ImportSpecifier(specifier) => &specifier.local,
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => &specifier.local,
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => &specifier.local,
+            };
+            collector.hoisted_non_nullable_type_import |= local.name == "NonNullable";
+        }
+        return;
+    }
     for specifier in specifiers {
         let local = match specifier {
             ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
                 if specifier.import_kind.is_type() {
+                    collector.hoisted_non_nullable_type_import |= specifier.local.name == "NonNullable";
                     continue;
                 }
                 &specifier.local

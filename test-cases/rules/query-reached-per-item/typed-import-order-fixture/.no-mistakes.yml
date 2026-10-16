@@ -1,0 +1,9 @@
+effects:
+  postgres:
+    typedExecutors:
+      - { module: './unselected.mts', export: NonNullable }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
