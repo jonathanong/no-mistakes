@@ -25,6 +25,25 @@ def sha(path):
     return hashlib.file_digest(pathlib.Path(path).open('rb'), 'sha256').hexdigest()
 
 
+def verify_staged_assets(stage, spec, context):
+    proof = json.loads((stage / 'transport.json').read_text())
+    assert proof['complete'] is True and proof['producer'] == 'native-download'
+    for key, env_key in [('repository', 'GITHUB_REPOSITORY'), ('run_id', 'GITHUB_RUN_ID'),
+                         ('run_attempt', 'GITHUB_RUN_ATTEMPT'), ('workflow_sha', 'GITHUB_SHA')]:
+        assert proof[key] == context[env_key]
+    assert len(proof['assets']) == len(spec['assets']) == 4
+    for expected in spec['assets']:
+        matches = [row for row in proof['assets'] if row['name'] == expected['name']]
+        assert len(matches) == 1
+        row = matches[0]
+        assert row['exit'] == 0 and row['asset_id'] == expected['asset_id']
+        path = stage / expected['name']
+        assert path.parent == stage and not path.is_symlink() and path.is_file()
+        assert row['bytes'] == path.stat().st_size == expected['bytes']
+        assert row['sha256'] == sha(path) == expected['sha256']
+    return proof
+
+
 def run(argv, label, seconds=120, env=None, cwd=None):
     subreaper.require_empty()
     process = owner = None
@@ -66,6 +85,9 @@ shutil.copytree('candidate-source', spec['source_root'], ignore=shutil.ignore_pa
 assert len(spec['files']) == 97 and len(spec['assets']) == 4
 assert spec['assets'] == [r for r in spec['files'] if 'asset_id' in r]
 assert len({r['path'] for r in spec['files']}) == 97
+stage = pathlib.Path(os.environ['RUNNER_TEMP']) / 'native-stage'
+transfer = verify_staged_assets(stage, spec, os.environ)
+(O / 'verified-same-run-transfer.json').write_text(json.dumps(transfer, indent=2))
 for row in spec['files']:
     target = pathlib.Path(row['path'])
     assert str(target).startswith('/tmp/') and '..' not in target.parts
@@ -76,10 +98,7 @@ for row in spec['files']:
         shutil.copyfile(source, target)
     else:
         assert type(row['asset_id']) is int and row['asset_id'] > 0
-        command(['gh', 'api', '--header', 'Accept: application/octet-stream',
-                 f"repos/{spec['repository']}/releases/assets/{row['asset_id']}"],
-                'download-' + row['name'], 190)
-        shutil.copyfile(O / ('download-' + row['name'] + '.stdout'), target)
+        shutil.copyfile(stage / row['name'], target)
         target.chmod(0o755)
     assert target.stat().st_size == row['bytes'] and sha(target) == row['sha256']
 freeze = json.loads((D / 'payload/original-freeze.json').read_text())

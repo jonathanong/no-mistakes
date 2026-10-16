@@ -1,0 +1,38 @@
+{
+  "repository": "jonathanong/no-mistakes",
+  "run_id": "123",
+  "run_attempt": "1",
+  "workflow_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "producer": "native-download",
+  "complete": true,
+  "assets": [
+    {
+      "name": "baseline-cli",
+      "asset_id": 648246434,
+      "bytes": 37,
+      "sha256": "b96b1d81377c88dd74debf135b93e17aad8bced90fc92bba0b919ab61f9ad07c",
+      "exit": 0
+    },
+    {
+      "name": "baseline-addon.node",
+      "asset_id": 648246432,
+      "bytes": 44,
+      "sha256": "f81f0f92eec5c4482588d4e5aeb46d161eb0d21dca5a616b7780b895893e5d28",
+      "exit": 0
+    },
+    {
+      "name": "candidate-cli",
+      "asset_id": 648246435,
+      "bytes": 38,
+      "sha256": "b35492ae5f0506eaab4dbb5dd14348f860ab88b47ff0a17fae85730c0b2ca7f6",
+      "exit": 0
+    },
+    {
+      "name": "candidate-addon.node",
+      "asset_id": 648246436,
+      "bytes": 45,
+      "sha256": "d99bd492397f73d41be0410d56c8eb6bd3645c352bb20fffd59fe9a4d8dcb15f",
+      "exit": 0
+    }
+  ]
+}

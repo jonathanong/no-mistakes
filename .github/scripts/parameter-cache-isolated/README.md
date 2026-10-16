@@ -11,9 +11,14 @@ release. The activated transport binds all four verified IDs and SHA-256 values.
 Normal diagnostic publication is approved; root must review the exact published
 commit before a single exact-SHA dispatch. Actual hosted results remain pending.
 The release must never be published. Delete staging only after retained CI
-evidence confirms consumption. No secrets or write token are required in CI.
-Direct asset-ID REST download uses the job's `contents: read` token; no draft
-release listing is used. Official endpoint permissions:
+evidence confirms consumption. No PAT or repository secret is used. Actual run 38950862496 proved that the
+read-only Actions integration could not fetch the draft asset (HTTP 403), before
+any controls or samples. A separate trusted download-only job now has
+`contents: write`, performs GETs of only four hardcoded IDs, verifies bytes and
+SHA-256, and uploads same-run artifacts. It never checks out or executes source
+or native payloads. The dependent measurement VM remains read-only and checks
+all four hashes again, plus repository/run/attempt/workflow-SHA ownership.
+The staging release remains unpublished. No draft listing is used. Official endpoint permissions:
 https://docs.github.com/en/rest/releases/assets#get-a-release-asset
 
 Reuse the already registered `.github/workflows/receiver-fact-native.yml`

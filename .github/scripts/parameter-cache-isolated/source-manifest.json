@@ -3,13 +3,38 @@
   "files": [
     {
       "path": ".github/scripts/parameter-cache-isolated/README.md",
-      "bytes": 2746,
-      "sha256": "4a20ffd893f8a9373306b6143e7e817fba192a1356a0af534e68e03521d1ecd0"
+      "bytes": 3204,
+      "sha256": "582b59cc808eaedadaad4f34ca366c70c0898957094daed69758f6ed162dd8b1"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/analyze-once.py",
       "bytes": 4213,
       "sha256": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/native-transfer/baseline-addon.node",
+      "bytes": 44,
+      "sha256": "f81f0f92eec5c4482588d4e5aeb46d161eb0d21dca5a616b7780b895893e5d28"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/native-transfer/baseline-cli",
+      "bytes": 37,
+      "sha256": "b96b1d81377c88dd74debf135b93e17aad8bced90fc92bba0b919ab61f9ad07c"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/native-transfer/candidate-addon.node",
+      "bytes": 45,
+      "sha256": "d99bd492397f73d41be0410d56c8eb6bd3645c352bb20fffd59fe9a4d8dcb15f"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/native-transfer/candidate-cli",
+      "bytes": 38,
+      "sha256": "b35492ae5f0506eaab4dbb5dd14348f860ab88b47ff0a17fae85730c0b2ca7f6"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/fixtures/native-transfer/transport.json",
+      "bytes": 999,
+      "sha256": "2ca78abfbf13d760854e1fe514ae29b0bcbee1d8a641ae9288449089e7326d11"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/fixtures/orphan_child.py",
@@ -28,8 +53,8 @@
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/hosted.py",
-      "bytes": 8907,
-      "sha256": "ebb66b3b8405018dc74491eea39cd511537204d2b6ea0f4ae48cee22279b1418"
+      "bytes": 9896,
+      "sha256": "d9b3c9200084e1de2d788a23bdd7bf335697323c81a6f88a650494de764c9d70"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/measure-once.py",
@@ -533,13 +558,18 @@
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/test_source.py",
-      "bytes": 2405,
-      "sha256": "8289008de4f0bb17ee198f09400951b5b0cc60c24ab0a911811b460b497257b8"
+      "bytes": 2444,
+      "sha256": "4c42e8e4ddd0ae520e62f514c783243c17b56a869086221c1e1ab1c30afafeef"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/test_subreaper.py",
       "bytes": 1956,
       "sha256": "b6a772bece1c788a7b95e4f0bb2cb1bc695817d3d49be8e6bd5e1c93f25735f3"
+    },
+    {
+      "path": ".github/scripts/parameter-cache-isolated/test_transport.py",
+      "bytes": 3542,
+      "sha256": "7b93f4325c254db83c68409a92960ec52a1b9acad99ce0df643585b1062165c6"
     },
     {
       "path": ".github/scripts/parameter-cache-isolated/transport-DRAFT.json",
@@ -558,8 +588,8 @@
     },
     {
       "path": ".github/workflows/receiver-fact-native.yml",
-      "bytes": 2160,
-      "sha256": "d65b7f9303bf742bb4606cc7107b9f744806c3d23e682202bbd51d2db4f0acf5"
+      "bytes": 6139,
+      "sha256": "04a5fa77efd9a5ac491510d6d8009f5774238b3a6e711d26f5bf5c2551b80213"
     }
   ]
 }

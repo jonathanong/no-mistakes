@@ -41,7 +41,8 @@ class SourceTests(unittest.TestCase):
         source = (D / 'hosted.py').read_text()
         self.assertNotIn('Bearer ', source)
         self.assertIn("clean.pop('GH_TOKEN', None)", source)
-        self.assertIn("'gh', 'api', '--header', 'Accept: application/octet-stream'", source)
+        self.assertNotIn("releases/assets/", source)
+        self.assertIn("verify_staged_assets(stage, spec, os.environ)", source)
 
     def test_python_parses(self):
         for path in D.glob('*.py'):
