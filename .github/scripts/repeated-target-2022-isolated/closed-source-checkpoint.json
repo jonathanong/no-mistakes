@@ -1,14 +1,14 @@
 {
   "status": "CLOSED REVIEWED source activation; normal publication authorized, no dispatch",
   "root": "/tmp/nm2022-isolated-five-cohort-source-draft",
-  "files": 2052,
-  "manifest_sha256": "80829c9fd30bc08461fe2830b17b5faf0c5a1585e05e1ca0e774ae0c551a7188",
+  "files": 2059,
+  "manifest_sha256": "6ba35057bb1dc23134a5b3c894dddbac88f8c30edd0504856192f20261950418",
   "plan_sha256": "a8d399e78b0a873c5144c9ac1f177736b6dddf026122977b8721e024171bd965",
   "source_tests": {
-    "methods": 11,
+    "methods": 14,
     "exit": 0,
-    "stderr_sha256": "5d367da43996f4a19f339bdfc14aee4cbe6a82d48c9dddadaa506cb261880337",
-    "actual_log": "/tmp/nm2022-isolated-five-cohort-activation/source-tests.stderr"
+    "actual_log": "/tmp/nm2022-public-facade-lookup-fix/all14.stderr",
+    "stderr_sha256": "934b11070c82ac727e73897352778517cea11666a96ebc34e8b4f972876d32a1"
   },
   "actionlint_shellcheck_exit": 0,
   "no_native_execution": true,
@@ -18,5 +18,6 @@
   ],
   "numerical_protocol": "original16workloads/90inputs/704rows/48metric outcomes, copied sampler and assessor unchanged from reviewed local deadline adapter",
   "transport_actual_source": "32e9f76ed570ddbafba132a0201e9ecd9d13bee0",
-  "publication_fix": "Only opaque payload .gitattributes binary marker; original CRLF/trailing-space fixture bytes unchanged"
+  "publication_fix": "Only opaque payload .gitattributes binary marker; original CRLF/trailing-space fixture bytes unchanged",
+  "followup": "Only baseline facade Git lookups use public tree-equivalent b947; actual compiled baseline c896 restored in finally; all producer/artifact labels unchanged"
 }

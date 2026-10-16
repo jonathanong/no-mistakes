@@ -27,6 +27,11 @@
       "sha256": "20ad91346183739a7801d74fa10f299002c487a72737fd84f18319475b81ff2c"
     },
     {
+      "path": "baseline-public-facade-carry.json",
+      "bytes": 440077,
+      "sha256": "99b0b7ff53d2709f6d7db8b18fca480ee8715857701c3f3bc8a116d5db7726c2"
+    },
+    {
       "path": "cohort.py",
       "bytes": 3828,
       "sha256": "17f0c3e81eb05157388571c26fb28e35b8d869ae51f3784049b540c0343699a6"
@@ -40,6 +45,31 @@
       "path": "execution-approval.json",
       "bytes": 458,
       "sha256": "5c3257ec66467d14cf740173c737ca6cb64ba35a025c4f4ca915a035d8916be4"
+    },
+    {
+      "path": "facade_lookup.py",
+      "bytes": 807,
+      "sha256": "68d917992c13412e8a52112522251620cd421c0c846f0dc821afadab255d49dd"
+    },
+    {
+      "path": "fixtures/public-facade-object/objects.json",
+      "bytes": 226,
+      "sha256": "a97fefeaa3d3f43e2989224a0c0fa5dc81e9ef7b82edbe9bb5d09677a5a06372"
+    },
+    {
+      "path": "fixtures/public-facade-object/packages/no-mistakes/index.js",
+      "bytes": 7448,
+      "sha256": "52f9914b87ce22b1be4a5e688d461394d5e6c0f5aae277623c08dabab8c46b7d"
+    },
+    {
+      "path": "fixtures/public-facade-object/packages/no-mistakes/index.mjs",
+      "bytes": 1235,
+      "sha256": "0833bd7021dff935cb6573b0180fc3de55e3121346c8d46bb6ab4554c1f4ae77"
+    },
+    {
+      "path": "fixtures/public-facade-object/wrong-facade.txt",
+      "bytes": 25,
+      "sha256": "d0f1e82e9a051e7af02c01d46a8aeff7ccb25cc1e357bb830b3bd2265128d5b3"
     },
     {
       "path": "fixtures/synthetic-archive/0/private/SYNTHETIC-0.stdout",
@@ -5000,11 +5030,6 @@
       "path": "immutable-source-pins.json",
       "bytes": 264,
       "sha256": "af3e2cb25f5d8cd915c884e55595ef39bfe31115091c7553c950a71eae3a3a8c"
-    },
-    {
-      "path": "payload-index.json",
-      "bytes": 258619,
-      "sha256": "4c4a67c2669ed2e25b8e2c79515589761b7f133f8e40ec71a14fffb123af7c66"
     },
     {
       "path": "payload/.gitattributes",
@@ -10092,14 +10117,19 @@
       "sha256": "80ec31586aba261129ff9900273da1703329a96283496a8cace7021975fa3666"
     },
     {
+      "path": "payload-index.json",
+      "bytes": 258619,
+      "sha256": "4c4a67c2669ed2e25b8e2c79515589761b7f133f8e40ec71a14fffb123af7c66"
+    },
+    {
       "path": "plan.json",
       "bytes": 6280,
       "sha256": "a8d399e78b0a873c5144c9ac1f177736b6dddf026122977b8721e024171bd965"
     },
     {
       "path": "preflight.py",
-      "bytes": 4616,
-      "sha256": "61c7bdb97b57eb768a292ffdf2914c47fe0ea18ac22898187b610d2d6dc00312"
+      "bytes": 5015,
+      "sha256": "30c8917d66fda3ccc9f883a151fc73054d5849ba29cc977373d9a4bc0e0b1290"
     },
     {
       "path": "prepare-payload.py",
@@ -10245,6 +10275,11 @@
       "path": "test_contracts.py",
       "bytes": 2873,
       "sha256": "e21b88c1be8c5c2b4cad7f85dec129e453f2b1f3d4ac804a87911df78be8c26f"
+    },
+    {
+      "path": "test_facade_lookup.py",
+      "bytes": 2893,
+      "sha256": "adfccded638536c1822d6a10458b6a50be9d1a8da05a4c2656068e35b85e9306"
     },
     {
       "path": "union-from-artifacts.py",

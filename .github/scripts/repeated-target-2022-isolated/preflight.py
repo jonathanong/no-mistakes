@@ -21,7 +21,13 @@ import pair
 # reports, expected hashes, 90 inputs and measurement definitions remain exact.
 pair.SPEC['baseline']['revision'] = 'c896db3775411e9b7867260db420a73965b91a9e'
 pair.SPEC['candidate']['revision'] = '4c24e9718081e36afd061389fadc465913b223d7'
+import napi_parity
+from facade_lookup import with_public_baseline
+facade_proof = json.loads((D / 'baseline-public-facade-carry.json').read_text())
+original_facade_identity = napi_parity.facade_identity
+napi_parity.facade_identity = lambda: with_public_baseline(original_facade_identity, pair.SPEC, facade_proof)
 runpy.run_path('/tmp/nm2022-2084-release/collect-current-pair-semantics.py', run_name='__main__')
+assert pair.SPEC['baseline']['revision'] == 'c896db3775411e9b7867260db420a73965b91a9e'
 m = json.loads((ROOT / 'semantic-manifest.json').read_text())
 assert not m['failures'] and len(m['raw_files']) == 182
 assert sum(len(v) for v in m['report_hashes'].values()) == 27
