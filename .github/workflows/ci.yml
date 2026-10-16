@@ -191,6 +191,13 @@ jobs:
           --no-default-features
           --features test-instrumentation
 
+      - name: Test PostgreSQL source identities without default features
+        timeout-minutes: 10
+        run: >
+          cargo test --locked -p no-mistakes --lib
+          --no-default-features --features test-instrumentation
+          codebase::postgres::source::
+
       - name: Deny rustc warnings in coverage test builds
         timeout-minutes: 10
         env:
