@@ -105,3 +105,7 @@ fn refine_site(
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "refine_vector_tests.rs"]
 mod vector_oracle;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "refinement_boundaries_tests.rs"]
+mod boundary_tests;
