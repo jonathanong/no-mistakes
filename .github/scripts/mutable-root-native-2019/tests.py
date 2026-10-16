@@ -29,4 +29,23 @@ class DraftTests(unittest.TestCase):
     def test_every_python_parses(self):
         for path in common.HERE.rglob('*.py'):ast.parse(path.read_text(),filename=str(path))
 
+    def test_authenticated_modes_survive_safe_tar_filter(self):
+        import tarfile,state
+        for mode,symlink in [(0o664,False),(0o775,False),(0o777,True)]:
+            item=tarfile.TarInfo('proof/producer.json');item.mode=mode;item.mtime=123
+            if symlink:item.type=tarfile.SYMTYPE;item.linkname='producer-target.json'
+            if not symlink:self.assertNotEqual(tarfile.data_filter(item,'/tmp/nm2019-arm2019/baseline').mode,mode)
+            row={'mode':mode,'mtime':123,'sha256':'raw','bytes':1,'kind':'symlink'if symlink else'file'}
+            manifest={'run_id':'mock','archive_sha256':'archive','files':{item.name:row}}
+            archive=mock.MagicMock();archive.getmembers.return_value=[item]
+            with mock.patch.object(state,'identity',return_value={'run_id':'mock'}),mock.patch.object(state,'sha',return_value='archive'),mock.patch.object(state,'git',return_value=''),mock.patch.object(Path,'read_text',return_value=json.dumps(manifest)),mock.patch.object(Path,'exists',return_value=False),mock.patch.object(Path,'is_symlink',return_value=False),mock.patch.object(Path,'mkdir'),mock.patch.object(state.tarfile,'open')as opened,mock.patch.object(state,'metadata',return_value=row),mock.patch.object(state.os,'chmod')as chmod,mock.patch.object(state.os,'utime')as utime:
+                opened.return_value.__enter__.return_value=archive
+                state.restore('baseline','core')
+                target=common.WORK/'baseline/proof/producer.json'
+                if symlink:
+                    chmod.assert_not_called();utime.assert_called_once_with(target,(123,123),follow_symlinks=False)
+                else:
+                    chmod.assert_called_once_with(target,mode,follow_symlinks=False);utime.assert_not_called()
+                archive.extract.assert_called_once_with(item,path=common.WORK/'baseline',filter='data')
+
 if __name__=='__main__':unittest.main()

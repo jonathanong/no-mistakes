@@ -7,7 +7,7 @@ def reviewed():
     approved=os.environ.get('APPROVED_DIAGNOSTIC_COMMIT','')
     require(re.fullmatch('[0-9a-f]{40}',approved),'missing approved diagnostic SHA')
     require(git('rev-parse','HEAD')==approved,'diagnostic source changed')
-    require(git('rev-parse','HEAD^')==SPEC['diagnostic_parent'],'wrong diagnostic parent')
+    require(git('merge-base',SPEC['diagnostic_parent'],'HEAD')==SPEC['diagnostic_parent'],'wrong diagnostic parent')
     require(not git('status','--porcelain'),'dirty diagnostic source')
     changed=git('diff','--name-only',SPEC['diagnostic_parent'],'HEAD').splitlines()
     require(changed and all(p==SPEC['workflow']or p.startswith(SPEC['directory']+'/')for p in changed),

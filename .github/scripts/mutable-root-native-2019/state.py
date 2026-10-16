@@ -1,6 +1,6 @@
 """Lossless producer metadata carry; never fabricate freshness or transfer Git credentials."""
 from common import *
-import tarfile,shutil
+import tarfile,shutil,math
 
 def directory(arm):
     require(arm in ARM,'unknown arm')
@@ -61,7 +61,16 @@ def restore(arm,previous):
             if target.is_symlink():target.unlink()
             # Standard archive extraction restores authentic producer mode/mtime/link metadata.
             # No depinfo/fingerprint edits, manufactured timestamps or forced Cargo freshness.
+            require(type(row['mtime'])in(int,float)and math.isfinite(row['mtime'])and math.isfinite(item.mtime)
+                    and abs(row['mtime']-item.mtime)<0.000001,'archive timestamp differs from producer')
             tar.extract(item,path=root,filter='data')
+            if item.isfile():
+                require(type(row['mode'])is int and 0<=row['mode']<=0o777,'unsafe authenticated mode')
+                # data_filter strips group/other write bits; restore producer permissions only.
+                os.chmod(target,row['mode'],follow_symlinks=False)
+            else:
+                # tarfile skips symlink timestamps; restore the archived link, never its referent.
+                os.utime(target,(item.mtime,item.mtime),follow_symlinks=False)
             actual=metadata(target)
             require(all(actual[k]==row[k]for k in ['sha256','bytes','kind','mode']),'state payload mismatch')
             require(abs(actual['mtime']-item.mtime)<0.000001,'producer archive metadata lost')
