@@ -97,7 +97,8 @@ impl ScopeVisitor<'_> {
         // Relative candidates are recorded before their arguments escape, but
         // ownership is still unconfirmed here. A rejected owner can mutate a
         // builder, so only already-confirmed consumers preserve its variants.
-        callee_name(call, self.bindings, self.scoped).is_some()
+        self.executor_alias_callee(&call.callee)
+            || callee_name(call, self.bindings, self.scoped).is_some()
             || self.fresh_builder_call(call)
             || self.known_append_receiver(callee)
     }

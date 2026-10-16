@@ -4,6 +4,7 @@ const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
 require("./postgres-boolean-stringification-api.test.js");
+require("./postgres-conditional-executors-api.test.js");
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const fixture = (name) =>

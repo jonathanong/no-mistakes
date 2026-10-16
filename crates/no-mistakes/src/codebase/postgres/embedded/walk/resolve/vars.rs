@@ -19,6 +19,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
     if let Some(scope) = visitor.current_scope() {
         for (name, position) in names {
             scope.entry(name).or_insert_with(|| BindingState {
+                executor_alias: None,
                 builder_identity: None,
                 builder_effect_revision: 0,
                 condition_key: None,
@@ -144,6 +145,7 @@ pub(super) fn record_declarator(
         scope.insert(
             ident.name.to_string(),
             BindingState {
+                executor_alias: is_const.then_some(false),
                 builder_identity,
                 builder_effect_revision: 0,
                 condition_key,
@@ -184,6 +186,7 @@ fn var_scope(visitor: &ScopeVisitor<'_>, name: &str) -> usize {
 }
 
 fn clear_binding(binding: &mut BindingState) {
+    binding.executor_alias = None;
     binding.initialized = true;
     binding.sql = None;
     binding.sql_builder = false;
