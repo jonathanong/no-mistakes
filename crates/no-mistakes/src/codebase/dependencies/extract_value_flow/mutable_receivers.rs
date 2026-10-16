@@ -24,32 +24,6 @@ impl ImportCollector {
         self.retain_receiver_origin(scope, name, value, completed_at, true);
     }
 
-    pub(in super::super) fn prepare_mutable_pattern_roots(
-        &mut self,
-        target: &AssignmentTarget<'_>,
-    ) {
-        if self.receiver_only_bindings.is_none()
-            || !matches!(
-                target,
-                AssignmentTarget::ArrayAssignmentTarget(_)
-                    | AssignmentTarget::ObjectAssignmentTarget(_)
-            )
-        {
-            return;
-        }
-        if write_targets::targets(target)
-            .iter()
-            .any(|(name, path, _)| {
-                path.is_empty()
-                    && self
-                        .callee_binding_scope(name)
-                        .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name))
-            })
-        {
-            self.prepare_value_references();
-        }
-    }
-
     pub(in super::super) fn record_mutable_receiver_assignment(
         &mut self,
         assignment: &AssignmentExpression<'_>,
@@ -60,7 +34,10 @@ impl ImportCollector {
         if let Some(name) = mutable_root_name(&assignment.left) {
             if let Some(scope) = self.callee_binding_scope(name) {
                 if self.has_mutable_receiver_binding(scope, name) {
-                    let value = self.value_expression(&assignment.right);
+                    if self.record_single_named_root(scope, name, assignment) {
+                        return;
+                    }
+                    let value = self.root_value_expression(&assignment.right);
                     self.capture_mutable_root_phase(
                         (scope, name),
                         assignment.left.span().start,
@@ -88,15 +65,14 @@ impl ImportCollector {
             {
                 self.value_flow.receiver_root_target_decompositions += 1;
             }
-            if !write_targets::targets(&assignment.left)
-                .iter()
-                .any(|(name, path, _)| {
-                    path.is_empty()
-                        && self
-                            .callee_binding_scope(name)
-                            .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name))
-                })
-            {
+            let mut has_root = false;
+            root_targets::for_each_root(&assignment.left, |name, _| {
+                has_root = has_root
+                    || self
+                        .callee_binding_scope(name)
+                        .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name));
+            });
+            if !has_root {
                 return;
             }
             let value = self.value_expression(&assignment.right);
@@ -156,11 +132,11 @@ impl ImportCollector {
         }
     }
 
-    fn retain_receiver_origin(
+    pub(super) fn retain_receiver_origin(
         &mut self,
         scope: usize,
         name: &str,
-        value: ValueExpression,
+        value: impl Into<mutable_origins::Origin>,
         completed_at: u32,
         unconditional: bool,
     ) {

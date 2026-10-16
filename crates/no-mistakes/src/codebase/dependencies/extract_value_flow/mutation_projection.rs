@@ -1,5 +1,4 @@
 use super::*;
-
 #[path = "affected_receivers.rs"]
 mod affected;
 pub(super) use affected::Affected;
@@ -7,14 +6,12 @@ pub(super) use affected::Affected;
 mod eligibility;
 pub(super) type PendingMutation<R = nested::RootRead> =
     (nested::ReceiverWrite<R>, bool, bool, bool);
-#[derive(Clone, Copy)]
-pub(super) struct MutationInfo<'a> {
-    pub(super) metadata: mutation_metadata::MutationMetadata,
-    pub(super) assigned_member: Option<&'a str>,
-    pub(super) completed_at: u32,
-    pub(super) has_assignment: bool,
-    pub(super) proof: Option<&'a mutable_deferred::DeferredProof>,
-}
+pub(super) use eligibility::MutationInfo;
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "mutation_projection_differential_tests.rs"]
+mod differential_tests;
+#[path = "mutation_pending.rs"]
+mod pending_work;
 impl ImportCollector {
     pub(super) fn project_member_mutation<R: nested::RootCoordinate>(
         &mut self,
@@ -23,6 +20,10 @@ impl ImportCollector {
         info: MutationInfo<'_>,
         affected: &mut Affected,
     ) {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        if differential_tests::LEGACY.with(std::cell::Cell::get) {
+            return self.project_member_mutation_legacy(pending, assigned, info, affected);
+        }
         let mut traversal = receiver_traversal::ReceiverTraversal::default();
         #[cfg(feature = "test-instrumentation")]
         let mut binding_visits = 0;
@@ -50,17 +51,11 @@ impl ImportCollector {
                     },
                 );
             }
-            let terminal = root_read.read().is_some()
-                && !self.prior_member_mutations.has_assigned_origins()
-                && self.mutation_reference_is_terminal(&key);
-            #[cfg(feature = "test-instrumentation")]
-            if terminal {
-                self.value_flow.reference_terminal_paths += 1;
-            }
+            let terminal = self.projected_receiver_is_terminal(&key, root_read.read().is_some());
             // RHS facts are another possible successor source. Keep their
             // canonical projection whenever that request-owned index exists.
             if terminal {
-                affected.insert(key.0, &key.1);
+                affected.insert_owned(key.0, key.1);
                 continue;
             }
             let version = self.projected_root_version(&key, root_read);
@@ -92,12 +87,7 @@ impl ImportCollector {
             {
                 self.value_flow.reference_path_visits += 1;
             }
-            pending.push((
-                ((key.clone(), Vec::new()), Vec::new(), root_read),
-                true,
-                false,
-                assigned_exit,
-            ));
+            let exit_position = pending.len();
             affected.insert(key.0, &key.1);
             for target in self
                 .value_reference_links
@@ -111,6 +101,8 @@ impl ImportCollector {
                 {
                     self.value_flow.reference_link_visits += 1;
                 }
+                // Reserve the slot occupied by the old early exit marker.
+                pending.reserve(2);
                 pending.push((
                     ((target.clone(), path.clone()), reads.clone(), root_read),
                     false,
@@ -187,10 +179,13 @@ impl ImportCollector {
             }
             #[cfg(feature = "test-instrumentation")]
             references.record_counts(&mut self.value_flow);
-            pending.extend(
-                references
-                    .into_iter()
-                    .map(|reference| (reference, false, true, true)),
+            pending_work::append(
+                &mut pending,
+                exit_position,
+                key,
+                root_read,
+                assigned_exit,
+                references,
             );
         }
         #[cfg(feature = "test-instrumentation")]

@@ -76,3 +76,30 @@ impl PatternRoots {
         )
     }
 }
+
+impl ImportCollector {
+    pub(in super::super) fn prepare_mutable_pattern_roots(
+        &mut self,
+        target: &AssignmentTarget<'_>,
+    ) {
+        if self.receiver_only_bindings.is_none()
+            || !matches!(
+                target,
+                AssignmentTarget::ArrayAssignmentTarget(_)
+                    | AssignmentTarget::ObjectAssignmentTarget(_)
+            )
+        {
+            return;
+        }
+        let mut prepare = false;
+        root_targets::for_each_root(target, |name, _| {
+            prepare = prepare
+                || self
+                    .callee_binding_scope(name)
+                    .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name));
+        });
+        if prepare {
+            self.prepare_value_references();
+        }
+    }
+}

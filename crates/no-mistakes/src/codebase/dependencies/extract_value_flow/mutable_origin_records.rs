@@ -5,11 +5,11 @@ impl ReceiverBindingOrigins {
         &mut self,
         key: (usize, &str),
         location: (u32, Option<CallableId>),
-        value: ValueExpression,
+        value: impl Into<Origin>,
         guaranteed: bool,
     ) {
         let leaf = self.arena.len();
-        self.arena.push(Origin::Value(value));
+        self.arena.push(value.into());
         let names = self.roots.entry(key.0).or_default();
         if let Some(root) = names.get_mut(key.1) {
             root.record(&mut self.arena, location, leaf, guaranteed);

@@ -116,13 +116,11 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
-    let rhs_frame = collector.begin_assignment_rhs(assignment);
-    collector.prepare_mutable_pattern_roots(&assignment.left);
-    let receipts = collector.begin_phase_receipts(&assignment.left);
-    let mut phases =
-        collector.begin_reference_destructuring_phases(&assignment.left, &assignment.right);
-    let fresh = receiver_replacement_is_fresh(assignment);
-    let previous = std::mem::replace(&mut collector.receiver_replacement_is_fresh, fresh);
+    if collector.collect_value_flow {
+        visit_assignment_expression_with_receiver_effects(collector, assignment);
+        return;
+    }
+    // Ordinary writes/getters/imports retain their original traversal order.
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         record_assignment_target_writes(
             collector,
@@ -131,28 +129,10 @@ fn visit_assignment_expression_with_calls<'a>(
             assignment.span.end,
         );
     });
-    collector.receiver_replacement_is_fresh = previous;
-    if phases.is_none() {
-        phases = collector.begin_destructuring_phases(&assignment.left, &assignment.right);
-    }
-    let receipts = if phases.is_some() {
-        receipts
-    } else {
-        collector.end_phase_receipts(receipts);
-        None
-    };
-    let previous_fresh_evaluation = collector.fresh_receiver_effects.active;
-    collector.fresh_receiver_effects.active |= fresh && collector.collect_value_flow;
     walk_assignment_lhs_without_written_getter(collector, &assignment.left);
-    collector.end_destructuring_lhs(&phases);
     with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
         collector.visit_expression(&assignment.right);
     });
-    collector.fresh_receiver_effects.active = previous_fresh_evaluation;
-    collector.finish_assignment_rhs(assignment, rhs_frame);
-    collector.record_mutable_receiver_assignment(assignment);
-    collector.finish_destructuring_phases(phases);
-    collector.end_phase_receipts(receipts);
 }
 
 fn walk_assignment_lhs_without_written_getter<'a>(

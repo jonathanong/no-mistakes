@@ -40,11 +40,7 @@ pub(super) fn write_receiver_references<R: RootCoordinate>(
     output: &mut impl Extend<ReceiverWrite<R>>,
 ) {
     walk_references(value, path, 0, &mut |receiver, acquired, read| {
-        let retained = receiver.1.len() - acquired;
-        let reads = std::iter::repeat_n(Some(read), acquired)
-            .chain(reads[reads.len() - retained..].iter().copied())
-            .collect();
-        output.extend(std::iter::once((receiver, reads, R::capture(read))));
+        append_write(receiver, acquired, read, reads, output);
     });
 }
 
@@ -61,18 +57,7 @@ fn walk_references(
             offset,
             context,
         } => {
-            let mut names = name.split('.');
-            let base = names.next().expect("binding name");
-            let tail = names
-                .map(|member| Some(member.to_string()))
-                .chain(path.iter().cloned())
-                .collect::<Vec<_>>();
-            let acquired = acquired + tail.len() - path.len();
-            output(
-                ((scope.unwrap_or(0), base.to_string()), tail),
-                acquired,
-                (*offset, *context),
-            );
+            named_reference(name, *scope, (*offset, *context), path, acquired, output);
         }
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
             if let Some((head, tail)) = path.split_first() {
@@ -100,4 +85,59 @@ fn walk_references(
         ValueExpression::Awaited(value) => walk_references(value, path, acquired, output),
         _ => {}
     }
+}
+
+/// Both full values and compact root facts share named receiver/read projection.
+pub(super) fn write_named_receiver_references<R: RootCoordinate>(
+    name: &str,
+    scope: Option<usize>,
+    read: RootRead,
+    path: &[Option<String>],
+    reads: &[ReceiverRead],
+    output: &mut impl Extend<ReceiverWrite<R>>,
+) {
+    named_reference(
+        name,
+        scope,
+        read,
+        path,
+        0,
+        &mut |receiver, acquired, read| {
+            append_write(receiver, acquired, read, reads, output);
+        },
+    );
+}
+fn named_reference(
+    name: &str,
+    scope: Option<usize>,
+    read: RootRead,
+    path: &[Option<String>],
+    acquired: usize,
+    output: &mut impl FnMut(Receiver, usize, RootRead),
+) {
+    let mut names = name.split('.');
+    let base = names.next().expect("binding name");
+    let tail = names
+        .map(|member| Some(member.to_string()))
+        .chain(path.iter().cloned())
+        .collect::<Vec<_>>();
+    let acquired = acquired + tail.len() - path.len();
+    output(
+        ((scope.unwrap_or(0), base.to_string()), tail),
+        acquired,
+        read,
+    );
+}
+fn append_write<R: RootCoordinate>(
+    receiver: Receiver,
+    acquired: usize,
+    read: RootRead,
+    reads: &[ReceiverRead],
+    output: &mut impl Extend<ReceiverWrite<R>>,
+) {
+    let retained = receiver.1.len() - acquired;
+    let reads = std::iter::repeat_n(Some(read), acquired)
+        .chain(reads[reads.len() - retained..].iter().copied())
+        .collect();
+    output.extend(std::iter::once((receiver, reads, R::capture(read))));
 }

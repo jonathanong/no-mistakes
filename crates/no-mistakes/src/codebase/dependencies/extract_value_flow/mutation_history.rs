@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "mutation_child.rs"]
+mod child;
+
 /// One prefix summary per mutation receiver path, shared by every default that
 /// refers to that receiver. Neither finalization nor lookup replays all writes.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -79,7 +82,7 @@ impl ValueMutationHistory {
         #[cfg(feature = "test-instrumentation")]
         metrics::PATH_DESCENTS.with(|count| count.set(count.get() + 1));
         match member {
-            Some(member) => self.members.entry(member.clone()).or_default(),
+            Some(member) => child::record(&mut self.members, member),
             None => self.dynamic.get_or_insert_with(Default::default),
         }
     }
@@ -183,7 +186,7 @@ impl ValueMutationHistory {
 
 #[cfg(feature = "test-instrumentation")]
 #[path = "mutation_recording_metrics.rs"]
-mod metrics;
+pub(super) mod metrics;
 
 #[cfg(test)]
 #[path = "mutation_recording_tests.rs"]

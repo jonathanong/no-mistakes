@@ -97,7 +97,11 @@ from the package. Findings retain the executor's source location. See the
 TypeScript/JavaScript text through the same executor and embedded SQL extractor.
 Each source is `{ fileName, source }`; optional `executorNames`,
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` select the same
-bindings as the annotation rule. It returns one record per executor call or
+bindings as the annotation rule. Immutable `const` aliases and conditional callees
+are recognized when every alternative is a configured imported executor or a
+previously initialized immutable alias. Shadowed names, mutable aliases, and
+unproven alternatives do not establish an executor binding. This does not infer
+read-only SQL. It returns one record per executor call or
 recoverable conditional alternative, in source order. Sources without a configured
 executor call return an empty array, including when import-aware analysis evaluates
 nested SQL-building helpers. Records include `fileName`, the one-based executor

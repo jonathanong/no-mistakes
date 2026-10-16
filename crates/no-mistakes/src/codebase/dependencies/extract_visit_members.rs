@@ -110,18 +110,24 @@ fn visit_receiver_field_initializer<'a>(
         begin_static_decorator_applications(collector, value.span().start);
         collector.visit_expression(value);
     } else {
-        // Deferred fields can run once per instance even with module context.
+        // Deferred fields remain repeated for ordinary calls/imports too.
         collector.repeat_depth += 1;
-        let active = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
-        let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
-        let epoch = std::mem::replace(
-            &mut collector.fresh_receiver_effects.epoch,
-            u64::from(value.span().start) + 1,
-        );
-        with_conditional_receiver_write(collector, |collector| collector.visit_expression(value));
-        collector.fresh_receiver_effects.epoch = epoch;
-        collector.fresh_receiver_effects.active = active;
-        collector.fresh_receiver_effects.descriptor_call = descriptor_call;
+        if collector.collect_value_flow {
+            #[cfg(feature = "test-instrumentation")]
+            extract_value_flow::ordinary_demand_metrics::site(4);
+            let active = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
+            let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
+            let epoch = std::mem::replace(
+                &mut collector.fresh_receiver_effects.epoch,
+                u64::from(value.span().start) + 1,
+            );
+            with_conditional_receiver_write(collector, |collector| collector.visit_expression(value));
+            collector.fresh_receiver_effects.epoch = epoch;
+            collector.fresh_receiver_effects.active = active;
+            collector.fresh_receiver_effects.descriptor_call = descriptor_call;
+        } else {
+            collector.visit_expression(value);
+        }
         collector.repeat_depth -= 1;
     }
 }

@@ -9,6 +9,8 @@ mod pending;
 mod phases;
 #[path = "mutable_origin_records.rs"]
 mod records;
+#[path = "mutable_origin_single.rs"]
+pub(super) mod single;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(super) struct RootVersion {
@@ -51,7 +53,8 @@ struct RootOrigins {
     #[cfg(feature = "test-instrumentation")]
     predecessor_queries: usize,
 }
-enum Origin {
+pub(super) enum Origin {
+    SingleNamedField(single::SingleNamedField),
     Value(ValueExpression),
     Either(usize, usize),
 }
@@ -60,6 +63,7 @@ enum Origin {
 pub(in super::super) struct ReceiverBindingOrigins {
     roots: FxHashMap<usize, FxHashMap<String, RootOrigins>>,
     arena: Vec<Origin>,
+    names: Option<Box<single::Names>>,
     #[cfg(feature = "test-instrumentation")]
     lookups: std::cell::Cell<usize>,
     #[cfg(feature = "test-instrumentation")]
@@ -185,6 +189,11 @@ impl ReceiverBindingOrigins {
                 Origin::Value(value) => {
                     if !foreign || id < foreign_before {
                         nested::write_receiver_references(value, path, reads, output)
+                    }
+                }
+                Origin::SingleNamedField(value) => {
+                    if !foreign || id < foreign_before {
+                        self.append_single(value, path, reads, output);
                     }
                 }
                 Origin::Either(left, right) => {

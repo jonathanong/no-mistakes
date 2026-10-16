@@ -64,3 +64,29 @@ impl ImportCollector {
         traversal.exit(key, version);
     }
 }
+
+#[derive(Clone, Copy)]
+pub(in super::super) struct MutationInfo<'a> {
+    pub(in super::super) metadata: mutation_metadata::MutationMetadata,
+    pub(in super::super) assigned_member: Option<&'a str>,
+    pub(in super::super) completed_at: u32,
+    pub(in super::super) has_assignment: bool,
+    pub(in super::super) proof: Option<&'a mutable_deferred::DeferredProof>,
+}
+
+impl ImportCollector {
+    pub(in super::super) fn projected_receiver_is_terminal(
+        &mut self,
+        key: &(usize, String),
+        has_root_read: bool,
+    ) -> bool {
+        let terminal = has_root_read
+            && !self.prior_member_mutations.has_assigned_origins()
+            && self.mutation_reference_is_terminal(key);
+        #[cfg(feature = "test-instrumentation")]
+        if terminal {
+            self.value_flow.reference_terminal_paths += 1;
+        }
+        terminal
+    }
+}
