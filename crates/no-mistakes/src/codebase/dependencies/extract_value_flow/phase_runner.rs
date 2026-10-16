@@ -125,13 +125,7 @@ impl ImportCollector {
                 .filter(|segment| segment.0 < target.span().end)
                 .collect(),
         });
-        let mut first_changes = fx_map();
-        for point in &root_writes {
-            first_changes
-                .entry(point.name.clone())
-                .and_modify(|phase: &mut u32| *phase = (*phase).min(point.phase))
-                .or_insert(point.phase);
-        }
+        let first_changes = root_phase_capture::RootPhaseCapture::first_changes(&root_writes);
         let previous_root_capture = root_catalog.and_then(|catalog| {
             self.receiver_root_phases
                 .replace(Box::new(root_phase_capture::RootPhaseCapture {
@@ -176,7 +170,14 @@ impl ImportCollector {
         let previous = self
             .destructuring_phase_owner
             .replace(self.current_function_id());
-        let defer_mutable = self.receiver_only_bindings.is_some();
+        // Nested RHS patterns already append into the outer frame. Only its
+        // owner may replay after the complete root phase capture is committed.
+        let defer_mutable =
+            self.receiver_only_bindings.is_some() && self.deferred_mutable_writes.is_none();
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let defer_mutable = defer_mutable
+            || (self.receiver_only_bindings.is_some()
+                && mutable_receiver_tests::deferred_frames::LEGACY.with(std::cell::Cell::get));
         let previous_deferred = defer_mutable
             .then(|| self.begin_deferred_mutable_writes())
             .flatten();

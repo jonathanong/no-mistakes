@@ -117,7 +117,13 @@ impl PhaseWalk<'_> {
     }
     pub(super) fn root_write(&mut self, name: &str, target: u32, guaranteed: bool) {
         if let Some(changed) = &mut self.changed_roots {
-            changed.insert(name.to_string());
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::phase_key(0);
+            if !changed.contains(name) {
+                #[cfg(feature = "test-instrumentation")]
+                root_target_metrics::phase_key(1);
+                changed.insert(name.to_string());
+            }
         }
         if self.collect_root_origins {
             self.root_writes.push(phase_walk::RootPhaseWrite {
