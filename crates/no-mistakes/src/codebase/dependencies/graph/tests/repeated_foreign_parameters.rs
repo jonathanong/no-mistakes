@@ -79,7 +79,10 @@ fn repeated_foreign_reads_preserve_owned_one_time_source_snapshots() {
     let (root, graph) = foreign_parameter_graph("timing");
     #[cfg(feature = "test-instrumentation")]
     // The bounded selector preserves these snapshots without allocating frame scratch.
-    assert_eq!(benchmark_probe_replacements().inherited_frame_qualifications, 0);
+    assert_eq!(
+        benchmark_probe_replacements().inherited_frame_qualifications,
+        0
+    );
     let sites = graph.call_sites_in_file(&root.join("src/entry.mts"));
     for (callee, expected) in [
         ("localSaved", Some("localWriter.get")),

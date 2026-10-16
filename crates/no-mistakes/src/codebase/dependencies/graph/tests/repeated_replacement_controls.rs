@@ -206,7 +206,9 @@ fn local_member_writes_do_not_acquire_imported_replacement_identity() {
 #[test]
 fn inherited_acquisition_qualification_avoids_per_read_heap_scratch() {
     let (root, graph) = replacement_graph("value-flow-foreign-parameter-timing");
-    assert!(!graph.call_sites_in_file(&root.join("src/entry.mts")).is_empty());
+    assert!(!graph
+        .call_sites_in_file(&root.join("src/entry.mts"))
+        .is_empty());
     let probe = benchmark_probe_replacements();
     // This saved hot inherited-input fixture must not allocate traversal
     // scratch for each repeated source-owner qualification.
@@ -217,7 +219,10 @@ fn inherited_acquisition_qualification_avoids_per_read_heap_scratch() {
 #[test]
 fn repeated_member_admission_reuses_immutable_prepared_proof() {
     let (root, graph) = replacement_graph("value-flow-replacement-scale-256");
-    assert_eq!(graph.call_sites_in_file(&root.join("src/entry.mts")).len(), 256);
+    assert_eq!(
+        graph.call_sites_in_file(&root.join("src/entry.mts")).len(),
+        256
+    );
     let probe = benchmark_probe_replacements();
     assert_eq!(probe.call_admission_checks, 256);
     // Each physical site remains checked; only the immutable member proof is shared.
