@@ -20,7 +20,7 @@ fn visit_function_with_value_flow_scope<'a>(
         if let Some(name) = &name {
             collector.record_callable_binding_id(name, callable_id);
         }
-        collector.push_function_scope(name.clone(), callable_id);
+        collector.push_function_scope(name, callable_id);
         if let Some(scope) = collector.current_function() {
             collector.callable_scopes.insert(scope.clone());
             if collector.export_depth > 0 && collector.function_stack.len() == 1 {
@@ -33,17 +33,22 @@ fn visit_function_with_value_flow_scope<'a>(
     }
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    if let Some(name) = &name {
+    if let Some(name) = function.id.as_ref().map(|id| id.name.as_str()) {
         // The assignment visitor records its literal RHS immediately before
         // visiting this function, so the last staged write identifies it in
         // constant time. Give that self name a lexical identity for
         // value-use/escape facts, including nested
         // closures. A same-named parameter shadows it instead.
         if collector.collect_value_flow
-            && collector.value_flow.callable_assignments.last().is_some_and(|assignment| {
-                assignment.callable == Some(callable_id)
-            })
-            && !collector.local_stack.last().is_some_and(|bindings| bindings.contains(name))
+            && collector
+                .callable_assignment_state
+                .as_ref()
+                .and_then(|state| state.assignments.last())
+                .is_some_and(|assignment| assignment.callable == Some(callable_id))
+            && !collector
+                .local_stack
+                .last()
+                .is_some_and(|bindings| bindings.contains(name))
         {
             collector.add_binding_name(name);
             collector.record_callable_binding_id(name, callable_id);

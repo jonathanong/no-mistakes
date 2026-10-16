@@ -1,4 +1,8 @@
 impl ImportCollector {
+    fn require_receiver_replacement_facts(&mut self) {
+        let facts = self.value_flow.replacements.get_or_insert_with(Default::default);
+        std::sync::Arc::get_mut(facts).expect("owned receiver facts").callable_only = false;
+    }
     fn record_replacement_assignment(&mut self, assignment: &AssignmentExpression<'_>) {
         if !self.collect_value_flow {
             return;
@@ -94,9 +98,7 @@ impl ImportCollector {
             return;
         }
         if !matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {
-            self.value_flow
-                .replacements
-                .get_or_insert_with(Default::default);
+            self.require_receiver_replacement_facts();
             self.replacement_region_index();
         }
         // A destructuring target can reset an imported receiver without a
@@ -131,9 +133,7 @@ impl ImportCollector {
         {
             return;
         }
-        self.value_flow
-            .replacements
-            .get_or_insert_with(Default::default);
+        self.require_receiver_replacement_facts();
         let region = self.replacement_region_index();
         let write = ValueReplacementWrite {
             receiver: name.to_string(),
