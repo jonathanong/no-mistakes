@@ -1,0 +1,53 @@
+"""Digest and payload allowlist for one-run private ARM binary transfer.
+
+The producer emits a manifest for its own files. The consumer verifies the
+downloaded bytes, exact arm/source/profile metadata, and rejects extra files.
+"""
+from closed_modes import restore_file_modes
+import hashlib
+import json
+from pathlib import Path
+
+ALLOWED = {'cli', 'timing-probe', 'graph-probe', 'addon.node',
+           'cargo.jsonl', 'source-inventory.json'}
+
+
+def digest(path):
+    data = Path(path).read_bytes()
+    return {'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)}
+
+
+def record(directory, arm, revision, tree, source_inventory_sha256, compiler, features,
+           profile, graph_probe_cfg):
+    directory = Path(directory)
+    assert arm in ('baseline', 'candidate')
+    assert graph_probe_cfg == ('alternatives_api' if arm == 'candidate' else None)
+    entries = list(directory.iterdir())
+    assert {p.name for p in entries} == ALLOWED, 'missing or extra private transfer entry'
+    assert all(p.is_file() and not p.is_symlink() for p in entries), 'private transfer entry is not a regular file'
+    files = {p.name: digest(p) for p in entries}
+    manifest = dict(arm=arm, revision=revision, tree=tree,
+                source_inventory_sha256=source_inventory_sha256,
+                compiler=compiler, features=features, profile=profile,
+                graph_probe_cfg=graph_probe_cfg, files=files,
+                file_modes={p.name:p.stat().st_mode & 0o777 for p in entries})
+    (directory / 'transfer-manifest.json').write_text(json.dumps(manifest, sort_keys=True) + '\n')
+    return manifest
+
+
+def verify(directory, manifest, expected):
+    directory = Path(directory)
+    assert set(manifest) == {'arm', 'revision', 'tree', 'source_inventory_sha256',
+                             'compiler', 'features', 'profile', 'graph_probe_cfg', 'files', 'file_modes'}
+    for key, value in expected.items():
+        assert manifest[key] == value, f'{key} differs from frozen pair'
+    assert manifest['graph_probe_cfg'] == (
+        'alternatives_api' if manifest['arm'] == 'candidate' else None)
+    assert set(manifest['files']) == ALLOWED
+    assert {p.name for p in directory.iterdir()} == ALLOWED | {'transfer-manifest.json'}
+    assert all(p.is_file() and not p.is_symlink() for p in directory.iterdir())
+    assert json.loads((directory / 'transfer-manifest.json').read_text()) == manifest
+    for name in ALLOWED:
+        assert digest(directory / name) == manifest['files'][name], f'{name} changed in transfer'
+    restore_file_modes(directory, {name:row['sha256'] for name,row in manifest['files'].items()}, manifest['file_modes'])
+    return True

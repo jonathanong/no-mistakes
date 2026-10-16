@@ -1,0 +1,16 @@
+{
+  "source_checkpoint": "/tmp/nm2019-arm2019-source-validation/complete-transport-source-checkpoint.json",
+  "reviewed_manifest_sha256": "a46093dedb9f6f8b09bedc558c79fb75d5a3b392544ad08c465d2668afaf2f4e",
+  "reuse_scope": "phase process/metadata/source transport only; no2019workload/sampler/gate values",
+  "copied_files": [
+    "phase_common.py",
+    "phase_state.py",
+    "phase_source.py"
+  ],
+  "adaptations": [
+    "pair.json current2022 SPEC",
+    "own runner.temp root",
+    "ownbaseline/candidate labels",
+    "wholejob deadline clamps every ownedphase command"
+  ]
+}

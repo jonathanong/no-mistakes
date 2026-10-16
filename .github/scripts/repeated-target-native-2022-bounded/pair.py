@@ -1,0 +1,75 @@
+"""Exact stacked source pair and one-shot remote check for the ARM diagnostic."""
+import hashlib
+import json
+import os
+import subprocess
+from pathlib import Path
+
+from common import require
+from proposal_guard import check, git
+
+HERE = Path(__file__).resolve().parent
+SPEC = json.loads((HERE / 'pair.json').read_text())
+ROOT = HERE.parents[2] if len(HERE.parents) > 2 else Path('/tmp/no-mistakes-pr2022')
+
+
+def fetch_reviewed_pair_objects():
+    """Make the live main and PR merge objects available before exact Git checks."""
+    require(SPEC['status'] == 'REVIEWED AND FROZEN', 'draft_experiment_cannot_execute')
+    for ref, expected in [('main', SPEC['baseline']['revision']),
+                          ('refs/pull/2022/merge', SPEC['candidate']['revision'])]:
+        from phase_common import run
+        run(['git', 'fetch', '--no-tags', 'origin', ref], cwd=ROOT, timeout=90)
+        require(git(ROOT, 'rev-parse', 'FETCH_HEAD') == expected,
+                'live_pair_ref_changed', ref=ref)
+
+
+def remote_snapshot():
+    """One remote snapshot per stage; no CI polling or waiting."""
+    def api(path):
+        from phase_common import run
+        return json.loads(run(['gh', 'api', path], cwd=ROOT, timeout=90))
+    main = api('repos/jonathanong/no-mistakes/git/ref/heads/main')
+    pr = api('repos/jonathanong/no-mistakes/pulls/' + str(SPEC['pr']['number']))
+    require(main['object']['sha'] == SPEC['baseline']['required_remote_head'], 'main_head_changed')
+    require(pr['head']['sha'] == SPEC['pr']['head_sha'] and pr['head']['sha'] == SPEC['candidate']['pr_head'], 'candidate_remote_head_changed')
+    require(pr['base']['ref'] == SPEC['pr']['base_branch'] and pr['draft'] is True, 'candidate_base_or_draft_changed')
+    run = api('repos/jonathanong/no-mistakes/actions/runs/' + str(SPEC['pr']['required_successful_ci_run']))
+    require(run['head_sha'] == SPEC['pr']['head_sha'] and run['conclusion'] == 'success', 'exact_head_ci_not_successful')
+    pinned = SPEC['pr']['four_codecov_check_runs']
+    names = ['codecov/' + kind + '/' + language for kind in ('patch', 'project') for language in ('rust', 'javascript')]
+    require(set(pinned) == set(names), 'four_codecov_pin_set_changed')
+    for name, check_id in pinned.items():
+        row = api('repos/jonathanong/no-mistakes/check-runs/' + str(check_id))
+        require(row['id'] == check_id and row['name'] == name
+                and row['head_sha'] == SPEC['pr']['head_sha']
+                and row['status'] == 'completed' and row['conclusion'] == 'success',
+                'pinned_codecov_check_not_successful', check=name)
+    return {'main_head': main['object']['sha'], 'candidate_head': pr['head']['sha'], 'candidate_base':pr['base']['ref'], 'draft':pr['draft'], 'ci_run':run['id'], 'codecov':pinned}
+
+
+def current_pair(_checkout=None):
+    snap = remote_snapshot()
+    return snap, SPEC['baseline']['revision']
+
+
+def reviewed_stage(stage, diagnostic=True):
+    head = git(ROOT, 'rev-parse', 'HEAD') if diagnostic else None
+    approved_commit = os.environ.get('APPROVED_DIAGNOSTIC_COMMIT')
+    fetch_reviewed_pair_objects()
+    check(SPEC, ROOT, stage, head, approved_commit)
+    require(not git(ROOT, 'status', '--porcelain'), 'dirty_diagnostic_checkout')
+    manifest=json.loads((HERE/'proposal-file-hashes.json').read_text())
+    for name, expected in manifest['files'].items():
+        path=HERE/name
+        require(path.is_file() and not path.is_symlink()
+                and hashlib.sha256(path.read_bytes()).hexdigest()==expected,
+                'reviewed_driver_file_changed',file=name)
+    require((ROOT/SPEC['workflow_path']).read_bytes()==(HERE/'workflow-proposal.yml').read_bytes(),'registered_workflow_copy_changed')
+    tracked=set(git(ROOT,'ls-files','--','.github/scripts/repeated-target-native-2022-bounded').splitlines())
+    expected_tracked={'.github/scripts/repeated-target-native-2022-bounded/'+name for name in manifest['files']}
+    expected_tracked.add('.github/scripts/repeated-target-native-2022-bounded/proposal-file-hashes.json')
+    require(tracked==expected_tracked,'reviewed_driver_file_set_changed')
+    require(os.environ.get('GITHUB_REF') == 'refs/heads/' + SPEC['diagnostic_branch'], 'wrong_branch')
+    require(os.environ.get('GITHUB_SHA') == approved_commit, 'wrong_workflow_commit')
+    return remote_snapshot()

@@ -1,0 +1,508 @@
+name: Repeated receiver bounded two-cohort native 2022
+on:
+  push:
+    branches: [diagnostic/repeated-target-native-2022-bb41-bounded]
+  workflow_dispatch:
+    inputs:
+      approved_diagnostic_commit:
+        required: true
+        type: string
+        description: Exact independently reviewed diagnostic commit SHA
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  pull-requests: read
+concurrency:
+  group: repeated-target-2022-bounded-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  GH_TOKEN: ${{ github.token }}
+  APPROVED_DIAGNOSTIC_COMMIT: ${{ inputs.approved_diagnostic_commit }}
+  PYTHONDONTWRITEBYTECODE: '1'
+  RUSTUP_TOOLCHAIN: '1.99.1'
+defaults:
+  run:
+    shell: bash
+jobs:
+  registration:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - run: echo 'Registration only; no build, test or timing on push.'
+  eligibility:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    name: eligibility
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: eligibility
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py eligibility
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}
+          path: ${{ runner.temp }}/repeated-target-2022/public/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  production-core:
+    needs: eligibility
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    name: production-core (${{ matrix.arm }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: production-core (${{ matrix.arm }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py build --arm '${{ matrix.arm }}' --phase core
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 2
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-core
+          path: ${{ runner.temp }}/repeated-target-2022/transfer/${{ matrix.arm }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  production-cli:
+    needs: production-core
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    name: production-cli (${{ matrix.arm }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: production-cli (${{ matrix.arm }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-core
+          path: ${{ runner.temp }}/repeated-target-2022/incoming/${{ matrix.arm }}/
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py build --arm '${{ matrix.arm }}' --phase cli
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 2
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-cli
+          path: ${{ runner.temp }}/repeated-target-2022/transfer/${{ matrix.arm }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  production-addon:
+    needs: production-cli
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    name: production-addon (${{ matrix.arm }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: production-addon (${{ matrix.arm }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-cli
+          path: ${{ runner.temp }}/repeated-target-2022/incoming/${{ matrix.arm }}/
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py build --arm '${{ matrix.arm }}' --phase addon
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 2
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-addon
+          path: ${{ runner.temp }}/repeated-target-2022/transfer/${{ matrix.arm }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  production-timing:
+    needs: production-addon
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    name: production-timing (${{ matrix.arm }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: production-timing (${{ matrix.arm }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-addon
+          path: ${{ runner.temp }}/repeated-target-2022/incoming/${{ matrix.arm }}/
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py build --arm '${{ matrix.arm }}' --phase timing
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 2
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-timing
+          path: ${{ runner.temp }}/repeated-target-2022/transfer/${{ matrix.arm }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  production-graph:
+    needs: production-timing
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    name: production-graph (${{ matrix.arm }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: production-graph (${{ matrix.arm }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-state-${{ github.run_id }}-${{ matrix.arm }}-timing
+          path: ${{ runner.temp }}/repeated-target-2022/incoming/${{ matrix.arm }}/
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py build --arm '${{ matrix.arm }}' --phase graph
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 2
+        with:
+          name: 2022-private-${{ github.run_id }}-${{ matrix.arm }}
+          path: ${{ runner.temp }}/repeated-target-2022/${{ matrix.arm }}/transfer/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  layout-core:
+    needs: eligibility
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+        mode: [default, instrumented]
+    name: layout-core (${{ matrix.arm }}, ${{ matrix.mode }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: layout-core (${{ matrix.arm }}, ${{ matrix.mode }})
+      DIAG_LAYOUT_MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py layout --arm '${{ matrix.arm }}' --phase core
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 2
+        with:
+          name: 2022-layout-state-${{ github.run_id }}-${{ matrix.arm }}-${{ matrix.mode }}
+          path: ${{ runner.temp }}/repeated-target-2022/layout-${{ matrix.mode }}/transfer/${{ matrix.arm }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}-${{ matrix.mode }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/layout-${{ matrix.mode }}/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  layout-probe:
+    needs: layout-core
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+        mode: [default, instrumented]
+    name: layout-probe (${{ matrix.arm }}, ${{ matrix.mode }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: layout-probe (${{ matrix.arm }}, ${{ matrix.mode }})
+      DIAG_LAYOUT_MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-layout-state-${{ github.run_id }}-${{ matrix.arm }}-${{ matrix.mode }}
+          path: ${{ runner.temp }}/repeated-target-2022/layout-${{ matrix.mode }}/incoming/${{ matrix.arm }}/
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # stable
+        timeout-minutes: 3
+        with:
+          toolchain: '1.99.1'
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py layout --arm '${{ matrix.arm }}' --phase probe
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}-${{ matrix.mode }}
+          path: |
+            ${{ runner.temp }}/repeated-target-2022/public/
+            ${{ runner.temp }}/repeated-target-2022/layout-${{ matrix.mode }}/${{ matrix.arm }}/proof/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  measurement:
+    needs: [production-graph, layout-probe]
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: ['0', '1']
+    name: measurement (${{ matrix.cohort }})
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: measurement (${{ matrix.cohort }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-private-${{ github.run_id }}-baseline
+          path: ${{ runner.temp }}/repeated-target-2022/baseline/transfer/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: 2022-private-${{ github.run_id }}-candidate
+          path: ${{ runner.temp }}/repeated-target-2022/candidate/transfer/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 1
+        with:
+          pattern: 2022-evidence-${{ github.run_id }}-layout-probe-*
+          path: ${{ runner.temp }}/repeated-target-2022/layouts/
+          merge-multiple: false
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py measure --cohort '${{ matrix.cohort }}'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-cohort-${{ github.run_id }}-${{ matrix.cohort }}
+          path: ${{ runner.temp }}/repeated-target-2022/public/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+  curate:
+    needs: [eligibility, production-graph, layout-probe, measurement]
+    if: ${{ github.event_name == 'workflow_dispatch' && always() }}
+    name: curate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      DIAG_JOB_NAME: curate
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Anchor actual whole-job clock before setup and transfer
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py bootstrap
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          name: 2022-cohort-${{ github.run_id }}-0
+          path: ${{ runner.temp }}/repeated-target-2022/cohorts/0/public/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          name: 2022-cohort-${{ github.run_id }}-1
+          path: ${{ runner.temp }}/repeated-target-2022/cohorts/1/public/
+      - name: Execute one bounded phase
+        timeout-minutes: 27
+        env:
+          PREFLIGHT_RESULT: ${{ needs.eligibility.result }}
+          BUILD_RESULT: ${{ needs.production-graph.result }}
+          LAYOUT_RESULT: ${{ needs.layout-probe.result }}
+          COHORT_RESULT: ${{ needs.measurement.result }}
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py curate
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 1
+        with:
+          name: 2022-complete-readable-${{ github.run_id }}
+          path: ${{ runner.temp }}/repeated-target-2022/public/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
