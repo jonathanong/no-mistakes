@@ -1,0 +1,9 @@
+{
+  "status": "PASS: fresh prototype native arm versus unchanged retained baseline full controls; baseline producer not rerun",
+  "native_tests_per_arm": 8,
+  "prepared_bytes": 15424,
+  "artifact_manifests": {
+    "baseline": "c8b72fe9d0c27718b35c9c9d355012f4bebc1cea1dc082c92b6f60c15a4c9bac",
+    "candidate": "83dedf521176f1b1fc3fca36040e4913335d40fb640b0e302b271bec1263e2ba"
+  }
+}

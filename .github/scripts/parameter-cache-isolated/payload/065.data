@@ -1,8 +1,0 @@
-[timing] parse: 0.349ms
-[timing] search: 4.558ms
-[timing] ingest: 0.000ms
-[timing] analysis: 0.000ms
-[timing] invocation.dispatch: 4.986ms
-[timing] invocation.prepare: 0.127ms
-[timing] output: 0.069ms
-[timing] total: 5.265ms

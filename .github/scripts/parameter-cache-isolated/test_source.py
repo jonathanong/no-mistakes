@@ -17,7 +17,7 @@ class SourceTests(unittest.TestCase):
     def test_exact_original_payload(self):
         spec = json.loads((D / 'transport-DRAFT.json').read_text())
         freeze = json.loads((D / 'payload/original-freeze.json').read_text())
-        self.assertEqual(len(spec['files']), 97)
+        self.assertEqual(len(spec['files']), 105)
         self.assertEqual([{k: r[k] for k in ['path', 'bytes', 'sha256']} for r in spec['files']], freeze['files'])
         for row in spec['files']:
             if 'payload' in row:

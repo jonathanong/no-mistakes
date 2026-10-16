@@ -41,8 +41,8 @@ jobs:
           assets = [
               ('baseline-cli', 648246434, 82354432, '4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107'),
               ('baseline-addon.node', 648246432, 78789848, 'f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e'),
-              ('candidate-cli', 648246435, 82354464, '1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f'),
-              ('candidate-addon.node', 648246436, 78789816, 'ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc'),
+              ('candidate-cli', 648454710, 82354464, '6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380'),
+              ('candidate-addon.node', 648454948, 78789784, '2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647'),
           ]
           proof = {'repository': os.environ['GITHUB_REPOSITORY'], 'run_id': os.environ['GITHUB_RUN_ID'],
                    'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'workflow_sha': os.environ['GITHUB_SHA'],
@@ -104,7 +104,7 @@ jobs:
         timeout-minutes: 1
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 099cfed26a23050aee6e9e8427af4de9b7eab4ef
+          ref: 2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555
           path: candidate-source
           persist-credentials: false
       - name: Install matching Node runtime

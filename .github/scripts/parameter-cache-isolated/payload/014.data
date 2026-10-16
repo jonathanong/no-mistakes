@@ -1,74 +1,57 @@
 {
-  "status": "SOURCE ONLY; root review/activation and immediate coordinated START still required",
-  "source_dir": "/tmp/nm2076-current-main-e0b-functional",
-  "no_new_builds_or_semantic_reruns": true,
-  "activation": [
-    "Preserve DRAFT plan; change status only to REVIEWED under root source approval.",
-    "Run python3 seal-measurement.py once; retain exact plan and freeze hashes."
-  ],
-  "start_preconditions": [
-    "Fresh direct availability and ACKs from every coordinated lane, explicitly including external Sol. Active primary work wins; NACK cancels without reserving a future window.",
-    "Fresh host idle proof; live main e0/head099/open draft and completed CI success.",
-    "Root writes measurement-START.json with actual UTC, plan hash, actual main/head/draft and full_current_head_ci_success. Start sampler within 10 seconds."
-  ],
-  "command": [
-    "python3",
-    "/tmp/nm2076-current-main-e0b-functional/measure-once.py"
-  ],
-  "sampling": {
-    "rows": 256,
-    "workload_modes": 8,
-    "orders": [
-      "ABBA",
-      "BAAB",
-      "ABBA",
-      "BAAB",
-      "ABBA",
-      "BAAB",
-      "ABBA",
-      "BAAB"
-    ],
-    "metrics": [
-      "cpu_s",
-      "wall_s",
-      "rss_kib"
-    ],
-    "per_invocation_max_seconds": 30,
-    "round_max_seconds": 600,
-    "internal_deadline_seconds": 590,
-    "affinity": [
-      0,
-      1,
-      2,
-      3
-    ],
-    "rayon": 4,
-    "behavior": "Sequential fresh CLI invocations only; keep every raw stdout/stderr/exit/row, fail closed on mismatch or timeout; no retry/pilot/recalibration/exclusion."
-  },
-  "end": [
-    "Root supervises the bounded run and owned process cleanup, records explicit END within 600 seconds and immediately releases every hold.",
-    "On failure retain partial evidence; independently inspect any recorded owned identities/artifact arguments and reap only positively owned processes. No retry or gate claim."
-  ],
-  "after_end": [
-    "Verify 256 complete rows, all frozen pins, exact schedule, raw golden equality, source/live eligibility, and no owned processes.",
-    "Run python3 analyze-once.py once after quiet END; reproduce every result independently.",
-    "Preserve all adverse/inconclusive results; leave PR draft until numeric and all other gates actually pass."
-  ],
-  "statistics_and_gates": {
-    "statistics": "Same frozen B25 arithmetic: eight paired four-process blocks, geometric mean block ratios, 10000 percentile bootstrap draws, seed1972; ABBA/BAAB reported separately, no exclusions or pooling.",
-    "gates": {
-      "benefit": "Both scale CPU intervals must be strictly below zero (diagnostics off and on).",
-      "controls": "Any CPU/wall/RSS interval strictly above zero in any workload rejects the gate; all orders and inconclusive outcomes remain reported.",
-      "memory": "No exception for cold construction or retained cache payload.",
-      "readiness": "Requires actual completed current-head CI and live main/head/draft eligibility; no automatic merge from these results."
+  "status": "PASS: exact published2ee8 full TestCI/global98/all four Codecov gates",
+  "head": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
+  "run": 38959592766,
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "completed_at": "2026-10-16T20:16:39Z",
+  "Rust_job": 117171010081,
+  "coverage": {
+    "regions": {
+      "count": 332110,
+      "missed": 4995,
+      "percent": 98.49598024750836
+    },
+    "functions": {
+      "count": 23982,
+      "missed": 147,
+      "percent": 99.38704028021016
+    },
+    "lines": {
+      "count": 224772,
+      "missed": 1452,
+      "percent": 99.35401206555977
     }
   },
-  "source_hashes": {
-    "performance-source-plan.json": "23d0cb32228963f04442308e526cd2356d0020385e803954e3d16f020ebd1a34",
-    "measure-once.py": "b5b216c0ede1ecf863e0d4ee661cb9f740835038aee3944efb9ba0c06c3ad5b8",
-    "analyze-once.py": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0",
-    "seal-measurement.py": "87253df1a8ae365a78375535711138c2fc7ada9def45dbd9405c9394b5d2d8dc",
-    "process_owner.py": "4b03c528c35735d0bbafd82bb12c908ff36d9c4e850f2fca2cf51b530ba18e1e"
+  "unchanged_coverage_floors": {
+    "lines": 98,
+    "functions": 98,
+    "regions": 98
   },
-  "publication_order": "Measure unchanged 099 after reviewed e0 default-production carry; only afterward ordinary merge/push e0 with exact production carry and fresh new-head CI before readiness."
+  "codecov_contexts": {
+    "codecov/patch/rust": 117174298195,
+    "codecov/project/rust": 117174290467,
+    "codecov/patch/javascript": 117172828681,
+    "codecov/project/javascript": 117172811834
+  },
+  "all_checks": {
+    "success": 38,
+    "skipped": 2
+  },
+  "all_jobs": {
+    "success": 32,
+    "skipped": 1
+  },
+  "live_main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "PR_draft": true,
+  "raw_pins": {
+    "jobs.json": "dd86288fb6dc0b181628917f34aff035f7ea3ef81ba8b069e3c68e5ba583ddd8",
+    "checks.json": "472f6d6aebcd8dd8b556ca17efac58eced81fb89da3dd005a2c5b516b2653cc7",
+    "rust.raw.log": "98a53909e0458a0799cab5c65d7f60ae001e319752c31d1c946f2e809522f328",
+    "main.json": "06a5ba316df5408211f4234164c01646da979b145345591afa7e5c13771f49c9",
+    "pr.json": "8aa3cb8de2081779a8a9d23a3daeb7ba0f1610bbf8090dac35948afb89f5bb72",
+    "run.json": "30a8caf42ed078f3a5be569e4cdb4c964c8a7f3b1cc68cea19578b293b3b31e1"
+  },
+  "utc": "2026-10-16T20:22:12.889110+00:00",
+  "performance_acceptance": "NOT ESTABLISHED: original099RSS FAIL preserved; changed-source prototype not yet measured"
 }

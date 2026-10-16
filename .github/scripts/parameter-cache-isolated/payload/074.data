@@ -1,27 +1,8 @@
-{
-  "head": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
-  "base": "b9476931aeecc3e24f43a276bf1c6a2088bebe3b",
-  "tree": "d410d13cf450f5e5b7b2b9b98e167d526cf4b8ee",
-  "status": "PASS: full Git tree exactly equals currently compiling candidate tree; 18 feature files unchanged",
-  "files": {
-    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/parameter_annotation_tests.rs": "18b680b494c0dd7834799b5dbe76c6b40c4ef9b5a3c60f191fe2b4fdd204e70d",
-    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/parameters.rs": "c47a6580e945d8cb2b868baaca8e5cd646f16ba06502608f02e05e8998da194c",
-    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/provenance.rs": "e73e92f83ea2bc1e0fb69dd7020672dec06483c252b8f1d3cb5199d66d43e05c",
-    "fixtures/benchmarks/parameter-annotation-cache/cold/.no-mistakes.yml": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f",
-    "fixtures/benchmarks/parameter-annotation-cache/cold/barrel.ts": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140",
-    "fixtures/benchmarks/parameter-annotation-cache/cold/entry.ts": "afddf206963c8e9ffdbcecce6e90a1111d7b5d09f185b9eb8e5b9d6bddc44c9b",
-    "fixtures/benchmarks/parameter-annotation-cache/cold/tsconfig.json": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
-    "fixtures/benchmarks/parameter-annotation-cache/cold/types.ts": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b",
-    "fixtures/benchmarks/parameter-annotation-cache/scale/.no-mistakes.yml": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f",
-    "fixtures/benchmarks/parameter-annotation-cache/scale/barrel.ts": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140",
-    "fixtures/benchmarks/parameter-annotation-cache/scale/entry.ts": "83599baefb226eba51c12197ced6fa29783260c95f1750486e00978314855b4e",
-    "fixtures/benchmarks/parameter-annotation-cache/scale/tsconfig.json": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
-    "fixtures/benchmarks/parameter-annotation-cache/scale/types.ts": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b",
-    "packages/no-mistakes/scripts/query-reached-per-item-api.test.js": "3f00996c2168465e7d2c782d913e0ca52203229e41c45c2f36f67c02f7db78cc",
-    "test-cases/codebase-analysis/parameter-annotation-cache/fixture/barrel.ts": "e158431b47f01d97f6d73dde8f7cdf5263cb26d2680f41c7f25d6b39267b0f93",
-    "test-cases/codebase-analysis/parameter-annotation-cache/fixture/entry.ts": "3ef903cd263321ec3e97ac0c8a9b160fe7946ef9ff9544b432ebf7c6af1a44bc",
-    "test-cases/codebase-analysis/parameter-annotation-cache/fixture/tsconfig.json": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
-    "test-cases/codebase-analysis/parameter-annotation-cache/fixture/types.ts": "f20a4640e6308497878e9a940f2e2b63700965f1f89ef78544592fcdf7ef8236"
-  },
-  "build_scope": "Native build still active; no completed native or performance claim"
-}
+[timing] parse: 0.349ms
+[timing] search: 4.558ms
+[timing] ingest: 0.000ms
+[timing] analysis: 0.000ms
+[timing] invocation.dispatch: 4.986ms
+[timing] invocation.prepare: 0.127ms
+[timing] output: 0.069ms
+[timing] total: 5.265ms

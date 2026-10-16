@@ -1,1 +1,3 @@
-{"roots":["types.ts"],"files":[{"path":"barrel.ts","depth":1,"via":["type-import"]},{"path":"entry.ts","depth":2,"via":["type-import"]}],"diagnostics":[],"tsconfig_provenance":[{"importer":"types.ts","config":"tsconfig.json","forced":false}]}
+[timing] invocation.dispatch: 7.493ms
+[timing] invocation.prepare: 0.201ms
+[timing] total: 8.071ms

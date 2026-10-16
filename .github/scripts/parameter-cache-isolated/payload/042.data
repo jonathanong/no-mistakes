@@ -1,1 +1,3 @@
-{"kind":"postgres","entry":"entry.ts","callSites":[{"file":"entry.ts","line":5,"callee":"Query","caller":"queryMany","depth":0}],"byCategory":{"uncategorized":1}}
+[timing] invocation.dispatch: 9.762ms
+[timing] invocation.prepare: 0.313ms
+[timing] total: 11.252ms

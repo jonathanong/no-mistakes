@@ -1,29 +1,17 @@
 {
   "status": "DRAFT",
   "repository": "jonathanong/no-mistakes",
-  "candidate": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+  "candidate": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
   "main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
-  "candidate_tree": "d410d13cf450f5e5b7b2b9b98e167d526cf4b8ee",
-  "frozen_plan": "/tmp/nm2076-current-main-e0b-functional/performance-source-plan.json",
-  "frozen_freeze": "/tmp/nm2076-current-main-e0b-functional/measurement-freeze.json",
+  "candidate_tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+  "frozen_plan": "/tmp/nm2076-lifetime-experiment/frozen/performance-source-plan.json",
+  "frozen_freeze": "/tmp/nm2076-lifetime-experiment/frozen/measurement-freeze.json",
   "files": [
-    {
-      "path": "/tmp/nm-shared-baseline-2087-c896/actual-original-selector-failure.json",
-      "bytes": 1800,
-      "sha256": "e5c8f5d0393208f7045ec18ba4203a4cfb1d2792a6f5837681d9a600e0d1cc70",
-      "payload": "000.data"
-    },
-    {
-      "path": "/tmp/nm-shared-baseline-2087-c896/main-merge-equivalence/actual-source-equivalence.json",
-      "bytes": 570,
-      "sha256": "6a5e3a947e82db53b53843809b81c3d5f127c792fad0436953e0474829e3da7d",
-      "payload": "001.data"
-    },
     {
       "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/addon.node",
       "bytes": 78789848,
       "sha256": "f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e",
-      "asset_id": null,
+      "asset_id": 648246432,
       "name": "baseline-addon.node",
       "mode": 493
     },
@@ -31,7 +19,7 @@
       "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
       "bytes": 82354432,
       "sha256": "4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107",
-      "asset_id": null,
+      "asset_id": 648246434,
       "name": "baseline-cli",
       "mode": 493
     },
@@ -39,563 +27,623 @@
       "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/closed-artifacts.json",
       "bytes": 3952,
       "sha256": "c8b72fe9d0c27718b35c9c9d355012f4bebc1cea1dc082c92b6f60c15a4c9bac",
+      "payload": "002.data"
+    },
+    {
+      "path": "/tmp/nm-shared-baseline-2087-c896/actual-original-selector-failure.json",
+      "bytes": 1800,
+      "sha256": "e5c8f5d0393208f7045ec18ba4203a4cfb1d2792a6f5837681d9a600e0d1cc70",
+      "payload": "003.data"
+    },
+    {
+      "path": "/tmp/nm-shared-baseline-2087-c896/main-merge-equivalence/actual-source-equivalence.json",
+      "bytes": 570,
+      "sha256": "6a5e3a947e82db53b53843809b81c3d5f127c792fad0436953e0474829e3da7d",
       "payload": "004.data"
     },
     {
-      "path": "/tmp/nm2076-current-head-ci-final/actual-final-ci-review.json",
-      "bytes": 6510,
-      "sha256": "4e55e37ce9191ae99efde2c92b3d34b44cf37d6b9e3089ff01ed83024bb89b86",
+      "path": "/tmp/nm2076-cold-lifetime-clippy-followup/actual-terminal.json",
+      "bytes": 297,
+      "sha256": "f2ff089fc74e6b1de87cb5c50f343048302801f2ea7ee7007525ff409c05437e",
       "payload": "005.data"
     },
     {
-      "path": "/tmp/nm2076-current-head-ci-final/checks.json",
-      "bytes": 155740,
-      "sha256": "72cb02ff59cf4cb096e7c5d78642b23d1a2a08446a234b9b8660321f79356973",
+      "path": "/tmp/nm2076-cold-lifetime-clippy-followup/source-proof.json",
+      "bytes": 3071,
+      "sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4",
       "payload": "006.data"
     },
     {
-      "path": "/tmp/nm2076-current-head-ci-final/main.json",
-      "bytes": 28911,
-      "sha256": "d34d81da577482afa23ff3707ea4b336028d9a1b8e7b4a92713f90f2fe77cd37",
+      "path": "/tmp/nm2076-cold-lifetime-functional-source/actual-functional-terminal-review.json",
+      "bytes": 2874,
+      "sha256": "5e590402949afd7baa09a4e90c7ed60e82c24b988113d85c3ce8b90d040da4e4",
       "payload": "007.data"
     },
     {
-      "path": "/tmp/nm2076-current-head-ci-final/pr.json",
-      "bytes": 19676,
-      "sha256": "32096a2278bc2dda933b9ad87be5a3cccbb1d74583944e93d188848c245ca242",
+      "path": "/tmp/nm2076-cold-lifetime-publication/actual-published-head.json",
+      "bytes": 586,
+      "sha256": "806bf7c592c4bce45e5f6b734e24c0d35c40934436fa28060974a6e9bd4103eb",
       "payload": "008.data"
     },
     {
-      "path": "/tmp/nm2076-current-head-ci-final/run.json",
-      "bytes": 13022,
-      "sha256": "3d4257d20f1f803bdf318b06893965ab074d16401c92667f0b075f08b83a4814",
+      "path": "/tmp/nm2076-cold-lifetime-publication/root-exact-committed-source-carry.json",
+      "bytes": 354,
+      "sha256": "95df35989113882484e2e9454ee1adf89335ef9280aa90cc034b2ec2a2a22e15",
       "payload": "009.data"
     },
     {
-      "path": "/tmp/nm2076-current-head-ci-phase/actual-current-head-technical-gates.json",
-      "bytes": 1535,
-      "sha256": "87776ba6d10a622d9a55fd3c3578d199eced37f260aced7fb845b69bdd491c77",
+      "path": "/tmp/nm2076-cold-lifetime-publication/source-carry.json",
+      "bytes": 505002,
+      "sha256": "e9077e6812e92cc40a9efc82008f773499f4e89393d0911653a7a06e8ff16de8",
       "payload": "010.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/actual-measurement-ready-evidence.json",
-      "bytes": 244792,
-      "sha256": "53aff21f4f862b9fe8c1ebe226ab356137fc1f3b46f2bd189a84750c7ebbff31",
+      "path": "/tmp/nm2076-cold-lifetime-release/actual-release-terminal-review.json",
+      "bytes": 1138,
+      "sha256": "fc78fb6c5576157549a47a97af2c2c69112510ef3ed58bb5431647dd5c215bc8",
       "payload": "011.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/actual-paired-functional-terminal-review.json",
-      "bytes": 8547,
-      "sha256": "676e1b7a3e25bada890a9b70ddffd408b554d0948c8c98675ec82c4f8a4c25fa",
+      "path": "/tmp/nm2076-cold-lifetime-release/source-inventory.json",
+      "bytes": 3385842,
+      "sha256": "c9e580871ee81c2ed4525e39c3ad5566072a32b1547f8aedb76a0b837abe6d2c",
       "payload": "012.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/analyze-once.py",
-      "bytes": 4213,
-      "sha256": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0",
+      "path": "/tmp/nm2076-cold-lifetime-validation/actual-focused-and-clippy-result.json",
+      "bytes": 2852,
+      "sha256": "7d35a0014c090ec2c0e5c2799e77a485552406f34dc68e6391addde1306c55c1",
       "payload": "013.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/bounded-execution-plan.json",
-      "bytes": 3714,
-      "sha256": "8c3eb0726f39614a93ba3d0a0b83a013abc8af7f651f1cd307ff00f9253d5253",
+      "path": "/tmp/nm2076-lifetime-experiment/ci/actual-current-head-technical-gates.json",
+      "bytes": 1815,
+      "sha256": "c0d8511c2503bb9ae5d9e702138d9e543f2789cc52e7b0f4e673f6d3e818aa85",
       "payload": "014.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/actual-functional-result.json",
-      "bytes": 356,
-      "sha256": "a1f4663631fdb12da8f142a4b2f16e1a3319168d8de0a1c8970cbf050135b633",
+      "path": "/tmp/nm2076-lifetime-experiment/ci/actual-final-ci-review.json",
+      "bytes": 1815,
+      "sha256": "c0d8511c2503bb9ae5d9e702138d9e543f2789cc52e7b0f4e673f6d3e818aa85",
       "payload": "015.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-api.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/ci/checks.json",
+      "bytes": 155224,
+      "sha256": "472f6d6aebcd8dd8b556ca17efac58eced81fb89da3dd005a2c5b516b2653cc7",
       "payload": "016.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-api.stdout",
-      "bytes": 925,
-      "sha256": "585d3a05979368b3760a5e77c762e4ade63d41ad3c9e81a3567980824a804d06",
+      "path": "/tmp/nm2076-lifetime-experiment/ci/main.json",
+      "bytes": 344,
+      "sha256": "06a5ba316df5408211f4234164c01646da979b145345591afa7e5c13771f49c9",
       "payload": "017.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-cold-timings.stderr",
-      "bytes": 99,
-      "sha256": "d750e58ea3c0235b3cebfd229100f5bd0c3ac9e6aacb92b899bad928b77e6638",
+      "path": "/tmp/nm2076-lifetime-experiment/ci/pr.json",
+      "bytes": 21601,
+      "sha256": "8aa3cb8de2081779a8a9d23a3daeb7ba0f1610bbf8090dac35948afb89f5bb72",
       "payload": "018.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-cold-timings.stdout",
-      "bytes": 163,
-      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
+      "path": "/tmp/nm2076-lifetime-experiment/ci/run.json",
+      "bytes": 13025,
+      "sha256": "30a8caf42ed078f3a5be569e4cdb4c964c8a7f3b1cc68cea19578b293b3b31e1",
       "payload": "019.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-cold.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/actual-measurement-ready-evidence.json",
+      "bytes": 1000,
+      "sha256": "9beab556c1fbab3366db160edbf0d208959e91fd9d43749d482d65a2bd273eae",
       "payload": "020.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-cold.stdout",
-      "bytes": 163,
-      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/actual-paired-functional-terminal-review.json",
+      "bytes": 2874,
+      "sha256": "5e590402949afd7baa09a4e90c7ed60e82c24b988113d85c3ce8b90d040da4e4",
       "payload": "021.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-mixed-timings.stderr",
-      "bytes": 99,
-      "sha256": "369372c2ff122eab0f79746857ef3d6ca082c560d64705baf11d00cbd047f897",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/analyze-once.py",
+      "bytes": 4213,
+      "sha256": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0",
       "payload": "022.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-mixed-timings.stdout",
-      "bytes": 978,
-      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/bounded-execution-plan.json",
+      "bytes": 3714,
+      "sha256": "8c3eb0726f39614a93ba3d0a0b83a013abc8af7f651f1cd307ff00f9253d5253",
       "payload": "023.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-mixed.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/actual-functional-result.json",
+      "bytes": 383,
+      "sha256": "3da4407652d1b895cde821a27e8b969a9cd5f594a948d9cbaa83e16bbe0c5999",
       "payload": "024.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-mixed.stdout",
-      "bytes": 978,
-      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-api.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "025.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-non-consuming-timings.stderr",
-      "bytes": 227,
-      "sha256": "da4210d9cba467122c71494167b42c16e6e8991ac921c4a601abf9a054ac9c54",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-api.stdout",
+      "bytes": 925,
+      "sha256": "585d3a05979368b3760a5e77c762e4ade63d41ad3c9e81a3567980824a804d06",
       "payload": "026.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-non-consuming-timings.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold-timings.stderr",
+      "bytes": 99,
+      "sha256": "d750e58ea3c0235b3cebfd229100f5bd0c3ac9e6aacb92b899bad928b77e6638",
       "payload": "027.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-non-consuming.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold-timings.stdout",
+      "bytes": 163,
+      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
       "payload": "028.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-non-consuming.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "029.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-prepared-result.json",
-      "bytes": 15424,
-      "sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold.stdout",
+      "bytes": 163,
+      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
       "payload": "030.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-prepared.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed-timings.stderr",
+      "bytes": 99,
+      "sha256": "369372c2ff122eab0f79746857ef3d6ca082c560d64705baf11d00cbd047f897",
       "payload": "031.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-prepared.stdout",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed-timings.stdout",
+      "bytes": 978,
+      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
       "payload": "032.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-scale-timings.stderr",
-      "bytes": 100,
-      "sha256": "5db35e9e5c113411e5ba9d16efb84766afaa531897b51244337ffbc8f16b05bb",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "033.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-scale-timings.stdout",
-      "bytes": 10100,
-      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed.stdout",
+      "bytes": 978,
+      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
       "payload": "034.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-scale.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming-timings.stderr",
+      "bytes": 227,
+      "sha256": "da4210d9cba467122c71494167b42c16e6e8991ac921c4a601abf9a054ac9c54",
       "payload": "035.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/baseline-scale.stdout",
-      "bytes": 10100,
-      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming-timings.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
       "payload": "036.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-api.stderr",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming.stderr",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "037.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-api.stdout",
-      "bytes": 1029,
-      "sha256": "f92a5eeed71159334f070a27d7184b0cb3cf6fc9c4f08dbcb2f167b942a5d5b3",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
       "payload": "038.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-cold-timings.stderr",
-      "bytes": 100,
-      "sha256": "e08c321de417a85f2e2758adae4fa44598b7d13437160305dd2f3136f19fc694",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-prepared-result.json",
+      "bytes": 15424,
+      "sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6",
       "payload": "039.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-cold-timings.stdout",
-      "bytes": 163,
-      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-prepared.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "040.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-cold.stderr",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-prepared.stdout",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "041.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-cold.stdout",
-      "bytes": 163,
-      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale-timings.stderr",
+      "bytes": 100,
+      "sha256": "5db35e9e5c113411e5ba9d16efb84766afaa531897b51244337ffbc8f16b05bb",
       "payload": "042.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-mixed-timings.stderr",
-      "bytes": 101,
-      "sha256": "93f3166690a7614b6db4a8dd21d96affebf6f61ad853f8337e64bf973e8086cf",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale-timings.stdout",
+      "bytes": 10100,
+      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
       "payload": "043.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-mixed-timings.stdout",
-      "bytes": 978,
-      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "044.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-mixed.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale.stdout",
+      "bytes": 10100,
+      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
       "payload": "045.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-mixed.stdout",
-      "bytes": 978,
-      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-api.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "046.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-non-consuming-timings.stderr",
-      "bytes": 225,
-      "sha256": "aba176908e070bcfa80b1a978c9a3cfcf48ceb56f97230bb71aa1fd452a849a3",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-api.stdout",
+      "bytes": 923,
+      "sha256": "a4b41553ea4f445af705ba2614d194e25451ec74ccd7d008a68427736aaf7f37",
       "payload": "047.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-non-consuming-timings.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold-timings.stderr",
+      "bytes": 99,
+      "sha256": "ebda71d0dc9b0fbf463ce4ae70bece439fdc35f12ec1c471a5c35c58d1a2ba7e",
       "payload": "048.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-non-consuming.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold-timings.stdout",
+      "bytes": 163,
+      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
       "payload": "049.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-non-consuming.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "050.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-prepared-result.json",
-      "bytes": 15424,
-      "sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold.stdout",
+      "bytes": 163,
+      "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
       "payload": "051.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-prepared.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed-timings.stderr",
+      "bytes": 99,
+      "sha256": "8d4a9cc9a7dd27c3d0e7a2b003651c981835278c2751df516e3d460d864f7806",
       "payload": "052.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-prepared.stdout",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed-timings.stdout",
+      "bytes": 978,
+      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
       "payload": "053.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-scale-timings.stderr",
-      "bytes": 99,
-      "sha256": "b3cda62c17ddb8bdb79ede7becf729610f1071a9a6fafe9ead7999f5bceebba4",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "054.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-scale-timings.stdout",
-      "bytes": 10100,
-      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed.stdout",
+      "bytes": 978,
+      "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
       "payload": "055.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-scale.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming-timings.stderr",
+      "bytes": 225,
+      "sha256": "dee4237f047614f5654b6a49859c70c47fb6059aa58bd7a05e28f0bc03d1a318",
       "payload": "056.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/candidate-scale.stdout",
-      "bytes": 10100,
-      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming-timings.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
       "payload": "057.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/ledger.json",
-      "bytes": 7093,
-      "sha256": "698cd50961f7f208f203a67dcfb6d4c2a094ee73db5142a2d789d08159006f99",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "058.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/functional/runtime-provenance.json",
-      "bytes": 998,
-      "sha256": "139bec0d33d4a69a991c1815f0ff37f9247126bb4b40c7ee11d77805a97dd5cb",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
       "payload": "059.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/actual-result.json",
-      "bytes": 128,
-      "sha256": "e985cb6eb3bd0c824a9925bf56848c9ecebcf7853bb818d8d500eee0dfd63642",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-prepared-result.json",
+      "bytes": 15424,
+      "sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6",
       "payload": "060.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/baseline-non-consuming-timings.stderr",
-      "bytes": 225,
-      "sha256": "9d392110f647562cba1541b13fe13a82de1f60f287a506ef6d4713af8edfc6a2",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-prepared.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "061.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/baseline-non-consuming-timings.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-prepared.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "062.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/baseline-non-consuming.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale-timings.stderr",
+      "bytes": 99,
+      "sha256": "cdde3aea454c2d6516d57fd15748a574d2ed45ca0a0f750ca24d425f45420a46",
       "payload": "063.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/baseline-non-consuming.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale-timings.stdout",
+      "bytes": 10100,
+      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
       "payload": "064.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/candidate-non-consuming-timings.stderr",
-      "bytes": 225,
-      "sha256": "18c273b4020fdd3ef592a3aedf19528672a55a5c5058fe4b5b34896fe1bc2973",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "065.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/candidate-non-consuming-timings.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale.stdout",
+      "bytes": 10100,
+      "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
       "payload": "066.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/candidate-non-consuming.stderr",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/ledger.json",
+      "bytes": 3615,
+      "sha256": "96b2ef7ad8a3ac8555ee467580a30d06ad790fea53054c7006e10f95e17c3e7a",
       "payload": "067.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/candidate-non-consuming.stdout",
-      "bytes": 243,
-      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/runtime-provenance.json",
+      "bytes": 1126,
+      "sha256": "68cd049287c3b84588d911985c73b3d5aa5a460732923e17c56763639bcadbaf",
       "payload": "068.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/import-only-controls/ledger.json",
-      "bytes": 1532,
-      "sha256": "776e98cf4da4e013911508afdb0574c9412acdbffed40fd608f795ca582ce633",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/actual-result.json",
+      "bytes": 128,
+      "sha256": "e985cb6eb3bd0c824a9925bf56848c9ecebcf7853bb818d8d500eee0dfd63642",
       "payload": "069.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/measure-once.py",
-      "bytes": 4535,
-      "sha256": "b5b216c0ede1ecf863e0d4ee661cb9f740835038aee3944efb9ba0c06c3ad5b8",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming-timings.stderr",
+      "bytes": 225,
+      "sha256": "9d392110f647562cba1541b13fe13a82de1f60f287a506ef6d4713af8edfc6a2",
       "payload": "070.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/performance-source-plan.json",
-      "bytes": 10360,
-      "sha256": "27b2eca7681fc8c7defafa707875414bb8119bd01aaa5f3902eafc022da410a2",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming-timings.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
       "payload": "071.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/process_owner.py",
-      "bytes": 4218,
-      "sha256": "4b03c528c35735d0bbafd82bb12c908ff36d9c4e850f2fca2cf51b530ba18e1e",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "payload": "072.data"
     },
     {
-      "path": "/tmp/nm2076-current-main-e0b-functional/seal-measurement.py",
-      "bytes": 1817,
-      "sha256": "87253df1a8ae365a78375535711138c2fc7ada9def45dbd9405c9394b5d2d8dc",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
       "payload": "073.data"
     },
     {
-      "path": "/tmp/nm2076-main-b947-publication/source-carry.json",
-      "bytes": 3014,
-      "sha256": "261f614ebea22de186b29bce7cf1652aae735185b3e526269fdb39955322e5d6",
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming-timings.stderr",
+      "bytes": 225,
+      "sha256": "18c273b4020fdd3ef592a3aedf19528672a55a5c5058fe4b5b34896fe1bc2973",
       "payload": "074.data"
     },
     {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming-timings.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "payload": "075.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "payload": "076.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming.stdout",
+      "bytes": 243,
+      "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "payload": "077.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/ledger.json",
+      "bytes": 1532,
+      "sha256": "776e98cf4da4e013911508afdb0574c9412acdbffed40fd608f795ca582ce633",
+      "payload": "078.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/measure-once.py",
+      "bytes": 4566,
+      "sha256": "29304a4b81714d407d4590e1eac48fd4b0e7c0e202302104c7c0ed43ac308a15",
+      "payload": "079.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/performance-source-plan.json",
+      "bytes": 11720,
+      "sha256": "24398dc96d4d3aa2a1d3a1297843cecd307aea7d3cc61d97686b37c1914b9bbb",
+      "payload": "080.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/process_owner.py",
+      "bytes": 4218,
+      "sha256": "4b03c528c35735d0bbafd82bb12c908ff36d9c4e850f2fca2cf51b530ba18e1e",
+      "payload": "081.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/reviewed-freeze-rows.json",
+      "bytes": 21084,
+      "sha256": "22e761d6be276e396b929666fdabe96d10b39a848004be70f964ab0feceac3e8",
+      "payload": "082.data"
+    },
+    {
+      "path": "/tmp/nm2076-lifetime-experiment/frozen/seal-measurement.py",
+      "bytes": 944,
+      "sha256": "67ad3d3b6e5693e87de16d2f4ac72de56e034bf21dc2df9063ea0b4f38cf9a2c",
+      "payload": "083.data"
+    },
+    {
       "path": "/tmp/nm2076-prospective2087-native/candidate/addon.node",
-      "bytes": 78789816,
-      "sha256": "ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc",
-      "asset_id": null,
+      "bytes": 78789784,
+      "sha256": "2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647",
+      "asset_id": 648454948,
       "name": "candidate-addon.node",
       "mode": 493
     },
     {
       "path": "/tmp/nm2076-prospective2087-native/candidate/cli",
       "bytes": 82354464,
-      "sha256": "1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f",
-      "asset_id": null,
+      "sha256": "6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380",
+      "asset_id": 648454710,
       "name": "candidate-cli",
       "mode": 493
     },
     {
       "path": "/tmp/nm2076-prospective2087-native/candidate/closed-artifacts.json",
-      "bytes": 3021,
-      "sha256": "5968665c34948e8a46c20dddc85a7a343c702152be8e710bd88377d2c812c40a",
-      "payload": "077.data"
-    },
-    {
-      "path": "/tmp/nm2076-prospective2087-source/source-proof.json",
-      "bytes": 4755701,
-      "sha256": "df7973442fb0c1150e20db284c007230113c4786873ccb622bdd70a5f203b506",
-      "payload": "078.data"
+      "bytes": 4044,
+      "sha256": "3c4092bb9704638abbae252ab824c450d5dc0c300155a85d7c0740a1707c9bda",
+      "payload": "086.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/.no-mistakes.yml",
       "bytes": 86,
       "sha256": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f",
-      "payload": "079.data"
+      "payload": "087.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/barrel.ts",
       "bytes": 40,
       "sha256": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140",
-      "payload": "080.data"
+      "payload": "088.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/entry.ts",
       "bytes": 211,
       "sha256": "afddf206963c8e9ffdbcecce6e90a1111d7b5d09f185b9eb8e5b9d6bddc44c9b",
-      "payload": "081.data"
+      "payload": "089.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/tsconfig.json",
       "bytes": 86,
       "sha256": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
-      "payload": "082.data"
+      "payload": "090.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/types.ts",
       "bytes": 96,
       "sha256": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b",
-      "payload": "083.data"
+      "payload": "091.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/.no-mistakes.yml",
       "bytes": 86,
       "sha256": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f",
-      "payload": "084.data"
+      "payload": "092.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/barrel.ts",
       "bytes": 40,
       "sha256": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140",
-      "payload": "085.data"
+      "payload": "093.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/entry.ts",
       "bytes": 3024,
       "sha256": "83599baefb226eba51c12197ced6fa29783260c95f1750486e00978314855b4e",
-      "payload": "086.data"
+      "payload": "094.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/tsconfig.json",
       "bytes": 86,
       "sha256": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
-      "payload": "087.data"
+      "payload": "095.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/types.ts",
       "bytes": 96,
       "sha256": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b",
-      "payload": "088.data"
+      "payload": "096.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/.no-mistakes.yml",
       "bytes": 356,
       "sha256": "656b08b6bd8bed21873f7fd9538897e08fdc8f28ac59d6cb32cfb40a1269369c",
-      "payload": "089.data"
+      "payload": "097.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/barrel.mts",
       "bytes": 117,
       "sha256": "788e59de7f2573b68ec3b3bba0660d2e0147803c1723eb18ba1df51f049218ea",
-      "payload": "090.data"
+      "payload": "098.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/broken.mts",
       "bytes": 130,
       "sha256": "7cd64f8699c5dc8c857f1c7921a97e50f15422f84b48c7420e1cf002ba74003d",
-      "payload": "091.data"
+      "payload": "099.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/coverage.mts",
       "bytes": 3252,
       "sha256": "736f6cfd541db644e23625e03f04df68264cabbc44b302bd1758baf5baf4f716",
-      "payload": "092.data"
+      "payload": "100.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/database.mts",
       "bytes": 252,
       "sha256": "a564e9235f17f73014ccc8ebb1ec2678e55c3a92c9101feb470bd22b05a2fd61",
-      "payload": "093.data"
+      "payload": "101.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/entry.mts",
       "bytes": 1988,
       "sha256": "16c131b817b9074f261bab292c35dfa4bd5215fa9c70ba3bf3adbdc94a35ed79",
-      "payload": "094.data"
+      "payload": "102.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/other.mts",
       "bytes": 121,
       "sha256": "a7703dbe4edb502f526c1b90ad42233150640fabb6a5d3c5366be5bbe8404732",
-      "payload": "095.data"
+      "payload": "103.data"
     },
     {
       "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/renamed.mts",
       "bytes": 139,
       "sha256": "a82c79fb7ee2e8b85109896a9d29086c5734403284ff93fa0f0722ad788e7aa7",
-      "payload": "096.data"
+      "payload": "104.data"
     }
   ],
   "assets": [
@@ -617,8 +665,8 @@
     },
     {
       "path": "/tmp/nm2076-prospective2087-native/candidate/addon.node",
-      "bytes": 78789816,
-      "sha256": "ec91c4114e4071a962ff4c54fb61c1a0edf93dd8381e808e76dff66a4b51abcc",
+      "bytes": 78789784,
+      "sha256": "2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647",
       "asset_id": null,
       "name": "candidate-addon.node",
       "mode": 493
@@ -626,12 +674,26 @@
     {
       "path": "/tmp/nm2076-prospective2087-native/candidate/cli",
       "bytes": 82354464,
-      "sha256": "1587a110106abf7e05d929fd6bf0b3323753ac4b595df5ef48d1bdd2637ae45f",
+      "sha256": "6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380",
       "asset_id": null,
       "name": "candidate-cli",
       "mode": 493
     }
   ],
   "source_root": "/tmp/no-mistakes-2076-prospective2087",
-  "node_version": "v26.11.1"
+  "node_version": "v26.11.1",
+  "root_authorization": "Root final source/data review /tmp/nm2076-lifetime-experiment/root-final-source-data-review.json SHA256 c3f68cb29309e016332d25834c1b8cc25c0deefeb263d95d16ba5f8ea7d59be1",
+  "draft_release": {
+    "id": 415271391,
+    "tag": "diagnostic-native-2076-099cfed-20261016",
+    "draft": true,
+    "published_at": null
+  },
+  "candidate_ci_run": 38959592766,
+  "producer_identity": {
+    "actual_base": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+    "built_tree": "f84f4a5691179b246e8cd10be1eb9a896656da9a",
+    "published_equivalent": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
+    "original_manifest_sha256": "83dedf521176f1b1fc3fca36040e4913335d40fb640b0e302b271bec1263e2ba"
+  }
 }

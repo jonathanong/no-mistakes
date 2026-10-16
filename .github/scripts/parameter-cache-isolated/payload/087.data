@@ -1,1 +1,4 @@
-{"compilerOptions":{"strict":true,"module":"NodeNext","moduleResolution":"NodeNext"}}
+effects:
+  postgres:
+    typedExecutors:
+      - { module: './types', export: Query }

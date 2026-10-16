@@ -1,1 +1,252 @@
-export type { Options } from './types';
+{
+  "status": "REVIEWED",
+  "baseline": "c896db3775411e9b7867260db420a73965b91a9e",
+  "candidate": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
+  "workloads": [
+    {
+      "id": "cold",
+      "argv": [
+        "effects",
+        "postgres",
+        "--entry",
+        "entry.ts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold",
+        "--format",
+        "json"
+      ],
+      "diagnostics": false
+    },
+    {
+      "id": "cold-timings",
+      "argv": [
+        "effects",
+        "postgres",
+        "--entry",
+        "entry.ts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold",
+        "--format",
+        "json",
+        "--timings"
+      ],
+      "diagnostics": true
+    },
+    {
+      "id": "scale",
+      "argv": [
+        "effects",
+        "postgres",
+        "--entry",
+        "entry.ts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+        "--format",
+        "json"
+      ],
+      "diagnostics": false
+    },
+    {
+      "id": "scale-timings",
+      "argv": [
+        "effects",
+        "postgres",
+        "--entry",
+        "entry.ts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+        "--format",
+        "json",
+        "--timings"
+      ],
+      "diagnostics": true
+    },
+    {
+      "id": "mixed",
+      "argv": [
+        "effects",
+        "postgres",
+        "--entry",
+        "entry.mts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture",
+        "--format",
+        "json"
+      ],
+      "diagnostics": false
+    },
+    {
+      "id": "mixed-timings",
+      "argv": [
+        "effects",
+        "postgres",
+        "--entry",
+        "entry.mts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture",
+        "--format",
+        "json",
+        "--timings"
+      ],
+      "diagnostics": true
+    },
+    {
+      "id": "non-consuming",
+      "argv": [
+        "dependents",
+        "types.ts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+        "--format",
+        "json",
+        "--relationship",
+        "import"
+      ],
+      "diagnostics": false
+    },
+    {
+      "id": "non-consuming-timings",
+      "argv": [
+        "dependents",
+        "types.ts",
+        "--root",
+        "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale",
+        "--format",
+        "json",
+        "--timings",
+        "--relationship",
+        "import"
+      ],
+      "diagnostics": true
+    }
+  ],
+  "orders": [
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB"
+  ],
+  "rows": 256,
+  "metrics": [
+    "cpu_s",
+    "wall_s",
+    "rss_kib"
+  ],
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "rayon": 4,
+  "budget_seconds": 600,
+  "conditions": [
+    "Both actual native arms closed and full-output parity pass",
+    "The isolated measurement VM runs no competing build/test work; fresh VM controls precede START. Shared-host primary work continues without any local quiet lease, ACK or reservation.",
+    "Retain every observation; no pilot/recalibration/exclusions; separate diagnostic modes",
+    "Cold construction and cache-retained payload cost remain measured risks"
+  ],
+  "physical_inputs": {
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/entry.ts": "afddf206963c8e9ffdbcecce6e90a1111d7b5d09f185b9eb8e5b9d6bddc44c9b",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/barrel.ts": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/.no-mistakes.yml": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/types.ts": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/tsconfig.json": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/entry.ts": "83599baefb226eba51c12197ced6fa29783260c95f1750486e00978314855b4e",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/barrel.ts": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/.no-mistakes.yml": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/types.ts": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b",
+    "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/tsconfig.json": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/broken.mts": "7cd64f8699c5dc8c857f1c7921a97e50f15422f84b48c7420e1cf002ba74003d",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/barrel.mts": "788e59de7f2573b68ec3b3bba0660d2e0147803c1723eb18ba1df51f049218ea",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/database.mts": "a564e9235f17f73014ccc8ebb1ec2678e55c3a92c9101feb470bd22b05a2fd61",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/entry.mts": "16c131b817b9074f261bab292c35dfa4bd5215fa9c70ba3bf3adbdc94a35ed79",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/other.mts": "a7703dbe4edb502f526c1b90ad42233150640fabb6a5d3c5366be5bbe8404732",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/.no-mistakes.yml": "656b08b6bd8bed21873f7fd9538897e08fdc8f28ac59d6cb32cfb40a1269369c",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/renamed.mts": "a82c79fb7ee2e8b85109896a9d29086c5734403284ff93fa0f0722ad788e7aa7",
+    "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/coverage.mts": "736f6cfd541db644e23625e03f04df68264cabbc44b302bd1758baf5baf4f716"
+  },
+  "fixture_scope": {
+    "cold": {
+      "source_bytes": 347,
+      "source_lines": 9,
+      "source_files": 3,
+      "jsx_source_files": 0,
+      "configured_effects_yaml": "effects:\n  postgres:\n    typedExecutors:\n      - { module: './types', export: Query }\n"
+    },
+    "scale": {
+      "source_bytes": 3160,
+      "source_lines": 136,
+      "source_files": 3,
+      "jsx_source_files": 0,
+      "configured_effects_yaml": "effects:\n  postgres:\n    typedExecutors:\n      - { module: './types', export: Query }\n"
+    },
+    "mixed": {
+      "source_bytes": 5999,
+      "source_lines": 141,
+      "source_files": 7,
+      "jsx_source_files": 0,
+      "configured_effects_yaml": "effects:\n  postgres:\n    targets:\n      - { module: './database.mts', export: write }\n    returnedExecutors:\n      - { module: './database.mts', export: beginTransaction }\n    typedExecutors:\n      - { module: './database.mts', export: TransactionQuery }\nrules:\n  - rule: query-reached-per-item\n    scope: repository\n    options:\n      effects: [postgres]\n"
+    }
+  },
+  "baseline_equivalent_main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "candidate_actual_producer_commit": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+  "candidate_tree": "f84f4a5691179b246e8cd10be1eb9a896656da9a",
+  "artifacts": {
+    "baseline": "/tmp/nm-shared-baseline-2087-c896-final-artifacts",
+    "candidate": "/tmp/nm2076-prospective2087-native/candidate"
+  },
+  "expected_current_main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "gates": {
+    "benefit": "Both scale CPU intervals must be strictly below zero (diagnostics off and on).",
+    "controls": "Any CPU/wall/RSS interval strictly above zero in any workload rejects the gate; all orders and inconclusive outcomes remain reported.",
+    "memory": "No exception for cold construction or retained cache payload.",
+    "readiness": "Requires actual completed current-head CI and live main/head/draft eligibility; no automatic merge from these results."
+  },
+  "statistics": "Same frozen B25 arithmetic: eight paired four-process blocks, geometric mean block ratios, 10000 percentile bootstrap draws, seed1972; ABBA/BAAB reported separately, no exclusions or pooling.",
+  "functional_golden_paths": {
+    "cold": "/tmp/nm2076-lifetime-experiment/frozen/functional",
+    "cold-timings": "/tmp/nm2076-lifetime-experiment/frozen/functional",
+    "scale": "/tmp/nm2076-lifetime-experiment/frozen/functional",
+    "scale-timings": "/tmp/nm2076-lifetime-experiment/frozen/functional",
+    "mixed": "/tmp/nm2076-lifetime-experiment/frozen/functional",
+    "mixed-timings": "/tmp/nm2076-lifetime-experiment/frozen/functional",
+    "non-consuming": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls",
+    "non-consuming-timings": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls"
+  },
+  "non_consuming_source_invariant": "RelationshipArg::Import selects no Call edge; GraphBuildPlan::from_allowed sets calls=false and fact_options.value_flow=self.calls. Default/all was not a false-demand control.",
+  "baseline_original_whole_tree_equivalent_commit": "b9476931aeecc3e24f43a276bf1c6a2088bebe3b",
+  "baseline_equivalence_scope": "Default production, dependencies and facades only; e0 adds test/fixture/CI/doc files. Original compiled producer c896 and native proof labels remain unchanged.",
+  "live_main_carry_proof": {
+    "path": "/tmp/nm2076-main-e0b-source-carry/actual-production-dependency-carry.json",
+    "sha256": "031759b4a61b434ebd7cf95fb3df8ed0f6a0407730cef472c934a3e7039a2f40"
+  },
+  "candidate_published_tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+  "candidate_producer_overlay": {
+    "path": "/tmp/nm2076-cold-lifetime-clippy-followup/source-proof.json",
+    "sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4"
+  },
+  "candidate_ci_run": 38959592766,
+  "previous_experiment": {
+    "run": 38952882472,
+    "gate": "FAIL: cold-timings RSS; immutable evidence retained"
+  },
+  "candidate_artifact_adapter": {
+    "path": "/tmp/nm2076-lifetime-experiment/candidate-artifact-adapter.json",
+    "sha256": "3c4092bb9704638abbae252ab824c450d5dc0c300155a85d7c0740a1707c9bda"
+  },
+  "experiment_identity": "Lifetime prototype after initial099 cold-RSS FAIL; no prior rows reused",
+  "VM_only_artifact_alias": {
+    "target": "/tmp/nm2076-prospective2087-native/candidate",
+    "actual_producer_artifacts": "/tmp/nm2076-cold-lifetime-release/candidate",
+    "note": "Preserve identical executable argv paths on fresh isolated VM. Original local099 artifacts are never overwritten; adapter materialization is VM-only."
+  },
+  "candidate_ci_review": {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/actual-final-ci-review.json",
+    "sha256": "c0d8511c2503bb9ae5d9e702138d9e543f2789cc52e7b0f4e673f6d3e818aa85"
+  }
+}

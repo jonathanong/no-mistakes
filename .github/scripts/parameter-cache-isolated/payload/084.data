@@ -1,4 +1,0 @@
-effects:
-  postgres:
-    typedExecutors:
-      - { module: './types', export: Query }

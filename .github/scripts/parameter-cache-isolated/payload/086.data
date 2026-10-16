@@ -1,133 +1,106 @@
-import type { Options as Renamed } from './barrel';
-
-// Repeated physical reads share one immutable parameter annotation.
-export function queryMany(query: NonNullable<Renamed['query']>) {
-  query('select 0');
-  query('select 1');
-  query('select 2');
-  query('select 3');
-  query('select 4');
-  query('select 5');
-  query('select 6');
-  query('select 7');
-  query('select 8');
-  query('select 9');
-  query('select 10');
-  query('select 11');
-  query('select 12');
-  query('select 13');
-  query('select 14');
-  query('select 15');
-  query('select 16');
-  query('select 17');
-  query('select 18');
-  query('select 19');
-  query('select 20');
-  query('select 21');
-  query('select 22');
-  query('select 23');
-  query('select 24');
-  query('select 25');
-  query('select 26');
-  query('select 27');
-  query('select 28');
-  query('select 29');
-  query('select 30');
-  query('select 31');
-  query('select 32');
-  query('select 33');
-  query('select 34');
-  query('select 35');
-  query('select 36');
-  query('select 37');
-  query('select 38');
-  query('select 39');
-  query('select 40');
-  query('select 41');
-  query('select 42');
-  query('select 43');
-  query('select 44');
-  query('select 45');
-  query('select 46');
-  query('select 47');
-  query('select 48');
-  query('select 49');
-  query('select 50');
-  query('select 51');
-  query('select 52');
-  query('select 53');
-  query('select 54');
-  query('select 55');
-  query('select 56');
-  query('select 57');
-  query('select 58');
-  query('select 59');
-  query('select 60');
-  query('select 61');
-  query('select 62');
-  query('select 63');
-  query('select 64');
-  query('select 65');
-  query('select 66');
-  query('select 67');
-  query('select 68');
-  query('select 69');
-  query('select 70');
-  query('select 71');
-  query('select 72');
-  query('select 73');
-  query('select 74');
-  query('select 75');
-  query('select 76');
-  query('select 77');
-  query('select 78');
-  query('select 79');
-  query('select 80');
-  query('select 81');
-  query('select 82');
-  query('select 83');
-  query('select 84');
-  query('select 85');
-  query('select 86');
-  query('select 87');
-  query('select 88');
-  query('select 89');
-  query('select 90');
-  query('select 91');
-  query('select 92');
-  query('select 93');
-  query('select 94');
-  query('select 95');
-  query('select 96');
-  query('select 97');
-  query('select 98');
-  query('select 99');
-  query('select 100');
-  query('select 101');
-  query('select 102');
-  query('select 103');
-  query('select 104');
-  query('select 105');
-  query('select 106');
-  query('select 107');
-  query('select 108');
-  query('select 109');
-  query('select 110');
-  query('select 111');
-  query('select 112');
-  query('select 113');
-  query('select 114');
-  query('select 115');
-  query('select 116');
-  query('select 117');
-  query('select 118');
-  query('select 119');
-  query('select 120');
-  query('select 121');
-  query('select 122');
-  query('select 123');
-  query('select 124');
-  query('select 125');
-  query('select 126');
-  query('select 127');
+{
+  "head": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+  "overlay_proof_sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4",
+  "source_inventory_sha256": "c9e580871ee81c2ed4525e39c3ad5566072a32b1547f8aedb76a0b837abe6d2c",
+  "root": "/tmp/no-mistakes-2076-cold-lifetime",
+  "artifacts": {
+    "cli": {
+      "sha256": "6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2076-cold-lifetime/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2076-cold-lifetime/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2076-cold-lifetime/target/release/no-mistakes"
+    },
+    "addon": {
+      "sha256": "2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2076-cold-lifetime/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2076-cold-lifetime/target/release/libno_mistakes.so"
+    }
+  },
+  "uncommitted_tree": "f84f4a5691179b246e8cd10be1eb9a896656da9a",
+  "producer_overlay": {
+    "path": "/tmp/nm2076-cold-lifetime-clippy-followup/source-proof.json",
+    "sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4"
+  },
+  "source_tree_derivation": "Reconstructed after build from unchanged sealed source inventory + exact five overlays; original Git index and original producer manifest unchanged.",
+  "published_equivalent_commit": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
+  "published_equivalent_tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+  "original_producer_manifest": {
+    "path": "/tmp/nm2076-cold-lifetime-release/candidate/closed-artifacts.json",
+    "sha256": "83dedf521176f1b1fc3fca36040e4913335d40fb640b0e302b271bec1263e2ba"
+  },
+  "publication_carry": {
+    "path": "/tmp/nm2076-cold-lifetime-publication/root-exact-committed-source-carry.json",
+    "sha256": "95df35989113882484e2e9454ee1adf89335ef9280aa90cc034b2ec2a2a22e15"
+  }
 }

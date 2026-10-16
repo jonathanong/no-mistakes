@@ -1,42 +1,93 @@
-"""All retained long rows; paired four-process block is resampling unit."""
-import json,math,random,statistics,hashlib
-from pathlib import Path
-p=Path(__file__).resolve().parent
-plan=json.loads((p/'performance-source-plan.json').read_text());assert plan['status']=='REVIEWED'
-assert json.loads((p/'measurement/END.json').read_text())['complete'] is True
-assert not (p/'analysis.json').exists()
-metrics=['cpu_s','wall_s','rss_kib']
-files=['measurement/rows.json']
-rng=random.Random(1972)
-# Same 10,000 bootstrap block-index draws for every metric/workload.
-draws=[[rng.randrange(8) for _ in range(8)] for _ in range(10000)]
-def delta(logs):return 100*math.expm1(statistics.mean(logs))
-def quantile(xs,q):
- xs=sorted(xs);v=(len(xs)-1)*q;i=int(v);return xs[i]+(xs[min(i+1,len(xs)-1)]-xs[i])*(v-i)
-result={'method':{'point':'geometric mean of eight paired-block candidate/baseline ratios; each block averages its two processes per arm','interval':'95% percentile bootstrap of eight complete paired four-process blocks, 10000 draws, seed1972; descriptive small-sample intervals, not causal proof','order_split':'geometric mean block ratios within four ABBA or four BAAB blocks','raw_arm_means':'arithmetic mean across16 processes/arm; CPU is user+system, wall includes startup, RSS is process high-water KiB','no_exclusions':True,'scope':'Current 2076 source-equivalent release artifacts only; no historical pooling or causal allocation claims'},'files':{},'workloads':[]}
-for name in files:
- raw=(p/name).read_bytes();rows=json.loads(raw)
- expected=[(b,w['id'],i,'baseline' if letter=='A' else 'candidate') for b,order in enumerate(plan['orders']) for w in plan['workloads'] for i,letter in enumerate(order)]
- assert [(r['block'],r['workload'],r['position'],r['arm']) for r in rows]==expected
- result['files'][name]={'rows':len(rows),'sha256':hashlib.sha256(raw).hexdigest()}
- for w in dict.fromkeys(r['workload'] for r in rows):
-  selected=[r for r in rows if r['workload']==w];assert len(selected)==32
-  entry={'pair':'current-main/candidate','group':'diagnostics-on' if w.endswith('-timings') else 'diagnostics-off','workload':w,'metrics':{}}
-  assert all(r['exit']==0 for r in selected)
-  for m in metrics:
-   blocks=[]
-   for b in range(8):
-    a=[r[m] for r in selected if r['block']==b and r['arm']=='baseline'];c=[r[m] for r in selected if r['block']==b and r['arm']=='candidate'];assert len(a)==len(c)==2
-    assert statistics.mean(a)>0 and statistics.mean(c)>0
-    blocks.append(math.log(statistics.mean(c)/statistics.mean(a)))
-   bs=[delta([blocks[i] for i in draw]) for draw in draws]
-   entry['metrics'][m]={'baseline_mean':statistics.mean(r[m] for r in selected if r['arm']=='baseline'),'candidate_mean':statistics.mean(r[m] for r in selected if r['arm']=='candidate'),'paired_delta_pct':delta(blocks),'ci95_pct':[quantile(bs,.025),quantile(bs,.975)],'ABBA_pct':delta(blocks[::2]),'BAAB_pct':delta(blocks[1::2]),'block_delta_pct':[100*math.expm1(x) for x in blocks],'position_means':{str(i):statistics.mean(r[m] for r in selected if r['position']==i) for i in range(4)}}
-  result['workloads'].append(entry)
-assert sum(x['rows'] for x in result['files'].values())==256
-result['gate']={'adverse':[{'workload':x['workload'],'metric':m} for x in result['workloads'] for m,v in x['metrics'].items() if v['ci95_pct'][0]>0], 'scale_cpu_benefit':all(next(x for x in result['workloads'] if x['workload']==w)['metrics']['cpu_s']['ci95_pct'][1]<0 for w in ['scale','scale-timings'])}
-result['gate']['pass']=not result['gate']['adverse'] and result['gate']['scale_cpu_benefit']
-(p/'analysis.json').write_text(json.dumps(result,indent=2)+'\n')
-lines=['All256 current paired rows retained; no pilot or calibration. Units and bootstrap method: analysis.json.','pair workload CPU% [95%] ABBA% BAAB% wall% RSS%']
-for x in result['workloads']:
- c=x['metrics']['cpu_s'];lines.append(f"{x['pair']} {x['workload']} {c['paired_delta_pct']:+.3f} [{c['ci95_pct'][0]:+.3f},{c['ci95_pct'][1]:+.3f}] {c['ABBA_pct']:+.3f} {c['BAAB_pct']:+.3f} {x['metrics']['wall_s']['paired_delta_pct']:+.3f} {x['metrics']['rss_kib']['paired_delta_pct']:+.3f}")
-(p/'analysis-summary.txt').write_text('\n'.join(lines)+'\n');print('\n'.join(lines))
+{
+  "status": "FOCUSED PASS; default Clippy blocked by unchanged base test import",
+  "observed_terminal": {
+    "session": 80700,
+    "exit": 1,
+    "chunk": "9b50aa"
+  },
+  "focused_tests": 677,
+  "coverage": {
+    "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/parameters.rs": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 3,
+        "covered": 3,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 3,
+        "covered": 3,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 86,
+        "covered": 86,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 131,
+        "covered": 131,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    },
+    "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/provenance.rs": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 17,
+        "covered": 17,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 17,
+        "covered": 17,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 119,
+        "covered": 118,
+        "percent": 99.15966386554622
+      },
+      "regions": {
+        "count": 156,
+        "covered": 155,
+        "notcovered": 1,
+        "percent": 99.35897435897436
+      }
+    }
+  },
+  "clippy_exit": 101,
+  "diagnostic": "unused glob import in unchanged destructuring_phase_bounds.rs:1",
+  "source_unchanged": {
+    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/parameter_annotation_tests.rs": "c10a202838466fa3e88223f4234ed63236cb69c601a67a235f6e1f9929930ba4",
+    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/parameters.rs": "bc2a7008c1a1549f245efd424d12be34c28b392eab5729e54c3ca861e37b5f90",
+    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/provenance.rs": "ed5c6f4c1951395adb3860108097b1f47acdc25b37db4a5be5260208db8309b8",
+    "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/value_flow/parameter_lifetime_tests.rs": "5532098fd6d0d34c1d5a8ffa916a7ba917824f70d8eadbeaf2d936e324ce3765"
+  },
+  "target_physically_absent": true,
+  "owned_compiler_processes": [],
+  "ledger_sha256": "9ce717910d26518608b4a2492a6f3f3d89977f2a972585e8d787852d58ede26c",
+  "created_at_utc": "2026-10-16T19:31:36.722287+00:00"
+}

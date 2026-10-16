@@ -1,2 +1,14 @@
-export type Query = (sql: string) => Promise<unknown>;
-export type Options = { query?: Query };
+"""Freeze reviewed source/data once; never launches a native process."""
+import hashlib,json
+from pathlib import Path
+D=Path(__file__).resolve().parent
+plan=json.loads((D/'performance-source-plan.json').read_text())
+assert plan['status']=='REVIEWED'
+assert not(D/'measurement-freeze.json').exists()
+rows=json.loads((D/'reviewed-freeze-rows.json').read_text())
+for row in rows:
+ p=Path(row['path']);assert p.is_file()and not p.is_symlink()
+ assert p.stat().st_size==row['bytes']and hashlib.sha256(p.read_bytes()).hexdigest()==row['sha256']
+rows.append({'path':str(D/'reviewed-freeze-rows.json'),'bytes':(D/'reviewed-freeze-rows.json').stat().st_size,'sha256':hashlib.sha256((D/'reviewed-freeze-rows.json').read_bytes()).hexdigest()})
+rows.sort(key=lambda row:row['path'])
+(D/'measurement-freeze.json').write_text(json.dumps({'plan_sha256':hashlib.sha256((D/'performance-source-plan.json').read_bytes()).hexdigest(),'files':rows},indent=2)+'\n')

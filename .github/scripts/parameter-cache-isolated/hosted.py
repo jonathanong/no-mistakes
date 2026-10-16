@@ -25,6 +25,12 @@ def sha(path):
     return hashlib.file_digest(pathlib.Path(path).open('rb'), 'sha256').hexdigest()
 
 
+def verify_transport_inventory(spec):
+    assert len(spec['files']) == 105 and len(spec['assets']) == 4
+    assert spec['assets'] == [r for r in spec['files'] if 'asset_id' in r]
+    assert len({r['path'] for r in spec['files']}) == 105
+
+
 def verify_staged_assets(stage, spec, context):
     proof = json.loads((stage / 'transport.json').read_text())
     assert proof['complete'] is True and proof['producer'] == 'native-download'
@@ -82,9 +88,7 @@ assert subprocess.check_output(['node', '--version'], text=True).strip() == spec
 assert not pathlib.Path(spec['source_root']).exists()
 assert subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], cwd='candidate-source', text=True).strip() == spec['candidate_tree']
 shutil.copytree('candidate-source', spec['source_root'], ignore=shutil.ignore_patterns('.git'), symlinks=True)
-assert len(spec['files']) == 97 and len(spec['assets']) == 4
-assert spec['assets'] == [r for r in spec['files'] if 'asset_id' in r]
-assert len({r['path'] for r in spec['files']}) == 97
+verify_transport_inventory(spec)
 stage = pathlib.Path(os.environ['RUNNER_TEMP']) / 'native-stage'
 transfer = verify_staged_assets(stage, spec, os.environ)
 (O / 'verified-same-run-transfer.json').write_text(json.dumps(transfer, indent=2))
@@ -122,7 +126,7 @@ def eligibility():
     command(['gh', 'api', 'repos/jonathanong/no-mistakes/pulls/2086'], 'live-pr-' + suffix)
     main = json.loads((O / ('live-main-' + suffix + '.stdout')).read_text())
     pr = json.loads((O / ('live-pr-' + suffix + '.stdout')).read_text())
-    command(['gh', 'api', 'repos/jonathanong/no-mistakes/actions/runs/38941195465'], 'live-ci-' + suffix)
+    command(['gh', 'api', f"repos/jonathanong/no-mistakes/actions/runs/{spec['candidate_ci_run']}"], 'live-ci-' + suffix)
     ci = json.loads((O / ('live-ci-' + suffix + '.stdout')).read_text())
     assert ci['head_sha'] == spec['candidate'] and ci['status'] == 'completed' and ci['conclusion'] == 'success'
     command(['gh', 'api', f"repos/jonathanong/no-mistakes/commits/{spec['candidate']}/check-runs?per_page=100"], 'live-checks-' + suffix)

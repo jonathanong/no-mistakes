@@ -1,1 +1,74 @@
-{"kind":"postgres","entry":"entry.mts","callSites":[{"file":"coverage.mts","line":17,"callee":"TransactionQuery","caller":"typedCallback","depth":1},{"file":"coverage.mts","line":25,"callee":"TransactionQuery","caller":"boundCallback","depth":1},{"file":"coverage.mts","line":31,"callee":"write","caller":"definiteChoice","depth":1},{"file":"coverage.mts","line":35,"callee":"write","caller":"nullChoice","depth":1},{"file":"entry.mts","line":5,"callee":"TransactionQuery","caller":"control","depth":0},{"file":"entry.mts","line":8,"callee":"TransactionQuery","caller":"indexed","depth":0},{"file":"entry.mts","line":16,"callee":"beginTransaction","caller":"callback","depth":0},{"file":"entry.mts","line":21,"callee":"TransactionQuery","caller":"options","depth":0},{"file":"entry.mts","line":39,"callee":"TransactionQuery","caller":"barrel","depth":0},{"file":"entry.mts","line":42,"callee":"TransactionQuery","caller":"renamed","depth":0}],"byCategory":{"uncategorized":10}}
+{
+  "status": "SOURCE ONLY; root review/activation and immediate coordinated START still required",
+  "source_dir": "/tmp/nm2076-current-main-e0b-functional",
+  "no_new_builds_or_semantic_reruns": true,
+  "activation": [
+    "Preserve DRAFT plan; change status only to REVIEWED under root source approval.",
+    "Run python3 seal-measurement.py once; retain exact plan and freeze hashes."
+  ],
+  "start_preconditions": [
+    "Fresh direct availability and ACKs from every coordinated lane, explicitly including external Sol. Active primary work wins; NACK cancels without reserving a future window.",
+    "Fresh host idle proof; live main e0/head099/open draft and completed CI success.",
+    "Root writes measurement-START.json with actual UTC, plan hash, actual main/head/draft and full_current_head_ci_success. Start sampler within 10 seconds."
+  ],
+  "command": [
+    "python3",
+    "/tmp/nm2076-current-main-e0b-functional/measure-once.py"
+  ],
+  "sampling": {
+    "rows": 256,
+    "workload_modes": 8,
+    "orders": [
+      "ABBA",
+      "BAAB",
+      "ABBA",
+      "BAAB",
+      "ABBA",
+      "BAAB",
+      "ABBA",
+      "BAAB"
+    ],
+    "metrics": [
+      "cpu_s",
+      "wall_s",
+      "rss_kib"
+    ],
+    "per_invocation_max_seconds": 30,
+    "round_max_seconds": 600,
+    "internal_deadline_seconds": 590,
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "rayon": 4,
+    "behavior": "Sequential fresh CLI invocations only; keep every raw stdout/stderr/exit/row, fail closed on mismatch or timeout; no retry/pilot/recalibration/exclusion."
+  },
+  "end": [
+    "Root supervises the bounded run and owned process cleanup, records explicit END within 600 seconds and immediately releases every hold.",
+    "On failure retain partial evidence; independently inspect any recorded owned identities/artifact arguments and reap only positively owned processes. No retry or gate claim."
+  ],
+  "after_end": [
+    "Verify 256 complete rows, all frozen pins, exact schedule, raw golden equality, source/live eligibility, and no owned processes.",
+    "Run python3 analyze-once.py once after quiet END; reproduce every result independently.",
+    "Preserve all adverse/inconclusive results; leave PR draft until numeric and all other gates actually pass."
+  ],
+  "statistics_and_gates": {
+    "statistics": "Same frozen B25 arithmetic: eight paired four-process blocks, geometric mean block ratios, 10000 percentile bootstrap draws, seed1972; ABBA/BAAB reported separately, no exclusions or pooling.",
+    "gates": {
+      "benefit": "Both scale CPU intervals must be strictly below zero (diagnostics off and on).",
+      "controls": "Any CPU/wall/RSS interval strictly above zero in any workload rejects the gate; all orders and inconclusive outcomes remain reported.",
+      "memory": "No exception for cold construction or retained cache payload.",
+      "readiness": "Requires actual completed current-head CI and live main/head/draft eligibility; no automatic merge from these results."
+    }
+  },
+  "source_hashes": {
+    "performance-source-plan.json": "23d0cb32228963f04442308e526cd2356d0020385e803954e3d16f020ebd1a34",
+    "measure-once.py": "b5b216c0ede1ecf863e0d4ee661cb9f740835038aee3944efb9ba0c06c3ad5b8",
+    "analyze-once.py": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0",
+    "seal-measurement.py": "87253df1a8ae365a78375535711138c2fc7ada9def45dbd9405c9394b5d2d8dc",
+    "process_owner.py": "4b03c528c35735d0bbafd82bb12c908ff36d9c4e850f2fca2cf51b530ba18e1e"
+  },
+  "publication_order": "Measure unchanged 099 after reviewed e0 default-production carry; only afterward ordinary merge/push e0 with exact production carry and fresh new-head CI before readiness."
+}

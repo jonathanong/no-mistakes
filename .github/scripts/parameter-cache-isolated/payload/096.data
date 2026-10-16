@@ -1,3 +1,2 @@
-import type { TransactionQuery } from './database.mts'
-type Options = { query?: TransactionQuery }
-export type { Options as QueryOptions }
+export type Query = (sql: string) => Promise<unknown>;
+export type Options = { query?: Query };

@@ -1,0 +1,19 @@
+{
+  "status": "PASS: actual CI/native/source evidence root-reviewed; isolated sampling has not run",
+  "candidate": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
+  "candidate_published_tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+  "candidate_actual_producer": "099 plus sealed five-path overlay, reconstructed tree f84f4a5691179b246e8cd10be1eb9a896656da9a",
+  "CI_review": {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/actual-final-ci-review.json",
+    "sha256": "c0d8511c2503bb9ae5d9e702138d9e543f2789cc52e7b0f4e673f6d3e818aa85"
+  },
+  "release_review": {
+    "path": "/tmp/nm2076-cold-lifetime-release/actual-release-terminal-review.json",
+    "sha256": "fc78fb6c5576157549a47a97af2c2c69112510ef3ed58bb5431647dd5c215bc8"
+  },
+  "native_control_review": {
+    "path": "/tmp/nm2076-cold-lifetime-functional-source/actual-functional-terminal-review.json",
+    "sha256": "5e590402949afd7baa09a4e90c7ed60e82c24b988113d85c3ce8b90d040da4e4"
+  },
+  "prior099_RSS_failure_preserved": 38952882472
+}

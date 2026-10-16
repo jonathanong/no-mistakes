@@ -1,2 +1,2 @@
-// Intentionally malformed: failed prepared facts must not manufacture property provenance.
-export type QueryOptions = { query: ;
+export type Query = (sql: string) => Promise<unknown>;
+export type Options = { query?: Query };

@@ -1,8 +1,18 @@
-[timing] parse: 1.328ms
-[timing] search: 5.711ms
-[timing] ingest: 0.001ms
-[timing] analysis: 0.000ms
-[timing] invocation.dispatch: 7.148ms
-[timing] invocation.prepare: 0.156ms
-[timing] output: 0.096ms
-[timing] total: 7.645ms
+waiting for lock held by pid 25 for 0s
+✔ compiled namespace type barrels preserve effects and aggregate parity (415.361825ms)
+✔ compiled typed executors respect namespace and class type shadows (76.696043ms)
+✔ compiled callback findings keep each lexical binding and occurrence distinct (63.914778ms)
+✔ compiled checks honor exact effect bindings through aliases and helper traces (51.605051ms)
+✔ compiled CJS, ESM and batched checks share per-item effect diagnostics (99.641234ms)
+✔ compiled repeated parameter annotations preserve indexed contextual and prepared reports (83.668525ms)
+✔ compiled annotation cache controls keep cold and repeated requests isolated (42.546719ms)
+waiting for lock held by pid 25 for 0s
+✔ compiled async APIs preserve hoisted custom type imports (596.404803ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 632.989451

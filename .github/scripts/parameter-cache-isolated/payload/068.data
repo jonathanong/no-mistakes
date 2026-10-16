@@ -1,1 +1,13 @@
-{"roots":["types.ts"],"files":[{"path":"barrel.ts","depth":1,"via":["type-import"]},{"path":"entry.ts","depth":2,"via":["type-import"]}],"diagnostics":[],"tsconfig_provenance":[{"importer":"types.ts","config":"tsconfig.json","forced":false}]}
+{
+  "node": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+  "node_sha256": "5a7b8a3cf5ccb57d297519754fd73238f64cf560afd0ef19a2f9bf7384cbb657",
+  "version": "v26.11.1",
+  "sources": {
+    "/tmp/no-mistakes-2076-cold-lifetime/packages/no-mistakes/index.js": "52f9914b87ce22b1be4a5e688d461394d5e6c0f5aae277623c08dabab8c46b7d",
+    "/tmp/no-mistakes-2076-cold-lifetime/packages/no-mistakes/index.mjs": "0833bd7021dff935cb6573b0180fc3de55e3121346c8d46bb6ab4554c1f4ae77",
+    "/tmp/no-mistakes-2076-cold-lifetime/packages/no-mistakes/scripts/query-reached-per-item-api.test.js": "3f00996c2168465e7d2c782d913e0ca52203229e41c45c2f36f67c02f7db78cc",
+    "/tmp/no-mistakes-2076-cold-lifetime/packages/no-mistakes/scripts/namespace-types-api.test.js": "40ff534bafd9fd256fcf269e56cb8019e51298951022542665e9142235f8acd3",
+    "/tmp/no-mistakes-2076-cold-lifetime/packages/no-mistakes/scripts/type-import-order-api.test.js": "e0e38764946eff069607a5618c7e8773d53c27a4e5fdc46f7a34c475330109b6",
+    "/tmp/nm2076-cold-lifetime-functional-source/public-reports.cjs": "f397b8a1e3b2b9637d07934f4e82b52e835bec10a69c65d7c3b8189dbf21ba00"
+  }
+}

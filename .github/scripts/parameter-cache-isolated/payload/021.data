@@ -1,1 +1,71 @@
-{"kind":"postgres","entry":"entry.ts","callSites":[{"file":"entry.ts","line":5,"callee":"Query","caller":"queryMany","depth":0}],"byCategory":{"uncategorized":1}}
+{
+  "status": "PASS: new prototype8 native API tests and full prepared/8CLI outputs against retained baseline",
+  "session": 77064,
+  "exit": 0,
+  "chunk": "ba9024",
+  "utc": "2026-10-16T19:59:22.831464+00:00",
+  "prepared_bytes": 15424,
+  "prepared_sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6",
+  "native_counts": {
+    "tests": "8",
+    "pass": "8",
+    "fail": "0",
+    "cancelled": "0",
+    "skipped": "0"
+  },
+  "CLI_raw": [
+    {
+      "label": "candidate-cold",
+      "raw_sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
+      "bytes": 163,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-cold.stdout"
+    },
+    {
+      "label": "candidate-cold-timings",
+      "raw_sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902",
+      "bytes": 163,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-cold-timings.stdout"
+    },
+    {
+      "label": "candidate-scale",
+      "raw_sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
+      "bytes": 10100,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-scale.stdout"
+    },
+    {
+      "label": "candidate-scale-timings",
+      "raw_sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e",
+      "bytes": 10100,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-scale-timings.stdout"
+    },
+    {
+      "label": "candidate-mixed",
+      "raw_sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
+      "bytes": 978,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-mixed.stdout"
+    },
+    {
+      "label": "candidate-mixed-timings",
+      "raw_sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf",
+      "bytes": 978,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-mixed-timings.stdout"
+    },
+    {
+      "label": "candidate-non-consuming",
+      "raw_sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "bytes": 243,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-non-consuming.stdout"
+    },
+    {
+      "label": "candidate-non-consuming-timings",
+      "raw_sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c",
+      "bytes": 243,
+      "golden": "/tmp/nm2076-prospective2087-functional/functional/baseline-non-consuming-timings.stdout"
+    }
+  ],
+  "release_closed_manifest_sha256": "83dedf521176f1b1fc3fca36040e4913335d40fb640b0e302b271bec1263e2ba",
+  "runtime_provenance_sha256": "68cd049287c3b84588d911985c73b3d5aa5a460732923e17c56763639bcadbaf",
+  "ledger_sha256": "96b2ef7ad8a3ac8555ee467580a30d06ad790fea53054c7006e10f95e17c3e7a",
+  "baseline_reexecuted": false,
+  "performance_claim": false
+}

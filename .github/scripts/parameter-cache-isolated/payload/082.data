@@ -1,1 +1,522 @@
-{"compilerOptions":{"strict":true,"module":"NodeNext","moduleResolution":"NodeNext"}}
+[
+  {
+    "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/addon.node",
+    "bytes": 78789848,
+    "sha256": "f7d3a9f6d735b7628d7c4a13500553b831ad09478072b9ab684e6af95de4ff6e"
+  },
+  {
+    "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/cli",
+    "bytes": 82354432,
+    "sha256": "4f68e778926ba7428d90299ab4f4914caed786b4b3f9909c92ed78a8c0fb5107"
+  },
+  {
+    "path": "/tmp/nm-shared-baseline-2087-c896-final-artifacts/closed-artifacts.json",
+    "bytes": 3952,
+    "sha256": "c8b72fe9d0c27718b35c9c9d355012f4bebc1cea1dc082c92b6f60c15a4c9bac"
+  },
+  {
+    "path": "/tmp/nm-shared-baseline-2087-c896/actual-original-selector-failure.json",
+    "bytes": 1800,
+    "sha256": "e5c8f5d0393208f7045ec18ba4203a4cfb1d2792a6f5837681d9a600e0d1cc70"
+  },
+  {
+    "path": "/tmp/nm-shared-baseline-2087-c896/main-merge-equivalence/actual-source-equivalence.json",
+    "bytes": 570,
+    "sha256": "6a5e3a947e82db53b53843809b81c3d5f127c792fad0436953e0474829e3da7d"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-clippy-followup/actual-terminal.json",
+    "bytes": 297,
+    "sha256": "f2ff089fc74e6b1de87cb5c50f343048302801f2ea7ee7007525ff409c05437e"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-clippy-followup/source-proof.json",
+    "bytes": 3071,
+    "sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-functional-source/actual-functional-terminal-review.json",
+    "bytes": 2874,
+    "sha256": "5e590402949afd7baa09a4e90c7ed60e82c24b988113d85c3ce8b90d040da4e4"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-publication/actual-published-head.json",
+    "bytes": 586,
+    "sha256": "806bf7c592c4bce45e5f6b734e24c0d35c40934436fa28060974a6e9bd4103eb"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-publication/root-exact-committed-source-carry.json",
+    "bytes": 354,
+    "sha256": "95df35989113882484e2e9454ee1adf89335ef9280aa90cc034b2ec2a2a22e15"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-publication/source-carry.json",
+    "bytes": 505002,
+    "sha256": "e9077e6812e92cc40a9efc82008f773499f4e89393d0911653a7a06e8ff16de8"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-release/actual-release-terminal-review.json",
+    "bytes": 1138,
+    "sha256": "fc78fb6c5576157549a47a97af2c2c69112510ef3ed58bb5431647dd5c215bc8"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-release/source-inventory.json",
+    "bytes": 3385842,
+    "sha256": "c9e580871ee81c2ed4525e39c3ad5566072a32b1547f8aedb76a0b837abe6d2c"
+  },
+  {
+    "path": "/tmp/nm2076-cold-lifetime-validation/actual-focused-and-clippy-result.json",
+    "bytes": 2852,
+    "sha256": "7d35a0014c090ec2c0e5c2799e77a485552406f34dc68e6391addde1306c55c1"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/actual-current-head-technical-gates.json",
+    "bytes": 1815,
+    "sha256": "c0d8511c2503bb9ae5d9e702138d9e543f2789cc52e7b0f4e673f6d3e818aa85"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/actual-final-ci-review.json",
+    "bytes": 1815,
+    "sha256": "c0d8511c2503bb9ae5d9e702138d9e543f2789cc52e7b0f4e673f6d3e818aa85"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/checks.json",
+    "bytes": 155224,
+    "sha256": "472f6d6aebcd8dd8b556ca17efac58eced81fb89da3dd005a2c5b516b2653cc7"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/main.json",
+    "bytes": 344,
+    "sha256": "06a5ba316df5408211f4234164c01646da979b145345591afa7e5c13771f49c9"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/pr.json",
+    "bytes": 21601,
+    "sha256": "8aa3cb8de2081779a8a9d23a3daeb7ba0f1610bbf8090dac35948afb89f5bb72"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/ci/run.json",
+    "bytes": 13025,
+    "sha256": "30a8caf42ed078f3a5be569e4cdb4c964c8a7f3b1cc68cea19578b293b3b31e1"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/actual-measurement-ready-evidence.json",
+    "bytes": 1000,
+    "sha256": "9beab556c1fbab3366db160edbf0d208959e91fd9d43749d482d65a2bd273eae"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/actual-paired-functional-terminal-review.json",
+    "bytes": 2874,
+    "sha256": "5e590402949afd7baa09a4e90c7ed60e82c24b988113d85c3ce8b90d040da4e4"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/analyze-once.py",
+    "bytes": 4213,
+    "sha256": "a7430123cda4c539e4cecbe28dcd32d83cfa29d4129d2c43fccef96520e3d2b0"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/bounded-execution-plan.json",
+    "bytes": 3714,
+    "sha256": "8c3eb0726f39614a93ba3d0a0b83a013abc8af7f651f1cd307ff00f9253d5253"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/actual-functional-result.json",
+    "bytes": 383,
+    "sha256": "3da4407652d1b895cde821a27e8b969a9cd5f594a948d9cbaa83e16bbe0c5999"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-api.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-api.stdout",
+    "bytes": 925,
+    "sha256": "585d3a05979368b3760a5e77c762e4ade63d41ad3c9e81a3567980824a804d06"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold-timings.stderr",
+    "bytes": 99,
+    "sha256": "d750e58ea3c0235b3cebfd229100f5bd0c3ac9e6aacb92b899bad928b77e6638"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold-timings.stdout",
+    "bytes": 163,
+    "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-cold.stdout",
+    "bytes": 163,
+    "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed-timings.stderr",
+    "bytes": 99,
+    "sha256": "369372c2ff122eab0f79746857ef3d6ca082c560d64705baf11d00cbd047f897"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed-timings.stdout",
+    "bytes": 978,
+    "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-mixed.stdout",
+    "bytes": 978,
+    "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming-timings.stderr",
+    "bytes": 227,
+    "sha256": "da4210d9cba467122c71494167b42c16e6e8991ac921c4a601abf9a054ac9c54"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming-timings.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-non-consuming.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-prepared-result.json",
+    "bytes": 15424,
+    "sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-prepared.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-prepared.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale-timings.stderr",
+    "bytes": 100,
+    "sha256": "5db35e9e5c113411e5ba9d16efb84766afaa531897b51244337ffbc8f16b05bb"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale-timings.stdout",
+    "bytes": 10100,
+    "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/baseline-scale.stdout",
+    "bytes": 10100,
+    "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-api.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-api.stdout",
+    "bytes": 923,
+    "sha256": "a4b41553ea4f445af705ba2614d194e25451ec74ccd7d008a68427736aaf7f37"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold-timings.stderr",
+    "bytes": 99,
+    "sha256": "ebda71d0dc9b0fbf463ce4ae70bece439fdc35f12ec1c471a5c35c58d1a2ba7e"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold-timings.stdout",
+    "bytes": 163,
+    "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-cold.stdout",
+    "bytes": 163,
+    "sha256": "23d36814bad5576a2f8d8ac3dacd6d62b9ee9e47707734231f91de2d93e8d902"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed-timings.stderr",
+    "bytes": 99,
+    "sha256": "8d4a9cc9a7dd27c3d0e7a2b003651c981835278c2751df516e3d460d864f7806"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed-timings.stdout",
+    "bytes": 978,
+    "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-mixed.stdout",
+    "bytes": 978,
+    "sha256": "5944966be99ead21835cfd11acac4c4e1e37024257e1ca664a3e5367463234cf"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming-timings.stderr",
+    "bytes": 225,
+    "sha256": "dee4237f047614f5654b6a49859c70c47fb6059aa58bd7a05e28f0bc03d1a318"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming-timings.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-non-consuming.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-prepared-result.json",
+    "bytes": 15424,
+    "sha256": "ba8b9831618beadc7c401ddea07fbcdb73c8f5cfea0c87dc37ee753420c57bc6"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-prepared.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-prepared.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale-timings.stderr",
+    "bytes": 99,
+    "sha256": "cdde3aea454c2d6516d57fd15748a574d2ed45ca0a0f750ca24d425f45420a46"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale-timings.stdout",
+    "bytes": 10100,
+    "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/candidate-scale.stdout",
+    "bytes": 10100,
+    "sha256": "6c5fca8e57a844ec335a0ea8654bebffcf83c50555a6d31e09478f3a4c7a800e"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/ledger.json",
+    "bytes": 3615,
+    "sha256": "96b2ef7ad8a3ac8555ee467580a30d06ad790fea53054c7006e10f95e17c3e7a"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/functional/runtime-provenance.json",
+    "bytes": 1126,
+    "sha256": "68cd049287c3b84588d911985c73b3d5aa5a460732923e17c56763639bcadbaf"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/actual-result.json",
+    "bytes": 128,
+    "sha256": "e985cb6eb3bd0c824a9925bf56848c9ecebcf7853bb818d8d500eee0dfd63642"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming-timings.stderr",
+    "bytes": 225,
+    "sha256": "9d392110f647562cba1541b13fe13a82de1f60f287a506ef6d4713af8edfc6a2"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming-timings.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/baseline-non-consuming.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming-timings.stderr",
+    "bytes": 225,
+    "sha256": "18c273b4020fdd3ef592a3aedf19528672a55a5c5058fe4b5b34896fe1bc2973"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming-timings.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/candidate-non-consuming.stdout",
+    "bytes": 243,
+    "sha256": "341f5dd20610855312920c67937d41476cd2a907c29eaa4930796d6fd6713b4c"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/import-only-controls/ledger.json",
+    "bytes": 1532,
+    "sha256": "776e98cf4da4e013911508afdb0574c9412acdbffed40fd608f795ca582ce633"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/measure-once.py",
+    "bytes": 4566,
+    "sha256": "29304a4b81714d407d4590e1eac48fd4b0e7c0e202302104c7c0ed43ac308a15"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/performance-source-plan.json",
+    "bytes": 11720,
+    "sha256": "24398dc96d4d3aa2a1d3a1297843cecd307aea7d3cc61d97686b37c1914b9bbb"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/process_owner.py",
+    "bytes": 4218,
+    "sha256": "4b03c528c35735d0bbafd82bb12c908ff36d9c4e850f2fca2cf51b530ba18e1e"
+  },
+  {
+    "path": "/tmp/nm2076-lifetime-experiment/frozen/seal-measurement.py",
+    "bytes": 944,
+    "sha256": "67ad3d3b6e5693e87de16d2f4ac72de56e034bf21dc2df9063ea0b4f38cf9a2c"
+  },
+  {
+    "path": "/tmp/nm2076-prospective2087-native/candidate/addon.node",
+    "bytes": 78789784,
+    "sha256": "2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647"
+  },
+  {
+    "path": "/tmp/nm2076-prospective2087-native/candidate/cli",
+    "bytes": 82354464,
+    "sha256": "6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380"
+  },
+  {
+    "path": "/tmp/nm2076-prospective2087-native/candidate/closed-artifacts.json",
+    "bytes": 4044,
+    "sha256": "3c4092bb9704638abbae252ab824c450d5dc0c300155a85d7c0740a1707c9bda"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/.no-mistakes.yml",
+    "bytes": 86,
+    "sha256": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/barrel.ts",
+    "bytes": 40,
+    "sha256": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/entry.ts",
+    "bytes": 211,
+    "sha256": "afddf206963c8e9ffdbcecce6e90a1111d7b5d09f185b9eb8e5b9d6bddc44c9b"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/tsconfig.json",
+    "bytes": 86,
+    "sha256": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/cold/types.ts",
+    "bytes": 96,
+    "sha256": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/.no-mistakes.yml",
+    "bytes": 86,
+    "sha256": "adedd60ceb88101a6b6d7d6ce024944f713c90e23acb879378f6027996810d5f"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/barrel.ts",
+    "bytes": 40,
+    "sha256": "84c27dccbddea3f94c1d4d3af6b09175c75e55778be1a01cb358f57f49627140"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/entry.ts",
+    "bytes": 3024,
+    "sha256": "83599baefb226eba51c12197ced6fa29783260c95f1750486e00978314855b4e"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/tsconfig.json",
+    "bytes": 86,
+    "sha256": "c00fcb478ed42e281c4f1cf7af879e5123cfe759d7f2f2ba49abefc6288c041f"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/fixtures/benchmarks/parameter-annotation-cache/scale/types.ts",
+    "bytes": 96,
+    "sha256": "8975eb20240ce01ce6348d96d92d9f2fecfa34fd2a13556dcaf558830bed848b"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/.no-mistakes.yml",
+    "bytes": 356,
+    "sha256": "656b08b6bd8bed21873f7fd9538897e08fdc8f28ac59d6cb32cfb40a1269369c"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/barrel.mts",
+    "bytes": 117,
+    "sha256": "788e59de7f2573b68ec3b3bba0660d2e0147803c1723eb18ba1df51f049218ea"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/broken.mts",
+    "bytes": 130,
+    "sha256": "7cd64f8699c5dc8c857f1c7921a97e50f15422f84b48c7420e1cf002ba74003d"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/coverage.mts",
+    "bytes": 3252,
+    "sha256": "736f6cfd541db644e23625e03f04df68264cabbc44b302bd1758baf5baf4f716"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/database.mts",
+    "bytes": 252,
+    "sha256": "a564e9235f17f73014ccc8ebb1ec2678e55c3a92c9101feb470bd22b05a2fd61"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/entry.mts",
+    "bytes": 1988,
+    "sha256": "16c131b817b9074f261bab292c35dfa4bd5215fa9c70ba3bf3adbdc94a35ed79"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/other.mts",
+    "bytes": 121,
+    "sha256": "a7703dbe4edb502f526c1b90ad42233150640fabb6a5d3c5366be5bbe8404732"
+  },
+  {
+    "path": "/tmp/no-mistakes-2076-prospective2087/test-cases/rules/query-reached-per-item/executor-paths-fixture/renamed.mts",
+    "bytes": 139,
+    "sha256": "a82c79fb7ee2e8b85109896a9d29086c5734403284ff93fa0f0722ad788e7aa7"
+  }
+]

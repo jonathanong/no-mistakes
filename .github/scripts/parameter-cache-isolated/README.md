@@ -1,47 +1,17 @@
-# Isolated x86 diagnostic source proposal
+# Parameter annotation lifetime prototype: reviewed source
 
-This source-approved adapter reuses the four closed c896/099-source-equivalent x86 CLI/addon
-ELFs. It builds no analyzer, changes no production PR, and reuses no old rows.
-The original 97-file local freeze and canceled R1 remain untouched. The new host
-is an isolated GitHub `ubuntu-24.04` x86 VM with CPUs 0–3 and Rayon 4. This is
-separate hosted evidence, with no ARM, Criterion, or CodSpeed claim.
+This source package reuses the reviewed isolated x86 transport, full controls,
+256 balanced rows, original sampler, and unchanged assessor. It changes no gates.
+Candidate code is published as `2ee8eabb`; authentic native artifacts were built
+from `099cfed2` plus the sealed five-path overlay. The adapter preserves both
+identities and the original producer manifest (`83dedf52`). Default source carry
+is independently proved.
 
-Root reviewed the source and staged four immutable assets in a temporary DRAFT
-release. The activated transport binds all four verified IDs and SHA-256 values.
-Normal diagnostic publication is approved; root must review the exact published
-commit before a single exact-SHA dispatch. Actual hosted results remain pending.
-The release must never be published. Delete staging only after retained CI
-evidence confirms consumption. No PAT or repository secret is used. Actual run 38950862496 proved that the
-read-only Actions integration could not fetch the draft asset (HTTP 403), before
-any controls or samples. A separate trusted download-only job now has
-`contents: write`, performs GETs of only four hardcoded IDs, verifies bytes and
-SHA-256, and uploads same-run artifacts. It never checks out or executes source
-or native payloads. The dependent measurement VM remains read-only and checks
-all four hashes again, plus repository/run/attempt/workflow-SHA ownership.
-The staging release remains unpublished. No draft listing is used. Official endpoint permissions:
-https://docs.github.com/en/rest/releases/assets#get-a-release-asset
+VM-only artifact destination paths intentionally match the first experiment to
+keep executable argument paths fixed. The materializer never overwrites local
+frozen artifacts. Original run `38952882472` and its cold RSS failure are immutable.
 
-Reuse the already registered `.github/workflows/receiver-fact-native.yml`
-(workflow ID 384918609), on a separate diagnostic branch. Confirm no owner is
-using that registration before dispatch. No new default-branch workflow PR is
-needed. The replacement is dispatch-only and has its own concurrency group.
-
-The 93 small payloads preserve the exact original frozen bytes at their original
-absolute paths. Four pinned asset downloads complete the 97-file inventory.
-The candidate input checkout is exact 099/tree d410; producer labels remain
-c896 and 0076 plus its uncommitted d410 tree. Current e0 main is accepted only
-through the already reviewed production/dependency/facade equivalence proof.
-
-Before samples, both addons must pass all eight existing native tests and full
-prepared-report equality. All eight CLI workload slots must match the original
-full-byte goldens. Dynamic loads, Node version, image, CPU, memory, dependency
-listing, live main/head/draft and completed exact-head Test CI are retained.
-There is no local quiet lease or inference about external primary jobs.
-
-The sampler differs only in its documentation and explicit isolated START
-label. All 256 fixed ABBA/BAAB rows, deadlines, affinity, metrics, output checks,
-and the assessor bytes are unchanged. The 600-second sample cap remains.
-The adapter has a 1260-second command budget, and the job has a 30-minute cap;
-downloads/controls phase fit is unproved until actual execution. All partial
-logs and rows are uploaded even on failure. The Actions conclusion is not a
-manual performance gate; root independently reproduces all 24 metric objects.
+Run `38959592766` completed successfully. Global coverage and all four Codecov
+checks pass. Root approved source/data activation and normal diagnostic publication.
+Actual hosted controls, measurement, and every performance gate remain pending;
+dispatch requires root review of the exact published diagnostic commit.

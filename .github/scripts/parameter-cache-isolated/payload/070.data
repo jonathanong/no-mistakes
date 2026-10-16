@@ -1,60 +1,8 @@
-"""Fixed fresh-invocation comparison; requires an immediate coordinated START."""
-import datetime,hashlib,json,os,pathlib,subprocess,time
-from process_owner import OwnedProcess
-D=pathlib.Path(__file__).resolve().parent;O=D/'measurement';rows=[];complete=False;deadline=time.monotonic()+590
-def sha(p):return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
-plan=json.loads((D/'performance-source-plan.json').read_text());assert plan['status']=='REVIEWED'
-start=json.loads((D/'measurement-START.json').read_text());assert start['status']=='ACTUAL START after fresh immediate ACKs and host idle'
-assert start['plan_sha256']==sha(D/'performance-source-plan.json')
-assert start['actual_main']==plan['expected_current_main'] and start['actual_head']==plan['candidate'] and start['actual_draft'] is True
-assert start['full_current_head_ci_success'] is True
-freeze=json.loads((D/'measurement-freeze.json').read_text())
-assert freeze['plan_sha256']==sha(D/'performance-source-plan.json')
-for item in freeze['files']:assert sha(item['path'])==item['sha256']
-O.mkdir()
-started=datetime.datetime.fromisoformat(start['utc']);assert 0<=(datetime.datetime.now(datetime.timezone.utc)-started).total_seconds()<10
-deadline=min(deadline,time.monotonic()+600-(datetime.datetime.now(datetime.timezone.utc)-started).total_seconds()-5)
-assert json.loads((D/'functional/actual-functional-result.json').read_text())['status'].startswith('PASS:')
-assert set([0,1,2,3])<=os.sched_getaffinity(0)
-for p,h in plan['physical_inputs'].items():assert sha(p)==h
-manifests={arm:json.loads((pathlib.Path(plan['artifacts'][arm])/'closed-artifacts.json').read_text())for arm in ['baseline','candidate']}
-for arm,manifest in manifests.items():
- assert manifest['head']==(plan['candidate_actual_producer_commit'] if arm=='candidate' else plan['baseline'])
- if arm=='candidate':assert manifest['uncommitted_tree']==plan['candidate_tree']
- assert sha(pathlib.Path(plan['artifacts'][arm])/'cli')==manifest['artifacts']['cli']['sha256']
-env=os.environ.copy();env.update(RAYON_NUM_THREADS='4',XDG_RUNTIME_DIR=str(O/'runtime'))
-pathlib.Path(env['XDG_RUNTIME_DIR']).mkdir(mode=0o700);pathlib.Path(env['XDG_RUNTIME_DIR']).chmod(0o700)
-def affinity():os.sched_setaffinity(0,{0,1,2,3})
-try:
- for block,order in enumerate(plan['orders']):
-  for workload in plan['workloads']:
-   for position,letter in enumerate(order):
-    arm='baseline'if letter=='A'else'candidate';label=f'{block}-{workload["id"]}-{position}-{arm}';p=None;owner=None
-    before=time.perf_counter();usage=None
-    try:
-     with(O/(label+'.stdout')).open('wb')as out,(O/(label+'.stderr')).open('wb')as err:
-      p=subprocess.Popen([str(pathlib.Path(plan['artifacts'][arm])/'cli'),*workload['argv']],env=env,stdout=out,stderr=err,start_new_session=True,preexec_fn=affinity);owner=OwnedProcess(p)
-      while True:
-       pid,status,usage=os.wait4(p.pid,os.WNOHANG)
-       if pid:p.returncode=os.waitstatus_to_exitcode(status);break
-       assert time.monotonic()<deadline and time.perf_counter()-before<30
-       time.sleep(.002)
-     elapsed=time.perf_counter()-before
-    finally:
-     if p:assert owner is not None;owner.finish();assert not owner.members()
-    stdout=(O/(label+'.stdout')).read_bytes();stderr=(O/(label+'.stderr')).read_bytes()
-    row={'block':block,'order':order,'position':position,'workload':workload['id'],'arm':arm,'revision':plan[arm],'actual_producer_commit':manifests[arm]['head'],'cpu_s':usage.ru_utime+usage.ru_stime,'wall_s':elapsed,'rss_kib':usage.ru_maxrss,'exit':p.returncode,'stdout_sha256':hashlib.sha256(stdout).hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest()}
-    rows.append(row);(O/'rows.json').write_text(json.dumps(rows,indent=2))
-    assert p.returncode==0 and stdout==(pathlib.Path(plan['functional_golden_paths'][workload['id']])/(arm+'-'+workload['id']+'.stdout')).read_bytes()
-    assert workload['diagnostics']or not stderr
-    assert time.monotonic()<deadline
- assert len(rows)==plan['rows']
- for p,h in plan['physical_inputs'].items():assert sha(p)==h
- for arm,manifest in manifests.items():assert sha(pathlib.Path(plan['artifacts'][arm])/'cli')==manifest['artifacts']['cli']['sha256']
- for item in freeze['files']:assert sha(item['path'])==item['sha256']
- assert time.monotonic()<deadline
- complete=True
-finally:
- (O/'END.json').write_text(json.dumps({'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'rows':len(rows),'complete':complete and time.monotonic()<deadline},indent=2))
-
-assert complete and time.monotonic()<deadline
+[timing] parse: 0.502ms
+[timing] search: 4.760ms
+[timing] ingest: 0.001ms
+[timing] analysis: 0.000ms
+[timing] invocation.dispatch: 5.355ms
+[timing] invocation.prepare: 0.149ms
+[timing] output: 0.081ms
+[timing] total: 5.661ms
