@@ -191,6 +191,13 @@ jobs:
           --no-default-features
           --features test-instrumentation
 
+      - name: Test PostgreSQL source identities without default features
+        timeout-minutes: 10
+        run: >
+          cargo test --locked -p no-mistakes --lib
+          --no-default-features --features test-instrumentation
+          codebase::postgres::source::
+
       - name: Deny rustc warnings in coverage test builds
         timeout-minutes: 10
         env:
@@ -300,6 +307,7 @@ jobs:
           packages/no-mistakes/scripts/annex-b-for-in-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           packages/no-mistakes/scripts/postgres-source-api.test.js
+          packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js
           packages/no-mistakes/scripts/postgres-quantified-api.test.js
           packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js
           packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js
