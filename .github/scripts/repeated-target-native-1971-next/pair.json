@@ -1,0 +1,1215 @@
+{
+  "baseline": {
+    "required_remote_head": "31a0d460d81616146351a2d0c5bff3ae3b625d2f",
+    "revision": "31a0d460d81616146351a2d0c5bff3ae3b625d2f",
+    "scope": "Actual main0.91.1; analyzer/dependency-equivalent to actual frozen local637/0.91.0 artifacts under explicit version-only carry; old artifact labels retained.",
+    "tree": "024712f24c612abfd7d75b438ba5f18bd8c29b13"
+  },
+  "budgets_minutes": {
+    "layout_build_per_arm": 150,
+    "measurement_job": 120,
+    "napi_parity": 20,
+    "pair_preflight": 10,
+    "private_upload": 10,
+    "production_build_per_arm": 120,
+    "sample": 60,
+    "sampling": 60,
+    "semantic_preflight": 15,
+    "summary": 10
+  },
+  "build_jobs": 2,
+  "candidate": {
+    "merge_parents": [
+      "31a0d460d81616146351a2d0c5bff3ae3b625d2f",
+      "714126d7d3a4be1f0fec97f6b0c84270bbadb18b"
+    ],
+    "pr_head": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+    "proposed_revision": "bb5328e2460f49713ee13efe466d55fdd25f18a4",
+    "revision": "bb5328e2460f49713ee13efe466d55fdd25f18a4",
+    "scope": "Actual current synthetic merge of optimized714 source; final Rust text validated by frozen0.91.0 local artifacts with documented version/doc-only carry to0.91.1.",
+    "tree": "dbda632effd547da49f939c5ba191ca432eaddcb"
+  },
+  "diagnostic_branch": "diagnostic/repeated-target-native-1971-714126-next",
+  "diagnostic_commit": null,
+  "diagnostic_parent": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "final_artifact": {
+    "exclude_binaries_and_raw_source": true,
+    "numeric_only": true,
+    "retain_counts_hashes_samples_assessments_and_failures": true,
+    "retention_days": 30
+  },
+  "inputs": {
+    "cold-graph": {
+      "files": [
+        {
+          "bytes": 111,
+          "lines": 4,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/entry.mts",
+          "sha256": "2d5684755ea047b4d46ea8c2fff46bd2d62b8ea8e67894dedd53aa5470a2d5ed"
+        },
+        {
+          "bytes": 44,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/local.mts",
+          "sha256": "6dae0f6762b93c3e7f4b227c0d409e4f709caad09aa9534eec5e788cab8f6e85"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture"
+    },
+    "configured": {
+      "files": [
+        {
+          "bytes": 774,
+          "lines": 43,
+          "path": "fixtures/performance/core-analysis/.no-mistakes.yml",
+          "sha256": "8626562981218868b3bb4924900cd51b1559052f755ab86023dbb753f7db64a6"
+        },
+        {
+          "bytes": 144,
+          "lines": 8,
+          "path": "fixtures/performance/core-analysis/package.json",
+          "sha256": "260a747db3c91aa568be7ab8149ef49e411a6bafb692b5e7e87e9376f8eb65ec"
+        },
+        {
+          "bytes": 83,
+          "lines": 5,
+          "path": "fixtures/performance/core-analysis/packages/core/package.json",
+          "sha256": "47db8a2d7b9aad904c46e58b7d45ddad0e8c2ed7f2fc346bc91a89a66e35d08e"
+        },
+        {
+          "bytes": 136,
+          "lines": 7,
+          "path": "fixtures/performance/core-analysis/packages/core/src/index.ts",
+          "sha256": "db6d8b570a4de4b1ddb7497dbbed10a3d24a18aff055d8ec6fef87aee084ad18"
+        },
+        {
+          "bytes": 198,
+          "lines": 6,
+          "path": "fixtures/performance/core-analysis/src/app.tsx",
+          "sha256": "cd4ddf001fafdda0ab4877c73d5a4a4906b52896f3b74c7111e5f55408c40a19"
+        },
+        {
+          "bytes": 117,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/button.tsx",
+          "sha256": "5c9dd5b2b4a37d6f9873889a2b1ffadf279aa3385ae134ba762e24ebe6098be9"
+        },
+        {
+          "bytes": 33,
+          "lines": 1,
+          "path": "fixtures/performance/core-analysis/src/feature.ts",
+          "sha256": "55a60a7cfff3acfb9b202dee77b75ae375751b1f2b567b66d8a40a374feef4aa"
+        },
+        {
+          "bytes": 41,
+          "lines": 1,
+          "path": "fixtures/performance/core-analysis/src/forbidden.ts",
+          "sha256": "2140b7834e836b5c8cf390c1e01f49687f125c6a19c618d49178225eff70f607"
+        },
+        {
+          "bytes": 135,
+          "lines": 5,
+          "path": "fixtures/performance/core-analysis/src/jobs/send.ts",
+          "sha256": "b82069b550b6881cc5368ae2f37e28110fe18639f509926fbb73f684349803f9"
+        },
+        {
+          "bytes": 80,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/jobs/worker.ts",
+          "sha256": "4e498aab7916ca1449d7680d57c22ace51f3a5bfb4ad28d3c124531876a6c0c5"
+        },
+        {
+          "bytes": 70,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/lazy.ts",
+          "sha256": "2d9e3866d73ab0441bffa2744a71eb82f8fb501c04bdbb019cacef1a329d5fc5"
+        },
+        {
+          "bytes": 43,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/lib.rs",
+          "sha256": "6e00da67d9207f76108ea901dda239ec3d7c9e8489de968e54a48d73ea792d76"
+        },
+        {
+          "bytes": 136,
+          "lines": 6,
+          "path": "fixtures/performance/core-analysis/src/queues/create.ts",
+          "sha256": "2271832f419c3198a6233be90174b34f4df88010c003153e4bb20d43a233ac86"
+        },
+        {
+          "bytes": 89,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/queues/email.ts",
+          "sha256": "be46c4c4877b85f1acdbac1f241752f6a855e44be7ee9ab120f75d2a78fa9a5a"
+        },
+        {
+          "bytes": 82,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/util.mts",
+          "sha256": "780da513a6edb68ce5be405e5ef5912e5732ffdd160d42472de396e77edca2ae"
+        },
+        {
+          "bytes": 218,
+          "lines": 8,
+          "path": "fixtures/performance/core-analysis/tests/app.test.ts",
+          "sha256": "102271ea2d9f92cb2be8045a2ca9083394f2b1f895349ee0c10d711aa9b7000a"
+        },
+        {
+          "bytes": 269,
+          "lines": 8,
+          "path": "fixtures/performance/core-analysis/tests/lazy.test.ts",
+          "sha256": "1da1ebc6490bac5f112c1461131a47b75a7ecda5fc0ecd95c4b8a577d02fefba"
+        },
+        {
+          "bytes": 220,
+          "lines": 10,
+          "path": "fixtures/performance/core-analysis/tsconfig.json",
+          "sha256": "abbf8aee96b598cfcb24310b000cb3f8b656152bd6b2d946a042681305702f3f"
+        },
+        {
+          "bytes": 90,
+          "lines": 6,
+          "path": "fixtures/performance/core-analysis/vitest.config.ts",
+          "sha256": "b80b2e8f79a775c1693f2d004c419b618a1fb821a5ce974fad7cd9b57477bd93"
+        }
+      ],
+      "path": "fixtures/performance/core-analysis"
+    },
+    "configured-consumer": {
+      "files": [
+        {
+          "bytes": 192,
+          "lines": 9,
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/.no-mistakes.yml",
+          "sha256": "eb892ec456cfab542f162f42ccb646c861839097c0992f658ba2b59f29b792ab"
+        },
+        {
+          "bytes": 283,
+          "lines": 7,
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/src/entry.mts",
+          "sha256": "2e44440c8111f2118934c5f05fe977cb5a3f31263414230e20cd069cd4077429"
+        },
+        {
+          "bytes": 101,
+          "lines": 4,
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/src/helpers.mts",
+          "sha256": "70391e500852c20abfc691f6e6bef9ee575058e5cbcf08d6762f5c8fcd72ba55"
+        }
+      ],
+      "path": "test-cases/rules/query-reached-per-item/alternatives-fixture"
+    },
+    "default-cold": {
+      "characteristics": {
+        "physical_consume_calls": 128,
+        "receiver_writes": 0,
+        "scope": "Reviewed no-write saved control; actual prepared counts are exactCI assertions, not this descriptor"
+      },
+      "files": [
+        {
+          "bytes": 1585,
+          "lines": 131,
+          "path": "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture/src/defaults.mts",
+          "sha256": "51dba1ee00b475ce463f6e974c80385ffb4bae5b8a57c331ae656ad5931cefee"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture"
+    },
+    "hot-16": {
+      "files": [
+        {
+          "bytes": 822,
+          "lines": 21,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture/src/entry.mts",
+          "sha256": "3dadf44eb1b094a2e2518ee15fc9f964e8afa1334e91cc7ef9a083ad06d88c63"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture"
+    },
+    "hot-256": {
+      "files": [
+        {
+          "bytes": 11059,
+          "lines": 261,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture/src/entry.mts",
+          "sha256": "812632e137131078d364aac7fc0cbd9f686a77128837736e13d49f09ed810b99"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture"
+    },
+    "inherited": {
+      "files": [
+        {
+          "bytes": 1322,
+          "lines": 42,
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/entry.mts",
+          "sha256": "662f5b975cc29daf867688543b18801cc08d232284ab0212d0d175e116e3a46c"
+        },
+        {
+          "bytes": 175,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/helper.mts",
+          "sha256": "fb48c71d831747c468081787bc226beb6d5183519299b3a008db550eef0e7910"
+        },
+        {
+          "bytes": 176,
+          "lines": 5,
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/writer.mts",
+          "sha256": "ef62867d06c2035d8bb910da351cfbe0684ca26e1111d52c6221c48c04e9c1de"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture"
+    },
+    "jsx-facts": {
+      "characteristics": {
+        "reviewed_jsx_opening_tags": 37,
+        "scope": "Fixture-specific descriptive source count; generic<null> excluded, not an analyzer facts counter",
+        "uppercase_named_functions": 33
+      },
+      "files": [
+        {
+          "bytes": 3293,
+          "lines": 154,
+          "path": "fixtures/performance/react-traits/many-components.tsx",
+          "sha256": "5076d2b9386e7920897e81a85ec9743e32c45fb1f12fbf6f58c51509ec5659e8"
+        }
+      ],
+      "path": "fixtures/performance/react-traits/many-components.tsx"
+    },
+    "plain-consumer": {
+      "files": [
+        {
+          "bytes": 310,
+          "lines": 15,
+          "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/.no-mistakes.yml",
+          "sha256": "c3c3be13de4d613c2f5f9663e8fab200d33af05d0585eecc0c0153ee6f3241b1"
+        },
+        {
+          "bytes": 188,
+          "lines": 6,
+          "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/src/entry.mts",
+          "sha256": "80ec31586aba261129ff9900273da1703329a96283496a8cace7021975fa3666"
+        }
+      ],
+      "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture"
+    },
+    "receiver-order": {
+      "characteristics": "Exact 41-file physical source fixture: copied receiver snapshots, one-shot alias-call canonical edge, twice-call, empty/conditional/early-exit/reset/escape/shadow controls.",
+      "files": [
+        {
+          "bytes": 1487,
+          "lines": 49,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/.no-mistakes.yml",
+          "sha256": "af4674d94ff6a16c6738efbe01e48775c5be39bcf6b51ef6816c35db673fc277"
+        },
+        {
+          "bytes": 205,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/alias-after-write.mts",
+          "sha256": "f46691c5065f3409f4aea1f39988ef1964639876b6ae5d0ed946a70e6fc7873a"
+        },
+        {
+          "bytes": 207,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/alias-before-write.mts",
+          "sha256": "a87903f888e9d976059d3fcf05916a0f50109826123314b4b295439640f4f2bf"
+        },
+        {
+          "bytes": 2094,
+          "lines": 42,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/argument-order.mts",
+          "sha256": "d6d62f189536f9256d8f8002b8fdc1bc29690f244e004f27a1cdbc9e83b32168"
+        },
+        {
+          "bytes": 236,
+          "lines": 10,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/chained-after-write.mts",
+          "sha256": "4625c60d0b5f5f0df5209af359dec91b1e12e063b11de161899d8e158baa2d84"
+        },
+        {
+          "bytes": 195,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/copied-method.mts",
+          "sha256": "c352eed8714c5dc7446d0f39c4fd230baafea49f3526f5abce96346a1ba09cb3"
+        },
+        {
+          "bytes": 2090,
+          "lines": 47,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-facts.mts",
+          "sha256": "dbceb1e5a4aadd33d42e5bb90ade2af94d0c3bf4af05607e389351304e01a631"
+        },
+        {
+          "bytes": 1830,
+          "lines": 63,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-phase.mts",
+          "sha256": "568019afcb8d5237077122a5dfa8fbb90a0354b03183287652f657501e620db5"
+        },
+        {
+          "bytes": 367,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/default-forwarded.mts",
+          "sha256": "0ce038e743c010a1f6f12ff832ebc0d955333126ec7f023f27442d9a879b7334"
+        },
+        {
+          "bytes": 6055,
+          "lines": 214,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-call-proof-controls.mts",
+          "sha256": "1084385fc369fdb59701e7d7784d504d81114f978162abb6ec572c9851f08a39"
+        },
+        {
+          "bytes": 420,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-double-call.mts",
+          "sha256": "ba1d16a3a9bcd86e76fc942b749b0c3ee35bcd3fa571df7f32d5f1fc98b7f518"
+        },
+        {
+          "bytes": 1605,
+          "lines": 20,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring-nested.mts",
+          "sha256": "f7b50ed83215b2fed177eb4e614b783b2345e7fa3ad9aa30a8e57ac3787c83f9"
+        },
+        {
+          "bytes": 1401,
+          "lines": 17,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring-scopes.mts",
+          "sha256": "f85bd4fb0c39e8358df227aff9d8168124a725bed6459d7a4ceade3363e93fdf"
+        },
+        {
+          "bytes": 2534,
+          "lines": 37,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring.mts",
+          "sha256": "8ce1f6c659665e27937cc16d0e1fdb5ebc7a5c16dc2219370291fc82fc73dcba"
+        },
+        {
+          "bytes": 2949,
+          "lines": 120,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/direct-inline-arguments.mts",
+          "sha256": "a11ede40271517cc937e7aeffca721cb5dfa8464684262b7bcb8594378a08edf"
+        },
+        {
+          "bytes": 3162,
+          "lines": 113,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/enclosing-tdz.mts",
+          "sha256": "03e710f91a9e49f4781315c4de0d7380869e910b9e394215eed54ce823d862ac"
+        },
+        {
+          "bytes": 457,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/foreign-repeated-helper.mts",
+          "sha256": "443dbfb36c7f85cdc1ddd828e167656de1436aa33102606343ebb493763b595e"
+        },
+        {
+          "bytes": 681,
+          "lines": 17,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/foreign-repeated-phase.mts",
+          "sha256": "8bd1fee52de1a4ecaea28ecc3cee53f8dfac5860507b8dc558706386e893269e"
+        },
+        {
+          "bytes": 361,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/forwarded.mts",
+          "sha256": "8ae06a18fd7e4a4ab027a59136cf70dd22d2f83c08cdfd93f9bf23f10e674013"
+        },
+        {
+          "bytes": 205,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/hoisted-after-write.mts",
+          "sha256": "69d9507bd61aa13d1a90e43d454d0ed5b6862ec2d4a51a0503c402f48fc04fee"
+        },
+        {
+          "bytes": 189,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/iife-after-write.mts",
+          "sha256": "2934c52b34a26e93a4dec4b8410994d66a738ac4805be1e754e42f8d456dab1d"
+        },
+        {
+          "bytes": 211,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/live-parameter-alias.mts",
+          "sha256": "ef1dd94f2889cfe715388c4ab306421a6c744b1d725b50c1de04de80d9700314"
+        },
+        {
+          "bytes": 718,
+          "lines": 19,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/method-defaults.mts",
+          "sha256": "8d3d86ce7b775f8d7955e9d3e41f5008c7997fd9cc2ecfd01fd95b357308c3af"
+        },
+        {
+          "bytes": 734,
+          "lines": 15,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/module-snapshot-escape.mts",
+          "sha256": "375f664bc08e6805e949bed8746fbb8146c5964d848d6d2ccf48cd6d265b5905"
+        },
+        {
+          "bytes": 3962,
+          "lines": 111,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/module-snapshot-phase.mts",
+          "sha256": "f8c3db6c69fda1dd5199b311db2e73c147e32780b06ba8811d9cd9ac128fdb2f"
+        },
+        {
+          "bytes": 284,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/named-repeated-phase.mts",
+          "sha256": "0753272e3a59ce3df755897316d541adbb4660919ccdf0438cc38fd5f1637002"
+        },
+        {
+          "bytes": 2706,
+          "lines": 54,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-argument-order.mts",
+          "sha256": "cb501938821d3a4dcedeb44a98017ccf1fdfae3a16196872b23cd2299d10edd7"
+        },
+        {
+          "bytes": 654,
+          "lines": 10,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-copied-fields.mts",
+          "sha256": "28e157dc88b4d76d9e104ebf187037380447ad967867ef1e39922bfafc2218c3"
+        },
+        {
+          "bytes": 1178,
+          "lines": 17,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-parameter-order.mts",
+          "sha256": "9280f2256d412a46c4e73615d504eee34cba0fd98d846a0efd587be48e2a5b9e"
+        },
+        {
+          "bytes": 228,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/object-after-write.mts",
+          "sha256": "20bb24e5242e84110aa84d406378f5165759a9ccd3b1d6d5732493ff8871f3fc"
+        },
+        {
+          "bytes": 569,
+          "lines": 10,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/object-forwarded.mts",
+          "sha256": "9bb256de8b2a92f231de433ee5ad4baffa13d8e3f136b93145219da9eb08aa4e"
+        },
+        {
+          "bytes": 1323,
+          "lines": 33,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/owned-fields.mts",
+          "sha256": "79b82a828a24106ee41612906b827d249e4301671d694b02ccf5c9a29d035c6f"
+        },
+        {
+          "bytes": 526,
+          "lines": 14,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/owned-live.mts",
+          "sha256": "eb2f3a4ce3a9fda10b25eb05349166c40df08b3e71c0c4d5be61ceb5326aa7aa"
+        },
+        {
+          "bytes": 346,
+          "lines": 7,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/provenance-factories.mts",
+          "sha256": "5fdd0f4d067806ad88bf3f5427f6d0438cb8c713eec33c78be78e8ed072c5fe4"
+        },
+        {
+          "bytes": 763,
+          "lines": 19,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/provenance-receivers.mts",
+          "sha256": "c1cad2b3a28e2d5c826b7a3d9bde8e7722442c429fa21413a0464bfc5ee1fbbc"
+        },
+        {
+          "bytes": 2669,
+          "lines": 118,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/repeated-binding-acquisitions.mts",
+          "sha256": "5d687b6330eff99e9265a164f08b3799929039e1b9d25fd5d07e0e7121d80ea5"
+        },
+        {
+          "bytes": 5068,
+          "lines": 121,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/repeated-parameter-phase.mts",
+          "sha256": "37bbd3f899456e154b0cec2ddde447b6bd7545df440b863c9cae3013334f1894"
+        },
+        {
+          "bytes": 1041,
+          "lines": 32,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/returned.mts",
+          "sha256": "065a89f77a6dea07067e6e6661ded9728436199c5273eeaa56a6084e0c349043"
+        },
+        {
+          "bytes": 508,
+          "lines": 11,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/rhs.mts",
+          "sha256": "b938f8f84265911f96eb97920373fc0141170f2c0338e7b4b61fe9e1412b0edb"
+        },
+        {
+          "bytes": 550,
+          "lines": 12,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/supplied-context.mts",
+          "sha256": "0807cf1b345caadbeb3cd3ff0cd27a47f5ebbdcb1bd4e1a0e9fb751d7886dcec"
+        },
+        {
+          "bytes": 1326,
+          "lines": 20,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/unique-parameter-phase.mts",
+          "sha256": "eeaa54389097b2414828b73ff78547aaccaf9736889173d55af598ccc9e833a2"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture"
+    },
+    "repository-incoming": {
+      "files": [
+        {
+          "bytes": 89,
+          "lines": 1,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/barrel.mts",
+          "sha256": "1fc9747cc6d11d3d6f298406802119bb65cf80abe82038b64f6b2aa76a0a7d37"
+        },
+        {
+          "bytes": 150,
+          "lines": 7,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/closed.mts",
+          "sha256": "5cd54e4f7a13be5b56cacd9fdbcca3e526a12ea2dfa2f251c6cfd053dcac9ecd"
+        },
+        {
+          "bytes": 1238,
+          "lines": 37,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/controls.mts",
+          "sha256": "cfd3938b13d23dc662e0746247b606a2a55834d5b2fd9305d51402593ac24df1"
+        },
+        {
+          "bytes": 751,
+          "lines": 21,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter-caller.mts",
+          "sha256": "b56557485237486b4298f4c460d2dffa493c6935520f1519fd3b1a35c3d03a63"
+        },
+        {
+          "bytes": 568,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter.mts",
+          "sha256": "59488d4ac217391936e98d3e49093cefbeed9c71273792c96804fa9f46ae7015"
+        },
+        {
+          "bytes": 148,
+          "lines": 4,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-writer.mts",
+          "sha256": "0fd7f349aa1b7f59167a42fcd4f5b930da2a9d98b3a064d7a3f6288fcff7c9d6"
+        },
+        {
+          "bytes": 451,
+          "lines": 14,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign.mts",
+          "sha256": "bb779f3697e4cba2b0e4df7d09dffe7f1c2e7f45976ba64235bc1772d6ff792a"
+        },
+        {
+          "bytes": 533,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/nested-once.mts",
+          "sha256": "53e83d0b130c00a7a70b2c65abd2806c749e24e41dae7d63a629934c2d368186"
+        },
+        {
+          "bytes": 1270,
+          "lines": 42,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque-owner.mts",
+          "sha256": "6d608a33067b7f146ba299b6eb3e3acbe0381ed8e7753a6bf4240c6053a808a3"
+        },
+        {
+          "bytes": 2453,
+          "lines": 73,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque.mts",
+          "sha256": "6f7c2d150a411617023236369426073c3dd39d9224f59db151a27fbe0374195e"
+        },
+        {
+          "bytes": 448,
+          "lines": 14,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/owners.mts",
+          "sha256": "4218725e1e3e9634e45e252103b012e6546a01800c5c8a1ddb8cff7af6731ca2"
+        },
+        {
+          "bytes": 467,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/positive.mts",
+          "sha256": "f422615e81feb8b9de83e495f5db26dbb3e4617dc073d74ea6b4bc088d9e0d06"
+        },
+        {
+          "bytes": 201,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository-object.mts",
+          "sha256": "6fb58875cc8e7a50970a7f202134bdc3c0a81a6717357e20ffcb23472fe567a3"
+        },
+        {
+          "bytes": 569,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository.mts",
+          "sha256": "96f6bad83223905475f74841d987f0bd66012ad196181ee81846b2e097b47526"
+        },
+        {
+          "bytes": 620,
+          "lines": 18,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/snapshots.mts",
+          "sha256": "9b66bd63cf9d4e9fb18472767dabaf785899975e129a36119c6a978610a40d3c"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture"
+    },
+    "shared-facts": {
+      "files": [
+        {
+          "bytes": 2454,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+          "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts"
+    }
+  },
+  "intermediate_artifact": {
+    "allowed_payload": [
+      "CLI",
+      "timing-probe",
+      "graph-probe",
+      "NAPI addon",
+      "Cargo JSON build log",
+      "source inventory and compiler provenance"
+    ],
+    "digest_manifest_required": true,
+    "forbidden_payload": [
+      "source worktree",
+      "Cargo target",
+      "node_modules",
+      "store",
+      "private raw stdout or fixture copy"
+    ],
+    "private_build_transfer": true,
+    "receiver": "one measurement VM downloads both A/B; compare digest/size/ELF target/profile/source manifest before untimed preflight or sampling",
+    "retention_days": 1,
+    "same_run_only": true
+  },
+  "iterations_cap": 10000,
+  "lock_sha256": "979f81a3253a901f9033e25fccbda73fbe32c463e3f402198596b990933171b9",
+  "min_ram_gib_per_build_job": 8,
+  "pr": {
+    "base_branch": "main",
+    "draft": true,
+    "four_codecov_check_runs": {
+      "codecov/patch/javascript": 116766658469,
+      "codecov/patch/rust": 116767823583,
+      "codecov/project/javascript": 116766650663,
+      "codecov/project/rust": 116767819194
+    },
+    "head_sha": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+    "number": 2022,
+    "required_successful_ci_run": 38836020089,
+    "url": "https://github.com/jonathanong/no-mistakes/pull/2022"
+  },
+  "prepared_at_utc": "2026-10-16T01:43:01.298446+00:00",
+  "release_profile": {
+    "codegen_units": 1,
+    "incremental": false,
+    "lto": true,
+    "opt_level": 3
+  },
+  "review_history": [
+    {
+      "outcome": "terminal adverse; all rows retained; superseded source pair",
+      "pair": "073148c2/edb31fdf",
+      "run": 38770868763
+    },
+    {
+      "assessment": "12adverse/4inconclusive; no pooling or exclusion",
+      "outcome": "terminal adverse; all640rows and all artifacts retained; new material source required",
+      "pair": "63760fa2/fff61408 syntheticf6eafbf",
+      "run": 38817487538
+    }
+  ],
+  "review_provenance": {
+    "actual_ci": {
+      "conclusion": "success",
+      "head": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+      "run": 38836020089,
+      "status": "completed"
+    },
+    "facade_metadata_fix": {
+      "preflight_guard": "Mandatory exact two-file lowercaseSHA256 map before source I/O or builds",
+      "proof": "/tmp/nm2022-stage2-arm-source-draft/actual-31-714-native-facade-proof.json",
+      "regression_green_log": "/tmp/nm2022-stage2-facade-guard-GREEN.log",
+      "regression_red_log": "/tmp/nm2022-stage2-facade-guard-RED.log"
+    },
+    "final_peer_review": "/tmp/nm2022-stage2-arm-source-draft/independent-714-arm-final-facade-source-review.json",
+    "final_published_head": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+    "final_root_review": "/tmp/nm2022-stage2-arm-source-draft/root-final-714-facade-source-review.json",
+    "four_codecov_observed": [
+      {
+        "conclusion": "success",
+        "head_sha": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+        "id": 116767823583,
+        "name": "codecov/patch/rust",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "head_sha": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+        "id": 116767819194,
+        "name": "codecov/project/rust",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "head_sha": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+        "id": 116766658469,
+        "name": "codecov/patch/javascript",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "head_sha": "714126d7d3a4be1f0fec97f6b0c84270bbadb18b",
+        "id": 116766650663,
+        "name": "codecov/project/javascript",
+        "status": "completed"
+      }
+    ],
+    "fresh_required": [
+      "separate addition-only registration and external exact-SHA dispatch approval"
+    ],
+    "material_change": "Validated false-demand replacement work removal, named-function clone removal, single lazy staging box and sparse callable/receiver capsule; defaultSome remains conservative",
+    "retained_adverse_gate": "/tmp/nm2022-arm-run38817487538-retained",
+    "source_review": "/tmp/nm2022-stage2-independent-714-source-review.json",
+    "status": "REVIEWED: root and independent peer final source/metadata PASS; registration and exact-SHA dispatch remain separately gated",
+    "template_actual_completed_run": 38817487538,
+    "template_diagnostic": "184024ca64667fd545e4fffbd48d7ae6389c33af"
+  },
+  "sampling": {
+    "affinity": "same selected four CPUs for both downloaded frozen binaries",
+    "calibration_per_arm": 1,
+    "iterations_cap": 10000,
+    "long_blocks_per_order": 4,
+    "long_orders": [
+      "ABBA",
+      "BAAB"
+    ],
+    "metrics": [
+      "cpu_s",
+      "user_s",
+      "system_s",
+      "wall_s",
+      "rss_kib"
+    ],
+    "minimum_long_rows_per_eligible_workload": 32,
+    "pilot_blocks_per_order": 1,
+    "pilot_orders": [
+      "ABBA",
+      "BAAB"
+    ],
+    "rayon_threads": 4,
+    "retain": "all startup, calibration, pilot, long, failed and censored rows; no selection/reruns",
+    "startup_per_arm": 1,
+    "surprising_delta": "require separate adjacent reverse confirmation; no waiver"
+  },
+  "semantic_policy": {
+    "cli": "complete effects/check JSON, exits, warnings/advisories and configured fallbacks per arm",
+    "collection_provenance": {
+      "actual_baseline_revision": "63760fa2a58b931498b9609afdc749dde12063aa",
+      "actual_candidate_source_proof": "/tmp/nm2022-stage2-final-source-proof-v2/source-proof.json",
+      "actual_local_artifact_versions": "0.91.0",
+      "eligible_baseline_revision": "31a0d460d81616146351a2d0c5bff3ae3b625d2f",
+      "eligible_candidate_revision": "bb5328e2460f49713ee13efe466d55fdd25f18a4",
+      "eligible_source_versions": "0.91.1",
+      "final_git_source_carry": "/tmp/nm2022-stage2-final-committed-source-proof/proof.json",
+      "independent_full_review": "/tmp/nm2022-stage2-native-semantics/collection-v2/root-independent-full-semantic-review.json",
+      "manifest": "/tmp/nm2022-stage2-native-semantics/collection-v2/semantic-manifest.json",
+      "manifest_sha256": "e8057ecd26faf625c46c0e425f126188e75af8e802ccb05ac89058b4fe4df11d",
+      "raw_files": 182,
+      "runtime_performance_claim": "NONE; oldfff ARM failure remains historical and all adverse evidence retained",
+      "status": "Root-independent full-object review PASS; explicit version-only carry, no artifact relabel",
+      "version_carry": "/tmp/nm2022-stage2-independent-main31-version-carry.json"
+    },
+    "graph": "complete structured sites/nodes/edges/importer_view; physical identities and all deltas reviewed per arm",
+    "napi": "async CJS/ESM standalone and prepared analyzeProject versus CLI on cold, plain alternatives, and receiver-order controls",
+    "napi_cases": [
+      {
+        "entries": [
+          "src/defaults.mts"
+        ],
+        "input": "default-cold",
+        "kind": "database",
+        "prefix": "cold"
+      },
+      {
+        "entries": [
+          "src/entry.mts"
+        ],
+        "input": "plain-consumer",
+        "kind": "plain",
+        "prefix": "plain"
+      },
+      {
+        "entries": [
+          "src/repeated-binding-acquisitions.mts",
+          "src/deferred-call-proof-controls.mts"
+        ],
+        "input": "receiver-order",
+        "kind": "repeated-binding",
+        "prefix": "receiver"
+      }
+    ],
+    "napi_facade_sha256": {
+      "index.js": "52f9914b87ce22b1be4a5e688d461394d5e6c0f5aae277623c08dabab8c46b7d",
+      "index.mjs": "0833bd7021dff935cb6573b0180fc3de55e3121346c8d46bb6ab4554c1f4ae77"
+    },
+    "old_073_edb_gate": "38770868763 terminal adverse historical pair; no report hash carry",
+    "probe": "exact 16 workload signatures per arm",
+    "report_hashes": {
+      "cli": {
+        "configured-check": {
+          "baseline": {
+            "exit": 1,
+            "sha256": "5ef614dc752d91a5cec1256bfa1b808bdf2fda450c251cc20fa759e19a5feac1"
+          },
+          "candidate": {
+            "exit": 1,
+            "sha256": "5ef614dc752d91a5cec1256bfa1b808bdf2fda450c251cc20fa759e19a5feac1"
+          }
+        },
+        "effects-plain-cold-diagnostics": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          }
+        },
+        "effects-plain-cold-off": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          }
+        },
+        "effects-plain-hot-diagnostics": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "ac66da8ebd783dff4cf15ab54e57aa29c0c0eeb327e973368c68404a58c735f7"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "fda2bec189d3bf8bd8f3e7bc217d72a1e626c37cb87a454766af3cac3bc8721b"
+          }
+        },
+        "effects-plain-hot-off": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "ac66da8ebd783dff4cf15ab54e57aa29c0c0eeb327e973368c68404a58c735f7"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "fda2bec189d3bf8bd8f3e7bc217d72a1e626c37cb87a454766af3cac3bc8721b"
+          }
+        },
+        "hot-rule-check": {
+          "baseline": {
+            "exit": 1,
+            "sha256": "f4f9cfd3e1262f0488372635f52093e29bbce41d476a248b9d28a8269a475ca8"
+          },
+          "candidate": {
+            "exit": 1,
+            "sha256": "024e937a14dcb045c73ea340de69d2bdeb47df2cc69057c4857b0dc8cf9b4984"
+          }
+        }
+      },
+      "graph": {
+        "cold-graph:calls": {
+          "baseline": "feebae20f851757e31d351060ad0d4526c61b96d2ec6ddb101f46db62aa79e76",
+          "candidate": "feebae20f851757e31d351060ad0d4526c61b96d2ec6ddb101f46db62aa79e76"
+        },
+        "cold-graph:no-calls": {
+          "baseline": "7ccfe1cc3151224de3db5ac6cf16d09531d7dfcee755ac785d1238125d55f744",
+          "candidate": "7ccfe1cc3151224de3db5ac6cf16d09531d7dfcee755ac785d1238125d55f744"
+        },
+        "default-cold:calls": {
+          "baseline": "3ca4a3c3c8fb830b03848b0ec16849afd526acec0ab92db0ea9472f133006eea",
+          "candidate": "3ca4a3c3c8fb830b03848b0ec16849afd526acec0ab92db0ea9472f133006eea"
+        },
+        "hot-16:calls": {
+          "baseline": "bc75e194bf56e02971c9c30c6b91afdc221bf754db16f3575f3ac0b3691203bc",
+          "candidate": "ca6930aef20cd05a5811cb669ef30cdbe36e70463062a2fe31b765cb02ae0112"
+        },
+        "hot-256:calls": {
+          "baseline": "0cabe4f3e202dfb2e555767de41bdcea879951d87f594161f4071dea5695135f",
+          "candidate": "afdd496f09f8debc3ff1216071586435d4c300bce20a1548e1f125350ffe36b2"
+        },
+        "inherited:calls": {
+          "baseline": "aa9ce4f77df2d5f61645a1c4f7f39b2ae202c55a9a818fdf421dc4a10b0415f6",
+          "candidate": "f01092027b0af17f83446fde7d468942dd9d71fbe9bc0fc62a167131105f558f"
+        },
+        "receiver-order:calls": {
+          "baseline": "1d0ee31ebd3a8e300c22ed79ec7fa038c64a2ed78aba8cf963ad1b068cc93d1c",
+          "candidate": "51e2085cf006220aa599aacfe7ba5dad187e90b8af63bc8de6e54b5bde95d5a1"
+        },
+        "repository-incoming:calls": {
+          "baseline": "d4226abcfe20e33b3d2950faa15c47e134debdf6dc0205cd1a4484de7ef42591",
+          "candidate": "e8869f0ec7295b18064177b765c404ba5a585f6a832bc1af386847780a074ae2"
+        }
+      },
+      "napi": {
+        "cold": {
+          "baseline": "f61a787f72aaded846883ae9d9a08a16af667982901fccbf2f71c4e9aed8cdfc",
+          "candidate": "f61a787f72aaded846883ae9d9a08a16af667982901fccbf2f71c4e9aed8cdfc"
+        },
+        "plain": {
+          "baseline": "0941ea9b462dbfde9445afe81d811c0f68da85ba716598b06f2ec857dc660700",
+          "candidate": "cee36e4fea0384154769eed15da80d1332e0b556ea5948ea0426d3f730ce5a8f"
+        },
+        "receiver": {
+          "baseline": "dd6d7dd3641cca1cab7c66cdebf8d132a8fbd916714a2f76a2acde54fb609adf",
+          "candidate": "dd6d7dd3641cca1cab7c66cdebf8d132a8fbd916714a2f76a2acde54fb609adf"
+        }
+      },
+      "probe": {
+        "cold-calls": {
+          "baseline": "2",
+          "candidate": "2"
+        },
+        "cold-no-calls": {
+          "baseline": "0",
+          "candidate": "0"
+        },
+        "default-cold": {
+          "baseline": "129",
+          "candidate": "129"
+        },
+        "hot-16": {
+          "baseline": "16",
+          "candidate": "16"
+        },
+        "hot-256": {
+          "baseline": "256",
+          "candidate": "256"
+        },
+        "inherited": {
+          "baseline": "25",
+          "candidate": "25"
+        },
+        "jsx-imports": {
+          "baseline": "27",
+          "candidate": "27"
+        },
+        "jsx-values": {
+          "baseline": "32",
+          "candidate": "32"
+        },
+        "shared-imports": {
+          "baseline": "0",
+          "candidate": "0"
+        },
+        "shared-values": {
+          "baseline": "128",
+          "candidate": "128"
+        }
+      }
+    },
+    "status": "REVIEWED FULL REPORTS",
+    "unchanged_cli_controls": [
+      "configured-check",
+      "effects-plain-cold-off",
+      "effects-plain-cold-diagnostics"
+    ],
+    "unchanged_graph_controls": [
+      "cold-graph:calls",
+      "cold-graph:no-calls",
+      "default-cold:calls"
+    ],
+    "untimed_graph_inputs": [
+      "cold-graph:calls",
+      "cold-graph:no-calls",
+      "default-cold:calls",
+      "hot-16:calls",
+      "hot-256:calls",
+      "inherited:calls",
+      "receiver-order:calls",
+      "repository-incoming:calls"
+    ]
+  },
+  "source_git_inventory_sha256": {
+    "baseline": "640a28f7bdc88532a925ba85417339cf67d6cd21f09c1c07a3bb87d6cef65751",
+    "candidate": "7c060919b3df98c2105252834c4ac6e6caad0d511fa0a0935b28151758f8b3dd"
+  },
+  "status": "REVIEWED AND FROZEN",
+  "target": "aarch64-unknown-linux-gnu",
+  "template": {
+    "diagnostic_commit": "fd960cab7b43d61bd07acfa34ff23a25b8ab3009",
+    "path": ".github/scripts/repeated-target-native-1971",
+    "reference_script_hashes": {
+      "cli-worker.py": "09ddcef6ee513dfe2bcdaa2c6e9f09bc9b3c3170133958a33e89c8b7e8ca6918",
+      "graph-probe.rs": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451",
+      "layout-helper.rs": "2112c0c5920423ed46d9c36b1c6b813c83a3e20ffbd57520e0ebff554a819375",
+      "layout-probe.rs": "e0e61c522ce3a97ba595a79eac69137daffb9da2ffc2710c5697cd4ee61786ae",
+      "paired_summary.py": "f2670dc7120efd8d9b6aaaa12fd3acb22cf337e0c88873a328726ed5eaa4f755",
+      "timing-probe.rs": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44"
+    },
+    "reference_support_hashes": {
+      "consumer-overlay.yml": "b000ad490bb717e85f42e6c1053951f5aafcc73c24862fe96fc3426effe3addc",
+      "plain-cold-overlay.yml": "bdf5c2f024101726297625bd058c544b9a33406589d6e913957df42d19337cc0",
+      "test-fixtures/README.md": "52424c7711e43d9244e3c80cba45864747e6f1339b18f985f0b88c3fabbb1fc3",
+      "test-fixtures/consumer-baseline.json": "69d14ebdbc632322dd5151d9499039dea333c74eab7671b5a617d5823dbbcbac",
+      "test-fixtures/consumer-candidate.json": "ca512bdb5fff032a99d072de67a38c0942c6ea9d4a83919acef6e87ff164e2c1",
+      "test-fixtures/consumer-expectations.json": "40f8bf4424317c626a03f1dbe9ed80e9135eb0283e4eb1958a56d87dc159d426",
+      "test-fixtures/graph-canonical-snapshot.json": "988ee8423054c91dfab14bb48c600dda5476354df4143049ebb17cc4303a69ef"
+    },
+    "v4_adapted_source_hashes": {
+      "budgets.py": "3c30dc294de5217208b20ddff38af8b0b94a05aa0373795fd0c68a3a5daeb4cb",
+      "common.py": "ed7d60340c0c253410e957b79f733ffc808861bd42e73f98d90f22a6c5c219b5",
+      "measure.py": "fa3bdbc4ac3b03e82673ba407a7e4843eb30c66c7e879599281a131168220201",
+      "report.py": "929a4d9be02116a8eaff693955c1c41f1740e79a9059eb05a0be9c547969ebf1"
+    }
+  },
+  "toolchain": "1.99.1",
+  "unmet": [
+    "separate addition-only registration and external exact-SHA dispatch approval"
+  ],
+  "workload_count": 16,
+  "workloads": [
+    {
+      "input": "shared-facts",
+      "kind": "probe",
+      "mode": "facts-imports",
+      "name": "shared-imports",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "shared-facts",
+      "kind": "probe",
+      "mode": "facts-values",
+      "name": "shared-values",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "jsx-facts",
+      "kind": "probe",
+      "mode": "facts-imports",
+      "name": "jsx-imports",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "jsx-facts",
+      "kind": "probe",
+      "mode": "facts-values",
+      "name": "jsx-values",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "cold-graph",
+      "kind": "probe",
+      "mode": "graph-no-calls",
+      "name": "cold-no-calls",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "cold-graph",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "cold-calls",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "default-cold",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "default-cold",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "hot-16",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "hot-16",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "hot-256",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "hot-256",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "inherited",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "inherited",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "command": [
+        "check"
+      ],
+      "diagnostics": false,
+      "input": "configured",
+      "kind": "cli",
+      "name": "configured-check",
+      "semantic": "Exactcoldreportparity"
+    },
+    {
+      "command": [
+        "check"
+      ],
+      "diagnostics": false,
+      "input": "configured-consumer",
+      "kind": "cli",
+      "name": "hot-rule-check",
+      "semantic": "ApprovedA0/B1queryfindingtrace"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/defaults.mts"
+      ],
+      "diagnostics": false,
+      "input": "default-cold",
+      "kind": "cli",
+      "name": "effects-plain-cold-off",
+      "semantic": "Exactphysicalreportparity",
+      "semantic_case": "plain-cold"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/defaults.mts"
+      ],
+      "diagnostics": true,
+      "input": "default-cold",
+      "kind": "cli",
+      "name": "effects-plain-cold-diagnostics",
+      "semantic": "Exactphysicalreportparity",
+      "semantic_case": "plain-cold"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/entry.mts"
+      ],
+      "diagnostics": false,
+      "input": "plain-consumer",
+      "kind": "cli",
+      "name": "effects-plain-hot-off",
+      "semantic": "ApprovedA0/B1physicalread/uncategorized",
+      "semantic_case": "plain-hot"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/entry.mts"
+      ],
+      "diagnostics": true,
+      "input": "plain-consumer",
+      "kind": "cli",
+      "name": "effects-plain-hot-diagnostics",
+      "semantic": "ApprovedA0/B1physicalread/uncategorized",
+      "semantic_case": "plain-hot"
+    }
+  ]
+}
