@@ -26,11 +26,8 @@ impl Drop for Mode {
         ACTIVE.with(|v| v.set(false));
     }
 }
-fn collect(
-    name: &str,
-    demand: bool,
-    old: bool,
-) -> (ImportFacts, [usize; 8], Vec<(usize, Vec<usize>)>) {
+type CollectedOrigins = (ImportFacts, [usize; 8], Vec<(usize, Vec<usize>)>);
+fn collect(name: &str, demand: bool, old: bool) -> CollectedOrigins {
     let _mode = Mode(LEGACY.with(|v| v.replace(old)));
     COUNTS.with(|v| *v.borrow_mut() = [0; 8]);
     PREFIXES.with(|v| v.borrow_mut().clear());
