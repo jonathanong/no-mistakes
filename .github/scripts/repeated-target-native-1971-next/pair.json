@@ -1,0 +1,2627 @@
+{
+  "baseline": {
+    "required_remote_head": "e5ae00bd6353a28045a5344f4accac411a2ccd74",
+    "revision": "e5ae00bd6353a28045a5344f4accac411a2ccd74",
+    "scope": "Actual SQLruntime main2078/e5; fresh exact-source ARM release build required; no test-only or old binary carry",
+    "tree": "d34c77347324e43bda42a72ebcedf45e4922345a"
+  },
+  "budgets_minutes": {
+    "layout_build_per_arm": 150,
+    "measurement_job": 120,
+    "napi_parity": 20,
+    "pair_preflight": 10,
+    "private_upload": 10,
+    "production_build_per_arm": 120,
+    "sample": 60,
+    "sampling": 60,
+    "semantic_preflight": 15,
+    "summary": 10
+  },
+  "build_jobs": 2,
+  "candidate": {
+    "merge_parents": [
+      "e5ae00bd6353a28045a5344f4accac411a2ccd74",
+      "bc41d814fb16070acd7ddc68e75d092f0cd017af"
+    ],
+    "pr_head": "bc41d814fb16070acd7ddc68e75d092f0cd017af",
+    "proposed_revision": "8d2170207e143a0e325819de4fdb05c51b5dc294",
+    "revision": "8d2170207e143a0e325819de4fdb05c51b5dc294",
+    "scope": "Actual GitHub synthetic8d217 with exactmainSQLruntimee5/publishedbc parents/tree; fresh both-arm release builds and fullsemantic2075/2078 preflight beforetiming",
+    "tree": "6f199c323d29e1c6fa85f3b26d1642d63dd1283a"
+  },
+  "diagnostic_branch": "diagnostic/repeated-target-native-1971-bc41-next",
+  "diagnostic_commit": null,
+  "diagnostic_parent": "bc41d814fb16070acd7ddc68e75d092f0cd017af",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "final_artifact": {
+    "exclude_binaries_and_raw_source": true,
+    "numeric_only": true,
+    "retain_counts_hashes_samples_assessments_and_failures": true,
+    "retention_days": 30
+  },
+  "inputs": {
+    "cold-graph": {
+      "files": [
+        {
+          "bytes": 111,
+          "lines": 4,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/entry.mts",
+          "sha256": "2d5684755ea047b4d46ea8c2fff46bd2d62b8ea8e67894dedd53aa5470a2d5ed"
+        },
+        {
+          "bytes": 44,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/local.mts",
+          "sha256": "6dae0f6762b93c3e7f4b227c0d409e4f709caad09aa9534eec5e788cab8f6e85"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-replacement-cold/fixture"
+    },
+    "configured": {
+      "files": [
+        {
+          "bytes": 774,
+          "lines": 43,
+          "path": "fixtures/performance/core-analysis/.no-mistakes.yml",
+          "sha256": "8626562981218868b3bb4924900cd51b1559052f755ab86023dbb753f7db64a6"
+        },
+        {
+          "bytes": 144,
+          "lines": 8,
+          "path": "fixtures/performance/core-analysis/package.json",
+          "sha256": "260a747db3c91aa568be7ab8149ef49e411a6bafb692b5e7e87e9376f8eb65ec"
+        },
+        {
+          "bytes": 83,
+          "lines": 5,
+          "path": "fixtures/performance/core-analysis/packages/core/package.json",
+          "sha256": "47db8a2d7b9aad904c46e58b7d45ddad0e8c2ed7f2fc346bc91a89a66e35d08e"
+        },
+        {
+          "bytes": 136,
+          "lines": 7,
+          "path": "fixtures/performance/core-analysis/packages/core/src/index.ts",
+          "sha256": "db6d8b570a4de4b1ddb7497dbbed10a3d24a18aff055d8ec6fef87aee084ad18"
+        },
+        {
+          "bytes": 198,
+          "lines": 6,
+          "path": "fixtures/performance/core-analysis/src/app.tsx",
+          "sha256": "cd4ddf001fafdda0ab4877c73d5a4a4906b52896f3b74c7111e5f55408c40a19"
+        },
+        {
+          "bytes": 117,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/button.tsx",
+          "sha256": "5c9dd5b2b4a37d6f9873889a2b1ffadf279aa3385ae134ba762e24ebe6098be9"
+        },
+        {
+          "bytes": 33,
+          "lines": 1,
+          "path": "fixtures/performance/core-analysis/src/feature.ts",
+          "sha256": "55a60a7cfff3acfb9b202dee77b75ae375751b1f2b567b66d8a40a374feef4aa"
+        },
+        {
+          "bytes": 41,
+          "lines": 1,
+          "path": "fixtures/performance/core-analysis/src/forbidden.ts",
+          "sha256": "2140b7834e836b5c8cf390c1e01f49687f125c6a19c618d49178225eff70f607"
+        },
+        {
+          "bytes": 135,
+          "lines": 5,
+          "path": "fixtures/performance/core-analysis/src/jobs/send.ts",
+          "sha256": "b82069b550b6881cc5368ae2f37e28110fe18639f509926fbb73f684349803f9"
+        },
+        {
+          "bytes": 80,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/jobs/worker.ts",
+          "sha256": "4e498aab7916ca1449d7680d57c22ace51f3a5bfb4ad28d3c124531876a6c0c5"
+        },
+        {
+          "bytes": 70,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/lazy.ts",
+          "sha256": "2d9e3866d73ab0441bffa2744a71eb82f8fb501c04bdbb019cacef1a329d5fc5"
+        },
+        {
+          "bytes": 43,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/lib.rs",
+          "sha256": "6e00da67d9207f76108ea901dda239ec3d7c9e8489de968e54a48d73ea792d76"
+        },
+        {
+          "bytes": 136,
+          "lines": 6,
+          "path": "fixtures/performance/core-analysis/src/queues/create.ts",
+          "sha256": "2271832f419c3198a6233be90174b34f4df88010c003153e4bb20d43a233ac86"
+        },
+        {
+          "bytes": 89,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/queues/email.ts",
+          "sha256": "be46c4c4877b85f1acdbac1f241752f6a855e44be7ee9ab120f75d2a78fa9a5a"
+        },
+        {
+          "bytes": 82,
+          "lines": 3,
+          "path": "fixtures/performance/core-analysis/src/util.mts",
+          "sha256": "780da513a6edb68ce5be405e5ef5912e5732ffdd160d42472de396e77edca2ae"
+        },
+        {
+          "bytes": 218,
+          "lines": 8,
+          "path": "fixtures/performance/core-analysis/tests/app.test.ts",
+          "sha256": "102271ea2d9f92cb2be8045a2ca9083394f2b1f895349ee0c10d711aa9b7000a"
+        },
+        {
+          "bytes": 269,
+          "lines": 8,
+          "path": "fixtures/performance/core-analysis/tests/lazy.test.ts",
+          "sha256": "1da1ebc6490bac5f112c1461131a47b75a7ecda5fc0ecd95c4b8a577d02fefba"
+        },
+        {
+          "bytes": 220,
+          "lines": 10,
+          "path": "fixtures/performance/core-analysis/tsconfig.json",
+          "sha256": "abbf8aee96b598cfcb24310b000cb3f8b656152bd6b2d946a042681305702f3f"
+        },
+        {
+          "bytes": 90,
+          "lines": 6,
+          "path": "fixtures/performance/core-analysis/vitest.config.ts",
+          "sha256": "b80b2e8f79a775c1693f2d004c419b618a1fb821a5ce974fad7cd9b57477bd93"
+        }
+      ],
+      "path": "fixtures/performance/core-analysis"
+    },
+    "configured-consumer": {
+      "files": [
+        {
+          "bytes": 192,
+          "lines": 9,
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/.no-mistakes.yml",
+          "sha256": "eb892ec456cfab542f162f42ccb646c861839097c0992f658ba2b59f29b792ab"
+        },
+        {
+          "bytes": 283,
+          "lines": 7,
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/src/entry.mts",
+          "sha256": "2e44440c8111f2118934c5f05fe977cb5a3f31263414230e20cd069cd4077429"
+        },
+        {
+          "bytes": 101,
+          "lines": 4,
+          "path": "test-cases/rules/query-reached-per-item/alternatives-fixture/src/helpers.mts",
+          "sha256": "70391e500852c20abfc691f6e6bef9ee575058e5cbcf08d6762f5c8fcd72ba55"
+        }
+      ],
+      "path": "test-cases/rules/query-reached-per-item/alternatives-fixture"
+    },
+    "default-cold": {
+      "characteristics": {
+        "physical_consume_calls": 128,
+        "receiver_writes": 0,
+        "scope": "Reviewed no-write saved control; actual prepared counts are exactCI assertions, not this descriptor"
+      },
+      "files": [
+        {
+          "bytes": 1585,
+          "lines": 131,
+          "path": "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture/src/defaults.mts",
+          "sha256": "51dba1ee00b475ce463f6e974c80385ffb4bae5b8a57c331ae656ad5931cefee"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture"
+    },
+    "hot-16": {
+      "files": [
+        {
+          "bytes": 822,
+          "lines": 21,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture/src/entry.mts",
+          "sha256": "3dadf44eb1b094a2e2518ee15fc9f964e8afa1334e91cc7ef9a083ad06d88c63"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture"
+    },
+    "hot-256": {
+      "files": [
+        {
+          "bytes": 11059,
+          "lines": 261,
+          "path": "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture/src/entry.mts",
+          "sha256": "812632e137131078d364aac7fc0cbd9f686a77128837736e13d49f09ed810b99"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture"
+    },
+    "inherited": {
+      "files": [
+        {
+          "bytes": 1322,
+          "lines": 42,
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/entry.mts",
+          "sha256": "662f5b975cc29daf867688543b18801cc08d232284ab0212d0d175e116e3a46c"
+        },
+        {
+          "bytes": 175,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/helper.mts",
+          "sha256": "fb48c71d831747c468081787bc226beb6d5183519299b3a008db550eef0e7910"
+        },
+        {
+          "bytes": 176,
+          "lines": 5,
+          "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/writer.mts",
+          "sha256": "ef62867d06c2035d8bb910da351cfbe0684ca26e1111d52c6221c48c04e9c1de"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture"
+    },
+    "jsx-facts": {
+      "characteristics": {
+        "reviewed_jsx_opening_tags": 37,
+        "scope": "Fixture-specific descriptive source count; generic<null> excluded, not an analyzer facts counter",
+        "uppercase_named_functions": 33
+      },
+      "files": [
+        {
+          "bytes": 3293,
+          "lines": 154,
+          "path": "fixtures/performance/react-traits/many-components.tsx",
+          "sha256": "5076d2b9386e7920897e81a85ec9743e32c45fb1f12fbf6f58c51509ec5659e8"
+        }
+      ],
+      "path": "fixtures/performance/react-traits/many-components.tsx"
+    },
+    "plain-consumer": {
+      "files": [
+        {
+          "bytes": 310,
+          "lines": 15,
+          "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/.no-mistakes.yml",
+          "sha256": "c3c3be13de4d613c2f5f9663e8fab200d33af05d0585eecc0c0153ee6f3241b1"
+        },
+        {
+          "bytes": 188,
+          "lines": 6,
+          "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/src/entry.mts",
+          "sha256": "80ec31586aba261129ff9900273da1703329a96283496a8cace7021975fa3666"
+        }
+      ],
+      "path": "test-cases/rules/query-reached-per-item/plain-alternatives-fixture"
+    },
+    "receiver-order": {
+      "characteristics": "Exact 41-file physical source fixture: copied receiver snapshots, one-shot alias-call canonical edge, twice-call, empty/conditional/early-exit/reset/escape/shadow controls.",
+      "files": [
+        {
+          "bytes": 1487,
+          "lines": 49,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/.no-mistakes.yml",
+          "sha256": "af4674d94ff6a16c6738efbe01e48775c5be39bcf6b51ef6816c35db673fc277"
+        },
+        {
+          "bytes": 205,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/alias-after-write.mts",
+          "sha256": "f46691c5065f3409f4aea1f39988ef1964639876b6ae5d0ed946a70e6fc7873a"
+        },
+        {
+          "bytes": 207,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/alias-before-write.mts",
+          "sha256": "a87903f888e9d976059d3fcf05916a0f50109826123314b4b295439640f4f2bf"
+        },
+        {
+          "bytes": 2094,
+          "lines": 42,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/argument-order.mts",
+          "sha256": "d6d62f189536f9256d8f8002b8fdc1bc29690f244e004f27a1cdbc9e83b32168"
+        },
+        {
+          "bytes": 236,
+          "lines": 10,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/chained-after-write.mts",
+          "sha256": "4625c60d0b5f5f0df5209af359dec91b1e12e063b11de161899d8e158baa2d84"
+        },
+        {
+          "bytes": 195,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/copied-method.mts",
+          "sha256": "c352eed8714c5dc7446d0f39c4fd230baafea49f3526f5abce96346a1ba09cb3"
+        },
+        {
+          "bytes": 2090,
+          "lines": 47,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-facts.mts",
+          "sha256": "dbceb1e5a4aadd33d42e5bb90ade2af94d0c3bf4af05607e389351304e01a631"
+        },
+        {
+          "bytes": 1830,
+          "lines": 63,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-phase.mts",
+          "sha256": "568019afcb8d5237077122a5dfa8fbb90a0354b03183287652f657501e620db5"
+        },
+        {
+          "bytes": 367,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/default-forwarded.mts",
+          "sha256": "0ce038e743c010a1f6f12ff832ebc0d955333126ec7f023f27442d9a879b7334"
+        },
+        {
+          "bytes": 6055,
+          "lines": 214,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-call-proof-controls.mts",
+          "sha256": "1084385fc369fdb59701e7d7784d504d81114f978162abb6ec572c9851f08a39"
+        },
+        {
+          "bytes": 420,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-double-call.mts",
+          "sha256": "ba1d16a3a9bcd86e76fc942b749b0c3ee35bcd3fa571df7f32d5f1fc98b7f518"
+        },
+        {
+          "bytes": 1605,
+          "lines": 20,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring-nested.mts",
+          "sha256": "f7b50ed83215b2fed177eb4e614b783b2345e7fa3ad9aa30a8e57ac3787c83f9"
+        },
+        {
+          "bytes": 1401,
+          "lines": 17,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring-scopes.mts",
+          "sha256": "f85bd4fb0c39e8358df227aff9d8168124a725bed6459d7a4ceade3363e93fdf"
+        },
+        {
+          "bytes": 2534,
+          "lines": 37,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring.mts",
+          "sha256": "8ce1f6c659665e27937cc16d0e1fdb5ebc7a5c16dc2219370291fc82fc73dcba"
+        },
+        {
+          "bytes": 2949,
+          "lines": 120,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/direct-inline-arguments.mts",
+          "sha256": "a11ede40271517cc937e7aeffca721cb5dfa8464684262b7bcb8594378a08edf"
+        },
+        {
+          "bytes": 3162,
+          "lines": 113,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/enclosing-tdz.mts",
+          "sha256": "03e710f91a9e49f4781315c4de0d7380869e910b9e394215eed54ce823d862ac"
+        },
+        {
+          "bytes": 457,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/foreign-repeated-helper.mts",
+          "sha256": "443dbfb36c7f85cdc1ddd828e167656de1436aa33102606343ebb493763b595e"
+        },
+        {
+          "bytes": 681,
+          "lines": 17,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/foreign-repeated-phase.mts",
+          "sha256": "8bd1fee52de1a4ecaea28ecc3cee53f8dfac5860507b8dc558706386e893269e"
+        },
+        {
+          "bytes": 361,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/forwarded.mts",
+          "sha256": "8ae06a18fd7e4a4ab027a59136cf70dd22d2f83c08cdfd93f9bf23f10e674013"
+        },
+        {
+          "bytes": 205,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/hoisted-after-write.mts",
+          "sha256": "69d9507bd61aa13d1a90e43d454d0ed5b6862ec2d4a51a0503c402f48fc04fee"
+        },
+        {
+          "bytes": 189,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/iife-after-write.mts",
+          "sha256": "2934c52b34a26e93a4dec4b8410994d66a738ac4805be1e754e42f8d456dab1d"
+        },
+        {
+          "bytes": 211,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/live-parameter-alias.mts",
+          "sha256": "ef1dd94f2889cfe715388c4ab306421a6c744b1d725b50c1de04de80d9700314"
+        },
+        {
+          "bytes": 718,
+          "lines": 19,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/method-defaults.mts",
+          "sha256": "8d3d86ce7b775f8d7955e9d3e41f5008c7997fd9cc2ecfd01fd95b357308c3af"
+        },
+        {
+          "bytes": 734,
+          "lines": 15,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/module-snapshot-escape.mts",
+          "sha256": "375f664bc08e6805e949bed8746fbb8146c5964d848d6d2ccf48cd6d265b5905"
+        },
+        {
+          "bytes": 3962,
+          "lines": 111,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/module-snapshot-phase.mts",
+          "sha256": "f8c3db6c69fda1dd5199b311db2e73c147e32780b06ba8811d9cd9ac128fdb2f"
+        },
+        {
+          "bytes": 284,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/named-repeated-phase.mts",
+          "sha256": "0753272e3a59ce3df755897316d541adbb4660919ccdf0438cc38fd5f1637002"
+        },
+        {
+          "bytes": 2706,
+          "lines": 54,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-argument-order.mts",
+          "sha256": "cb501938821d3a4dcedeb44a98017ccf1fdfae3a16196872b23cd2299d10edd7"
+        },
+        {
+          "bytes": 654,
+          "lines": 10,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-copied-fields.mts",
+          "sha256": "28e157dc88b4d76d9e104ebf187037380447ad967867ef1e39922bfafc2218c3"
+        },
+        {
+          "bytes": 1178,
+          "lines": 17,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-parameter-order.mts",
+          "sha256": "9280f2256d412a46c4e73615d504eee34cba0fd98d846a0efd587be48e2a5b9e"
+        },
+        {
+          "bytes": 228,
+          "lines": 9,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/object-after-write.mts",
+          "sha256": "20bb24e5242e84110aa84d406378f5165759a9ccd3b1d6d5732493ff8871f3fc"
+        },
+        {
+          "bytes": 569,
+          "lines": 10,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/object-forwarded.mts",
+          "sha256": "9bb256de8b2a92f231de433ee5ad4baffa13d8e3f136b93145219da9eb08aa4e"
+        },
+        {
+          "bytes": 1323,
+          "lines": 33,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/owned-fields.mts",
+          "sha256": "79b82a828a24106ee41612906b827d249e4301671d694b02ccf5c9a29d035c6f"
+        },
+        {
+          "bytes": 526,
+          "lines": 14,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/owned-live.mts",
+          "sha256": "eb2f3a4ce3a9fda10b25eb05349166c40df08b3e71c0c4d5be61ceb5326aa7aa"
+        },
+        {
+          "bytes": 346,
+          "lines": 7,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/provenance-factories.mts",
+          "sha256": "5fdd0f4d067806ad88bf3f5427f6d0438cb8c713eec33c78be78e8ed072c5fe4"
+        },
+        {
+          "bytes": 763,
+          "lines": 19,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/provenance-receivers.mts",
+          "sha256": "c1cad2b3a28e2d5c826b7a3d9bde8e7722442c429fa21413a0464bfc5ee1fbbc"
+        },
+        {
+          "bytes": 2669,
+          "lines": 118,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/repeated-binding-acquisitions.mts",
+          "sha256": "5d687b6330eff99e9265a164f08b3799929039e1b9d25fd5d07e0e7121d80ea5"
+        },
+        {
+          "bytes": 5068,
+          "lines": 121,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/repeated-parameter-phase.mts",
+          "sha256": "37bbd3f899456e154b0cec2ddde447b6bd7545df440b863c9cae3013334f1894"
+        },
+        {
+          "bytes": 1041,
+          "lines": 32,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/returned.mts",
+          "sha256": "065a89f77a6dea07067e6e6661ded9728436199c5273eeaa56a6084e0c349043"
+        },
+        {
+          "bytes": 508,
+          "lines": 11,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/rhs.mts",
+          "sha256": "b938f8f84265911f96eb97920373fc0141170f2c0338e7b4b61fe9e1412b0edb"
+        },
+        {
+          "bytes": 550,
+          "lines": 12,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/supplied-context.mts",
+          "sha256": "0807cf1b345caadbeb3cd3ff0cd27a47f5ebbdcb1bd4e1a0e9fb751d7886dcec"
+        },
+        {
+          "bytes": 1326,
+          "lines": 20,
+          "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/unique-parameter-phase.mts",
+          "sha256": "eeaa54389097b2414828b73ff78547aaccaf9736889173d55af598ccc9e833a2"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture"
+    },
+    "repository-incoming": {
+      "files": [
+        {
+          "bytes": 89,
+          "lines": 1,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/barrel.mts",
+          "sha256": "1fc9747cc6d11d3d6f298406802119bb65cf80abe82038b64f6b2aa76a0a7d37"
+        },
+        {
+          "bytes": 150,
+          "lines": 7,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/closed.mts",
+          "sha256": "5cd54e4f7a13be5b56cacd9fdbcca3e526a12ea2dfa2f251c6cfd053dcac9ecd"
+        },
+        {
+          "bytes": 1238,
+          "lines": 37,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/controls.mts",
+          "sha256": "cfd3938b13d23dc662e0746247b606a2a55834d5b2fd9305d51402593ac24df1"
+        },
+        {
+          "bytes": 751,
+          "lines": 21,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter-caller.mts",
+          "sha256": "b56557485237486b4298f4c460d2dffa493c6935520f1519fd3b1a35c3d03a63"
+        },
+        {
+          "bytes": 568,
+          "lines": 8,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter.mts",
+          "sha256": "59488d4ac217391936e98d3e49093cefbeed9c71273792c96804fa9f46ae7015"
+        },
+        {
+          "bytes": 148,
+          "lines": 4,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-writer.mts",
+          "sha256": "0fd7f349aa1b7f59167a42fcd4f5b930da2a9d98b3a064d7a3f6288fcff7c9d6"
+        },
+        {
+          "bytes": 451,
+          "lines": 14,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign.mts",
+          "sha256": "bb779f3697e4cba2b0e4df7d09dffe7f1c2e7f45976ba64235bc1772d6ff792a"
+        },
+        {
+          "bytes": 533,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/nested-once.mts",
+          "sha256": "53e83d0b130c00a7a70b2c65abd2806c749e24e41dae7d63a629934c2d368186"
+        },
+        {
+          "bytes": 1270,
+          "lines": 42,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque-owner.mts",
+          "sha256": "6d608a33067b7f146ba299b6eb3e3acbe0381ed8e7753a6bf4240c6053a808a3"
+        },
+        {
+          "bytes": 2453,
+          "lines": 73,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque.mts",
+          "sha256": "6f7c2d150a411617023236369426073c3dd39d9224f59db151a27fbe0374195e"
+        },
+        {
+          "bytes": 448,
+          "lines": 14,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/owners.mts",
+          "sha256": "4218725e1e3e9634e45e252103b012e6546a01800c5c8a1ddb8cff7af6731ca2"
+        },
+        {
+          "bytes": 467,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/positive.mts",
+          "sha256": "f422615e81feb8b9de83e495f5db26dbb3e4617dc073d74ea6b4bc088d9e0d06"
+        },
+        {
+          "bytes": 201,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository-object.mts",
+          "sha256": "6fb58875cc8e7a50970a7f202134bdc3c0a81a6717357e20ffcb23472fe567a3"
+        },
+        {
+          "bytes": 569,
+          "lines": 16,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository.mts",
+          "sha256": "96f6bad83223905475f74841d987f0bd66012ad196181ee81846b2e097b47526"
+        },
+        {
+          "bytes": 620,
+          "lines": 18,
+          "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/snapshots.mts",
+          "sha256": "9b66bd63cf9d4e9fb18472767dabaf785899975e129a36119c6a978610a40d3c"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture"
+    },
+    "shared-facts": {
+      "files": [
+        {
+          "bytes": 2454,
+          "lines": 3,
+          "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+          "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff"
+        }
+      ],
+      "path": "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts"
+    }
+  },
+  "intermediate_artifact": {
+    "allowed_payload": [
+      "CLI",
+      "timing-probe",
+      "graph-probe",
+      "NAPI addon",
+      "Cargo JSON build log",
+      "source inventory and compiler provenance"
+    ],
+    "digest_manifest_required": true,
+    "forbidden_payload": [
+      "source worktree",
+      "Cargo target",
+      "node_modules",
+      "store",
+      "private raw stdout or fixture copy"
+    ],
+    "private_build_transfer": true,
+    "receiver": "one measurement VM downloads both A/B; compare digest/size/ELF target/profile/source manifest before untimed preflight or sampling",
+    "retention_days": 1,
+    "same_run_only": true
+  },
+  "iterations_cap": 10000,
+  "lock_sha256": "979f81a3253a901f9033e25fccbda73fbe32c463e3f402198596b990933171b9",
+  "min_ram_gib_per_build_job": 8,
+  "pr": {
+    "base_branch": "main",
+    "draft": true,
+    "four_codecov_check_runs": {
+      "codecov/patch/javascript": 116833714194,
+      "codecov/patch/rust": 116835435885,
+      "codecov/project/javascript": 116833704078,
+      "codecov/project/rust": 116835431700
+    },
+    "head_sha": "bc41d814fb16070acd7ddc68e75d092f0cd017af",
+    "number": 2022,
+    "required_successful_ci_run": 38857542164,
+    "url": "https://github.com/jonathanong/no-mistakes/pull/2022"
+  },
+  "prepared_at_utc": "2026-10-16T06:11:56.109629+00:00",
+  "release_profile": {
+    "codegen_units": 1,
+    "incremental": false,
+    "lto": true,
+    "opt_level": 3
+  },
+  "review_history": [
+    {
+      "outcome": "terminal adverse; all rows retained; superseded source pair",
+      "pair": "073148c2/edb31fdf",
+      "run": 38770868763
+    },
+    {
+      "assessment": "12adverse/4inconclusive; no pooling or exclusion",
+      "outcome": "terminal adverse; all640rows and all artifacts retained; new material source required",
+      "pair": "63760fa2/fff61408 syntheticf6eafbf",
+      "run": 38817487538
+    },
+    {
+      "all16_CPU_wall_RSS_points_and_CIs": "/tmp/nm2022-arm-run38840490099-retained/historical-offline-all16-metrics.md",
+      "all48_readback": "/tmp/nm2022-arm-run38840490099-retained/historical-offline-numeric-readback.json",
+      "all_metric_classifications": {
+        "higher_cost": 14,
+        "inconclusive": 32,
+        "lower_cost": 2
+      },
+      "all_original_rows": 704,
+      "historical_offline_readback_only": true,
+      "original_terminal_verdict": "main_head_changed; source-ineligible, never rewritten",
+      "pair": "actual31a0/bb5328 sourcehead714126",
+      "root_independent_review": "/tmp/nm2022-arm-run38840490099-retained/root-independent-historical-readback.json",
+      "row_artifact_or_measurement_carry": false,
+      "run": 38840490099
+    }
+  ],
+  "review_provenance": {
+    "actual_local_expected_parity": "/tmp/nm2022-stage3-native-semantics/collection/reviewed-expected-parity.json",
+    "actual_local_full182_manifest": "/tmp/nm2022-stage3-native-semantics/collection/semantic-manifest.json",
+    "actual_newhead_ci_success": 38857542164,
+    "actual_newhead_global98_receipt": "/tmp/nm2022-stage3-maine5-arm-source-draft/bc41-final-ci-global98-fourcodecov-receipt.json",
+    "actual_release_CJS_ESM_control": "/tmp/nm2022-stage3-native-semantics/early-native-functional-review.json",
+    "actual_synthetic_merge": "8d2170207e143a0e325819de4fdb05c51b5dc294",
+    "compiled_unformatted_source_proof": "/tmp/nm2022-stage3-final-source-proof/source-proof.json",
+    "coverage_global98_review": "/tmp/nm2022-stage3-coverage-evidence/root-independent-global98-source-readback.json",
+    "four_codecov_success_ids": {
+      "codecov/patch/javascript": 116833714194,
+      "codecov/patch/rust": 116835435885,
+      "codecov/project/javascript": 116833704078,
+      "codecov/project/rust": 116835431700
+    },
+    "fresh2078_control_source_pin_proof": "/tmp/nm2022-stage3-maine5-arm-source-draft/postgres2078-source-pin-proof.json",
+    "fresh_ARM_baseline_and_candidate_builds_and_full_semantics_before_timing_required": true,
+    "historical_main826_arbiter_control": "/tmp/nm2022-stage3-diagnosis/main826-test-only-carry/actual-current826-control-receipt.json",
+    "historical_prior_test_only_source_carry": "/tmp/nm2022-stage3-diagnosis/committed-3a2bd8-test-only-source-carry.json",
+    "historical_source_ineligible_run": 38840490099,
+    "independent_published_carry": "/tmp/nm2022-stage3-diagnosis/root-independent-published-dc1296-source-carry.json",
+    "local_actual_build_scope": "Old local5c frozenTS native/182/coverage are historical;2078 SQLruntime is NOT validated by those binaries. Fresh bothnewARMaddons execute oldTS expected semantics and both saved2075/2078 controls beforetiming.",
+    "local_layout_provenance": "/tmp/nm2022-stage3-layout-evidence/provenance.json",
+    "local_semantic_manifest": "/tmp/nm2022-stage3-native-semantics/collection/semantic-manifest.json",
+    "local_semantic_status": "COMPLETE actual182 rawfiles/all27groups perarm expectedparity; actualhistorical637 baseline vs frozen5c candidate; no new2078runtime proof",
+    "main826_test_only_source_proof": "/tmp/nm2022-stage3-diagnosis/main826-test-only-carry/source-equivalence-proof.json",
+    "native_build_provenance": "/tmp/nm2022-stage3-native-semantics/candidate/build-provenance.json",
+    "native_build_status": "COMPLETE historical LOCAL x86 frozenunformatted5c; actual5artifacts retained; not new2078runtime binaries",
+    "no_old_artifact_row_or_performance_carry": true,
+    "peer_source_review": "/tmp/nm2022-stage3-maine5-arm-peer-source-review.json",
+    "prior_dc_four_codecov_success_ids": {
+      "codecov/patch/javascript": 116820861997,
+      "codecov/patch/rust": 116822017450,
+      "codecov/project/javascript": 116820851448,
+      "codecov/project/rust": 116822012806
+    },
+    "prior_dc_successful_ci_run": 38853433252,
+    "published_head": "bc41d814fb16070acd7ddc68e75d092f0cd017af",
+    "published_source_carry": "/tmp/nm2022-stage3-diagnosis/published-dc1296-source-carry.json",
+    "retained_historical_all48": "/tmp/nm2022-arm-run38840490099-retained/historical-offline-numeric-readback.json",
+    "root_source_review": "/tmp/nm2022-stage3-maine5-arm-source-draft/root-independent-e5-source-review.json",
+    "status": "REVIEWED source/protocol/CI; registrationonly authorized; exactcommittedSHA dispatch approval still required"
+  },
+  "sampling": {
+    "affinity": "same selected four CPUs for both downloaded frozen binaries",
+    "calibration_per_arm": 1,
+    "iterations_cap": 10000,
+    "long_blocks_per_order": 4,
+    "long_orders": [
+      "ABBA",
+      "BAAB"
+    ],
+    "metrics": [
+      "cpu_s",
+      "user_s",
+      "system_s",
+      "wall_s",
+      "rss_kib"
+    ],
+    "minimum_long_rows_per_eligible_workload": 32,
+    "pilot_blocks_per_order": 1,
+    "pilot_orders": [
+      "ABBA",
+      "BAAB"
+    ],
+    "rayon_threads": 4,
+    "retain": "all startup, calibration, pilot, long, failed and censored rows; no selection/reruns",
+    "startup_per_arm": 1,
+    "surprising_delta": "require separate adjacent reverse confirmation; no waiver"
+  },
+  "semantic_policy": {
+    "cli": "complete effects/check JSON, exits, warnings/advisories and configured fallbacks per arm",
+    "collection_provenance": {
+      "actual_historical_baseline_revision": "63760fa2a58b931498b9609afdc749dde12063aa",
+      "actual_historical_candidate_source_proof": "/tmp/nm2022-stage2-final-source-proof-v2/source-proof.json",
+      "actual_historical_local_artifact_versions": "0.91.0",
+      "fresh_ARM_execution_required": true,
+      "historical_full_review": "/tmp/nm2022-stage2-native-semantics/collection-v2/root-independent-full-semantic-review.json",
+      "manifest": "/tmp/nm2022-stage2-native-semantics/collection-v2/semantic-manifest.json",
+      "manifest_sha256": "e8057ecd26faf625c46c0e425f126188e75af8e802ccb05ac89058b4fe4df11d",
+      "published_test_only_formatter_carry": "/tmp/nm2022-stage3-diagnosis/format-only-publication-carry.json",
+      "raw_files": 182,
+      "root_expected_only_approval": "Root explicitly permits reviewed old714 full reports as EXPECTED semantics, with both fresh new ARM arms executed/compared before timing",
+      "source_or_artifact_or_measurement_carry_to_new_ARM_pair": false,
+      "stage3_local_validation_manifest": "/tmp/nm2022-stage3-native-semantics/collection/semantic-manifest.json",
+      "stage3_local_validation_status": "IN_PROGRESS; actual historical637 baseline and unformatted Stage3 candidate, not actual new-main performance eligibility",
+      "status": "REVIEWED EXPECTED HISTORICAL REPORTS ONLY; not actual new-main/new-head ARM execution"
+    },
+    "conditional_executor_control": {
+      "expected_tests_per_arm": 1,
+      "fixture": {
+        "path": "fixtures/postgres-facts/executed-source/conditional-executors.ts",
+        "sha256": "2b4e396bf53efa32079215b3df7bcafceb02bd73c1ad5126dcb31843b4dfa6b0",
+        "source_revision": "e5ae00bd6353a28045a5344f4accac411a2ccd74"
+      },
+      "script": {
+        "path": "packages/no-mistakes/scripts/postgres-conditional-executors-api.test.js",
+        "sha256": "7fbb0d3307d54c98b682f3d5a4488f59eb0ff55b8495887193e37e9663a47b49",
+        "source_revision": "e5ae00bd6353a28045a5344f4accac411a2ccd74"
+      }
+    },
+    "graph": "complete structured sites/nodes/edges/importer_view; physical identities and all deltas reviewed per arm",
+    "napi": "async CJS/ESM standalone and prepared analyzeProject versus CLI on cold, plain alternatives, and receiver-order controls",
+    "napi_cases": [
+      {
+        "entries": [
+          "src/defaults.mts"
+        ],
+        "input": "default-cold",
+        "kind": "database",
+        "prefix": "cold"
+      },
+      {
+        "entries": [
+          "src/entry.mts"
+        ],
+        "input": "plain-consumer",
+        "kind": "plain",
+        "prefix": "plain"
+      },
+      {
+        "entries": [
+          "src/repeated-binding-acquisitions.mts",
+          "src/deferred-call-proof-controls.mts"
+        ],
+        "input": "receiver-order",
+        "kind": "repeated-binding",
+        "prefix": "receiver"
+      }
+    ],
+    "napi_facade_sha256": {
+      "index.js": "52f9914b87ce22b1be4a5e688d461394d5e6c0f5aae277623c08dabab8c46b7d",
+      "index.mjs": "0833bd7021dff935cb6573b0180fc3de55e3121346c8d46bb6ab4554c1f4ae77"
+    },
+    "old_073_edb_gate": "38770868763 terminal adverse historical pair; no report hash carry",
+    "postgres_source_control": {
+      "required_passing_test": "compiled CJS and ESM retain legacy nested index identity strings across feature modes",
+      "rows": [
+        {
+          "path": "fixtures/postgres-facts/executed-source/aliased-consumer.ts",
+          "sha256": "9c8e603feb0ab5ad8041b521a3f22beed8d335c5efa66bb0433be2a9e14ac594"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/async-builder.ts",
+          "sha256": "98bbcdeb3802e71a9d8bc4f1b064f9efe3ac24612d32bffc6e92f935413caf55"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/async-consumer.ts",
+          "sha256": "7862ca93eb8c3a89668ff4e953a229c1e871955d98cc0ea520afd21841bd80cf"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/async-event-consumer.ts",
+          "sha256": "631b3ae8a283ecd1286da3d11acf74f8408778822f373f3ae0c94f7109b967a0"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/async-suspended-builder.ts",
+          "sha256": "86d13f286a98204822b987e434a2b4c657664900e5844f214265d90e5776be62"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/async-suspended-consumer.ts",
+          "sha256": "f9940177c702b0bd701214dcb061c27131030ca97de94a388baa3a5c9565d322"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/boolean-stringification.ts",
+          "sha256": "a5aff7c667f675f89129aaea31a628b1d1eacec33d769a206011d57d45d465e5"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/broken.ts",
+          "sha256": "3d56101c0515aace7ae9b5ed75386eb09cf3b27b3fa292b616a76072f4ae9abd"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/cjs-eager-consumer.ts",
+          "sha256": "68bbb4624daba5fbb7009e77131c7a9279da555284a96c5fd2f21bab8207a8f5"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/cjs-late-consumer.ts",
+          "sha256": "68bdbd5967257927aa254379e3bce6c79503ba86c31a38563f300eadef40b9c6"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/cjs-wrapped-consumer.ts",
+          "sha256": "39ce78ca0011e7a8e43f818175e6c30ff335b7861f49b8b99fe05be8bd0a24ec"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/conditional-executors.ts",
+          "sha256": "2b4e396bf53efa32079215b3df7bcafceb02bd73c1ad5126dcb31843b4dfa6b0"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-callbacks.ts",
+          "sha256": "e1c8ee7892bd8e08f924a8270c877bccf89f5f0fa95fb5005fbf9ec72a838c39"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-accessor.ts",
+          "sha256": "fb09eb1200e8d043b14dde7e1ab02ff89fe6afaa52f7126de03f921445b5f9bc"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-alias-consumer.ts",
+          "sha256": "3c30ea85a3e900964d1cc215d91e52d3d16409930ffec1b130d0dfaa0dcc9463"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-alias.ts",
+          "sha256": "ca743d6f899f2de65b7a20e8f32ef96d55fcc7d006e0a7b95f7e5156822c50ae"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-bound-accessor.ts",
+          "sha256": "43e216b2be1fe4069f1d68c21292c327da56b9da94a4a9bb460575e7b05f5eeb"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-computed.ts",
+          "sha256": "5b5e73085848277d7ba0e1863e917f5dd7b2fac59a175a0b524da9be21723e65"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-constructor-dependency.ts",
+          "sha256": "7eaba4aef0fb2a4b4201bcf8c1cb84682649bee5a51f090851fc61b151882ef6"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-consumer.ts",
+          "sha256": "95a1aba4b546127e26fcf33cd5ee101fe7b099386c19a4f739c0f4b54aadaa05"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-dependency.ts",
+          "sha256": "3f16daa4531e88dbfd089705412cb538c1df5278f206f1ebce8cee861007e3a6"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-derived-dependency.ts",
+          "sha256": "e5cb594956b75c73ca27d5ee698ecf7a1389de8ddb9c04ca267a2b91a939ebed"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-exposure.ts",
+          "sha256": "187e5a2e039eeb7902005b3d11bd4f9d295c67b17431cec0e818d074433b9c39"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-global.ts",
+          "sha256": "1ada99c7c98a49b5c2e6babb2987d4f523bcdf0d056533a79d7b8a7019120717"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-instance-dependency.ts",
+          "sha256": "92bb4436552f09861a7c680994d9144ffb69f733b8ecad690e2abc1b3cf22bd8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-namespace.ts",
+          "sha256": "57c297cf1f658684ac2fec4c24e024613b9cd7f6edae813e73ed4f93908ff28e"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-node-dependency.ts",
+          "sha256": "1cfb23af8e9e73e278e2dc9e8f21548f360078dd15efbc5d83e456266bca88ee"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-object-dependency.ts",
+          "sha256": "9509b48cd918b5dbeb9bbc995a600dbc2678b194a6389aebfd485388827d8eca"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-opaque.ts",
+          "sha256": "77fdabca8e98413a19a193614755c4b3e661d620d5be8085d58ea8204da21560"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-pristine.ts",
+          "sha256": "7d00080b8cecf1a3d90f5711033f6326f30849cbd6ace989552f12d578fcd8d7"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics-reflect-dependency.ts",
+          "sha256": "fa2536a92f366e744979708218591d3b9fd602b24e7230a5ddb5ae952bfdf1ce"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-array-intrinsics.ts",
+          "sha256": "250d71b90931b4043df7407c12c2d943eb43840925ca85ee2080050f5a6706be"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-branch-local-callback.ts",
+          "sha256": "7c25a2e0ccfb1290b1d47825d02301be95e18f59bbda8c85c076c2a349f1c0d1"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-branch-returned-functions.ts",
+          "sha256": "e12c5fb831eae81a8b70894fa3d610d680dc4b3d196aa04de4a03f3ecfefd6e6"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-branch-shapes.ts",
+          "sha256": "1b15f03a6e48010b79be39913084267dfbc5218d6494fcb742fdc2a6e4d6429e"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-callback-container-aliases.ts",
+          "sha256": "d10d598ff5e22578f5219db1b5549b760de84dcd21660f1e219ff1ac0b01fd9f"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-collections.ts",
+          "sha256": "978aeb401b56b4da1499734b9eae679f8922895558b3ae4c4b405618c9d14ef6"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-conditional-callback-bindings.ts",
+          "sha256": "0359d0a645c67f80cea278bb1fdb3590770c174757010e540c932dbc9a1dc3d8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-conditional-callback-shapes.ts",
+          "sha256": "70b6da1dc008ce330e09985cab8ad81688bcd94038502a4ff9ab95118cb4f505"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-effects.ts",
+          "sha256": "132c24f10f20bfa0e777f2dde661cdbd37e66a4fb0f45e1b3cfe6865e760302d"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-executor-callee-effects.ts",
+          "sha256": "372110a72a842bfda9cf8e1f606a03567ce2aece2ea71965267bb6d6b5388931"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-executor-direct-operand.ts",
+          "sha256": "5803a0a39d386428ef602d3bd98e674f6300f4018f3d032503fecf2fab9826d1"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-handled-alternative-updates.ts",
+          "sha256": "30dee68ad1d336c5e762759815c599c4d0c815f2de62cc322372af0485e8f043"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-hoisted-branches.ts",
+          "sha256": "162b69ed12544b2fa71f742ac7720a0d0b51a8198784b0f547ba1f2900d89d2c"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-late-builder-coercion.ts",
+          "sha256": "aaf100a4bb31b83ef254373e56a15c766e7d0364cc8044b94e49c59496137a6d"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-limits.ts",
+          "sha256": "5547cb4f8b8a66afc6463807ae2f9e15eae5254471d3303934f059084e194f03"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-map-builder-alias.ts",
+          "sha256": "5a96d76293a2bdf5e69e9b01c110b29bfc935b009ea87deaa22ef441ecd550da"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-nested-unsupported.ts",
+          "sha256": "29f29e1658dfd2ddcd4dcbd9bdfca0ecbedaa6df426183eda2a8c6d2f655f91f"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-opaque-object-callbacks.ts",
+          "sha256": "0b649ee3559e55cb51305fe96f522a096e16ad3a0cae91c0e3d4fe3a51887019"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-operand-effects.ts",
+          "sha256": "0de8cbdc8e376ccebba4104900b98969b508a244ba2ec875bb20c8b999a7425f"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-operand-failure-effects.ts",
+          "sha256": "26b4b3b4440c32efce2bf8abc7db6ce817eb6a4b5b96180b2324495acba94457"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-ordered-operand-effects.ts",
+          "sha256": "4894c1a2d17435cada48905b5a25ba7710027dc576d0f4ce104e7eb1294246f4"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-poisoned-arguments-callbacks.ts",
+          "sha256": "603b506fbdf045773eea39b2e4f0f613c4e638481348c2727b78731196c33754"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-primitive-opaque-intrinsics.ts",
+          "sha256": "b2cf3aeedc295141cd657bee6aeb39f17c9167f58266002f2ae6e7568b1dac41"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-returned-entrypoint-static-branches.ts",
+          "sha256": "4700099aaf1f10da79d5bb7ab962d79e54c127b2cd9a3d6aa87e505b18dc1270"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-returned-entrypoint-unsupported.ts",
+          "sha256": "72c036c15ae1427f993e6a6540bee540af62b003ca23b963223c42383a9ae739"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-returned-entrypoint-wrappers.ts",
+          "sha256": "4562e4029bbb5b4f0591eafe9062e5748d065863a5d11867b10391a2b7ca02a7"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-sparse-failed-array.ts",
+          "sha256": "f4ca3ed5521b18690d7c1be701dbaf726c3b2112885f518ba1f1dbf0f0e007ba"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-sparse-snapshots.ts",
+          "sha256": "fcf9bf020b38d3a4083a9a5082bd30f75a2058bc3789eb01a5e0203616ef0fed"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-unsupported-append.ts",
+          "sha256": "49dc57f3f0e30434b4e2ea871486d33bdf03571b8550ef4ed0892370d8f3dc84"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/control-flow-wrapper-update-baselines.ts",
+          "sha256": "21a4cfd7ea8eab13db5e5ac72e321d7a6ee00d851ba2d60e0c03fb487f54f911"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/directory-consumer.ts",
+          "sha256": "ea2f1fadb087c3a87020b7f285aea84cf145796264de1369f0d74271ecd3706c"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/dynamic-import-consumer.ts",
+          "sha256": "ad7e7e56ea3feb8567a9ae3eb5a178d9e81b19586c56643db09517f7857ee994"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/dynamic-unawaited-consumer.ts",
+          "sha256": "66831c5c89ac04f3156e4dd7a4b1ec064678dab41a8d4dc74772651d204606ce"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/eager-builder.ts",
+          "sha256": "cdf7a527c174226dbe4383728fbd9f940f3db6e437e43dca5d15ff94d7e89eba"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/eager-consumer.ts",
+          "sha256": "f0c1190384a22c6855575e7d15ebdb817b6e5bae5cae110b32367f0d56f826fb"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/eager-mutator.ts",
+          "sha256": "57094203a27b1f5fe58684cb2689924631f9bf725efeaa54a78602d05fd9f7eb"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/eager-unused-consumer.ts",
+          "sha256": "cb91bcf7eb96ce6fb9ecb48e929df67e86b7a58cc2d0769aa6312a0229b1e957"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-boundary-helper.ts",
+          "sha256": "3e52420ece715a5f1fc11f7185227f29529db230fe6302db4d59faafeb62be61"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-boundary-indirect-argument.ts",
+          "sha256": "fa9be828d2e616fb81444d763b5756ca53fc1dcf1c6ac97cf7eef5d92f4556e8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-boundary-known.ts",
+          "sha256": "35681d07faa103317945cb61f9795715603f0d55582814981539d7738eb2440e"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-boundary-nested-await-consumer.ts",
+          "sha256": "e3d320cb0ab3e3d38ccad0b5f8670a29e0fe1692830f6e3bb62d6fd8d09676a8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-boundary-nested-await.ts",
+          "sha256": "98890200f83bf394e947db4410b5697625613e3b7a1656514fcc82a5f6278886"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-boundary-unknown.ts",
+          "sha256": "20811e2758d4ee8438e86e4dee173828061f44cd646d4492494332b362365259"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-require-dynamic.ts",
+          "sha256": "4f54accf2f47d050be8fbb4549363f832502a9769171b38ad074c79ac9dfe783"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/effect-require-unknown.ts",
+          "sha256": "94d92aa3867f30f9de3d6672e91dfec0eda9becadd73ae71d763b4c203dd0c4f"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/executor-getter.ts",
+          "sha256": "4d34bd8b48d908b83f1758f915d93b0295eadfb30aff9505fa2e54b90ed747db"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-array-callback.ts",
+          "sha256": "dd1b408a4a03a4f43b1faef1005e9b05a74af89de48f023d4ac7f3ea133a1374"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-computed-callback.ts",
+          "sha256": "0eea3019b47de4c3446fbe08cfea1f775b3df5338457b75aa76a71fe39ce88af"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-conditional.ts",
+          "sha256": "10c432d5c133c1d6e429160d1c2a366f097668d5ffd653e59f3d58f17e3fd090"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-cyclic-alias.ts",
+          "sha256": "e1272db9a376ac775bbcb5afa8fd85cfaae69dcf6c70735e53eb4ac4180afd0f"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-dynamic-key-callback.ts",
+          "sha256": "12431d23f8815d35d2b7561b165432b90fe98a2a1bf34dbf51a0e6e6032dbee6"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-generic.ts",
+          "sha256": "adf4d781766861e2823a5a5319c98a9fcaee9cbf197c7b38c83146bdda8a145a"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-indexed-callback.ts",
+          "sha256": "83d4a9d4b8af33c46112211943eb1c510be641de4831d0004039f57bf3c3afcc"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-inline-record.ts",
+          "sha256": "722f1d842fe26ab9774c16b3146ad8c410755551a75c1733b4494cfed476bc46"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-logical-callback.ts",
+          "sha256": "0e85a5a05a3b249b63bab61d71643f09a2f2870c72eed4d0e3143a963ddaf94b"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-record.ts",
+          "sha256": "2ffcc728f527fd83a639f871385523dade58980e453e136fcfe34b860593329e"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-sequence-callback.ts",
+          "sha256": "daaf5683179d96797a50db1eb3b9a349b97b3dabe1a09012825361eca4e62693"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-spread-callback.ts",
+          "sha256": "ab62b0799872805b8571f0b765886bedaec21d1a5aae265f5a0dbacb39f5e66b"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/exported-spread.ts",
+          "sha256": "91fb71604e2f61457752bd758d44eaddcf0ad1e3b398fef9e8d6386bda6e05e7"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/extensionless-consumer.ts",
+          "sha256": "5d85fe68bf9161d06527823722052bb8b6974e6aae0cef8b748a660a4720d105"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/imported-builder.ts",
+          "sha256": "7067634a5c3c8c6216980888f10eb7d2426cdb06e843f107ef19f99a9914fb7e"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/imported-consumer.ts",
+          "sha256": "ba5eed87b5b99b0f6bcb692ab5155b73f6beb0cd08fe08ed8cd3ca6a51d3f7f3"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/intrinsic-raw.ts",
+          "sha256": "0d1161bc305421d9d2dd0b675716dd6ce892662a84989b1016a26f3666db9856"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/member-getter.ts",
+          "sha256": "c9b6fd13a979aa51ca9d431b9de67b6b1cb32cb1a9cd2003ca158c2a0ac383e8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/named-member-consumer.ts",
+          "sha256": "469fc3c4df748d2fe798df37cd9a1b823e6bba2d67e5f11f570b98712da82c7b"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/namespace-consumer.ts",
+          "sha256": "53d3acba5f5d0911ee3f8de87e487f60be0944e9e1a059be25e89d8d43f7a029"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/nested-builder-control.mts",
+          "sha256": "4056d0f032e3b62c650357be4bef06b24c155acf824daf4220b2f6584825d669"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/nested-builder-no-executor.mts",
+          "sha256": "3256c1b5e4f773d80faa0a7079b3401045754e17cd2e43e547b0d416e2528600"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/opaque-append.ts",
+          "sha256": "878e710c1b0f39c012c5ee5d3a7bf1fc6bf01e6d4dd5df555bf3383c3f6bb2e8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/opaque-consumer.ts",
+          "sha256": "360ca7095367177d0699d42889172af056b91a69b2ce781b47d946aa77c6fa19"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/opaque-initializer.ts",
+          "sha256": "17586ffc0dddfbd93e3ad519380c6d3ee1550bdafa9dec75843f529fbc422123"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/ordered-consumer.ts",
+          "sha256": "14109337333927feba0a95377bf8199ec9d227a3d20e1aedfa68c3605de90992"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/ordered-helper.ts",
+          "sha256": "e799bcc501659f24bdaa3aa042e2b5740548c246494a94372b5313b050911ba4"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/ordered-unsafe.ts",
+          "sha256": "65e9ae32bacfc03b2d4f06746527286136790d2766e1ae9b8a4dbd897800e841"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/priority-consumer.ts",
+          "sha256": "9996cc673f29d1e43fc488ae8cdb04a7d6efc93f4c3b2c45146b0f8e32128190"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/priority-helper.ts",
+          "sha256": "0035db4a05c8a22bde5d627366411c0281585823fdb453e9b105337dbef4629f"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/priority-helper.tsx",
+          "sha256": "b853356b5020fc534d325bb222a59dd692cbee82f7a5d7cfd1d30d192d4e5baa"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/reads.ts",
+          "sha256": "3842bd93bf275582990be27d853baf1bb5cfa2b8191238bd7f09f504650a77d4"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/receiver-argument.ts",
+          "sha256": "6533396ba9088c199b5b5f57e810d792513fb0eeec57221e481274736b88c3c8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/review-safety-consumer.ts",
+          "sha256": "b9689af9ca6c759b341dd59f48b352b3417dec4f625795e5a51a7af23be16fb4"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/review-safety-helper.ts",
+          "sha256": "5a3ef1b94188316be6e437c93d30d89b8c13baf8519fabdb84e6b6d58458bea7"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/search-append.ts",
+          "sha256": "642a67fd4ee2b824918e3617ebd1043c59db9e2d67b51258a230a660673d6ef0"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/search-builder.ts",
+          "sha256": "5d0e54a2ded8334b03097779c2318540a87cf2e0c11056cb30dc412cee13a149"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/search-consumer.ts",
+          "sha256": "8a81bf821492e8d3280d6cd76bd33040b286812c94d913594f1df6709d1ac36c"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/search-count.ts",
+          "sha256": "b5a23095395b8a1ba4198d7b2b69438d3fbd7d2c62a61cab9f02e47ccecb81a8"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/suspension-shapes-consumer.ts",
+          "sha256": "7ec74413425b7bf327614b4939b4c2621c624778b54cc807fb140d878304a192"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/suspension-shapes.ts",
+          "sha256": "877afad446fc5a23fa17388dbf5142d70627dfcda93a3bf4a8dc78849697b570"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/transient-array-callbacks.mts",
+          "sha256": "e2b56a52ecb99c1f4f56e6bae076f44bf7408faf6385169fbb005c7ac747e460"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/transient-replaced-child.mts",
+          "sha256": "f307c53ac85a473705f62a5ac3c2a19e5fecca82557a106107e747b438053c38"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/with-branches.ts",
+          "sha256": "4863055052ad121995d4d1493494f5f07f15cdee5d52295292eadbd7e0a6e10e"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/with-builder.ts",
+          "sha256": "1675f1d049ca80e2815ddd7e8394958afe5f6313fe97252cdc49a00f4aa27ce7"
+        },
+        {
+          "path": "fixtures/postgres-facts/executed-source/writes.ts",
+          "sha256": "6487f894b550db4dbaecd46e04bf805d7eabb9defc6295c00cfd9825eb90ad56"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/comment-join-alias-parity.sql",
+          "sha256": "c9b9bf64f45e9f48b38d0039f8457222c86499d9ed2ae79d66c883cd26fb4c32"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/comment-join-begin-control.sql",
+          "sha256": "5080567ba55736ccf8dea21374b6f00c6afbebe65815d120caa0b339ba1770c9"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/comment-literals.sql",
+          "sha256": "41d59fec82bb321418d047201ac5a0c56e35faff1d55b7fc61f76453e491fe79"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/comment-nested-wrapper-header.sql",
+          "sha256": "afdbcfd74baeeae8c82ba242ac02da1a52ee41889b10de4dc3ac3b35679c6b7c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-adjacent-locks.sql",
+          "sha256": "2f1fe185a8aef1cc460e46fd68b08232bde22367902ffdac6e312ce3f153e867"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-block.sql",
+          "sha256": "5a160174ab5ee75688876f4850b3cb5bf32384d727a42b3e183c17ff0437fc23"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-branch.sql",
+          "sha256": "05a64ea52090ee8908541f51982d1436c26f9fa8208d08230014cbf1106329b8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-empty.sql",
+          "sha256": "1f55623ee180534ad0789cfdedb04574babc321cf7399dbb2d053d0653362c8f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-identifiers.sql",
+          "sha256": "b9e833a56933ff8e2ff7c30710d301e1109543898ff25c216a69547f847f4b2d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-nested.sql",
+          "sha256": "9028db45d307602061a08f1d52cfb35868a90ce8196856e7ec4bcd90f29aca7d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-outside-body.sql",
+          "sha256": "4d63bc69d9a0a66c09795c41419f93ccee0412d8dfdd1ea688f915ecb5716c43"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-partial-conflict-controls.sql",
+          "sha256": "21642bf1aaf16e67f30c1a92cc04f6112a2728591a3ec88f63d347cf9ba319d0"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-routine-comment-invalid.sql",
+          "sha256": "274707c103124bb3a14f7f34c43d063131db68e08cad6d127e34b2bc15281bb2"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-routine-comment.sql",
+          "sha256": "fa344ab8573491e55dbd2c45873d2498e611b5178f3206bcc517f2163b70fdef"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-single-quoted.sql",
+          "sha256": "dec9b1c3748fd44682c639df838dbd06ee0a30c5c332d1b8b189434a715fe531"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional-with-insert.sql",
+          "sha256": "210a79d0e93c0755037a61b95afeb14438dfa4ca569ddc88b2962fc36ecb91b9"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/conditional.sql",
+          "sha256": "9bf52021111d06984a1422d846664330a2b15acabc13c99c8a1361a7c3be8a26"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/constraint-source-spans-basic.sql",
+          "sha256": "2fd7919c50526c6151442be574e1315c0609a4b90c80cb5c3e97afb9abd44204"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/constraint-source-spans-nested.sql",
+          "sha256": "d2bcfcef2c7211e83307e4943644a4f78e1102737781f3b45ce1762b6570eb6b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/constraint-source-spans-unproven.sql",
+          "sha256": "925dd245f292d5181040d1d80016b757422005cb4fc091691f8d56ee6ab21753"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/constraint-source-spans.sql",
+          "sha256": "40c52379e2273f5a55ba08829480406dd96ca305e1d227b55d8e2383dc9cbe12"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/copy-source.sql",
+          "sha256": "9fb64761d611a9b1973967d4d2dd5a40738f9960bb4287e8287f54aa2bd9dc87"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/create-index-only-basic.sql",
+          "sha256": "7ef46a857aeae6a095c1abc6a6108be6bf84184ab2eccd9e2cc0998b40dc1241"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/create-index-only-truncated-create.sql",
+          "sha256": "fde9c5013bf506100d196c3c865dc3acdc36530b46f661826f62a1b0463de3b3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/create-index-only-truncated-index.sql",
+          "sha256": "7c1afc7ae50535c0717155695715cc79da4553fad1dc8695ce4334a905f2fe35"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/create-index-only-truncated-on.sql",
+          "sha256": "fcc240e6035a839210f938d7d61011747a6bb5dd66c45b548ed83ed0a1e12e7a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/create-index-only-truncated-unique.sql",
+          "sha256": "8651b18acf1dfb1932e2cca2a0b7da1742ebaf6c792259bcd76e425e0ad0ce5d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/create-index-only.sql",
+          "sha256": "654192338ab1323903a3015d6ff7676ffbfecd303bbfc4c66bdad3d769b82430"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/ddl.sql",
+          "sha256": "06dd482701a01691e4469e1b724dc3ca88e8ad7248bdd22c97c0dad6e3c9b83f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/delimiters.sql",
+          "sha256": "0b6b590086351ee74234e0847f91a5cc6d1121553e5a839879d3bc0c10ec06b6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/drops.sql",
+          "sha256": "a9b5c66ab3eab8a5e780cd1bac04b15a4b4451bf9df0292f81a5acd578604ee6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/empty.sql",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/escaped-continuations.sql",
+          "sha256": "2c69bf31630a53851bf3bab8270ca98fb533e1923b6eca5b7f881de8745bb7c6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/escaped-quote-continuations-invalid.sql",
+          "sha256": "0883bc934b0e8cf2346c2a223b4295016387897206b03a6c16771f369fafe8d4"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/escaped-quote-continuations.sql",
+          "sha256": "571b51101a5a276a8f0e8f7d07e7e90783f47881c1ccb257fec0e437849306d1"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/escaped-quote-initial-unterminated.sql",
+          "sha256": "af50121c02bd1e917b7fc3999d3b71bcdf140136bb1673895dc5d48bc3ee9339"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/execute-only.sql",
+          "sha256": "60372da76cdd34f9aa4e71c6a65ab6a9b82200939b640ca630b425c20e4235e6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expression-identity-non-object.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expression-identity-order.expected.json",
+          "sha256": "b20b45279e031745a1597ed55ad5f3f3f7a27ff7ebe4744d5f7f54db3e694d2f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expression-identity-order.json",
+          "sha256": "46b51543d368e93d069fb7010fbc228b38a76a3c859ab2dfed1c78e4171cea88"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expression-predicates-and-temporal-values.sql",
+          "sha256": "6ce1e7803b0aa79c3f49aa6a61f83d189b8eb233412ab00bcbe1517f37220517"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expression-roots.sql",
+          "sha256": "ae547f2b620880fe0fa75c2955462670cc4d61b9ba4f933500fdb2d1c56b91a9"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expression-span-bytes.sql",
+          "sha256": "f96c14b4aa5d319947abb99ebdf2b5ecc4b78be1e13379bfcd4df335a721a23c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/expressions.sql",
+          "sha256": "dd478eae2def89f6d080ebc56f283956d762f3708cb7f782af7e828952550f15"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/fetch-expressions.sql",
+          "sha256": "e7a9cfbf562f39c54a242a0543b8a5f4b813ad23b6d954ba4663bb03632ea8ba"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/fetch-no-delimiter.sql",
+          "sha256": "fdb3420a90553ac979f14487400b69b259795403513c4db289abcc455c9e3363"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/fetch-ordinary.sql",
+          "sha256": "67b9ca73b125dd0c8fc2e8116e5605963fdda32cac3dee6d19d834e27ef5af97"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/fetch-procedural.sql",
+          "sha256": "7c29ce029c4fa63c421bc4a578d14fd82ad8b16dd51fb8088829e0077ea51416"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/function-body-bigquery.sql",
+          "sha256": "5aae46cf0ad3ddb75b789aceaf0254b445771d62cd9807a3c96c2c21e354e70b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/function-body-mssql.sql",
+          "sha256": "c35a684d09f4eedfc44821abdc2f6973a14b046da081f727419e3ac3e144b8c8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/function-body-postgres.sql",
+          "sha256": "95c7407fb1d52064f004c90e892b2f5806381afb3a362ccee94ff2c4cc9ff595"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/generated-empty.sql",
+          "sha256": "2fc533ea09d01746b351c0b2ec089763eb1b363d02e643afd3f46f4105045d9b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/generated-storage.sql",
+          "sha256": "28f34134decd66551634e0ef2529e978d9708b316c06b44d516841a753154f12"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/index-identity-feature-parity.expected.json",
+          "sha256": "6bdfcd22de8f994d7d3fb7f9adb0e3feed9c8d059cc8a0ae1281b8240990e5aa"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/index-identity-feature-parity.sql",
+          "sha256": "1e685a552cce974be7765850a3cd5640ef0d99ba3ec7736d19b6bd1b4e72f843"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/index-methods.sql",
+          "sha256": "0a04d46fa1b65161cb818ece97c7e45dcae5fc0793e3b9d6c0451138f153075a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/indexes.sql",
+          "sha256": "cb0b557699bfc0c11e920f2f355c207a20dd9585a564fd1da142a1395ed4e10c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-column-sources-unsupported.sql",
+          "sha256": "97998349bb22d6daee63115e9458802658b18904e0bf919e42f39dfeacc66f56"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-column-sources.sql",
+          "sha256": "9422447d7451c80003fe09553aac495a47d2306f2f9bf1e0f9c60a80d186d395"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-composite.sql",
+          "sha256": "021f87309d3e91015df3b2f735db6d16f05c3d165a2b2711b8a4b87328ef91a1"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-conflict-expressions-invalid.sql",
+          "sha256": "688541e8bc0d1c13cca13ea708126e7fc154389698806eaca8c6bc60602e8e17"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-conflict-expressions.sql",
+          "sha256": "36f4629e9d87f70240fcaed943b657198e882fff3e681fa9be193103c7e95356"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-conflict-indirection.sql",
+          "sha256": "73403754ba3eb49588a958e1572d0635cc24045cd5b76103ddcad1e646dc61f8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-cte-returning-incomplete.sql",
+          "sha256": "700eeedcf1e36c38e5e596187fba763131f0acc5195409a72bcaaf28746d58ab"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-cte-returning-projection.sql",
+          "sha256": "aa6a121061909c01050bf784e8ce7c48fc563dcc50106c0b0fa03239bded31fd"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-errors.sql",
+          "sha256": "7ad95a11934526cb90021971bc5df432cfa3af71b73ad8894ad115d74533f8f8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-modifiers.sql",
+          "sha256": "31f516f5fb7a21c5104fecf83a91b90f0828942390a7fd04901330d3e4418280"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-partial.sql",
+          "sha256": "c8a8b0d30121ca379e5c9b1cd959e8ef410a3282a3c55d6c604a54675fd8f6f9"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-projection-function.sql",
+          "sha256": "7d4e0dd337aa4123a03d261f3ef415887c0c29f55096cc732c5f4d81af421844"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-projection.sql",
+          "sha256": "cc16229cb6e3699b5ea0b025db85fbba418bc25a9e9a77db729ed71f791424b2"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-recursive-call-trivia.sql",
+          "sha256": "c2a931f43de753b1b81477f5ab9604f8f61fa1225fd2f88706085af2df090b97"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-recursive-expressions.sql",
+          "sha256": "9d4c239541affdcde0051b8253acbfc5d3053a919676d3de5ff6321ee80acff3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-recursive-invalid.sql",
+          "sha256": "43de1d6fcb812d7a39b7494b27b78b68b48bd2c11ab0fadd8d817ba9026f9372"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-recursive-nested.sql",
+          "sha256": "87ad9aa2c8556f741f4226ed3727df30ddbd8f26940230ee4850e54cfde0bb42"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-returning-cte-spans.sql",
+          "sha256": "aec7ca331399f36594095754ca962cc7be30d2cabe10aaa5ca49bcee1e70cef2"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-returning-delimiters.sql",
+          "sha256": "7ba8db4c13a1f4fce601b74b4c2be79af1359fcc1f42f2ac26f9a24dede0884c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-returning-execute.sql",
+          "sha256": "5a451242f1fbc17220ca535fa54b37c5a85d3391e8f6fcbc7fa33d12b34bd2c6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-returning-incomplete.sql",
+          "sha256": "cb44f0f47d67fd6ac03ec33f51f13ac367fbead60ab0acf8e3ee84d344de2656"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-returning.sql",
+          "sha256": "951a36791b7187094844f7df8e23a093c0faaf64bf0cfeb533561a656d3c4eaa"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-review-invalid.sql",
+          "sha256": "581a9dc6f26d1c66e207911e644bce772a8adc37423c2125a9dbbd8c11e418a8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-review.sql",
+          "sha256": "d53a9eada58f72108d720478e3a2abd0c42299a252e11612b3d4f14cbe38ac85"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-truncated.sql",
+          "sha256": "63ac4ed22c91dd3237b3b3bd4c1fc5245b0731380dc3196445415e04b07b702e"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-unary.sql",
+          "sha256": "f71e09e16f1bed4083564f195efc5f4548bc32744ef3f07e649a67c434b5f63f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-values-modifiers.sql",
+          "sha256": "2305dc7cadc34ed63453a42529fac7ad5db2dfdb36183776569541866aaf03e7"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert-with-values-column-sources.sql",
+          "sha256": "cebf20c1ac4e83571eb43b784fc7766f4410e6e41500b5885fc5dd4f72c7860d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/insert.sql",
+          "sha256": "aee894977a360fb1903a4d764c1387e707adabed16606a89400818ec40a3a5c5"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/invalid-metadata.sql",
+          "sha256": "21e50304c355e6fde20fef8fc535b44010a5df6749a9f7787855016bd87dabf8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/lexical.sql",
+          "sha256": "81d7b566c596aef4f66e04cc98ed76ebfd3d06fd618ffd822b61dc94d08c6ec0"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/literal-execute-conditional.sql",
+          "sha256": "4f47d773f598365ac4d7189a365406b45e863c639658bfdb033a443ff4b382af"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/literal-execute-escaped.sql",
+          "sha256": "82b8f26338c15681b8c9fea660edc3a1b8e5872d9362692dd1da340cd6f6c4b6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/literal-execute-outer-quoted.sql",
+          "sha256": "174acbacbf44148d5dfe602cd9f3532e7c3492e52a25f3ce861c711f37793178"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/literal-execute.sql",
+          "sha256": "e3e07a17a5f32cd21f066b23e10202f9610ff60df6d7edff2ea987429bf54f30"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/metadata-defensive.sql",
+          "sha256": "d7a782cd463eacee6effda7036899695baf640e4e68589ea698769abf551e3ff"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/metadata-preparation-cursor.sql",
+          "sha256": "d7a5a2038b33660c68b1e5c127c53605ee568435a1a97d349fcc40a945936c28"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/metadata-qualified-end.sql",
+          "sha256": "7c31b2cd7d3d2ff7b4dd4b3f17b35ed029d404307b89ebb5a35064200e9733a6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-conditional-locks-mixed.sql",
+          "sha256": "edd57806601d73774840d363a6af4be6b59f9f10253aa8c0b581bf15f608bf53"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-conditional-locks.sql",
+          "sha256": "9da88004b4d194bcd228a8ac903e7b7bce865e85a40aa10f8a7aa547cbf74e36"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-constraint-plain.sql",
+          "sha256": "fa1069411eb9b92e257169d6872d821a5e516717542e7bca47c6c9cd83f833f7"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-constraints-single.sql",
+          "sha256": "d73cb485360c6a6e41e48bf326ed3f84d4502b05d9c50d68564e49e0efe058f0"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-constraints.sql",
+          "sha256": "62f5c244989e7915c655e03fe66b395894b7d4dba64a29d9841df13f5ccf2b82"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-incomplete.sql",
+          "sha256": "851711ffcaac9ab1375dcf2646f39f4aac4d0c2dd2ea062c8828b8467abb58c5"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/nested-malformed-comment.sql",
+          "sha256": "c3ad37be54c3f6b5a4322f87be886b5fef5d283c21240c54a2c02cfd844ffd32"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/operator-comment-boundaries.sql",
+          "sha256": "9cf04766338998b7dd99071199d5ed16d223160d182db30ae3bf4cfda0f9e918"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/operator-line-comment-boundaries.sql",
+          "sha256": "6cf182c777428f47b8b27d66b9c6c6aaeafda691d65cbeef2ff97f8b1076564a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/operator-line-comment-error.sql",
+          "sha256": "02d6b301cb101d4aaf55fb14f8ec68c6be39ba2bb0426c0a709e0271822671bb"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/operator-line-comment-opaque.sql",
+          "sha256": "877548d83e16420cccdab86ecfadb98ad7359fe44ed00c580499ae75a7cbb703"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/partial.sql",
+          "sha256": "6c207402b92c42745e00807d3008b85fb045750980dd8383361ef56bf2db803f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-depth.sql",
+          "sha256": "ff6629dd19a67f84c5fc924b7e69785932226d5f6314fba104cc608c662f4d84"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-foreign-source.sql",
+          "sha256": "001d9cd15bd43b8dd7af021e3eb2e276c85f1debf6169bc3bb1b3df2b4627d73"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-invalid.sql",
+          "sha256": "6c67a976ede754ad4ca788c97fdc45263c91f16122b9242edd372c312462425a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-execute-reserved.sql",
+          "sha256": "111a75a651b347991f825aa62ed59213139b276bae4dedb64866dcaad61c472d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mismatch-location.sql",
+          "sha256": "4585cc6d846d04bcf6580e7cdb0a28141d7e571ab78cddfcdd82fa3d64664e11"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mismatch-nested.sql",
+          "sha256": "5756249968ba02c23ea4ff92b2dd735402ccede1b07270e98fdaf94dc6466958"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mismatches-256.sql",
+          "sha256": "3fadd84654c8159e42e098efd1bf2cb35745063d89a88ff6715b0971197c8f07"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mismatches-32.sql",
+          "sha256": "d77d35f1edc93a9f0461ce3ce9d64ae09e05561e25e450e95e25873cb60cd1a7"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mixed-case.sql",
+          "sha256": "c4694d67097db4ca4a6c2e4b021d6bcd808e4f10ac0dfac6254d46e6cc41926e"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mixed-quoted-opening.sql",
+          "sha256": "2c0c88cf3a125a557607581672d232cecc00c361b18b1d2821b671591f05f702"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-mixed-unquoted-opening.sql",
+          "sha256": "86fcd3c76c25f69aa78ef5911d84996f28b484ccee433fbd145753c00a831b31"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-quoted-reserved.sql",
+          "sha256": "f1381f398a257f170175e5ddd577b24d516912dcf450c04654600ccbd180655f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-reserved.sql",
+          "sha256": "1886baaa427b9f0436c0fefef2fe6bfb0a1834657f60edf8433890ae44a07297"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-truncated-difference.sql",
+          "sha256": "91ab052fe18a680399d139bfaf4eb7f6ceffd9963ebcb6eb760a59300cdca6dd"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-truncated-match.sql",
+          "sha256": "6f5ddfdd91c572982158698c18b9595853725001ece0eb63dda0ab635b413dd2"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-truncated-mixed.sql",
+          "sha256": "db6491ab7594ab51a442bdbceaa7df5b0c11041fc5bc668ddeaebc05e0404340"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-truncated-utf8-boundary.sql",
+          "sha256": "338b09749bafa209849b893d19ed75f84ee0e722d0ce72904bc00d83a459b036"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-truncated-utf8.sql",
+          "sha256": "f503e9350f07cda200ca707daad736b880d5ca5d67de2710099c2ae82d3ac288"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-unquoted-retry.sql",
+          "sha256": "1048a7e3a7144ed7fbf29ac19e8a6a5dc8029385fdac9f1b07ea2363a8db95d8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-label-unquoted-select.sql",
+          "sha256": "3fb149c32ae76cc1b569b739469fa07ace8a23aa15c37e3f1e7ac8fe2424c021"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-loop-coverage.sql",
+          "sha256": "b6f39d84125dec929f6c1be42e0ad63b3b9c4e3f71e1050b5c25038ea8c9949b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-opening-label-adjacent-line-comment.sql",
+          "sha256": "2a3db75a2574754f0cda536b26f2ebda97e92ffaa1888041a8f59746442ce363"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-opening-label-adjacent-operator-comment.sql",
+          "sha256": "2e5006bb6786b0ace8c94a54a25788879e5db0657cec09e9fb36dbc59a238a04"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-opening-label-batch.sql",
+          "sha256": "90823210f4363d9a5713afd52121510e948b5585105080e05c001c11ad5a9ec3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-opening-label-comments.sql",
+          "sha256": "744ef657fe02ad7fb0f57b04b452c3070cc7c1f00578c431a163664e73b8e72e"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-opening-label-unlabeled.sql",
+          "sha256": "d5fe69bce7c6fcc0e90ee0b0717f566264c3fcd22d30658f5c1592a2567b541d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-executable.sql",
+          "sha256": "711fbf0e43c70294c676628280657bfdc2d480ee633c6c9e54c5efa1003c377b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-invalid-column.sql",
+          "sha256": "677161261b19747be8729287bf29ed039bf2317d5bcb2ab2cbf8a351a2489e55"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-invalid-duplicate.sql",
+          "sha256": "310f8a2fa56c51dd45b687f2e977d14152283d11ea32dba00d16130a17fde154"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-invalid-empty.sql",
+          "sha256": "24116f104878f3f36e6c9cb37434c43782c57321e181eff3487417b999587c5e"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-invalid-expression.sql",
+          "sha256": "968f129ef928cdcd3e033e8d28455446750d11e59e908248b7ec0779be244011"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-invalid-on-update.sql",
+          "sha256": "dc6aa2f09fbf5fbf96eeddc3f69c6e53b40d1cafc5bec8b564671d4cebe683af"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-selective-fk-valid.sql",
+          "sha256": "202d26af6aed5cf89d848a0f0c5c896a4267db9a90a341f6bbb8ef87d1498516"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural-utility-completeness.sql",
+          "sha256": "057cce09ee4aa2cafa75041bd462a8b0ca7cafa2769a1ad5128018880aadf6e3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/procedural.sql",
+          "sha256": "e08ead6dd144b236a4c503d2c272dc93ad80856b75aebfafa9956a31f45d422d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-cte-conflict-rejected.sql",
+          "sha256": "c34d0a3ff19867c4fd41ed5aa30e9820ddcd0af246486f71f06d99a57e9f5ee0"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-cte-projection-invalid.sql",
+          "sha256": "0ea22a2ca520ddd1079a6842f9c0e4dac1161615f58caa567eb0d232dff9f62c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-cte-select-conflict.sql",
+          "sha256": "41d7984fcbf82f2e5a6884834f4eba308dc5d9b0b94c67d97b2950ebe1003919"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-cte-shadowed-targets.sql",
+          "sha256": "f7e23ecaacfbc039161059d6aa4d0373f6d27bc8d6584b69e297d85c1a9a118b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-cte-source-locks.sql",
+          "sha256": "7efe4ff516ee15ee5a4943ecd0f4229397bbdab5dbdf66a03915be11c755e650"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-cte-upsert.sql",
+          "sha256": "e121efae06ac5e13fae9eb505701fd26676b6a1ed1c2ba8f6ce26a1cba23120f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-dialect-extensions.sql",
+          "sha256": "779b945af1a3be40540d58a346641f9bd8dce4e286fa4f95085087773c5a3c97"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-edge-cases.sql",
+          "sha256": "a6db20edb75ceeab9dc5c9537f6cb9c3dd7545ed4e80f1fa8e33a84975f8684a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-exists-effective-mandatory.sql",
+          "sha256": "7757c665620d03fe3bdfa6526423c011cf63d655b02b411e6cb459759ea80ef8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-exists-polarity.sql",
+          "sha256": "b91b77373dd4e240a65436b439743005f0f6d86f3b548a687083030c8a6ef984"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-insert-source-call-spans.sql",
+          "sha256": "302ad70ef35b0f1e3af4c6f713cfd53906d858dec7d13c5c571a7caffd7c7a9b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-modifying-cte-extensions.sql",
+          "sha256": "053e1cb737f2cffbc16658c65c505aa1bad8509b28772f8013605664486e2ef1"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-modifying-ctes-unsupported.sql",
+          "sha256": "1b0b984f9a9f4a3820ac94e9dd924346a556f6d936516ac9134814c33d2592a6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-modifying-ctes.sql",
+          "sha256": "fcf1db07dc0442261b7b3069d923e5be4277f226950e28d669462c3c71707d45"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-nesting-limit.sql",
+          "sha256": "133aad61d89cdc3ebbee0be0321bd51b766cd9167293c5a7be2c499cc2cce39c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-ordering-all.sql",
+          "sha256": "7facf9c6b2f4c39a51e294e13b0b68a3756f8ece37acf272b82ab1fa90189640"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-readonly-cte-spans.sql",
+          "sha256": "55c9995d460b1b25f9298e4eebf3b4292a0563f0e31464b522cf0dac82df316e"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-scalar-quantified-malformed.sql",
+          "sha256": "b52c7c1da05504b3fdcdeda9d18ae9035aa01d72dc07e82433c132c54ce96e70"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-scalar-quantified-unsupported.sql",
+          "sha256": "137fd18529b7eec2eb434849f9642abc61a7892cfbc7af5cf2b39e6a20c90135"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-scalar-quantified.sql",
+          "sha256": "3cb366f2538d865b8c1dd33b9f1a4a9c300795a59d60923e0c85244c41e07e2c"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-scopes.sql",
+          "sha256": "fcffe3a1355da6dc274ce4ecfc415af21d2155dfc98b7894a2282e5120d35000"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-set-branch-chain.sql",
+          "sha256": "79aeb86f080c4aadb45a1061876f036c4de68591f28e4a3b0092f6a6e3aeb4c9"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-set-branch-spans.sql",
+          "sha256": "2fce475d7c31a4d98a6e83bea1bab2dc3ed229e4ac1f2aa5251f96aa7c7840cc"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-subqueries.sql",
+          "sha256": "9ed1e7923be181e7979e4b2198672f698c2e511aa482fe43403bebd71ca5326f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/query-unsupported.sql",
+          "sha256": "d4c8d207b3868bbc507e6018db10686bd484cb081565189bcdcf5966ca684c87"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/recursive-view-lenient.sql",
+          "sha256": "a208d9fce5aee37424cd2bb2f902d388a29b8c9bc0f689803887403008cfbda3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/recursive-view-missing-columns.sql",
+          "sha256": "a3d514ecdc95eeb72e5844b330d555054f7b120331b3250f61350a69d299197d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/recursive-view-scope.sql",
+          "sha256": "cfe47877e11c7772a21cc5011d965851db163536982d18753383a3402b0c5f22"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/recursive-views-invalid.sql",
+          "sha256": "809b37a9f0097a5e0e72d09fcd055b994567713d036d788eae844d25be11e64f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/recursive-views.sql",
+          "sha256": "f7fbdbff20c0db2e4dc8bce20ca7ab7b2ac754d1c837e658a6948d8a17319455"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/replay-structured-casts.sql",
+          "sha256": "b9118a8f19087aa0a814e03e0d770fc246a421cf057d4f1650910557dfff1cc0"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/replay-structured-execute-unsupported.sql",
+          "sha256": "9089bb8fedf1b131f2cae51712313b89959416ea31cb7bc51217a6c3073c2bfd"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/replay-structured-execute-variants.sql",
+          "sha256": "2ba49b854f42a1027fddc1ffb66b52f94bad281992466bbfd8eea3f3b4257839"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/replay-structured-execute.sql",
+          "sha256": "50cfc203d2d5c6b643dfe49dcbad49dc0fcfb599a1908e641b56fdb39303499a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/replay-structured-triggers.sql",
+          "sha256": "9145d2f60c236682ac543cb08a1aeefddf02779c7a3a532e56b14e776d3137c4"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/scalar-table-views.sql",
+          "sha256": "aaec2c876e556cc13680f93de50546db9e220b2d31cc2170a432587312d28397"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/schema-constraint-projections.sql",
+          "sha256": "5a4f1b891140c591f88fb95359541e7041fe28af77ee316b10ff3b15229dc310"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/schema-variants.sql",
+          "sha256": "9505c859f07ba764ff95c66c730df3b336cc5557b7e675baa29e2cd922ae21a5"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/schema-virtual.sql",
+          "sha256": "11f5183acbd3f131f92fd5a9b189fe2bc4b3234b18855795e1ad2ffbf4ec0066"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/schema.sql",
+          "sha256": "a2dc4e10832d32192fb8059aa9b8eebfc529bff34c6446de73610c6d35f9ab23"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/sql-fetch-no-candidate.sql",
+          "sha256": "ea2d659d1eebad10512103fcf2b952e7d6846d752a105c75dc9ac57c53cf5163"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/table-source-boundary.sql",
+          "sha256": "6d4ab9f37c522825f56a34c02f12e887a13162ebb68c6d9870a1b045e71cf3c5"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/table-source-neighbors.sql",
+          "sha256": "c66ea1d2d2298d56b63e2e6ef3a8c138a35416e5e231e74912a185018ce67de8"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/trigger-invalid.sql",
+          "sha256": "40fd9b750262d16a7b1f63aa6366240d2e39578e7b0efc79d41ff7c5acb89c44"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/truncated-escape-value.txt",
+          "sha256": "c666fab7ccb62a6387b7ee0ff91697f46488af0b56507a025f8fd915638a26c3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/unicode-comment-escapes.sql",
+          "sha256": "229f870f0f3ce0c1f5fc4f022271b441d7c9789e79ddd340004073167559944d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/unicode-locations-crlf.sql",
+          "sha256": "6460ad500febf346904b9ee3ea5f76323e862260b9b204dc139018499ac9e911"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/unicode-locations.sql",
+          "sha256": "d1e9f449bc1c6d37e7bdb93d4fe7fc072ee1500c9ad9f9a42540ec93890168b6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/unicode-surrogate-escapes.txt",
+          "sha256": "02f4733a7fe063d54d45488d162bad30d2505dcc21cc6a9434cc0ea4ea3938a6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/unicode-token-controls.sql",
+          "sha256": "bd3519f90980b54a27373ccd1f2b151cf6e3bca08f930e2592499fb2b0fc52a4"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/unsupported.sql",
+          "sha256": "18d3c6c1dd84a281d5fc7a4126687a09d445283b7398777c294aca77eed26963"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/valid-metadata.sql",
+          "sha256": "d6bf80de2469bd5c78a20d5d41a59cdce7b6f5af13dca16d5b17b39d24daf305"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/view-functions.sql",
+          "sha256": "8ba38a4c09173a227a31c86918590f161fc76bad175f7c3b19f42b35bead4c37"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/view-table-candidates.sql",
+          "sha256": "7b607cd15d29e715bccf8ff045b5ccb5299adeb1b4a7e7e8092dc62d9684e305"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/view-table.sql",
+          "sha256": "313fdab1c38b4b64351e6367677f2cf08456ecfb645d1cfaf00994a65699d855"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-atomic-identifiers.sql",
+          "sha256": "56c8cf4142237ffba2f192242db0dd0007fd95e50221ad2d835f84c739b81aa9"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-bare-end-alias.sql",
+          "sha256": "26198a80b6505097572594bac77536266ef72c365dc22cbed3d5cd743b0d7e40"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-boolean-identity.sql",
+          "sha256": "b1f830f8b99f457b2595a325c071ae41e6e04c452c084ebb8ee6f8a07157f533"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-boundaries.sql",
+          "sha256": "0de741842110f01ccea585d0be5152bee1ad0d58a2bf16eba19114ff2d623b27"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-comment-eof.sql",
+          "sha256": "03dd4fc7b8de4b3a08cf4b3d8e690631366a52ba91d4745026ded637886dc982"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-compatibility.sql",
+          "sha256": "9356818bc42f32062b040474f4ec98bc7c97ec49b9733f3c8f39fd0d175fa20f"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-cte-parity.sql",
+          "sha256": "6abcde37a63ab0d6170a9b2bf3fb434c7903f19e5a61c18d5cbfecc5518d5bf2"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-explain-comment-eof.sql",
+          "sha256": "385e500a44bab7ad6706933fb1d4829c9cd3f75d9040e529c81b77d429f75732"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-functions.sql",
+          "sha256": "67a2db65853fd1258a32d44300be1f54d7dd51f18b59f078c843bc0287f1f283"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-insert-identifier-boundaries.sql",
+          "sha256": "efb442aa4a53cd8c634f50962e470d5438dec506cbb278556d8ed0ea429de791"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-metadata.sql",
+          "sha256": "3376a6df91d535d757b741094112e36a013b59816f24224f73ab2033b42da2a4"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-noncommand.sql",
+          "sha256": "7e4b398c603264a14513165501f506677d9d6222df35d36be9c55773d7738df0"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-option-identity.sql",
+          "sha256": "3167a6be99396e823f2380047d16b3d251c37008cca5b38884760f0d1e32b616"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-options.sql",
+          "sha256": "9b4f887c643c8809652867341a181564f7290066c1626e3036a82875342977cc"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-prepare-comment-eof.sql",
+          "sha256": "9aed0950b98c3a4b73d8f0070ef5a3a1465922f2ae2b8cbcc72678f30db42e09"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-recovery.sql",
+          "sha256": "3eca0ae533dd3cb794fbe9a115ade3111de840bbc5e1983031c9fa49762cfb67"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-repeated-options.sql",
+          "sha256": "4cb9a26768dd746eb7b6671763ebb187d638cc401218221c77878a91f4d14b8b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-review-boundaries.sql",
+          "sha256": "3b75ad29a34ad7f3e16ba9be4fe342641de3958250f46e00c812d5e58de435d2"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-review.sql",
+          "sha256": "6d291c14db70e98dca48a835f4d45d90f953f90b8c43845bcbfb6876576d187b"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-routine-comment-eof.sql",
+          "sha256": "23afa7a5260ad2aaf6252769bf63d10339cb4bcdcd3d4e4c643d13f7f33b712a"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-signed-options.sql",
+          "sha256": "2827a6e8da49874695462c376c2b7126f2eece3ae0dbf4b926011a48e56073a3"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-string-options.sql",
+          "sha256": "e3c610a3bf0920ddc3674de0d2de977de2ec60c1b041c8d25aac7c6f1c9db7e6"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrapper-with-partial-conflict.sql",
+          "sha256": "3d77041f25150e374e5f3d1519fb45cb78ccedf5edbba4d97be1e66d53c1803d"
+        },
+        {
+          "path": "fixtures/postgres-facts/source/wrappers.sql",
+          "sha256": "21961b1f6a3d224774c13644d2e46df1792379367c2768967dadfc369b9172e6"
+        },
+        {
+          "path": "packages/no-mistakes/scripts/postgres-boolean-stringification-api.test.js",
+          "sha256": "f6c546f3eed7b39310626336066493c082c393fa7eefed7a50bac07fd38c1c43"
+        },
+        {
+          "path": "packages/no-mistakes/scripts/postgres-conditional-executors-api.test.js",
+          "sha256": "7fbb0d3307d54c98b682f3d5a4488f59eb0ff55b8495887193e37e9663a47b49"
+        },
+        {
+          "path": "packages/no-mistakes/scripts/postgres-source-api.test.js",
+          "sha256": "365d3da5e70f10d8cbbad960873a20074fd8ebc185346a87e305b693d06ee062"
+        }
+      ],
+      "source_revision": "e5ae00bd6353a28045a5344f4accac411a2ccd74"
+    },
+    "probe": "exact 16 workload signatures per arm",
+    "provenance_scope": "Reviewed expected full per-arm reports remain immutable historical outputs; fresh exact main3d8 and syntheticb70 release binaries must execute full semantic and NAPI comparisons plus the saved2075 CJS/ESM control before timing. LocalStage3 reports retain actual unformatted source labels and explicit test-only formatter carry. No historical artifact or row carry.",
+    "report_hashes": {
+      "cli": {
+        "configured-check": {
+          "baseline": {
+            "exit": 1,
+            "sha256": "5ef614dc752d91a5cec1256bfa1b808bdf2fda450c251cc20fa759e19a5feac1"
+          },
+          "candidate": {
+            "exit": 1,
+            "sha256": "5ef614dc752d91a5cec1256bfa1b808bdf2fda450c251cc20fa759e19a5feac1"
+          }
+        },
+        "effects-plain-cold-diagnostics": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          }
+        },
+        "effects-plain-cold-off": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
+          }
+        },
+        "effects-plain-hot-diagnostics": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "ac66da8ebd783dff4cf15ab54e57aa29c0c0eeb327e973368c68404a58c735f7"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "fda2bec189d3bf8bd8f3e7bc217d72a1e626c37cb87a454766af3cac3bc8721b"
+          }
+        },
+        "effects-plain-hot-off": {
+          "baseline": {
+            "exit": 0,
+            "sha256": "ac66da8ebd783dff4cf15ab54e57aa29c0c0eeb327e973368c68404a58c735f7"
+          },
+          "candidate": {
+            "exit": 0,
+            "sha256": "fda2bec189d3bf8bd8f3e7bc217d72a1e626c37cb87a454766af3cac3bc8721b"
+          }
+        },
+        "hot-rule-check": {
+          "baseline": {
+            "exit": 1,
+            "sha256": "f4f9cfd3e1262f0488372635f52093e29bbce41d476a248b9d28a8269a475ca8"
+          },
+          "candidate": {
+            "exit": 1,
+            "sha256": "024e937a14dcb045c73ea340de69d2bdeb47df2cc69057c4857b0dc8cf9b4984"
+          }
+        }
+      },
+      "graph": {
+        "cold-graph:calls": {
+          "baseline": "feebae20f851757e31d351060ad0d4526c61b96d2ec6ddb101f46db62aa79e76",
+          "candidate": "feebae20f851757e31d351060ad0d4526c61b96d2ec6ddb101f46db62aa79e76"
+        },
+        "cold-graph:no-calls": {
+          "baseline": "7ccfe1cc3151224de3db5ac6cf16d09531d7dfcee755ac785d1238125d55f744",
+          "candidate": "7ccfe1cc3151224de3db5ac6cf16d09531d7dfcee755ac785d1238125d55f744"
+        },
+        "default-cold:calls": {
+          "baseline": "3ca4a3c3c8fb830b03848b0ec16849afd526acec0ab92db0ea9472f133006eea",
+          "candidate": "3ca4a3c3c8fb830b03848b0ec16849afd526acec0ab92db0ea9472f133006eea"
+        },
+        "hot-16:calls": {
+          "baseline": "bc75e194bf56e02971c9c30c6b91afdc221bf754db16f3575f3ac0b3691203bc",
+          "candidate": "ca6930aef20cd05a5811cb669ef30cdbe36e70463062a2fe31b765cb02ae0112"
+        },
+        "hot-256:calls": {
+          "baseline": "0cabe4f3e202dfb2e555767de41bdcea879951d87f594161f4071dea5695135f",
+          "candidate": "afdd496f09f8debc3ff1216071586435d4c300bce20a1548e1f125350ffe36b2"
+        },
+        "inherited:calls": {
+          "baseline": "aa9ce4f77df2d5f61645a1c4f7f39b2ae202c55a9a818fdf421dc4a10b0415f6",
+          "candidate": "f01092027b0af17f83446fde7d468942dd9d71fbe9bc0fc62a167131105f558f"
+        },
+        "receiver-order:calls": {
+          "baseline": "1d0ee31ebd3a8e300c22ed79ec7fa038c64a2ed78aba8cf963ad1b068cc93d1c",
+          "candidate": "51e2085cf006220aa599aacfe7ba5dad187e90b8af63bc8de6e54b5bde95d5a1"
+        },
+        "repository-incoming:calls": {
+          "baseline": "d4226abcfe20e33b3d2950faa15c47e134debdf6dc0205cd1a4484de7ef42591",
+          "candidate": "e8869f0ec7295b18064177b765c404ba5a585f6a832bc1af386847780a074ae2"
+        }
+      },
+      "napi": {
+        "cold": {
+          "baseline": "f61a787f72aaded846883ae9d9a08a16af667982901fccbf2f71c4e9aed8cdfc",
+          "candidate": "f61a787f72aaded846883ae9d9a08a16af667982901fccbf2f71c4e9aed8cdfc"
+        },
+        "plain": {
+          "baseline": "0941ea9b462dbfde9445afe81d811c0f68da85ba716598b06f2ec857dc660700",
+          "candidate": "cee36e4fea0384154769eed15da80d1332e0b556ea5948ea0426d3f730ce5a8f"
+        },
+        "receiver": {
+          "baseline": "dd6d7dd3641cca1cab7c66cdebf8d132a8fbd916714a2f76a2acde54fb609adf",
+          "candidate": "dd6d7dd3641cca1cab7c66cdebf8d132a8fbd916714a2f76a2acde54fb609adf"
+        }
+      },
+      "probe": {
+        "cold-calls": {
+          "baseline": "2",
+          "candidate": "2"
+        },
+        "cold-no-calls": {
+          "baseline": "0",
+          "candidate": "0"
+        },
+        "default-cold": {
+          "baseline": "129",
+          "candidate": "129"
+        },
+        "hot-16": {
+          "baseline": "16",
+          "candidate": "16"
+        },
+        "hot-256": {
+          "baseline": "256",
+          "candidate": "256"
+        },
+        "inherited": {
+          "baseline": "25",
+          "candidate": "25"
+        },
+        "jsx-imports": {
+          "baseline": "27",
+          "candidate": "27"
+        },
+        "jsx-values": {
+          "baseline": "32",
+          "candidate": "32"
+        },
+        "shared-imports": {
+          "baseline": "0",
+          "candidate": "0"
+        },
+        "shared-values": {
+          "baseline": "128",
+          "candidate": "128"
+        }
+      }
+    },
+    "status": "REVIEWED FULL REPORTS",
+    "unchanged_cli_controls": [
+      "configured-check",
+      "effects-plain-cold-off",
+      "effects-plain-cold-diagnostics"
+    ],
+    "unchanged_graph_controls": [
+      "cold-graph:calls",
+      "cold-graph:no-calls",
+      "default-cold:calls"
+    ],
+    "untimed_graph_inputs": [
+      "cold-graph:calls",
+      "cold-graph:no-calls",
+      "default-cold:calls",
+      "hot-16:calls",
+      "hot-256:calls",
+      "inherited:calls",
+      "receiver-order:calls",
+      "repository-incoming:calls"
+    ]
+  },
+  "source_git_inventory_sha256": {
+    "baseline": "98d67ce875bc049057c112812e65e6048e14230f9189603b531fe2e35bf3044c",
+    "candidate": "62429ba354b13779d15b3d7797ae6bc201b80cc637d1f19cd8d52b13d4d93d3c"
+  },
+  "status": "REVIEWED AND FROZEN",
+  "target": "aarch64-unknown-linux-gnu",
+  "template": {
+    "diagnostic_commit": "fd960cab7b43d61bd07acfa34ff23a25b8ab3009",
+    "path": ".github/scripts/repeated-target-native-1971",
+    "reference_script_hashes": {
+      "cli-worker.py": "09ddcef6ee513dfe2bcdaa2c6e9f09bc9b3c3170133958a33e89c8b7e8ca6918",
+      "graph-probe.rs": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451",
+      "layout-helper.rs": "2112c0c5920423ed46d9c36b1c6b813c83a3e20ffbd57520e0ebff554a819375",
+      "layout-probe.rs": "e0e61c522ce3a97ba595a79eac69137daffb9da2ffc2710c5697cd4ee61786ae",
+      "paired_summary.py": "f2670dc7120efd8d9b6aaaa12fd3acb22cf337e0c88873a328726ed5eaa4f755",
+      "timing-probe.rs": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44"
+    },
+    "reference_support_hashes": {
+      "consumer-overlay.yml": "b000ad490bb717e85f42e6c1053951f5aafcc73c24862fe96fc3426effe3addc",
+      "plain-cold-overlay.yml": "bdf5c2f024101726297625bd058c544b9a33406589d6e913957df42d19337cc0",
+      "test-fixtures/README.md": "52424c7711e43d9244e3c80cba45864747e6f1339b18f985f0b88c3fabbb1fc3",
+      "test-fixtures/consumer-baseline.json": "69d14ebdbc632322dd5151d9499039dea333c74eab7671b5a617d5823dbbcbac",
+      "test-fixtures/consumer-candidate.json": "ca512bdb5fff032a99d072de67a38c0942c6ea9d4a83919acef6e87ff164e2c1",
+      "test-fixtures/consumer-expectations.json": "40f8bf4424317c626a03f1dbe9ed80e9135eb0283e4eb1958a56d87dc159d426",
+      "test-fixtures/graph-canonical-snapshot.json": "988ee8423054c91dfab14bb48c600dda5476354df4143049ebb17cc4303a69ef"
+    },
+    "v4_adapted_source_hashes": {
+      "budgets.py": "3c30dc294de5217208b20ddff38af8b0b94a05aa0373795fd0c68a3a5daeb4cb",
+      "common.py": "ed7d60340c0c253410e957b79f733ffc808861bd42e73f98d90f22a6c5c219b5",
+      "measure.py": "fa3bdbc4ac3b03e82673ba407a7e4843eb30c66c7e879599281a131168220201",
+      "report.py": "929a4d9be02116a8eaff693955c1c41f1740e79a9059eb05a0be9c547969ebf1"
+    }
+  },
+  "toolchain": "1.99.1",
+  "unmet": [
+    "Normalregistration-only diagnostic commit/push and registrationSUCCESS with allcomputeSKIPPED",
+    "Independent root review exactcommitted diagnosticSHA followed by separately approved ONEdispatch"
+  ],
+  "workload_count": 16,
+  "workloads": [
+    {
+      "input": "shared-facts",
+      "kind": "probe",
+      "mode": "facts-imports",
+      "name": "shared-imports",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "shared-facts",
+      "kind": "probe",
+      "mode": "facts-values",
+      "name": "shared-values",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "jsx-facts",
+      "kind": "probe",
+      "mode": "facts-imports",
+      "name": "jsx-imports",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "jsx-facts",
+      "kind": "probe",
+      "mode": "facts-values",
+      "name": "jsx-values",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "cold-graph",
+      "kind": "probe",
+      "mode": "graph-no-calls",
+      "name": "cold-no-calls",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "cold-graph",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "cold-calls",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "default-cold",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "default-cold",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "hot-16",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "hot-16",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "hot-256",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "hot-256",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "input": "inherited",
+      "kind": "probe",
+      "mode": "graph",
+      "name": "inherited",
+      "semantic": "exact canonical parity for cold; reviewed physical identity and target deltas for hot"
+    },
+    {
+      "command": [
+        "check"
+      ],
+      "diagnostics": false,
+      "input": "configured",
+      "kind": "cli",
+      "name": "configured-check",
+      "semantic": "Exactcoldreportparity"
+    },
+    {
+      "command": [
+        "check"
+      ],
+      "diagnostics": false,
+      "input": "configured-consumer",
+      "kind": "cli",
+      "name": "hot-rule-check",
+      "semantic": "ApprovedA0/B1queryfindingtrace"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/defaults.mts"
+      ],
+      "diagnostics": false,
+      "input": "default-cold",
+      "kind": "cli",
+      "name": "effects-plain-cold-off",
+      "semantic": "Exactphysicalreportparity",
+      "semantic_case": "plain-cold"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/defaults.mts"
+      ],
+      "diagnostics": true,
+      "input": "default-cold",
+      "kind": "cli",
+      "name": "effects-plain-cold-diagnostics",
+      "semantic": "Exactphysicalreportparity",
+      "semantic_case": "plain-cold"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/entry.mts"
+      ],
+      "diagnostics": false,
+      "input": "plain-consumer",
+      "kind": "cli",
+      "name": "effects-plain-hot-off",
+      "semantic": "ApprovedA0/B1physicalread/uncategorized",
+      "semantic_case": "plain-hot"
+    },
+    {
+      "command": [
+        "effects",
+        "database",
+        "--entry",
+        "src/entry.mts"
+      ],
+      "diagnostics": true,
+      "input": "plain-consumer",
+      "kind": "cli",
+      "name": "effects-plain-hot-diagnostics",
+      "semantic": "ApprovedA0/B1physicalread/uncategorized",
+      "semantic_case": "plain-hot"
+    }
+  ]
+}
