@@ -1,0 +1,185 @@
+{
+  "A26": {
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "revision": "c896db3775411e9b7867260db420a73965b91a9e",
+    "tree": "80a21e61065e68b69afb7ed4e5fd91cb79688f23",
+    "version": "0.91.2",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes#0.91.2",
+      "manifest_path": "/tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes/Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "no_mistakes",
+        "src_path": "/tmp/no-mistakes-shared-baseline-2087-c896/crates/no-mistakes/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "mermaid-validation"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/no-mistakes-shared-baseline-2087-c896/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "release_profile": {
+      "opt_level": 3,
+      "lto": true,
+      "codegen_units": 1,
+      "debug": 0,
+      "build_jobs": 1,
+      "incremental": 0
+    },
+    "harness": [
+      {
+        "path": "effects.rs",
+        "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+      },
+      {
+        "path": "facts.rs",
+        "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+      },
+      {
+        "path": "graph_semantics.rs",
+        "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+      },
+      {
+        "path": "graph_timing.rs",
+        "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+      },
+      {
+        "path": "main.rs",
+        "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+      }
+    ],
+    "lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+    "binary_sha256": "b250fd4db84a7750132b6b7071d5ea6f49721ce1590ebd39e76317d57f75e1c1",
+    "library_sha256": "7721a767c4c0448e9877c04281b95b20fbbdcba29ff32e8ed8b9166243b0793f",
+    "source_manifest_sha256": "375362866a094182b40c10ae6463b7f5b570d98adeb0530dbeb90b9fe01a3ba7",
+    "actual_paths": {
+      "probe": "/tmp/nm2054-shared-baseline-probe-link/output/probe",
+      "lib": "/tmp/nm-shared-baseline-2087-c896/baseline/completed-library-dependencies/libno_mistakes-6bc14b8bee5f2efc.rlib",
+      "inventory": "/tmp/nm-shared-baseline-2087-c896/source-inventory.json"
+    },
+    "producer_records": {
+      "/tmp/nm-shared-baseline-2087-c896-final-artifacts/closed-artifacts.json": "c8b72fe9d0c27718b35c9c9d355012f4bebc1cea1dc082c92b6f60c15a4c9bac",
+      "/tmp/nm-shared-baseline-2087-c896/baseline/completed-library-dependencies.json": "91f1a7424169e9ce3ad9a82547631257ea5d18c7ce348566844b3ec3e2a9ef08",
+      "/tmp/nm2054-shared-baseline-probe-link/receipt.json": "a10004ff1eeb3b1d2166edbc74d83526fb82c97ad9b3f61a6e6924fcc2267ed6"
+    },
+    "scope": "Actual current-pair producer adapter; no producer relabeling; missing artifact identities fail closed"
+  },
+  "B26": {
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "revision": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+    "tree": "d6794fa9ff98e91c1a76c47eeebacaa632973d98",
+    "version": "0.91.2",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///tmp/no-mistakes-2054-current-main/crates/no-mistakes#0.91.2",
+      "manifest_path": "/tmp/no-mistakes-2054-current-main/crates/no-mistakes/Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "no_mistakes",
+        "src_path": "/tmp/no-mistakes-2054-current-main/crates/no-mistakes/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "mermaid-validation"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-2054-current-main/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/no-mistakes-2054-current-main/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "release_profile": {
+      "opt_level": 3,
+      "lto": true,
+      "codegen_units": 1,
+      "debug": 0,
+      "build_jobs": 1,
+      "incremental": 0
+    },
+    "harness": [
+      {
+        "path": "effects.rs",
+        "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+      },
+      {
+        "path": "facts.rs",
+        "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+      },
+      {
+        "path": "graph_semantics.rs",
+        "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+      },
+      {
+        "path": "graph_timing.rs",
+        "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+      },
+      {
+        "path": "main.rs",
+        "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+      }
+    ],
+    "lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+    "binary_sha256": "16fb0d9ed103fe12f31de3d2567b6acfbb2a3bd5e3f6559ee9ff301000d0d784",
+    "library_sha256": "b430fac24ca5f5f10b45624224747b9eaa623195c2d953ec5c04330f3bbe4d40",
+    "source_manifest_sha256": "f5e22c30571b951b98f4d1a03e5fbb31af9544bb856db87a80c4696226f86ad6",
+    "actual_paths": {
+      "probe": "/tmp/nm2054-c896-prospective-release/candidate/probe",
+      "lib": "/tmp/nm2054-c896-prospective-release/candidate/lib.rlib",
+      "inventory": "/tmp/nm2054-c896-prospective-integration/source-inventory.json"
+    },
+    "producer_records": {
+      "/tmp/nm2054-c896-prospective-release/request.json": "cf43924f595e01b0a0c0c781896ee97959e6aa936b68f7043c742da23756c89b",
+      "/tmp/nm2054-c896-prospective-release/candidate/closed-artifacts.json": "a177f685767aba202a83969b1993cf8e46a9a71b1910f918ec112bcc5b70a439",
+      "/tmp/nm2054-c896-prospective-release/actual-terminal.json": "7eea89674e5bca28a75ea5c7f0533ce0905e2c1f98274d414b3fb08d48e78f4d",
+      "/tmp/nm2054-c896-prospective-release/candidate/functional-deps-source-profile-manifest.json": "391f15be4a8cab6572da7660fd75ac17ba0d0417959f3d2ea80e8514fc0105ad"
+    },
+    "scope": "Actual current-pair producer adapter; no producer relabeling; missing artifact identities fail closed"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "status": "PASS root final source review; normal publication allowed, exactpublishedSHA review still required before one dispatch",
+  "utc": "2026-10-16T19:05:47.732646+00:00",
+  "closed_source_sha256": "41bb27b459c6495072dfad8cdaf21c2043b52160b3deaf151766c2046c1d76aa",
+  "manifest_sha256": "9e9d3896d6864540c4b190060769961dd2d66c454d54d639a6838a0c0819b5c9",
+  "pins": 118,
+  "unchanged_scientific_and_control_files": [
+    "measure-once.py",
+    "analyze-once.py",
+    "functional-once.py",
+    "process_owner.py",
+    "subreaper.py",
+    "transport-REVIEWED.json",
+    "transport-DRAFT.json",
+    "payload/original-freeze.json"
+  ],
+  "credential_review": "privileged job no checkout or payload execution; only hardcoded4GET; read-only dependent validates same-run repo/run/attempt/source+allasset hashes",
+  "focused_tests": "actual12 passed; inspected acceptance/foreign context/tamper/symlink/partial/duplicate/boundary tests",
+  "no_measurement_approval_yet": true
+}

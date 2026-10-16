@@ -1,0 +1,25 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "approved_diagnostic_commit": null,
+  "repository": "jonathanong/no-mistakes",
+  "main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "candidate_head": "97a1c03146db2ed6e45f2884b70ac152ef51d4b3",
+  "candidate_tree": "d6794fa9ff98e91c1a76c47eeebacaa632973d98",
+  "actual_producer_baseline": "c896db3775411e9b7867260db420a73965b91a9e",
+  "actual_producer_candidate": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+  "api_controls_complete": true,
+  "sampling_minimum_remaining_seconds": 600,
+  "job_seconds": 1800,
+  "operation_seconds": 1500,
+  "transfer_reserve_seconds": 300,
+  "node_version": "26.11.1",
+  "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
+  "review_provenance": {
+    "source_root_review": {
+      "original_path": "/tmp/nm2054-b26-hosted-root-source-review.json",
+      "sha256": "850f536947b65367e44fd367acdd1b5a651599c3646f149fb2122a4eeafedbe8"
+    },
+    "review_scope": "Source/scientific/kernel/asset pins reviewed. Fresh hosted native controls and every numerical gate remain mandatory. No hosted measurement has run. Local /tmp paths here are provenance only.",
+    "prior_approved_manifest_sha256": "a08908f4f02230e740fdf137915d41be1e482dcd0056484a29a71ee4f595d758"
+  }
+}
