@@ -34,6 +34,8 @@ type TypeOrigins =
     DashMap<(std::path::PathBuf, String), Arc<OnceLock<(String, String)>>, FxBuildHasher>;
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) site_storage: site_storage::Probe,
     #[cfg(feature = "test-instrumentation")]
     pub(super) admission_probe: admission_probe::AdmissionProbe,
     state: Mutex<State>,

@@ -4,18 +4,34 @@ use super::*;
 mod worklist;
 pub(in super::super) use worklist::refine_value_calls;
 include!("refine_incoming.rs");
-fn refine_iteration(
+fn refine_site(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
-    base: &[ResolvedCallSite],
+    base: &ResolvedCallSite,
     data: ValueInputs<'_>,
     parameters_enabled: bool,
 ) -> (
-    Vec<ResolvedCallSite>,
+    ResolvedCallSite,
     FxHashSet<(std::path::PathBuf, CallableId)>,
 ) {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    if data.cache.site_storage.original() {
+        data.cache.site_storage.vector();
+        let (mut sites, used) = vector_oracle::refine_iteration(
+            inputs,
+            facts,
+            resolver,
+            indexes,
+            std::slice::from_ref(base),
+            data,
+            parameters_enabled,
+        );
+        return (sites.remove(0), used);
+    }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    data.cache.site_storage.scalar();
     let mut flow = ValueFlowResolution {
         inputs,
         facts,
@@ -43,8 +59,8 @@ fn refine_iteration(
         member_initializer: None,
         member_read: None,
     };
-    let mut sites = base.to_vec();
-    for site in &mut sites {
+    let mut result = base.clone();
+    for site in std::iter::once(&mut result) {
         if site.invocation == InvocationKind::Construct {
             continue;
         }
@@ -83,5 +99,9 @@ fn refine_iteration(
         super::apply_value::apply_value(inputs, facts, indexes, site, value, flow.replacement_read);
     }
     flow.merge_writer_dependencies();
-    (sites, flow.used_parameters)
+    (result, flow.used_parameters)
 }
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "refine_vector_tests.rs"]
+mod vector_oracle;

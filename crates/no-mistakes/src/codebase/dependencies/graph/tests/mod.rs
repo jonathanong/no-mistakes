@@ -160,3 +160,6 @@ mod unique_execution_phases;
 mod inherited_graph_snapshot;
 #[cfg(feature = "test-instrumentation")]
 mod static_callable_admission;
+
+#[cfg(feature = "test-instrumentation")]
+mod scalar_refinement;

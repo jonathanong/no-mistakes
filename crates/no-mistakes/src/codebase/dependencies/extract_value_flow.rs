@@ -33,6 +33,8 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub callable_assignment_name_clones: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub callable_assignment_target_constructions: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_component_links: usize,

@@ -56,12 +56,12 @@ pub(in super::super::super) fn refine_value_calls(
             .par_iter()
             .map(|index| {
                 let enabled = visits[index] <= base.len() + 1;
-                let (mut sites, used) = refine_iteration(
+                let (site, used) = refine_site(
                     inputs,
                     facts,
                     resolver,
                     indexes,
-                    &base[*index..=*index],
+                    &base[*index],
                     ValueInputs {
                         module_writer_phases: &module_writer_phases,
                         cache: &pass.parameter_cache,
@@ -71,7 +71,7 @@ pub(in super::super::super) fn refine_value_calls(
                     },
                     enabled,
                 );
-                (*index, sites.remove(0), used)
+                (*index, site, used)
             })
             .collect();
         let mut changed = fx_set();
@@ -131,6 +131,8 @@ pub(in super::super::super) fn refine_value_calls(
     replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
         site_source(inputs, site)
     });
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pass.parameter_cache.site_storage.finish();
     #[cfg(feature = "test-instrumentation")]
     {
         let mut snapshot = replacements

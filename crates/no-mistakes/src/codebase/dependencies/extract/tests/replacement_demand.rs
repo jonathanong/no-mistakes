@@ -186,3 +186,6 @@ fn typed_invalidations_preserve_owner_semantics_and_ordinary_unary_walks() {
         assert_eq!(capsule.unsafe_owners.contains(owner), invalidated && name != "awaited", "{name}");
     }
 }
+
+#[path = "callable_assignment_targets.rs"]
+mod callable_assignment_targets;

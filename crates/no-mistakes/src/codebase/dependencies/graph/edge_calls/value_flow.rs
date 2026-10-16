@@ -224,3 +224,10 @@ mod parameter_values;
 
 #[path = "value_flow/annotation_values.rs"]
 mod annotation_values;
+
+#[path = "value_flow/choice_targets.rs"]
+mod choice_targets;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "value_flow/site_storage_tests.rs"]
+pub(super) mod site_storage;

@@ -9,6 +9,22 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        // Member writes cannot assign a lexical module binding. Avoid building
+        // owned receiver paths for callable-only staging; receiver facts are
+        // still recorded by the assignment visitor independently.
+        if self.callable_assignment_state.is_none()
+            || matches!(
+                target,
+                AssignmentTarget::StaticMemberExpression(_)
+                    | AssignmentTarget::ComputedMemberExpression(_)
+            )
+        {
+            return;
+        }
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.callable_assignment_target_constructions += 1;
+        }
         let literal = plain && matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_));
         let callable = literal
             .then(|| {
