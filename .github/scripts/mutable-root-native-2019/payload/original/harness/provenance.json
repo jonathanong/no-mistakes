@@ -1,0 +1,30 @@
+[
+  {
+    "module": "facts",
+    "source": "/tmp/nm1972-query-reuse-evidence/facts-probe.rs",
+    "original_sha256": "0f4abc13910ef5c9186370d8d9f88378e29dae00a1cbeaf1bf8bbbf855ea8d66",
+    "module_sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da",
+    "change": "main visibility only"
+  },
+  {
+    "module": "graph_timing",
+    "source": "/tmp/pr2022-native-proposal-v2/.github/scripts/repeated-target-native-1971/timing-probe.rs",
+    "original_sha256": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44",
+    "module_sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a",
+    "change": "main visibility only"
+  },
+  {
+    "module": "graph_semantics",
+    "source": "/tmp/pr2022-native-proposal-v2/.github/scripts/repeated-target-native-1971/graph-probe.rs",
+    "original_sha256": "4ec6de570404065cc7fb7750eb4c48a3b7e468259e630e23c278e0d467e8bcfd",
+    "module_sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf",
+    "change": "main visibility only"
+  },
+  {
+    "module": "effects",
+    "source": "/tmp/no-mistakes-2019-effects-probe.rs",
+    "original_sha256": "05f6c56b6ee2be23441b20f750bc89438c5328c9587c537781b03b70230918ce",
+    "module_sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3",
+    "change": "main visibility only"
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "status": "Draft workload plan; final source pair and per-arm semantic outputs must be frozen before sampling",
+  "arms": {"A": "actual main parent of final2019", "B": "final2019", "C": "B plus1972"},
+  "comparison_scope": {"A_B": "2019 correctness implementation costs", "B_C": "1972 optimization; same exact B artifact"},
+  "match": ["machine", "Rust1.99 stable", "default features", "release opt3 fullLTO codegen1", "threads", "jobs", "physical fixtures", "dependencies", "fresh invocation state"],
+  "extraction_hot_directory": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers",
+  "extraction_hot_files": ["mutable-root-scale.mts", "mutable-pattern-phase-scale.mts", "mutable-pattern-deferred-diamond.mts", "mutable-pattern-eager-class-scale.mts", "mutable-pattern-cold-class-scale.mts"],
+  "extraction_limit": "root-scale is an extraction/work-sharing stress control without a consuming call; it does not establish downstream query performance",
+  "graph": {"source": "/tmp/pr2022-native-proposal-v2/.github/scripts/repeated-target-native-1971/timing-probe.rs", "root": "test-cases/rules/query-reached-per-item/provenance-fixture", "modes": ["graph", "graph-observer", "graph-no-calls"], "semantics": "pin independently verified full graph reports before timing; physical-site count is only a stable timing signature"},
+  "effects": {"source": "/tmp/no-mistakes-2019-effects-probe.rs", "root": "test-cases/rules/query-reached-per-item/provenance-fixture", "kind": "valkey", "modes": ["off", "observer"], "entries": ["src/nested-receiver-containers/mutable-let-direct.mts", "src/nested-receiver-containers/mutable-let-copied.mts", "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts"], "semantics": "run verify mode with one iteration per arm; review exact target/caller/site changes before timing"},
+  "diagnostics_limit": "observer mode measures the public library observer; it excludes CLI stderr delivery/rendering and must not be described as full CLI diagnostic overhead",
+  "controls": "retain the existing fixed eight-case1972 controls without modifying their inputs or batch rules",
+  "report": ["all pilot and long rows", "fixed batch selection rules before long samples", "balanced ABBA and BAAB orders", "CPU and wall separately", "peakRSS including construction", "paired intervals and order effects", "every adverse or inconclusive result", "no favorable retry or outlier deletion", "exact final source and binary hashes", "source lines/bytes/JSX density/config payload scope"],
+  "gate": "reproduced representative regressions block publication; count or layout equality does not establish speed or memory neutrality"
+}

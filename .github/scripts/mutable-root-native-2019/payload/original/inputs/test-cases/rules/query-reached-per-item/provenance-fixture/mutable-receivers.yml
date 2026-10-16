@@ -1,0 +1,11 @@
+effects:
+  valkey:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey', export: replica.get }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    include: [src/nested-receiver-containers/mutable-rule-*.mts]
+    options:
+      effects: [valkey]

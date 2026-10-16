@@ -1,0 +1,339 @@
+name: Mutable receiver isolated ARM diagnostic 2019
+on:
+  workflow_dispatch:
+    inputs:
+      approved_diagnostic_commit:
+        description: Exact independently reviewed diagnostic SHA (not PR head)
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  pull-requests: read
+concurrency:
+  group: mutable-root-2019-arm-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  GH_TOKEN: ${{ github.token }}
+  APPROVED_DIAGNOSTIC_COMMIT: ${{ inputs.approved_diagnostic_commit }}
+  PYTHONDONTWRITEBYTECODE: '1'
+  RUSTUP_TOOLCHAIN: '1.99.1'
+defaults:
+  run:
+    shell: bash
+jobs:
+  eligibility:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py preflight
+        timeout-minutes: 27
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-pair
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  core:
+    needs: eligibility
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py build '${{ matrix.arm }}' core
+        timeout-minutes: 27
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-core
+          path: /tmp/nm2019-arm2019/transfer/${{ matrix.arm }}
+          retention-days: 3
+          if-no-files-found: error
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  cli:
+    needs: core
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-core
+          path: /tmp/nm2019-arm2019/incoming/${{ matrix.arm }}
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py build '${{ matrix.arm }}' cli
+        timeout-minutes: 27
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-cli
+          path: /tmp/nm2019-arm2019/transfer/${{ matrix.arm }}
+          retention-days: 3
+          if-no-files-found: error
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  addon:
+    needs: cli
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-cli
+          path: /tmp/nm2019-arm2019/incoming/${{ matrix.arm }}
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py build '${{ matrix.arm }}' addon
+        timeout-minutes: 27
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-addon
+          path: /tmp/nm2019-arm2019/transfer/${{ matrix.arm }}
+          retention-days: 3
+          if-no-files-found: error
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  probe:
+    needs: addon
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-addon
+          path: /tmp/nm2019-arm2019/incoming/${{ matrix.arm }}
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py build '${{ matrix.arm }}' probe
+        timeout-minutes: 27
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-probe
+          path: /tmp/nm2019-arm2019/transfer/${{ matrix.arm }}
+          retention-days: 3
+          if-no-files-found: error
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  sql:
+    needs: probe
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: state-${{ github.run_id }}-${{ matrix.arm }}-probe
+          path: /tmp/nm2019-arm2019/incoming/${{ matrix.arm }}
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py build '${{ matrix.arm }}' sql
+        timeout-minutes: 27
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 3
+        with:
+          name: closed-${{ github.run_id }}-${{ matrix.arm }}
+          path: /tmp/nm2019-arm2019/closed/${{ matrix.arm }}
+          retention-days: 14
+          if-no-files-found: error
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-${{ matrix.arm }}
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  semantics:
+    needs: sql
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: closed-${{ github.run_id }}-baseline
+          path: /tmp/nm2019-arm2019/closed/baseline
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: closed-${{ github.run_id }}-candidate
+          path: /tmp/nm2019-arm2019/closed/candidate
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py semantics
+        timeout-minutes: 27
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 3
+        with:
+          name: semantic-${{ github.run_id }}
+          path: /tmp/nm2019-arm2019/evidence
+          retention-days: 14
+          if-no-files-found: error
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-pair
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+  measure:
+    needs: semantics
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          ref: ${{ inputs.approved_diagnostic_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: closed-${{ github.run_id }}-baseline
+          path: /tmp/nm2019-arm2019/closed/baseline
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: closed-${{ github.run_id }}-candidate
+          path: /tmp/nm2019-arm2019/closed/candidate
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          name: semantic-${{ github.run_id }}
+          path: /tmp/nm2019-arm2019/evidence
+      - run: python3 .github/scripts/mutable-root-native-2019/entry.py measure
+        timeout-minutes: 27
+      - name: Retain actual command evidence even on failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: evidence-${{ github.run_id }}-${{ github.job }}-pair
+          path: |
+            /tmp/nm2019-arm2019/*/proof
+            /tmp/nm2019-arm2019/public
+            /tmp/nm2019-arm2019/evidence
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn

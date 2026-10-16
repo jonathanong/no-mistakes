@@ -1,0 +1,223 @@
+{
+  "status": "Full outputs retained for independent review; historicalB20 A6/A22 and B20/B23 parity must be independently reviewed before timing",
+  "source_revisions": {
+    "A22": "e5ae00bd6353a28045a5344f4accac411a2ccd74",
+    "B23": "a022ab5c01d4fa479f6a20e1d73ab7cf51bc25af"
+  },
+  "outputs": {
+    "facts-no_writes-values": {
+      "A22": {
+        "sha256": "f34f68c39bd5d53af0b68ba88660898078c78529d52f426ccb938a23474d75f0",
+        "bytes": 14793250
+      },
+      "B23": {
+        "sha256": "f34f68c39bd5d53af0b68ba88660898078c78529d52f426ccb938a23474d75f0",
+        "bytes": 14793250
+      }
+    },
+    "facts-no_writes-imports": {
+      "A22": {
+        "sha256": "3cafb960c83b53ea5874d24e3f61c6819ef4edc9ed31d53dac61f94ff378b395",
+        "bytes": 9259009
+      },
+      "B23": {
+        "sha256": "3cafb960c83b53ea5874d24e3f61c6819ef4edc9ed31d53dac61f94ff378b395",
+        "bytes": 9259009
+      }
+    },
+    "facts-writes-values": {
+      "A22": {
+        "sha256": "251fd5914a08ff688652822ac60311bf34a9d776d185416bfff3ac299bcdd544",
+        "bytes": 855574
+      },
+      "B23": {
+        "sha256": "251fd5914a08ff688652822ac60311bf34a9d776d185416bfff3ac299bcdd544",
+        "bytes": 855574
+      }
+    },
+    "facts-writes-imports": {
+      "A22": {
+        "sha256": "4b81e722acefdf0561cd948e757b4c71776fb777171309f221df06a04aec55eb",
+        "bytes": 325677
+      },
+      "B23": {
+        "sha256": "4b81e722acefdf0561cd948e757b4c71776fb777171309f221df06a04aec55eb",
+        "bytes": 325677
+      }
+    },
+    "facts-shared_histories-values": {
+      "A22": {
+        "sha256": "fb380859e004ac1803de1e43bcea8addbb52cf88a5cc4e5b6e82fcea6fc4c67d",
+        "bytes": 883588943
+      },
+      "B23": {
+        "sha256": "fb380859e004ac1803de1e43bcea8addbb52cf88a5cc4e5b6e82fcea6fc4c67d",
+        "bytes": 883588943
+      }
+    },
+    "facts-shared_histories-imports": {
+      "A22": {
+        "sha256": "1b230625737bfbfa20af9bc6e9de7e132cfa2fb2f8273a5ec66b6a406bb69b1f",
+        "bytes": 2820745
+      },
+      "B23": {
+        "sha256": "1b230625737bfbfa20af9bc6e9de7e132cfa2fb2f8273a5ec66b6a406bb69b1f",
+        "bytes": 2820745
+      }
+    },
+    "facts-jsx-values": {
+      "A22": {
+        "sha256": "67e66a255bdf1e92e391bb985a70a80c5ce3cb5b6ed60fc3310e88b3db2d70f9",
+        "bytes": 34293
+      },
+      "B23": {
+        "sha256": "67e66a255bdf1e92e391bb985a70a80c5ce3cb5b6ed60fc3310e88b3db2d70f9",
+        "bytes": 34293
+      }
+    },
+    "facts-jsx-imports": {
+      "A22": {
+        "sha256": "fc5e41a368373f30b41484732a976fe197db34f5bb34fb5656c444737aa1df99",
+        "bytes": 31779
+      },
+      "B23": {
+        "sha256": "fc5e41a368373f30b41484732a976fe197db34f5bb34fb5656c444737aa1df99",
+        "bytes": 31779
+      }
+    },
+    "facts-mutable-root-scale-values": {
+      "A22": {
+        "sha256": "b81318215c81957b497f911aba2684c252c9c4e784735ffbfce140c2e04819e4",
+        "bytes": 280176
+      },
+      "B23": {
+        "sha256": "a06e51cbf6fb753cd7cdc15b4b6928a1ec53695d433101ebab8b76c8a0dcfbc9",
+        "bytes": 292421
+      }
+    },
+    "facts-mutable-pattern-phase-scale-values": {
+      "A22": {
+        "sha256": "1eed7ecb2e53bdb42c5a4916c2a5dd5644cc13331365ee77bf3214444fb9126a",
+        "bytes": 22098
+      },
+      "B23": {
+        "sha256": "e369cd8036e088f8d323e8c2436466e2c4309aa09fb2ebe97eb667a7b3ec348e",
+        "bytes": 25576
+      }
+    },
+    "facts-mutable-pattern-deferred-diamond-values": {
+      "A22": {
+        "sha256": "a79a42c1552c32c2eb9700719f5fd22313094ee9fd35c83c96ab33ecafe77f31",
+        "bytes": 818024
+      },
+      "B23": {
+        "sha256": "bb6b4d080951a34b12ec4f288899c3d7cc4e5c599d39106193a8aea839e28756",
+        "bytes": 821502
+      }
+    },
+    "facts-mutable-pattern-eager-class-scale-values": {
+      "A22": {
+        "sha256": "e0af63637506ce6fd07d8534614113a3951f540df98f7e76d8c53ec3fb5197c1",
+        "bytes": 71588
+      },
+      "B23": {
+        "sha256": "0ccd67d139c6115596b52c2ed8728a368ae6ebd632e82c6d88a92d34eb87e21a",
+        "bytes": 75072
+      }
+    },
+    "facts-mutable-pattern-cold-class-scale-values": {
+      "A22": {
+        "sha256": "afd1e6b83142644d2bc314c1060ec5946217b19e637b1a69744d77a58ae87185",
+        "bytes": 68722
+      },
+      "B23": {
+        "sha256": "0d64792c75135117e32eec1b1f3d241752ddd7a5640d21c7751d69940efcca2c",
+        "bytes": 72204
+      }
+    },
+    "graph-off": {
+      "A22": {
+        "sha256": "1804a39e980a65022ed925b019baa3e3d94458199346190c9eeabf07a06c897f",
+        "bytes": 899809
+      },
+      "B23": {
+        "sha256": "a4eeace72918610dce9c02831292e87de0da4d2ced6740b246948a411f4deb2d",
+        "bytes": 894241
+      }
+    },
+    "graph-work": {
+      "A22": {
+        "sha256": "fa73534f73c6fdab285ad68176612f007cce00eb4ed57c34d543d0b93404564e",
+        "bytes": 900216
+      },
+      "B23": {
+        "sha256": "6aa26f891d33a3f12fa26882b1f9962236ae0d396f1b7e52842eb9db194f40ee",
+        "bytes": 894648
+      }
+    },
+    "graph-no-calls": {
+      "A22": {
+        "sha256": "b8290adaf5c906acbb9199f20b2458c9d9559a6f5e6d5bf820e55ebd8a34aa13",
+        "bytes": 101266
+      },
+      "B23": {
+        "sha256": "b8290adaf5c906acbb9199f20b2458c9d9559a6f5e6d5bf820e55ebd8a34aa13",
+        "bytes": 101266
+      }
+    },
+    "effects-0": {
+      "A22": {
+        "sha256": "cec2fc8cd5bf273fcf03c25ac9fd27bb7516e8bdf216cf7cb929be4f5b2237fb",
+        "bytes": 311
+      },
+      "B23": {
+        "sha256": "79e4df6e04abf57e5f8691a7a0de42c637b4222ff11963363ba4820184dc7ccd",
+        "bytes": 130
+      }
+    },
+    "effects-1": {
+      "A22": {
+        "sha256": "57e0521bfa1dc475edbfcd28fb499e044153305146729b52f48ce2ccbded8c2d",
+        "bytes": 311
+      },
+      "B23": {
+        "sha256": "57e0521bfa1dc475edbfcd28fb499e044153305146729b52f48ce2ccbded8c2d",
+        "bytes": 311
+      }
+    },
+    "effects-2": {
+      "A22": {
+        "sha256": "0d60fd928fd4e7cef05ffb47682dcd78fe1573926c4536b010bd25004774c3d6",
+        "bytes": 144
+      },
+      "B23": {
+        "sha256": "0d60fd928fd4e7cef05ffb47682dcd78fe1573926c4536b010bd25004774c3d6",
+        "bytes": 144
+      }
+    }
+  },
+  "prior_arm_carry": {
+    "A22": "A6",
+    "B23": "B20"
+  },
+  "prior_manifests": {
+    "A22": {
+      "path": "/tmp/nm2019-b20-evidence-draft/semantic-manifest.json",
+      "sha256": "1a0f3a232ae408c72bc0a4ad7997f6bf782214f5e996e9cfe547ade5ed5bbed2"
+    },
+    "B23": {
+      "path": "/tmp/nm2019-b20-evidence-draft/semantic-manifest.json",
+      "sha256": "1a0f3a232ae408c72bc0a4ad7997f6bf782214f5e996e9cfe547ade5ed5bbed2"
+    }
+  },
+  "intended_delta_review_reference": "/tmp/nm2019-three-arm-evidence/semantic-diff-A-B.json",
+  "assertions": [
+    "all13 full fact snapshots per prior arm exact",
+    "full graph historicalB20 A6/A22 and B20/B23 exact",
+    "graph observer/off semantic exact per arm",
+    "A22/B23 physical call identity exact",
+    "non-consuming graph has nodes/edges and no calls",
+    "all3 full effects reports historicalB20 A6/A22 and B20/B23 exact"
+  ],
+  "effects_observer_limit": "verify emits observer-off full reports; observer collection timed separately; count alone is not full semantic proof"
+}

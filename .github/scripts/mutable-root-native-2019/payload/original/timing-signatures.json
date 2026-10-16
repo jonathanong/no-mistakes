@@ -1,0 +1,112 @@
+{
+  "facts-no_writes-values": {
+    "A": "128",
+    "B": "128",
+    "C": "128"
+  },
+  "facts-no_writes-imports": {
+    "A": "0",
+    "B": "0",
+    "C": "0"
+  },
+  "facts-writes-values": {
+    "A": "517",
+    "B": "517",
+    "C": "517"
+  },
+  "facts-writes-imports": {
+    "A": "2",
+    "B": "2",
+    "C": "2"
+  },
+  "facts-shared_histories-values": {
+    "A": "1025",
+    "B": "1025",
+    "C": "1025"
+  },
+  "facts-shared_histories-imports": {
+    "A": "513",
+    "B": "513",
+    "C": "513"
+  },
+  "facts-jsx-values": {
+    "A": "0",
+    "B": "0",
+    "C": "0"
+  },
+  "facts-jsx-imports": {
+    "A": "0",
+    "B": "0",
+    "C": "0"
+  },
+  "hot-mutable-root-scale": {
+    "A": "1",
+    "B": "1",
+    "C": "1"
+  },
+  "hot-mutable-pattern-phase-scale": {
+    "A": "1",
+    "B": "1",
+    "C": "1"
+  },
+  "hot-mutable-pattern-deferred-diamond": {
+    "A": "19",
+    "B": "19",
+    "C": "19"
+  },
+  "hot-mutable-pattern-eager-class-scale": {
+    "A": "2",
+    "B": "2",
+    "C": "2"
+  },
+  "hot-mutable-pattern-cold-class-scale": {
+    "A": "2",
+    "B": "2",
+    "C": "2"
+  },
+  "graph": {
+    "A": "937",
+    "B": "937",
+    "C": "937"
+  },
+  "graph-observer": {
+    "A": "937",
+    "B": "937",
+    "C": "937"
+  },
+  "graph-no-calls": {
+    "A": "0",
+    "B": "0",
+    "C": "0"
+  },
+  "effects-mutable-let-direct-off": {
+    "A": "1",
+    "B": "0",
+    "C": "0"
+  },
+  "effects-mutable-let-direct-observer": {
+    "A": "1",
+    "B": "0",
+    "C": "0"
+  },
+  "effects-mutable-let-copied-off": {
+    "A": "1",
+    "B": "1",
+    "C": "1"
+  },
+  "effects-mutable-let-copied-observer": {
+    "A": "1",
+    "B": "1",
+    "C": "1"
+  },
+  "effects-mutable-pattern-deferred-diamond-off": {
+    "A": "0",
+    "B": "0",
+    "C": "0"
+  },
+  "effects-mutable-pattern-deferred-diamond-observer": {
+    "A": "0",
+    "B": "0",
+    "C": "0"
+  }
+}

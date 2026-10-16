@@ -1,0 +1,10 @@
+effects:
+  postgres:
+    functions: [query]
+    returnedExecutors:
+      - { module: '@vendor/opaque-database', export: begin }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

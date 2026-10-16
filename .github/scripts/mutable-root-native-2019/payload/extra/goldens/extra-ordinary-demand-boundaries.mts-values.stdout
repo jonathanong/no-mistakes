@@ -1,0 +1,1908 @@
+TsFileFacts {
+    module_bindings: None,
+    operational_error: None,
+    parse_error: None,
+    fatal_parse_error: false,
+    source: None,
+    imports: [
+        ExtractedImport {
+            specifier: "@vendor/valkey",
+            kind: Static,
+            line: 1,
+            function_scope: None,
+            function_scope_id: None,
+            side_effect_only: false,
+            re_export: false,
+            runtime_reachable: false,
+            computed: false,
+        },
+        ExtractedImport {
+            specifier: "./ordinary-eager.cjs",
+            kind: Require,
+            line: 2,
+            function_scope: None,
+            function_scope_id: None,
+            side_effect_only: false,
+            re_export: false,
+            runtime_reachable: false,
+            computed: false,
+        },
+        ExtractedImport {
+            specifier: "./ordinary-static.cjs",
+            kind: Require,
+            line: 16,
+            function_scope: None,
+            function_scope_id: None,
+            side_effect_only: false,
+            re_export: false,
+            runtime_reachable: false,
+            computed: false,
+        },
+        ExtractedImport {
+            specifier: "./ordinary-deferred.cjs",
+            kind: Require,
+            line: 17,
+            function_scope: Some(
+                "Receiver/<anonymous:1>",
+            ),
+            function_scope_id: Some(
+                CallableId(
+                    617,
+                ),
+            ),
+            side_effect_only: false,
+            re_export: false,
+            runtime_reachable: false,
+            computed: false,
+        },
+        ExtractedImport {
+            specifier: "./ordinary-conditional.cjs",
+            kind: Require,
+            line: 21,
+            function_scope: None,
+            function_scope_id: None,
+            side_effect_only: false,
+            re_export: false,
+            runtime_reachable: false,
+            computed: false,
+        },
+    ],
+    eager_require_specifiers: [
+        "./ordinary-eager.cjs",
+        "./ordinary-static.cjs",
+    ],
+    imported_bindings: [
+        ImportedBinding {
+            specifier: "@vendor/valkey",
+            local: "primary",
+            imported: "primary",
+            kind: Named,
+            is_type_only: false,
+        },
+    ],
+    exported_bindings: [],
+    value_flow: ValueFlowFacts {
+        callable_value_uses: Some(
+            {
+                0: {
+                    "accessor",
+                    "replacement",
+                    "Receiver",
+                },
+            },
+        ),
+        receiver_mutations: Some(
+            {
+                0: {
+                    "primary": ValueMutationHistory {
+                        summary: Some(
+                            ValueMutationInfo {
+                                offset: 146,
+                                contexts: {
+                                    None,
+                                    Some(
+                                        CallableId(
+                                            282,
+                                        ),
+                                    ),
+                                    Some(
+                                        CallableId(
+                                            745,
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        assigned: Some(
+                            ValueAssignedMutations {
+                                members: {
+                                    "get": ValueAssignedMutation {
+                                        offset: 309,
+                                        unconditional_offset: None,
+                                        writer: Mixed,
+                                    },
+                                },
+                                dynamic: None,
+                                propagated: Some(
+                                    ValuePropagatedMutations {
+                                        aggregate: ValueAssignedMutations {
+                                            members: {
+                                                "get": ValueAssignedMutation {
+                                                    offset: 174,
+                                                    unconditional_offset: None,
+                                                    writer: Module,
+                                                },
+                                            },
+                                            dynamic: None,
+                                            propagated: None,
+                                            replacements: None,
+                                            early: None,
+                                        },
+                                        contexts: {
+                                            None: ValueAssignedMutations {
+                                                members: {
+                                                    "get": ValueAssignedMutation {
+                                                        offset: 174,
+                                                        unconditional_offset: None,
+                                                        writer: Module,
+                                                    },
+                                                },
+                                                dynamic: None,
+                                                propagated: None,
+                                                replacements: None,
+                                                early: None,
+                                            },
+                                        },
+                                    },
+                                ),
+                                replacements: None,
+                                early: None,
+                            },
+                        ),
+                        has_assignments: true,
+                        has_unassigned: false,
+                        members: {},
+                        dynamic: None,
+                    },
+                    "box": ValueMutationHistory {
+                        summary: Some(
+                            ValueMutationInfo {
+                                offset: 146,
+                                contexts: {
+                                    None,
+                                    Some(
+                                        CallableId(
+                                            617,
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        assigned: Some(
+                            ValueAssignedMutations {
+                                members: {
+                                    "client": ValueAssignedMutation {
+                                        offset: 211,
+                                        unconditional_offset: None,
+                                        writer: Mixed,
+                                    },
+                                },
+                                dynamic: None,
+                                propagated: None,
+                                replacements: Some(
+                                    ReferenceReplacements {
+                                        members: {
+                                            "client": {
+                                                472: false,
+                                                645: false,
+                                            },
+                                        },
+                                        dynamic: {},
+                                        regions: None,
+                                        identity: Some(
+                                            IdentityMetadata {
+                                                captures: {},
+                                                preserved: {
+                                                    "client": {
+                                                        211,
+                                                    },
+                                                },
+                                                dynamic: {},
+                                                unknown: IdentityEvents {
+                                                    offsets: {},
+                                                    writer: None,
+                                                },
+                                            },
+                                        ),
+                                    },
+                                ),
+                                early: Some(
+                                    EarlyAssignments {
+                                        members: {
+                                            "client": ReadPhases {
+                                                pending: {},
+                                                prepared: [
+                                                    PhaseRead {
+                                                        catalog: PhaseCatalog {
+                                                            start: 430,
+                                                            end: 461,
+                                                            segments: [
+                                                                (
+                                                                    439,
+                                                                    442,
+                                                                    0,
+                                                                ),
+                                                                (
+                                                                    452,
+                                                                    459,
+                                                                    0,
+                                                                ),
+                                                            ],
+                                                        },
+                                                        first_write: 1,
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                        dynamic: ReadPhases {
+                                            pending: {},
+                                            prepared: [],
+                                        },
+                                    },
+                                ),
+                            },
+                        ),
+                        has_assignments: true,
+                        has_unassigned: false,
+                        members: {
+                            "client": ValueMutationHistory {
+                                summary: Some(
+                                    ValueMutationInfo {
+                                        offset: 146,
+                                        contexts: {
+                                            None,
+                                        },
+                                    },
+                                ),
+                                assigned: Some(
+                                    ValueAssignedMutations {
+                                        members: {
+                                            "get": ValueAssignedMutation {
+                                                offset: 174,
+                                                unconditional_offset: None,
+                                                writer: Module,
+                                            },
+                                        },
+                                        dynamic: None,
+                                        propagated: None,
+                                        replacements: Some(
+                                            ReferenceReplacements {
+                                                members: {
+                                                    "get": {
+                                                        174: false,
+                                                    },
+                                                },
+                                                dynamic: {},
+                                                regions: None,
+                                                identity: None,
+                                            },
+                                        ),
+                                        early: None,
+                                    },
+                                ),
+                                has_assignments: false,
+                                has_unassigned: false,
+                                members: {},
+                                dynamic: None,
+                            },
+                        },
+                        dynamic: None,
+                    },
+                },
+            },
+        ),
+        bindings: [
+            ValueBinding {
+                owner: None,
+                name: "eager",
+                scope: 0,
+                declared_at: 48,
+                repeated: false,
+                invalidated_at: None,
+                mutation_contexts: {},
+                value: Call(
+                    56,
+                    87,
+                ),
+            },
+            ValueBinding {
+                owner: None,
+                name: "accessor",
+                scope: 0,
+                declared_at: 219,
+                repeated: false,
+                invalidated_at: None,
+                mutation_contexts: {},
+                value: Unknown,
+            },
+        ],
+        parameters: [
+            ValueParameter {
+                owner: CallableId(
+                    282,
+                ),
+                index: 0,
+                name: "next",
+                scope: 6,
+                default: Unknown,
+                projection: [],
+                initialization_order: 0,
+                default_order: 0,
+                default_mutations: None,
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+            ValueParameter {
+                owner: CallableId(
+                    475,
+                ),
+                index: 0,
+                name: "callback",
+                scope: 7,
+                default: Member(
+                    Named {
+                        name: "primary",
+                        scope: None,
+                        offset: 504,
+                        context: Some(
+                            CallableId(
+                                475,
+                            ),
+                        ),
+                    },
+                    "get",
+                ),
+                projection: [],
+                initialization_order: 1,
+                default_order: 1,
+                default_mutations: Some(
+                    {
+                        0: [
+                            ValueDefaultMutationSource {
+                                path: [
+                                    Some(
+                                        "get",
+                                    ),
+                                ],
+                                history: ValueMutationHistory {
+                                    summary: Some(
+                                        ValueMutationInfo {
+                                            offset: 146,
+                                            contexts: {
+                                                None,
+                                                Some(
+                                                    CallableId(
+                                                        282,
+                                                    ),
+                                                ),
+                                                Some(
+                                                    CallableId(
+                                                        745,
+                                                    ),
+                                                ),
+                                            },
+                                        },
+                                    ),
+                                    assigned: Some(
+                                        ValueAssignedMutations {
+                                            members: {
+                                                "get": ValueAssignedMutation {
+                                                    offset: 309,
+                                                    unconditional_offset: None,
+                                                    writer: Mixed,
+                                                },
+                                            },
+                                            dynamic: None,
+                                            propagated: Some(
+                                                ValuePropagatedMutations {
+                                                    aggregate: ValueAssignedMutations {
+                                                        members: {
+                                                            "get": ValueAssignedMutation {
+                                                                offset: 174,
+                                                                unconditional_offset: None,
+                                                                writer: Module,
+                                                            },
+                                                        },
+                                                        dynamic: None,
+                                                        propagated: None,
+                                                        replacements: None,
+                                                        early: None,
+                                                    },
+                                                    contexts: {
+                                                        None: ValueAssignedMutations {
+                                                            members: {
+                                                                "get": ValueAssignedMutation {
+                                                                    offset: 174,
+                                                                    unconditional_offset: None,
+                                                                    writer: Module,
+                                                                },
+                                                            },
+                                                            dynamic: None,
+                                                            propagated: None,
+                                                            replacements: None,
+                                                            early: None,
+                                                        },
+                                                    },
+                                                },
+                                            ),
+                                            replacements: None,
+                                            early: None,
+                                        },
+                                    ),
+                                    has_assignments: true,
+                                    has_unassigned: false,
+                                    members: {},
+                                    dynamic: None,
+                                },
+                            },
+                        ],
+                    },
+                ),
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+            ValueParameter {
+                owner: CallableId(
+                    745,
+                ),
+                index: 0,
+                name: "next",
+                scope: 14,
+                default: Unknown,
+                projection: [],
+                initialization_order: 2,
+                default_order: 2,
+                default_mutations: None,
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+        ],
+        returns: [
+            (
+                CallableId(
+                    120,
+                ),
+                Unknown,
+            ),
+            (
+                CallableId(
+                    243,
+                ),
+                Member(
+                    Named {
+                        name: "primary",
+                        scope: None,
+                        offset: 255,
+                        context: Some(
+                            CallableId(
+                                243,
+                            ),
+                        ),
+                    },
+                    "get",
+                ),
+            ),
+            (
+                CallableId(
+                    282,
+                ),
+                Unknown,
+            ),
+            (
+                CallableId(
+                    475,
+                ),
+                Named {
+                    name: "callback",
+                    scope: Some(
+                        7,
+                    ),
+                    offset: 526,
+                    context: Some(
+                        CallableId(
+                            475,
+                        ),
+                    ),
+                },
+            ),
+            (
+                CallableId(
+                    617,
+                ),
+                Call(
+                    654,
+                    688,
+                ),
+            ),
+            (
+                CallableId(
+                    707,
+                ),
+                Member(
+                    Named {
+                        name: "primary",
+                        scope: None,
+                        offset: 719,
+                        context: Some(
+                            CallableId(
+                                707,
+                            ),
+                        ),
+                    },
+                    "get",
+                ),
+            ),
+            (
+                CallableId(
+                    745,
+                ),
+                Unknown,
+            ),
+        ],
+        calls: [
+            ValueCall {
+                offset: 56,
+                end: 87,
+                source_callee: "require",
+                context: Some(
+                    CallableId(
+                        48,
+                    ),
+                ),
+                callee: Named {
+                    name: "require",
+                    scope: None,
+                    offset: 56,
+                    context: Some(
+                        CallableId(
+                            48,
+                        ),
+                    ),
+                },
+                arguments: [
+                    Unknown,
+                ],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+            ValueCall {
+                offset: 56,
+                end: 87,
+                source_callee: "require",
+                context: None,
+                callee: Named {
+                    name: "require",
+                    scope: None,
+                    offset: 56,
+                    context: None,
+                },
+                arguments: [
+                    Unknown,
+                ],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+            ValueCall {
+                offset: 572,
+                end: 604,
+                source_callee: "require",
+                context: None,
+                callee: Named {
+                    name: "require",
+                    scope: None,
+                    offset: 572,
+                    context: None,
+                },
+                arguments: [
+                    Unknown,
+                ],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+            ValueCall {
+                offset: 616,
+                end: 694,
+                source_callee: "<unknown>",
+                context: Some(
+                    CallableId(
+                        538,
+                    ),
+                ),
+                callee: Callable(
+                    CallableId(
+                        617,
+                    ),
+                ),
+                arguments: [],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: true,
+            },
+            ValueCall {
+                offset: 654,
+                end: 688,
+                source_callee: "require",
+                context: Some(
+                    CallableId(
+                        617,
+                    ),
+                ),
+                callee: Named {
+                    name: "require",
+                    scope: None,
+                    offset: 654,
+                    context: Some(
+                        CallableId(
+                            617,
+                        ),
+                    ),
+                },
+                arguments: [
+                    Unknown,
+                ],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+            ValueCall {
+                offset: 793,
+                end: 830,
+                source_callee: "require",
+                context: None,
+                callee: Named {
+                    name: "require",
+                    scope: None,
+                    offset: 793,
+                    context: None,
+                },
+                arguments: [
+                    Unknown,
+                ],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+            ValueCall {
+                offset: 832,
+                end: 846,
+                source_callee: "Receiver",
+                context: None,
+                callee: Named {
+                    name: "Receiver",
+                    scope: Some(
+                        0,
+                    ),
+                    offset: 836,
+                    context: None,
+                },
+                arguments: [],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+            ValueCall {
+                offset: 848,
+                end: 858,
+                source_callee: "deferred",
+                context: None,
+                callee: Named {
+                    name: "deferred",
+                    scope: Some(
+                        0,
+                    ),
+                    offset: 848,
+                    context: None,
+                },
+                arguments: [],
+                bound: false,
+                spread_at: None,
+                once: false,
+                repeated: false,
+            },
+        ],
+        type_exports: [],
+        async_callables: {},
+        generator_callables: {},
+    },
+    callable_aliases: [],
+    star_reexport_specifiers: [],
+    per_item_calls: [],
+    function_calls: [
+        FunctionCall {
+            caller: Some(
+                "eager",
+            ),
+            caller_id: Some(
+                CallableId(
+                    48,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "require",
+            line: 2,
+            offset: 56,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Global,
+            callee_binding_scope: None,
+            static_arg: Some(
+                "./ordinary-eager.cjs",
+            ),
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "require",
+            line: 2,
+            offset: 56,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Global,
+            callee_binding_scope: None,
+            static_arg: Some(
+                "./ordinary-eager.cjs",
+            ),
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "accessor",
+            ),
+            caller_id: Some(
+                CallableId(
+                    219,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "value",
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: Membership,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "accessor",
+            ),
+            caller_id: Some(
+                CallableId(
+                    219,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "value",
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: Membership,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "accessor.value",
+            line: 11,
+            offset: 317,
+            is_callback: false,
+            invocation: Set,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver",
+            ),
+            caller_id: Some(
+                CallableId(
+                    538,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "value",
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: Membership,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver",
+            ),
+            caller_id: Some(
+                CallableId(
+                    538,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "value",
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: Membership,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "require",
+            line: 16,
+            offset: 572,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Global,
+            callee_binding_scope: None,
+            static_arg: Some(
+                "./ordinary-static.cjs",
+            ),
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver",
+            ),
+            caller_id: Some(
+                CallableId(
+                    538,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "Receiver/<anonymous:1>",
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: Callback,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/<anonymous:1>",
+            ),
+            caller_id: Some(
+                CallableId(
+                    617,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "require",
+            line: 17,
+            offset: 654,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Global,
+            callee_binding_scope: None,
+            static_arg: Some(
+                "./ordinary-deferred.cjs",
+            ),
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "require",
+            line: 21,
+            offset: 793,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Global,
+            callee_binding_scope: None,
+            static_arg: Some(
+                "./ordinary-conditional.cjs",
+            ),
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "Receiver",
+            line: 22,
+            offset: 832,
+            is_callback: false,
+            invocation: Construct,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "deferred",
+            line: 23,
+            offset: 848,
+            is_callback: false,
+            invocation: Call,
+            target_identity: RepositoryFunction,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+    ],
+    unknown_calls: [
+        UnknownCall {
+            caller: Some(
+                "Receiver",
+            ),
+            caller_id: Some(
+                CallableId(
+                    538,
+                ),
+            ),
+            line: 17,
+            offset: 616,
+            invocation: Call,
+        },
+    ],
+    call_sites: [],
+    resource_calls: [],
+    resource_diagnostics: [],
+    symbol_references: [
+        FunctionCall {
+            caller: Some(
+                "eager",
+            ),
+            caller_id: Some(
+                CallableId(
+                    48,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "require",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "require",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "box",
+            ),
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "box.client",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "box",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "replacement",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "box",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "replacement",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "accessor/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    243,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary.get",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "accessor/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    243,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "accessor/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    282,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "accessor/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    282,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "next",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                6,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "accessor",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "primary.get",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "box.client",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "box",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "accessor",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "deferred",
+            ),
+            caller_id: Some(
+                CallableId(
+                    475,
+                ),
+            ),
+            syntactic_caller: Some(
+                "deferred",
+            ),
+            callee: "primary.get",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "deferred",
+            ),
+            caller_id: Some(
+                CallableId(
+                    475,
+                ),
+            ),
+            syntactic_caller: Some(
+                "deferred",
+            ),
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "deferred",
+            ),
+            caller_id: Some(
+                CallableId(
+                    475,
+                ),
+            ),
+            syntactic_caller: Some(
+                "deferred",
+            ),
+            callee: "callback",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                7,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "require",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/<anonymous:1>",
+            ),
+            caller_id: Some(
+                CallableId(
+                    617,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "box",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/<anonymous:1>",
+            ),
+            caller_id: Some(
+                CallableId(
+                    617,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/<anonymous:1>",
+            ),
+            caller_id: Some(
+                CallableId(
+                    617,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "require",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    707,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary.get",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    707,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    745,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "primary",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Receiver/value",
+            ),
+            caller_id: Some(
+                CallableId(
+                    745,
+                ),
+            ),
+            syntactic_caller: None,
+            callee: "next",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                14,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "condition",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "require",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "Receiver",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "deferred",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: None,
+            caller_id: None,
+            syntactic_caller: None,
+            callee: "eager",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+    ],
+    exported_functions: [],
+    exported_resource_roots: [],
+    exported_resource_scopes: [],
+    known_function_scopes: [
+        "Receiver",
+        "Receiver/<anonymous:1>",
+        "Receiver/value",
+        "accessor",
+        "accessor/value",
+        "deferred",
+        "eager",
+        "replacement",
+    ],
+    callable_scope_ids: [
+        (
+            CallableId(
+                48,
+            ),
+            "eager",
+        ),
+        (
+            CallableId(
+                120,
+            ),
+            "replacement",
+        ),
+        (
+            CallableId(
+                243,
+            ),
+            "accessor",
+        ),
+        (
+            CallableId(
+                243,
+            ),
+            "accessor/value",
+        ),
+        (
+            CallableId(
+                282,
+            ),
+            "accessor",
+        ),
+        (
+            CallableId(
+                282,
+            ),
+            "accessor/value",
+        ),
+        (
+            CallableId(
+                475,
+            ),
+            "deferred",
+        ),
+        (
+            CallableId(
+                538,
+            ),
+            "Receiver",
+        ),
+        (
+            CallableId(
+                617,
+            ),
+            "Receiver/<anonymous:1>",
+        ),
+        (
+            CallableId(
+                707,
+            ),
+            "Receiver/value",
+        ),
+        (
+            CallableId(
+                745,
+            ),
+            "Receiver/value",
+        ),
+    ],
+    callable_bindings: [
+        (
+            0,
+            "Receiver",
+            CallableId(
+                538,
+            ),
+        ),
+        (
+            0,
+            "accessor",
+            CallableId(
+                219,
+            ),
+        ),
+        (
+            0,
+            "box",
+            CallableId(
+                93,
+            ),
+        ),
+        (
+            0,
+            "deferred",
+            CallableId(
+                475,
+            ),
+        ),
+        (
+            0,
+            "replacement",
+            CallableId(
+                120,
+            ),
+        ),
+        (
+            8,
+            "Receiver",
+            CallableId(
+                538,
+            ),
+        ),
+    ],
+    callable_binding_declared_at: [
+        (
+            0,
+            "accessor",
+            219,
+        ),
+        (
+            0,
+            "box",
+            93,
+        ),
+    ],
+    class_member_callable_ids: [],
+    static_getter_callable_ids: [],
+    static_setter_callable_ids: [],
+    lexical_scope_parents: [
+        (
+            0,
+            None,
+        ),
+        (
+            1,
+            Some(
+                0,
+            ),
+        ),
+        (
+            2,
+            Some(
+                0,
+            ),
+        ),
+        (
+            3,
+            Some(
+                0,
+            ),
+        ),
+        (
+            4,
+            Some(
+                3,
+            ),
+        ),
+        (
+            5,
+            Some(
+                0,
+            ),
+        ),
+        (
+            6,
+            Some(
+                5,
+            ),
+        ),
+        (
+            7,
+            Some(
+                0,
+            ),
+        ),
+        (
+            8,
+            Some(
+                0,
+            ),
+        ),
+        (
+            9,
+            Some(
+                8,
+            ),
+        ),
+        (
+            10,
+            Some(
+                9,
+            ),
+        ),
+        (
+            11,
+            Some(
+                8,
+            ),
+        ),
+        (
+            12,
+            Some(
+                11,
+            ),
+        ),
+        (
+            13,
+            Some(
+                8,
+            ),
+        ),
+        (
+            14,
+            Some(
+                13,
+            ),
+        ),
+    ],
+    callable_scopes: [
+        "Receiver",
+        "Receiver/<anonymous:1>",
+        "Receiver/value",
+        "accessor/value",
+        "deferred",
+        "replacement",
+    ],
+    class_scopes: [
+        "Receiver",
+    ],
+    class_declaration_lines: [],
+    namespaces: NamespaceFacts {
+        members: [],
+        roots: [],
+        declared: [],
+        value_uses: [
+            "primary",
+        ],
+        member_uses: [
+            (
+                "primary",
+                "get",
+            ),
+        ],
+        sites: [],
+        locals: [],
+        opaque_specifiers: [],
+        unreported_class_ids: [],
+    },
+    has_unknown_top_level_call: false,
+    symbols: None,
+    route_refs: [],
+    route_helpers: [],
+    route_helper_imports: [],
+    route_helper_refs: [],
+    backend_routes: [],
+    queue_usage: None,
+    queue_create_line: None,
+    queue_name: None,
+    queue_project: None,
+    http_calls: [],
+    process_spawns: [],
+    server_routes: None,
+    react_components: [],
+    effect_calls: [],
+    rsc_environment: None,
+    trpc_procedures: [],
+    trpc_calls: [],
+}

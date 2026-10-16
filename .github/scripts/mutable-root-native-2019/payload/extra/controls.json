@@ -1,0 +1,158 @@
+[
+  {
+    "label": "extra-mutable-root-single-fields.mts-imports",
+    "input": "mutable-root-single-fields.mts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+    "mode": [
+      "imports",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-root-single-fields.mts-imports.stdout",
+    "golden_sha256": "62d830ba03170f09a6e8674bd302d15641481a0ae5f3957998ea05be6012d550"
+  },
+  {
+    "label": "extra-mutable-root-single-fields.mts-values",
+    "input": "mutable-root-single-fields.mts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-root-single-fields.mts-values.stdout",
+    "golden_sha256": "d6cf9e2893dda6a1cbb88164555481d9760c1fbeae750428be40bb7d8dedc160"
+  },
+  {
+    "label": "extra-mutable-root-single-fallbacks.mts-imports",
+    "input": "mutable-root-single-fallbacks.mts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+    "mode": [
+      "imports",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-root-single-fallbacks.mts-imports.stdout",
+    "golden_sha256": "f687102006a5ee8b595c9890e017eee5993715d9bd36f8ccf111cee5cfcbf2c7"
+  },
+  {
+    "label": "extra-mutable-root-single-fallbacks.mts-values",
+    "input": "mutable-root-single-fallbacks.mts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-root-single-fallbacks.mts-values.stdout",
+    "golden_sha256": "f7a60a015bbcb345d01eaeeaa17b08cffaaeee48a00718c8226ebf17015f0e5f"
+  },
+  {
+    "label": "extra-mutable-root-target-metadata.ts-imports",
+    "input": "mutable-root-target-metadata.ts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+    "mode": [
+      "imports",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-root-target-metadata.ts-imports.stdout",
+    "golden_sha256": "65c660f462878e152c803befe6194a7c2b04f1e40ebbe9e7622e45ef629b4618"
+  },
+  {
+    "label": "extra-mutable-root-target-metadata.ts-values",
+    "input": "mutable-root-target-metadata.ts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-root-target-metadata.ts-values.stdout",
+    "golden_sha256": "b3c6d89715ad3090bcaa1a2a94c99d0055d852c8dee4fcc35606e38250f867a5"
+  },
+  {
+    "label": "extra-mutable-projection-wide.ts-imports",
+    "input": "mutable-projection-wide.ts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+    "mode": [
+      "imports",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-projection-wide.ts-imports.stdout",
+    "golden_sha256": "41d66f9da024629cd4b2cf4a445d57ba094ae1b66fb7b5dea8edb46b631f9d66"
+  },
+  {
+    "label": "extra-mutable-projection-wide.ts-values",
+    "input": "mutable-projection-wide.ts",
+    "source_git_path": "test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-mutable-projection-wide.ts-values.stdout",
+    "golden_sha256": "5ae0ba4910e105474cb325ca75cf19074a42e6dc2edc4c401a665163873949cc"
+  },
+  {
+    "label": "extra-ordinary-demand-annex.cjs-imports",
+    "input": "ordinary-demand-annex.cjs",
+    "source_git_path": "test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+    "mode": [
+      "imports",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-ordinary-demand-annex.cjs-imports.stdout",
+    "golden_sha256": "d873ce5b8fe62726d0f8ca99d2d59e10b7d0e09c870aa1236aa58532b7c774df"
+  },
+  {
+    "label": "extra-ordinary-demand-annex.cjs-values",
+    "input": "ordinary-demand-annex.cjs",
+    "source_git_path": "test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-ordinary-demand-annex.cjs-values.stdout",
+    "golden_sha256": "ddca32b69e525f5441fcc830cab7a846929ed0bf7d21982d65ae59bc53232b95"
+  },
+  {
+    "label": "extra-ordinary-demand-boundaries.mts-imports",
+    "input": "ordinary-demand-boundaries.mts",
+    "source_git_path": "test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+    "mode": [
+      "imports",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-ordinary-demand-boundaries.mts-imports.stdout",
+    "golden_sha256": "274da911059930108c07f553d26ad187f341819f70cbfccfc5baca9ed80466c4"
+  },
+  {
+    "label": "extra-ordinary-demand-boundaries.mts-values",
+    "input": "ordinary-demand-boundaries.mts",
+    "source_git_path": "test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "extra-ordinary-demand-boundaries.mts-values.stdout",
+    "golden_sha256": "6a6bf1f94c5fc80278af778cb520e9f83fa4fd34488a626928cd0608c914e2eb"
+  },
+  {
+    "label": "single-descent-history",
+    "input": "single-descent-history.mts",
+    "source_git_path": "test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts",
+    "mode": [
+      "values",
+      "1",
+      "dump"
+    ],
+    "golden": "single-descent-history.stdout",
+    "golden_sha256": "377b57d316368f745fd0bc6390c06c20bd0c182926492c70fc0018b8fdee7f65"
+  }
+]

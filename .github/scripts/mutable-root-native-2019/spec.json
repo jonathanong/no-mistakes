@@ -1,0 +1,58 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "diagnostic_parent": "577d79ae4896e76557cd34395f20041b72374fe7",
+  "directory": ".github/scripts/mutable-root-native-2019",
+  "workflow": ".github/workflows/repeated-target-native-1971-next.yml",
+  "toolchain": "1.99.1",
+  "target": "aarch64-unknown-linux-gnu",
+  "features": [
+    "default",
+    "mermaid-validation"
+  ],
+  "profile": {
+    "opt_level": "3",
+    "lto": true,
+    "codegen_units": 1,
+    "debug": 0,
+    "incremental": false,
+    "jobs": 2
+  },
+  "measurement_budget_seconds": 1500,
+  "measurement_job_minutes": 30,
+  "controls": {
+    "workloads.json": "cdd1b5e66757c37675876c30ad5e36e80657ce91843c7bbc6d28d56c739a6042",
+    "batches-1972.json": "67ac0c0318e013fb4b79b6609c24fbd2b51b6ad327651ccfb7fb47f35b6eadcb",
+    "calibration-batches.json": "0b677685f4f8ce94229c0f0295f57695914180d8d1aca55cbcb22a1a68cc995d"
+  },
+  "ci": {
+    "run": 38876026084,
+    "rust_job": 116891170498,
+    "raw_log_sha256": "8b33d1913b65b664938675857b856658a7ae1f8eb54ab4de0a286637aa7346a1",
+    "codecov": {
+      "codecov/patch/rust": 116894814532,
+      "codecov/project/rust": 116894807185,
+      "codecov/patch/javascript": 116892991450,
+      "codecov/project/javascript": 116892979258
+    }
+  },
+  "baseline": {
+    "revision": "e5ae00bd6353a28045a5344f4accac411a2ccd74",
+    "tree": "d34c77347324e43bda42a72ebcedf45e4922345a",
+    "source_manifest_sha256": "0e9545bc9c15c597e77ecfeca3789de902cdbac6bd76864e65a4c39baf59f062"
+  },
+  "candidate": {
+    "revision": "577d79ae4896e76557cd34395f20041b72374fe7",
+    "tree": "e05ec953f22966a72fbb4ab477527a393d662e5d",
+    "source_manifest_sha256": "68f98e75f62de06bfaeed61782cc31c635aa7c059d1ddc04520fece02ffeb95c"
+  },
+  "lock_sha256": "979f81a3253a901f9033e25fccbda73fbe32c463e3f402198596b990933171b9",
+  "acceptance": {
+    "policy": "crates/no-mistakes/AGENTS.md Required regression gates and Measurement and PR reporting",
+    "reject_reproduced_slowdown": true,
+    "include_cold_and_peak_rss": true,
+    "reject_flat_work_with_higher_memory": true,
+    "all_five_metrics_retained": true,
+    "no_threshold_relaxation": true,
+    "supplementary_only_not_x86_gate_replacement": true
+  }
+}

@@ -1,0 +1,11 @@
+# Mutable receiver ARM diagnostic draft
+
+Root and independent peer reviewed this source adapter and approved its source activation. `spec.json` is REVIEWED AND FROZEN; commit, push and exact-SHA dispatch remain separately authorized steps. It preserves the frozen x86 B24 evidence and all earlier adverse observations. It neither clears that gate nor supplies an ARM result before an actual run.
+
+The intended pair is fresh ARM production builds of current-main e5ae00b and candidate 577d79a. Each arm has bounded core, CLI, addon, original 2019 probe, and SQL link phases. Every job is at most 30 minutes; actual phase fit remains unproved. The older 2022 aggregate 46–48-minute production commands did not retain per-command compiler timings, so they do not establish an over-budget atomic phase.
+
+State transfers are restricted to one workflow run and one arm. They seal tracked source bytes, owned Cargo target, binaries and proof records, preserving authentic archive modes, mtimes and symlinks. They exclude Git configuration, credentials and process environment. Fresh checkouts independently establish Git identity. Later actual Cargo fresh=true observations remain distinct from the original fresh=false producer. Fingerprints and depinfo are never edited to manufacture freshness.
+
+The numerical controller retains 22 workloads, 704 balanced rows, fixed batches, all five metrics and existing bootstrap/gates. The hosted measurement budget is explicitly 1500 seconds on one ubuntu-24.04-arm VM, with no pilot or recalibration. It creates no local CPU hold. Both fresh ARM artifacts, 211 identical physical input files, 38 full outputs, eight lossless gzip roundtrips, 22 signatures, 48 exact intended site changes, 13 extra controls and SQL CJS/ESM parity must close before measurement. Expected x86 bytes are golden controls, never ARM observations.
+
+Source activation alone does not authorize a build, workflow registration, push or dispatch. Actual phase fit and all performance observations remain pending. Missing adapters, guards or provenance are blockers; none can be treated as a successful phase. The existing 2022 workflow path may be reused only through a separately reviewed diagnostic branch and explicit exact-SHA dispatch, without changing the 2022 branch or its evidence.
