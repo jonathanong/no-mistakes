@@ -81,6 +81,12 @@ same prepared facts and does not change Node types or JSON contracts.
 
 ## Contract
 
+Index `structuralIdentity` strings, including their nested expression identities,
+retain the same field order with default Rust features and `--no-default-features`.
+Ordinary indexes retain the legacy identity; `ON ONLY` adds the final `only: true`
+discriminator. Quoted names and literal values remain significant. This ordering
+does not depend on enabling Mermaid or changing global JSON map features.
+
 `PostgresSqlFacts.schemaVersion` is `1`. All public fact names are exported from
 the package declarations, including `PostgresSqlStatement`,
 `PostgresSqlStatementKind`, `PostgresSqlColumn`, `PostgresSqlType`,
