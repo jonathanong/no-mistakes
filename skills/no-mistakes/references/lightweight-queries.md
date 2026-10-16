@@ -119,6 +119,9 @@ selector. Explicit external re-exports resolve to the external module selector.
 Shadowed bindings are excluded from target matching. See
 [effects configuration](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/effects.md).
 
+Static indexed properties and `NonNullable` preserve selected callable types.
+Statically invoked async callbacks preserve returned-executor metadata, and nullish
+choices require every alternative to match the selected effect family/category.
 For explicit imported callable parameter types, configure
 `effects.<kind>.typedExecutors`. For a method on a receiver returned from an
 imported factory, configure `effects.<kind>.returnedMembers` with the exact

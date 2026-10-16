@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::dependencies::extract::{
-    ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
+    ValueType, ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
 };
 
 #[derive(Clone, Default)]
@@ -188,3 +188,12 @@ mod execution_phases;
 #[cfg(test)]
 #[path = "value_flow/execution_layout_tests.rs"]
 mod execution_layout_tests;
+
+#[path = "value_flow/apply_value.rs"]
+mod apply_value;
+
+#[path = "value_flow/parameter_values.rs"]
+mod parameter_values;
+
+#[path = "value_flow/annotation_values.rs"]
+mod annotation_values;

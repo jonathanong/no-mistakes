@@ -78,6 +78,15 @@ impl ImportCollector {
                 }
                 ValueExpression::Array(std::sync::Arc::new(fields))
             }
+            Expression::LogicalExpression(logical)
+                if logical.operator == oxc_syntax::operator::LogicalOperator::Coalesce =>
+            {
+                ValueExpression::Nullish(
+                    std::sync::Arc::new(self.value_expression(&logical.left)),
+                    std::sync::Arc::new(self.value_expression(&logical.right)),
+                )
+            }
+            Expression::NullLiteral(_) => ValueExpression::Null,
             Expression::ObjectExpression(object) => self.object_value(object),
             _ => simple_callee_name(expression).map_or(ValueExpression::Unknown, |name| {
                 ValueExpression::Named {

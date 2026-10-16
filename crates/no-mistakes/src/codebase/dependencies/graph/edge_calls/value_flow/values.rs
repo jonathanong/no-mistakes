@@ -56,6 +56,14 @@ impl ValueFlowResolution<'_, '_> {
                 fields: std::sync::Arc::clone(fields),
             },
             ValueExpression::Undefined => FlowValue::Undefined,
+            ValueExpression::Null => FlowValue::Null,
+            ValueExpression::Nullish(left, right) => {
+                let left = self.value(path, left);
+                if matches!(left.executor(), FlowValue::Undefined | FlowValue::Null) { return self.value(path, right); }
+                if !matches!(left.executor(), FlowValue::Unknown | FlowValue::Choice(_)) { return left; }
+                let right = self.value(path, right);
+                FlowValue::Choice(vec![left, right])
+            },
             ValueExpression::Default(value, fallback) => {
                 let value = self.value(path, value);
                 if value.is_undefined() {
@@ -96,6 +104,10 @@ impl ValueFlowResolution<'_, '_> {
     }
     pub(super) fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
+            FlowValue::TypedObject { executor, mut properties } => {
+                let value = self.member_value(*executor, member);
+                Self::annotate(value, properties.remove(member).unwrap_or(FlowValue::Unknown))
+            }
             FlowValue::Returned {
                 factory,
                 executor,
