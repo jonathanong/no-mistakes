@@ -22,8 +22,8 @@ impl<T> Extend<T> for ReferenceOutput<T> {
     }
 }
 impl<T> ReferenceOutput<T> {
-    pub(super) fn into_iter(self) -> impl Iterator<Item = T> {
-        self.first.into_iter().chain(self.overflow)
+    pub(super) fn into_parts(self) -> (Option<T>, Vec<T>) {
+        (self.first, self.overflow)
     }
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn record_counts(&self, facts: &mut super::ValueFlowFacts) {

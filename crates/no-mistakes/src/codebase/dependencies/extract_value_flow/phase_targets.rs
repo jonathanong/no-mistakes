@@ -102,6 +102,21 @@ impl PhaseWalk<'_> {
             });
             return;
         }
+        if let AssignmentTarget::AssignmentTargetIdentifier(identifier) = target {
+            #[cfg(all(test, feature = "test-instrumentation"))]
+            let legacy = mutable_receiver_tests::deferred_frames::LEGACY_IDENTIFIER
+                .with(std::cell::Cell::get);
+            #[cfg(not(all(test, feature = "test-instrumentation")))]
+            let legacy = false;
+            if !legacy {
+                self.root_write(identifier.name.as_str(), target.span().start, guaranteed);
+                return;
+            }
+        }
+        #[cfg(feature = "test-instrumentation")]
+        if matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {
+            root_target_metrics::PHASE_IDENTIFIERS.with(|count| count.set(count.get() + 1));
+        }
         for (name, path, target) in write_targets::targets(target) {
             if path.is_empty() {
                 self.root_write(&name, target, guaranteed);

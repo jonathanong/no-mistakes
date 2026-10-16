@@ -11,6 +11,8 @@ pub(in super::super) enum Queue<T> {
 
 impl<T> Queue<T> {
     pub(in super::super) fn new(initial: T) -> Self {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        work_counts::record(7);
         Self::Inline {
             slots: [Some(initial), None],
             len: 1,
@@ -39,12 +41,16 @@ impl<T> Queue<T> {
     }
 
     pub(in super::super) fn reserve(&mut self, additional: usize) {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        work_counts::record(0);
         let required = self
             .len()
             .checked_add(additional)
             .expect("capacity overflow");
         match self {
             Self::Inline { slots, len } if required > 2 => {
+                #[cfg(all(test, feature = "test-instrumentation"))]
+                work_counts::record(5);
                 let mut values = Vec::with_capacity(4.max(required));
                 values.extend(slots.iter_mut().take(*len).map(|slot| slot.take().unwrap()));
                 *self = Self::Heap(values);
@@ -63,6 +69,8 @@ impl<T> Queue<T> {
     }
 
     pub(in super::super) fn push(&mut self, value: T) {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        work_counts::record(1);
         self.reserve(1);
         match self {
             Self::Inline { slots, len } => {
@@ -73,7 +81,44 @@ impl<T> Queue<T> {
         }
     }
 
+    /// Append known output parts and place the exit below their LIFO successors.
+    /// The exact owned lengths retain the old virtual exit capacity headroom.
+    pub(in super::super) fn append_with_exit<U>(
+        &mut self,
+        index: usize,
+        (first, tail): (Option<U>, Vec<U>),
+        mut map: impl FnMut(U) -> T,
+        exit: T,
+    ) {
+        assert!(index <= self.len());
+        let additional = tail
+            .len()
+            .checked_add(usize::from(first.is_some()))
+            .and_then(|count| count.checked_add(1))
+            .expect("capacity overflow");
+        self.reserve(additional);
+        match self {
+            Self::Inline { slots, len } => {
+                for value in first.into_iter().chain(tail) {
+                    slots[*len] = Some(map(value));
+                    *len += 1;
+                }
+                for slot in (index..*len).rev() {
+                    slots[slot + 1] = slots[slot].take();
+                }
+                slots[index] = Some(exit);
+                *len += 1;
+            }
+            Self::Heap(values) => {
+                values.extend(first.into_iter().chain(tail).map(map));
+                values.insert(index, exit);
+            }
+        }
+    }
+
     pub(in super::super) fn pop(&mut self) -> Option<T> {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        work_counts::record(6);
         match self {
             Self::Inline { slots, len } => {
                 if *len == 0 {
@@ -85,31 +130,16 @@ impl<T> Queue<T> {
             Self::Heap(values) => values.pop(),
         }
     }
-
-    pub(in super::super) fn insert(&mut self, index: usize, value: T) {
-        assert!(index <= self.len());
-        self.reserve(1);
-        match self {
-            Self::Inline { slots, len } => {
-                for slot in (index..*len).rev() {
-                    slots[slot + 1] = slots[slot].take();
-                }
-                slots[index] = Some(value);
-                *len += 1;
-            }
-            Self::Heap(values) => values.insert(index, value),
-        }
-    }
-
-    pub(in super::super) fn extend(&mut self, values: impl IntoIterator<Item = T>) {
-        let values = values.into_iter();
-        self.reserve(values.size_hint().0);
-        for value in values {
-            self.push(value);
-        }
-    }
 }
 
 #[cfg(test)]
 #[path = "mutation_pending_queue_tests.rs"]
 mod tests;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "mutation_queue_work_counts_tests.rs"]
+pub(super) mod work_counts;
+
+#[cfg(test)]
+#[path = "mutation_pending_batch_tests.rs"]
+mod batch_tests;
