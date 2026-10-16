@@ -1,0 +1,1366 @@
+TsFileFacts {
+    module_bindings: None,
+    operational_error: None,
+    parse_error: None,
+    fatal_parse_error: false,
+    source: None,
+    imports: [],
+    eager_require_specifiers: [],
+    imported_bindings: [],
+    exported_bindings: [
+        ExportedBinding {
+            specifier: None,
+            local: "Example",
+            exported: "Example",
+        },
+    ],
+    value_flow: ValueFlowFacts {
+        callable_value_uses: Some(
+            {
+                0: {
+                    "Button",
+                },
+            },
+        ),
+        receiver_mutations: None,
+        bindings: [],
+        parameters: [
+            ValueParameter {
+                owner: CallableId(
+                    0,
+                ),
+                index: 0,
+                name: "props",
+                scope: 1,
+                default: Unknown,
+                projection: [],
+                initialization_order: 0,
+                default_order: 0,
+                default_mutations: None,
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+            ValueParameter {
+                owner: CallableId(
+                    177,
+                ),
+                index: 0,
+                name: "id",
+                scope: 2,
+                default: Unknown,
+                projection: [],
+                initialization_order: 1,
+                default_order: 1,
+                default_mutations: None,
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+            ValueParameter {
+                owner: CallableId(
+                    177,
+                ),
+                index: 1,
+                name: "selector",
+                scope: 2,
+                default: Unknown,
+                projection: [],
+                initialization_order: 2,
+                default_order: 2,
+                default_mutations: None,
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+            ValueParameter {
+                owner: CallableId(
+                    544,
+                ),
+                index: 0,
+                name: "props",
+                scope: 3,
+                default: Unknown,
+                projection: [],
+                initialization_order: 3,
+                default_order: 3,
+                default_mutations: None,
+                invalidated_at: None,
+                mutation_contexts: {},
+                type_reference: None,
+            },
+        ],
+        returns: [
+            (
+                CallableId(
+                    0,
+                ),
+                Unknown,
+            ),
+            (
+                CallableId(
+                    177,
+                ),
+                Unknown,
+            ),
+            (
+                CallableId(
+                    544,
+                ),
+                Unknown,
+            ),
+        ],
+        calls: [],
+        type_exports: [],
+        async_callables: {},
+        generator_callables: {},
+    },
+    callable_aliases: [],
+    star_reexport_specifiers: [],
+    per_item_calls: [],
+    function_calls: [],
+    unknown_calls: [],
+    call_sites: [],
+    resource_calls: [],
+    resource_diagnostics: [],
+    symbol_references: [
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "React.ReactNode",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "props.testId",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                1,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                1,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "props.title",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                1,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                1,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "props.children",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                1,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Button",
+            ),
+            caller_id: Some(
+                CallableId(
+                    0,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Button",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                1,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "InputWithDefaults",
+            ),
+            caller_id: Some(
+                CallableId(
+                    177,
+                ),
+            ),
+            syntactic_caller: Some(
+                "InputWithDefaults",
+            ),
+            callee: "id",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                2,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "InputWithDefaults",
+            ),
+            caller_id: Some(
+                CallableId(
+                    177,
+                ),
+            ),
+            syntactic_caller: Some(
+                "InputWithDefaults",
+            ),
+            callee: "id",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                2,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "InputWithDefaults",
+            ),
+            caller_id: Some(
+                CallableId(
+                    177,
+                ),
+            ),
+            syntactic_caller: Some(
+                "InputWithDefaults",
+            ),
+            callee: "selector",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                2,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "const",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "Button",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "Button",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "Button",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                0,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "UI.Button",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "UI",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "UI",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "Design.UI.Button",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "Design",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "Design",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "undefined",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "const",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "const",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "const",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "const",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "foo",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "foo",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "undefined",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: None,
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props.label",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+        FunctionCall {
+            caller: Some(
+                "Example",
+            ),
+            caller_id: Some(
+                CallableId(
+                    544,
+                ),
+            ),
+            syntactic_caller: Some(
+                "Example",
+            ),
+            callee: "props",
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: Call,
+            target_identity: Unknown,
+            callee_binding_scope: Some(
+                3,
+            ),
+            static_arg: None,
+            static_cwd: None,
+        },
+    ],
+    exported_functions: [
+        "Example",
+    ],
+    exported_resource_roots: [],
+    exported_resource_scopes: [],
+    known_function_scopes: [
+        "Button",
+        "Example",
+        "InputWithDefaults",
+    ],
+    callable_scope_ids: [
+        (
+            CallableId(
+                0,
+            ),
+            "Button",
+        ),
+        (
+            CallableId(
+                177,
+            ),
+            "InputWithDefaults",
+        ),
+        (
+            CallableId(
+                544,
+            ),
+            "Example",
+        ),
+    ],
+    callable_bindings: [
+        (
+            0,
+            "Button",
+            CallableId(
+                0,
+            ),
+        ),
+        (
+            0,
+            "Example",
+            CallableId(
+                544,
+            ),
+        ),
+        (
+            0,
+            "InputWithDefaults",
+            CallableId(
+                177,
+            ),
+        ),
+    ],
+    callable_binding_declared_at: [],
+    class_member_callable_ids: [],
+    static_getter_callable_ids: [],
+    static_setter_callable_ids: [],
+    lexical_scope_parents: [
+        (
+            0,
+            None,
+        ),
+        (
+            1,
+            Some(
+                0,
+            ),
+        ),
+        (
+            2,
+            Some(
+                0,
+            ),
+        ),
+        (
+            3,
+            Some(
+                0,
+            ),
+        ),
+    ],
+    callable_scopes: [
+        "Button",
+        "Example",
+        "InputWithDefaults",
+    ],
+    class_scopes: [],
+    class_declaration_lines: [],
+    namespaces: NamespaceFacts {
+        members: [],
+        roots: [],
+        declared: [],
+        value_uses: [],
+        member_uses: [],
+        sites: [],
+        locals: [],
+        opaque_specifiers: [],
+        unreported_class_ids: [],
+    },
+    has_unknown_top_level_call: false,
+    symbols: None,
+    route_refs: [],
+    route_helpers: [],
+    route_helper_imports: [],
+    route_helper_refs: [],
+    backend_routes: [],
+    queue_usage: None,
+    queue_create_line: None,
+    queue_name: None,
+    queue_project: None,
+    http_calls: [],
+    process_spawns: [],
+    server_routes: None,
+    react_components: [],
+    effect_calls: [],
+    rsc_environment: None,
+    trpc_procedures: [],
+    trpc_calls: [],
+}

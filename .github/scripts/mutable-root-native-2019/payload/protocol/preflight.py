@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 results = Path(__file__).resolve().parent
 from protocol_guard import require_reviewed_pair
@@ -66,6 +67,10 @@ records = {}
 prior = {'ARM_BASE': 'A22', 'ARM_CAND': 'B23'}
 prior_dirs = {arm:Path('/tmp/nm2019-arm2019-expected-prior') for arm in prior}
 previous = {arm:json.loads((directory/'semantic-manifest.json').read_text()) for arm,directory in prior_dirs.items()}
+sys.path.insert(0, os.environ['ARM2019_SOURCE'])
+from fact_parity import FullFactParity
+full_fact_parity = FullFactParity(Path(os.environ['ARM2019_SOURCE']), prior_dirs['ARM_BASE']/'semantic-manifest.json')
+fact_comparisons = {}
 def old_graph(arm, mode):
     raw = (prior_dirs[arm]/f'semantic-private/graph-{mode}-{prior[arm]}.stdout').read_bytes()
     data = json.loads(raw.replace(str(root).encode(), b'<inputs>'))
@@ -83,7 +88,9 @@ def run(arm,label,args):
 
 for case,demand,path in facts:
     outputs = {arm:run(arm,f'facts-{case}-{demand}',[str(root/path),demand,'1','dump']) for arm in ('ARM_BASE', 'ARM_CAND')}
-    assert all(records[f'facts-{case}-{demand}'][arm] == previous[arm]['outputs'][f'facts-{case}-{demand}'][prior[arm]] for arm in prior), (case,demand,'full prior-arm facts changed')
+    label = f'facts-{case}-{demand}'
+    fact_comparisons[label] = {arm: full_fact_parity.compare(label, arm, outputs[arm], records[label][arm]) for arm in prior}
+    (results/'full-fact-comparisons.json').write_text(json.dumps(fact_comparisons, indent=2)+'\n')
     print('fact parity immediateB23 ARM_BASE/ARM_BASE and B23/ARM_CAND:',case,demand,flush=True)
 graph_root = root/plan['graph']['root']
 graphs = {}
@@ -108,7 +115,7 @@ for index,entry in enumerate(plan['effects']['entries']):
     print('effects parity immediateB23 ARM_BASE/ARM_BASE and B23/ARM_CAND:',entry,flush=True)
 (results/'semantic-manifest.json').write_text(json.dumps({'status':'Full outputs retained for independent review; immediateB23 ARM_BASE/ARM_BASE and B23/ARM_CAND parity must be independently reviewed before timing',
  'source_revisions':{arm:manifest['revision'] for arm,manifest in manifests.items()},'outputs':records, 'prior_arm_carry':prior, 'prior_manifests':{arm:{'path':str(prior_dirs[arm]/'semantic-manifest.json'),'sha256':hashlib.sha256((prior_dirs[arm]/'semantic-manifest.json').read_bytes()).hexdigest()} for arm in prior}, 'intended_delta_review_reference':str(out/'semantic-diff-A-B.json'),
- 'assertions':['all13 full fact snapshots per prior arm exact','full graph immediateB23 ARM_BASE/ARM_BASE and B23/ARM_CAND exact','graph observer/off semantic exact per arm',
+ 'assertions':['all13 full facts per prior arm: raw exact or pinned full-token anonymous-map/set order equivalence','full graph immediateB23 ARM_BASE/ARM_BASE and B23/ARM_CAND exact','graph observer/off semantic exact per arm',
                'ARM_BASE/ARM_CAND physical call identity exact','non-consuming graph has nodes/edges and no calls',
                'all3 full effects reports immediateB23 ARM_BASE/ARM_BASE and B23/ARM_CAND exact'],
  'effects_observer_limit':'verify emits observer-off full reports; observer collection timed separately; count alone is not full semantic proof'},indent=2)+'\n')

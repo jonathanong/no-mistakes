@@ -1,0 +1,1 @@
+TsFileFacts { location: (34, 12), map: {"left": [1, 2], "right": [3, 4]}, set: {"a", "b"}, nested: Some(Node { name: "x", value: 7 }), quoted: "a{b}:[c],\\\"d" }

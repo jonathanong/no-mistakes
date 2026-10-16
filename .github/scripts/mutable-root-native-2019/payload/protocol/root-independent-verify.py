@@ -91,7 +91,22 @@ assert len(records)==19 and sum(len(v) for v in records.values())==38
 prior={'ARM_BASE':(Path('/tmp/nm2019-arm2019-expected-prior'),'A22'),'ARM_CAND':(Path('/tmp/nm2019-arm2019-expected-prior'),'B23')}
 prior_manifests={arm:json.loads((directory/'semantic-manifest.json').read_text()) for arm,(directory,_) in prior.items()}
 facts=[label for label in records if label.startswith('facts-')];assert len(facts)==13
-for label in facts+['effects-0','effects-1','effects-2']:
+import os,sys
+sys.path.insert(0, os.environ['ARM2019_SOURCE'])
+from fact_parity import FullFactParity
+full_fact_parity=FullFactParity(Path(os.environ['ARM2019_SOURCE']),prior['ARM_BASE'][0]/'semantic-manifest.json')
+saved_comparisons=json.loads((out/'full-fact-comparisons.json').read_text())
+assert set(saved_comparisons)==set(facts)
+for label in facts:
+ assert set(saved_comparisons[label])==set(prior)
+ for arm in prior:
+  relative=f'semantic-private/{label}-{arm}.stdout';packed=relative in packed_by_raw
+  path=out/(packed_by_raw[relative]['gzip_path'] if packed else relative)
+  with (gzip.open(path,'rb') if packed else path.open('rb')) as stream:
+   data=stream.read().replace(needle,replacement)
+  recomputed=full_fact_parity.compare(label,arm,data,semantic['outputs'][label][arm])
+  assert recomputed==saved_comparisons[label][arm],(label,arm,'saved fact comparison differs')
+for label in ['effects-0','effects-1','effects-2']:
  for arm,(_,old_arm) in prior.items():
   assert semantic['outputs'][label][arm]==prior_manifests[arm]['outputs'][label][old_arm],(label,arm,'prior full output')
 graphs={}
@@ -108,6 +123,6 @@ for arm in prior:
  assert graphs['no-calls'][arm]['nodes'] and graphs['no-calls'][arm]['edges']
 signatures=json.loads((out/'timing-signatures.json').read_text());original=json.loads((original/'timing-signatures.json').read_text());assert len(signatures)==22
 for label,values in signatures.items():assert values==dict(ARM_BASE=original[label]['A'],ARM_CAND=original[label]['B'])
-report={'status':'PASS independently recomputed artifacts/full outputs; no timing/freeze/START','artifact_pair':{a:{k:m[k] for k in ['revision','binary_sha256','library_sha256','source_manifest_sha256','rustc','features','release_profile','lock_sha256']} for a,m in manifest.items()},'outputs':records,'full_output_records':38,'fact_prior_pairs':26,'effects_prior_pairs':6,'graph_prior_pairs':6,'compressed_roundtrips':8,'timing_signatures':22,'root_normalization':'Only exact original input root replaced by <inputs>; compression identities use raw bytes','baseline_provenance':'Original immutable ARM_BASE actuale5 and fresh ARM_CAND actual reviewed candidate; original ARM_BASE/new ARM_CAND compilerfreshfalse receipts, no historical observation reuse','targets_present':{p:Path(p).exists() for p in ['/tmp/no-mistakes-2019/target','/tmp/no-mistakes-2019-base-current/target']},'limits':'No performance observations yet; prior adverse B20 retained separately and never pooled'}
+report={'status':'PASS independently recomputed artifacts/full outputs; no timing/freeze/START','artifact_pair':{a:{k:m[k] for k in ['revision','binary_sha256','library_sha256','source_manifest_sha256','rustc','features','release_profile','lock_sha256']} for a,m in manifest.items()},'outputs':records,'full_output_records':38,'fact_prior_pairs':26,'fact_comparisons':saved_comparisons,'fact_policy':'Raw exact first; otherwise immutable prior-bound full tokens/counts with anonymous map/set entry-order equivalence','effects_prior_pairs':6,'graph_prior_pairs':6,'compressed_roundtrips':8,'timing_signatures':22,'root_normalization':'Only exact original input root replaced by <inputs>; compression identities use raw bytes','baseline_provenance':'Original immutable ARM_BASE actuale5 and fresh ARM_CAND actual reviewed candidate; original ARM_BASE/new ARM_CAND compilerfreshfalse receipts, no historical observation reuse','targets_present':{p:Path(p).exists() for p in ['/tmp/no-mistakes-2019/target','/tmp/no-mistakes-2019-base-current/target']},'limits':'No performance observations yet; prior adverse B20 retained separately and never pooled'}
 p=out/'root-independent-verification.json';assert not p.exists();p.write_text(json.dumps(report,indent=2)+'\n')
 print('PASS ARM_BASE/ARM_CAND metadata,38 full outputs,8 gzip roundtrips,full prior-arm identity,22 signatures. No timing.')

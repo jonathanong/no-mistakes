@@ -1,0 +1,137 @@
+{
+  "pairs": [
+    {
+      "name": "anonymous-map-order",
+      "before": "anonymous-map-order.before.debug",
+      "after": "anonymous-map-order.after.debug",
+      "equal": true
+    },
+    {
+      "name": "anonymous-set-order",
+      "before": "anonymous-set-order.before.debug",
+      "after": "anonymous-set-order.after.debug",
+      "equal": true
+    },
+    {
+      "name": "format-whitespace",
+      "before": "format-whitespace.before.debug",
+      "after": "format-whitespace.after.debug",
+      "equal": true
+    },
+    {
+      "name": "nested-map-order",
+      "before": "nested-map-order.before.debug",
+      "after": "nested-map-order.after.debug",
+      "equal": true
+    },
+    {
+      "name": "struct-field-order",
+      "before": "struct-field-order.before.debug",
+      "after": "struct-field-order.after.debug",
+      "equal": false
+    },
+    {
+      "name": "field-name",
+      "before": "field-name.before.debug",
+      "after": "field-name.after.debug",
+      "equal": false
+    },
+    {
+      "name": "scalar-value",
+      "before": "scalar-value.before.debug",
+      "after": "scalar-value.after.debug",
+      "equal": false
+    },
+    {
+      "name": "coordinate",
+      "before": "coordinate.before.debug",
+      "after": "coordinate.after.debug",
+      "equal": false
+    },
+    {
+      "name": "list-order",
+      "before": "list-order.before.debug",
+      "after": "list-order.after.debug",
+      "equal": false
+    },
+    {
+      "name": "tuple-order",
+      "before": "tuple-order.before.debug",
+      "after": "tuple-order.after.debug",
+      "equal": false
+    },
+    {
+      "name": "map-key-value-pairing",
+      "before": "map-key-value-pairing.before.debug",
+      "after": "map-key-value-pairing.after.debug",
+      "equal": false
+    },
+    {
+      "name": "missing-map-entry",
+      "before": "missing-map-entry.before.debug",
+      "after": "missing-map-entry.after.debug",
+      "equal": false
+    },
+    {
+      "name": "duplicate-set-entry",
+      "before": "duplicate-set-entry.before.debug",
+      "after": "duplicate-set-entry.after.debug",
+      "equal": false
+    },
+    {
+      "name": "duplicate-map-entry",
+      "before": "duplicate-map-entry.before.debug",
+      "after": "duplicate-map-entry.after.debug",
+      "equal": false
+    },
+    {
+      "name": "quoted-raw-bytes",
+      "before": "quoted-raw-bytes.before.debug",
+      "after": "quoted-raw-bytes.after.debug",
+      "equal": false
+    },
+    {
+      "name": "enum-variant",
+      "before": "enum-variant.before.debug",
+      "after": "enum-variant.after.debug",
+      "equal": false
+    },
+    {
+      "name": "named-struct-field-order",
+      "before": "named-struct-field-order.before.debug",
+      "after": "named-struct-field-order.after.debug",
+      "equal": false
+    },
+    {
+      "name": "delimiter-kind",
+      "before": "delimiter-kind.before.debug",
+      "after": "delimiter-kind.after.debug",
+      "equal": false
+    },
+    {
+      "name": "named-vs-anonymous",
+      "before": "named-vs-anonymous.before.debug",
+      "after": "named-vs-anonymous.after.debug",
+      "equal": false
+    },
+    {
+      "name": "namespace-scalar",
+      "before": "namespace-scalar.before.debug",
+      "after": "namespace-scalar.after.debug",
+      "equal": false
+    },
+    {
+      "name": "character-bytes",
+      "before": "character-bytes.before.debug",
+      "after": "character-bytes.after.debug",
+      "equal": false
+    }
+  ],
+  "invalid": [
+    "mismatched-delimiter.invalid.debug",
+    "unclosed.invalid.debug",
+    "unterminated-quote.invalid.debug",
+    "mixed-anonymous-map-set.invalid.debug",
+    "double-comma.invalid.debug"
+  ]
+}
