@@ -86,6 +86,10 @@ per invocation; its internal batch size does not exempt an outer loop.
 resolves to the configured imported type export. Explicit named and local type
 barrels preserve namespace members such as `Namespace.Query`, including renamed
 imports; unrelated local types and different module names remain unselected.
+Static indexed property types, including `NonNullable<Options['query']>`, preserve
+the selected callable origin. Statically invoked async callbacks preserve returned
+executor metadata. A nullish choice between a typed executor and a configured
+export is selected only when every alternative belongs to the effect family.
 `returnedMembers` selects an exact member call on the receiver returned by the configured imported factory
 path. Both use binding provenance, so aliases and local variable names do not
 change the match and same-spelled unrelated local methods do not match. These

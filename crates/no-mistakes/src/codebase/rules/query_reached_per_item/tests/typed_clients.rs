@@ -120,3 +120,43 @@ fn namespace_members_keep_suffixes_through_explicit_type_barrels() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn indexed_contextual_and_nullish_executor_paths_keep_exact_provenance() {
+    let root = crate::test_support::rule_fixture_root("query-reached-per-item")
+        .with_file_name("executor-paths-fixture");
+    let report = crate::effects_query::run(
+        &root,
+        None,
+        None,
+        "postgres",
+        std::path::Path::new("entry.mts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        report
+            .call_sites
+            .iter()
+            .filter(|site| site.file == "entry.mts")
+            .map(|site| site.line)
+            .collect::<Vec<_>>(),
+        [5, 8, 16, 21],
+        "{report:#?}"
+    );
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("entry.mts", 5),
+            ("entry.mts", 8),
+            ("entry.mts", 16),
+            ("entry.mts", 21)
+        ],
+        "{findings:#?}"
+    );
+}

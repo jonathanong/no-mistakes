@@ -28,6 +28,7 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
     let opts =
         options("roots: [{ file: src/selectors.mts }]\ntargets: [{ terminal: waitForTimeout }]");
     let site = ResolvedCallSite {
+        alternatives: Vec::new(),
         returned_from: Vec::new(),
         typed_from: Vec::new(),
         returned_member_from: Vec::new(),
@@ -51,6 +52,7 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
     );
 
     let bare = ResolvedCallSite {
+        alternatives: Vec::new(),
         returned_from: Vec::new(),
         typed_from: Vec::new(),
         returned_member_from: Vec::new(),

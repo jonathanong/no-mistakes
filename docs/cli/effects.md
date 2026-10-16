@@ -73,7 +73,10 @@ provenance. Configure `effects.<kind>.returnedExecutors` for opaque imported
 factories whose returned callable performs the effect. These selectors report
 executor invocations, independent of local names, rather than factory creation.
 `effects.<kind>.typedExecutors` selects calls through parameters with an
-explicit callable type from the configured imported type export. Use
+explicit callable type from the configured imported type export, including static
+indexed properties wrapped in `NonNullable`. Statically invoked async callbacks
+preserve returned-executor provenance. Nullish choices require every alternative
+to match the selected effect family and category. Use
 `effects.<kind>.returnedMembers` to select an exact member call on the receiver
 returned by a configured imported factory path, such as `writePool.connect`
 with `member: query`. Both are opt-in exact binding selectors; type names,
