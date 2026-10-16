@@ -39,6 +39,8 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     // a built-in. This is collection from the already parsed Program, not a
     // second source pass.
     collector.local_stack.push(fx_set());
+    // Annotation shadow lookup reserves index zero for the program type scope.
+    collector.type_local_stack.push(fx_set());
     collector.lexical_scope_ids.push(0);
     collector.lexical_scope_parents.insert(0, None);
     collector.next_lexical_scope_id = 1;

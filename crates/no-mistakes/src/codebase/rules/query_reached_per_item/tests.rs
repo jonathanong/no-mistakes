@@ -494,3 +494,5 @@ mod projections;
 
 #[path = "tests/typed_clients.rs"]
 mod typed_clients;
+
+mod namespace_shadows;
