@@ -70,10 +70,20 @@ impl ImportCollector {
             let receiver = ((scope, base.to_string()), parts);
             if self.receiver_only_bindings.is_none() {
                 debug_assert!(self.deferred_mutable_writes.is_none());
-                let pending = vec![((receiver, reads, ()), false, true, false)];
+                let pending = mutation_projection::PendingQueue::new((
+                    (receiver, reads, ()),
+                    false,
+                    true,
+                    false,
+                ));
                 self.project_member_mutation(pending, assigned, info, &mut affected);
             } else {
-                let pending = vec![((receiver, reads, root_read), false, true, false)];
+                let pending = mutation_projection::PendingQueue::new((
+                    (receiver, reads, root_read),
+                    false,
+                    true,
+                    false,
+                ));
                 self.project_member_mutation(pending, assigned, info, &mut affected);
             }
         }

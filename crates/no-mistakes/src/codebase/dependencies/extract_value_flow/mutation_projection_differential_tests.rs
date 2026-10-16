@@ -39,7 +39,7 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
         let file = root.join("src/nested-receiver-containers").join(name);
         let source = std::fs::read_to_string(&file).unwrap();
         for demand in [false, true] {
-            let old = collect(&source, SourceType::from_path(&file).unwrap(), true, demand);
+            let mut old = collect(&source, SourceType::from_path(&file).unwrap(), true, demand);
             let new = collect(
                 &source,
                 SourceType::from_path(&file).unwrap(),
@@ -54,6 +54,16 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
                 );
                 assert!(old.value_flow.reference_pending_capacity >= 32);
             }
+            // Only cfg-only heap diagnostics change; every semantic field stays exact.
+            assert!(
+                new.value_flow.reference_pending_capacity
+                    <= old.value_flow.reference_pending_capacity
+            );
+            assert!(
+                new.value_flow.reference_pending_bytes <= old.value_flow.reference_pending_bytes
+            );
+            old.value_flow.reference_pending_capacity = new.value_flow.reference_pending_capacity;
+            old.value_flow.reference_pending_bytes = new.value_flow.reference_pending_bytes;
             assert_eq!(new, old, "{name} demand={demand}");
         }
     }
