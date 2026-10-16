@@ -1,0 +1,90 @@
+{
+  "facts-no_writes-values": {
+    "A26": "128",
+    "B26": "128"
+  },
+  "facts-no_writes-imports": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "facts-writes-values": {
+    "A26": "517",
+    "B26": "517"
+  },
+  "facts-writes-imports": {
+    "A26": "2",
+    "B26": "2"
+  },
+  "facts-shared_histories-values": {
+    "A26": "1025",
+    "B26": "1025"
+  },
+  "facts-shared_histories-imports": {
+    "A26": "513",
+    "B26": "513"
+  },
+  "facts-jsx-values": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "facts-jsx-imports": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "hot-mutable-root-scale": {
+    "A26": "1",
+    "B26": "1"
+  },
+  "hot-mutable-pattern-phase-scale": {
+    "A26": "1",
+    "B26": "1"
+  },
+  "hot-mutable-pattern-deferred-diamond": {
+    "A26": "19",
+    "B26": "19"
+  },
+  "hot-mutable-pattern-eager-class-scale": {
+    "A26": "2",
+    "B26": "2"
+  },
+  "hot-mutable-pattern-cold-class-scale": {
+    "A26": "2",
+    "B26": "2"
+  },
+  "graph": {
+    "A26": "937",
+    "B26": "937"
+  },
+  "graph-observer": {
+    "A26": "937",
+    "B26": "937"
+  },
+  "graph-no-calls": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "effects-mutable-let-direct-off": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "effects-mutable-let-direct-observer": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "effects-mutable-let-copied-off": {
+    "A26": "1",
+    "B26": "1"
+  },
+  "effects-mutable-let-copied-observer": {
+    "A26": "1",
+    "B26": "1"
+  },
+  "effects-mutable-pattern-deferred-diamond-off": {
+    "A26": "0",
+    "B26": "0"
+  },
+  "effects-mutable-pattern-deferred-diamond-observer": {
+    "A26": "0",
+    "B26": "0"
+  }
+}

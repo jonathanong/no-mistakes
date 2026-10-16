@@ -1,0 +1,186 @@
+{
+  "A26": {
+    "status": "ACTUAL CLOSED original CLI/core producer; helper linked separately with existing alternatives_api",
+    "revision": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///tmp/no-mistakes-2054-final-stack-release/crates/no-mistakes#0.91.2",
+      "manifest_path": "/tmp/no-mistakes-2054-final-stack-release/crates/no-mistakes/Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "no_mistakes",
+        "src_path": "/tmp/no-mistakes-2054-final-stack-release/crates/no-mistakes/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "mermaid-validation"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-2054-final-stack-release/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/no-mistakes-2054-final-stack-release/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "release_profile": {
+      "opt_level": 3,
+      "lto": true,
+      "codegen_units": 1,
+      "debug": 0,
+      "build_jobs": 1,
+      "incremental": 0
+    },
+    "binary_sha256": "9ffeae3ec16ddb698476df17ca09f6fb1d8173a2d91d20ecebe0ebac50300012",
+    "library_sha256": "125a9735e32c6b8090843a9de0e9dfea3402230bdfa776b32d854d4037eeb09e",
+    "source_manifest_sha256": "f20c6aa3941f089b1b2e3ce4eac6feff3d688dd1b42ea91eed00935675738dcb",
+    "lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+    "harness": [
+      {
+        "path": "effects.rs",
+        "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+      },
+      {
+        "path": "facts.rs",
+        "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+      },
+      {
+        "path": "graph_semantics.rs",
+        "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+      },
+      {
+        "path": "graph_timing.rs",
+        "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+      },
+      {
+        "path": "main.rs",
+        "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+      }
+    ],
+    "graph_helper_cfg": [
+      "alternatives_api"
+    ],
+    "retained_deps_manifest": {
+      "path": "/tmp/nm2054-final-stack-release/candidate/functional-deps-source-profile-manifest.json",
+      "sha256": "740e684e99c9dc9b1e1706efee6a1566d726a03d8a599e7f166ef5170ffdc0aa"
+    },
+    "original_cli_stage": {
+      "path": "/tmp/nm2054-final-stack-release/candidate/closed-cli-stage.json",
+      "sha256": "1767388fad9b0f46a583c6edd6a1e30640da110baaa98c2754ebf24d8ca8caa5"
+    },
+    "original_outer_probe_failure_preserved": true
+  },
+  "B26": {
+    "status": "ACTUAL CLOSED original CLI/core producer; helper linked separately with existing alternatives_api",
+    "revision": "e5c0848878810cf2155ba9698282e8c2c8840178",
+    "tree": "88e702ebaa0ea5ee5bb9ac2c0733f75b3b8a463c",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///tmp/no-mistakes-2064-current-parent-release/crates/no-mistakes#0.91.2",
+      "manifest_path": "/tmp/no-mistakes-2064-current-parent-release/crates/no-mistakes/Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "no_mistakes",
+        "src_path": "/tmp/no-mistakes-2064-current-parent-release/crates/no-mistakes/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "mermaid-validation"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-2064-current-parent-release/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/no-mistakes-2064-current-parent-release/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "release_profile": {
+      "opt_level": 3,
+      "lto": true,
+      "codegen_units": 1,
+      "debug": 0,
+      "build_jobs": 1,
+      "incremental": 0
+    },
+    "binary_sha256": "e5fe159431e127758b4a21a2303c1db197de135fc6a702577557b4a892f592b0",
+    "library_sha256": "da151e94825d7f72518457e63919737d1ead0f49b1ee83ed4d8934777a22109e",
+    "source_manifest_sha256": "25ad887287a0aedeb51bafa2d1baa899098fb99737843aab0b7627194032ff72",
+    "lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+    "harness": [
+      {
+        "path": "effects.rs",
+        "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+      },
+      {
+        "path": "facts.rs",
+        "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+      },
+      {
+        "path": "graph_semantics.rs",
+        "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+      },
+      {
+        "path": "graph_timing.rs",
+        "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+      },
+      {
+        "path": "main.rs",
+        "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+      }
+    ],
+    "graph_helper_cfg": [
+      "alternatives_api"
+    ],
+    "retained_deps_manifest": {
+      "path": "/tmp/nm2064-current-parent-release-plan/candidate/functional-deps-source-profile-manifest.json",
+      "sha256": "a5f8ca66ebafb27e81fb129737f89724c14c78f3474fa78cef44461b6f5e6a2d"
+    },
+    "original_cli_stage": {
+      "path": "/tmp/nm2064-current-parent-release-plan/candidate/closed-cli-stage.json",
+      "sha256": "0b56549a241569c297331959fcb0ea52238db166d0cce87179f3ae813c7d5d68"
+    },
+    "original_outer_probe_failure_preserved": true
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "utc": "2026-10-16T20:02:08.439404+00:00",
+  "status": "PASS source review; activation/publication authorized; no dispatch yet",
+  "manifest_sha256": "656b1ce11270b95e0a57ce478c9563fee184b66222cb5a885616538c944bf40b",
+  "files": 297,
+  "kernel_and_safety_identical": true,
+  "all_eight_physical_assets_exact": true,
+  "raw_controls": "all32 actual parent/child captures; exact-first; only known10/26 immutable fulltokens+all5stats fallback; graph/effects exact",
+  "native": "113parent/151child real +42shim; only38 childnewassertions excluded baseline",
+  "root_reviewed": [
+    "closed-source-checkpoint.json",
+    "source runtime deltas",
+    "workflow permissions+retention+same-runtransfer",
+    "full rawfactorder helper/tests",
+    "actualassets+sourcepins"
+  ],
+  "next": "activate spec+accurate child_fixture_control_receipt; refresh manifest; normal publication sharedClippycache; root exactSHA check thenone dispatch"
+}

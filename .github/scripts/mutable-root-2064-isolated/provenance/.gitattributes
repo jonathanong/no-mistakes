@@ -1,0 +1,2 @@
+# Preserve authenticated original CI raw log bytes.
+*.log binary

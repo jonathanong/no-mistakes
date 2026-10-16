@@ -1,0 +1,134 @@
+[
+  {
+    "role": "baseline-cli",
+    "name": "baseline-cli",
+    "path": "/tmp/nm2054-final-stack-artifacts/candidate/cli",
+    "bytes": 82896168,
+    "sha256": "aa5e8377987d496f8d5e75f00b0071336f19c72e0fefe23d97bd59896c2fe6eb",
+    "actual_producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "provenance": {
+      "path": "/tmp/nm2054-final-stack-artifacts/candidate/closed-artifacts.json",
+      "sha256": "51265d63a0d148f988a00f92c9df0d13cf954490234e815b1cf5c5fa98872fce"
+    },
+    "scope": "Authentic closed current2022parent / stacked2054 release artifacts; explicit arm role, no producer relabeling",
+    "id": 648705190,
+    "asset_id": 648705190,
+    "digest": "sha256:aa5e8377987d496f8d5e75f00b0071336f19c72e0fefe23d97bd59896c2fe6eb",
+    "release_asset_name": "2054-b28-candidate-cli"
+  },
+  {
+    "role": "baseline-addon.node",
+    "name": "baseline-addon.node",
+    "path": "/tmp/nm2054-final-stack-artifacts/candidate/addon.node",
+    "bytes": 79321752,
+    "sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f",
+    "actual_producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "provenance": {
+      "path": "/tmp/nm2054-final-stack-artifacts/candidate/closed-artifacts.json",
+      "sha256": "51265d63a0d148f988a00f92c9df0d13cf954490234e815b1cf5c5fa98872fce"
+    },
+    "scope": "Authentic closed current2022parent / stacked2054 release artifacts; explicit arm role, no producer relabeling",
+    "id": 648705342,
+    "asset_id": 648705342,
+    "digest": "sha256:b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f",
+    "release_asset_name": "2054-b28-candidate-addon.node"
+  },
+  {
+    "role": "baseline-probe",
+    "name": "baseline-probe",
+    "path": "/tmp/nm2054-final-stack-artifacts/candidate/probe",
+    "bytes": 83197168,
+    "sha256": "9ffeae3ec16ddb698476df17ca09f6fb1d8173a2d91d20ecebe0ebac50300012",
+    "actual_producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "provenance": {
+      "path": "/tmp/nm2054-final-stack-artifacts/candidate/closed-artifacts.json",
+      "sha256": "51265d63a0d148f988a00f92c9df0d13cf954490234e815b1cf5c5fa98872fce"
+    },
+    "scope": "Authentic closed current2022parent / stacked2054 release artifacts; explicit arm role, no producer relabeling",
+    "id": 648705461,
+    "asset_id": 648705461,
+    "digest": "sha256:9ffeae3ec16ddb698476df17ca09f6fb1d8173a2d91d20ecebe0ebac50300012",
+    "release_asset_name": "2054-b28-candidate-probe"
+  },
+  {
+    "role": "baseline-sql-probe",
+    "name": "baseline-sql-probe",
+    "path": "/tmp/nm2054-final-stack-artifacts/candidate/sql-probe",
+    "bytes": 83016560,
+    "sha256": "25603bf971508f9842f249d76ab44e5e2278d421ddb59ceea02110b6058682f0",
+    "actual_producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "provenance": {
+      "path": "/tmp/nm2054-final-stack-artifacts/candidate/closed-artifacts.json",
+      "sha256": "51265d63a0d148f988a00f92c9df0d13cf954490234e815b1cf5c5fa98872fce"
+    },
+    "scope": "Authentic closed current2022parent / stacked2054 release artifacts; explicit arm role, no producer relabeling",
+    "id": 648705659,
+    "asset_id": 648705659,
+    "digest": "sha256:25603bf971508f9842f249d76ab44e5e2278d421ddb59ceea02110b6058682f0",
+    "release_asset_name": "2054-b28-candidate-sql-probe"
+  },
+  {
+    "role": "candidate-cli",
+    "name": "candidate-cli",
+    "path": "/tmp/nm2064-current-parent-release-plan/candidate/cli",
+    "bytes": 83056000,
+    "sha256": "1303bcc0a9fa44d4b22ab10d7ba11a00212b2503b8a2b376a22db0292083f92f",
+    "actual_producer": "e5c0848878810cf2155ba9698282e8c2c8840178",
+    "provenance": {
+      "path": "/tmp/nm2064-current-parent-release-plan/candidate/closed-cli-stage.json",
+      "sha256": "0b56549a241569c297331959fcb0ea52238db166d0cce87179f3ae813c7d5d68"
+    },
+    "id": 648709110,
+    "asset_id": 648709110,
+    "digest": "sha256:1303bcc0a9fa44d4b22ab10d7ba11a00212b2503b8a2b376a22db0292083f92f",
+    "release_asset_name": "2064-e5-candidate-cli"
+  },
+  {
+    "role": "candidate-addon.node",
+    "name": "candidate-addon.node",
+    "path": "/tmp/nm2064-current-parent-addon-continuation/candidate/addon.node",
+    "bytes": 79482784,
+    "sha256": "637abc010ca993015e62ff7b80c7ae70278e265d8454811b3f8e127d3c998b08",
+    "actual_producer": "e5c0848878810cf2155ba9698282e8c2c8840178",
+    "provenance": {
+      "path": "/tmp/nm2064-current-parent-addon-continuation/candidate/closed-artifacts.json",
+      "sha256": "7d32301b35d5bb72bbe8c9fd4e7ee6bd313ed4d5d69247d2c1f6782816d80f87"
+    },
+    "id": 648709247,
+    "asset_id": 648709247,
+    "digest": "sha256:637abc010ca993015e62ff7b80c7ae70278e265d8454811b3f8e127d3c998b08",
+    "release_asset_name": "2064-e5-candidate-addon.node"
+  },
+  {
+    "role": "candidate-probe",
+    "name": "candidate-probe",
+    "path": "/tmp/nm2064-current-parent-helper-links/probe",
+    "bytes": 83356920,
+    "sha256": "e5fe159431e127758b4a21a2303c1db197de135fc6a702577557b4a892f592b0",
+    "actual_producer": "e5c0848878810cf2155ba9698282e8c2c8840178",
+    "provenance": {
+      "path": "/tmp/nm2064-current-parent-helper-links/actual.json",
+      "sha256": "196e4bb11bf617ab02cafa39f72d999427c128663501c3f5d42719f2e72b9059"
+    },
+    "id": 648709420,
+    "asset_id": 648709420,
+    "digest": "sha256:e5fe159431e127758b4a21a2303c1db197de135fc6a702577557b4a892f592b0",
+    "release_asset_name": "2064-e5-candidate-probe"
+  },
+  {
+    "role": "candidate-sql-probe",
+    "name": "candidate-sql-probe",
+    "path": "/tmp/nm2064-current-parent-helper-links/sql-probe",
+    "bytes": 83176408,
+    "sha256": "94b7f7ac6ec9ab1cced0f035c509be9e83028d7da05579209b966ff35be40978",
+    "actual_producer": "e5c0848878810cf2155ba9698282e8c2c8840178",
+    "provenance": {
+      "path": "/tmp/nm2064-current-parent-helper-links/actual.json",
+      "sha256": "196e4bb11bf617ab02cafa39f72d999427c128663501c3f5d42719f2e72b9059"
+    },
+    "id": 648709572,
+    "asset_id": 648709572,
+    "digest": "sha256:94b7f7ac6ec9ab1cced0f035c509be9e83028d7da05579209b966ff35be40978",
+    "release_asset_name": "2064-e5-candidate-sql-probe"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "status": "PASS complete current-pair technical closure before freeze; root/peer final review still required",
+  "baseline_producer": "c896db3775411e9b7867260db420a73965b91a9e",
+  "candidate_producer": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+  "published_candidate": "97a1c03146db2ed6e45f2884b70ac152ef51d4b3",
+  "current_main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "native_rows": 64,
+  "compressed_roundtrips": 8,
+  "untimed_signatures": 22,
+  "original48_delta": true,
+  "unchanged_schedule": "22 workloads/704 rows/8 ABBA-BAAB blocks/5 metrics/seed1972",
+  "measurement_started": false
+}

@@ -1,0 +1,47 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "approved_diagnostic_commit": null,
+  "repository": "jonathanong/no-mistakes",
+  "main": "281673146341e6915c051aedfde6fd05ae6dd055",
+  "candidate_head": "e5c0848878810cf2155ba9698282e8c2c8840178",
+  "candidate_tree": "88e702ebaa0ea5ee5bb9ac2c0733f75b3b8a463c",
+  "actual_producer_baseline": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+  "actual_producer_candidate": "e5c0848878810cf2155ba9698282e8c2c8840178",
+  "api_controls_complete": true,
+  "sampling_minimum_remaining_seconds": 600,
+  "job_seconds": 1800,
+  "operation_seconds": 1500,
+  "transfer_reserve_seconds": 300,
+  "node_version": "26.11.1",
+  "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
+  "review_provenance": {
+    "source_scope": "Current d784/e5 authentic producer/control/CI adaptation of unchanged reviewed child adapter kernels; root final source approval pending",
+    "parent_diagnostic_sha": "afbb0956d07e9bfa1e2e0cc61f45cd5897b334b8",
+    "original_source_manifest_sha256": "ca3b5f091f6a44d7bc851c14fa8ddc1d4c14e234a4fa0489232b371311159f7b",
+    "upstream_source_manifest": {
+      "path": "/tmp/nm2054-b26-hosted-source/package/.github/scripts/mutable-root-b26-isolated/source-manifest.json",
+      "sha256": "e30e1ff0339d29bd53e7c5cf08f6624cd4ab866d508f587e02669fa932035e8e"
+    }
+  },
+  "candidate_lock_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+  "pr_number": 2064,
+  "ci_run": 38968800513,
+  "root_review": {
+    "path": "provenance/current-pair/root-final-draft-review.json",
+    "sha256": "a2528604d076d23d736a2d89322adc71bba4daa4bd4e2432abeefa5ab0873389"
+  },
+  "child_sql_receipt": {
+    "path": "provenance/current-pair/child-SQL.json",
+    "sha256": "550d1932a67dfec446acd318698208afe9ae4e224eecbf6b1f4ae1f76efaf025"
+  },
+  "child_fixture_control_receipt": {
+    "path": "provenance/current-pair/full32-comparison.json",
+    "sha256": "454f7a046941d9d05fad42d4b89d65fd3b03d736d9c51f36a0f26c9cc6645483"
+  },
+  "exact_head_ci": {
+    "path": "provenance/current-pair/child-CI-global98.json",
+    "sha256": "c6830120844da40af95933d5b55f0b17345136ae1e40157260db1fab695342e1"
+  },
+  "baseline_tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
+  "main_policy": "Recorded observationally; exact immutable d784 baseline tree required, including identical-tree parent merge proof. Candidate e5 remains open/DRAFT."
+}

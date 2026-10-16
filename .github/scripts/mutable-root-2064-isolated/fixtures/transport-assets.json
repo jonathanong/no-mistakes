@@ -1,0 +1,50 @@
+[
+  {
+    "name": "role-0",
+    "asset_id": 1,
+    "bytes": 45,
+    "sha256": "7f881438eacf68ac5b6732cd48f29c8c929473736b6c51cf98bdee8d612098a8"
+  },
+  {
+    "name": "role-1",
+    "asset_id": 2,
+    "bytes": 45,
+    "sha256": "7ed9e1c701d9197fa86f8af33d25380511a156943836f97b8885b2922c429fde"
+  },
+  {
+    "name": "role-2",
+    "asset_id": 3,
+    "bytes": 45,
+    "sha256": "83f1adcca4b187a23d9f7a035f5f6450a2bd31cc30909a1e14f17ef3540b27c7"
+  },
+  {
+    "name": "role-3",
+    "asset_id": 4,
+    "bytes": 45,
+    "sha256": "075b163f3b77ec34e6dc07808cfd13a7848dd7cf700ab20de0237224a48673f2"
+  },
+  {
+    "name": "role-4",
+    "asset_id": 5,
+    "bytes": 45,
+    "sha256": "e42e04ec34bbb70145ee949efeb1bc83ef9ad88b713fa67f94c1a98800170c86"
+  },
+  {
+    "name": "role-5",
+    "asset_id": 6,
+    "bytes": 45,
+    "sha256": "1471eac46ac1b7c30e336be80b3e80fd999358d91be0212651241bc9c3378adf"
+  },
+  {
+    "name": "role-6",
+    "asset_id": 7,
+    "bytes": 45,
+    "sha256": "b3f8c85a7607a3099601e5cb72ab247d73a24f388e22808dd926459d36434281"
+  },
+  {
+    "name": "role-7",
+    "asset_id": 8,
+    "bytes": 45,
+    "sha256": "5f6518ded2e2e90e11ef4b74dd9b3723082645b45e07079316e9e5f6086a5801"
+  }
+]

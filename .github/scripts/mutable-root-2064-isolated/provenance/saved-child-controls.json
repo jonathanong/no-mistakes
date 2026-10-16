@@ -1,0 +1,55 @@
+{
+  "status": "SAVED existing fixtures and assertions; no new metric/threshold",
+  "fixture_rows": [
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-pattern.mts",
+      "bytes": 351,
+      "sha256": "641941e73d77782b367205f9060ba5bab308ae8a0b25d5438eda1a10e09fc5e7"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-pattern-order.mts",
+      "bytes": 397,
+      "sha256": "f2b9dd9b81121a2b0c22aa6eeb0300a41ff95fa3f1a7568a766d21699b8393dd"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-history-64.mts",
+      "bytes": 2354,
+      "sha256": "81269e92c47101e77adb8147e3919370469b2239f79c0ac9e2c4a1d856b28735"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-history-256.mts",
+      "bytes": 6962,
+      "sha256": "72b5f28672ede2326ec6ffdaf2e89aa0e86e7b543efd77b118de4b3b871ee992"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-diamond-4.mts",
+      "bytes": 471,
+      "sha256": "c3dda778b701972c3f39dccab44c777f1607b5ba44b9fd16648fb5878cb27e25"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-diamond-8.mts",
+      "bytes": 727,
+      "sha256": "6fd239e21e9e0303de2915fd62f84cfcaafacfe3faa7877816cad2cd68e9265a"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-conditional-history-64.mts",
+      "bytes": 2884,
+      "sha256": "47c0819e6d9a5723d5e867286bd8c94d88e4fac06f4710168f3b31259f9ecbde"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/assignment-rhs-conditional-history-256.mts",
+      "bytes": 10948,
+      "sha256": "29d27cce9a8a44034f99a70dd66275aaca3dade0fb1890fbbd36fdc88f883619"
+    },
+    {
+      "path": "/tmp/no-mistakes-2064-b0b-release/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+      "bytes": 6372,
+      "sha256": "b6e6b2899d45e0bd97ce93ec61dd78888d1cb13ee1f43703675dd7435a71ed4f"
+    }
+  ],
+  "api": "assignment-receiver-api.test.js 38 child-only real-addon assertions, alongside both-arm existing113 real +42shim; CJS/ESM/prepared saved control methods",
+  "native_hotroot": "Original22 workload hot-mutable-root-scale uses saved mutable-root-scale input; no added timing workload",
+  "cfg_bound": "mutable_root_probe_tests.rs retains receiver_only_membership_probes <=6*128=768; parent128 and d9 whole-facts oracle remain compiler-test evidence, not fabricated default-native counters",
+  "sql_actual_receipt": "/tmp/nm2064-b0b-sql-control/closed-asset-for-root-staging.json",
+  "raw32": "30 byte-exact parent comparisons; indices10/26 full-token+all5statistics equal, raw differences retained; no favorable golden replacement"
+}

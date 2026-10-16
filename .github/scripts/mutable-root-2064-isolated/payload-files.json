@@ -1,0 +1,1334 @@
+[
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+    "payload": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79.data",
+    "bytes": 9660,
+    "sha256": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+    "payload": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2.data",
+    "bytes": 59584,
+    "sha256": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+    "payload": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575.data",
+    "bytes": 24398,
+    "sha256": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+    "payload": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff.data",
+    "bytes": 2454,
+    "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/.no-mistakes.yml",
+    "payload": "9d4da80853985b4fde1efaebc29c9a143633e418d24c5c5c1ffd69d4a82bd2fa.data",
+    "bytes": 692,
+    "sha256": "9d4da80853985b4fde1efaebc29c9a143633e418d24c5c5c1ffd69d4a82bd2fa"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/async-imports.yml",
+    "payload": "21aeb210fd6236984aeaecba4a759921413b25a242f5f08f05e61fe4e0212183.data",
+    "bytes": 360,
+    "sha256": "21aeb210fd6236984aeaecba4a759921413b25a242f5f08f05e61fe4e0212183"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/mutable-receivers.yml",
+    "payload": "827b97ea6cf58b802b8547c4e0b63f0b209823431375fda1b681685cf8216bc0.data",
+    "bytes": 312,
+    "sha256": "827b97ea6cf58b802b8547c4e0b63f0b209823431375fda1b681685cf8216bc0"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/named-clients.yml",
+    "payload": "5697b8e1205dbde65526fcb1e6d65e77ada955a594d8258860d1ec3b997af9c9.data",
+    "bytes": 175,
+    "sha256": "5697b8e1205dbde65526fcb1e6d65e77ada955a594d8258860d1ec3b997af9c9"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/returned-only.yml",
+    "payload": "e0354424a9fa02159042076e1bcd18e80bd97671a5c54dadf5abbb5ff987a017.data",
+    "bytes": 270,
+    "sha256": "e0354424a9fa02159042076e1bcd18e80bd97671a5c54dadf5abbb5ff987a017"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/review-marker.yml",
+    "payload": "abcf66dd3b13ae7cb30e62a28d9f9fdcd441b3206449c6af38f864f505c7295e.data",
+    "bytes": 229,
+    "sha256": "abcf66dd3b13ae7cb30e62a28d9f9fdcd441b3206449c6af38f864f505c7295e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/review.yml",
+    "payload": "005d6374c467e717b39140d1b15a1e7e7251125e2cc94792f0312b320a65c449.data",
+    "bytes": 421,
+    "sha256": "005d6374c467e717b39140d1b15a1e7e7251125e2cc94792f0312b320a65c449"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/adapters-and-mutations.mts",
+    "payload": "c3917345b5e64ffef0d0f53e74e215c714ed924852eb2d952acede39db1ae3a8.data",
+    "bytes": 1717,
+    "sha256": "c3917345b5e64ffef0d0f53e74e215c714ed924852eb2d952acede39db1ae3a8"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-and-bind.mts",
+    "payload": "65f6f1a55fbaaed6c182aaa2b6c0ce6ea40df6afb802232735e5080a62243d9d.data",
+    "bytes": 1508,
+    "sha256": "65f6f1a55fbaaed6c182aaa2b6c0ce6ea40df6afb802232735e5080a62243d9d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-binding-entry.mts",
+    "payload": "9a4ca855d67f6d1e5e1e8f4e54424d7c5997e1234a3c1d93de10254bcd2ed136.data",
+    "bytes": 258,
+    "sha256": "9a4ca855d67f6d1e5e1e8f4e54424d7c5997e1234a3c1d93de10254bcd2ed136"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-binding-exports.mts",
+    "payload": "7e015641557337f4e9ad4cd38aee2ea6b51f2f9694282116e5f7c6ae537f6221.data",
+    "bytes": 420,
+    "sha256": "7e015641557337f4e9ad4cd38aee2ea6b51f2f9694282116e5f7c6ae537f6221"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/clients.mts",
+    "payload": "43712f9c3f1eed674db3362d0ee0ee1fc6cd833e519477751e550ab0caf83e4e.data",
+    "bytes": 145,
+    "sha256": "43712f9c3f1eed674db3362d0ee0ee1fc6cd833e519477751e550ab0caf83e4e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/controls.mts",
+    "payload": "66ed0f56a6b609a07db33bc6fe9f388adc5e58a304a22996a0af69e693e2706e.data",
+    "bytes": 2055,
+    "sha256": "66ed0f56a6b609a07db33bc6fe9f388adc5e58a304a22996a0af69e693e2706e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/cursors.mts",
+    "payload": "fe687faa6344ec4558c7b3288f5308e013fb5071572bc29f592ad023f5baf952.data",
+    "bytes": 97,
+    "sha256": "fe687faa6344ec4558c7b3288f5308e013fb5071572bc29f592ad023f5baf952"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor-barrel.mts",
+    "payload": "c4e740e8d3e3e5c6e96f226d4075584bc373f886d9287be75aec5df00d08eb90.data",
+    "bytes": 61,
+    "sha256": "c4e740e8d3e3e5c6e96f226d4075584bc373f886d9287be75aec5df00d08eb90"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor-entry.mts",
+    "payload": "05db823ed9dd680111d109be5de9f81dbae33f42b6294d0d88927e6c4e04c560.data",
+    "bytes": 206,
+    "sha256": "05db823ed9dd680111d109be5de9f81dbae33f42b6294d0d88927e6c4e04c560"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor.mts",
+    "payload": "84d6a6fa226b85ccddbb3b6b65ce5138b493601209899c3d6f65e0027f489db5.data",
+    "bytes": 73,
+    "sha256": "84d6a6fa226b85ccddbb3b6b65ce5138b493601209899c3d6f65e0027f489db5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-origin-mutations.mts",
+    "payload": "7d61db4c6c1d1211391e3982332c7dbe76b41deaee3d403b9fc2cd2c48cb50b2.data",
+    "bytes": 1994,
+    "sha256": "7d61db4c6c1d1211391e3982332c7dbe76b41deaee3d403b9fc2cd2c48cb50b2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-inherited.mts",
+    "payload": "d229cc9060eba2588735b925748afd1f657ac447f46ac82daf8b1f1aac193812.data",
+    "bytes": 1272,
+    "sha256": "d229cc9060eba2588735b925748afd1f657ac447f46ac82daf8b1f1aac193812"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-late.mts",
+    "payload": "24d5fb620ac2f92c4efdb1a53005ff17573de4deda1adefe1d9dcaadc6e48538.data",
+    "bytes": 923,
+    "sha256": "24d5fb620ac2f92c4efdb1a53005ff17573de4deda1adefe1d9dcaadc6e48538"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-stars.mts",
+    "payload": "db60339308f0f0c9e429e1991aae7390b7174557450171c146a6d662586b522c.data",
+    "bytes": 870,
+    "sha256": "db60339308f0f0c9e429e1991aae7390b7174557450171c146a6d662586b522c"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/destructured-export.mts",
+    "payload": "0041c2f0b54198d31d2cff75341b8adab53f546420a913d44d5a3a953d09dabe.data",
+    "bytes": 63,
+    "sha256": "0041c2f0b54198d31d2cff75341b8adab53f546420a913d44d5a3a953d09dabe"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/destructured-parameters.mts",
+    "payload": "f8f6cb86294014287345e7426ac61dc4285d4a76edb21654790a0628d678d4b1.data",
+    "bytes": 3436,
+    "sha256": "f8f6cb86294014287345e7426ac61dc4285d4a76edb21654790a0628d678d4b1"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/entry.mts",
+    "payload": "ce0a8e035ecb1c730210aa9ef9ebf127ba7f782aacea020fd5a472731361d58c.data",
+    "bytes": 1098,
+    "sha256": "ce0a8e035ecb1c730210aa9ef9ebf127ba7f782aacea020fd5a472731361d58c"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/helpers.mts",
+    "payload": "56f6aec3863b3b524aa448e0033b23ceec1640d18cc897a17c5ef01092130130.data",
+    "bytes": 287,
+    "sha256": "56f6aec3863b3b524aa448e0033b23ceec1640d18cc897a17c5ef01092130130"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/imported-receiver-mutations.mts",
+    "payload": "d38bc3ebe4ebce63253a8181d210aa260d88526d16d84f2395b8f5a824b426d5.data",
+    "bytes": 3621,
+    "sha256": "d38bc3ebe4ebce63253a8181d210aa260d88526d16d84f2395b8f5a824b426d5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/inherited-constructors.mts",
+    "payload": "56358a5bcb99d8bb031c57493945d15a066776359398aab4845b2d8948f455d9.data",
+    "bytes": 1471,
+    "sha256": "56358a5bcb99d8bb031c57493945d15a066776359398aab4845b2d8948f455d9"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-client-entry.mts",
+    "payload": "7e042c535d90d556598e4868b115b204d415a75de17be031cb7f373ef7cc74a9.data",
+    "bytes": 248,
+    "sha256": "7e042c535d90d556598e4868b115b204d415a75de17be031cb7f373ef7cc74a9"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-client-helpers.mts",
+    "payload": "b8ff5b3d3fd0fe89d3c3cbba47f235b01bd075f38589f6c8a4bbb6a69237d50f.data",
+    "bytes": 227,
+    "sha256": "b8ff5b3d3fd0fe89d3c3cbba47f235b01bd075f38589f6c8a4bbb6a69237d50f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-value-entry.mts",
+    "payload": "39d25fcac0fb8cc755243e7e432cbe0ae26f7c82cb15c3676697016227f1b93f.data",
+    "bytes": 121,
+    "sha256": "39d25fcac0fb8cc755243e7e432cbe0ae26f7c82cb15c3676697016227f1b93f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-value.mts",
+    "payload": "d3316677d404ea23e983965b54f4e9dcd04eaa33b04cf29f501ee0830d435c85.data",
+    "bytes": 176,
+    "sha256": "d3316677d404ea23e983965b54f4e9dcd04eaa33b04cf29f501ee0830d435c85"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/acquired-wrapper.mts",
+    "payload": "245c2d3ace6d405cb02ba85d2c4ce104d7d85b297c588ce535e89b443387be47.data",
+    "bytes": 354,
+    "sha256": "245c2d3ace6d405cb02ba85d2c4ce104d7d85b297c588ce535e89b443387be47"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/copied-method.mts",
+    "payload": "ce69215626c19548ffc49d9eaa2510c99556ba7cd0d67d7c25bc0c7654aee049.data",
+    "bytes": 346,
+    "sha256": "ce69215626c19548ffc49d9eaa2510c99556ba7cd0d67d7c25bc0c7654aee049"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-await.mts",
+    "payload": "7b20e576bbd5177bc6578a3c4a3a41567fede16aa77a2b57f75361c2f057b285.data",
+    "bytes": 409,
+    "sha256": "7b20e576bbd5177bc6578a3c4a3a41567fede16aa77a2b57f75361c2f057b285"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-call.mts",
+    "payload": "c2951e35835f2fc291a0878c14bcced7e19cedef48c69c67721b5ae6a50983ed.data",
+    "bytes": 335,
+    "sha256": "c2951e35835f2fc291a0878c14bcced7e19cedef48c69c67721b5ae6a50983ed"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-deferred-call.mts",
+    "payload": "8a0ac26d8e0cf8dd094dedd8a300685da5d0087b8a555dde85afae5f80a6eec8.data",
+    "bytes": 375,
+    "sha256": "8a0ac26d8e0cf8dd094dedd8a300685da5d0087b8a555dde85afae5f80a6eec8"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-new.mts",
+    "payload": "ba710dce128b85026395cee96d543e19249fdb8103c33015f0bcacec38e135a1.data",
+    "bytes": 337,
+    "sha256": "ba710dce128b85026395cee96d543e19249fdb8103c33015f0bcacec38e135a1"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-tagged.mts",
+    "payload": "8785ec3061c9a9dba7753571827e8e0b65dcffb80dc15fb4d70da460696fabb4.data",
+    "bytes": 351,
+    "sha256": "8785ec3061c9a9dba7753571827e8e0b65dcffb80dc15fb4d70da460696fabb4"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-yield.mts",
+    "payload": "b8b64282be3db4da6fda74a2f6bc3504c05a2191e0e5a9d56cef74da354ee7c5.data",
+    "bytes": 474,
+    "sha256": "b8b64282be3db4da6fda74a2f6bc3504c05a2191e0e5a9d56cef74da354ee7c5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-between.mts",
+    "payload": "d8a66453ba4c3b3ee3607758b47004e682e6d8644205ab1ed4c9c621bcd301f6.data",
+    "bytes": 291,
+    "sha256": "d8a66453ba4c3b3ee3607758b47004e682e6d8644205ab1ed4c9c621bcd301f6"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-logical.mts",
+    "payload": "88b72d50f576c967da2761d0e0022ce4fe42e4b86c0c2e9d93a9096218be9602.data",
+    "bytes": 322,
+    "sha256": "88b72d50f576c967da2761d0e0022ce4fe42e4b86c0c2e9d93a9096218be9602"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-rhs.mts",
+    "payload": "3ced336e58d35e0726a2f5c92fd837aa4229c24ecf119cf425bd4ca75baeb027.data",
+    "bytes": 288,
+    "sha256": "3ced336e58d35e0726a2f5c92fd837aa4229c24ecf119cf425bd4ca75baeb027"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-await-operand-capture.mts",
+    "payload": "5190f2c515a38a8732fdeaeb36597083dadb26dafea36b8ebc6f2eb739bf6805.data",
+    "bytes": 418,
+    "sha256": "5190f2c515a38a8732fdeaeb36597083dadb26dafea36b8ebc6f2eb739bf6805"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-await-saved.mts",
+    "payload": "4b0f54cd310bf84923ca069b399faa5ece7a6bc9f040d7b9a20ec646d0eab879.data",
+    "bytes": 359,
+    "sha256": "4b0f54cd310bf84923ca069b399faa5ece7a6bc9f040d7b9a20ec646d0eab879"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-await.mts",
+    "payload": "7d0fd772f8d8bb930b6ea6176c0ade38ee45c018fbeca01a2bf136b31fe3235e.data",
+    "bytes": 315,
+    "sha256": "7d0fd772f8d8bb930b6ea6176c0ade38ee45c018fbeca01a2bf136b31fe3235e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-call.mts",
+    "payload": "62890da779484e15ed206c45f5e000acc30dcfb19ef73b905f16928d5e637893.data",
+    "bytes": 333,
+    "sha256": "62890da779484e15ed206c45f5e000acc30dcfb19ef73b905f16928d5e637893"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-yield.mts",
+    "payload": "13b54663e563b036b2782f277cf157c9fe0eaf807b8b95dbbb12fb5dffa15a9e.data",
+    "bytes": 365,
+    "sha256": "13b54663e563b036b2782f277cf157c9fe0eaf807b8b95dbbb12fb5dffa15a9e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-call-argument-capture.mts",
+    "payload": "c7b9a9aa3b76f339d2a964c5b545dc161e33c052eb74e4207db6bb6a329ea93a.data",
+    "bytes": 334,
+    "sha256": "c7b9a9aa3b76f339d2a964c5b545dc161e33c052eb74e4207db6bb6a329ea93a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-capture-chain.mts",
+    "payload": "d1683f9de16f3f9834195215646a0074beafeaf2430cd0d5ba48ee793031549e.data",
+    "bytes": 961,
+    "sha256": "d1683f9de16f3f9834195215646a0074beafeaf2430cd0d5ba48ee793031549e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-cold-suspension.mts",
+    "payload": "bcbe3c6347cb9a362093b3eff368024e8411fec6b42a4d64d617b9f3f54ba29b.data",
+    "bytes": 115,
+    "sha256": "bcbe3c6347cb9a362093b3eff368024e8411fec6b42a4d64d617b9f3f54ba29b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-computed-call.mts",
+    "payload": "3a20aa188e7c894d7ea1d244a318dbc8c4a1ab087793e29351861058b0b3136d.data",
+    "bytes": 294,
+    "sha256": "3a20aa188e7c894d7ea1d244a318dbc8c4a1ab087793e29351861058b0b3136d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-computed-rhs-call.mts",
+    "payload": "e2b8b025c36a5cc1ba665f77bd8197e46dedee6867de98cd5fcdd5b1118ab844.data",
+    "bytes": 340,
+    "sha256": "e2b8b025c36a5cc1ba665f77bd8197e46dedee6867de98cd5fcdd5b1118ab844"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-copied-method.mts",
+    "payload": "76157904e9c213ef884625736a5f14c907c2fa02d10f94490515c189006f0908.data",
+    "bytes": 307,
+    "sha256": "76157904e9c213ef884625736a5f14c907c2fa02d10f94490515c189006f0908"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-accessor.mts",
+    "payload": "5e1819950ef6817a63db1dfcf9998612e641593d9d2cfaba9144bd214414c0c1.data",
+    "bytes": 323,
+    "sha256": "5e1819950ef6817a63db1dfcf9998612e641593d9d2cfaba9144bd214414c0c1"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous-late-key.mts",
+    "payload": "355a694962d30106795ac2a65362f4ae1569ca5e0f2270774be8c1d6696ad12b.data",
+    "bytes": 429,
+    "sha256": "355a694962d30106795ac2a65362f4ae1569ca5e0f2270774be8c1d6696ad12b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous-late-member.mts",
+    "payload": "96bb836c6d4b002d0c018c92d75194c4ac5cfc98c268a996d700004583238511.data",
+    "bytes": 482,
+    "sha256": "96bb836c6d4b002d0c018c92d75194c4ac5cfc98c268a996d700004583238511"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous.mts",
+    "payload": "fe2d86d2827eceac8b6d3d9e0822a68e4f64c7923210f4c4f853f52c4adc57ef.data",
+    "bytes": 312,
+    "sha256": "fe2d86d2827eceac8b6d3d9e0822a68e4f64c7923210f4c4f853f52c4adc57ef"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-application.mts",
+    "payload": "d67d91f755792aca370f4d9b6ad1a5f831a823c44ae61f5ff3ec5cdfd675dac3.data",
+    "bytes": 454,
+    "sha256": "d67d91f755792aca370f4d9b6ad1a5f831a823c44ae61f5ff3ec5cdfd675dac3"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-before-capture.mts",
+    "payload": "924735f0c66edbf81c31340ce750bf113ed37399959dc97f16a2d90406e9431b.data",
+    "bytes": 306,
+    "sha256": "924735f0c66edbf81c31340ce750bf113ed37399959dc97f16a2d90406e9431b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-class-static.mts",
+    "payload": "69382596da2c040f85a7f23a3a9d8dbf265a184bb844f242a609acbe997d01f5.data",
+    "bytes": 327,
+    "sha256": "69382596da2c040f85a7f23a3a9d8dbf265a184bb844f242a609acbe997d01f5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-cold.mts",
+    "payload": "7b8d12fe7e8d3b705015badf6421ef60f6a90c52db9694ff8f237ea29181712b.data",
+    "bytes": 496,
+    "sha256": "7b8d12fe7e8d3b705015badf6421ef60f6a90c52db9694ff8f237ea29181712b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-computed-key.mts",
+    "payload": "75d1f5788f190333f3d7ded372f93026b6199762da85ec7db25f348df0ea22d2.data",
+    "bytes": 315,
+    "sha256": "75d1f5788f190333f3d7ded372f93026b6199762da85ec7db25f348df0ea22d2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-copied-snapshot.mts",
+    "payload": "268d1c4b6b3b6daba72f38f02ddfd14a05b918bd6f88bc235d6b809cc5a9c29f.data",
+    "bytes": 405,
+    "sha256": "268d1c4b6b3b6daba72f38f02ddfd14a05b918bd6f88bc235d6b809cc5a9c29f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-deferred.mts",
+    "payload": "c84a6d90860397076a33e50edf84676e789e3766c3da34eb7cf72d8c308ba25b.data",
+    "bytes": 327,
+    "sha256": "c84a6d90860397076a33e50edf84676e789e3766c3da34eb7cf72d8c308ba25b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-factory.mts",
+    "payload": "8f60224dc3e59c26d40a6e3d1fc63f0c292d7562ca0fcdb6940fbdb8eb166c11.data",
+    "bytes": 347,
+    "sha256": "8f60224dc3e59c26d40a6e3d1fc63f0c292d7562ca0fcdb6940fbdb8eb166c11"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-late-key.mts",
+    "payload": "29d3bdd99a2bd4c2304ffe95244afeabb6ba41df1e7e9e862d44b5f65b9af620.data",
+    "bytes": 436,
+    "sha256": "29d3bdd99a2bd4c2304ffe95244afeabb6ba41df1e7e9e862d44b5f65b9af620"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-member-static.mts",
+    "payload": "d35f5eb81293df633c0a21e1edada9880065c701480a8b7759a7cd36c7eb48a4.data",
+    "bytes": 433,
+    "sha256": "d35f5eb81293df633c0a21e1edada9880065c701480a8b7759a7cd36c7eb48a4"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-nested-class.mts",
+    "payload": "9a8599d0ca829f007c2054d18e1868dd2858ec1b3837d6405a2da474a0dbba3c.data",
+    "bytes": 413,
+    "sha256": "9a8599d0ca829f007c2054d18e1868dd2858ec1b3837d6405a2da474a0dbba3c"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-static-block.mts",
+    "payload": "64bd9804c01cb3427d2842fb0ba809a5268b5c79a22ce82a74f2d9f431cc4944.data",
+    "bytes": 330,
+    "sha256": "64bd9804c01cb3427d2842fb0ba809a5268b5c79a22ce82a74f2d9f431cc4944"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-static-field.mts",
+    "payload": "56ed8b6fd4cae3120742ab0c980e2c7a94d82d79c1d0205daf93f0820d42b966.data",
+    "bytes": 322,
+    "sha256": "56ed8b6fd4cae3120742ab0c980e2c7a94d82d79c1d0205daf93f0820d42b966"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-deferred-await.mts",
+    "payload": "a655a30d90ccd600d009a03c70f43ad20c88cb018a19610250baa87fb098cd33.data",
+    "bytes": 444,
+    "sha256": "a655a30d90ccd600d009a03c70f43ad20c88cb018a19610250baa87fb098cd33"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-deferred-own.mts",
+    "payload": "cbafe44914f45ad61a2c32700bca0b595dca2e866386b011018ed174041776e8.data",
+    "bytes": 331,
+    "sha256": "cbafe44914f45ad61a2c32700bca0b595dca2e866386b011018ed174041776e8"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-direct-alias.mts",
+    "payload": "2f8fe9a2757b84333e9f8dd8b1cbe35bc5a34269f78c492a0a34a9e4e9dce52a.data",
+    "bytes": 308,
+    "sha256": "2f8fe9a2757b84333e9f8dd8b1cbe35bc5a34269f78c492a0a34a9e4e9dce52a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-direct-write.mts",
+    "payload": "838f7fe903a4ec0392316db7c6c08bea237a24968626d0d7c069bb0bd7195bdd.data",
+    "bytes": 92,
+    "sha256": "838f7fe903a4ec0392316db7c6c08bea237a24968626d0d7c069bb0bd7195bdd"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-dynamic-ancestor.mts",
+    "payload": "55bc8b2a05bbccf4504bf6c170eb6500ffcc629fe29cedec5601a94a7a4f1d9e.data",
+    "bytes": 297,
+    "sha256": "55bc8b2a05bbccf4504bf6c170eb6500ffcc629fe29cedec5601a94a7a4f1d9e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-immediate-call.mts",
+    "payload": "5e128a691a4384a4b929ce95d6e91399dd92fca91d0849d436ad5f1331a64a4d.data",
+    "bytes": 332,
+    "sha256": "5e128a691a4384a4b929ce95d6e91399dd92fca91d0849d436ad5f1331a64a4d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-instance-own.mts",
+    "payload": "852681bfbc368083dd6cb044b3d9839e2c1b7ecf9d3ab5fd691229eb7e7e8fb5.data",
+    "bytes": 344,
+    "sha256": "852681bfbc368083dd6cb044b3d9839e2c1b7ecf9d3ab5fd691229eb7e7e8fb5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-many-captures.mts",
+    "payload": "d4e7cf70b5eba7ec60c567e363e490b57b04b99dfc18b3f8b817442fc45027e1.data",
+    "bytes": 5899,
+    "sha256": "d4e7cf70b5eba7ec60c567e363e490b57b04b99dfc18b3f8b817442fc45027e1"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-nested-fresh.mts",
+    "payload": "d09b3dd120aeabb1e2686c4fdea8b31c42894c4688750bc912d46e4cd21567d1.data",
+    "bytes": 323,
+    "sha256": "d09b3dd120aeabb1e2686c4fdea8b31c42894c4688750bc912d46e4cd21567d1"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-after-call.mts",
+    "payload": "b05ae2b1a3cddb294175d1adb23d0347b488a68a0e7e12abed861428f4162dce.data",
+    "bytes": 377,
+    "sha256": "b05ae2b1a3cddb294175d1adb23d0347b488a68a0e7e12abed861428f4162dce"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-after.mts",
+    "payload": "0987f621dc06494d402faf6f69a7f36d449211c93f55c8d19ba268ca6184f301.data",
+    "bytes": 336,
+    "sha256": "0987f621dc06494d402faf6f69a7f36d449211c93f55c8d19ba268ca6184f301"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-argument-before-call.mts",
+    "payload": "95d2489810cc48a290fffb1c6dfe5462cba883ac7f1fcb4bb9f019e7d5e93cd2.data",
+    "bytes": 479,
+    "sha256": "95d2489810cc48a290fffb1c6dfe5462cba883ac7f1fcb4bb9f019e7d5e93cd2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-before-call.mts",
+    "payload": "3813a6e7d2706febdaa74704b88006b783255d8c0b86022f98993bd113b40b66.data",
+    "bytes": 383,
+    "sha256": "3813a6e7d2706febdaa74704b88006b783255d8c0b86022f98993bd113b40b66"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-before.mts",
+    "payload": "7e0a6674194b166e9c8681a823985e45f672f8a2eae5fbf2bac7bd55928e7beb.data",
+    "bytes": 339,
+    "sha256": "7e0a6674194b166e9c8681a823985e45f672f8a2eae5fbf2bac7bd55928e7beb"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-descriptor-call.mts",
+    "payload": "b37e0bf6f6c3b4e63d246df6aeca8c272c5ebf7d1ec88448c8597e1dcdea4765.data",
+    "bytes": 550,
+    "sha256": "b37e0bf6f6c3b4e63d246df6aeca8c272c5ebf7d1ec88448c8597e1dcdea4765"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-nested-getter.mts",
+    "payload": "a860d2b69455f9c823310bfdbf0c14aff455236da2ce118986c8e62bf271ea74.data",
+    "bytes": 499,
+    "sha256": "a860d2b69455f9c823310bfdbf0c14aff455236da2ce118986c8e62bf271ea74"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-original-restore.mts",
+    "payload": "a589dd78a5b82e74659c1b9abeb1dafdbd8e3481cd39bd009ebaed5e62183400.data",
+    "bytes": 364,
+    "sha256": "a589dd78a5b82e74659c1b9abeb1dafdbd8e3481cd39bd009ebaed5e62183400"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-preserved-fresh.mts",
+    "payload": "c0e9a7f4f0036f0421059af4486d9e7cfe330862d335240f3aa04135e854c660.data",
+    "bytes": 437,
+    "sha256": "c0e9a7f4f0036f0421059af4486d9e7cfe330862d335240f3aa04135e854c660"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-call.mts",
+    "payload": "5353ad117e89accc36df021d2dfd1bbcb53e3ea63c1adbc9da531dbc1ea3a524.data",
+    "bytes": 389,
+    "sha256": "5353ad117e89accc36df021d2dfd1bbcb53e3ea63c1adbc9da531dbc1ea3a524"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-first.mts",
+    "payload": "71c6944938cdbf1c719bc7c346f9c65354804ed0503c8bab978fc833cd0d6148.data",
+    "bytes": 424,
+    "sha256": "71c6944938cdbf1c719bc7c346f9c65354804ed0503c8bab978fc833cd0d6148"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-getter.mts",
+    "payload": "cac4f85bdd3bdeec42c87ec3473127ed95d20d790e7d74cf226b73fe02bd323f.data",
+    "bytes": 388,
+    "sha256": "cac4f85bdd3bdeec42c87ec3473127ed95d20d790e7d74cf226b73fe02bd323f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-spread.mts",
+    "payload": "e4a10fd38d0661011cec8b51626a8fa59eb834ab2d19f5758e6b9ecef63a3ba5.data",
+    "bytes": 400,
+    "sha256": "e4a10fd38d0661011cec8b51626a8fa59eb834ab2d19f5758e6b9ecef63a3ba5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-rhs-stress.mts",
+    "payload": "57587312500b4245a429ac0eb823f0f01423d43cfd552a1f9d160ed0c292ca41.data",
+    "bytes": 1082,
+    "sha256": "57587312500b4245a429ac0eb823f0f01423d43cfd552a1f9d160ed0c292ca41"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-after-fresh.mts",
+    "payload": "80e37382da6fb420f32082da763ba3c9f60e44bc1d44f1b8282af77109e6d982.data",
+    "bytes": 312,
+    "sha256": "80e37382da6fb420f32082da763ba3c9f60e44bc1d44f1b8282af77109e6d982"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-before-fresh.mts",
+    "payload": "8fc9eab9e5372c262ab7dec9d6781c8ba552a33af867d4a418c766ba5b573754.data",
+    "bytes": 314,
+    "sha256": "8fc9eab9e5372c262ab7dec9d6781c8ba552a33af867d4a418c766ba5b573754"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-client.mts",
+    "payload": "dbef00b6edc5960339a7083333af9686707a4542d80d4a04ae43d59479bca5ac.data",
+    "bytes": 304,
+    "sha256": "dbef00b6edc5960339a7083333af9686707a4542d80d4a04ae43d59479bca5ac"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-old-wrapper.mts",
+    "payload": "2326c928e4b6eec593f55c4d5602376e05f7eaaf759b0cce59125ac13ca5a6db.data",
+    "bytes": 307,
+    "sha256": "2326c928e4b6eec593f55c4d5602376e05f7eaaf759b0cce59125ac13ca5a6db"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-sibling-after.mts",
+    "payload": "37a6745ddb55683f37e96574013a81246dbd7f2c6d099c0d651b5035bc32e4c2.data",
+    "bytes": 291,
+    "sha256": "37a6745ddb55683f37e96574013a81246dbd7f2c6d099c0d651b5035bc32e4c2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-sibling-rhs.mts",
+    "payload": "268ee0543723295de233f11f9a33e9cfb2f951e19cbdad3d17fadc79f8e8b37a.data",
+    "bytes": 283,
+    "sha256": "268ee0543723295de233f11f9a33e9cfb2f951e19cbdad3d17fadc79f8e8b37a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-static-call.mts",
+    "payload": "ea80939851e47720c9b0082aaa4bf05c8c552ea2c900b4e4dac21f7efd79562f.data",
+    "bytes": 299,
+    "sha256": "ea80939851e47720c9b0082aaa4bf05c8c552ea2c900b4e4dac21f7efd79562f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-unknown-call.mts",
+    "payload": "509ebaccd431eff21e48aa4cf0935d87835062f41471c5ac3b303e08bfed9b1d.data",
+    "bytes": 271,
+    "sha256": "509ebaccd431eff21e48aa4cf0935d87835062f41471c5ac3b303e08bfed9b1d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-unrelated-rhs.mts",
+    "payload": "c255094e8d1edabcae43b3fe281e31723077518e1cf670e9bf72d5cc0b3a2c80.data",
+    "bytes": 280,
+    "sha256": "c255094e8d1edabcae43b3fe281e31723077518e1cf670e9bf72d5cc0b3a2c80"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-yield-operand-capture.mts",
+    "payload": "74caa27138d9222ba312a638bb10669c3b960d339bfd56cd758e936135a4bc40.data",
+    "bytes": 400,
+    "sha256": "74caa27138d9222ba312a638bb10669c3b960d339bfd56cd758e936135a4bc40"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-after.mts",
+    "payload": "0adc012ade6c18da303975f1d3935176c43af4517bcbb80268ddab028ced58e8.data",
+    "bytes": 236,
+    "sha256": "0adc012ade6c18da303975f1d3935176c43af4517bcbb80268ddab028ced58e8"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-ancestor-conditional.mts",
+    "payload": "b08c27b5b662d2a9692d9034dbaf03e0ffa6b85db0cc44d19c9942d0f20e6a61.data",
+    "bytes": 334,
+    "sha256": "b08c27b5b662d2a9692d9034dbaf03e0ffa6b85db0cc44d19c9942d0f20e6a61"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-ancestor-rhs.mts",
+    "payload": "76202e7d8219509d87bfdd445226bfcb7b3be15caf057538ce7db48f8e83ee83.data",
+    "bytes": 304,
+    "sha256": "76202e7d8219509d87bfdd445226bfcb7b3be15caf057538ce7db48f8e83ee83"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-arm.mts",
+    "payload": "754d482107bad9ea6c55b3893302091203f19a6b6e21686e813bbc6f486a19fe.data",
+    "bytes": 232,
+    "sha256": "754d482107bad9ea6c55b3893302091203f19a6b6e21686e813bbc6f486a19fe"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-child.mts",
+    "payload": "dbe99eb456bb9369a5dc2b721ea11fe22a6ff5c9d02ac666e1bb6b8cab5327b9.data",
+    "bytes": 251,
+    "sha256": "dbe99eb456bb9369a5dc2b721ea11fe22a6ff5c9d02ac666e1bb6b8cab5327b9"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-descendant.mts",
+    "payload": "cf0ed3b910148fea3e6c34612df53e3ac3d672ec82fae40f2af70727d4f37d05.data",
+    "bytes": 276,
+    "sha256": "cf0ed3b910148fea3e6c34612df53e3ac3d672ec82fae40f2af70727d4f37d05"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-dynamic.mts",
+    "payload": "ffcfef3209ba27e86f64f6e33f5fe7fe32a57a80c2dcc89a181c46a2e1806750.data",
+    "bytes": 259,
+    "sha256": "ffcfef3209ba27e86f64f6e33f5fe7fe32a57a80c2dcc89a181c46a2e1806750"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-foreign.mts",
+    "payload": "b7e21cb15a3d683006feb332ddd4994feb47e664c34bc784e2c73cdea23c2b95.data",
+    "bytes": 284,
+    "sha256": "b7e21cb15a3d683006feb332ddd4994feb47e664c34bc784e2c73cdea23c2b95"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-logical.mts",
+    "payload": "be79fbe75015fcb619094d8d575fa2892c3ba3b3b0597a7a09290e56fb1f795d.data",
+    "bytes": 242,
+    "sha256": "be79fbe75015fcb619094d8d575fa2892c3ba3b3b0597a7a09290e56fb1f795d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-many-writes.mts",
+    "payload": "fdafbaac463776f0c49c48c38e5d10f757ca699946fd2383e92de0285f336945.data",
+    "bytes": 6132,
+    "sha256": "fdafbaac463776f0c49c48c38e5d10f757ca699946fd2383e92de0285f336945"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-opposite.mts",
+    "payload": "c59f7c0f80ae157362ca48fc4b538896feadd192be0177c53eb3aefa21cabdb5.data",
+    "bytes": 251,
+    "sha256": "c59f7c0f80ae157362ca48fc4b538896feadd192be0177c53eb3aefa21cabdb5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-restore.mts",
+    "payload": "70a58e48b7c5941f4f7ed3e230960c0090ee0c59a4cc5786dc041a0336dcbb60.data",
+    "bytes": 261,
+    "sha256": "70a58e48b7c5941f4f7ed3e230960c0090ee0c59a4cc5786dc041a0336dcbb60"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-rhs.mts",
+    "payload": "60b7eac1839544751bcf869168eca09b20d532a3f3d6362121621685c2766788.data",
+    "bytes": 242,
+    "sha256": "60b7eac1839544751bcf869168eca09b20d532a3f3d6362121621685c2766788"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-root-conditional.mts",
+    "payload": "2aba10de5edd64559dee454dfb8b8bf08cde0b8b634addd20795c3517813871e.data",
+    "bytes": 291,
+    "sha256": "2aba10de5edd64559dee454dfb8b8bf08cde0b8b634addd20795c3517813871e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-root-rhs.mts",
+    "payload": "60fb4e97eebbd93ec77cedcf2cf3a14e696b4829cdd37daf668de67871707922.data",
+    "bytes": 261,
+    "sha256": "60fb4e97eebbd93ec77cedcf2cf3a14e696b4829cdd37daf668de67871707922"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-const-guarded.mts",
+    "payload": "338be48c354149ca8de73dd6e15d5a002d5837c56b63423d6456b50ee178f87a.data",
+    "bytes": 244,
+    "sha256": "338be48c354149ca8de73dd6e15d5a002d5837c56b63423d6456b50ee178f87a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-array.mts",
+    "payload": "a3dca576840b06384b0259ab0626b867f621fe2a855a9c290cd6c5b7d60d476f.data",
+    "bytes": 196,
+    "sha256": "a3dca576840b06384b0259ab0626b867f621fe2a855a9c290cd6c5b7d60d476f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-conditional-root.mts",
+    "payload": "977502a4f3758bc7a7425a6bf365771f4eeef3cc56d30f1e1f07f8eb2e737e4c.data",
+    "bytes": 239,
+    "sha256": "977502a4f3758bc7a7425a6bf365771f4eeef3cc56d30f1e1f07f8eb2e737e4c"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-copied.mts",
+    "payload": "c791444900629596849ba8872629762fd83ed4ea6f8a726c8afc09b1563dfde2.data",
+    "bytes": 217,
+    "sha256": "c791444900629596849ba8872629762fd83ed4ea6f8a726c8afc09b1563dfde2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-cycle.mts",
+    "payload": "9204d22f8db20f2d28b09963edb3c905f4d91a1366abe8ed8a496a7a6601c24b.data",
+    "bytes": 244,
+    "sha256": "9204d22f8db20f2d28b09963edb3c905f4d91a1366abe8ed8a496a7a6601c24b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-array.mts",
+    "payload": "ee571c036329bee718493a32da1e16ef9cea0df2d09c8859b8b45c5b949f0c5f.data",
+    "bytes": 299,
+    "sha256": "ee571c036329bee718493a32da1e16ef9cea0df2d09c8859b8b45c5b949f0c5f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-default.mts",
+    "payload": "d8fc914b1e719e4dd97867f4d95c614d77bafa93f38f6770e8ec76f48c03c9bb.data",
+    "bytes": 302,
+    "sha256": "d8fc914b1e719e4dd97867f4d95c614d77bafa93f38f6770e8ec76f48c03c9bb"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-object.mts",
+    "payload": "6ff26ac870680f330cdc43eccc856a21cd112b9b27dc494e03dbe8cba8c8df92.data",
+    "bytes": 317,
+    "sha256": "6ff26ac870680f330cdc43eccc856a21cd112b9b27dc494e03dbe8cba8c8df92"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-detached.mts",
+    "payload": "8225c10700e3129012ca59b5ece3555e64bff6f874b487be18396d41c22e520c.data",
+    "bytes": 219,
+    "sha256": "8225c10700e3129012ca59b5ece3555e64bff6f874b487be18396d41c22e520c"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-direct.mts",
+    "payload": "d81d5b1a33677f83e5fe2d10d4b1ce4226a7495b4ec299a08f54ea0216545024.data",
+    "bytes": 202,
+    "sha256": "d81d5b1a33677f83e5fe2d10d4b1ce4226a7495b4ec299a08f54ea0216545024"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-foreign-root.mts",
+    "payload": "133a9878be233c6a501d98865fc5dd07206f5acc9ee9bcebcda58b67967cd579.data",
+    "bytes": 321,
+    "sha256": "133a9878be233c6a501d98865fc5dd07206f5acc9ee9bcebcda58b67967cd579"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-guarded.mts",
+    "payload": "8b137b6e483f5604db74f8fa424029fd7ba09e8615d5bd81299c9006f4173cb3.data",
+    "bytes": 242,
+    "sha256": "8b137b6e483f5604db74f8fa424029fd7ba09e8615d5bd81299c9006f4173cb3"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-lhs-acquisition.mts",
+    "payload": "9c3db1edfc8eff3704c6e7deeee895c7584b909e006441eafdb6aac4f3f85860.data",
+    "bytes": 290,
+    "sha256": "9c3db1edfc8eff3704c6e7deeee895c7584b909e006441eafdb6aac4f3f85860"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-logical-root.mts",
+    "payload": "6d45f75b0aa279ca58be04df2499847d086fcef88b0f1b01f443300878e33b5d.data",
+    "bytes": 231,
+    "sha256": "6d45f75b0aa279ca58be04df2499847d086fcef88b0f1b01f443300878e33b5d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-before.mts",
+    "payload": "ef5a13f2748cc3104f3846f21419e8d59ef078e2ce5350ed032cea09135aeb0f.data",
+    "bytes": 345,
+    "sha256": "ef5a13f2748cc3104f3846f21419e8d59ef078e2ce5350ed032cea09135aeb0f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-class-context.mts",
+    "payload": "3a275dcd4974ccba487a3ef0a0a3f10d03e8e06f9dd9bd990ff470e7df21270d.data",
+    "bytes": 463,
+    "sha256": "3a275dcd4974ccba487a3ef0a0a3f10d03e8e06f9dd9bd990ff470e7df21270d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-cold-class.mts",
+    "payload": "690c72140cc18c8e4d5b7b559c78d0894661488da024386c549a354b89095bda.data",
+    "bytes": 392,
+    "sha256": "690c72140cc18c8e4d5b7b559c78d0894661488da024386c549a354b89095bda"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+    "payload": "414e0b400091d35f19ba14907de0fd25a7c78c6d4a4b70ada91bd726184aef69.data",
+    "bytes": 465,
+    "sha256": "414e0b400091d35f19ba14907de0fd25a7c78c6d4a4b70ada91bd726184aef69"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+    "payload": "a0f8110e014d0ea0ad944267a8d2e2aaac0023e79c69442755269b80797fb4b3.data",
+    "bytes": 418,
+    "sha256": "a0f8110e014d0ea0ad944267a8d2e2aaac0023e79c69442755269b80797fb4b3"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-whole.mts",
+    "payload": "7cea1b2f803b1199a2280a02b681e059f0bea337e06aed356d388812d5fc1610.data",
+    "bytes": 391,
+    "sha256": "7cea1b2f803b1199a2280a02b681e059f0bea337e06aed356d388812d5fc1610"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-default.mts",
+    "payload": "477ea05ae349d1dd76748dc61eef05328623f27c1f50e5768b7743348bd75cf7.data",
+    "bytes": 338,
+    "sha256": "477ea05ae349d1dd76748dc61eef05328623f27c1f50e5768b7743348bd75cf7"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+    "payload": "1a861f4ad21b1a12a7a755ac37ad988044b979d1ebb53ab45dd3544c1387699e.data",
+    "bytes": 440,
+    "sha256": "1a861f4ad21b1a12a7a755ac37ad988044b979d1ebb53ab45dd3544c1387699e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-final-root.mts",
+    "payload": "2ebb428bdcb65415130cbdb68dbd7be19ed6b70b1c42cdeaad2bf1d655e5180a.data",
+    "bytes": 407,
+    "sha256": "2ebb428bdcb65415130cbdb68dbd7be19ed6b70b1c42cdeaad2bf1d655e5180a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-foreign-catalog.mts",
+    "payload": "e7ba6700626355844908aed9b479e6fda34cd2167405c1faaccdd4d631ca6a77.data",
+    "bytes": 396,
+    "sha256": "e7ba6700626355844908aed9b479e6fda34cd2167405c1faaccdd4d631ca6a77"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+    "payload": "c2a60991f2a7339fc6d5ff1fbaab5960d1204d6489a1d0f5a3049999fc771e64.data",
+    "bytes": 422,
+    "sha256": "c2a60991f2a7339fc6d5ff1fbaab5960d1204d6489a1d0f5a3049999fc771e64"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts",
+    "payload": "a6f112c3790620f788f70bb311604e161e555bd7125b3d4ce6c6bc2fd54e6312.data",
+    "bytes": 395,
+    "sha256": "a6f112c3790620f788f70bb311604e161e555bd7125b3d4ce6c6bc2fd54e6312"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-lhs.mts",
+    "payload": "c9c1d8b76f5c2a339d777da64a7c96af10cfd0b3bb3bae81db61d95b11e1eeb3.data",
+    "bytes": 344,
+    "sha256": "c9c1d8b76f5c2a339d777da64a7c96af10cfd0b3bb3bae81db61d95b11e1eeb3"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+    "payload": "6a609041607119b959d653218c6637d410bcc118f13efdf272852c11007d6bdf.data",
+    "bytes": 394,
+    "sha256": "6a609041607119b959d653218c6637d410bcc118f13efdf272852c11007d6bdf"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts",
+    "payload": "dac6a2cdbd9b003b2ceecb002ef24ff83c4e7cab1f8bceda4b62ced1355ea634.data",
+    "bytes": 415,
+    "sha256": "dac6a2cdbd9b003b2ceecb002ef24ff83c4e7cab1f8bceda4b62ced1355ea634"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-carrier.mts",
+    "payload": "d46a404b7c1948034e1d3d38d4cfda6a51918ec947ab6fed3ba1657decaac9fc.data",
+    "bytes": 450,
+    "sha256": "d46a404b7c1948034e1d3d38d4cfda6a51918ec947ab6fed3ba1657decaac9fc"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts",
+    "payload": "e943ef42fb887449fb49350e90dfefcad3856ab329c01560c3de015ba7f92df2.data",
+    "bytes": 443,
+    "sha256": "e943ef42fb887449fb49350e90dfefcad3856ab329c01560c3de015ba7f92df2"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-getter-rhs.mts",
+    "payload": "5f1724fe422c45a79bba47a39081be18e9256bc8142277d9dfe969ead0330847.data",
+    "bytes": 483,
+    "sha256": "5f1724fe422c45a79bba47a39081be18e9256bc8142277d9dfe969ead0330847"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-later-lhs.mts",
+    "payload": "bf78ceaf77f1418d2cdff48562107a8c7281c1617d833f2941b80a1cb1670bd5.data",
+    "bytes": 448,
+    "sha256": "bf78ceaf77f1418d2cdff48562107a8c7281c1617d833f2941b80a1cb1670bd5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts",
+    "payload": "35de60eac7b54c0ac49380248d19cc66bf187c68a39dbe48282ef26666bd79df.data",
+    "bytes": 430,
+    "sha256": "35de60eac7b54c0ac49380248d19cc66bf187c68a39dbe48282ef26666bd79df"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts",
+    "payload": "e8666c783c01bd1de1e733bd5b590de51a8545e52990114ea9c29952d96855a0.data",
+    "bytes": 381,
+    "sha256": "e8666c783c01bd1de1e733bd5b590de51a8545e52990114ea9c29952d96855a0"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-rhs.mts",
+    "payload": "88828cd64c13722d9a8fe19604f721e10448f94a647aa68f461d46298e2464d3.data",
+    "bytes": 328,
+    "sha256": "88828cd64c13722d9a8fe19604f721e10448f94a647aa68f461d46298e2464d3"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-self-copy.mts",
+    "payload": "d1c537cebf6a280d9894c45e34e762fc6d5baebe128b05318d79fc17c1913412.data",
+    "bytes": 352,
+    "sha256": "d1c537cebf6a280d9894c45e34e762fc6d5baebe128b05318d79fc17c1913412"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts",
+    "payload": "8c583cea4c13b8a4868a4a3b61e7739c76b8278fda36cda251c76b9c1c917b47.data",
+    "bytes": 406,
+    "sha256": "8c583cea4c13b8a4868a4a3b61e7739c76b8278fda36cda251c76b9c1c917b47"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-shorthand.mts",
+    "payload": "73eaa8b4ecdbfcfec586597993e38183706170ca515bafbb83ddb30f64ae8b46.data",
+    "bytes": 372,
+    "sha256": "73eaa8b4ecdbfcfec586597993e38183706170ca515bafbb83ddb30f64ae8b46"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-capture.mts",
+    "payload": "83326c1de5c4ed1d102184277014099fd889437ce26e4e77ff44ad90fb80a752.data",
+    "bytes": 554,
+    "sha256": "83326c1de5c4ed1d102184277014099fd889437ce26e4e77ff44ad90fb80a752"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts",
+    "payload": "a85af6aa4dc0c07bf1c2e016b0d0b439af966881060317cb29ef6b752bb6dec0.data",
+    "bytes": 553,
+    "sha256": "a85af6aa4dc0c07bf1c2e016b0d0b439af966881060317cb29ef6b752bb6dec0"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-fields.mts",
+    "payload": "228e863ec8bb6d69f8dfb9d7ebbd478736b5c005b0041ede789dcbe53bff6541.data",
+    "bytes": 593,
+    "sha256": "228e863ec8bb6d69f8dfb9d7ebbd478736b5c005b0041ede789dcbe53bff6541"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-local.mts",
+    "payload": "ab8ee5bcf1fcf0392f79db005273f71b25de4935c2cdad57cc17ec39295f41c5.data",
+    "bytes": 500,
+    "sha256": "ab8ee5bcf1fcf0392f79db005273f71b25de4935c2cdad57cc17ec39295f41c5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-nested.mts",
+    "payload": "4367450265609ae35fdcd15278e2b332f3ab022bdb7c20313d8bb9c984e72906.data",
+    "bytes": 434,
+    "sha256": "4367450265609ae35fdcd15278e2b332f3ab022bdb7c20313d8bb9c984e72906"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts",
+    "payload": "e43dc0d664191f7271d7fc149c0625d324d8fda452f77e27346fb6d7539463db.data",
+    "bytes": 394,
+    "sha256": "e43dc0d664191f7271d7fc149c0625d324d8fda452f77e27346fb6d7539463db"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts",
+    "payload": "401a6dee5d1d3e725286a6a1bd6a6425c45c8e55599379e7de0f0af93425dc8f.data",
+    "bytes": 679,
+    "sha256": "401a6dee5d1d3e725286a6a1bd6a6425c45c8e55599379e7de0f0af93425dc8f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+    "payload": "a8c0b0d6347a2d8c2e4fec30c0eb5c0f84932660e8d638c910ff0462e8d487b4.data",
+    "bytes": 561,
+    "sha256": "a8c0b0d6347a2d8c2e4fec30c0eb5c0f84932660e8d638c910ff0462e8d487b4"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+    "payload": "da9ac9349746993301634ff4cd4d4739206cb9f47ca85d1f970549b7f66aad3a.data",
+    "bytes": 473,
+    "sha256": "da9ac9349746993301634ff4cd4d4739206cb9f47ca85d1f970549b7f66aad3a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-twice.mts",
+    "payload": "f2b5d7190764d2f85e98b790c83ef6cd81f03425f25ee2fc76ed2989ffd5d4dd.data",
+    "bytes": 371,
+    "sha256": "f2b5d7190764d2f85e98b790c83ef6cd81f03425f25ee2fc76ed2989ffd5d4dd"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-wrapped.mts",
+    "payload": "bf417c4a20a60bc60703cb95172ca2f4ca93e639e89694a3a664b5576f5fb2ac.data",
+    "bytes": 354,
+    "sha256": "bf417c4a20a60bc60703cb95172ca2f4ca93e639e89694a3a664b5576f5fb2ac"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rebound-detaches-old.mts",
+    "payload": "83c44407a493a4517b21a1f222aae2f692f7f1a56de98d7425c7e8f94f95f80f.data",
+    "bytes": 229,
+    "sha256": "83c44407a493a4517b21a1f222aae2f692f7f1a56de98d7425c7e8f94f95f80f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rebound.mts",
+    "payload": "4061f86724785361f1876875a5d435949d5f5efedce1bd6b39478b459ad4602e.data",
+    "bytes": 239,
+    "sha256": "4061f86724785361f1876875a5d435949d5f5efedce1bd6b39478b459ad4602e"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rhs-named.mts",
+    "payload": "07e08083e69688acb7b0ba6158d7dac58648b6b66e0e42affd90d5987761f762.data",
+    "bytes": 257,
+    "sha256": "07e08083e69688acb7b0ba6158d7dac58648b6b66e0e42affd90d5987761f762"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rhs-rebound.mts",
+    "payload": "0766fc9567f4ac6f103dca87509deb914f8929eb5b94cb408ed0be083fd51c73.data",
+    "bytes": 230,
+    "sha256": "0766fc9567f4ac6f103dca87509deb914f8929eb5b94cb408ed0be083fd51c73"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-self-copy.mts",
+    "payload": "89ad1fff714f327d872ff252a986068ccac4493b91c0e261b423bdc5e5fa7289.data",
+    "bytes": 213,
+    "sha256": "89ad1fff714f327d872ff252a986068ccac4493b91c0e261b423bdc5e5fa7289"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-shadowed.mts",
+    "payload": "e1789868d8e4b13abd8bdf0b90fecfde80ebd1b006a67e9991aac73ae1b2f981.data",
+    "bytes": 232,
+    "sha256": "e1789868d8e4b13abd8bdf0b90fecfde80ebd1b006a67e9991aac73ae1b2f981"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-sibling.mts",
+    "payload": "fa0bd815299257f2b302d79b3e326c06aa9f2d742cbc339d099c6f0fef949b88.data",
+    "bytes": 202,
+    "sha256": "fa0bd815299257f2b302d79b3e326c06aa9f2d742cbc339d099c6f0fef949b88"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-as.mts",
+    "payload": "d6604fff3907891d835ee22ddb1b6920fde7820d24fe497de5655af2911e3b77.data",
+    "bytes": 307,
+    "sha256": "d6604fff3907891d835ee22ddb1b6920fde7820d24fe497de5655af2911e3b77"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-assertion.mts",
+    "payload": "ebebded3ffde4ef218c170a3d09b3e1ba37f1ab5edc854358e0a3f53ea679122.data",
+    "bytes": 305,
+    "sha256": "ebebded3ffde4ef218c170a3d09b3e1ba37f1ab5edc854358e0a3f53ea679122"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-non-null.mts",
+    "payload": "71cb6f78f2bf0d7eb45cd8fed8c237cc90ed7f6f4e8243f396c68909a7bdacf4.data",
+    "bytes": 299,
+    "sha256": "71cb6f78f2bf0d7eb45cd8fed8c237cc90ed7f6f4e8243f396c68909a7bdacf4"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-satisfies.mts",
+    "payload": "7c72fae94e4a93e6676bd8b1df58dd4778f74a2ea9347dc8b6b23e824637d565.data",
+    "bytes": 314,
+    "sha256": "7c72fae94e4a93e6676bd8b1df58dd4778f74a2ea9347dc8b6b23e824637d565"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-unrelated.mts",
+    "payload": "35c7705edcbbd4e8140f5fa4038c513c003a3995d560a2fac37165f1eb8404a4.data",
+    "bytes": 321,
+    "sha256": "35c7705edcbbd4e8140f5fa4038c513c003a3995d560a2fac37165f1eb8404a4"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+    "payload": "51dba0de96d86d9a59b0890aebe744f61d03d8459bb4333c15da0f7df721b306.data",
+    "bytes": 1373,
+    "sha256": "51dba0de96d86d9a59b0890aebe744f61d03d8459bb4333c15da0f7df721b306"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+    "payload": "a2f8e6482d906d3e80902bc8f6a560f5764f2d3f0f9146f99abc5c3db26873c3.data",
+    "bytes": 1018,
+    "sha256": "a2f8e6482d906d3e80902bc8f6a560f5764f2d3f0f9146f99abc5c3db26873c3"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+    "payload": "5bc4260bef66761a337ce6faab1e70751b256f329ddbcbde0a4d13928887f214.data",
+    "bytes": 1469,
+    "sha256": "5bc4260bef66761a337ce6faab1e70751b256f329ddbcbde0a4d13928887f214"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-future-foreign-128.mts",
+    "payload": "e41bfbc9d9a55e767bc85ded84f8d04bf2514f0961b4601144feac68af4e72ec.data",
+    "bytes": 4432,
+    "sha256": "e41bfbc9d9a55e767bc85ded84f8d04bf2514f0961b4601144feac68af4e72ec"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-future-foreign-32.mts",
+    "payload": "84f4cec39866ab4d54adf07400b9b79edf9d9441c5de978dd5eb848a56ce277d.data",
+    "bytes": 1840,
+    "sha256": "84f4cec39866ab4d54adf07400b9b79edf9d9441c5de978dd5eb848a56ce277d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+    "payload": "676d97bd1c5452789e2d00a77196135cab674d7103d7c018d27d35ae64952816.data",
+    "bytes": 617,
+    "sha256": "676d97bd1c5452789e2d00a77196135cab674d7103d7c018d27d35ae64952816"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+    "payload": "b6e6b2899d45e0bd97ce93ec61dd78888d1cb13ee1f43703675dd7435a71ed4f.data",
+    "bytes": 6372,
+    "sha256": "b6e6b2899d45e0bd97ce93ec61dd78888d1cb13ee1f43703675dd7435a71ed4f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-rule-mutated.mts",
+    "payload": "35a5e0f3031926625a34614265f921585ef0880daa0ab360473eedbd593f369a.data",
+    "bytes": 264,
+    "sha256": "35a5e0f3031926625a34614265f921585ef0880daa0ab360473eedbd593f369a"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-rule-sibling.mts",
+    "payload": "e4a6b5c08084e865795c25185dbde7c9665152d248b6cabff395256a30026a47.data",
+    "bytes": 224,
+    "sha256": "e4a6b5c08084e865795c25185dbde7c9665152d248b6cabff395256a30026a47"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/replaced-terminal.mts",
+    "payload": "b1c85f31613d47d248e07cdee745aab2e0d4a7b1c12884623851f6fdc5b6c066.data",
+    "bytes": 330,
+    "sha256": "b1c85f31613d47d248e07cdee745aab2e0d4a7b1c12884623851f6fdc5b6c066"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/retained-array.mts",
+    "payload": "455e2b74140c98ddbc17d6b95608e1bdff39e37d04b23cb061c2ca69081832ff.data",
+    "bytes": 299,
+    "sha256": "455e2b74140c98ddbc17d6b95608e1bdff39e37d04b23cb061c2ca69081832ff"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/retained-object.mts",
+    "payload": "b0a119734495188d3589e292ecf9b53c68a14736d4afce5f3e04cde245a5c46d.data",
+    "bytes": 309,
+    "sha256": "b0a119734495188d3589e292ecf9b53c68a14736d4afce5f3e04cde245a5c46d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/sibling.mts",
+    "payload": "239bae5e0ad1b75f65bfe8574ce88cbc3309e1739b6800fc4a69ad3ddbfa0159.data",
+    "bytes": 311,
+    "sha256": "239bae5e0ad1b75f65bfe8574ce88cbc3309e1739b6800fc4a69ad3ddbfa0159"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/unguarded-root.mts",
+    "payload": "c50ddad39405118cadb38e2bcbdddc3a7378a50ba02b2b9efc66c5e07690506b.data",
+    "bytes": 137,
+    "sha256": "c50ddad39405118cadb38e2bcbdddc3a7378a50ba02b2b9efc66c5e07690506b"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-cutoffs.mts",
+    "payload": "feea24310f68375a73312ba8e9e800061fb505da6e81d3d7bf51ca70dd5e7787.data",
+    "bytes": 10817,
+    "sha256": "feea24310f68375a73312ba8e9e800061fb505da6e81d3d7bf51ca70dd5e7787"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-owned-defaults.mts",
+    "payload": "aa66b9bec409d7c01ec384c7e2c62857f1bdc51f596acd6390a6c8f5285bc234.data",
+    "bytes": 1470,
+    "sha256": "aa66b9bec409d7c01ec384c7e2c62857f1bdc51f596acd6390a6c8f5285bc234"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-writes.mts",
+    "payload": "9b58a44992c8156ac4d41bcfbaf3654eb27e864a8bfa0fca5a1b5c3b1a9d74d5.data",
+    "bytes": 4663,
+    "sha256": "9b58a44992c8156ac4d41bcfbaf3654eb27e864a8bfa0fca5a1b5c3b1a9d74d5"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/projections.mts",
+    "payload": "3a8378ca699986b1acd342c3a52b2e992a107b196b618a6e3fd66323d7ae9e7f.data",
+    "bytes": 1237,
+    "sha256": "3a8378ca699986b1acd342c3a52b2e992a107b196b618a6e3fd66323d7ae9e7f"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/psql.mts",
+    "payload": "9f2677b341b6bfd8fbc9aa73b36017911e885edd6f16310219291262efb73be1.data",
+    "bytes": 178,
+    "sha256": "9f2677b341b6bfd8fbc9aa73b36017911e885edd6f16310219291262efb73be1"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review-contexts.mts",
+    "payload": "db7285bdedf6581f837e1fed7f6e096b585ea8f0f9571466a867d0d8a830ba50.data",
+    "bytes": 1568,
+    "sha256": "db7285bdedf6581f837e1fed7f6e096b585ea8f0f9571466a867d0d8a830ba50"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review-wrappers.mts",
+    "payload": "f4772acc608232b938842c59f82d25810dcd29b6552bd28773e0727fbf80bbab.data",
+    "bytes": 135,
+    "sha256": "f4772acc608232b938842c59f82d25810dcd29b6552bd28773e0727fbf80bbab"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review.mts",
+    "payload": "03b91bad8aa0e4923d7fa57dbdf96807071168cda8fb4a05985169be6c20d973.data",
+    "bytes": 1292,
+    "sha256": "03b91bad8aa0e4923d7fa57dbdf96807071168cda8fb4a05985169be6c20d973"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/runtime.mts",
+    "payload": "4182e53c087d7472871fd626ec84af10b1cd2983733cedab5c837d36fccc7896.data",
+    "bytes": 676,
+    "sha256": "4182e53c087d7472871fd626ec84af10b1cd2983733cedab5c837d36fccc7896"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/setup.mts",
+    "payload": "1ca7558789f75d9c52baeec058101733a4042cb7480b5e40248b622a9d398e35.data",
+    "bytes": 31,
+    "sha256": "1ca7558789f75d9c52baeec058101733a4042cb7480b5e40248b622a9d398e35"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/syntax-and-nesting.mts",
+    "payload": "1fe2157e04599196e1369eb5b84c635b980aded67a6fb41f1607650e770ea823.data",
+    "bytes": 1175,
+    "sha256": "1fe2157e04599196e1369eb5b84c635b980aded67a6fb41f1607650e770ea823"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/value-selectors.yml",
+    "payload": "1b43d34e9360b3690181b778c7a69d3eeed8cff86a24f830a1d6729f0f955d37.data",
+    "bytes": 192,
+    "sha256": "1b43d34e9360b3690181b778c7a69d3eeed8cff86a24f830a1d6729f0f955d37"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/wrapper-only.yml",
+    "payload": "a516ab9b1c68c3bfec47d740fcebb23be9d3df9a3e5f17365a56d2c51f744e0d.data",
+    "bytes": 211,
+    "sha256": "a516ab9b1c68c3bfec47d740fcebb23be9d3df9a3e5f17365a56d2c51f744e0d"
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/input-manifest.json",
+    "payload": "52ad1c2a371db1403f6a917d5786b3a51fc917b5de8881a50bb3ca8b7964bca1.data",
+    "bytes": 57975,
+    "sha256": "52ad1c2a371db1403f6a917d5786b3a51fc917b5de8881a50bb3ca8b7964bca1"
+  },
+  {
+    "path": "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql",
+    "payload": "1e685a552cce974be7765850a3cd5640ef0d99ba3ec7736d19b6bd1b4e72f843.data",
+    "bytes": 563,
+    "sha256": "1e685a552cce974be7765850a3cd5640ef0d99ba3ec7736d19b6bd1b4e72f843"
+  },
+  {
+    "path": "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "payload": "6bdfcd22de8f994d7d3fb7f9adb0e3feed9c8d059cc8a0ae1281b8240990e5aa.data",
+    "bytes": 4201,
+    "sha256": "6bdfcd22de8f994d7d3fb7f9adb0e3feed9c8d059cc8a0ae1281b8240990e5aa"
+  },
+  {
+    "path": "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json",
+    "payload": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8.data",
+    "bytes": 19221,
+    "sha256": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+    "payload": "771eca4e1a080d8b3aea06ed5fe3669992c1b4e2557fd3a731a7022c051464de.data",
+    "bytes": 673,
+    "sha256": "771eca4e1a080d8b3aea06ed5fe3669992c1b4e2557fd3a731a7022c051464de"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+    "payload": "0f4c0c0e61d3904ea0e743d1394f331e95f0a994dcbe8afdf14c7ac2c739ed53.data",
+    "bytes": 564,
+    "sha256": "0f4c0c0e61d3904ea0e743d1394f331e95f0a994dcbe8afdf14c7ac2c739ed53"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+    "payload": "136e9a620e9d2c86be5f2029ef4c1b89cfba222cb79e9c587eac17eabadef830.data",
+    "bytes": 650,
+    "sha256": "136e9a620e9d2c86be5f2029ef4c1b89cfba222cb79e9c587eac17eabadef830"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+    "payload": "0f0482262955161cdcebfa8f09bcab95997e6156aa9081f082744412bdc7bce4.data",
+    "bytes": 843,
+    "sha256": "0f0482262955161cdcebfa8f09bcab95997e6156aa9081f082744412bdc7bce4"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+    "payload": "8735e7fca9feff063946aea9ddfc3e08a6055ac4b278e96afe54a40639998d56.data",
+    "bytes": 311,
+    "sha256": "8735e7fca9feff063946aea9ddfc3e08a6055ac4b278e96afe54a40639998d56"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+    "payload": "c8f24d92fba69fa8a344a5ffeba6f90a0c3d56f7d4346f943f700b0d48f6988d.data",
+    "bytes": 867,
+    "sha256": "c8f24d92fba69fa8a344a5ffeba6f90a0c3d56f7d4346f943f700b0d48f6988d"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts",
+    "payload": "e444f0e649db4a9f6f631869f503cfae005fce4be6df63314ae65fbd86fc580b.data",
+    "bytes": 408,
+    "sha256": "e444f0e649db4a9f6f631869f503cfae005fce4be6df63314ae65fbd86fc580b"
+  }
+]

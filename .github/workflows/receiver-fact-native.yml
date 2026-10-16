@@ -1,87 +1,201 @@
-name: Historical receiver native experiment
+name: Assignment receiver child2064 isolated complete-workload cohorts
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/receiver-fact-native.yml'
-      - '.github/scripts/receiver-fact-native/**'
-      - 'docs/performance/receiver-native-hosted.md'
   workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: Exact reviewed diagnostic commit
+        required: true
+        type: string
 
 permissions:
   contents: read
+  actions: read
+  checks: read
+  pull-requests: read
 
 concurrency:
-  group: receiver-native-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: mutable-root-B26-isolated-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  historical-x86:
-    name: Historical native x86 pair
+  native-download:
+    name: Trusted fixed native asset download only
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
-    env:
-      # Exact historical compiler; source worktrees must not select their moving stable alias.
-      RUSTUP_TOOLCHAIN: '1.99.0'
-      DRIVER: .github/scripts/receiver-fact-native
+    timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
-      - name: Checkout experiment and public probe
-        id: checkout
-        timeout-minutes: 5
+      - name: Fetch only the eight reviewed draft asset IDs
+        timeout-minutes: 8
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+        run: |
+          python3 - <<'PY'
+          import datetime, hashlib, json, os, pathlib, subprocess
+          assert os.environ['APPROVED_SHA'] == os.environ['GITHUB_SHA']
+          assert os.environ['GITHUB_REPOSITORY'] == 'jonathanong/no-mistakes'
+          out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'native-stage'
+          out.mkdir(exist_ok=False)
+          assets = [
+              ('baseline-cli', 648705190, 82896168, 'aa5e8377987d496f8d5e75f00b0071336f19c72e0fefe23d97bd59896c2fe6eb'),
+              ('baseline-addon.node', 648705342, 79321752, 'b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f'),
+              ('baseline-probe', 648705461, 83197168, '9ffeae3ec16ddb698476df17ca09f6fb1d8173a2d91d20ecebe0ebac50300012'),
+              ('baseline-sql-probe', 648705659, 83016560, '25603bf971508f9842f249d76ab44e5e2278d421ddb59ceea02110b6058682f0'),
+              ('candidate-cli', 648709110, 83056000, '1303bcc0a9fa44d4b22ab10d7ba11a00212b2503b8a2b376a22db0292083f92f'),
+              ('candidate-addon.node', 648709247, 79482784, '637abc010ca993015e62ff7b80c7ae70278e265d8454811b3f8e127d3c998b08'),
+              ('candidate-probe', 648709420, 83356920, 'e5fe159431e127758b4a21a2303c1db197de135fc6a702577557b4a892f592b0'),
+              ('candidate-sql-probe', 648709572, 83176408, '94b7f7ac6ec9ab1cced0f035c509be9e83028d7da05579209b966ff35be40978'),
+          ]
+          proof = {'repository': os.environ['GITHUB_REPOSITORY'], 'run_id': os.environ['GITHUB_RUN_ID'],
+                   'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'workflow_sha': os.environ['GITHUB_SHA'],
+                   'producer': 'native-download', 'complete': False, 'assets': []}
+          def save():
+              (out / 'transport.json').write_text(json.dumps(proof, indent=2))
+          save()
+          for name, asset_id, size, digest in assets:
+              path = out / name
+              # Token remains on stdin to trusted curl; it never enters argv or the artifact.
+              config = '\n'.join([
+                  'url = "https://api.github.com/repos/jonathanong/no-mistakes/releases/assets/' + str(asset_id) + '"',
+                  'header = "Accept: application/octet-stream"',
+                  'header = "X-GitHub-Api-Version: 2022-11-28"',
+                  'header = "Authorization: Bearer ' + os.environ['GH_TOKEN'] + '"',
+                  'request = "GET"', 'location', 'fail-with-body', 'silent', 'show-error',
+                  'connect-timeout = 15', 'max-time = 45',
+              ])
+              with path.open('wb') as binary, (out / (name + '.stderr')).open('wb') as error:
+                  result = subprocess.run(['curl', '--config', '-'], input=config.encode(), stdout=binary,
+                                          stderr=error, timeout=55, check=False)
+              row = {'name': name, 'asset_id': asset_id, 'exit': result.returncode,
+                     'bytes': path.stat().st_size, 'sha256': hashlib.file_digest(path.open('rb'), 'sha256').hexdigest(),
+                     'utc': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+              proof['assets'].append(row)
+              save()
+              assert result.returncode == 0 and row['bytes'] == size and row['sha256'] == digest
+          proof['complete'] = True
+          save()
+          PY
+      - name: Retain verified transfer or partial download evidence
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mutable-root-B26-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-stage/
+          if-no-files-found: error
+          retention-days: 7
+
+  measure:
+    name: Child2064 complete workload cohort (${{ matrix.cohort }})
+    needs: native-download
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [A, B]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Receive verified same-run assets
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: mutable-root-B26-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-stage/
+      - name: Checkout reviewed diagnostic source
+        timeout-minutes: 1
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Set isolated runtime output path
+      - name: Checkout exact published candidate API source
         timeout-minutes: 1
-        run: printf 'EXPERIMENT_ROOT=%s/receiver-native-2012\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - name: Test saved report fixtures
-        timeout-minutes: 2
-        run: python3 -m unittest discover -s "$DRIVER" -p 'test_*.py'
-      - name: Install historical compiler
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          toolchain: '1.99.0'
-      - name: Preflight and pin historical source pair
-        id: preflight
-        timeout-minutes: 3
-        run: python3 "$DRIVER/build.py" prepare --root "$EXPERIMENT_ROOT"
-      - name: Build exact release pair sequentially
-        timeout-minutes: 90
-        run: python3 "$DRIVER/build.py" opt3 --root "$EXPERIMENT_ROOT"
-      - name: Measure release pair after builds finish
-        id: release-samples
-        timeout-minutes: 15
-        run: python3 "$DRIVER/measure.py" opt3 --root "$EXPERIMENT_ROOT"
-      - name: Remove only owned release compilation target
-        if: ${{ always() && steps.preflight.outcome == 'success' }}
+          ref: e5c0848878810cf2155ba9698282e8c2c8840178
+          path: candidate-source
+          persist-credentials: false
+      - name: Install the repository-pinned pnpm tool
         timeout-minutes: 2
-        run: python3 "$DRIVER/build.py" cleanup-opt3 --root "$EXPERIMENT_ROOT"
-      - name: Build separate original-profile opt0 pair
-        if: ${{ success() && steps.release-samples.outcome == 'success' }}
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: '11.24.0'
+          package_json_file: candidate-source/package.json
+          run_install: false
+      - name: Install matching Node
+        timeout-minutes: 1
+        uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        with:
+          node-version: '26.11.1'
+      - name: Install complete lockfile-pinned JS declaration prerequisites without scripts
+        timeout-minutes: 4
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COHORT: ${{ matrix.cohort }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 .github/scripts/mutable-root-2064-isolated/dependency_setup.py "$COHORT"
+      - name: Fresh controls and complete same-runner workload cohort
         timeout-minutes: 25
-        run: python3 "$DRIVER/build.py" opt0 --root "$EXPERIMENT_ROOT"
-      - name: Measure separate opt0 control
-        timeout-minutes: 12
-        run: python3 "$DRIVER/measure.py" opt0 --root "$EXPERIMENT_ROOT"
-      - name: Remove only owned opt0 compilation target
-        if: ${{ always() && steps.preflight.outcome == 'success' }}
-        timeout-minutes: 2
-        run: python3 "$DRIVER/build.py" cleanup-opt0 --root "$EXPERIMENT_ROOT"
-      - name: Verify and summarize every retained row
-        if: ${{ always() && steps.checkout.outcome == 'success' }}
-        timeout-minutes: 2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_DIAGNOSTIC_COMMIT: ${{ inputs.approved_sha }}
+          COHORT: ${{ matrix.cohort }}
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
-          status=0
-          python3 "$DRIVER/report.py" --root "$EXPERIMENT_ROOT" || status=$?
-          cat "$EXPERIMENT_ROOT/public/summary.md" >> "$GITHUB_STEP_SUMMARY"
-          exit "$status"
-      - name: Retain curated readable measurements only
-        if: ${{ always() && steps.checkout.outcome == 'success' }}
+          test "$APPROVED_DIAGNOSTIC_COMMIT" = "$GITHUB_SHA"
+          python3 .github/scripts/mutable-root-2064-isolated/hosted.py "$COHORT"
+      - name: Pack all completed and partial raw evidence losslessly
+        if: ${{ always() }}
+        timeout-minutes: 2
+        env:
+          COHORT: ${{ matrix.cohort }}
+          APPROVED_DIAGNOSTIC_COMMIT: ${{ inputs.approved_sha }}
+        run: |
+          python3 .github/scripts/mutable-root-2064-isolated/pack.py "$COHORT"
+      - name: Retain portable cohort carrier
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: B26-cohort-${{ matrix.cohort }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/B26-transport-${{ matrix.cohort }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  curate:
+    name: Verify both complete cohorts and unchanged per-workload assessor
+    needs: measure
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout reviewed diagnostic source
+        timeout-minutes: 1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download cohort A
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: B26-cohort-A-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/B26-incoming/cohort-A/
+      - name: Download cohort B
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: B26-cohort-B-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/B26-incoming/cohort-B/
+      - name: Verify complete schedule and assess each workload on its own runner
+        timeout-minutes: 15
+        env:
+          APPROVED_DIAGNOSTIC_COMMIT: ${{ inputs.approved_sha }}
+        run: python3 .github/scripts/mutable-root-2064-isolated/curate.py "$RUNNER_TEMP/B26-incoming" "$RUNNER_TEMP/B26-final"
+      - name: Retain flat 704-row report, original analysis and all raw cohorts
+        if: ${{ always() }}
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: receiver-native-2012-x86-readable
-          path: ${{ env.EXPERIMENT_ROOT }}/public/
-          if-no-files-found: error
+          name: B26-complete-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/B26-final/
           retention-days: 30
+          if-no-files-found: error

@@ -1,0 +1,486 @@
+{
+  "status": "PASS actual prospective RELEASE API functional checks; no current-main or performance eligibility claim",
+  "commands": [
+    {
+      "label": "api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:19.138220+00:00",
+      "initial_identity": {
+        "pid": 6,
+        "starttime": 40871722,
+        "sid": 6,
+        "pgid": 6,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": []
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:19.753833+00:00"
+    },
+    {
+      "label": "mutable-receiver-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/mutable-receiver-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:19.754278+00:00",
+      "initial_identity": {
+        "pid": 23,
+        "starttime": 40871784,
+        "sid": 23,
+        "pgid": 23,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": []
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:23.080016+00:00"
+    },
+    {
+      "label": "receiver-suspension-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/receiver-suspension-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:23.128054+00:00",
+      "initial_identity": {
+        "pid": 184,
+        "starttime": 40872121,
+        "sid": 184,
+        "pgid": 184,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/receiver-suspension-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:23.593837+00:00"
+    },
+    {
+      "label": "receiver-inline-arguments-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/receiver-inline-arguments-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:23.640872+00:00",
+      "initial_identity": {
+        "pid": 221,
+        "starttime": 40872172,
+        "sid": 221,
+        "pgid": 221,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/receiver-inline-arguments-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:23.805996+00:00"
+    },
+    {
+      "label": "cross-file-inline-receiver-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/cross-file-inline-receiver-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:23.854128+00:00",
+      "initial_identity": {
+        "pid": 246,
+        "starttime": 40872194,
+        "sid": 246,
+        "pgid": 246,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/cross-file-inline-receiver-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:24.119531+00:00"
+    },
+    {
+      "label": "inline-owned-member-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/inline-owned-member-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:24.168249+00:00",
+      "initial_identity": {
+        "pid": 289,
+        "starttime": 40872225,
+        "sid": 289,
+        "pgid": 289,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/inline-owned-member-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:24.333191+00:00"
+    },
+    {
+      "label": "postgres-conditional-executors-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/postgres-conditional-executors-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:24.380690+00:00",
+      "initial_identity": {
+        "pid": 314,
+        "starttime": 40872246,
+        "sid": 314,
+        "pgid": 314,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/postgres-conditional-executors-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:24.495724+00:00"
+    },
+    {
+      "label": "postgres-source-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/postgres-source-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:24.543807+00:00",
+      "initial_identity": {
+        "pid": 335,
+        "starttime": 40872263,
+        "sid": 335,
+        "pgid": 335,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/postgres-source-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:24.708739+00:00"
+    },
+    {
+      "label": "postgres-expression-arbiter-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:24.754776+00:00",
+      "initial_identity": {
+        "pid": 360,
+        "starttime": 40872284,
+        "sid": 360,
+        "pgid": 360,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:24.919506+00:00"
+    },
+    {
+      "label": "namespace-types-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/namespace-types-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:24.965089+00:00",
+      "initial_identity": {
+        "pid": 396,
+        "starttime": 40872305,
+        "sid": 396,
+        "pgid": 396,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/namespace-types-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:25.231198+00:00"
+    },
+    {
+      "label": "type-import-order-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/type-import-order-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:25.281105+00:00",
+      "initial_identity": {
+        "pid": 447,
+        "starttime": 40872336,
+        "sid": 447,
+        "pgid": 447,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/type-import-order-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:25.446541+00:00"
+    },
+    {
+      "label": "effects-alternatives-api.test.js",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/effects-alternatives-api.test.js"
+      ],
+      "start_utc": "2026-10-16T21:38:25.491461+00:00",
+      "initial_identity": {
+        "pid": 485,
+        "starttime": 40872357,
+        "sid": 485,
+        "pgid": 485,
+        "exe": "/home/jong/.nvm/versions/node/v26.11.1/bin/node",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "/tmp/no-mistakes-2054-stack-assessment/packages/no-mistakes/scripts/effects-alternatives-api.test.js"
+        ]
+      },
+      "exit": 0,
+      "end_utc": "2026-10-16T21:38:25.656769+00:00"
+    }
+  ],
+  "source_proof_sha256": "2ed9d14e189cd5cce3823bb529fd25fbad1811149b8dc17253e751f4e565be76",
+  "target_highwater": 0,
+  "scope": "Actual combined2022\u21922054 RELEASE API controls; exact d784 producer; no performance or CI PASS claim",
+  "build_receipt_sha256": "51265d63a0d148f988a00f92c9df0d13cf954490234e815b1cf5c5fa98872fce",
+  "TAP_counts": {
+    "api.test.js": {
+      "actual": {
+        "tests": 43,
+        "pass": 43,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "saved declaration shim",
+      "addon_sha256": "20bbc31e8260e48a1499a82a463f6e03829495ac8a9aec7643008d719e26ceb5"
+    },
+    "mutable-receiver-api.test.js": {
+      "actual": {
+        "tests": 67,
+        "pass": 67,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "receiver-suspension-api.test.js": {
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "receiver-inline-arguments-api.test.js": {
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "cross-file-inline-receiver-api.test.js": {
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "inline-owned-member-api.test.js": {
+      "actual": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "postgres-conditional-executors-api.test.js": {
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "postgres-source-api.test.js": {
+      "actual": {
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "postgres-expression-arbiter-api.test.js": {
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "namespace-types-api.test.js": {
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "type-import-order-api.test.js": {
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    },
+    "effects-alternatives-api.test.js": {
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "actual PROSPECTIVE RELEASE addon CJS/ESM",
+      "addon_sha256": "b7771d777841df7700be077b0a51b5b24b794e37ffe953ecdcafaf2816c72e1f"
+    }
+  },
+  "owned_cleanup": [
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    },
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    }
+  ],
+  "source_after_exact": true,
+  "target_absent": true,
+  "ended_utc": "2026-10-16T21:38:26.046426+00:00"
+}
