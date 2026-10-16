@@ -253,3 +253,7 @@ mod statement_legacy;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "extract_statement_mode.rs"]
 mod statement_mode;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract/ordinary_demand_tests.rs"]
+mod ordinary_demand_tests;

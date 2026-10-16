@@ -31,6 +31,24 @@ fn existing_root_records_allocate_only_the_initial_owned_key() {
     );
 }
 #[test]
+fn repeated_root_rhs_preserves_all_identities_without_full_object_maps() {
+    let source = mutable_receiver_source("mutable-root-scale.mts");
+    object_values::ROOT_RHS_MAPS.with(|count| count.set(0));
+    let facts = flow(&source);
+    assert_eq!(facts.receiver_only_origins, 129);
+    assert_eq!(facts.receiver_only_nodes, 129);
+    assert!(
+        facts.receiver_mutations.as_ref().unwrap()[&0]["client"].assignment_invalidated(
+            &["get"],
+            source.len() as u32,
+            None,
+            false
+        )
+    );
+    // Keep every physical replacement identity; remove only its full map construction.
+    assert_eq!(object_values::ROOT_RHS_MAPS.with(std::cell::Cell::get), 0);
+}
+#[test]
 fn captured_versions_bound_repeated_membership_probes() {
     let source = mutable_receiver_source("mutable-root-scale.mts");
     let facts = flow(&source);
@@ -128,3 +146,6 @@ fn saved_root_snapshot_insertion_orders() {
         }
     }
 }
+
+#[path = "mutable_root_compact_tests.rs"]
+mod compact;

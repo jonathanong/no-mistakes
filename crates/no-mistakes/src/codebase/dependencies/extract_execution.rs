@@ -21,19 +21,27 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
-    if conditional {
-        collector.invalidate_replacement_execution();
-        collector.receiver_conditional_region = None;
-    }
+    if conditional { collector.invalidate_replacement_execution(); }
+    let previous_receiver = collector.collect_value_flow.then(|| {
+        #[cfg(feature = "test-instrumentation")]
+        extract_value_flow::ordinary_demand_metrics::site(1);
+        if conditional {
+            collector.receiver_conditional_region = None;
+        }
+        collector.receiver_write_is_conditional
+    });
     let previous = collector.conditional_execution;
-    let previous_receiver = collector.receiver_write_is_conditional;
     collector.conditional_execution |= conditional;
-    collector.receiver_write_is_conditional |= conditional;
-    collector.receiver_write_conditional_depth += usize::from(conditional);
+    if previous_receiver.is_some() {
+        collector.receiver_write_is_conditional |= conditional;
+        collector.receiver_write_conditional_depth += usize::from(conditional);
+    }
     visit(collector);
     collector.conditional_execution = previous;
-    collector.receiver_write_is_conditional = previous_receiver;
-    collector.receiver_write_conditional_depth -= usize::from(conditional);
+    if let Some(previous_receiver) = previous_receiver {
+        collector.receiver_write_is_conditional = previous_receiver;
+        collector.receiver_write_conditional_depth -= usize::from(conditional);
+    }
 }
 
 fn visit_binding_default_with_execution<'a>(
@@ -44,19 +52,6 @@ fn visit_binding_default_with_execution<'a>(
     with_conditional_receiver_write(collector, |collector| {
         collector.visit_expression(&pattern.right)
     });
-}
-
-fn with_conditional_receiver_write(
-    collector: &mut ImportCollector,
-    visit: impl FnOnce(&mut ImportCollector),
-) {
-    // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
-    collector.receiver_conditional_region = None;
-    let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
-    collector.receiver_write_conditional_depth += 1;
-    visit(collector);
-    collector.receiver_write_is_conditional = previous;
-    collector.receiver_write_conditional_depth -= 1;
 }
 
 fn with_repeat_execution<T>(
