@@ -3,6 +3,7 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
+from dependency_guard import verify as dependency_guard
 
 D = Path(__file__).resolve().parent
 
@@ -21,6 +22,8 @@ def raw_identity(path):
 
 
 def verify(root):
+    spec = json.loads((D / 'hosted-spec.json').read_text())
+    dependency_guard(json.loads((root / 'JS-dependency-setup/closure.json').read_text()), spec['candidate_head'], spec['candidate_lock_sha256'])
     controls = json.loads((D / 'controls.json').read_text())
     for arm in ['A26', 'B26']:
         for index, row in enumerate(controls[arm]):

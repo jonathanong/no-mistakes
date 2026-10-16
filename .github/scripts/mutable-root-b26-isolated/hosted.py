@@ -16,6 +16,7 @@ from schedule import verify_rows
 from supervise import command
 from transport import sha, verify
 from retain import compress
+from dependency_guard import verify as dependency_guard
 
 D = Path(__file__).resolve().parent
 
@@ -66,6 +67,10 @@ def main():
                 'run_id': os.environ['GITHUB_RUN_ID'], 'attempt': os.environ['GITHUB_RUN_ATTEMPT'],
                 'workflow_sha': os.environ['GITHUB_SHA'], 'no_local_quiet_lease': True}
         (out / 'host.json').write_text(json.dumps(host, indent=2))
+        dependencies = Path(os.environ['RUNNER_TEMP']) / ('B26-dependencies-' + cohort)
+        dependency_proof = json.loads((dependencies / 'closure.json').read_text())
+        assert sha(Path('candidate-source/pnpm-lock.yaml')) == spec['candidate_lock_sha256']
+        dependency_guard(dependency_proof, spec['candidate_head'], spec['candidate_lock_sha256'])
         eligibility(spec, out, end, 'before-controls')
         raw = out / 'full-controls'
         raw.mkdir()

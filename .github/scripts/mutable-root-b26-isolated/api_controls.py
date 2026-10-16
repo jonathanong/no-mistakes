@@ -21,7 +21,10 @@ def main():
     # relabeling of either older compiled native producer.
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, timeout=10).decode().strip() == spec['candidate_head']
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], cwd=source, timeout=10).decode().strip() == spec['candidate_tree']
+    assert not subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=source, timeout=10).strip()
     counts = json.loads((D / 'api-counts.json').read_text())
+    runtime = output / 'native-api-runtime'
+    runtime.mkdir(mode=0o700)
     receipts = []
     for arm in ['baseline', 'candidate']:
         for name, expected in counts.items():
@@ -29,6 +32,7 @@ def main():
                 continue  # These 67 cases assert the intended new receiver feature.
             addon = source / 'fixtures/napi/test-addon.js' if name == 'api.test.js' else stage / (arm + '-addon.node')
             env = dict(os.environ, NO_MISTAKES_TEST_NAPI_ADDON_PATH=str(addon), RAYON_NUM_THREADS='4')
+            env['XDG_RUNTIME_DIR'] = str(runtime)
             env.pop('GH_TOKEN', None)
             label = arm + '-' + name
             command(['node', '--test', '--test-reporter=tap', str(source / 'packages/no-mistakes/scripts' / name)],

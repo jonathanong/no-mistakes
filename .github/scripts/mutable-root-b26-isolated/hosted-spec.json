@@ -20,6 +20,8 @@
       "sha256": "850f536947b65367e44fd367acdd1b5a651599c3646f149fb2122a4eeafedbe8"
     },
     "review_scope": "Source/scientific/kernel/asset pins reviewed. Fresh hosted native controls and every numerical gate remain mandatory. No hosted measurement has run. Local /tmp paths here are provenance only.",
-    "prior_approved_manifest_sha256": "a08908f4f02230e740fdf137915d41be1e482dcd0056484a29a71ee4f595d758"
-  }
+    "prior_approved_manifest_sha256": "a08908f4f02230e740fdf137915d41be1e482dcd0056484a29a71ee4f595d758",
+    "blocking_followup": "Actual fresh child declaration test40/42 failed due missing lockfile-pinned JS dependencies; owned frozen ignore-scripts install fixed42/42 without native rebuild. Hosted prerequisite must run before all native controls."
+  },
+  "candidate_lock_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a"
 }
