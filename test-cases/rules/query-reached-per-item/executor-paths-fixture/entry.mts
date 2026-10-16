@@ -41,3 +41,4 @@ export async function barrel(ids: string[], run: NonNullable<BarrelOptions['quer
 export async function renamed(ids: string[], run: NonNullable<AliasOptions['query']>) {
   for (const id of ids) await run('SELECT ' + id)
 }
+import './coverage.mts'

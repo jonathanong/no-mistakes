@@ -149,6 +149,7 @@ fn indexed_contextual_and_nullish_executor_paths_keep_exact_provenance() {
     assert_eq!(
         findings
             .iter()
+            .filter(|finding| finding.file == "entry.mts")
             .map(|finding| (finding.file.as_str(), finding.line))
             .collect::<Vec<_>>(),
         [
@@ -159,6 +160,42 @@ fn indexed_contextual_and_nullish_executor_paths_keep_exact_provenance() {
             ("entry.mts", 39),
             ("entry.mts", 42)
         ],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn executor_choices_and_async_callback_guards_keep_exact_provenance() {
+    let root = crate::test_support::rule_fixture_root("query-reached-per-item")
+        .with_file_name("executor-paths-fixture");
+    let report = crate::effects_query::run(
+        &root,
+        None,
+        None,
+        "postgres",
+        std::path::Path::new("entry.mts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        report
+            .call_sites
+            .iter()
+            .filter(|site| site.file == "coverage.mts")
+            .map(|site| site.line)
+            .collect::<Vec<_>>(),
+        [17, 25, 31, 35],
+        "{report:#?}"
+    );
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "coverage.mts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [17, 25, 31, 35],
         "{findings:#?}"
     );
 }
