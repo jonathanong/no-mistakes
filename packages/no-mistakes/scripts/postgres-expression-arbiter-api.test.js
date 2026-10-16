@@ -34,6 +34,7 @@ test(
         assert.deepEqual(
           report.rules.map(({ file }) => file),
           [
+            "sql/coupled_partial.sql",
             "sql/expression.sql",
             "sql/mixed.sql",
             "sql/parenthesized.sql",
