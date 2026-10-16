@@ -1,6 +1,7 @@
 """Union accounting only. Every estimate is reproduced inside its original workload VM."""
 from phase_common import *
 from cohort_files import verify
+from cohort_transport import unpack
 from cohorts import verify_rows, verify_union
 from cohort_run import documents
 from paired_summary import assess
@@ -16,7 +17,9 @@ def curate(root):
     try:
         receipts=[];outcomes=[]
         for cohort in ('0','1'):
-            incoming=root/'cohorts'/cohort;verify(incoming/'public',cohort)
+            incoming=root/'cohorts'/cohort
+            unpack(incoming/'transport',incoming/'public',cohort)
+            verify(incoming/'public',cohort)
             receipt=json.loads((incoming/'public/cohort-receipt.json').read_text());receipts.append(receipt)
             verify_rows(SPEC,cohort,documents(incoming,cohort))
             actual=json.loads((incoming/'public/assessments.json').read_text())

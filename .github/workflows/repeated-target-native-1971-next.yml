@@ -450,12 +450,16 @@ jobs:
       - name: Execute one bounded phase
         timeout-minutes: 27
         run: python3 .github/scripts/repeated-target-native-2022-bounded/entry.py measure --cohort '${{ matrix.cohort }}'
+      - name: Seal complete public inventory inside portable TAR transport
+        if: ${{ always() }}
+        timeout-minutes: 1
+        run: python3 .github/scripts/repeated-target-native-2022-bounded/cohort_transport.py pack "$RUNNER_TEMP/repeated-target-2022/public" "$RUNNER_TEMP/repeated-target-2022/cohort-upload" '${{ matrix.cohort }}'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: ${{ always() }}
         timeout-minutes: 1
         with:
           name: 2022-cohort-${{ github.run_id }}-${{ matrix.cohort }}
-          path: ${{ runner.temp }}/repeated-target-2022/public/
+          path: ${{ runner.temp }}/repeated-target-2022/cohort-upload/
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
@@ -482,13 +486,13 @@ jobs:
         timeout-minutes: 3
         with:
           name: 2022-cohort-${{ github.run_id }}-0
-          path: ${{ runner.temp }}/repeated-target-2022/cohorts/0/public/
+          path: ${{ runner.temp }}/repeated-target-2022/cohorts/0/transport/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         continue-on-error: true
         timeout-minutes: 3
         with:
           name: 2022-cohort-${{ github.run_id }}-1
-          path: ${{ runner.temp }}/repeated-target-2022/cohorts/1/public/
+          path: ${{ runner.temp }}/repeated-target-2022/cohorts/1/transport/
       - name: Execute one bounded phase
         timeout-minutes: 27
         env:

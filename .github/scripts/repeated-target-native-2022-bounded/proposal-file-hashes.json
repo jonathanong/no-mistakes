@@ -7,12 +7,13 @@
     "closed_modes.py": "cb4f630843b25c0cb2b8c001b31c07b8619481abf68aa6d8e96592a93f244672",
     "cohort_files.py": "8c8b5ea574658354b469aa1f1ade233837e13111564b80c4fe0e9eeca9e0d8ca",
     "cohort_run.py": "a0ae34063b45f945cc5eb85e72aad010e1cf36febe6f162702a6e34fde3896e5",
+    "cohort_transport.py": "82c477f49c8d8b60103b272de9630088a5a7ac0fa41af5f7ca0d1ce12d9eb13c",
     "cohorts.py": "0f90336dde379f6c69b417ae4019f8a5fc6e7e8ac5f2517b094ae8825c085f7c",
     "common.py": "60b36e8e5c9f0d342ad988bd8bef00948975d8f77ad3a18c83b544ddadac8929",
     "consumer-overlay.yml": "b000ad490bb717e85f42e6c1053951f5aafcc73c24862fe96fc3426effe3addc",
     "deadline.py": "2a1eb9510308c2d453996a1f20adfeba041dacf90ca7116a9ef462c951357535",
     "entry.py": "d49e8ee9d3b69377177f189fb437aa784ba9c8d56251d3c8b449fb1985b91ac4",
-    "final_union.py": "fd90d434b4fbe54ab46349c8fbae4bc0721dc1002949832db83dd325ea93a029",
+    "final_union.py": "7cd964884150768cdffe4809b9643311e281e3e375f004a2a5c6470ac8aabf9e",
     "graph-probe.rs.txt": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451",
     "layout-helper.rs": "2112c0c5920423ed46d9c36b1c6b813c83a3e20ffbd57520e0ebff554a819375",
     "layout-probe.rs": "e0e61c522ce3a97ba595a79eac69137daffb9da2ffc2710c5697cd4ee61786ae",
@@ -38,6 +39,7 @@
     "semantic_worker.py": "7c44a1f4a292a364bad7ef5c8378dc52f762a56dbe7b57a8f91b2ef600ff232e",
     "semantics.py": "faf3c407d52519a91778325cc51d68dce169e4de5ddfff6aeb27f13f790c8491",
     "test-fixtures/README.md": "52424c7711e43d9244e3c80cba45864747e6f1339b18f985f0b88c3fabbb1fc3",
+    "test-fixtures/cohort-transport-public.tar": "6474d82000176395917cccac567f37fb20f920bb1eaaf9376aa0b99419f66b19",
     "test-fixtures/conditional-executor-pass.tap": "09fc1e3c40458fc3f459dd2ac8fc294204a804d75dd7303051cde9db091a1ee8",
     "test-fixtures/consumer-baseline.json": "69d14ebdbc632322dd5151d9499039dea333c74eab7671b5a617d5823dbbcbac",
     "test-fixtures/consumer-candidate.json": "ca512bdb5fff032a99d072de67a38c0942c6ea9d4a83919acef6e87ff164e2c1",
@@ -48,6 +50,7 @@
     "test-fixtures/pinned90-input-archive.tar": "9c8206cf0b34163f4e6abfcdc5e1122c262441ec5346f5d785df05267108b08c",
     "test-fixtures/postgres-source-pass.tap": "ea09298096f94183ee55e244da6d7d93ec3cdd82327b7de8910f0b7a47a6ce29",
     "test_cohort_files.py": "14aedce8fc2d7203426023c4ed20aa9fef53b5b4f06eb6c0c18c3dcc3c33e40e",
+    "test_cohort_transport.py": "ef9030b58a0f9227066f35d410b83607311f1060ec353432e9208a041469786b",
     "test_cohorts.py": "fbf45e28ec416cc7d0ea69f9158f5c734acc23c2cc92e8b722cb5d728c1c0de5",
     "test_deadline.py": "bb4ea1623e8b8d431091d2705b7a77e51676b6eccf65a938264e9e2bff4c2a04",
     "test_proposal.py": "7571eb4ede2cd10aa6305216fa9accb70617e10887ff75afde9cdceedf805071",
@@ -55,6 +58,6 @@
     "timing-probe.rs": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44",
     "transfer.py": "87713435ae534b33541365bd8efd1facab1d35b8637e1ed89ce228401b6f8aa4",
     "transport-origin.json": "44df8f509dc5c82401e84d429b79c351c6aeb8c22d7b2db19ba57a6790c7db0f",
-    "workflow-proposal.yml": "e175813e3ced7954ddd30479d8388ce85d5776512448e3f12433478e2ce159cf"
+    "workflow-proposal.yml": "0c8539a671bbddf8d2a3e83c18cdb4648b2718d08868c75ddbe783ce2df9cd42"
   }
 }
