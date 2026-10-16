@@ -18,6 +18,14 @@ pub(super) struct FlowFileIndex {
     async_callables: FxHashSet<CallableId>,
     generator_callables: FxHashSet<CallableId>,
 }
+#[cfg(feature = "test-instrumentation")]
+#[path = "value_flow/admission_probe.rs"]
+mod admission_probe;
+#[path = "value_flow/known_callable_admission.rs"]
+mod known_callable_admission;
+#[cfg(feature = "test-instrumentation")]
+#[path = "value_flow/admission_mode.rs"]
+pub(super) mod admission_mode;
 #[path = "value_flow/types.rs"]
 mod types;
 #[cfg(feature = "test-instrumentation")]

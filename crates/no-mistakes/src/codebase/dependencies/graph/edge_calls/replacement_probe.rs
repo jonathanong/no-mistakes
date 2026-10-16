@@ -27,6 +27,12 @@ pub struct ReplacementProbeSnapshot {
     pub inherited_frame_qualifications: usize,
     pub rhs: Vec<ReplacementRhsProbe>,
     pub incoming: Vec<ReplacementIncomingProbe>,
+    pub receiver_initial_admissions_without_target_node: usize,
+    pub receiver_initial_admissions_with_target_node: usize,
+    pub receiver_original_admission: bool,
+    pub receiver_skipped_direct_callable_admissions: usize,
+    /// Original order and duplicates retained before canonical edge deduplication.
+    pub admission_raw_edges: Vec<String>,
 }
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct ReplacementRhsProbe {

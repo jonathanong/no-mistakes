@@ -34,6 +34,8 @@ type TypeOrigins =
     DashMap<(std::path::PathBuf, String), Arc<OnceLock<(String, String)>>, FxBuildHasher>;
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) admission_probe: admission_probe::AdmissionProbe,
     state: Mutex<State>,
     ready: Condvar,
     type_origins: OnceLock<TypeOrigins>,
@@ -76,22 +78,6 @@ impl ParameterCache {
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         Arc::new(OriginNode::new(kind, height))
     }
-    #[cfg(feature = "test-instrumentation")]
-    pub(in super::super) fn origin_nodes(&self) -> usize {
-        self.origin_nodes.load(std::sync::atomic::Ordering::Relaxed)
-    }
-
-    #[cfg(feature = "test-instrumentation")]
-    pub(super) fn record_execution_step(&self) {
-        self.execution_steps
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    }
-    #[cfg(feature = "test-instrumentation")]
-    pub(in super::super) fn execution_steps(&self) -> usize {
-        self.execution_steps
-            .load(std::sync::atomic::Ordering::Relaxed)
-    }
-
     pub(super) fn acquire(&self, key: ParameterKey) -> CacheAccess<'_> {
         let thread = std::thread::current().id();
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -207,3 +193,6 @@ mod dependencies;
 #[cfg(test)]
 #[path = "parameter_cache_tests.rs"]
 mod tests;
+
+#[path = "parameter_cache_metrics.rs"]
+mod metrics;

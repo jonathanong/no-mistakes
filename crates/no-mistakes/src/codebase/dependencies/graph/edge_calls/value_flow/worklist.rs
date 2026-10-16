@@ -18,20 +18,29 @@ pub(in super::super::super) fn refine_value_calls(
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
         inputs, facts, resolver, indexes, pass, &incoming,
     );
-    let mut pending: FxHashSet<usize> = base
-        .iter()
-        .enumerate()
-        .filter(|(_, site)| {
-            site.invocation != InvocationKind::Construct
-                && (site.target_node.is_none()
-                    || site.invocation == InvocationKind::Call
-                        && replacements
-                            .as_ref()
-                            .and_then(|catalog| catalog.file(&site.file))
-                            .is_some())
-        })
-        .map(|(index, _)| index)
-        .collect();
+    let pending = base.iter().enumerate().filter(|(_, site)| {
+        site.invocation != InvocationKind::Construct
+            && (site.target_node.is_none()
+                || site.invocation == InvocationKind::Call
+                    && replacements
+                        .as_ref()
+                        .and_then(|catalog| catalog.file(&site.file))
+                        .is_some()
+                    && known_callable_admission::needs_refinement(
+                        facts,
+                        indexes,
+                        site,
+                        #[cfg(feature = "test-instrumentation")]
+                        &pass.parameter_cache.admission_probe,
+                    ))
+    });
+    #[cfg(feature = "test-instrumentation")]
+    let pending = pending.inspect(|(_, site)| {
+        pass.parameter_cache
+            .admission_probe
+            .admission(site.target_node.is_some())
+    });
+    let mut pending: FxHashSet<usize> = pending.map(|(index, _)| index).collect();
     let mut dependencies: FxHashMap<FunctionKey, FxHashSet<usize>> = fx_map();
     let mut previous_dependencies: FxHashMap<usize, FxHashSet<FunctionKey>> = fx_map();
     let mut visits: FxHashMap<usize, usize> = fx_map();
@@ -129,47 +138,14 @@ pub(in super::super::super) fn refine_value_calls(
             .map_or_else(ReplacementProbeSnapshot::default, |catalog| {
                 catalog.snapshot()
             });
+        pass.parameter_cache.admission_probe.capture(&mut snapshot);
+        admission_mode::capture_edges(&mut snapshot, &pass.edges);
         replacement_incoming::capture(&mut snapshot, &incoming, &pass.sites, indexes, facts);
         super::super::super::value_flow_metrics::record_replacements(snapshot);
     }
 }
-fn replace_call_edges(
-    edges: &mut Vec<Edge>,
-    base: &[ResolvedCallSite],
-    sites: &[ResolvedCallSite],
-    processed: &[usize],
-    source: impl Fn(&ResolvedCallSite) -> NodeId,
-) {
-    // Initial edges contain one entry per physical occurrence (before the
-    // canonical adjacency dedupe). Remove exactly that occurrence's old Call
-    // edges; identical calls and implicit constructor routes must survive.
-    let mut removed: FxHashMap<Edge, usize> = fx_map();
-    for index in processed {
-        let site = &base[*index];
-        for node in site.target_nodes() {
-            *removed
-                .entry((source(site), node.clone(), EdgeKind::Call))
-                .or_default() += 1;
-        }
-    }
-    if !removed.is_empty() {
-        edges.retain(|edge| {
-            if let Some(count) = removed.get_mut(edge) {
-                if *count > 0 {
-                    *count -= 1;
-                    return false;
-                }
-            }
-            true
-        });
-    }
-    for index in processed {
-        let site = &sites[*index];
-        for node in site.target_nodes() {
-            edges.push((source(site), node.clone(), EdgeKind::Call));
-        }
-    }
-}
+include!("worklist_edges.rs");
+
 fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> + '_ {
     site.target_nodes().filter_map(move |node| {
         if site.invocation == InvocationKind::Membership {
