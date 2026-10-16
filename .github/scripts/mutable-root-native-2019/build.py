@@ -43,12 +43,19 @@ def link(phase,root,env):
           'codegen-units=1','-C','debuginfo=0','-L','dependency='+str(root/'target/release/deps'),
           '--extern','no_mistakes='+str(root/'binaries/lib.rlib')]
     if phase=='sql':
-        data=(root/'proof/core-cargo.jsonl').read_text().splitlines()
-        serde=[json.loads(s)for s in data if s.startswith('{')and json.loads(s).get('reason')=='compiler-artifact'and json.loads(s)['target']['name']=='serde_json']
-        require(len(serde)==1 and serde[0]['profile']['opt_level']=='3','serde producer mismatch')
-        path=Path(next(f for f in serde[0]['filenames']if f.endswith('.rlib')))
-        require(path.is_relative_to(root/'target/release/deps'),'foreign serde path')
-        args+=['--extern','serde_json='+str(path)];write(root/'proof/serde-producer.json',serde[0])
+        import tomllib
+        from dependency_producer import select_release_rlib
+        lock=tomllib.loads((root/'source/Cargo.lock').read_text())
+        packages=[row for row in lock['package']if row['name']=='serde_json']
+        require(len(packages)==1,'serde lock identity mismatch')
+        package=packages[0];package_id=package['source']+'#serde_json@'+package['version']
+        cargo_json=root/'proof/core-cargo.jsonl'
+        producer,path=select_release_rlib(cargo_json.read_text(),'serde_json',root,package_id)
+        require(path.is_file()and not path.is_symlink(),'serde library not regular')
+        args+=['--extern','serde_json='+str(path)];write(root/'proof/serde-producer.json',producer)
+        write(root/'proof/serde-library-binding.json',{'package_id':package_id,'path':str(path),
+              'sha256':sha(path),'features':producer['features'],'profile':producer['profile'],
+              'core_cargo_json_sha256':sha(cargo_json),'lock_sha256':sha(root/'source/Cargo.lock')})
     args+=[str(source),'-o',str(output)]
     run(args,env=env,log=root/'proof'/(phase+'-link'),timeout=1500);elf(output)
     if phase=='sql':

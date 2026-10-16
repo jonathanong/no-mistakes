@@ -1,0 +1,78 @@
+[
+  {
+    "reason": "compiler-artifact",
+    "package_id": "registry+https://github.com/rust-lang/crates.io-index#serde_json@1.0.151",
+    "manifest_path": "/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/Cargo.toml",
+    "target": {
+      "kind": [
+        "lib"
+      ],
+      "crate_types": [
+        "lib"
+      ],
+      "name": "serde_json",
+      "src_path": "/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/src/lib.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": true,
+      "test": true
+    },
+    "profile": {
+      "opt_level": "0",
+      "debuginfo": 0,
+      "debug_assertions": false,
+      "overflow_checks": false,
+      "test": false
+    },
+    "features": [
+      "default",
+      "std"
+    ],
+    "filenames": [
+      "/tmp/nm2019-arm2019/candidate/target/release/deps/libserde_json-fd4b5e60f9833cdd.rlib",
+      "/tmp/nm2019-arm2019/candidate/target/release/deps/libserde_json-fd4b5e60f9833cdd.rmeta"
+    ],
+    "executable": null,
+    "fresh": false
+  },
+  {
+    "reason": "compiler-artifact",
+    "package_id": "registry+https://github.com/rust-lang/crates.io-index#serde_json@1.0.151",
+    "manifest_path": "/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/Cargo.toml",
+    "target": {
+      "kind": [
+        "lib"
+      ],
+      "crate_types": [
+        "lib"
+      ],
+      "name": "serde_json",
+      "src_path": "/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/src/lib.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": true,
+      "test": true
+    },
+    "profile": {
+      "opt_level": "3",
+      "debuginfo": 0,
+      "debug_assertions": false,
+      "overflow_checks": false,
+      "test": false
+    },
+    "features": [
+      "default",
+      "float_roundtrip",
+      "indexmap",
+      "preserve_order",
+      "raw_value",
+      "std"
+    ],
+    "filenames": [
+      "/tmp/nm2019-arm2019/candidate/target/release/deps/libserde_json-4220ee3c9bd65d8a.rlib",
+      "/tmp/nm2019-arm2019/candidate/target/release/deps/libserde_json-4220ee3c9bd65d8a.rmeta"
+    ],
+    "executable": null,
+    "fresh": false
+  }
+]
