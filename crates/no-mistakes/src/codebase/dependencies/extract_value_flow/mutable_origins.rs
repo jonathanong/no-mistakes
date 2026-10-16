@@ -26,10 +26,13 @@ impl RootVersion {
 #[path = "mutable_origin_snapshots.rs"]
 mod snapshots;
 
+#[path = "mutable_origin_possible.rs"]
+mod possible;
+
 #[derive(Default)]
 struct RootStates {
     snapshots: snapshots::RootSnapshots,
-    possible: Vec<usize>,
+    possible: possible::PossibleOrigins,
     #[cfg(feature = "test-instrumentation")]
     insertion_order: [usize; 3],
 }
@@ -163,8 +166,7 @@ impl ReceiverBindingOrigins {
             if root_read.1 != *owner {
                 // Normal leaves append in arena order. Later foreign bodies
                 // cannot force replay to walk a suffix beyond this acquisition.
-                let end = states.possible.partition_point(|id| *id < foreign_before);
-                pending.extend(states.possible[..end].iter().map(|id| (*id, true)));
+                pending.extend(states.possible.before(foreign_before).map(|id| (id, true)));
             } else if phase_selected.is_none() {
                 pending.extend(version.selected.map(|id| (id, false)));
             }
