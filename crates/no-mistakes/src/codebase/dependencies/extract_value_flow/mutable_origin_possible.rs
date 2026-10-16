@@ -1,3 +1,4 @@
+#[cfg(all(test, feature = "test-instrumentation"))]
 use super::*;
 
 // Preserve every arena leaf in insertion order. A gap materializes the original
@@ -7,6 +8,10 @@ use super::*;
 pub(super) struct PossibleOrigins {
     start: usize,
     end: usize,
+    #[expect(
+        clippy::box_collection,
+        reason = "The boxed Vec keeps this struct the same size as Vec while consecutive histories allocate nothing."
+    )]
     sparse: Option<Box<Vec<usize>>>,
 }
 impl PossibleOrigins {
