@@ -105,3 +105,37 @@ fn exiting_inline_active_key_keeps_other_active_bindings() {
         .enter_ordinary(&other, &[None], vec![None])
         .is_some());
 }
+
+impl ReceiverTraversal {
+    pub(in super::super) fn enter_ordinary(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: Vec<nested::ReceiverRead>,
+    ) -> Option<Vec<nested::ReceiverRead>> {
+        self.ordinary.enter(key, path, reads)
+    }
+    pub(in super::super) fn enter(
+        &mut self,
+        key: &(usize, String),
+        path: &[Option<String>],
+        reads: Vec<nested::ReceiverRead>,
+        version: Option<mutable_origins::RootVersion>,
+    ) -> Option<Vec<nested::ReceiverRead>> {
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.version_dispatches += 1;
+        }
+        let state = match version {
+            Some(version) => self
+                .mutable
+                .get_or_insert_with(|| MutableTraversal {
+                    first: (version, TraversalState::default()),
+                    other: fx_map(),
+                })
+                .state(version),
+            None => &mut self.ordinary,
+        };
+        state.enter(key, path, reads)
+    }
+}

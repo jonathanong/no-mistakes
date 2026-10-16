@@ -136,9 +136,19 @@ pub struct ValueFlowFacts {
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
     pub type_exports: Vec<ExportedBinding>,
+    pub type_shapes: FxHashMap<String, ValueType>,
     pub async_callables: FxHashSet<CallableId>,
     pub generator_callables: FxHashSet<CallableId>,
 }
+/// Small syntactic annotation shapes; resolution uses the prepared fact catalog.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValueType {
+    Reference(String),
+    Member(Box<ValueType>, String),
+    Object(FxHashMap<String, ValueType>),
+    Unknown,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueExpression {
     Named {
@@ -155,6 +165,11 @@ pub enum ValueExpression {
     Object(std::sync::Arc<FxHashMap<String, ValueExpression>>, bool),
     Array(std::sync::Arc<FxHashMap<String, ValueExpression>>),
     Undefined,
+    Null,
+    Nullish(
+        std::sync::Arc<ValueExpression>,
+        std::sync::Arc<ValueExpression>,
+    ),
     Default(
         std::sync::Arc<ValueExpression>,
         std::sync::Arc<ValueExpression>,

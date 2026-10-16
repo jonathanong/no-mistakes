@@ -4,6 +4,9 @@ use super::*;
 mod state;
 use state::TraversalState;
 
+#[path = "receiver_traversal_owned_entry.rs"]
+mod owned_entry;
+
 struct MutableTraversal {
     first: (mutable_origins::RootVersion, TraversalState),
     other: FxHashMap<mutable_origins::RootVersion, TraversalState>,
@@ -32,14 +35,6 @@ pub(super) struct ReceiverTraversal {
     mutable: Option<MutableTraversal>,
 }
 impl ReceiverTraversal {
-    pub(super) fn enter_ordinary(
-        &mut self,
-        key: &(usize, String),
-        path: &[Option<String>],
-        reads: Vec<nested::ReceiverRead>,
-    ) -> Option<Vec<nested::ReceiverRead>> {
-        self.ordinary.enter(key, path, reads)
-    }
     pub(super) fn exit_ordinary(&mut self, key: &(usize, String)) {
         self.ordinary.remove_active(key);
     }
@@ -77,29 +72,6 @@ impl ReceiverTraversal {
             .map_or(0, |state| state.other.capacity())
     }
 
-    pub(super) fn enter(
-        &mut self,
-        key: &(usize, String),
-        path: &[Option<String>],
-        reads: Vec<nested::ReceiverRead>,
-        version: Option<mutable_origins::RootVersion>,
-    ) -> Option<Vec<nested::ReceiverRead>> {
-        #[cfg(feature = "test-instrumentation")]
-        {
-            self.version_dispatches += 1;
-        }
-        let state = match version {
-            Some(version) => self
-                .mutable
-                .get_or_insert_with(|| MutableTraversal {
-                    first: (version, TraversalState::default()),
-                    other: fx_map(),
-                })
-                .state(version),
-            None => &mut self.ordinary,
-        };
-        state.enter(key, path, reads)
-    }
     pub(super) fn exit(
         &mut self,
         key: &(usize, String),

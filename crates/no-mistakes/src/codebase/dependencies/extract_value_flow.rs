@@ -19,7 +19,7 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 
 #[path = "extract_value_flow/value_facts.rs"]
 mod value_facts;
-pub use value_facts::{ValueExpression, ValueFlowFacts};
+pub use value_facts::{ValueExpression, ValueFlowFacts, ValueType};
 #[path = "extract_value_flow/value_descriptors.rs"]
 mod value_descriptors;
 pub use value_descriptors::{ValueBinding, ValueCall, ValueParameter, ValueProjection};
