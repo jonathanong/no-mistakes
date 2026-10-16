@@ -193,17 +193,72 @@ class ProposalTests(unittest.TestCase):
             if args == ('show', '-s', '--format=%P', driver):
                 return source
             if args[0] == 'merge-base':
-                return baseline
+                return source if args[1:]==(source,driver) else baseline
             if args[0] == 'diff':
                 return 'A\t.github/scripts/repeated-target-native-2022-bounded/entry.py'
             raise AssertionError(args)
-        with patch('proposal_guard.git', side_effect=fake_git):
-            with self.assertRaises(AssertionError):
-                check(spec, Path('/unused'), 'pair-preflight', driver, None)
-            self.assertTrue(check(spec, Path('/unused'), 'pair-preflight', driver, driver))
-            spec['diagnostic_parent'] = merge
-            with self.assertRaises(AssertionError):
-                check(spec, Path('/unused'), 'pair-preflight', driver, driver)
+        with patch('proposal_guard.git', side_effect=fake_git)as lookup:
+            with self.assertRaises(AssertionError):check(spec,Path('/unused'),'pair-preflight',driver,None)
+            with self.assertRaises(AssertionError):check(spec,Path('/unused'),'pair-preflight',driver,'e'*40)
+            self.assertTrue(check(spec,Path('/unused'),'pair-preflight',driver,driver))
+            self.assertIn(((Path('/unused'),'merge-base',source,driver),{}),[(call.args,call.kwargs)for call in lookup.call_args_list])
+            self.assertIn(((Path('/unused'),'diff','--name-status',source,driver),{}),[(call.args,call.kwargs)for call in lookup.call_args_list])
+            self.assertNotIn(((Path('/unused'),'show','-s','--format=%P',driver),{}),[(call.args,call.kwargs)for call in lookup.call_args_list])
+            for mode in ('outside_path','nonadditive','wrong_ancestor'):
+                def invalid_git(repo,*args):
+                    if args[0]=='diff':return 'A\toutside/path.py'if mode=='outside_path'else'M\t.github/scripts/repeated-target-native-2022-bounded/entry.py'if mode=='nonadditive'else fake_git(repo,*args)
+                    if args==('merge-base',source,driver)and mode=='wrong_ancestor':return '0'*40
+                    return fake_git(repo,*args)
+                with self.subTest(mode=mode),patch('proposal_guard.git',side_effect=invalid_git),self.assertRaises(AssertionError):
+                    check(spec,Path('/unused'),'pair-preflight',driver,driver)
+            spec['diagnostic_parent']=merge
+            with self.assertRaises(AssertionError):check(spec,Path('/unused'),'pair-preflight',driver,driver)
+
+    def test_nonempty_pinned90_archive_preserves_all_fields(self):
+        spec = json.loads((HERE / 'pair.json').read_text())
+        baseline, source, merge, driver = ('a' * 40, 'b' * 40, 'c' * 40, 'd' * 40)
+        spec.update(status='REVIEWED AND FROZEN',
+                    source_git_inventory_sha256={'baseline': 'e' * 64, 'candidate': 'f' * 64})
+        spec['baseline'].update(revision=baseline, tree='1' * 40)
+        spec['candidate'].update(revision=merge, proposed_revision=merge, tree='2' * 40, pr_head=source)
+        spec['pr'].update(head_sha=source, required_successful_ci_run=1,
+                          four_codecov_check_runs={name: i for i, name in enumerate(
+                              ('codecov/patch/rust', 'codecov/project/rust',
+                               'codecov/patch/javascript', 'codecov/project/javascript'), 1)})
+        spec['semantic_policy']['postgres_source_control']['source_revision'] = baseline
+        for key in ('fixture', 'script'):
+            spec['semantic_policy']['conditional_executor_control'][key]['source_revision'] = baseline
+        spec['diagnostic_parent'] = source
+        spec['semantic_policy'].update(status='REVIEWED FULL REPORTS', report_hashes={'graph': {'a': 'x'}})
+        def fake_git(_repo, *args):
+            if args == ('rev-parse', merge + '^{tree}'):
+                return '2' * 40
+            if args == ('rev-parse', source + '^{tree}'):
+                return '2' * 40
+            if args == ('rev-parse', baseline + '^{tree}'):
+                return '1' * 40
+            if args == ('show', '-s', '--format=%P', merge):
+                return baseline + ' ' + source
+            if args == ('show', '-s', '--format=%P', driver):
+                return source
+            if args[0] == 'merge-base':
+                return source if args[1:]==(source,driver) else baseline
+            if args[0] == 'diff':
+                return 'A\t.github/scripts/repeated-target-native-2022-bounded/entry.py'
+            raise AssertionError(args)
+        archive=(HERE/'test-fixtures/pinned90-input-archive.tar').read_bytes()
+        with patch('proposal_guard.git',side_effect=fake_git),patch('phase_common.run',return_value=archive)as read_archive:
+            self.assertTrue(check(spec,Path('/unused'),'pair-preflight',driver,driver))
+            read_archive.assert_called_once()
+            self.assertEqual(read_archive.call_args.args[0][:4],['git','archive','--format=tar',merge])
+            self.assertEqual(len({row['path']for inp in spec['inputs'].values()for row in inp['files']}),90)
+            first=next(iter(spec['inputs'].values()))['files'][0]
+            for field,bad in [('lines',first['lines']+1),('bytes',first['bytes']+1),('sha256','0'*64),('path','missing/input.mts')]:
+                saved=first[field];first[field]=bad
+                try:
+                    with self.subTest(field=field),self.assertRaises(AssertionError):
+                        check(spec,Path('/unused'),'pair-preflight',driver,driver)
+                finally:first[field]=saved
 
     def test_private_transfer_rejects_changed_bytes_and_extra_directory(self):
         with tempfile.TemporaryDirectory() as name:

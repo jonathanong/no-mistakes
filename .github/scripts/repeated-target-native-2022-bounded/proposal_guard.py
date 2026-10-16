@@ -70,9 +70,9 @@ def check(spec, repo, stage, diagnostic_head=None, approved_commit=None):
         assert approved_commit and len(approved_commit) == 40
         assert all(c in '0123456789abcdef' for c in approved_commit)
         assert diagnostic_head == approved_commit
-        assert git(repo, 'show', '-s', '--format=%P', diagnostic_head).split() == [spec['diagnostic_parent']]
         assert spec['diagnostic_parent'] == spec['pr']['head_sha']
-        changes = git(repo, 'diff', '--name-status', diagnostic_head + '^', diagnostic_head).splitlines()
+        assert git(repo, 'merge-base', spec['diagnostic_parent'], diagnostic_head) == spec['diagnostic_parent']
+        changes = git(repo, 'diff', '--name-status', spec['diagnostic_parent'], diagnostic_head).splitlines()
         assert changes and all(line.startswith('A\t.github/scripts/repeated-target-native-2022-bounded/')
                                or line == 'A\t.github/workflows/repeated-target-native-1971-next.yml'
                                for line in changes)
@@ -87,7 +87,7 @@ def check(spec, repo, stage, diagnostic_head=None, approved_commit=None):
                 if member.name not in wanted:continue
                 assert member.isfile()
                 raw=archive.extractfile(member).read()
-                observed[member.name]={'path':member.name,'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+                observed[member.name]={'path':member.name,'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'lines':len(raw.splitlines())}
         assert observed==wanted
     return True
 
