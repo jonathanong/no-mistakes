@@ -155,3 +155,8 @@ mod receiver_evaluation_order;
 mod module_scope_receiver_reads;
 mod namespace_executor_shadows;
 mod unique_execution_phases;
+
+#[cfg(feature = "test-instrumentation")]
+mod inherited_graph_snapshot;
+#[cfg(feature = "test-instrumentation")]
+mod static_callable_admission;
