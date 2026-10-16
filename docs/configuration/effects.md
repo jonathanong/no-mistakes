@@ -107,6 +107,10 @@ callable type. A statically invoked async callback can receive a configured
 returned executor without an explicit annotation. For a nullish choice such as
 `options.query ?? write`, every possible alternative must match a selector for
 the selected effect family; an unrelated fallback keeps the choice unselected.
+Recursive indexed descriptors, computed or missing type members, and callback
+annotations forwarded through an untyped relay remain conservatively unresolved.
+A known non-nullish callable can discard an unreachable nullish fallback; an
+annotation alone does not make an unknown alternative a selected executor.
 
 `returnedMembers` selects a member call on a receiver returned by a configured
 imported factory. Its selector has `{module, export, member, category?}`: `export`
