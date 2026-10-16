@@ -96,6 +96,12 @@ impl PhaseWalk<'_> {
         guaranteed: bool,
     ) {
         self.phase += 1;
+        if self.root_capture_rhs {
+            root_targets::for_each_root(target, |name, target| {
+                self.root_write(name, target, guaranteed);
+            });
+            return;
+        }
         for (name, path, target) in write_targets::targets(target) {
             if path.is_empty() {
                 self.root_write(&name, target, guaranteed);

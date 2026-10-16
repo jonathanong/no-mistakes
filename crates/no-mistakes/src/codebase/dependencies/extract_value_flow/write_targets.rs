@@ -2,6 +2,10 @@ use super::*;
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
 type WriteTarget = (String, ValueMutationPath, u32);
 pub(in super::super) fn targets(target: &AssignmentTarget<'_>) -> Vec<WriteTarget> {
+    #[cfg(feature = "test-instrumentation")]
+    if matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {
+        root_target_metrics::record(0);
+    }
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(_) => assignment_target_names(target)
             .into_iter()
@@ -80,6 +84,8 @@ fn member_target(
     property: Option<String>,
     start: u32,
 ) -> Option<WriteTarget> {
+    #[cfg(feature = "test-instrumentation")]
+    root_target_metrics::record(1);
     let (base, mut path) = expression_path(object)?;
     path.push(property);
     let name = std::iter::once(base)

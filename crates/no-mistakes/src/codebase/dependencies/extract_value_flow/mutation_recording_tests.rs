@@ -12,6 +12,8 @@ fn exact_member_records_descend_once_per_receiver_segment() {
     let parsed = oxc_parser::Parser::new(&allocator, &source, SourceType::ts()).parse();
     assert!(parsed.diagnostics.is_empty());
     super::metrics::PATH_DESCENTS.with(|count| count.set(0));
+    super::metrics::CHILD_KEYS.with(|counts| counts.set([0; 4]));
+    super::metrics::OWNED_KEYS.with(|counts| counts.set([0; 4]));
     let facts = extract_import_facts_from_program_with_source_and_demands(
         &parsed.program,
         &source,
@@ -22,6 +24,15 @@ fn exact_member_records_descend_once_per_receiver_segment() {
     // Each box.client.get write records box's one-segment path and client's
     // empty path. Summary and exact-assignment recording must share the descent.
     assert_eq!(super::metrics::PATH_DESCENTS.with(|count| count.get()), 128);
+    let keys = super::metrics::CHILD_KEYS.with(|counts| counts.get());
+    println!("MUTATION_CHILD_KEYS {keys:?}");
+    let owned = super::metrics::OWNED_KEYS.with(|counts| counts.get());
+    println!("MUTATION_OWNED_KEYS {owned:?}");
+    assert_eq!(owned[2], 0, "exit records move their existing owned key");
+    assert_eq!(facts.value_flow.reference_terminal_paths, 128);
+    assert_eq!(owned[0], 258, "only terminal names transfer ownership");
+    // Existing receiver children need no new owned key for a later write.
+    assert_eq!(keys[2], keys[1]);
     let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["client"];
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
 }

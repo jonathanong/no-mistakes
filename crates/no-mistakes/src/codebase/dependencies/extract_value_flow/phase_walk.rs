@@ -27,6 +27,8 @@ pub(super) struct PhaseWalk<'c> {
     pub(super) root_writes: Vec<RootPhaseWrite>,
     pub(super) changed_roots: Option<FxHashSet<String>>,
     pub(super) collect_root_origins: bool,
+    // Only the temporary RHS root walk discards member-write metadata.
+    pub(super) root_capture_rhs: bool,
     #[cfg(feature = "test-instrumentation")]
     pub(super) root_visits: usize,
     pub(super) conditional: bool,
