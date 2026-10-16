@@ -33,7 +33,7 @@ pub struct ValueParameter {
     pub invalidated_at: Option<u32>,
     pub mutation_contexts: FxHashSet<Option<CallableId>>,
     /// An explicit reference in the annotation namespace, distinct from runtime names.
-    pub type_reference: Option<String>,
+    pub type_reference: Option<ValueType>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueCall {

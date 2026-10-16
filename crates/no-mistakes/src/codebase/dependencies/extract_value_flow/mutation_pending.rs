@@ -44,3 +44,8 @@ pub(super) fn record_queue(len: usize, allocations: usize) {
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "mutation_pending_probe_tests.rs"]
 mod probe_tests;
+
+#[cfg(feature = "test-instrumentation")]
+pub(super) fn record_path_visit(facts: &mut ValueFlowFacts) {
+    facts.reference_path_visits += 1;
+}

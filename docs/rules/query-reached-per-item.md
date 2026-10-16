@@ -86,6 +86,10 @@ per invocation; its internal batch size does not exempt an outer loop.
 resolves to the configured imported type export. Explicit named and local type
 barrels preserve namespace members such as `Namespace.Query`, including renamed
 imports; unrelated local types and different module names remain unselected.
+Static indexed property types, including `NonNullable<Options['query']>`, preserve
+the selected callable origin. Statically invoked async callbacks preserve returned
+executor metadata. A nullish choice between a typed executor and a configured
+export is selected only when every alternative belongs to the effect family.
 `returnedMembers` selects an exact member call on the receiver returned by the configured imported factory
 path. Both use binding provenance, so aliases and local variable names do not
 change the match and same-spelled unrelated local methods do not match. These
@@ -93,6 +97,11 @@ selectors mark findings as transaction-client-only. They are also available to
 the `effects` query, with the configured category. Its callee display uses the
 configured type export for typed executors and the factory path plus returned
 member for returned members (for example, `writePool.connect().query`).
+Namespace-local classes, interfaces, type aliases, enums, and type parameters
+shadow imported types, including declarations later in the same lexical body.
+A value-only local binding does not shadow a type import. Leaving that scope
+restores the imported annotation; matching still requires the configured module
+and export identity.
 
 Effect `functions` and `categories` retain the spelling matching documented for
 [`effects`](../cli/effects.md), including unrelated bindings with matching names.

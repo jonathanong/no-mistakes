@@ -176,6 +176,7 @@ fn per_item_metadata_is_explicit_demand_and_display_roots_remain_supported() {
         invocation: crate::codebase::dependencies::extract::InvocationKind::Call,
         source_callee: "callee".into(),
         target: crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown,
+        alternatives: Vec::new(),
         returned_from: Vec::new(),
         typed_from: Vec::new(),
         returned_member_from: Vec::new(),
@@ -493,3 +494,5 @@ mod projections;
 
 #[path = "tests/typed_clients.rs"]
 mod typed_clients;
+
+mod namespace_shadows;

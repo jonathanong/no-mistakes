@@ -14,14 +14,76 @@ impl ImportCollector {
     pub(super) fn parameter_type_reference(
         &self,
         param: &oxc_ast::ast::FormalParameter<'_>,
-    ) -> Option<String> {
-        let oxc_ast::ast::TSType::TSTypeReference(reference) =
-            &param.type_annotation.as_ref()?.type_annotation
-        else {
-            return None;
-        };
-        let name = type_reference_name(reference)?;
-        let root = name.split('.').next()?;
-        (!self.type_parameter_shadows(root) && !self.type_binding_shadows(root)).then_some(name)
+    ) -> Option<ValueType> {
+        Some(self.annotation_shape(&param.type_annotation.as_ref()?.type_annotation))
+    }
+
+    pub(in super::super) fn annotation_shape(
+        &self,
+        annotation: &oxc_ast::ast::TSType<'_>,
+    ) -> ValueType {
+        use oxc_ast::ast::TSType;
+        match annotation {
+            TSType::TSTypeReference(reference) => {
+                let Some(name) = type_reference_name(reference) else {
+                    return ValueType::Unknown;
+                };
+                let root = name.split('.').next().unwrap_or(&name);
+                if self.type_parameter_shadows(root)
+                    || self
+                        .type_local_stack
+                        .iter()
+                        .skip(1)
+                        .any(|scope| scope.contains(root))
+                {
+                    return ValueType::Unknown;
+                }
+                if name == "NonNullable"
+                    && !self.type_binding_shadows(root)
+                    && !self.imported_bindings.contains(root)
+                    && !self.predeclared_imported_bindings.contains(root)
+                {
+                    return reference
+                        .type_arguments
+                        .as_ref()
+                        .filter(|arguments| arguments.params.len() == 1)
+                        .map_or(ValueType::Unknown, |arguments| {
+                            self.annotation_shape(&arguments.params[0])
+                        });
+                }
+                ValueType::Reference(name)
+            }
+            TSType::TSIndexedAccessType(indexed) => {
+                if let TSType::TSLiteralType(literal) = &indexed.index_type {
+                    if let oxc_ast::ast::TSLiteral::StringLiteral(key) = &literal.literal {
+                        return ValueType::Member(
+                            Box::new(self.annotation_shape(&indexed.object_type)),
+                            key.value.to_string(),
+                        );
+                    }
+                }
+                ValueType::Unknown
+            }
+            TSType::TSTypeLiteral(literal) => {
+                let mut properties = fx_map();
+                for member in &literal.members {
+                    if let oxc_ast::ast::TSSignature::TSPropertySignature(property) = member {
+                        if !property.computed {
+                            if let (Some(key), Some(annotation)) = (
+                                crate::codebase::ts_source::static_property_key_name(&property.key),
+                                &property.type_annotation,
+                            ) {
+                                properties.insert(
+                                    key.to_string(),
+                                    self.annotation_shape(&annotation.type_annotation),
+                                );
+                            }
+                        }
+                    }
+                }
+                ValueType::Object(properties)
+            }
+            _ => ValueType::Unknown,
+        }
     }
 }

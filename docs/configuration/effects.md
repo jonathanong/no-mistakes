@@ -95,6 +95,18 @@ type re-exports preserve that type provenance. Namespace member suffixes (for ex
 `Namespace.Query`) survive explicit named and local type barrels, including aliases.
 Local spelling and a matching terminal type name alone do not select a call. These calls carry the transaction
 marker in `query-reached-per-item` findings.
+Namespace-local classes, interfaces, type aliases, enums, and type parameters
+shadow imported types, including declarations later in the same lexical body.
+A value-only local binding does not shadow a type import. Leaving that scope
+restores the imported annotation; matching still requires the configured module
+and export identity.
+
+Callable provenance also survives static indexed access such as
+`NonNullable<QueryOptions['query']>` when the property refers to the selected
+callable type. A statically invoked async callback can receive a configured
+returned executor without an explicit annotation. For a nullish choice such as
+`options.query ?? write`, every possible alternative must match a selector for
+the selected effect family; an unrelated fallback keeps the choice unselected.
 
 `returnedMembers` selects a member call on a receiver returned by a configured
 imported factory. Its selector has `{module, export, member, category?}`: `export`

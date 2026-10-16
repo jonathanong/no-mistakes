@@ -27,7 +27,7 @@ pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, 
 
 #[path = "extract_value_flow/value_facts.rs"]
 mod value_facts;
-pub use value_facts::{ValueExpression, ValueFlowFacts};
+pub use value_facts::{ValueExpression, ValueFlowFacts, ValueType};
 #[path = "extract_value_flow/value_descriptors.rs"]
 mod value_descriptors;
 pub use value_descriptors::{ValueBinding, ValueCall, ValueParameter, ValueProjection};
@@ -121,7 +121,7 @@ mod receiver_identity_tests;
 mod active_reference_phases;
 
 #[path = "extract_value_flow/inert_receiver_rhs.rs"]
-mod inert_receiver_rhs;
+pub(super) mod inert_receiver_rhs;
 
 #[cfg(test)]
 #[path = "extract_value_flow/suspension_tests.rs"]
@@ -178,3 +178,9 @@ mod mutable_root_single;
 mod root_target_metrics;
 #[path = "extract_value_flow/root_targets.rs"]
 pub(super) mod root_targets;
+
+#[path = "extract_value_flow/phase_changed_roots.rs"]
+mod phase_changed_roots;
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract_value_flow/phase_changed_roots_tests.rs"]
+mod phase_changed_roots_tests;

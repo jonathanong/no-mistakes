@@ -3,6 +3,11 @@ use super::*;
 #[derive(Clone, PartialEq, Eq)]
 pub(super) enum FlowValue {
     Uncallable,
+    Choice(Vec<FlowValue>),
+    TypedObject {
+        executor: Box<FlowValue>,
+        properties: FxHashMap<String, FlowValue>,
+    },
     Provenance {
         executor: Box<FlowValue>,
         typed: Vec<(String, String)>,
@@ -35,6 +40,7 @@ pub(super) enum FlowValue {
         fields: std::sync::Arc<FxHashMap<String, ValueExpression>>,
     },
     Undefined,
+    Null,
     Unknown,
 }
 
@@ -60,12 +66,15 @@ impl FlowValue {
                 members,
                 receiver_factories,
             },
+            Self::TypedObject { executor, properties } => Self::TypedObject {
+                executor: Box::new(executor.map_executor(operation)), properties,
+            },
             value => operation(value),
         }
     }
     pub(super) fn executor(&self) -> &Self {
         match self {
-            Self::Provenance { executor, .. } => executor.executor(),
+            Self::Provenance { executor, .. } | Self::TypedObject { executor, .. } => executor.executor(),
             value => value,
         }
     }

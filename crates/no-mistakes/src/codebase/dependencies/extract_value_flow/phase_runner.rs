@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 #[path = "phase_finish.rs"]
 mod finish;
-
 pub(in super::super) struct PreparedPhases {
     catalog: Arc<PhaseCatalog>,
     previous_deferred: Option<Box<mutable_deferred::DeferredMutations>>,
@@ -98,6 +97,8 @@ impl ImportCollector {
         debug_assert!(walk.segments.windows(2).all(|pair| pair[0].1 <= pair[1].0));
         #[cfg(feature = "test-instrumentation")]
         let root_visits = walk.root_visits;
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        phase_changed_roots_tests::finish_walk(&walk);
         let PhaseWalk {
             segments,
             writes,

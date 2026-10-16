@@ -1,6 +1,7 @@
 use super::{
-    binding_identifier_name, binding_names, function_name, visit_type_parameter_constraints,
-    with_callable_receiver_execution, CallableId, ImportCollector,
+    binding_identifier_name, binding_names, function_name, record_statement_type_binding,
+    visit_type_parameter_constraints, with_callable_receiver_execution, CallableId,
+    ImportCollector,
 };
 use crate::fx::{fx_set, FxHashSet};
 use oxc_ast::ast::{
@@ -90,6 +91,8 @@ pub(super) fn predeclare_hoisted_var_bindings<'a>(
     let mut names = fx_set();
     let mut visitor = HoistedVarBindingCollector { names: &mut names };
     for statement in statements {
+        // Type declarations shadow imports throughout this lexical body.
+        record_statement_type_binding(collector, statement);
         visitor.visit_statement(statement);
     }
     for name in names {
@@ -139,6 +142,7 @@ pub(super) fn predeclare_function_declarations<'a>(
     statements: &[Statement<'a>],
 ) {
     for statement in statements {
+        record_statement_type_binding(collector, statement);
         let Statement::FunctionDeclaration(function) = statement else {
             continue;
         };

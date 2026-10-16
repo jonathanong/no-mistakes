@@ -171,6 +171,7 @@ fn function_and_terminal_selectors_use_canonical_repository_targets() {
         "roots: [{ file: src/selectors.mts }]\ntargets: [{ function: { file: src/targets.mts, symbol: repositoryTarget } }]",
     );
     let repository_site = ResolvedCallSite {
+        alternatives: Vec::new(),
         returned_from: Vec::new(),
         typed_from: Vec::new(),
         returned_member_from: Vec::new(),

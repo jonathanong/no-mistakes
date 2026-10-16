@@ -59,8 +59,7 @@ impl ImportCollector {
                     },
                 );
             }
-            // RHS facts are another possible successor source. Keep their
-            // canonical projection whenever that request-owned index exists.
+            // RHS facts retain canonical successors whenever their request-owned index exists.
             if self.projected_receiver_is_terminal(&key, root_read.read().is_some()) {
                 affected.insert_owned(key.0, key.1);
                 continue;
@@ -79,21 +78,23 @@ impl ImportCollector {
             };
             let assigned_exit = assigned_origin.is_some();
             let entered = match assigned_origin.as_mut() {
-                Some(selection) => traversal.enter_assigned(
+                Some(selection) => traversal.enter_assigned_owned_path(
                     &key,
-                    &path,
+                    path,
                     reads,
                     version,
                     std::mem::take(&mut selection.receipts),
                 ),
-                None if root_read.read().is_none() => traversal.enter_ordinary(&key, &path, reads),
-                None => traversal.enter(&key, &path, reads, version),
+                None if root_read.read().is_none() => {
+                    traversal.enter_ordinary_owned_path(&key, path, reads)
+                }
+                None => traversal.enter_owned_path(&key, path, reads, version),
             };
-            let Some(reads) = entered else { continue };
+            let Some((reads, path)) = entered else {
+                continue;
+            };
             #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_path_visits += 1;
-            }
+            pending_work::record_path_visit(&mut self.value_flow);
             let exit_position = pending.len();
             affected.insert(key.0, &key.1);
             for target in self
@@ -111,7 +112,7 @@ impl ImportCollector {
                 // Reserve the slot occupied by the old early exit marker.
                 pending.reserve(2);
                 pending.push((
-                    ((target.clone(), path.clone()), reads.clone(), root_read),
+                    ((target.clone(), path.to_vec()), reads.clone(), root_read),
                     false,
                     false,
                     propagated,
@@ -136,8 +137,7 @@ impl ImportCollector {
             );
             let projects = version.is_some() || first_projected.is_some();
             let replaced = projects && self.mutation_reference_replaced(&key, &path, &reads, info);
-            // The eligibility prefix contains only direct aliases. They have
-            // already been handled by component links and need no second visit.
+            // Component links already handled the direct-alias eligibility prefix.
             if let Some(first) = first_projected.filter(|_| !replaced && !has_assigned_origin) {
                 for value in self
                     .value_binding_indexes

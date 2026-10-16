@@ -3,6 +3,9 @@ use std::collections::BTreeSet;
 
 #[derive(Default)]
 pub(in super::super) struct FreshReceiverEffects {
+    #[cfg(feature = "test-instrumentation")]
+    pub(in super::super) rhs_probe:
+        Option<std::rc::Rc<std::cell::RefCell<inert_receiver_rhs::tests_support::Probe>>>,
     pub active: bool,
     pub epoch: u64,
     pub descriptor_call: Option<u32>,

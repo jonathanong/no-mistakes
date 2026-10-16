@@ -63,6 +63,15 @@ impl<'a> Sinks<'a> {
     }
 
     pub(super) fn match_site(&self, site: &ResolvedCallSite) -> Option<bool> {
+        if !site.alternatives.is_empty() {
+            return site
+                .alternatives
+                .iter()
+                .try_fold(false, |transaction, alternative| {
+                    self.match_site(alternative)
+                        .map(|matched| transaction || matched)
+                });
+        }
         if self.provenance.match_site(site).is_some() {
             return Some(true);
         }

@@ -39,11 +39,17 @@ pub(super) fn allow_mutable(walk: &phase_walk::PhaseWalk<'_>, expression: &Expre
     else {
         return true;
     };
-    !walk
-        .changed_roots
-        .as_ref()
-        .is_some_and(|names| names.contains(root.name.as_str()))
-        && walk.collector.is_none_or(|collector| {
-            collector.mutable_root_unchanged(root.name.as_str(), member.span.end)
-        })
+    !walk.changed_roots.as_ref().is_some_and(|names| {
+        let changed = names.contains(root.name.as_str());
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        {
+            phase_changed_roots_tests::record(3);
+            if changed {
+                phase_changed_roots_tests::record(8);
+            }
+        }
+        changed
+    }) && walk.collector.is_none_or(|collector| {
+        collector.mutable_root_unchanged(root.name.as_str(), member.span.end)
+    })
 }

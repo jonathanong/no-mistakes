@@ -6,37 +6,19 @@ impl ValueFlowResolution<'_, '_> {
         &self,
         path: &std::path::Path,
         parameter: &ValueParameter,
-        index: &CallableFileIndex,
+        _index: &CallableFileIndex,
         executor: FlowValue,
     ) -> FlowValue {
         let Some(reference) = &parameter.type_reference else {
             return executor;
         };
-        let (local, member) = reference
-            .split_once('.')
-            .map_or((reference.as_str(), None), |(a, b)| (a, Some(b)));
-        let Some(binding) = index.type_imported.get(local) else {
-            return executor;
-        };
-        let Some(export) = type_export(binding, member) else {
-            return executor;
-        };
-        let origin = self
-            .cache
-            .type_origin((path.to_path_buf(), reference.clone()), || {
-                self.type_origin(path, binding.specifier.clone(), export)
-            });
-        FlowValue::Provenance {
-            executor: Box::new(executor),
-            typed: vec![origin],
-            members: Vec::new(),
-            receiver_factories: Vec::new(),
-        }
+        let annotation = self.annotation_value(path, reference, None, &mut fx_set());
+        Self::annotate(executor, annotation)
     }
 
     // Type re-exports use the same prepared fact catalog as calls. Walking one
     // explicit binding chain does not widen runtime reachability or parse again.
-    fn type_origin(
+    pub(super) fn type_origin(
         &self,
         path: &std::path::Path,
         mut module: String,
@@ -131,7 +113,7 @@ impl ValueFlowResolution<'_, '_> {
     }
 }
 
-fn type_export(
+pub(super) fn type_export(
     binding: &crate::codebase::dependencies::extract::ImportedBinding,
     member: Option<&str>,
 ) -> Option<String> {

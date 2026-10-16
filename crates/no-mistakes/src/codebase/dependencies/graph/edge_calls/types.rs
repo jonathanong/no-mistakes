@@ -14,6 +14,8 @@ pub struct ResolvedCallSite {
     /// Exact source spelling, kept apart from canonical target selectors.
     pub source_callee: String,
     pub target: ResolvedCallTarget,
+    /// Alternatives retained for exact effect selection across a nullish choice.
+    pub alternatives: Vec<ResolvedCallSite>,
     /// Imported factories which produced or wrapped this executor, separate from its callable target.
     pub returned_from: Vec<(String, String)>,
     /// Explicit imported annotation provenance, without changing the runtime target.
