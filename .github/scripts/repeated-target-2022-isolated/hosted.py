@@ -37,7 +37,7 @@ approved(plan, os.environ)
 cohort = int(os.environ['COHORT'])
 assert 0 <= cohort < 5
 ledger = []
-deadline = time.monotonic() + 1200  # Replaced with stricter actual job-start bound below.
+deadline = time.monotonic() + 1080  # Replaced with stricter actual job-start bound below.
 
 
 def sha(path):
@@ -81,10 +81,10 @@ matches = [j for j in jobs['jobs'] if j['name'] == f'Complete workload cohort {c
 assert len(matches) == 1
 job = matches[0]
 started_at = datetime.datetime.fromisoformat(job['started_at'].replace('Z', '+00:00'))
-remaining = 1800 - (datetime.datetime.now(datetime.timezone.utc) - started_at).total_seconds() - 180
+remaining = 1800 - (datetime.datetime.now(datetime.timezone.utc) - started_at).total_seconds() - 420
 assert remaining > 720
 deadline = min(deadline, time.monotonic() + remaining)
-(O / 'actual-job-budget.json').write_text(json.dumps({'job': job, 'remaining_s': remaining, 'upload_reserve_s': 180}, indent=2))
+(O / 'actual-job-budget.json').write_text(json.dumps({'job': job, 'remaining_s': remaining, 'retention_reserve_s': 360, 'cleanup_reserve_s': 60}, indent=2))
 
 
 def eligibility(suffix):

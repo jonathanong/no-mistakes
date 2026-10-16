@@ -1,7 +1,9 @@
 """Run locally after root independently downloads/digest-verifies five artifacts."""
 import argparse
+import os
 import json
 from pathlib import Path
+from cohort_transport import unpack
 from retention import verify
 from union import verify as verify_union
 
@@ -9,10 +11,18 @@ D = Path(__file__).resolve().parent
 p = argparse.ArgumentParser()
 p.add_argument('--artifact', type=Path, action='append', required=True)
 p.add_argument('--output', type=Path, required=True)
+p.add_argument('--unpacked-output', type=Path, required=True)
+p.add_argument('--run-id', required=True)
+p.add_argument('--attempt', required=True)
+p.add_argument('--workflow-sha', required=True)
 a = p.parse_args()
-assert len(a.artifact) == 5 and not a.output.exists()
+assert len(a.artifact) == 5 and not a.output.exists() and not a.unpacked_output.exists()
+os.environ.update(GITHUB_REPOSITORY='jonathanong/no-mistakes', GITHUB_RUN_ID=a.run_id, GITHUB_RUN_ATTEMPT=a.attempt, GITHUB_SHA=a.workflow_sha, APPROVED_SHA=a.workflow_sha)
+a.unpacked_output.mkdir()
 roots = {}
-for artifact in a.artifact:
+for cohort, carrier in enumerate(a.artifact):
+    artifact = a.unpacked_output / str(cohort)
+    unpack(carrier, artifact, str(cohort))
     ends = list(artifact.rglob('cohort-END.json'))
     indices = list(artifact.rglob('retained-evidence-index.json'))
     closures = list(artifact.rglob('closure.json'))

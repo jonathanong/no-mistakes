@@ -192,5 +192,11 @@
   },
   "transport_source": "32e9f76ed570ddbafba132a0201e9ecd9d13bee0",
   "cross_runner_pooling": false,
-  "workflow_identity": "Exact approved_sha dispatch input must equal actual GITHUB_SHA; same-run transfer binds that immutable workflow commit (no self-referential committed SHA)."
+  "workflow_identity": "Exact approved_sha dispatch input must equal actual GITHUB_SHA; same-run transfer binds that immutable workflow commit (no self-referential committed SHA).",
+  "prior_technical_run": {
+    "id": 38955760477,
+    "head": "bbc9b304fd185814429764d0bc00747beef6292f",
+    "eligibility": "INELIGIBLE: upload rejected colon filenames; raw numerical evidence not retained",
+    "new_experiment": "Root approval required; never selective numerical retry"
+  }
 }

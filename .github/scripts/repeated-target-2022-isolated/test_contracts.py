@@ -57,7 +57,7 @@ class Boundaries(unittest.TestCase):
 
     def test_upload_never_contains_native_tree(self):
         workflow = (D / 'workflow.yml').read_text()
-        paths = workflow.split('name: Retain all completed and partial evidence')[1]
+        paths = workflow.split('name: Retain authenticated portable evidence carrier')[1]
         self.assertNotIn('/transfer/', paths)
         self.assertNotIn('candidate-source', paths)
         self.assertNotIn('.git', paths)

@@ -1,10 +1,10 @@
 {
-  "status": "ROOT REVIEWED source activation; normal publication authorized, dispatch still requires root exact-SHA approval",
+  "status": "ROOT REVIEWED portable carrier source; normal publication authorized, explicit dispatch still requires root exact-SHA approval",
   "files": [
     {
       "path": "README.md",
-      "bytes": 3746,
-      "sha256": "2180a853a430761ff6bfae40718ece63d31a11d47276d8c5a3ec2c9bdccb30e6"
+      "bytes": 5326,
+      "sha256": "c142d06b0f7340a08b9fd5d82ed3b8de474daa62839cdbaaa4fa5d0befcb2916"
     },
     {
       "path": "actionlint.stderr",
@@ -35,6 +35,11 @@
       "path": "cohort.py",
       "bytes": 3828,
       "sha256": "17f0c3e81eb05157388571c26fb28e35b8d869ae51f3784049b540c0343699a6"
+    },
+    {
+      "path": "cohort_transport.py",
+      "bytes": 4570,
+      "sha256": "f550f66edbcb07433842797d8bca22ba0c6a7a38c344b75ed0d03b7fb84457ec"
     },
     {
       "path": "contracts.py",
@@ -70,11 +75,6 @@
       "path": "fixtures/public-facade-object/wrong-facade.txt",
       "bytes": 25,
       "sha256": "d0f1e82e9a051e7af02c01d46a8aeff7ccb25cc1e357bb830b3bd2265128d5b3"
-    },
-    {
-      "path": "fixtures/synthetic-archive/0/private/SYNTHETIC-0.stdout",
-      "bytes": 28,
-      "sha256": "6849035dd5c94c130fdba7323f5b26461de67808a9877891eb25fdcfb1cf4650"
     },
     {
       "path": "fixtures/synthetic-archive/0/private/SYNTHETIC-1.stdout",
@@ -982,6 +982,11 @@
       "sha256": "0f1528c2fca6e1ab2ce3507bbb476e622ef48d4efedfa8aacd2b96855d8034b2"
     },
     {
+      "path": "fixtures/synthetic-archive/0/private/graphs/cold-graph:calls-baseline.stderr",
+      "bytes": 28,
+      "sha256": "6849035dd5c94c130fdba7323f5b26461de67808a9877891eb25fdcfb1cf4650"
+    },
+    {
       "path": "fixtures/synthetic-archive/0/public/assessments-round-0.json",
       "bytes": 3170,
       "sha256": "d3ffc16137afd3cb173c5a91ef876c31d3f66490a8b1f35c188dfde160472d90"
@@ -1053,8 +1058,8 @@
     },
     {
       "path": "fixtures/synthetic-archive/0/semantic-manifest.json",
-      "bytes": 18208,
-      "sha256": "145ffb844b39eb8a626a470477c2599ef1da95ba7d010d54d2cc0b03f1808655"
+      "bytes": 18229,
+      "sha256": "7b03cd36324a777f86b46b9a7e8117c92a0a1a88f7abc5f8b696b3e61c5b7928"
     },
     {
       "path": "fixtures/synthetic-archive/1/private/SYNTHETIC-0.stdout",
@@ -5018,8 +5023,8 @@
     },
     {
       "path": "hosted.py",
-      "bytes": 7674,
-      "sha256": "d9f99981249d8b700eac72d9be4814a71a6e21c8ef1da4f7ecd6223e1d9ae251"
+      "bytes": 7702,
+      "sha256": "8cf152ba0f622e0b24e412e57020b8ed34dae3241ae2e4191c284866e441bdbf"
     },
     {
       "path": "immutable-input-freeze.json",
@@ -5030,6 +5035,11 @@
       "path": "immutable-source-pins.json",
       "bytes": 264,
       "sha256": "af3e2cb25f5d8cd915c884e55595ef39bfe31115091c7553c950a71eae3a3a8c"
+    },
+    {
+      "path": "pack-evidence.py",
+      "bytes": 2015,
+      "sha256": "db0bdd2fae42882e4e0256a039dd30c51139d04c6ef7833a667280129bd251dc"
     },
     {
       "path": "payload/.gitattributes",
@@ -10123,8 +10133,8 @@
     },
     {
       "path": "plan.json",
-      "bytes": 6280,
-      "sha256": "a8d399e78b0a873c5144c9ac1f177736b6dddf026122977b8721e024171bd965"
+      "bytes": 6574,
+      "sha256": "ea2aa18cd537d9e17562141b486777579a826cf06a5b23d0037f091b408bac8c"
     },
     {
       "path": "preflight.py",
@@ -10272,9 +10282,14 @@
       "sha256": "dc976b7a1fab2aa471cdde31a796fd582e2508417f380ebcecf55e8cf1514189"
     },
     {
+      "path": "test_carrier.py",
+      "bytes": 2444,
+      "sha256": "3fb52542b68f3f6b66e34bb35e88d1049d72afe4f574ea991af1f6f878e01a6b"
+    },
+    {
       "path": "test_contracts.py",
-      "bytes": 2873,
-      "sha256": "e21b88c1be8c5c2b4cad7f85dec129e453f2b1f3d4ac804a87911df78be8c26f"
+      "bytes": 2878,
+      "sha256": "ad573b3a792fe9fc949fdecb0065010aa60f68d3a7f117624c7a5420507c576c"
     },
     {
       "path": "test_facade_lookup.py",
@@ -10283,8 +10298,8 @@
     },
     {
       "path": "union-from-artifacts.py",
-      "bytes": 1354,
-      "sha256": "fd10ce590ebb5b7bbb3581429e7e74c54ca7ebc5893ff22d4b72d4dc2c6373cd"
+      "bytes": 1937,
+      "sha256": "bef17002cd6fe4bd995f98ccdcdd6f30b9fdc1dc5885193a0e50718b0bf5c101"
     },
     {
       "path": "union.py",
@@ -10293,8 +10308,8 @@
     },
     {
       "path": "workflow.yml",
-      "bytes": 7032,
-      "sha256": "642773b3c34a7951bc15c0dbcb1f9542298cc9c54336e32a8c49742daa113edc"
+      "bytes": 7037,
+      "sha256": "8fbce591d503453794be4286de565e6003ea3d6aed1c351fbe2fcc32816769f2"
     }
   ]
 }

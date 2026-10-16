@@ -16,7 +16,7 @@ iterations cap and 90 physical inputs are unchanged. The original unsuitable
 Historical cohort child durations are 431–461 seconds, not a current fit promise.
 Each sampler has a hard 600-second deadline and requires 65 seconds before every
 child (original 60-second child bound plus five cleanup seconds). The controller
-also anchors to the official current job `started_at`, reserving 180 seconds from
+also anchors to the official current job `started_at`, reserving 420 seconds from
 its 30-minute whole-job budget and requiring 720 seconds before sampling. All
 partial outputs survive failure. There is no host-wide quiet lease or reservation.
 
@@ -39,8 +39,8 @@ adapter changes only obsolete Git lookup revision IDs to authentic c896/4c in
 memory, never its normalization or expected report hashes. Payload source files
 are hash-verified before materialization; existing checkout files must match.
 
-`workflow.yml` always uploads O and ROOT/public, ROOT/private and the two semantic
-manifests. It excludes ELF transfer symlinks, source Git stores, tokens and environment
+`workflow.yml` always packages O and ROOT/public, ROOT/private and the two semantic
+manifests into the authenticated portable TAR carrier. It excludes ELF transfer symlinks, source Git stores, tokens and environment
 dumps. The controller records an explicit retained-file inventory even on failure.
 After independently checking official artifact digests, root may run
 `union-from-artifacts.py --artifact <cohort0> ... --artifact <cohort4> --output <new>`.
@@ -48,8 +48,32 @@ It rehashes retained files, reopens all910 fresh semantic raw files, verifies al
 rows and recomputes unchanged workload-local statistics. Numerical outcomes remain
 separate from integrity and require root review; higher/inconclusive is never PASS.
 
-Source validation: `python3 -m unittest discover -s . -p 'test_*.py'` (11 methods),
+Source validation: `python3 -m unittest discover -s . -p 'test_*.py'` (16 methods),
 plus actionlint with actual ShellCheck. Synthetic saved archive bytes are explicitly
 labeled SYNTHETIC and cannot substitute for runtime receipts. One first unit attempt
 used a text-read mock against a bytes-read call; the failed source is retained and
 the corrected bytes-read mutation rejects the missing row.
+
+## Portable evidence carrier follow-up
+
+Run38955760477 is preserved as INELIGIBLE: every runtime step returned success,
+but all five evidence uploads rejected a colon in a private raw filename. No
+numerical raw artifact survived, so no numerical verdict or selective retry exists.
+
+The follow-up uses the reviewed B26 TAR+manifest carrier, preserving every inner
+filename and byte, with only two portable outer names. The archive includes exact
+controller records plus ROOT/public, ROOT/private and semantic manifests; it excludes
+ELFs, Git and environment/token dumps. The pack step runs even on failure.
+
+Whole job remains1800s: setup step ceilings300s, controller1080s, pack180s, upload180s,
+and60s final cleanup fit1800s. The controller additionally anchors to official
+job started_at and reserves420s (360 retention +60 cleanup). A full600-second sampler
+still requires720s available at START; the sampler, batches and assessor are unchanged.
+Pack uses uncompressed lossless TAR and upload uses compression-level1 once. Runtime
+fit remains unproved; limits fail closed and do not drop rows or alter counts.
+
+After checking official artifact ZIP digests, use union-from-artifacts.py with five
+--artifact directories, --run-id, --attempt, --workflow-sha, --unpacked-output freshdir
+and --output freshfile. The unpacker verifies exact context, all member names/types,
+full archive hash/inventory and every file hash BEFORE writing extracted files.
+Sixteen source tests include saved colon-named bytes and complete704-row roundtrip.

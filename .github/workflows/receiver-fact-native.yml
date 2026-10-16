@@ -122,7 +122,7 @@ jobs:
         with:
           node-version: '26.11.1'
       - name: Verify transferred pair, run controls and fixed measurement
-        timeout-minutes: 22
+        timeout-minutes: 18
         env:
           GH_TOKEN: ${{ github.token }}
           APPROVED_SHA: ${{ inputs.approved_sha }}
@@ -130,17 +130,20 @@ jobs:
         run: |
           test "$APPROVED_SHA" = "$GITHUB_SHA"
           python3 .github/scripts/repeated-target-2022-isolated/hosted.py
-      - name: Retain all completed and partial evidence
+      - name: Package exact completed and partial evidence
         if: ${{ always() }}
-        timeout-minutes: 1
+        timeout-minutes: 3
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          COHORT: ${{ matrix.cohort }}
+        run: python3 .github/scripts/repeated-target-2022-isolated/pack-evidence.py
+      - name: Retain authenticated portable evidence carrier
+        if: ${{ always() }}
+        timeout-minutes: 3
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: repeated-target-2022-cohort-${{ matrix.cohort }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/repeated-target-2022-isolated/
-            /tmp/nm2022-2084-release/current-pair-semantics/public/
-            /tmp/nm2022-2084-release/current-pair-semantics/private/
-            /tmp/nm2022-2084-release/current-pair-semantics/semantic-manifest.json
-            /tmp/nm2022-2084-release/current-pair-semantics/reviewed-expected-parity.json
-          if-no-files-found: warn
-          retention-days: 30
+          path: ${{ runner.temp }}/2022-evidence-carrier/
+          compression-level: 1
+          if-no-files-found: error
+          retention-days: 7

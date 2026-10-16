@@ -1,23 +1,84 @@
 {
-  "status": "CLOSED REVIEWED source activation; normal publication authorized, no dispatch",
-  "root": "/tmp/nm2022-isolated-five-cohort-source-draft",
-  "files": 2059,
-  "manifest_sha256": "6ba35057bb1dc23134a5b3c894dddbac88f8c30edd0504856192f20261950418",
-  "plan_sha256": "a8d399e78b0a873c5144c9ac1f177736b6dddf026122977b8721e024171bd965",
+  "status": "ROOT REVIEWED carrier source activation; normal publication authorized, no dispatch",
+  "package": "/tmp/nm2022-safe-carrier-fix/package",
+  "source_files": 2062,
+  "source_manifest_sha256": "1226b168c7f46d56085095a0b7c717afe0a8ecc7bb8c149011c52c8ec89e1f1f",
+  "changes": [
+    {
+      "path": "README.md",
+      "before_sha256": "2180a853a430761ff6bfae40718ece63d31a11d47276d8c5a3ec2c9bdccb30e6",
+      "after_sha256": "c142d06b0f7340a08b9fd5d82ed3b8de474daa62839cdbaaa4fa5d0befcb2916"
+    },
+    {
+      "path": "cohort_transport.py",
+      "before_sha256": null,
+      "after_sha256": "f550f66edbcb07433842797d8bca22ba0c6a7a38c344b75ed0d03b7fb84457ec"
+    },
+    {
+      "path": "fixtures/synthetic-archive/0/private/SYNTHETIC-0.stdout",
+      "before_sha256": "6849035dd5c94c130fdba7323f5b26461de67808a9877891eb25fdcfb1cf4650",
+      "after_sha256": null
+    },
+    {
+      "path": "fixtures/synthetic-archive/0/private/graphs/cold-graph:calls-baseline.stderr",
+      "before_sha256": null,
+      "after_sha256": "6849035dd5c94c130fdba7323f5b26461de67808a9877891eb25fdcfb1cf4650"
+    },
+    {
+      "path": "fixtures/synthetic-archive/0/semantic-manifest.json",
+      "before_sha256": "145ffb844b39eb8a626a470477c2599ef1da95ba7d010d54d2cc0b03f1808655",
+      "after_sha256": "7b03cd36324a777f86b46b9a7e8117c92a0a1a88f7abc5f8b696b3e61c5b7928"
+    },
+    {
+      "path": "hosted.py",
+      "before_sha256": "d9f99981249d8b700eac72d9be4814a71a6e21c8ef1da4f7ecd6223e1d9ae251",
+      "after_sha256": "8cf152ba0f622e0b24e412e57020b8ed34dae3241ae2e4191c284866e441bdbf"
+    },
+    {
+      "path": "pack-evidence.py",
+      "before_sha256": null,
+      "after_sha256": "db0bdd2fae42882e4e0256a039dd30c51139d04c6ef7833a667280129bd251dc"
+    },
+    {
+      "path": "plan.json",
+      "before_sha256": "a8d399e78b0a873c5144c9ac1f177736b6dddf026122977b8721e024171bd965",
+      "after_sha256": "8963e67e03dfba8f90bef8824b037c329f09298d55ea0925c5d64eaff878a697"
+    },
+    {
+      "path": "test_carrier.py",
+      "before_sha256": null,
+      "after_sha256": "3fb52542b68f3f6b66e34bb35e88d1049d72afe4f574ea991af1f6f878e01a6b"
+    },
+    {
+      "path": "test_contracts.py",
+      "before_sha256": "e21b88c1be8c5c2b4cad7f85dec129e453f2b1f3d4ac804a87911df78be8c26f",
+      "after_sha256": "ad573b3a792fe9fc949fdecb0065010aa60f68d3a7f117624c7a5420507c576c"
+    },
+    {
+      "path": "union-from-artifacts.py",
+      "before_sha256": "fd10ce590ebb5b7bbb3581429e7e74c54ca7ebc5893ff22d4b72d4dc2c6373cd",
+      "after_sha256": "bef17002cd6fe4bd995f98ccdcdd6f30b9fdc1dc5885193a0e50718b0bf5c101"
+    },
+    {
+      "path": "workflow.yml",
+      "before_sha256": "642773b3c34a7951bc15c0dbcb1f9542298cc9c54336e32a8c49742daa113edc",
+      "after_sha256": "8fbce591d503453794be4286de565e6003ea3d6aed1c351fbe2fcc32816769f2"
+    }
+  ],
+  "all_protocol_files_byte_identical": true,
   "source_tests": {
-    "methods": 14,
+    "methods": 16,
     "exit": 0,
-    "actual_log": "/tmp/nm2022-public-facade-lookup-fix/all14.stderr",
-    "stderr_sha256": "934b11070c82ac727e73897352778517cea11666a96ebc34e8b4f972876d32a1"
+    "log": "/tmp/nm2022-safe-carrier-fix/final-tests.stderr",
+    "sha256": "43c890bcf8ef06cb6505434a3674038f227c4cd473f08c0e2348a6a4b228f5ba"
   },
   "actionlint_shellcheck_exit": 0,
-  "no_native_execution": true,
-  "remaining": [
-    "normal publication and exact approved diagnostic SHA",
-    "explicit root dispatch; no local quiet coordination"
-  ],
-  "numerical_protocol": "original16workloads/90inputs/704rows/48metric outcomes, copied sampler and assessor unchanged from reviewed local deadline adapter",
-  "transport_actual_source": "32e9f76ed570ddbafba132a0201e9ecd9d13bee0",
-  "publication_fix": "Only opaque payload .gitattributes binary marker; original CRLF/trailing-space fixture bytes unchanged",
-  "followup": "Only baseline facade Git lookups use public tree-equivalent b947; actual compiled baseline c896 restored in finally; all producer/artifact labels unchanged"
+  "runtime_context": "APPROVED_SHA==GITHUB_SHA plus repository/run/attempt/cohort exact",
+  "retention_budget": "1800s wholejob: setup300+controller1080+pack180+upload180+cleanup60; controller clamps to actualstarted_at minus420retention/cleanup",
+  "prior_experiment": {
+    "run": 38955760477,
+    "terminal": "FAILURE: all5 upload rejection, no usable raw numerical artifacts",
+    "receipt": "/tmp/nm2022-isolated-run38955760477/terminal-evidence-receipt.json"
+  },
+  "no_new_native_execution_or_dispatch": true
 }
