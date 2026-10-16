@@ -11,6 +11,7 @@ fn walk_class_with_scoped_methods<'a>(
     let pushed_class_scope = collector.push_lexical_scope();
     if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
         collector.add_binding_name(name);
+        collector.add_type_binding_name(name);
         collector.record_callable_binding_id(name, class_id);
     }
     if let Some(type_parameters) = &class.type_parameters {

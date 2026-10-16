@@ -97,6 +97,11 @@ selectors mark findings as transaction-client-only. They are also available to
 the `effects` query, with the configured category. Its callee display uses the
 configured type export for typed executors and the factory path plus returned
 member for returned members (for example, `writePool.connect().query`).
+Namespace-local classes, interfaces, type aliases, enums, and type parameters
+shadow imported types, including declarations later in the same lexical body.
+A value-only local binding does not shadow a type import. Leaving that scope
+restores the imported annotation; matching still requires the configured module
+and export identity.
 
 Effect `functions` and `categories` retain the spelling matching documented for
 [`effects`](../cli/effects.md), including unrelated bindings with matching names.
