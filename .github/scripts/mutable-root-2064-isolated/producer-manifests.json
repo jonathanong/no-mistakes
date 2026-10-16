@@ -1,0 +1,183 @@
+{
+  "A26": {
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "revision": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+    "tree": "d6794fa9ff98e91c1a76c47eeebacaa632973d98",
+    "version": "0.91.2",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///tmp/no-mistakes-2054-current-main/crates/no-mistakes#0.91.2",
+      "manifest_path": "/tmp/no-mistakes-2054-current-main/crates/no-mistakes/Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "no_mistakes",
+        "src_path": "/tmp/no-mistakes-2054-current-main/crates/no-mistakes/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "mermaid-validation"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-2054-current-main/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/no-mistakes-2054-current-main/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "release_profile": {
+      "opt_level": 3,
+      "lto": true,
+      "codegen_units": 1,
+      "debug": 0,
+      "build_jobs": 1,
+      "incremental": 0
+    },
+    "harness": [
+      {
+        "path": "effects.rs",
+        "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+      },
+      {
+        "path": "facts.rs",
+        "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+      },
+      {
+        "path": "graph_semantics.rs",
+        "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+      },
+      {
+        "path": "graph_timing.rs",
+        "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+      },
+      {
+        "path": "main.rs",
+        "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+      }
+    ],
+    "lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+    "binary_sha256": "16fb0d9ed103fe12f31de3d2567b6acfbb2a3bd5e3f6559ee9ff301000d0d784",
+    "library_sha256": "b430fac24ca5f5f10b45624224747b9eaa623195c2d953ec5c04330f3bbe4d40",
+    "source_manifest_sha256": "f5e22c30571b951b98f4d1a03e5fbb31af9544bb856db87a80c4696226f86ad6",
+    "actual_paths": {
+      "probe": "/tmp/nm2054-c896-prospective-release/candidate/probe",
+      "lib": "/tmp/nm2054-c896-prospective-release/candidate/lib.rlib",
+      "inventory": "/tmp/nm2054-c896-prospective-integration/source-inventory.json"
+    },
+    "producer_records": {
+      "/tmp/nm2054-c896-prospective-release/request.json": "cf43924f595e01b0a0c0c781896ee97959e6aa936b68f7043c742da23756c89b",
+      "/tmp/nm2054-c896-prospective-release/candidate/closed-artifacts.json": "a177f685767aba202a83969b1993cf8e46a9a71b1910f918ec112bcc5b70a439",
+      "/tmp/nm2054-c896-prospective-release/actual-terminal.json": "7eea89674e5bca28a75ea5c7f0533ce0905e2c1f98274d414b3fb08d48e78f4d",
+      "/tmp/nm2054-c896-prospective-release/candidate/functional-deps-source-profile-manifest.json": "391f15be4a8cab6572da7660fd75ac17ba0d0417959f3d2ea80e8514fc0105ad"
+    },
+    "scope": "Actual5d37 parent release baseline, public97a same-tree; old B26 role identifier only"
+  },
+  "B26": {
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "revision": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+    "tree": "4c4e328d09deed24676e7c731c0aff50ccad70e9",
+    "version": "0.91.2",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///tmp/no-mistakes-2064-b0b-release/crates/no-mistakes#0.91.2",
+      "manifest_path": "/tmp/no-mistakes-2064-b0b-release/crates/no-mistakes/Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "no_mistakes",
+        "src_path": "/tmp/no-mistakes-2064-b0b-release/crates/no-mistakes/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "mermaid-validation"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-2064-b0b-release/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/no-mistakes-2064-b0b-release/target/release/deps/libno_mistakes-6bc14b8bee5f2efc.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "release_profile": {
+      "opt_level": 3,
+      "lto": true,
+      "codegen_units": 1,
+      "debug": 0,
+      "build_jobs": 1,
+      "incremental": 0
+    },
+    "harness": [
+      {
+        "path": "effects.rs",
+        "sha256": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3"
+      },
+      {
+        "path": "facts.rs",
+        "sha256": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da"
+      },
+      {
+        "path": "graph_semantics.rs",
+        "sha256": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf"
+      },
+      {
+        "path": "graph_timing.rs",
+        "sha256": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a"
+      },
+      {
+        "path": "main.rs",
+        "sha256": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7"
+      }
+    ],
+    "lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+    "binary_sha256": "e4552c97ddf6bd6f45e15799b114bbeff8c05dd8240e2e7ed4db17b60ed01722",
+    "library_sha256": "4b85714384a053581b57ce331123f265362e5b1ea8169294e07701a6708f4308",
+    "source_manifest_sha256": "36d88e83a335c89db77e55437c2fbeb674005aaf7080ac4870b49de1e6148bbd",
+    "actual_paths": {
+      "probe": "/tmp/nm2064-b0b-release/candidate/probe",
+      "library": "/tmp/nm2064-b0b-release/candidate/lib.rlib"
+    },
+    "producer_records": {
+      "closed_artifacts": "/tmp/nm2064-b0b-release/candidate/closed-artifacts.json",
+      "source_inventory": "/tmp/nm2064-b0b-release/source-inventory.json"
+    },
+    "scope": "Actual child b0 release; no artifact relabeling; internal B26 role name retained only for exact kernel"
+  }
+}

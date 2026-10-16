@@ -1,0 +1,7 @@
+{
+  "original_sha256": "e6a8c4c3a2525640037d6c448946d7631a272331d83918deb3490b8281d14bce",
+  "kernel_from": "rows=[] through final print, byte-identical after removing one indentation column",
+  "kernel_sha256": "eb21ea046b66787c797b147413c89026f4aec1b50643907d8434086fcc1416c2",
+  "outer_supervisor_required": true,
+  "no_sample_proc_scans": true
+}

@@ -1,0 +1,89 @@
+{
+  "original_evidence": "/tmp/nm2019-three-arm-evidence",
+  "physical_input_root": "/tmp/nm2019-three-arm-evidence/inputs",
+  "input_argument_path_exact": true,
+  "long_rows": 704,
+  "workloads": 22,
+  "orders": [
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB"
+  ],
+  "rows_per_workload": 32,
+  "old_control_batches_unchanged": true,
+  "new_workload_batches": "exact original calibration-batches.json; no new pilot or recalibration",
+  "metrics": [
+    "cpu_s",
+    "user_s",
+    "system_s",
+    "wall_s",
+    "rss_kib"
+  ],
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "rayon_workers": 4,
+  "retention": "every row, no drops or selective retries",
+  "scope_limit": "Current2019 correctness costs; no historical1972 causal-resolution claim",
+  "status": "REVIEWED: root source and independent full semantic approval; one bounded untimed technical closure only, no freeze or sampling",
+  "artifact_arms": {
+    "baseline": "A26",
+    "candidate": "B26"
+  },
+  "baseline_revision": "c896db3775411e9b7867260db420a73965b91a9e",
+  "baseline_tree": "80a21e61065e68b69afb7ed4e5fd91cb79688f23",
+  "candidate_revision": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+  "candidate_tree": "d6794fa9ff98e91c1a76c47eeebacaa632973d98",
+  "published_candidate": "97a1c03146db2ed6e45f2884b70ac152ef51d4b3",
+  "actual_merged_baseline": "b9476931aeecc3e24f43a276bf1c6a2088bebe3b",
+  "current_main_revision": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "baseline_version": "0.91.2",
+  "candidate_version": "0.91.2",
+  "release_profile": {
+    "opt_level": 3,
+    "lto": true,
+    "codegen_units": 1,
+    "debug": 0,
+    "build_jobs": 1,
+    "incremental": 0
+  },
+  "artifact_root": "/tmp/nm2054-b26-pair-artifacts",
+  "baseline_artifact_reused": true,
+  "candidate_ci": {
+    "path": "/tmp/nm2054-stack-ci-phase-1826/2054-global98-receipt.json",
+    "sha256": "ae9c8f4e7c79205653f5794458205b0e470e0392c69adda0254bb878cb16e435"
+  },
+  "candidate_semantics": null,
+  "fresh_pair_semantics": null,
+  "freeze": null,
+  "baseline_current_main_review": {
+    "path": "/tmp/nm2076-main-e0b-source-carry/actual-production-dependency-carry.json",
+    "sha256": "031759b4a61b434ebd7cf95fb3df8ed0f6a0407730cef472c934a3e7039a2f40"
+  },
+  "published_candidate_review": {
+    "path": "/tmp/nm2054-b947-publication/publication/receipt.json",
+    "sha256": "b672cb490d73d156192efe83d2b3da2fba7b8120c1c9abaf0f4b211a4c9a0bc3"
+  },
+  "fresh_semantic_review": {
+    "path": "/tmp/nm2054-b26-evidence-draft/fresh-semantic-review.json",
+    "sha256": "43ac97a6ea50a270fbe8897ba4dc431e60563efe194323612cbab28b702f68c7"
+  },
+  "sql_control_review": {
+    "path": "/tmp/nm2054-b26-sql-control/review-input.json",
+    "sha256": "6aa157e915ee3d5f79c1f9da3c828030b84decf6a4fe60f4e087b83d6e8c259e"
+  },
+  "baseline_independent_review": null,
+  "source_closure": {
+    "path": "/tmp/nm2054-b26-evidence-draft/source-closure.json",
+    "sha256": "3396d446e25f0ed8152dba2ab3c98230906da110237cc806d52592124557bb43"
+  },
+  "final_source_review": null
+}

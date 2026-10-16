@@ -1,0 +1,792 @@
+{
+  "A26": [
+    {
+      "label": "facts-no_writes-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 14793275,
+      "sha256": "cebd253e3e66c270c8b16df687ccca84aceb09aa7020b6903d386259725ce63c"
+    },
+    {
+      "label": "facts-no_writes-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 9259034,
+      "sha256": "3038e8428e809f11b347d26560d61bf25f108545617269913c5616b775e78a40"
+    },
+    {
+      "label": "facts-writes-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 855599,
+      "sha256": "f70d40519bbd1537896968defe7b15d36246a0f994d2a33117f7be00aff2a084"
+    },
+    {
+      "label": "facts-writes-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 325702,
+      "sha256": "eec93bc31533e8fc9b514180e7a3ad8c3c91e509919adecf1c4f8094bc2382c6"
+    },
+    {
+      "label": "facts-shared_histories-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 883588968,
+      "sha256": "adc3b88732898714366d058df7065ca1816534c40e2bf976849e30ad3acf538c"
+    },
+    {
+      "label": "facts-shared_histories-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 2820770,
+      "sha256": "07098cbbe42316e5107e7f37f081f26552e8711dfebf8d8b57ec1d3da0745635"
+    },
+    {
+      "label": "facts-jsx-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 34836,
+      "sha256": "464a634b1d615737cf81b87f8666b12b2d3876ce3f954b094f0c430150757148"
+    },
+    {
+      "label": "facts-jsx-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 31804,
+      "sha256": "dc570e3e7b1d0d04e9250e16ece6edff3ec6483241c6296a813ffdfc78dbf662"
+    },
+    {
+      "label": "facts-mutable-root-scale-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 292446,
+      "sha256": "7aca659442b6d90b12d600a23592873d40add87e44a35a0ef9fede41b19a9de5"
+    },
+    {
+      "label": "facts-mutable-pattern-phase-scale-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 25601,
+      "sha256": "7a30331d48407bd99db4d74cbcb00413d48ab6568aa253fb4b35cf93774b3f2b"
+    },
+    {
+      "label": "facts-mutable-pattern-deferred-diamond-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 821527,
+      "sha256": "d1cc598aa1cc934105aec09ecd380af14c535fd5af06cb20fbbffd4d9be14ac3"
+    },
+    {
+      "label": "facts-mutable-pattern-eager-class-scale-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 75097,
+      "sha256": "582953c7efd912dd7e64840c92fb2ff993603f2957ccb4223498adacf7478e09"
+    },
+    {
+      "label": "facts-mutable-pattern-cold-class-scale-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 72229,
+      "sha256": "4b12715b26bd1fa754627d5b7b8b5f61e56c4de33afd0f104029c458a5b21634"
+    },
+    {
+      "label": "graph-off",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1",
+        "off",
+        "calls"
+      ],
+      "bytes": 970047,
+      "sha256": "b77bf323987d87138f5e813e0dd5be6cc50cf7c5bb23461e090e8794c42b7a22"
+    },
+    {
+      "label": "graph-work",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1",
+        "work",
+        "calls"
+      ],
+      "bytes": 970454,
+      "sha256": "aef5d4c27efb89cf0308e8256b2d536e7c02f20e55fcf78b81461acb1d00e192"
+    },
+    {
+      "label": "graph-no-calls",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1",
+        "off",
+        "no-calls"
+      ],
+      "bytes": 115244,
+      "sha256": "0e3863865cff4240acf1c622ebff5b259eb3f9a9fcb085e173787c1893d70a8d"
+    },
+    {
+      "label": "effects-0",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "verify",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "bytes": 130,
+      "sha256": "79e4df6e04abf57e5f8691a7a0de42c637b4222ff11963363ba4820184dc7ccd"
+    },
+    {
+      "label": "effects-1",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "verify",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "bytes": 311,
+      "sha256": "57e0521bfa1dc475edbfcd28fb499e044153305146729b52f48ce2ccbded8c2d"
+    },
+    {
+      "label": "effects-2",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "verify",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "bytes": 144,
+      "sha256": "0d60fd928fd4e7cef05ffb47682dcd78fe1573926c4536b010bd25004774c3d6"
+    },
+    {
+      "label": "extra-mutable-root-single-fields.mts-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 18846,
+      "sha256": "b0435057a28905112f2761881daeb471a6b0d3efe78ce6854c5315b77d81f84a"
+    },
+    {
+      "label": "extra-mutable-root-single-fields.mts-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 46827,
+      "sha256": "99b5136277c39c5d015be49a463b3de75455d322af28e2b80f11d1ca86b9f631"
+    },
+    {
+      "label": "extra-mutable-root-single-fallbacks.mts-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 16755,
+      "sha256": "60849f1e7ed8d69f1c98f549b02a5356e0fde42e3fe28108c097245cc4793470"
+    },
+    {
+      "label": "extra-mutable-root-single-fallbacks.mts-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 21216,
+      "sha256": "4387e30b0f0b141fffcacbe6d4577cb91594c0ec106d59d9309c7bb29612fbcb"
+    },
+    {
+      "label": "extra-mutable-root-target-metadata.ts-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 20806,
+      "sha256": "a7bde5bec842b299254d71cdedff89f023a75af9883b5b3863b6ad7f1c24dd4b"
+    },
+    {
+      "label": "extra-mutable-root-target-metadata.ts-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 28167,
+      "sha256": "5dd7bb9f24764e928ac0a471204d57c546cc182ee99d6b407151c35e515e009d"
+    },
+    {
+      "label": "extra-mutable-projection-wide.ts-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 35097,
+      "sha256": "1227b9816eba31b4291b620e92fc53a7515bf01ff58a645e6358eca260a2d693"
+    },
+    {
+      "label": "extra-mutable-projection-wide.ts-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 59049,
+      "sha256": "c6c57eac52a8b8577e8c1f048dae0b750cb30ac1037f09a630fb0d80cdd4f960"
+    },
+    {
+      "label": "extra-ordinary-demand-annex.cjs-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 11444,
+      "sha256": "89b3245349afe1f45f20732830fd747ef194876a5a02cfee61b29c27c97455f1"
+    },
+    {
+      "label": "extra-ordinary-demand-annex.cjs-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 17323,
+      "sha256": "bf59978dea1fe42149c86f8810b9298451877c6b24e4cf6c20f744146318b7e8"
+    },
+    {
+      "label": "extra-ordinary-demand-boundaries.mts-imports",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 32048,
+      "sha256": "0ea14269334f73c281ee0974eaca755bd5619b9ea598e59b780ab30267039c98"
+    },
+    {
+      "label": "extra-ordinary-demand-boundaries.mts-values",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 57455,
+      "sha256": "53a216eb1bdc61c137dde0c861f5c06ab3a559453fba6d35dc5b0974a5e66aa1"
+    },
+    {
+      "label": "single-descent-history",
+      "argv": [
+        "/tmp/nm2054-c896-prospective-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 32179,
+      "sha256": "d7d55de1800adda07e73759f1a85f769a63dd9228019f78daa57f8af637d23fc"
+    }
+  ],
+  "B26": [
+    {
+      "label": "facts-no_writes-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 14793275,
+      "sha256": "cebd253e3e66c270c8b16df687ccca84aceb09aa7020b6903d386259725ce63c"
+    },
+    {
+      "label": "facts-no_writes-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 9259034,
+      "sha256": "3038e8428e809f11b347d26560d61bf25f108545617269913c5616b775e78a40"
+    },
+    {
+      "label": "facts-writes-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 855599,
+      "sha256": "f70d40519bbd1537896968defe7b15d36246a0f994d2a33117f7be00aff2a084"
+    },
+    {
+      "label": "facts-writes-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 325702,
+      "sha256": "eec93bc31533e8fc9b514180e7a3ad8c3c91e509919adecf1c4f8094bc2382c6"
+    },
+    {
+      "label": "facts-shared_histories-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 883588968,
+      "sha256": "adc3b88732898714366d058df7065ca1816534c40e2bf976849e30ad3acf538c"
+    },
+    {
+      "label": "facts-shared_histories-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 2820770,
+      "sha256": "07098cbbe42316e5107e7f37f081f26552e8711dfebf8d8b57ec1d3da0745635"
+    },
+    {
+      "label": "facts-jsx-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 34836,
+      "sha256": "464a634b1d615737cf81b87f8666b12b2d3876ce3f954b094f0c430150757148"
+    },
+    {
+      "label": "facts-jsx-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 31804,
+      "sha256": "dc570e3e7b1d0d04e9250e16ece6edff3ec6483241c6296a813ffdfc78dbf662"
+    },
+    {
+      "label": "facts-mutable-root-scale-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 292446,
+      "sha256": "7aca659442b6d90b12d600a23592873d40add87e44a35a0ef9fede41b19a9de5"
+    },
+    {
+      "label": "facts-mutable-pattern-phase-scale-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 25601,
+      "sha256": "7a30331d48407bd99db4d74cbcb00413d48ab6568aa253fb4b35cf93774b3f2b"
+    },
+    {
+      "label": "facts-mutable-pattern-deferred-diamond-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 821527,
+      "sha256": "e4ce63a72e949a0c2f457cf0b93af244660c4db46f53d4b8d2fca45c365d35ea"
+    },
+    {
+      "label": "facts-mutable-pattern-eager-class-scale-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 75097,
+      "sha256": "582953c7efd912dd7e64840c92fb2ff993603f2957ccb4223498adacf7478e09"
+    },
+    {
+      "label": "facts-mutable-pattern-cold-class-scale-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 72229,
+      "sha256": "4b12715b26bd1fa754627d5b7b8b5f61e56c4de33afd0f104029c458a5b21634"
+    },
+    {
+      "label": "graph-off",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1",
+        "off",
+        "calls"
+      ],
+      "bytes": 970047,
+      "sha256": "b77bf323987d87138f5e813e0dd5be6cc50cf7c5bb23461e090e8794c42b7a22"
+    },
+    {
+      "label": "graph-work",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1",
+        "work",
+        "calls"
+      ],
+      "bytes": 970454,
+      "sha256": "aef5d4c27efb89cf0308e8256b2d536e7c02f20e55fcf78b81461acb1d00e192"
+    },
+    {
+      "label": "graph-no-calls",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1",
+        "off",
+        "no-calls"
+      ],
+      "bytes": 115244,
+      "sha256": "0e3863865cff4240acf1c622ebff5b259eb3f9a9fcb085e173787c1893d70a8d"
+    },
+    {
+      "label": "effects-0",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "verify",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "bytes": 130,
+      "sha256": "79e4df6e04abf57e5f8691a7a0de42c637b4222ff11963363ba4820184dc7ccd"
+    },
+    {
+      "label": "effects-1",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "verify",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "bytes": 311,
+      "sha256": "57e0521bfa1dc475edbfcd28fb499e044153305146729b52f48ce2ccbded8c2d"
+    },
+    {
+      "label": "effects-2",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "verify",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "bytes": 144,
+      "sha256": "0d60fd928fd4e7cef05ffb47682dcd78fe1573926c4536b010bd25004774c3d6"
+    },
+    {
+      "label": "extra-mutable-root-single-fields.mts-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 18846,
+      "sha256": "b0435057a28905112f2761881daeb471a6b0d3efe78ce6854c5315b77d81f84a"
+    },
+    {
+      "label": "extra-mutable-root-single-fields.mts-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 46827,
+      "sha256": "99b5136277c39c5d015be49a463b3de75455d322af28e2b80f11d1ca86b9f631"
+    },
+    {
+      "label": "extra-mutable-root-single-fallbacks.mts-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 16755,
+      "sha256": "60849f1e7ed8d69f1c98f549b02a5356e0fde42e3fe28108c097245cc4793470"
+    },
+    {
+      "label": "extra-mutable-root-single-fallbacks.mts-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 21216,
+      "sha256": "4387e30b0f0b141fffcacbe6d4577cb91594c0ec106d59d9309c7bb29612fbcb"
+    },
+    {
+      "label": "extra-mutable-root-target-metadata.ts-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 20806,
+      "sha256": "a7bde5bec842b299254d71cdedff89f023a75af9883b5b3863b6ad7f1c24dd4b"
+    },
+    {
+      "label": "extra-mutable-root-target-metadata.ts-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 28167,
+      "sha256": "5dd7bb9f24764e928ac0a471204d57c546cc182ee99d6b407151c35e515e009d"
+    },
+    {
+      "label": "extra-mutable-projection-wide.ts-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 35097,
+      "sha256": "1227b9816eba31b4291b620e92fc53a7515bf01ff58a645e6358eca260a2d693"
+    },
+    {
+      "label": "extra-mutable-projection-wide.ts-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 59049,
+      "sha256": "60f006a346fe6445f52e98787aca57a0710049ac39edfdb997a5b226a3a9d004"
+    },
+    {
+      "label": "extra-ordinary-demand-annex.cjs-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 11444,
+      "sha256": "89b3245349afe1f45f20732830fd747ef194876a5a02cfee61b29c27c97455f1"
+    },
+    {
+      "label": "extra-ordinary-demand-annex.cjs-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 17323,
+      "sha256": "bf59978dea1fe42149c86f8810b9298451877c6b24e4cf6c20f744146318b7e8"
+    },
+    {
+      "label": "extra-ordinary-demand-boundaries.mts-imports",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+        "imports",
+        "1",
+        "dump"
+      ],
+      "bytes": 32048,
+      "sha256": "0ea14269334f73c281ee0974eaca755bd5619b9ea598e59b780ab30267039c98"
+    },
+    {
+      "label": "extra-ordinary-demand-boundaries.mts-values",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 57455,
+      "sha256": "53a216eb1bdc61c137dde0c861f5c06ab3a559453fba6d35dc5b0974a5e66aa1"
+    },
+    {
+      "label": "single-descent-history",
+      "argv": [
+        "/tmp/nm2064-b0b-release/candidate/probe",
+        "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts",
+        "values",
+        "1",
+        "dump"
+      ],
+      "bytes": 32179,
+      "sha256": "d7d55de1800adda07e73759f1a85f769a63dd9228019f78daa57f8af637d23fc"
+    }
+  ],
+  "A26-run": [
+    "/tmp/nm2054-b26-sql-control/B26-sql-probe",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json"
+  ],
+  "B26-run": [
+    "/tmp/nm2054-b26-sql-control/B26-sql-probe",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json"
+  ]
+}

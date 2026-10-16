@@ -1,0 +1,59 @@
+{
+  "status": "OFFLINE diagnostic full-token comparison only; raw differences retained, no golden replacement",
+  "helper_sha256": "1d6f6623f5970025983d8094208d58ecced308a841a5e5f8fe7613e4ea83bdaf",
+  "rows": [
+    {
+      "index": 10,
+      "parent": {
+        "sha256": "ceb012848ad449a7077829c2c392bb338f095cd2e881fb28a8d218dabc24c39f",
+        "stats": {
+          "atoms": 17334,
+          "groups": 3975,
+          "unordered_groups": 1510,
+          "entries": 7540,
+          "max_depth": 53
+        }
+      },
+      "child": {
+        "sha256": "ceb012848ad449a7077829c2c392bb338f095cd2e881fb28a8d218dabc24c39f",
+        "stats": {
+          "atoms": 17334,
+          "groups": 3975,
+          "unordered_groups": 1510,
+          "entries": 7540,
+          "max_depth": 53
+        }
+      },
+      "equal": true,
+      "parent_raw_sha256": "d1cc598aa1cc934105aec09ecd380af14c535fd5af06cb20fbbffd4d9be14ac3",
+      "child_raw_sha256": "e4ce63a72e949a0c2f457cf0b93af244660c4db46f53d4b8d2fca45c365d35ea"
+    },
+    {
+      "index": 26,
+      "parent": {
+        "sha256": "864765aef908edecd0eeb66843a31a7670d718184bfad82c47d5f236b079c883",
+        "stats": {
+          "atoms": 3945,
+          "groups": 417,
+          "unordered_groups": 43,
+          "entries": 1552,
+          "max_depth": 16
+        }
+      },
+      "child": {
+        "sha256": "864765aef908edecd0eeb66843a31a7670d718184bfad82c47d5f236b079c883",
+        "stats": {
+          "atoms": 3945,
+          "groups": 417,
+          "unordered_groups": 43,
+          "entries": 1552,
+          "max_depth": 16
+        }
+      },
+      "equal": true,
+      "parent_raw_sha256": "c6c57eac52a8b8577e8c1f048dae0b750cb30ac1037f09a630fb0d80cdd4f960",
+      "child_raw_sha256": "60f006a346fe6445f52e98787aca57a0710049ac39edfdb997a5b226a3a9d004"
+    }
+  ],
+  "all_equal": true
+}

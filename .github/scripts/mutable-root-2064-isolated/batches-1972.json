@@ -1,0 +1,10 @@
+{
+  "no_writes|values": 391,
+  "no_writes|imports": 1006,
+  "writes|values": 1551,
+  "writes|imports": 2467,
+  "shared_histories|values": 26,
+  "shared_histories|imports": 280,
+  "jsx|values": 20226,
+  "jsx|imports": 20460
+}

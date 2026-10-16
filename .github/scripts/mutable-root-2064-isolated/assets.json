@@ -1,0 +1,90 @@
+[
+  {
+    "role": "baseline-cli",
+    "path": "/tmp/nm2054-c896-prospective-release/candidate/cli",
+    "bytes": 82556240,
+    "sha256": "6b405f9f6509f760888160d2b6e296640142c7a9526185d14a2115090eb9272a",
+    "actual_producer": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+    "reuse_asset_id": null,
+    "required": "Primary native transport",
+    "asset_id": 648319666,
+    "name": "baseline-cli",
+    "release_asset_name": "candidate-cli"
+  },
+  {
+    "role": "baseline-addon.node",
+    "path": "/tmp/nm2054-c896-prospective-release/candidate/addon.node",
+    "bytes": 78991176,
+    "sha256": "e50bc22dcd235b15bb2c688e0dc4240f8d732fe64226a125e3b62dc45ce37c1f",
+    "actual_producer": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+    "reuse_asset_id": null,
+    "required": "Primary native transport",
+    "asset_id": 648319902,
+    "name": "baseline-addon.node",
+    "release_asset_name": "candidate-addon.node"
+  },
+  {
+    "role": "baseline-probe",
+    "path": "/tmp/nm2054-c896-prospective-release/candidate/probe",
+    "bytes": 82843960,
+    "sha256": "16fb0d9ed103fe12f31de3d2567b6acfbb2a3bd5e3f6559ee9ff301000d0d784",
+    "actual_producer": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+    "reuse_asset_id": null,
+    "required": "Primary native transport",
+    "asset_id": 648319664,
+    "name": "baseline-probe",
+    "release_asset_name": "candidate-probe"
+  },
+  {
+    "role": "baseline-sql-probe",
+    "path": "/tmp/nm2054-b26-sql-control/B26-sql-probe",
+    "bytes": 82680728,
+    "sha256": "27530d10e20a97adf6ac3bb41908afc7df330c6bb56b61b6c9c57cea055cc1fc",
+    "actual_producer": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+    "reuse_asset_id": null,
+    "required": "Include for exact fresh-host standalone Rust SQL gate; local full proof also retained",
+    "asset_id": 648320405,
+    "name": "baseline-sql-probe",
+    "release_asset_name": "candidate-sql-probe"
+  },
+  {
+    "role": "candidate-cli",
+    "name": "candidate-cli",
+    "release_asset_name": "2064-candidate-cli",
+    "asset_id": 648406363,
+    "bytes": 82716952,
+    "sha256": "dda9d9a172f2bbf8e381381f1ed2e92f8999ac8abb4c462772da5da08b34e004",
+    "actual_producer": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+    "path": "/tmp/nm2064-b0b-release/candidate/cli"
+  },
+  {
+    "role": "candidate-addon.node",
+    "name": "candidate-addon.node",
+    "release_asset_name": "2064-candidate-addon.node",
+    "asset_id": 648406370,
+    "bytes": 79153392,
+    "sha256": "8d692b54d6edaecf8fc36988652083a67d3d94525513630c54003edc9bf160f8",
+    "actual_producer": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+    "path": "/tmp/nm2064-b0b-release/candidate/addon.node"
+  },
+  {
+    "role": "candidate-probe",
+    "name": "candidate-probe",
+    "release_asset_name": "2064-candidate-probe",
+    "asset_id": 648406371,
+    "bytes": 83004856,
+    "sha256": "e4552c97ddf6bd6f45e15799b114bbeff8c05dd8240e2e7ed4db17b60ed01722",
+    "actual_producer": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+    "path": "/tmp/nm2064-b0b-release/candidate/probe"
+  },
+  {
+    "role": "candidate-sql-probe",
+    "name": "candidate-sql-probe",
+    "release_asset_name": "2064-candidate-sql-probe",
+    "asset_id": 648422900,
+    "bytes": 82841480,
+    "sha256": "8c49e582fcfb8605cc93b1d9ee7556cd4fcc43f21b3a5e6e9c10cfbe403cc380",
+    "actual_producer": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+    "path": "/tmp/nm2064-b0b-sql-control/C26-sql-probe"
+  }
+]

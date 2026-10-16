@@ -1,0 +1,45 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "approved_diagnostic_commit": null,
+  "repository": "jonathanong/no-mistakes",
+  "main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "candidate_head": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+  "candidate_tree": "4c4e328d09deed24676e7c731c0aff50ccad70e9",
+  "actual_producer_baseline": "5d37f71759a6e88130785867df5573d9ea8b9d27",
+  "actual_producer_candidate": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+  "api_controls_complete": true,
+  "sampling_minimum_remaining_seconds": 600,
+  "job_seconds": 1800,
+  "operation_seconds": 1500,
+  "transfer_reserve_seconds": 300,
+  "node_version": "26.11.1",
+  "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
+  "review_provenance": {
+    "source_scope": "Current published e30 full-input-closure B26 adapter copied, plus explicit child parent5d37/b0/source/API/fullfact-order adaptation; no timing occurred",
+    "parent_diagnostic_sha": "afbb0956d07e9bfa1e2e0cc61f45cd5897b334b8",
+    "original_source_manifest_sha256": "ca3b5f091f6a44d7bc851c14fa8ddc1d4c14e234a4fa0489232b371311159f7b",
+    "upstream_source_manifest": {
+      "path": "/tmp/nm2054-b26-hosted-source/package/.github/scripts/mutable-root-b26-isolated/source-manifest.json",
+      "sha256": "e30e1ff0339d29bd53e7c5cf08f6624cd4ab866d508f587e02669fa932035e8e"
+    }
+  },
+  "candidate_lock_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+  "pr_number": 2064,
+  "ci_run": 38946857531,
+  "root_review": {
+    "path": "provenance/child-root-source-review.json",
+    "sha256": "81d197354684dda0e8bb4d4d54fe3620c7d7cacbadd810be5fc9e39a2081f2b1"
+  },
+  "child_sql_receipt": {
+    "path": "/tmp/nm2064-b0b-sql-control/closed-asset-for-root-staging.json",
+    "sha256": "3c5b25f45b8e5943dd52e503d14715652fdf06f5ab72e1fc32adc2f300e31c95"
+  },
+  "child_fixture_control_receipt": {
+    "path": "provenance/child-fixture-control-receipt.json",
+    "sha256": "db367c19fd18f8df959c79e9e959185d9983befe4214051873b9e45afdd343cb"
+  },
+  "exact_head_ci": {
+    "path": "/tmp/nm2064-b0b-final-ci/global98-receipt.json",
+    "sha256": "7badb5ec4ec06dec0b0ea59051f301f18de3a15a6ef4bc6374f02c6fa58f8c0e"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "status": "PASS exact b0b child TestCI/global98/four Codecov",
+  "head": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+  "run": 38946857531,
+  "rust_job": 117128054895,
+  "raw_log_sha256": "76fab45ac33485729909a93770704eca70b57aaa1f39a8afe23dfeccee48af0f",
+  "total_line": "2026-10-16T18:31:05.6488680Z TOTAL                                                                                                      337381              5049    98.50%       24374               150    99.38%      228377              1482    99.35%           0                 0         -",
+  "metrics": {
+    "regions": {
+      "total": 337381,
+      "missed": 5049,
+      "percent": 98.50347233543086,
+      "integer98": true
+    },
+    "functions": {
+      "total": 24374,
+      "missed": 150,
+      "percent": 99.38459013703127,
+      "integer98": true
+    },
+    "lines": {
+      "total": 228377,
+      "missed": 1482,
+      "percent": 99.35107300647613,
+      "integer98": true
+    }
+  },
+  "codecov": {
+    "codecov/patch/rust": {
+      "id": 117132362159,
+      "conclusion": "success"
+    },
+    "codecov/project/rust": {
+      "id": 117132353357,
+      "conclusion": "success"
+    },
+    "codecov/patch/javascript": {
+      "id": 117129814618,
+      "conclusion": "success"
+    },
+    "codecov/project/javascript": {
+      "id": 117129800865,
+      "conclusion": "success"
+    }
+  },
+  "no_source_exclusions": true
+}
