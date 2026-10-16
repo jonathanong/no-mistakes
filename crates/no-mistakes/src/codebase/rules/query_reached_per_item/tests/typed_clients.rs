@@ -142,7 +142,7 @@ fn indexed_contextual_and_nullish_executor_paths_keep_exact_provenance() {
             .filter(|site| site.file == "entry.mts")
             .map(|site| site.line)
             .collect::<Vec<_>>(),
-        [5, 8, 16, 21],
+        [5, 8, 16, 21, 39, 42],
         "{report:#?}"
     );
     let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
@@ -155,7 +155,9 @@ fn indexed_contextual_and_nullish_executor_paths_keep_exact_provenance() {
             ("entry.mts", 5),
             ("entry.mts", 8),
             ("entry.mts", 16),
-            ("entry.mts", 21)
+            ("entry.mts", 21),
+            ("entry.mts", 39),
+            ("entry.mts", 42)
         ],
         "{findings:#?}"
     );

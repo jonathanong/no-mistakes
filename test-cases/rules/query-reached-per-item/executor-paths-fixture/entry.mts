@@ -33,3 +33,11 @@ export async function unrelatedLocal(ids: string[]) {
   const query = local
   for (const id of ids) await query('SELECT ' + id)
 }
+// Indexed properties must reach declarations through sourced and renamed exports.
+import type { QueryOptions as BarrelOptions, AliasOptions } from './barrel.mts'
+export async function barrel(ids: string[], run: NonNullable<BarrelOptions['query']>) {
+  for (const id of ids) await run('SELECT ' + id)
+}
+export async function renamed(ids: string[], run: NonNullable<AliasOptions['query']>) {
+  for (const id of ids) await run('SELECT ' + id)
+}

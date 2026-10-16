@@ -117,6 +117,40 @@ impl ValueFlowResolution<'_, '_> {
         let Some(facts) = self.facts.get_ts_facts(path) else {
             return FlowValue::Unknown;
         };
+        if let Some(binding) = facts
+            .value_flow
+            .type_exports
+            .iter()
+            .find(|binding| binding.exported == reference)
+        {
+            if let Some(specifier) = &binding.specifier {
+                return self
+                    .resolver
+                    .resolve(specifier, path)
+                    .and_then(|target| {
+                        self.inputs
+                            .graph_files
+                            .visible_path(&target)
+                            .map(std::path::Path::to_path_buf)
+                    })
+                    .map_or(FlowValue::Unknown, |target| {
+                        self.annotation_value(
+                            &target,
+                            &ValueType::Reference(binding.local.clone()),
+                            module,
+                            visited,
+                        )
+                    });
+            }
+            if binding.local != reference {
+                return self.annotation_value(
+                    path,
+                    &ValueType::Reference(binding.local.clone()),
+                    module,
+                    visited,
+                );
+            }
+        }
         let inner = facts
             .value_flow
             .type_shapes
