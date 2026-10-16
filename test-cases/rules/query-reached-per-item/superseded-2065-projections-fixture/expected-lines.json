@@ -1,0 +1,39 @@
+{
+  "class-utility.mts": [],
+  "contextual-agreement.mts": [],
+  "contextual-controls.mts": [],
+  "controls.mts": [],
+  "cycle-a.mts": [],
+  "cycle-b.mts": [],
+  "database.mts": [],
+  "entry.mts": [
+    4,
+    7,
+    15,
+    20
+  ],
+  "forward-import-utility.mts": [],
+  "forward-type-shadow.mts": [],
+  "forward-utility.mts": [],
+  "imported-utility.mts": [],
+  "nullish-acquisitions.mts": [
+    35
+  ],
+  "nullish-branches.mts": [],
+  "nullish-literals-and-types.mts": [
+    5,
+    9,
+    14
+  ],
+  "nullish-receipts.mts": [],
+  "receipt-factories.mts": [],
+  "recursive-indexed-types.mts": [],
+  "type-barrel.mts": [],
+  "type-shapes.mts": [
+    15,
+    18
+  ],
+  "unselected-indexed.mts": [],
+  "unselected.mts": [],
+  "unsupported-shapes.mts": []
+}

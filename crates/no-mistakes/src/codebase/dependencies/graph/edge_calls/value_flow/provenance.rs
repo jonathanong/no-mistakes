@@ -2,6 +2,23 @@ use super::*;
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 
 impl ValueFlowResolution<'_, '_> {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn test_computation_scope() -> impl Drop {
+        tests::lifetime::scope()
+    }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn test_old_annotation_lifetime() -> bool {
+        tests::lifetime::old_mode()
+    }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn test_retiring_computation_buffers(&self) {
+        tests::lifetime::retiring(
+            self.visiting.capacity()
+                + self.calls_visiting.capacity()
+                + self.initializing.capacity(),
+        );
+    }
+
     pub(super) fn typed_parameter(
         &self,
         path: &std::path::Path,

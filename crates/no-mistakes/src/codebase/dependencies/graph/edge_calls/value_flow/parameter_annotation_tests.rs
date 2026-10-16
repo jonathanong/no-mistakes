@@ -1,9 +1,13 @@
 use super::*;
 
+#[path = "parameter_lifetime_tests.rs"]
+pub(super) mod lifetime;
+
 thread_local! {
     static ANNOTATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 pub(super) fn record_annotation() {
+    lifetime::annotation();
     ANNOTATIONS.with(|count| count.set(count.get() + 1));
 }
 fn count() -> usize { ANNOTATIONS.with(std::cell::Cell::get) }
@@ -12,9 +16,16 @@ fn with_prepared_flow(
     visible_types: bool,
     run: impl FnOnce(&mut ValueFlowResolution<'_, '_>, &std::path::Path, &CallableFileIndex, &[ValueParameter]),
 ) {
+    with_prepared_flow_in("test-cases/codebase-analysis/parameter-annotation-cache/fixture", visible_types, run);
+}
+
+fn with_prepared_flow_in(
+    relative: &str,
+    visible_types: bool,
+    run: impl FnOnce(&mut ValueFlowResolution<'_, '_>, &std::path::Path, &CallableFileIndex, &[ValueParameter]),
+) {
     use crate::codebase::ts_source::facts::{TsFactPlan, collect_ts_facts};
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/parameter-annotation-cache/fixture");
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..").join(relative);
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let paths: Vec<_> = ["entry.ts", "barrel.ts", "types.ts"].into_iter().map(|file| root.join(file)).collect();
     let facts = collect_ts_facts(&paths, TsFactPlan { imports: true, function_calls: true, value_flow: true, ..Default::default() });
