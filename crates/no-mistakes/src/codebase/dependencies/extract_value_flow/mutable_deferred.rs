@@ -135,7 +135,12 @@ impl ImportCollector {
                 .map(|reference| (reference, false, true, true))
                 .collect();
             let mut affected = mutation_projection::Affected::default();
-            self.project_member_mutation::<nested::RootRead>(pending, None, info, &mut affected);
+            self.project_member_mutation::<nested::RootRead>(
+                mutation_projection::PendingQueue::from_vec(pending),
+                None,
+                info,
+                &mut affected,
+            );
             self.invalidate_mutation_bindings(
                 &affected,
                 info.metadata.context,

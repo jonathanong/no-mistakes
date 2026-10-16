@@ -3,33 +3,34 @@ use super::*;
 #[path = "affected_receivers.rs"]
 mod affected;
 pub(super) use affected::Affected;
-pub(super) type PendingMutation<R = nested::RootRead> =
-    (nested::ReceiverWrite<R>, bool, bool, bool);
-#[derive(Clone, Copy)]
-pub(super) struct MutationInfo<'a> {
-    pub(super) metadata: mutation_metadata::MutationMetadata,
-    pub(super) assigned_member: Option<&'a str>,
-    pub(super) completed_at: u32,
-    pub(super) has_assignment: bool,
-    pub(super) proof: Option<&'a mutable_deferred::DeferredProof>,
-}
+pub(super) use mutation_metadata::MutationInfo;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "mutation_projection_differential_tests.rs"]
 mod differential_tests;
 #[path = "mutation_pending.rs"]
 mod pending_work;
+#[path = "mutation_pending_queue.rs"]
+mod queue;
+pub(super) use queue::{PendingMutation, Queue as PendingQueue};
 impl ImportCollector {
     pub(super) fn project_member_mutation<R: nested::RootCoordinate>(
         &mut self,
-        mut pending: Vec<PendingMutation<R>>,
+        mut pending: PendingQueue<PendingMutation<R>>,
         mut assigned: Option<(Option<String>, u32)>,
         info: MutationInfo<'_>,
         affected: &mut Affected,
     ) {
         #[cfg(all(test, feature = "test-instrumentation"))]
         if differential_tests::LEGACY.with(std::cell::Cell::get) {
-            return self.project_member_mutation_legacy(pending, assigned, info, affected);
+            return self.project_member_mutation_legacy(
+                pending.into_vec(),
+                assigned,
+                info,
+                affected,
+            );
         }
+        #[cfg(feature = "test-instrumentation")]
+        pending_work::record_queue(pending.len(), 0);
         let mut traversal = receiver_traversal::ReceiverTraversal::default();
         #[cfg(feature = "test-instrumentation")]
         let mut binding_visits = 0;
