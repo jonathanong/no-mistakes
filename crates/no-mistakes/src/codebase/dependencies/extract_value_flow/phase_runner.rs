@@ -70,6 +70,7 @@ impl ImportCollector {
                 .as_ref()
                 .map(|_| Default::default()),
             collect_root_origins,
+            root_capture_rhs: false,
             #[cfg(feature = "test-instrumentation")]
             root_visits: 0,
             conditional: false,
@@ -83,7 +84,12 @@ impl ImportCollector {
             // member-reference receipts still cover only the LHS catalog.
             let reference_effects = walk.collect_reference_effects;
             walk.collect_reference_effects = false;
+            walk.root_capture_rhs = true;
             walk.expression(rhs);
+            walk.root_capture_rhs = false;
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::RHS_DISCARDED_WRITES
+                .with(|count| count.set(count.get() + walk.writes.len()));
             walk.writes.clear();
             walk.collect_reference_effects = reference_effects;
         }

@@ -107,3 +107,39 @@ fn alias_overflow_keeps_every_receiver_and_required_name_buffer() {
     assert!(history.assignment_invalidated(&["get"], source.len() as u32, None, false));
     assert!(!history.assignment_invalidated(&["set"], source.len() as u32, None, false));
 }
+
+#[test]
+fn owned_names_keep_their_buffers_across_dedup_and_scope_promotions() {
+    let mut affected = Affected::default();
+    let first = "first".to_owned();
+    let first_pointer = first.as_ptr();
+    affected.insert_owned(4, first);
+    assert_eq!(
+        affected.get(&4).unwrap().get("first").unwrap().as_ptr(),
+        first_pointer
+    );
+    // A duplicate must retain the first owned buffer, including after promotion.
+    affected.insert_owned(4, "first".to_owned());
+    for name in ["second", "third", "fourth"] {
+        let owned = name.to_owned();
+        let pointer = owned.as_ptr();
+        affected.insert_owned(4, owned);
+        assert_eq!(
+            affected.get(&4).unwrap().get(name).unwrap().as_ptr(),
+            pointer
+        );
+    }
+    affected.insert_owned(4, "third".to_owned());
+    affected.insert_owned(9, "other-scope".to_owned());
+    affected.insert_owned(9, "other-scope".to_owned());
+    affected.insert_owned(12, "third-scope".to_owned());
+    affected.insert_owned(4, "first".to_owned());
+    affected.insert(9, "borrowed");
+    assert_eq!(
+        affected.get(&4).unwrap().get("first").unwrap().as_ptr(),
+        first_pointer
+    );
+    assert_eq!(affected.get(&4).unwrap().iter().count(), 4);
+    assert_eq!(affected.get(&9).unwrap().iter().count(), 2);
+    assert_eq!(affected.get(&12).unwrap().iter().count(), 1);
+}

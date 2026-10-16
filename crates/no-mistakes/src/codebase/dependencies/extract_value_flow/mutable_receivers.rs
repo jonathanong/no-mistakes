@@ -37,15 +37,14 @@ impl ImportCollector {
         {
             return;
         }
-        if write_targets::targets(target)
-            .iter()
-            .any(|(name, path, _)| {
-                path.is_empty()
-                    && self
-                        .callee_binding_scope(name)
-                        .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name))
-            })
-        {
+        let mut prepare = false;
+        root_targets::for_each_root(target, |name, _| {
+            prepare = prepare
+                || self
+                    .callee_binding_scope(name)
+                    .is_some_and(|scope| self.has_mutable_receiver_binding(scope, name));
+        });
+        if prepare {
             self.prepare_value_references();
         }
     }
@@ -91,28 +90,26 @@ impl ImportCollector {
             {
                 self.value_flow.receiver_root_target_decompositions += 1;
             }
-            for (name, path, target) in write_targets::targets(&assignment.left) {
-                if path.is_empty() {
-                    if let Some(scope) = self.callee_binding_scope(&name) {
-                        if self.has_mutable_receiver_binding(scope, &name) {
-                            self.fresh_receiver_effects.rebind(scope, &name);
-                            self.capture_mutable_root_phase(
-                                (scope, &name),
-                                target,
-                                &ValueExpression::Unknown,
-                                true,
-                            );
-                            self.retain_receiver_origin(
-                                scope,
-                                &name,
-                                ValueExpression::Unknown,
-                                assignment.span.end,
-                                true,
-                            );
-                        }
+            root_targets::for_each_root(&assignment.left, |name, target| {
+                if let Some(scope) = self.callee_binding_scope(name) {
+                    if self.has_mutable_receiver_binding(scope, name) {
+                        self.fresh_receiver_effects.rebind(scope, name);
+                        self.capture_mutable_root_phase(
+                            (scope, name),
+                            target,
+                            &ValueExpression::Unknown,
+                            true,
+                        );
+                        self.retain_receiver_origin(
+                            scope,
+                            name,
+                            ValueExpression::Unknown,
+                            assignment.span.end,
+                            true,
+                        );
                     }
                 }
-            }
+            });
         }
     }
 

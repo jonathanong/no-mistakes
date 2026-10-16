@@ -15,20 +15,30 @@ impl Names {
         if self.contains(name) {
             return;
         }
+        #[cfg(feature = "test-instrumentation")]
+        mutation_history::metrics::owned_key(0, name);
+        self.insert_new(name.to_owned());
+    }
+    pub(in super::super::super) fn insert_owned(&mut self, name: String) {
+        if !self.contains(&name) {
+            self.insert_new(name);
+        }
+    }
+    fn insert_new(&mut self, name: String) {
         match self {
-            Self::Empty => *self = Self::One(name.to_owned()),
+            Self::Empty => *self = Self::One(name),
             Self::One(first) => {
-                *self = Self::Two(std::mem::take(first), name.to_owned());
+                *self = Self::Two(std::mem::take(first), name);
             }
             Self::Two(first, second) => {
                 let mut names = fx_set();
                 names.insert(std::mem::take(first));
                 names.insert(std::mem::take(second));
-                names.insert(name.to_owned());
+                names.insert(name);
                 *self = Self::Many(names);
             }
             Self::Many(names) => {
-                names.insert(name.to_owned());
+                names.insert(name);
             }
         }
     }
