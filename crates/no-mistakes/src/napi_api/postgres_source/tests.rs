@@ -343,3 +343,54 @@ fn opaque_array_callbacks_keep_both_sql_proof_flags_false() {
     assert!(rows[0]["sqlText"].is_null(), "{rows:?}");
     assert_eq!(rows[0]["incompleteReason"], "unresolved-value-or-effect");
 }
+
+#[test]
+fn executed_source_conditional_executor_bindings_are_lexical() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/executed-source/conditional-executors.ts"
+    ));
+    for resolve_imports in [false, true] {
+        let result: serde_json::Value = serde_json::from_str(
+            &extract_executed_postgres_sql_json_impl(serde_json::json!({
+                "sources": [{"fileName": "conditional-executors.ts", "source": source}],
+                "importSpecifier": "@example/db",
+                "executorNames": ["read", "write"],
+                "resolveImports": resolve_imports
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let facts = result.as_array().unwrap();
+        let annotations: Vec<_> = facts
+            .iter()
+            .map(|fact| fact["annotation"].as_str().unwrap())
+            .collect();
+        assert_eq!(
+            annotations,
+            [
+                "assigned",
+                "direct",
+                "nested",
+                "outer",
+                "deep",
+                "outside-class"
+            ],
+            "resolveImports={resolve_imports}: {result}"
+        );
+        for fact in facts {
+            assert_eq!(fact["fileName"], "conditional-executors.ts");
+            assert_eq!(fact["complete"], true, "{fact}");
+            assert!(fact["sqlText"]
+                .as_str()
+                .unwrap()
+                .contains("SELECT id FROM items"));
+            let line = fact["line"].as_u64().unwrap() as usize;
+            assert!(source
+                .lines()
+                .nth(line - 1)
+                .unwrap()
+                .contains(fact["annotation"].as_str().unwrap()));
+        }
+    }
+}

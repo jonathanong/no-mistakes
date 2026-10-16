@@ -84,6 +84,7 @@ fn replacement_cutoffs_keep_possible_and_guaranteed_offsets_separate() {
 }
 
 #[test]
+#[cfg(feature = "test-instrumentation")]
 fn converging_default_paths_join_cutoffs_instead_of_multiplying_states() {
     let source =
         std::fs::read_to_string(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(

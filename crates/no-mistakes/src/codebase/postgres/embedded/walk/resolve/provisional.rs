@@ -9,6 +9,15 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     visitor: &mut ScopeVisitor<'_>,
     call: &CallExpression<'_>,
 ) {
+    if visitor.executor_alias_callee(&call.callee) {
+        let span = oxc_span::GetSpan::span(&call.callee);
+        push_confirmed(
+            visitor,
+            call,
+            visitor.source[span.start as usize..span.end as usize].to_string(),
+        );
+        return;
+    }
     let member = unwrap_ts_wrappers(&call.callee).is_member_expression();
     if let Some(callee) = callee_name(call, visitor.bindings, visitor.scoped) {
         if visitor.query_members || !member {

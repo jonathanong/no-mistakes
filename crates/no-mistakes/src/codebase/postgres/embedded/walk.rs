@@ -8,6 +8,7 @@ use oxc_syntax::scope::ScopeFlags;
 mod assignments;
 mod calls;
 mod executor_arguments;
+mod executors;
 mod flow;
 mod imported;
 pub(crate) mod resolve;
@@ -64,6 +65,22 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         walk::walk_function_body(self, body);
     }
 
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        let private_name = (class.r#type == oxc_ast::ast::ClassType::ClassExpression)
+            .then_some(class.id.as_ref())
+            .flatten();
+        if let Some(name) = private_name {
+            self.push_scope();
+            self.bind_self_name(name.name.as_str());
+        }
+        // The private class name shadows outer bindings in heritage expressions,
+        // computed keys and method bodies; it must not escape the expression.
+        walk::walk_class(self, class);
+        if private_name.is_some() {
+            self.pop_scope();
+        }
+    }
+
     fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
         // Class static blocks are also independent var ownership boundaries.
         self.push_scope();
@@ -93,6 +110,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
+        let executor = declaration
+            .init
+            .as_ref()
+            .is_some_and(|init| self.proven_executor(init));
         self.refresh_builder_identity(declaration);
         let variants = declaration
             .init
@@ -100,6 +121,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
             .and_then(|init| self.recover_variants(init));
         walk::walk_variable_declarator(self, declaration);
         self.initialize_variants(declaration, variants);
+        self.initialize_executor_alias(declaration, executor);
     }
 
     fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {
