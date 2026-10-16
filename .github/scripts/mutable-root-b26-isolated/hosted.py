@@ -17,6 +17,7 @@ from supervise import command
 from transport import sha, verify
 from retain import compress
 from dependency_guard import verify as dependency_guard
+from input_guard import verify as input_guard
 
 D = Path(__file__).resolve().parent
 
@@ -71,6 +72,9 @@ def main():
         dependency_proof = json.loads((dependencies / 'closure.json').read_text())
         assert sha(Path('candidate-source/pnpm-lock.yaml')) == spec['candidate_lock_sha256']
         dependency_guard(dependency_proof, spec['candidate_head'], spec['candidate_lock_sha256'])
+        input_files = json.loads((D / 'payload-files.json').read_text())
+        required_inputs = json.loads((D / 'required-inputs.json').read_text())
+        input_guard(input_files, required_inputs)
         eligibility(spec, out, end, 'before-controls')
         raw = out / 'full-controls'
         raw.mkdir()
@@ -97,6 +101,7 @@ def main():
             assert sha(stage / row['name']) == row['sha256']
         for row in json.loads((D / 'payload-files.json').read_text()):
             assert Path(row['path']).stat().st_size == row['bytes'] and sha(row['path']) == row['sha256']
+        input_guard(input_files, required_inputs)
         assert time.monotonic() < end
         complete = True
     finally:

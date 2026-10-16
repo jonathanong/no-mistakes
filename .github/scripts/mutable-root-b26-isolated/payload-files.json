@@ -1288,5 +1288,47 @@
     "payload": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8.data",
     "bytes": 19221,
     "sha256": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+    "payload": "771eca4e1a080d8b3aea06ed5fe3669992c1b4e2557fd3a731a7022c051464de.data",
+    "bytes": 673,
+    "sha256": "771eca4e1a080d8b3aea06ed5fe3669992c1b4e2557fd3a731a7022c051464de"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+    "payload": "0f4c0c0e61d3904ea0e743d1394f331e95f0a994dcbe8afdf14c7ac2c739ed53.data",
+    "bytes": 564,
+    "sha256": "0f4c0c0e61d3904ea0e743d1394f331e95f0a994dcbe8afdf14c7ac2c739ed53"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+    "payload": "136e9a620e9d2c86be5f2029ef4c1b89cfba222cb79e9c587eac17eabadef830.data",
+    "bytes": 650,
+    "sha256": "136e9a620e9d2c86be5f2029ef4c1b89cfba222cb79e9c587eac17eabadef830"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+    "payload": "0f0482262955161cdcebfa8f09bcab95997e6156aa9081f082744412bdc7bce4.data",
+    "bytes": 843,
+    "sha256": "0f0482262955161cdcebfa8f09bcab95997e6156aa9081f082744412bdc7bce4"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+    "payload": "8735e7fca9feff063946aea9ddfc3e08a6055ac4b278e96afe54a40639998d56.data",
+    "bytes": 311,
+    "sha256": "8735e7fca9feff063946aea9ddfc3e08a6055ac4b278e96afe54a40639998d56"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+    "payload": "c8f24d92fba69fa8a344a5ffeba6f90a0c3d56f7d4346f943f700b0d48f6988d.data",
+    "bytes": 867,
+    "sha256": "c8f24d92fba69fa8a344a5ffeba6f90a0c3d56f7d4346f943f700b0d48f6988d"
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts",
+    "payload": "e444f0e649db4a9f6f631869f503cfae005fce4be6df63314ae65fbd86fc580b.data",
+    "bytes": 408,
+    "sha256": "e444f0e649db4a9f6f631869f503cfae005fce4be6df63314ae65fbd86fc580b"
   }
 ]
