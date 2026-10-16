@@ -1,7 +1,6 @@
 use super::*;
 
-#[path = "receiver_traversal_oracle_tests.rs"]
-mod oracle;
+use super::super::super::oracle;
 
 #[test]
 fn owned_paths_preserve_buffers_and_empty_dynamic_distinction() {
