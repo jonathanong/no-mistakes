@@ -1,5 +1,6 @@
 pub(super) mod executor;
 pub(super) use executor::executor_call;
+mod builder_text;
 mod provisional;
 pub(super) use provisional::record_executor_call;
 pub(super) mod append;

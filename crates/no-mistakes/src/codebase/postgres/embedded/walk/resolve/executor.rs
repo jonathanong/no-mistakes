@@ -91,6 +91,9 @@ pub(crate) fn executor_call(
     call: &CallExpression<'_>,
     callee: String,
 ) -> EmbeddedSqlCall {
+    if let Some(recovered) = super::builder_text::executor_call(visitor, call, &callee) {
+        return recovered;
+    }
     let mut recovered = legacy_executor_call(visitor, call, callee);
     if recovered.kind == EmbeddedSqlKind::Dynamic {
         recovered.variants = first_call_argument(call)
