@@ -20,6 +20,7 @@ fn member_writes_skip_callable_assignment_target_construction() {
                 values,
             );
             // These physical receiver writes cannot assign a lexical module binding.
+            #[cfg(feature = "test-instrumentation")]
             assert_eq!(
                 facts.value_flow.callable_assignment_target_constructions, 0,
                 "{relative}/{values}"
@@ -37,6 +38,7 @@ fn member_writes_skip_callable_assignment_target_construction() {
         }
     }
     let facts = super::saved_assignment_facts("mixed-callable-receiver.mts", true);
+    #[cfg(feature = "test-instrumentation")]
     assert_eq!(facts.value_flow.callable_assignment_target_constructions, 1);
     assert_eq!(facts.value_flow.callable_assignments().len(), 1);
     assert!(facts.value_flow.callable_assignment_is_used(0, "callback"));
@@ -98,6 +100,7 @@ fn callable_staging_rejects_missing_shadowed_and_imported_binding_scopes() {
             true,
             assignment.span.end,
         );
+        #[cfg(feature = "test-instrumentation")]
         assert_eq!(
             collector
                 .value_flow
