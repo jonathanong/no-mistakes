@@ -102,6 +102,11 @@ harness = false
 name = "sql_bound_scopes"
 harness = false
 
+[[bench]]
+name = "check_timeout"
+harness = false
+required-features = ["test-instrumentation"]
+
 # Test modules retain their original paths so fixture and include paths stay stable.
 
 [[test]]
