@@ -1215,6 +1215,16 @@ test("declarations expose invocation controls on every analysis", () => {
   assert.match(invocationDeclarations, /command-specific options are validated/);
   assert.match(invocationDeclarations, /JSON\/control or lock failures cannot/);
   assert.match(invocationDeclarations, /Later calls cannot resize an already initialized pool/);
+  assert.match(invocationDeclarations, /export interface JobsPoolWarning/);
+  assert.match(invocationDeclarations, /code: "rayon-pool-size"/);
+  assert.match(invocationDeclarations, /requestedJobs: number/);
+  assert.match(invocationDeclarations, /effectiveJobs: number/);
+  assert.match(invocationDeclarations, /jobsPoolWarning/);
+  assert.match(invocationDeclarations, /each queued run uses the full pool/);
+  assert.match(
+    readFileSync(join(packageRoot, "analyze-project-types.d.ts"), "utf8"),
+    /jobsPoolWarning\?: JobsPoolWarning/,
+  );
   assert.match(
     indexDeclarations,
     /analyzeProject\(\n  options: WithInvocationOptions<AnalyzeProjectOptions>/,

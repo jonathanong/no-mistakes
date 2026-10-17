@@ -1,7 +1,8 @@
 use super::traversal::EdgeTraversalIndex;
 use super::{
-    edge_view, init_rayon_threads, init_rayon_threads_if_requested, rayon_thread_count,
-    resolve_optional_root, resolve_root, JobsArg, TraversableEdge,
+    attach_jobs_pool_warning, edge_view, init_rayon_threads, init_rayon_threads_if_requested,
+    jobs_pool_mismatch, rayon_thread_count, recorded_rayon_threads, resolve_optional_root,
+    resolve_root, JobsArg, TraversableEdge,
 };
 use crate::queue::{Edge, EdgeKind};
 use std::path::Path;
@@ -95,6 +96,53 @@ fn rayon_thread_count_prefers_jobs_then_env_then_cpu_default() {
         rayon_thread_count(JobsArg { jobs: 0 }, None),
         num_cpus::get()
     );
+    assert_eq!(
+        rayon_thread_count(JobsArg { jobs: 0 }, Some("0")),
+        num_cpus::get()
+    );
+}
+
+#[test]
+fn jobs_pool_mismatch_warns_only_when_resolved_count_differs() {
+    assert!(jobs_pool_mismatch(4, None).is_none());
+    assert!(jobs_pool_mismatch(4, Some(4)).is_none());
+    let warning = jobs_pool_mismatch(8, Some(2)).expect("mismatch");
+    assert_eq!(warning.code, "rayon-pool-size");
+    assert_eq!(warning.requested_jobs, 8);
+    assert_eq!(warning.effective_jobs, 2);
+    assert!(warning.message.contains('8'));
+    assert!(warning.message.contains('2'));
+}
+
+#[test]
+fn later_init_with_different_jobs_warns_and_does_not_resize() {
+    let _ = init_rayon_threads(JobsArg { jobs: 0 });
+    let recorded = recorded_rayon_threads().expect("pool recorded");
+    let before = rayon::current_num_threads();
+    assert_eq!(before, recorded);
+    let requested = if recorded == 1 { 2 } else { 1 };
+    let warning = init_rayon_threads(JobsArg { jobs: requested }).expect("mismatch warns");
+    assert_eq!(warning.requested_jobs, requested);
+    assert_eq!(warning.effective_jobs, recorded);
+    assert_eq!(rayon::current_num_threads(), before);
+    assert_eq!(recorded_rayon_threads(), Some(recorded));
+    assert!(init_rayon_threads(JobsArg { jobs: recorded }).is_none());
+}
+
+#[test]
+fn attach_jobs_pool_warning_omits_empty_and_keeps_non_objects() {
+    assert_eq!(
+        attach_jobs_pool_warning(r#"{"reports":[]}"#.to_string(), None),
+        r#"{"reports":[]}"#
+    );
+    let warning = jobs_pool_mismatch(8, Some(2));
+    let with_warning = attach_jobs_pool_warning(r#"{"reports":[]}"#.to_string(), warning.clone());
+    let value: serde_json::Value = serde_json::from_str(&with_warning).expect("object");
+    assert_eq!(value["jobsPoolWarning"]["code"], "rayon-pool-size");
+    assert_eq!(value["jobsPoolWarning"]["requestedJobs"], 8);
+    assert_eq!(value["jobsPoolWarning"]["effectiveJobs"], 2);
+    assert_eq!(value["reports"], serde_json::json!([]));
+    assert_eq!(attach_jobs_pool_warning("1".to_string(), warning), "1");
 }
 
 #[test]

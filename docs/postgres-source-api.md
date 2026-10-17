@@ -20,10 +20,13 @@ console.log(facts.diagnostics);
 ```
 
 Passing an array of `PostgresSqlSource` inputs returns an array of facts in input
-order. Independent sources run in parallel on a separate, reusable worker pool.
-Its first batch selects `RAYON_NUM_THREADS` when it is a positive integer,
-otherwise the CPU count. Source parsing leaves the global analysis pool available
-for the first repository invocation's `jobs` option. The optional `fileName` is an opaque
+order. Independent sources run in parallel. Workers follow the analysis `jobs`
+rules: a positive count when the Rust caller passes one, otherwise a positive
+`RAYON_NUM_THREADS`, otherwise the CPU count. The Node source API does not take
+`jobs`. Parsing does not initialize the global analysis pool, so the first
+repository invocation can still select `jobs`. If that pool is already recorded
+and smaller than the resolved count, the batch uses it or another pool no larger
+than it, not a fresh all-CPU pool. The optional `fileName` is an opaque
 label; it is never opened. Each source owns one prepared token inventory and each
 statement is parsed once. Projections borrow that statement's AST, which is
 discarded after its serializable facts are collected. There is no persistent

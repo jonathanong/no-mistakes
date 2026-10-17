@@ -11,12 +11,17 @@ export interface InvocationOptions {
   /**
    * Rayon worker count. A positive integer takes precedence over `RAYON_NUM_THREADS`.
    * Omit, `0`, or `null` uses `RAYON_NUM_THREADS`, falling back to CPU count when
-   * unset or invalid, matching CLI `--jobs 0`.
+   * unset, zero, or invalid, matching CLI `--jobs 0`.
    * The first analysis request with valid UTF-8 JSON and invocation controls that
    * acquires the invocation lock initializes the process-wide pool before
    * command-specific options are validated. A later command-validation failure
    * can therefore still select the pool; JSON/control or lock failures cannot.
    * Later calls cannot resize an already initialized pool.
+   * The call that installs the pool does not warn. A later call whose resolved
+   * count differs keeps that pool, does not fail, and includes `jobsPoolWarning`
+   * on the JSON object. Omit, `0`, or `null` does not warn when the resolved
+   * count matches the pool. Concurrent `analyzeProject()` calls and same-user CLI
+   * runs queue on the per-user invocation lock, and each queued run uses the full pool.
    */
   jobs?: number | null;
   /** `ci` sets unbounded command and lock timeouts. CLI `--profile ci` does the same. */
@@ -26,6 +31,16 @@ export interface InvocationOptions {
 }
 
 export type WithInvocationOptions<T> = T & InvocationOptions;
+
+/** Present when a later call's resolved `jobs` cannot resize the process-wide Rayon pool. */
+export interface JobsPoolWarning {
+  code: "rayon-pool-size";
+  message: string;
+  /** Worker count resolved from this call's `jobs` and `RAYON_NUM_THREADS`. */
+  requestedJobs: number;
+  /** Worker count recorded for the process pool. */
+  effectiveJobs: number;
+}
 
 /** One live span; siblings may overlap and labels form the enclosing phase path. */
 export interface ActiveTimingSpan {
