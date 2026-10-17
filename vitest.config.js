@@ -3,7 +3,8 @@ const { defineConfig } = require("vitest/config");
 module.exports = defineConfig({
   test: {
     globals: true,
-    // Compiled API calls share the CLI lock across concurrent test files.
+    // Native environment access must see each compiled worker's private runtime directory.
+    pool: "forks",
     testTimeout: process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node") ? 20_000 : 5_000,
     setupFiles: ["tests/js/setup.js"],
     include: [
