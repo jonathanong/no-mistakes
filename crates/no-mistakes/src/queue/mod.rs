@@ -27,4 +27,4 @@ pub use source::{discover_source_files, relative_string};
 pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

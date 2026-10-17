@@ -1,6 +1,6 @@
 use crate::codebase::lang_frontends::{
-    collect_all_lang_facts, lang_config_from_v2, lang_config_is_empty, matching_cluster,
-    queue_globs_from_v2, topic_identity, LangFileFacts, QueueGlobMatchers,
+    lang_config_from_v2, lang_config_is_empty, matching_cluster, queue_globs_from_v2,
+    topic_identity, LangFileFacts, QueueGlobMatchers,
 };
 use crate::config::v2::NoMistakesConfig;
 use crate::queue::extract_model::{ProducerSite, WorkerSite};
@@ -26,7 +26,7 @@ pub(super) fn language_queue_sites(
     let mut producers = Vec::new();
     let mut workers = Vec::new();
     if !lang_config_is_empty(&lang) {
-        let collected = collect_all_lang_facts(root, &all_files, &lang, &sources);
+        let collected = session.lang_frontend_facts(root, &all_files, &lang, &sources);
         for map in crate::codebase::lang_frontends::each_lang_map(&collected) {
             for file in map.files.values() {
                 extend_file(root, file, &globs, cli_filter, &mut producers, &mut workers);

@@ -101,6 +101,10 @@ impl GraphFiles {
         &self.all
     }
 
+    pub(crate) fn all_shared(&self) -> std::sync::Arc<Vec<PathBuf>> {
+        std::sync::Arc::clone(&self.all)
+    }
+
     pub(crate) fn resource_candidates(&self) -> &[PathBuf] {
         &self.resource_candidates
     }

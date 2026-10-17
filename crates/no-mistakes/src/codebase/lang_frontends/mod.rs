@@ -47,7 +47,7 @@ pub(crate) use python::collect_python_facts;
 pub(crate) use ruby::collect_ruby_facts;
 pub(crate) use rustlang::collect_rust_facts;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub(crate) struct LangFrontendConfig {
     pub python_packages: Vec<String>,
     pub go_modules: Vec<String>,

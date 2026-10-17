@@ -11,6 +11,7 @@ use std::sync::{Arc, OnceLock};
 
 mod intern;
 mod io;
+mod lang_facts;
 mod parsing;
 mod registry_extension;
 
@@ -34,6 +35,7 @@ pub struct AnalysisSession {
     parse_attempts: Option<DashMap<PathBuf, u64>>,
     interner: Arc<PathInterner>,
     test_filters: DashMap<PathBuf, Arc<TestFilterCell>>,
+    lang_facts: lang_facts::LangFactsCache,
 }
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
@@ -62,6 +64,7 @@ impl AnalysisSession {
             parse_attempts: collect_keyed_work.then(DashMap::new),
             interner: Arc::new(PathInterner::new()),
             test_filters: DashMap::new(),
+            lang_facts: lang_facts::LangFactsCache::new(),
         })
     }
 

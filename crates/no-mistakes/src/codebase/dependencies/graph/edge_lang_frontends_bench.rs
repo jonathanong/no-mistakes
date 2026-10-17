@@ -30,12 +30,18 @@ pub(crate) fn collect_language_frontend_edges_for_bench(
         ..GraphConfigOptions::default()
     };
     let interner = PathInterner::new();
+    let files = Arc::new(request.all_files.to_vec());
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(request.all_files),
+    )));
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     collect_language_frontend_edges(
         request.root,
-        request.all_files,
+        &files,
         Some(&options),
-        None,
+        &sources,
         &interner,
+        &session,
     )
 }
 

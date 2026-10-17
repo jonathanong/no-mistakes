@@ -23,4 +23,4 @@ pub use related::related;
 pub use types::{Diagnostic, Edge, EdgeKind, Framework, ServerRoute, Severity, Summary};
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

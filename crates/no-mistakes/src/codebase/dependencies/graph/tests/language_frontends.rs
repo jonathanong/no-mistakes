@@ -3,12 +3,20 @@ fn collect_language_frontend_edges_for_test(
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
+    let files = std::sync::Arc::new(all_files.to_vec());
+    let sources = std::sync::Arc::new(crate::codebase::ts_source::SourceStore::new(
+        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+            all_files,
+        )),
+    ));
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     super::collect_language_frontend_edges(
         root,
-        all_files,
+        &files,
         config_options,
-        None,
+        &sources,
         &crate::codebase::analysis_session::PathInterner::new(),
+        &session,
     )
 }
 
@@ -243,12 +251,16 @@ fn language_frontend_edges_cover_configured_extractors() {
         collect_language_frontend_edges_for_test(&java, &lang_files(&java), Some(&options));
     assert!(java_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::JavaImport
-            && from.as_file().is_some_and(|path| path.ends_with("App.java"))
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("App.java"))
             && to.as_file().is_some_and(|path| path.ends_with("User.java"))
     }));
     assert!(java_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::JavaReference
-            && from.as_file().is_some_and(|path| path.ends_with("App.java"))
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("App.java"))
             && to.as_file().is_some_and(|path| path.ends_with("User.java"))
     }));
     assert!(java_edges.iter().all(|(from, _, kind)| {
@@ -446,7 +458,9 @@ fn java_exact_imports_cross_configured_packages() {
     let edges = collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&options));
     assert!(edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::JavaImport
-            && from.as_file().is_some_and(|path| path.ends_with("App.java"))
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("App.java"))
             && to.as_file().is_some_and(|path| path.ends_with("User.java"))
     }));
 }

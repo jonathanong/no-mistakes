@@ -22,6 +22,8 @@ pub(crate) struct LangFactMap {
     pub files_by_module: HashMap<String, BTreeSet<PathBuf>>,
     pub files_by_package: HashMap<String, BTreeSet<PathBuf>>,
     pub package_path_deps: BTreeSet<(String, String)>,
+    /// Files handed to the per-file extractor, including reads that yielded no facts.
+    pub scanned_files: usize,
 }
 
 impl LangFactMap {
@@ -83,9 +85,12 @@ pub(crate) fn collect_files_parallel<F>(files: Vec<PathBuf>, parse: F) -> LangFa
 where
     F: Fn(&Path) -> Option<LangFileFacts> + Sync,
 {
+    let scanned_files = files.len();
     use rayon::prelude::*;
     let parsed: Vec<LangFileFacts> = files.par_iter().filter_map(|path| parse(path)).collect();
-    index_parsed_files(parsed)
+    let mut facts = index_parsed_files(parsed);
+    facts.scanned_files = scanned_files;
+    facts
 }
 
 pub(crate) fn files_under(
