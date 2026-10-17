@@ -365,3 +365,75 @@ fn effects_cli_distinguishes_loop_setup_from_repeated_positions() {
         assert!(sites.iter().all(|site| site["callee"] == "primary.get"));
     }
 }
+
+#[test]
+fn effects_cli_invalidates_one_time_lexical_writes_before_a_loop() {
+    let root = fixture("value-flow-lexical-member-replacement");
+    let report = run_json(&root, &["effects", "cache", "--entry", "src/entry.mts"]);
+    let sites = report["callSites"].as_array().unwrap();
+    let actual: Vec<_> = sites
+        .iter()
+        .map(|site| {
+            (
+                site["line"].as_u64().unwrap(),
+                site["callee"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        actual,
+        [
+            (3, "primary.get"),
+            (8, "primary.get"),
+            (9, "primary.info"),
+            (10, "untouched.get")
+        ],
+        "{report}"
+    );
+    let report = run_json(&root, &["effects", "cache", "--entry", "src/minimal.mts"]);
+    assert!(
+        report["callSites"].as_array().unwrap().is_empty(),
+        "{report}"
+    );
+    let report = run_json(&root, &["effects", "cache", "--entry", "src/after.mts"]);
+    assert_eq!(report["callSites"].as_array().unwrap().len(), 1, "{report}");
+}
+
+#[test]
+fn lexical_replaced_members_reach_unknown_call_rule_findings() {
+    let root = fixture("value-flow-lexical-member-replacement");
+    let output = run_in(
+        &root,
+        &[
+            "check",
+            "--root",
+            root.to_str().unwrap(),
+            "--config",
+            "rules.yml",
+            "--format",
+            "json",
+        ],
+    );
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let actual: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            (
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        actual,
+        [
+            (7, "unknown call"),
+            (13, "unknown call"),
+            (15, "unknown call")
+        ],
+        "{report}"
+    );
+}

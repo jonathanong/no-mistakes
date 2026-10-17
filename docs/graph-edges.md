@@ -639,6 +639,11 @@ patterns with uncertain execution order retain conservative alternatives;
 methods copied before the whole pattern and untouched members keep their
 supported acquisition precision.
 
+A direct imported member call after an earlier lexical property write is
+unknown when the replacement cannot be proved, including a one-time module
+write before a loop. Calls before the write, methods copied before the write,
+and untouched members retain their existing acquisition proofs.
+
 Repeated imported-member replacement alternatives require a closed execution
 region: a guaranteed multi-item literal `for-of` body or the supported closed
 sequence of synchronous owner invocations. Calls within that proof must be to
