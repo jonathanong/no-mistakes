@@ -32,7 +32,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
             modules: context.modules,
             environments: &roots,
             transient: context.transient,
-            ..reachable::RootSeeds::new(context.modules)
+            ..reachable::RootSeeds::all_modules(context.modules)
         },
         returned,
         arena.read(),
@@ -70,12 +70,12 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Compaction {
-    let roots = modules.values().copied().collect::<Vec<_>>();
     let indices = compact_from_roots(
         scopes,
         Roots {
             modules,
-            environments: &roots,
+            module_policy: reachable::ModulePolicy::AllModules,
+            environments: &[],
             arguments: &[],
             preserved: 0,
             transient: &[],

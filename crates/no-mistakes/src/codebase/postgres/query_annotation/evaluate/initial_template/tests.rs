@@ -267,6 +267,8 @@ fn concurrent_demand_builds_one_profile_local_template() {
     );
 }
 
+// The saved-fixture observer entrypoint is supplied by this feature.
+#[cfg(feature = "test-instrumentation")]
 #[test]
 fn two_real_executor_roots_initialize_their_shared_pure_helper_once() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

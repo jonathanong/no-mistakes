@@ -144,6 +144,7 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
         &mut scopes,
         Roots {
             modules: &Default::default(),
+            module_policy: reachable::ModulePolicy::Referenced,
             environments: &[0],
             arguments: &[],
             preserved: 0,
@@ -221,6 +222,7 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
         &mut scopes,
         Roots {
             modules: &Default::default(),
+            module_policy: reachable::ModulePolicy::Referenced,
             environments: &[0],
             arguments: &[],
             preserved: 0,
@@ -277,6 +279,7 @@ fn initial_argument_roots_preserve_cycles_and_callbacks_without_copying_returns(
         &mut scopes,
         Roots {
             modules: &Default::default(),
+            module_policy: reachable::ModulePolicy::Referenced,
             environments: &[0],
             arguments: &[42],
             preserved: 1,
