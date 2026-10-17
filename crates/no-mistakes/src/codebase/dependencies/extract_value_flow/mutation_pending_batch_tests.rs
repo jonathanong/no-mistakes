@@ -145,6 +145,42 @@ fn batch_mapper_panic_drops_each_owned_value_once_and_keeps_inserted_prefix() {
     }
 }
 
+#[test]
+fn batch_mapper_panic_while_inline_drops_each_owned_value_once_and_keeps_prefix() {
+    // Inline slots hold two values. A resident token plus the first output and
+    // the exit marker promotes, which the heap case above already covers.
+    let dropped = Rc::new(RefCell::new(Vec::new()));
+    let token = |id| Token {
+        id,
+        dropped: Rc::clone(&dropped),
+    };
+    let mut queue = Queue::new(token(0));
+    drop(queue.pop());
+    assert!(
+        matches!(&queue, Queue::Inline { len: 0, .. }) && queue.capacity() == 0,
+        "storage must remain inline before the mapper panic",
+    );
+    let panicked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        queue.append_with_exit(
+            0,
+            (Some(token(1)), Vec::new()),
+            |_| panic!("saved mapper failure"),
+            token(9),
+        );
+    }));
+    let panic = panicked.expect_err("mapper must panic");
+    assert_eq!(
+        panic.downcast_ref::<&str>().copied(),
+        Some("saved mapper failure")
+    );
+    assert_eq!(queue.len(), 0, "retained prefix length");
+    assert!(matches!(&queue, Queue::Inline { slots, len: 0 } if slots.iter().all(Option::is_none)));
+    drop(queue);
+    let mut actual = dropped.borrow().clone();
+    actual.sort_unstable();
+    assert_eq!(actual, vec![0, 1, 9]);
+}
+
 impl<T> Queue<T> {
     pub(in super::super) fn insert(&mut self, index: usize, value: T) {
         #[cfg(all(test, feature = "test-instrumentation"))]
