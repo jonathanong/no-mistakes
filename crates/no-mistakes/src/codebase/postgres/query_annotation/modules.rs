@@ -55,9 +55,7 @@ impl Module {
                 .entry(specifier.clone())
                 .or_insert_with(OnceLock::new);
         }
-        if let Some(observer) = crate::diagnostics::current() {
-            observer.increment("postgres.annotation.modules", 1);
-        }
+        crate::diagnostics::increment("postgres.annotation.modules", 1);
         Self {
             ts,
             imports,
@@ -74,9 +72,7 @@ impl Module {
     ) -> Option<&Path> {
         self.targets[specifier]
             .get_or_init(|| {
-                if let Some(observer) = crate::diagnostics::current() {
-                    observer.increment("postgres.annotation.target_resolutions", 1);
-                }
+                crate::diagnostics::increment("postgres.annotation.target_resolutions", 1);
                 resolve(specifier, from)
             })
             .as_deref()

@@ -9,6 +9,8 @@ mod observer;
 mod progress;
 mod request;
 
+pub(crate) use context::with_current;
+
 use std::sync::Arc;
 
 pub use context::{
@@ -21,9 +23,16 @@ pub use request::{progress_for_request, DiagnosticRequestGuard};
 
 /// Count one AST visitor walk when verbose timings are enabled.
 pub fn record_ast_walk() {
-    if let Some(observer) = current() {
-        observer.increment("ast.walks", 1);
-    }
+    increment("ast.walks", 1);
+}
+
+/// Record a work counter without cloning the request observer for each event.
+pub(crate) fn increment(metric: &'static str, amount: u64) {
+    with_current(|observer| {
+        if let Some(observer) = observer {
+            observer.increment(metric, amount);
+        }
+    });
 }
 
 #[derive(clap::Args, Debug, Clone, Copy)]

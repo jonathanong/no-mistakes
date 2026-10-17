@@ -17,17 +17,21 @@
 use std::time::Duration;
 
 pub fn enabled() -> bool {
-    crate::diagnostics::current().is_some_and(|observer| observer.detailed())
+    crate::diagnostics::with_current(|observer| {
+        observer.is_some_and(|observer| observer.detailed())
+    })
 }
 
 /// Record a duration if verbose timing is enabled; a no-op otherwise. The CLI
 /// boundary later renders all records in deterministic order.
 pub fn record(label: &str, elapsed: Duration) {
-    if let Some(observer) = crate::diagnostics::current() {
-        if observer.detailed() {
-            observer.record_duration(label, elapsed, crate::diagnostics::current_timing_kind());
+    crate::diagnostics::with_current(|observer| {
+        if let Some(observer) = observer {
+            if observer.detailed() {
+                observer.record_duration(label, elapsed, crate::diagnostics::current_timing_kind());
+            }
         }
-    }
+    });
 }
 
 /// Time `f` and report it under `label` via [`record`] when tracing is

@@ -62,9 +62,7 @@ pub(super) fn collect_from_roots(
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment("postgres.annotation.reachability_walks", 1);
-    }
+    crate::diagnostics::increment("postgres.annotation.reachability_walks", 1);
     let mut found = Reachable::default();
     found.pending_env.extend(roots.environments.iter().copied());
     found.pending_args.extend(roots.arguments.iter().copied());

@@ -16,6 +16,17 @@ pub fn current() -> Option<Arc<InvocationObserver>> {
     ACTIVE.with(|active| active.borrow().last().cloned().flatten())
 }
 
+/// Inspect the current observer without changing its shared reference count.
+/// The callback must not install or remove an observer scope. Keep arbitrary
+/// user operations on the owned `current()` path, where scope changes are valid.
+pub(crate) fn with_current<T>(operation: impl FnOnce(Option<&InvocationObserver>) -> T) -> T {
+    ACTIVE.with(|active| operation(active.borrow().last().and_then(Option::as_deref)))
+}
+
+#[cfg(test)]
+#[path = "context_borrow_tests.rs"]
+mod borrow_tests;
+
 pub struct InvocationGuard;
 
 impl InvocationGuard {

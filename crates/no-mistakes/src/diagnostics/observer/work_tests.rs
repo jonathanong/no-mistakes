@@ -29,6 +29,25 @@ fn timing_only_observers_allocate_no_counter_storage() {
 }
 
 #[test]
+fn annotation_counts_and_explicit_zeros_need_no_extension_map() {
+    let counters = WorkCounters::new();
+    let expected = BTreeMap::from([
+        ("postgres.annotation.modules", 2),
+        ("postgres.annotation.target_resolutions", 3),
+        ("postgres.annotation.reachability_walks", 7),
+        ("postgres.annotation.incoming_dense_slots_copied", 0),
+        ("postgres.annotation.captured_reader_rebuilds", 11),
+        ("postgres.annotation.captured_reader_names_retained", 13),
+    ]);
+    for (&name, &value) in &expected {
+        counters.increment(name, value);
+    }
+    assert_eq!(counters.snapshot(), expected);
+    // Equal values alone would also pass with the old DashMap-backed counters.
+    assert!(counters.extensions.get().is_none());
+}
+
+#[test]
 fn unknown_metrics_in_every_length_bucket_use_extensions() {
     let counters = WorkCounters::new();
     for metric in [
