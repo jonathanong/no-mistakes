@@ -73,7 +73,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 extras: &mut self.argument_extra_slots,
             },
             &self.captured_bindings,
-            &self.transient_roots,
+            frames::FrameContext {
+                transient: &self.transient_roots,
+                modules: &self.modules,
+            },
         );
     }
     pub(super) fn install_disconnected_slots(

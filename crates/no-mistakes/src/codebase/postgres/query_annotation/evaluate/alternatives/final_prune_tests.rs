@@ -35,6 +35,7 @@ fn resolve(_: &str, _: &Path) -> Option<PathBuf> {
 type TestEvaluator<'a> = Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>>;
 fn evaluator<'a>(files: &'a FxHashMap<PathBuf, File<'a>>) -> TestEvaluator<'a> {
     Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files,
         resolve,
         events: Default::default(),
@@ -89,6 +90,7 @@ fn compare(name: &str) -> ((u64, usize), (u64, usize)) {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(TsFileFacts::default().into())),
             executors: Default::default(),

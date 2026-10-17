@@ -32,12 +32,14 @@ fn with_arrays(
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None })
             as fn(&str, &std::path::Path) -> Option<PathBuf>,
@@ -76,9 +78,10 @@ fn with_arrays(
     let arrays = evaluator.expr(&call, &path, &root, 16, false).exposed();
     let nested = evaluator.index(arrays.clone(), 0);
     let child = evaluator.index(nested, 0);
-    let Value::Function(_, _, captured) = evaluator.index(child, 0) else {
+    let Value::Function(_, owner, captured) = evaluator.index(child, 0) else {
         panic!("saved shared callback");
     };
+    let captured = captured.environment(&owner, &evaluator.modules);
     assert!(
         matches!(evaluator.scopes[captured]["nested"], Value::Array(_)),
         "fixture uses modeled arrays, not aggregate fallback"

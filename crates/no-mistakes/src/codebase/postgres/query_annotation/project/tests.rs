@@ -281,6 +281,7 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
             (
                 path.clone(),
                 super::File {
+                    initial_template: Default::default(),
                     module: Arc::new(super::Module::new(Arc::clone(&file.ts))),
                     facts: &file.query_annotation[0].1,
                     executors: file.embedded_sql[0].1.call_spans.iter().copied().collect(),

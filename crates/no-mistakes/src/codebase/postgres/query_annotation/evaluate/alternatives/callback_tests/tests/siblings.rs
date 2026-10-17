@@ -25,12 +25,14 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -81,6 +83,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     else {
         panic!("saved installer function");
     };
+    let captured = captured.environment(&callback_path, &evaluator.modules);
     let key = (
         callback_path.clone(),
         function.start,
@@ -110,6 +113,6 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     );
     let module = evaluator.modules[&path];
     assert!(
-        matches!(&evaluator.scopes[module]["installer"], super::super::super::Value::Function(_,_,env) if *env == live.2)
+        matches!(&evaluator.scopes[module]["installer"], super::super::super::Value::Function(_,owner,capture) if capture.environment(owner, &evaluator.modules) == live.2)
     );
 }

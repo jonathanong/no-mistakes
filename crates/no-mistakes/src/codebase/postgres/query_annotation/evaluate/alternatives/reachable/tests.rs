@@ -14,8 +14,8 @@ fn shared_containers_are_visited_once_per_reachability_collection() {
         value = Value::Aggregate(vec![value.clone(), value].into());
     }
     let mut reachable = Reachable::default();
-    reachable.value(&value);
-    reachable.value(&value);
+    reachable.value(&value, &FxHashMap::default());
+    reachable.value(&value, &FxHashMap::default());
     assert_eq!(reachable.visited_values.len(), 13);
     assert_eq!(reachable.identities, FxHashSet::from_iter([7]));
     assert_eq!(reachable.pending_args, vec![8]);
@@ -63,7 +63,7 @@ fn saved_function() -> std::sync::Arc<crate::codebase::postgres::query_annotatio
 fn scalar_containers_skip_reachability_walks_even_through_result_wrappers() {
     let scalar = scalar_tree();
     let mut reachable = Reachable::default();
-    reachable.value(&scalar);
+    reachable.value(&scalar, &FxHashMap::default());
     assert_eq!(
         reachable.visited_values.len(),
         0,
@@ -75,7 +75,7 @@ fn scalar_containers_skip_reachability_walks_even_through_result_wrappers() {
 
     let wrapped = Value::Promise(Box::new(Value::Evaluated(Box::new(scalar), true)));
     let mut reachable = Reachable::default();
-    reachable.value(&wrapped);
+    reachable.value(&wrapped, &FxHashMap::default());
     assert_eq!(
         reachable.visited_values.len(),
         0,
@@ -87,7 +87,7 @@ fn scalar_containers_skip_reachability_walks_even_through_result_wrappers() {
 fn mixed_containers_keep_environment_argument_and_builder_roots() {
     let mut mixed = Value::Possible(
         vec![
-            Value::Function(saved_function(), "reads.mts".into(), 42),
+            Value::Function(saved_function(), "reads.mts".into(), 42usize.into()),
             Value::Arguments(8),
             Value::Prefix("SELECT 1".into(), true, Some(7)),
         ]
@@ -100,7 +100,7 @@ fn mixed_containers_keep_environment_argument_and_builder_roots() {
     mixed = Value::Promise(Box::new(Value::Evaluated(Box::new(mixed), true)));
     let value = Value::Aggregate(vec![scalar_tree(), mixed].into());
     let mut reachable = Reachable::default();
-    reachable.value(&value);
+    reachable.value(&value, &FxHashMap::default());
     assert_eq!(reachable.pending_env, vec![42]);
     assert_eq!(reachable.pending_args, vec![8]);
     assert_eq!(reachable.identities, FxHashSet::from_iter([7]));
@@ -118,7 +118,11 @@ fn detached_function_only_container_retains_its_environment() {
     assert!(!values.contains_environment());
     let scalar_snapshot = values.clone();
     values.push(Value::Promise(Box::new(Value::Evaluated(
-        Box::new(Value::Function(saved_function(), "reads.mts".into(), 42)),
+        Box::new(Value::Function(
+            saved_function(),
+            "reads.mts".into(),
+            42usize.into(),
+        )),
         true,
     ))));
 
@@ -126,14 +130,14 @@ fn detached_function_only_container_retains_its_environment() {
     // builder/argument summary remains empty after a detached mutation.
     assert!(!values.contains_reference());
     let mut reachable = Reachable::default();
-    reachable.value(&Value::Object(values));
+    reachable.value(&Value::Object(values), &FxHashMap::default());
     assert_eq!(reachable.pending_env, vec![42]);
     assert!(reachable.pending_args.is_empty());
     assert!(reachable.identities.is_empty());
     assert_eq!(reachable.visited_values.len(), 1);
 
     let mut previous = Reachable::default();
-    previous.value(&Value::Object(scalar_snapshot));
+    previous.value(&Value::Object(scalar_snapshot), &FxHashMap::default());
     assert_eq!(previous.visited_values.len(), 0);
     assert!(previous.pending_env.is_empty());
 }
@@ -161,7 +165,7 @@ fn transient_roots_keep_private_environments_sparse_slots_and_argument_cycles() 
         &scopes,
         RootSeeds {
             transient: &transient,
-            ..Default::default()
+            ..RootSeeds::new(&Default::default())
         },
         &[],
         Arena {
@@ -177,7 +181,7 @@ fn transient_roots_keep_private_environments_sparse_slots_and_argument_cycles() 
     // Once operand evaluation completes, those otherwise unreachable identities die.
     let released = collect_from_roots(
         &scopes,
-        RootSeeds::default(),
+        RootSeeds::new(&Default::default()),
         &[],
         Arena {
             objects: &objects,
@@ -189,4 +193,44 @@ fn transient_roots_keep_private_environments_sparse_slots_and_argument_cycles() 
     assert!(released.environments.is_empty());
     assert!(released.arguments.is_empty());
     assert!(released.identities.is_empty());
+}
+
+#[test]
+fn module_capture_liveness_follows_only_its_actual_owner_through_nested_values() {
+    use crate::codebase::postgres::query_annotation::evaluate::Capture;
+    let owner = std::path::PathBuf::from("reads.mts");
+    let unrelated = std::path::PathBuf::from("unused.mts");
+    let modules = FxHashMap::from_iter([(owner.clone(), 1), (unrelated, 2)]);
+    let scopes = vec![
+        Scope::default(),
+        Scope::from(FxHashMap::from_iter([("owned".into(), Value::Array(42))])),
+        Scope::from(FxHashMap::from_iter([(
+            "unrelated".into(),
+            Value::Array(99),
+        )])),
+    ];
+    let objects = FxHashMap::from_iter([(42, vec![Value::Unknown]), (99, vec![Value::Unknown])]);
+    let returned = [Value::Object(
+        vec![Value::Promise(Box::new(Value::Function(
+            saved_function(),
+            owner,
+            Capture::Module,
+        )))]
+        .into(),
+    )];
+    let found = collect_from_roots(
+        &scopes,
+        RootSeeds {
+            ..RootSeeds::new(&modules)
+        },
+        &returned,
+        Arena {
+            objects: &objects,
+            extras: &Default::default(),
+        },
+        &Default::default(),
+        &Default::default(),
+    );
+    assert_eq!(found.environments, FxHashSet::from_iter([1]));
+    assert_eq!(found.arguments, FxHashSet::from_iter([42]));
 }

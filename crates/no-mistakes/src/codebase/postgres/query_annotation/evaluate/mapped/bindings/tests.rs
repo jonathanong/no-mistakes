@@ -6,6 +6,7 @@ fn evaluator<'a>(
     files: &'a FxHashMap<PathBuf, File<'a>>,
 ) -> Evaluator<'a, impl Fn(&str, &Path) -> Option<PathBuf>> {
     Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files,
         resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
         events: Default::default(),

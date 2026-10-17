@@ -1,0 +1,32 @@
+[
+  {
+    "fileName": "entry.mts",
+    "line": 14,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "opaque-call-operand-effect"
+  },
+  {
+    "fileName": "entry.mts",
+    "line": 19,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "entry.mts",
+    "line": 27,
+    "annotation": null,
+    "sqlText": "SELECT local_without_annotation",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  }
+]

@@ -1,5 +1,10 @@
 use super::*;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) struct FrameContext<'a>
+{
+    pub transient: &'a [super::super::super::temporaries::TransientRoot],
+    pub modules: &'a FxHashMap<std::path::PathBuf, Environment>,
+}
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_state(
     scopes: &[Scope],
     returned: &[Value],
@@ -7,7 +12,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
-    transient: &[super::super::super::temporaries::TransientRoot],
+    context: FrameContext<'_>,
 ) {
     // Scalar-only branches have no heap or mutation state to discard.
     if arena.objects.is_empty()
@@ -24,9 +29,10 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     let reachable = reachable::collect_from_roots(
         scopes,
         reachable::RootSeeds {
+            modules: context.modules,
             environments: &roots,
-            transient,
-            ..Default::default()
+            transient: context.transient,
+            ..reachable::RootSeeds::new(context.modules)
         },
         returned,
         arena.read(),
@@ -68,6 +74,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     let indices = compact_from_roots(
         scopes,
         Roots {
+            modules,
             environments: &roots,
             arguments: &[],
             preserved: 0,

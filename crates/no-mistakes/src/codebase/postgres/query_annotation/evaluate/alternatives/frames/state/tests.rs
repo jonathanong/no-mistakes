@@ -40,7 +40,10 @@ fn pruning_shares_one_walk_for_heap_mutations_and_builder_updates() {
             extras: &mut extras,
         },
         &Default::default(),
-        &[],
+        FrameContext {
+            transient: &[],
+            modules: &FxHashMap::default(),
+        },
     );
     assert_eq!(
         observer.snapshot().work["postgres.annotation.reachability_walks"],
@@ -118,7 +121,10 @@ fn pruning_skips_only_completely_empty_state() {
                 extras: &mut extras,
             },
             &Default::default(),
-            &[],
+            FrameContext {
+                transient: &[],
+                modules: &FxHashMap::default(),
+            },
         );
         let walks = observer
             .snapshot()

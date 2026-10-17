@@ -7,6 +7,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
     let path = PathBuf::from("module.mts");
     let files = FxHashMap::default();
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
         events: Default::default(),

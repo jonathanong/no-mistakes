@@ -18,13 +18,23 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     pub(super) fn retain_temporary_roots(&mut self, value: &Value) {
-        retain(value, &mut self.transient_roots, &mut FxHashSet::default());
+        retain(
+            value,
+            &self.modules,
+            &mut self.transient_roots,
+            &mut FxHashSet::default(),
+        );
     }
 
     pub(super) fn retain_temporary_values(&mut self, values: &[Value]) {
         let mut visited = FxHashSet::default();
         for value in values {
-            retain(value, &mut self.transient_roots, &mut visited);
+            retain(
+                value,
+                &self.modules,
+                &mut self.transient_roots,
+                &mut visited,
+            );
         }
     }
 
@@ -63,7 +73,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 }
 
-fn retain(value: &Value, roots: &mut Vec<TransientRoot>, visited: &mut FxHashSet<*const ()>) {
+fn retain(
+    value: &Value,
+    modules: &crate::fx::FxHashMap<PathBuf, Environment>,
+    roots: &mut Vec<TransientRoot>,
+    visited: &mut FxHashSet<*const ()>,
+) {
     match value {
         Value::Array(id) | Value::Arguments(id) => {
             roots.push(TransientRoot::Argument(*id));
@@ -71,10 +86,14 @@ fn retain(value: &Value, roots: &mut Vec<TransientRoot>, visited: &mut FxHashSet
         Value::Prefix(_, _, Some(id)) => {
             roots.push(TransientRoot::Builder(*id));
         }
-        Value::Function(_, _, env) => {
-            roots.push(TransientRoot::Environment(*env));
+        Value::Function(_, path, capture) => {
+            roots.push(TransientRoot::Environment(
+                capture.environment(path, modules),
+            ));
         }
-        Value::Promise(value) | Value::Evaluated(value, _) => retain(value, roots, visited),
+        Value::Promise(value) | Value::Evaluated(value, _) => {
+            retain(value, modules, roots, visited)
+        }
         Value::Aggregate(values)
         | Value::References(values)
         | Value::Object(values)
@@ -85,7 +104,7 @@ fn retain(value: &Value, roots: &mut Vec<TransientRoot>, visited: &mut FxHashSet
                 && visited.insert(values.identity()) =>
         {
             for value in values {
-                retain(value, roots, visited);
+                retain(value, modules, roots, visited);
             }
         }
         _ => {}

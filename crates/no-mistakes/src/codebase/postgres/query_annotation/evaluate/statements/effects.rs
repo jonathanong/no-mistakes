@@ -32,6 +32,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Value::Function(function, function_path, captured) = value.exposed() else {
             return false;
         };
+        let captured = captured.environment(&function_path, &self.modules);
         function.supported && function.body.iter().all(|step| match step {
             Step::Reserve(_) => true,
             Step::Append(target, tail) => {

@@ -1,0 +1,52 @@
+[
+  {
+    "fileName": "entry.mts",
+    "line": 7,
+    "annotation": "module_initial",
+    "sqlText": "/* module_initial */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "entry.mts",
+    "line": 12,
+    "annotation": null,
+    "sqlText": "SELECT module_without_annotation",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "entry.mts",
+    "line": 21,
+    "annotation": "module_after",
+    "sqlText": "/* module_after */ SELECT 2",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "entry.mts",
+    "line": 28,
+    "annotation": null,
+    "sqlText": "SELECT module_without_annotation",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "entry.mts",
+    "line": 35,
+    "annotation": null,
+    "sqlText": "SELECT local_without_annotation",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  }
+]

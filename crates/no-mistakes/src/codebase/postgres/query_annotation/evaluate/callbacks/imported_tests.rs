@@ -48,6 +48,7 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
             (
                 path.clone(),
                 File {
+                    initial_template: Default::default(),
                     facts,
                     module: std::sync::Arc::new(Module::new(ts.clone().into())),
                     executors: embedded.call_spans.iter().copied().collect(),
@@ -56,6 +57,7 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
         })
         .collect::<FxHashMap<_, _>>();
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |specifier: &str, _: &std::path::Path| -> Option<PathBuf> {
             (specifier == "./helper.mjs").then(|| helper.clone())

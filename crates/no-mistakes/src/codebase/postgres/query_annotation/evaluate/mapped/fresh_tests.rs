@@ -43,12 +43,14 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         let files = FxHashMap::from_iter([(
             path.clone(),
             File {
+                initial_template: Default::default(),
                 facts: &facts,
                 module: std::sync::Arc::new(Module::new(ts.clone().into())),
                 executors: Default::default(),
             },
         )]);
         let mut evaluator = Evaluator {
+            initial_template_observer: crate::diagnostics::current(),
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),
@@ -104,11 +106,17 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             let Value::Aggregate(arms) = result else {
                 panic!("alternative wrapper");
             };
-            let Value::Function(_, _, captured) = &arms[0] else {
+            let Value::Function(
+                _,
+                _,
+                crate::codebase::postgres::query_annotation::evaluate::Capture::Lexical(captured),
+            ) = &arms[0]
+            else {
                 panic!("retained callback");
             };
-            assert_eq!(*captured, 1);
-            assert!(evaluator.fresh_mapped_parameters[captured].contains("parameter"));
+            let captured = captured.index();
+            assert_eq!(captured, 1);
+            assert!(evaluator.fresh_mapped_parameters[&captured].contains("parameter"));
             let callback = arms[0].clone();
             // Probe the private read boundary using the saved factory's real
             // callback identity, including multiple inherited mapping sets.

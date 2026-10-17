@@ -20,39 +20,17 @@ fn sequential_alternatives_discard_noncallback_frames() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
-    let mut evaluator = Evaluator {
-        files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
-        events: Default::default(),
-        scopes: Vec::new(),
-        modules: Default::default(),
-        active_module_initials: Default::default(),
-        transient_roots: Default::default(),
-        active_callback_functions: Default::default(),
-        active_callback_executions: Default::default(),
-        untrusted_array_intrinsics: false,
-        next_builder: 0,
-        invalidated_builders: Default::default(),
-        builder_updates: Default::default(),
-        captured_bindings: Default::default(),
-        captured_binding_readers: Default::default(),
-        mapped_argument_owners: Default::default(),
-        mapped_parameter_indices: Default::default(),
-        deleted_argument_slots: Default::default(),
-        mapped_arguments: Default::default(),
-        fresh_mapped_parameters: Default::default(),
-        fresh_mapped_argument_bindings: Default::default(),
-        argument_objects: Default::default(),
-        argument_extra_slots: Default::default(),
-        definite_deleted_argument_slots: Default::default(),
-        recreated_argument_slots: Default::default(),
-        disconnected_argument_slots: Default::default(),
-    };
+    let mut evaluator = super::super::new(
+        &files,
+        |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        false,
+    );
     let root = evaluator.module_environment(&path);
     assert_eq!(root, 0);
     assert!(
@@ -81,12 +59,14 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -137,12 +117,14 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -196,12 +178,14 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -252,12 +236,14 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -289,12 +275,18 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
     let Some(super::super::Value::Aggregate(arms)) = evaluator.scopes[root].get("callback") else {
         panic!("expected alternative callback values");
     };
-    let super::super::Value::Function(_, _, captured) = &arms[0] else {
+    let super::super::Value::Function(
+        _,
+        _,
+        crate::codebase::postgres::query_annotation::evaluate::Capture::Lexical(captured),
+    ) = &arms[0]
+    else {
         panic!("expected retained callback");
     };
-    assert_eq!(*captured, 1, "disposable helper frame is removed");
+    let captured = captured.index();
+    assert_eq!(captured, 1, "disposable helper frame is removed");
     assert_eq!(evaluator.scopes.len(), 2);
-    assert!(evaluator.mapped_arguments.contains_key(captured));
+    assert!(evaluator.mapped_arguments.contains_key(&captured));
 }
 
 #[test]
@@ -312,12 +304,14 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -372,12 +366,14 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -447,12 +443,14 @@ fn nested_capture_restoration_keeps_reverse_readers_exact() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

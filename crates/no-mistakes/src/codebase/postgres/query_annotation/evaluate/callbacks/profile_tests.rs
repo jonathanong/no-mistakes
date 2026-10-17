@@ -25,12 +25,14 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -59,9 +61,11 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         mapped_arguments: Default::default(),
     };
     let root = evaluator.module_environment(&path);
-    let Value::Function(function, _, captured) = evaluator.scopes[root]["observer"].clone() else {
+    let Value::Function(function, owner, captured) = evaluator.scopes[root]["observer"].clone()
+    else {
         panic!("saved observer");
     };
+    let captured = captured.environment(&owner, &evaluator.modules);
     let Value::Arguments(id) = evaluator.scopes[captured]["arguments"] else {
         panic!("saved invocation identity");
     };
@@ -75,7 +79,11 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
             panic!("saved mutation summary");
         };
         assert_eq!(
-            evaluator.callback_may_mutate(summary, &path, *env),
+            evaluator.callback_may_mutate(
+                summary,
+                &path,
+                env.environment(&path, &evaluator.modules)
+            ),
             mutating,
             "{name}"
         );

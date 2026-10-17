@@ -8,6 +8,7 @@ fn evaluator<'a>(
     scope: FxHashMap<String, Value>,
 ) -> Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> {
     Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files,
         resolve: |_name, _path| None,
         events: Default::default(),
