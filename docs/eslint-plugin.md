@@ -294,3 +294,9 @@ and an optional scoped `message`; a top-level `message` is the fallback.
 `requireSuppressionReason` defaults off and, when true, requires a nonempty
 reason on this rule's `no-mistakes-disable-*` directives only.
 See [the rule reference](eslint-rules/no-comment-phrases.md).
+
+### `forbidden-member-chains`
+
+Opt-in bans for configured static member chains. Each `chains` entry sets
+`path`, an optional `receiver` (`*` or a root name), and `message`. File scope
+stays on the lint config. See [the rule reference](eslint-rules/forbidden-member-chains.md).

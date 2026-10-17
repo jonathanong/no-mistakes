@@ -1,0 +1,26 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/forbidden-member-chains": [
+      "error",
+      {
+        "chains": [
+          { "path": "records.entry", "message": "Use the entry helper." },
+          { "path": "*.panel.open", "message": "Open the panel through the helper." },
+          {
+            "receiver": "*",
+            "path": ["drawer", "toggle"],
+            "message": "Toggle the drawer through the helper."
+          },
+          { "path": "matrix.1", "message": "Do not read the numeric slot." },
+          { "path": "*.#slot", "message": "Do not read the private slot." }
+        ]
+      }
+    ]
+  }
+}

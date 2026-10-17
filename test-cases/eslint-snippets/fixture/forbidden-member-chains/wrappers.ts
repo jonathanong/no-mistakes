@@ -1,0 +1,13 @@
+records.entry!;
+records.entry as const;
+records.entry satisfies { readonly kind?: string };
+(records.entry);
+<string>records.entry;
+(other.panel as const).open;
+other.panel!.open;
+(other!.panel).open;
+((other.panel.open) as const)();
+other.panel[('open' as const)];
+other.panel.open<string>();
+const instantiated = other.panel.open<string>;
+(records.entry as const)!;

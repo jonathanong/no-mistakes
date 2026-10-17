@@ -1,6 +1,7 @@
 "use strict";
 
 const rules = {
+  "forbidden-member-chains": require("./rules/forbidden-member-chains"),
   "gh-api-argument-safety": require("./rules/gh-api-argument-safety"),
   "no-argv-main-guard": require("./rules/no-argv-main-guard"),
   "no-comment-phrases": require("./rules/no-comment-phrases"),
