@@ -166,6 +166,6 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         }
         // Keep the final snapshot moves in this lexical scope and their original order.
         // Splitting their text adds no context struct, clones, or retained evaluator fields.
-        include!("run_finish.rs")
+        include!("run_finish.inc")
     }
 }
