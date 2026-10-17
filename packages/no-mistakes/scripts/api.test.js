@@ -1691,8 +1691,9 @@ test("forbidden-call predicates export bounded literal and unknown-policy declar
   assert.match(declarations, /arrayIncludes: ForbiddenCallArgumentLiteral/);
   assert.match(declarations, /arrayExcludes: ForbiddenCallArgumentLiteral/);
   assert.match(declarations, /property\?: string/);
+  assert.match(readFileSync(join(packageRoot, "index.d.ts"), "utf8"), /export \* from "\.\/types"/);
   assert.match(
-    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/forbidden-call-types"/,
   );
 });
