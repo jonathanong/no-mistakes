@@ -1,8 +1,8 @@
 use super::super::RuleFinding;
-use super::RULE_ID;
 use super::options::BannedPattern;
+use super::RULE_ID;
 use crate::codebase::ts_source::byte_offset_to_line;
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use regex::Regex;
 
 pub(super) struct CompiledPattern {

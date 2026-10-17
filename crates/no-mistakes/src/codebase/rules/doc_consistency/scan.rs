@@ -1,8 +1,8 @@
 use super::super::RuleFinding;
-use super::RULE_ID;
 use super::options::Options;
 use super::patterns::{self, CompiledPattern};
-use crate::codebase::ts_source::{SourceStore, relative_slash_path};
+use super::RULE_ID;
+use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
 use rayon::prelude::*;
 use std::collections::HashSet;
