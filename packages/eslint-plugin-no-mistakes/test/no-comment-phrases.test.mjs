@@ -291,10 +291,7 @@ describe(id, () => {
     assert.equal(schema.properties.patterns.maxItems, 64);
     assert.deepEqual(schema.properties.patterns.items.required, ["pattern"]);
     assert.equal(schema.properties.requireSuppressionReason.type, "boolean");
-    assert.equal(
-      flagPattern.source,
-      "^(?!.*(.).*\\1)(?!.*u.*v)(?!.*v.*u)[dgimsuvy]*$",
-    );
+    assert.equal(flagPattern.source, "^(?!.*(.).*\\1)(?!.*u.*v)(?!.*v.*u)[dgimsuvy]*$");
     for (const flags of ["", "d", "g", "i", "m", "s", "u", "v", "y", "gi", "yu", "gv"]) {
       assert.equal(flagPattern.test(flags), true, flags);
     }
