@@ -40,5 +40,11 @@
   "cells": 24,
   "total_rows": 192,
   "inference": "DESCRIPTIVE_ONLY_TWO_BLOCKS; no fabricated CI/gate or required universalwin",
-  "scope": "WholeactualasyncCJSanalyzeProject awaited, raw-native+ESMbyte/structuredparitycontrols; notCLIproxy/serializer-onlyspan"
+  "scope": "WholeactualasyncCJSanalyzeProject awaited, raw-native+ESMbyte/structuredparitycontrols; notCLIproxy/serializer-onlyspan",
+  "interpretation": "MEMORY_ONLY_REPLAY; original run39039054266 CPU/wall remain sole performance evidence",
+  "frozen_build_context": {
+    "run": 39039054266,
+    "attempt": 1,
+    "source": "f5d01415971a302332e25741326566035e0b1a65"
+  }
 }

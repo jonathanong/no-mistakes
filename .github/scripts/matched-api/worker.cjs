@@ -35,7 +35,12 @@ async function main() {
   let result;
   try { result = await pending; } finally { if (timer) clearInterval(timer); }
   const wall = Number(process.hrtime.bigint() - start) / 1e9, cpu = process.cpuUsage(cpu0);
-  const peakRssAtApiCompletion = process.resourceUsage().maxRSS;
+  const inheritedRusagePeakRssAtApiCompletion = process.resourceUsage().maxRSS;
+  const apiCompletionProcStatus = fs.readFileSync('/proc/self/status', 'utf8');
+  const vmHwm = /^VmHWM:\s+(\d+)\s+kB$/m.exec(apiCompletionProcStatus);
+  assert(vmHwm, 'Linux /proc/self/status VmHWM is required');
+  const peakRssAtApiCompletion = Number(vmHwm[1]);
+  assert(Number.isSafeInteger(peakRssAtApiCompletion) && peakRssAtApiCompletion > 0);
   while (sampling) await new Promise(resolve => setImmediate(resolve));
   assert(!fs.existsSync(c.observer_error));
   const bytes = c.mode === 'raw-native' ? Buffer.from(result) : Buffer.from(JSON.stringify(result));
@@ -47,7 +52,7 @@ async function main() {
     node_version: process.version, node_versions: process.versions, platform: process.platform, arch: process.arch,
     environment: { UV_THREADPOOL_SIZE: process.env.UV_THREADPOOL_SIZE ?? null, RAYON_NUM_THREADS: process.env.RAYON_NUM_THREADS ?? null, requested_jobs: c.jobs, diagnostics: c.diagnostics },
     cpu_seconds: (cpu.user + cpu.system) / 1e6, user_seconds: cpu.user / 1e6, sys_seconds: cpu.system / 1e6,
-    peak_rss_kib: peakRssAtApiCompletion, post_verification_peak_rss_kib: process.resourceUsage().maxRSS, output_sha256: sha(c.output), output_bytes: bytes.length,
+    peak_rss_kib: peakRssAtApiCompletion, peak_rss_source: 'linux-proc-self-status-VmHWM-exec-mm', api_completion_proc_status: apiCompletionProcStatus, inherited_rusage_peak_rss_kib: inheritedRusagePeakRssAtApiCompletion, post_verification_peak_rss_kib: process.resourceUsage().maxRSS, output_sha256: sha(c.output), output_bytes: bytes.length,
     reports: parsed.reports.length, snapshot_count: snapshots.filter(s => s.value !== null).length,
     interpretation: 'Whole async API await, including cold request cache construction and serialization; not isolated serializer time. PeakRSS includes fresh Node/addon process.'
   }, null, 2));

@@ -1,0 +1,88 @@
+{
+  "status": "FOUR_OFFICIAL_NATIVE_ARTIFACTS_FROZEN",
+  "utc": "2026-10-17T14:28:19.306607+00:00",
+  "run": 39039054266,
+  "source": "f5d01415971a302332e25741326566035e0b1a65",
+  "artifacts": [
+    {
+      "id": 12104370365,
+      "node_id": "MDg6QXJ0aWZhY3QxMjEwNDM3MDM2NQ==",
+      "name": "api-native-2127-baseline",
+      "size_in_bytes": 23699681,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12104370365",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12104370365/zip",
+      "expired": false,
+      "digest": "sha256:dc5e63af13882755c4bb1b89f88553cd8e37bbc0da6316f590bd707a66f97717",
+      "created_at": "2026-10-17T14:25:07Z",
+      "updated_at": "2026-10-17T14:25:07Z",
+      "expires_at": "2026-10-24T14:02:27Z",
+      "workflow_run": {
+        "id": 39039054266,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "diagnostic/2094-matched-arm",
+        "head_sha": "f5d01415971a302332e25741326566035e0b1a65"
+      }
+    },
+    {
+      "id": 12104355581,
+      "node_id": "MDg6QXJ0aWZhY3QxMjEwNDM1NTU4MQ==",
+      "name": "api-native-2127-candidate",
+      "size_in_bytes": 23664045,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12104355581",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12104355581/zip",
+      "expired": false,
+      "digest": "sha256:8dfe7709ee7c0562c3e9d309e963e946bb03ee6d6bab00d901cd3fa25a66bd4c",
+      "created_at": "2026-10-17T14:24:59Z",
+      "updated_at": "2026-10-17T14:24:59Z",
+      "expires_at": "2026-10-24T14:02:27Z",
+      "workflow_run": {
+        "id": 39039054266,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "diagnostic/2094-matched-arm",
+        "head_sha": "f5d01415971a302332e25741326566035e0b1a65"
+      }
+    },
+    {
+      "id": 12104100719,
+      "node_id": "MDg6QXJ0aWZhY3QxMjEwNDEwMDcxOQ==",
+      "name": "api-native-2129-candidate",
+      "size_in_bytes": 23697200,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12104100719",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12104100719/zip",
+      "expired": false,
+      "digest": "sha256:2755cfbb4a911a92d78271027e132b9f5dfce87df8f7758f75b2b4d21c92b47d",
+      "created_at": "2026-10-17T14:24:10Z",
+      "updated_at": "2026-10-17T14:24:10Z",
+      "expires_at": "2026-10-24T14:02:27Z",
+      "workflow_run": {
+        "id": 39039054266,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "diagnostic/2094-matched-arm",
+        "head_sha": "f5d01415971a302332e25741326566035e0b1a65"
+      }
+    },
+    {
+      "id": 12103781600,
+      "node_id": "MDg6QXJ0aWZhY3QxMjEwMzc4MTYwMA==",
+      "name": "api-native-2129-baseline",
+      "size_in_bytes": 23693402,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12103781600",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12103781600/zip",
+      "expired": false,
+      "digest": "sha256:73d7ca93464f85b9ee11272b6dcdb34d230999a10f82c7e7c7a0c7bb703da391",
+      "created_at": "2026-10-17T14:25:00Z",
+      "updated_at": "2026-10-17T14:25:00Z",
+      "expires_at": "2026-10-24T14:02:27Z",
+      "workflow_run": {
+        "id": 39039054266,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "diagnostic/2094-matched-arm",
+        "head_sha": "f5d01415971a302332e25741326566035e0b1a65"
+      }
+    }
+  ]
+}

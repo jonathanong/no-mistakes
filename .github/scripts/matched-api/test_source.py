@@ -25,7 +25,7 @@ class SourceTests(unittest.TestCase):
     def test_draft_and_four_producers(self):
         spec=json.loads((P/'protocol.json').read_text());self.assertEqual(spec['status'],'REVIEWED_ASYNC_API_DIAGNOSTIC');self.assertEqual(spec['total_rows'],192)
         workflow=(P/'workflow-source.yml').read_text();self.assertIn("inputs.confirm != 'DRAFT_DISABLED'",workflow);self.assertNotIn('contents: write',workflow)
-        self.assertEqual(workflow.count('            arm:'),4);self.assertEqual(workflow.count('            case:'),24)
+        self.assertEqual(workflow.count('            arm:'),0);self.assertIn('run-id: 39039054266',workflow);self.assertEqual(workflow.count('            case:'),24)
     def test_helper_identity_and_budget(self):
         from common import command_deadline
         with self.assertRaises(AssertionError):command_deadline(0,{'JOB_STARTED_UNIX':'20'},now=10)

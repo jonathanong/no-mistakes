@@ -5,7 +5,7 @@ from pathlib import Path
 def summary(rows):
     assert len(rows)==8
     result={}
-    for field in ['wall_seconds','cpu_seconds','user_seconds','sys_seconds','peak_rss_kib']:
+    for field in ['peak_rss_kib']:
         change=[]
         for block,order in enumerate(['ABBA','BAAB']):
             group=[r for r in rows if r['block']==block];assert ''.join('A'if r['arm']=='baseline'else'B'for r in group)==order

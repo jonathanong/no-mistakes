@@ -12,7 +12,7 @@ def validate(p,arm,pair,spec,m,d):
     assert p['tree']==spec['pairs'][pair]['trees'][arm]
     assert json.loads((d/'source-inventory.json').read_text())==json.loads((d/'source-after.json').read_text())
     assert sha(d/'source-after.json')==p['source_after_sha256']
-    assert p['machine']['run']==m['run'] and p['machine']['attempt']==m['attempt']
+    assert str(p['machine']['run'])=='39039054266' and str(p['machine']['attempt'])=='1'
     assert sha(d/'addon.node')==p['addon_sha256'] and (d/'addon.node').stat().st_size==p['bytes']
     assert p['cargo_selected']['fresh'] is False and p['cargo_selected']['target']['crate_types']==['cdylib']
     assert p['cargo_selected']['features']==['default','mermaid-validation']
@@ -26,6 +26,7 @@ def main():
     try:
         package_guard(P,os.environ);deadline=command_deadline(ENTRY_WALL,os.environ);spec=json.loads((P/'protocol.json').read_text())
         assert spec['status']=='REVIEWED_ASYNC_API_DIAGNOSTIC' and sha(P/'protocol.json')==os.environ['PROTOCOL_SHA256']
+        auth=json.loads((artifacts/'frozen-authentication.json').read_text());assert auth['original_run']==39039054266 and auth['source']=='f5d01415971a302332e25741326566035e0b1a65' and len(auth['proofs'])==2
         assert diag in ['off','on'] and jobs in ['1','4','default'];m=machine();save(out/'machine.json',m)
         assert git(root,'rev-parse','HEAD').decode().strip()==spec['pairs'][pair]['baseline']
         before=inventory(root);frozen=json.loads((P/f'fixture-{pair}.json').read_text());assert frozen['source']==spec['pairs'][pair]['baseline'] and before==frozen['files'] and git(root,'rev-parse','HEAD^{tree}').decode().strip()==frozen['tree'],'frozen fixture inventory mismatch';save(out/'fixture-before.json',before);binaries={}
@@ -58,7 +59,7 @@ def main():
     finally:
         checks={'fixture_exact':before is not None and inventory(root)==before,'binary_exact':all(sha(artifacts/(pair+'-'+a)/'addon.node')==p['addon_sha256']for a,p in producers.items()),'children':subreaper.children()};save(out/'postcheck.json',checks)
         package_guard(P,os.environ);assert checks['fixture_exact'] and checks['binary_exact'] and not checks['children']
-    save(out/'terminal.json',{'technical':'PASS','rows':8,'pair':pair,'case':case,'diagnostics':diag,'jobs':jobs,'run':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'source_sha':os.environ['GITHUB_SHA'],'interpretation':'Descriptive only; no automatic performance PASS'})
+    save(out/'terminal.json',{'technical':'PASS','rows':8,'pair':pair,'case':case,'diagnostics':diag,'jobs':jobs,'run':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'source_sha':os.environ['GITHUB_SHA'],'interpretation':'MEMORY_ONLY_REPLAY; CPU/wall descriptive, original run remains sole CPU/wall evidence','frozen_build_run':39039054266})
 if __name__=='__main__':
     try:main()
     except BaseException as e:
