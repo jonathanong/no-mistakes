@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-17T02:52:17.612008+00:00",
+  "status": "APPROVED local source/data review and metadata-only activation; exact trusted publicpayload approval REQUIRED before any diagnosticpush",
+  "reviewed_manifest_sha256": "e80c0a8d171cd54118d4b3d2940d9c0c8959130fcf119ae171adb9d727cb3089",
+  "all_source_pins_verified": 369,
+  "all_original_runtime_scientific_files_verified": 29,
+  "original_public_commit": "dda80c6816b99c7d83a7da1d118192235989aebd",
+  "original_git_blobs_not_stale_checkout_verified": true,
+  "controls_json_byte_exact": true,
+  "actualproducerlabels_verified": true,
+  "baseline": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "candidate": "48046084edf5f658191bde97e4674a14e2187b71",
+  "actualCI": "/tmp/nm2064-newhead-completed-ci/exact-head-ci-receipt.json all4Codecov/global98success aftergenuinecoveragejobrerun",
+  "scientific_scope": "All22workloads/704rows/110metrics, pilots/calibration/CPU/RSS gates unchanged; previousfailedrun retained, no numericalPASSclaim",
+  "allowed_finalization": "Bind this review, change only activation/status and derived manifest/hash metadata. Return finalexactimmutable manifest/filecount/destinationbranch for actualuserapproval; no diagnosticpush until rootrelays trustedapproval. RootsoleworkflowPOST.",
+  "release": "415271391 remainsDRAFT neverpublish"
+}

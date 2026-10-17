@@ -1,0 +1,25 @@
+{
+  "status": "ACTUAL PASS untimed SQL only",
+  "owner_tool_session": 71731,
+  "owner_actual_terminal_exit": 0,
+  "functional_actual_exit": 0,
+  "head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "tree": "0305ed0af71544a0a3975dea11d07d8c8d0d8093",
+  "scope": "Actual Z completed CLI owncore750deps; whole native addon still running; no timing/performance claim",
+  "artifact": {
+    "path": "/tmp/nm2064-next-stack-controls-source/sql/sql-probe",
+    "bytes": 83211024,
+    "sha256": "9b3c14086b99f2b130e13c4cdf75649ba7cc52f0be9034bc40658fba2a21351d"
+  },
+  "proof_pins": {
+    "/tmp/nm2064-next-stack-controls-source/sql/request.json": "195c00be5228a157120de18dafc5dd68eb609ca67e31d9d756fe54504bc70578",
+    "/tmp/nm2064-next-stack-controls-source/sql/actual-stage-source-binding.json": "af4f7227db27a35bd0c3792efa20d541d6cf3ece63e4a0b257285bd03523331f",
+    "/tmp/nm2064-next-stack-controls-source/sql/actual.json": "04125261802784956ce0af5fdfb9f57bda8fd9b01cc99f6dd8015d5103a9c22e",
+    "/tmp/nm2064-next-stack-controls-source/sql/ledger.json": "dfe0bbb107f201a34bd15014d4ce13f44cdbdda24b5a85eb46be454f7382002d",
+    "/tmp/nm2064-next-stack-controls-source/sql/sql-functional-actual.json": "ffb642e8d7d1eac432c07b8c3fd1f525a9700d7a3b733b7969e1329c39d221af",
+    "/tmp/nm2064-next-stack-controls-source/sql/sql-functional.stdout": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8",
+    "/tmp/nm2064-next-stack-controls-source/sql/sql-functional.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/tmp/nm2064-next-stack-controls-source/sql/link_once.py": "97cd2862938a2b9487f428fe09b868d7e32d7864aa6bc887656b6148e57655ff",
+    "/tmp/nm2064-next-stack-controls-source/sql/sql-functional.py": "eda03e12979feb552fdc2b6c8de02cf2eef8ef498dbaaa8529be58c2a1180998"
+  }
+}

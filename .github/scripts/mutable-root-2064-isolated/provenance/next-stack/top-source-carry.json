@@ -1,0 +1,39 @@
+{
+  "status": "PASS clean LOCAL committed source carry; no push/native/performance claim",
+  "root": "/tmp/no-mistakes-2064-final-cost-source",
+  "head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "tree": "0305ed0af71544a0a3975dea11d07d8c8d0d8093",
+  "parents": [
+    "bea5a183c663410b61fed6e7619b6268103adbe6",
+    "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d"
+  ],
+  "required_ancestor": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "ancestor_exit": 0,
+  "clean": true,
+  "target_absent": true,
+  "all_Git_live_content_rows": 23303,
+  "raw_symlink_rows": 26,
+  "source_checkpoint": {
+    "path": "/tmp/nm2064-oracle-test-filename-carry/top/source-checkpoint.json",
+    "sha256": "0aef0caee0310e785f32d90e2199100413cc4fa9759e1dc11fff9f35b7ae9224",
+    "bytes": 4121
+  },
+  "whole_inventory": {
+    "path": "/tmp/nm2064-oracle-test-filename-carry/top/whole-source-inventory.json",
+    "sha256": "541d19e4e0a71d29bf96a74ffc5ba6e0a780fe4bebc7c61e9a9d290cdd021622",
+    "bytes": 6541758
+  },
+  "local_validation": {
+    "path": "/tmp/nm2064-next-stack-final-local-closure/actual-closed-local-validation.json",
+    "sha256": "d6e8bdac22c4d97d8ac846d7eb0fcdab30fa39cac770703ce27d3c4fb4943fdf",
+    "bytes": 4007
+  },
+  "test_filename_carry": "Exact cfg-only oracle rename/path from publishedlower4a; body/module identity unchanged",
+  "configured_jscpd": {
+    "path": "/tmp/nm2064-oracle-test-filename-carry/jscpd.stdout",
+    "sha256": "795538685d8256d40ed29bdeaec5f7a6f1e4a8ace39f5c47a151b3618e098231",
+    "bytes": 3335
+  },
+  "origin": "git@github.com:jonathanong/no-mistakes.git",
+  "publication": "Root coordinates normal hooked push; none performed here"
+}

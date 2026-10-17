@@ -1,0 +1,152 @@
+{
+  "scope": "API only; full32/SQL separately retained, no repeat or combined claim",
+  "complete": true,
+  "candidate_head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "rows": [
+    {
+      "kind": "API",
+      "script": "api.test.js",
+      "counts": {
+        "tests": 43,
+        "pass": 43,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "20bbc31e8260e48a1499a82a463f6e03829495ac8a9aec7643008d719e26ceb5"
+    },
+    {
+      "kind": "API",
+      "script": "mutable-receiver-api.test.js",
+      "counts": {
+        "tests": 67,
+        "pass": 67,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "receiver-suspension-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "receiver-inline-arguments-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "cross-file-inline-receiver-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "inline-owned-member-api.test.js",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "postgres-conditional-executors-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "postgres-source-api.test.js",
+      "counts": {
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "postgres-expression-arbiter-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "assignment-receiver-api.test.js",
+      "counts": {
+        "tests": 38,
+        "pass": 38,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "namespace-types-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "type-import-order-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    {
+      "kind": "API",
+      "script": "effects-alternatives-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "loader_sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    }
+  ],
+  "no_timing": true,
+  "source_after_exact": true
+}

@@ -1,0 +1,50 @@
+{
+  "utc": "2026-10-17T02:49:31.452695+00:00",
+  "head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "run": 38994498219,
+  "attempt": 2,
+  "conclusion": "success",
+  "codecov": [
+    {
+      "id": 117289176654,
+      "name": "codecov/patch/javascript",
+      "conclusion": "success"
+    },
+    {
+      "id": 117289173534,
+      "name": "codecov/patch/rust",
+      "conclusion": "success"
+    },
+    {
+      "id": 117289170795,
+      "name": "codecov/project/javascript",
+      "conclusion": "success"
+    },
+    {
+      "id": 117289166619,
+      "name": "codecov/project/rust",
+      "conclusion": "success"
+    }
+  ],
+  "global_coverage": {
+    "regions": {
+      "total": 342526,
+      "missed": 5128,
+      "display_percent": 98.5
+    },
+    "functions": {
+      "total": 24796,
+      "missed": 161,
+      "display_percent": 99.35
+    },
+    "lines": {
+      "total": 232095,
+      "missed": 1534,
+      "display_percent": 99.34
+    }
+  },
+  "actual_coverage_job": 117287205316,
+  "raw_coverage_sha256": "c1fdea13fd714303266e5ebca87002bcdac5b9b7283847505f573653fda7e5f0",
+  "prior_missing_base": "Originalfailure retained, normal genuineRustjobrerun after parentreportavailability; no fabricatedcheck or source/settingschange",
+  "performance": "Separate new numerical gate stillpending"
+}

@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL untimed native/API/full32/SQL PASS; no performance claim",
+  "head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "tree": "0305ed0af71544a0a3975dea11d07d8c8d0d8093",
+  "actual_native_terminal": 50962,
+  "actual_api_terminal": 44597,
+  "actual_raw32_terminal": 83241,
+  "actual_sql_terminal": 71731,
+  "API": {
+    "real": 153,
+    "shim": 43,
+    "skipped": 0
+  },
+  "full32": {
+    "streams": 32,
+    "bytes": 915461181,
+    "comparison": "all32byteexact existinge5; no fallback used"
+  },
+  "SQL": {
+    "bytes": 19221,
+    "golden_sha256": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8"
+  },
+  "proof_pins": {
+    "/tmp/nm2064-next-stack-native/actual-owner-terminal.json": "ed8984f5c50eef69e45063321b4003155530b24af776473d7271514ad1613700",
+    "/tmp/nm2064-next-stack-api-actual01/actual-terminal.json": "ef98df9e8484632908c91127613f9eb384ed1db24d484e5a94e1206250ab99a9",
+    "/tmp/nm2064-next-stack-api-actual01/receipt.json": "f6e836043d4b4a94e7dd8303187aa608ab67b9473bd9d57332491db3986a51de",
+    "/tmp/nm2064-next-stack-raw32/actual-closed-raw32.json": "99d5c8f648fef3e4ba46b417dfe7d001e70b92c073dd75eb6d7bc2c4495fe418",
+    "/tmp/nm2064-next-stack-raw32/strict-e5-comparison.json": "d3518eae7011b67f5f9497627b9ee5d288478f1c8ebe1fde6400e517c01c401b",
+    "/tmp/nm2064-next-stack-controls-source/sql/actual-closed-sql.json": "e4b67071aa906c630d38115b931f708a9389727dd108f4be2ee796abd8865afd"
+  },
+  "target_absent": true
+}

@@ -1,0 +1,52 @@
+{
+  "request": {
+    "utc": "2026-10-17T02:36:28.466566+00:00",
+    "repository": "jonathanong/no-mistakes",
+    "draft_release_id": 415271391,
+    "tag": "diagnostic-native-2076-099cfed-20261016",
+    "name": "2064-4804-candidate-cli",
+    "source": "/tmp/nm2064-next-stack-native/candidate/cli",
+    "bytes": 83091456,
+    "sha256": "4ec7f28b4fb4c35bd8a2610ffae10dfe88b9e617acc11aac6ce5204142e40ff7",
+    "producer": "48046084edf5f658191bde97e4674a14e2187b71",
+    "scope": "Upload verified native CLI only to existing draft staging release, no publication, replacement, deletion or workflow dispatch"
+  },
+  "actual_exit": 0,
+  "asset": {
+    "url": "https://api.github.com/repos/jonathanong/no-mistakes/releases/assets/649311724",
+    "id": 649311724,
+    "node_id": "RA_kwDOSaSRXM4ms7Xs",
+    "name": "2064-4804-candidate-cli",
+    "label": "",
+    "uploader": {
+      "login": "jonathanong",
+      "id": 643505,
+      "node_id": "MDQ6VXNlcjY0MzUwNQ==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/643505?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jonathanong",
+      "html_url": "https://github.com/jonathanong",
+      "followers_url": "https://api.github.com/users/jonathanong/followers",
+      "following_url": "https://api.github.com/users/jonathanong/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jonathanong/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jonathanong/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jonathanong/subscriptions",
+      "organizations_url": "https://api.github.com/users/jonathanong/orgs",
+      "repos_url": "https://api.github.com/users/jonathanong/repos",
+      "events_url": "https://api.github.com/users/jonathanong/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jonathanong/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "content_type": "application/octet-stream",
+    "state": "uploaded",
+    "size": 83091456,
+    "digest": "sha256:4ec7f28b4fb4c35bd8a2610ffae10dfe88b9e617acc11aac6ce5204142e40ff7",
+    "download_count": 0,
+    "created_at": "2026-10-17T02:36:29Z",
+    "updated_at": "2026-10-17T02:36:32Z",
+    "browser_download_url": "https://github.com/jonathanong/no-mistakes/releases/download/untagged-c2ba798cfc5ea7de8bec/2064-4804-candidate-cli"
+  },
+  "draft_preserved": true
+}

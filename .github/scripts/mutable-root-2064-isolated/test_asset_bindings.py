@@ -20,5 +20,6 @@ class AssetBindings(unittest.TestCase):
         for row in assets:
             self.assertEqual(row['name'], row['role'])
             self.assertIn((row['name'], row['asset_id'], row['bytes'], row['sha256']), tuples)
-            expected = 'd7847d84fcfb22a84fd0a2d218aef8c8c1282eb3' if row['role'].startswith('baseline-') else '06fd7a1e7e741961417cd1ee5e6e0a2229f2f837'
+            spec = json.loads((D / 'hosted-spec.json').read_text())
+            expected = spec['actual_producer_baseline'] if row['role'].startswith('baseline-') else spec['actual_producer_candidate']
             self.assertEqual(row['actual_producer'], expected)

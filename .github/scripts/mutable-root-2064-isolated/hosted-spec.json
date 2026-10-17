@@ -2,11 +2,11 @@
   "status": "REVIEWED AND FROZEN",
   "approved_diagnostic_commit": null,
   "repository": "jonathanong/no-mistakes",
-  "main": "281673146341e6915c051aedfde6fd05ae6dd055",
-  "candidate_head": "bea5a183c663410b61fed6e7619b6268103adbe6",
-  "candidate_tree": "3bc608292725dd7830171df9c70f4e45bb4522b5",
-  "actual_producer_baseline": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
-  "actual_producer_candidate": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "main": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
+  "candidate_head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "candidate_tree": "0305ed0af71544a0a3975dea11d07d8c8d0d8093",
+  "actual_producer_baseline": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "actual_producer_candidate": "48046084edf5f658191bde97e4674a14e2187b71",
   "api_controls_complete": true,
   "sampling_minimum_remaining_seconds": 600,
   "job_seconds": 1800,
@@ -15,7 +15,7 @@
   "node_version": "26.11.1",
   "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
   "review_provenance": {
-    "source_scope": "Genuine borrowed-root implementation; authentic06fd producer exactly whole-tree equivalent to publicbea5. Original e5 partial B adverse observations remain immutable.",
+    "source_scope": "New genuine child admission + integrated lower/parent optimizations; Y/Z actual public clean layers; native stages still running. Previous bea5 experiment remains adverse historical evidence.",
     "parent_diagnostic_sha": "afbb0956d07e9bfa1e2e0cc61f45cd5897b334b8",
     "original_source_manifest_sha256": "ca3b5f091f6a44d7bc851c14fa8ddc1d4c14e234a4fa0489232b371311159f7b",
     "upstream_source_manifest": {
@@ -23,37 +23,37 @@
       "sha256": "e30e1ff0339d29bd53e7c5cf08f6624cd4ab866d508f587e02669fa932035e8e"
     }
   },
-  "candidate_lock_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+  "candidate_lock_sha256": "d84416b923a34fa01f86a200dba223aceddef4c00e942c88fb99b2c509d534de",
   "pr_number": 2064,
-  "ci_run": 38985425258,
+  "ci_run": 38994498219,
   "root_review": {
-    "path": "provenance/borrowed-root/root-final-source-activation-review.json",
-    "sha256": "3a16f1a8c843efed338ec657048071f2d634666b81ee18e8da914e2e62f66cc1"
+    "path": "provenance/next-stack/root-final-source-review.json",
+    "sha256": "1898f4d686ddba0e375b0cc656add6c81edb691e895695dbc37e24879ef5d6a0"
   },
   "child_sql_receipt": {
-    "path": "provenance/borrowed-root/SQL-functional.json",
-    "sha256": "dcdc2d12197b610e986b43ef65a78e83968992d851a3b8b6c12bb3c1814d410d"
+    "path": "provenance/next-stack/actual-closed-sql.json",
+    "sha256": "e4b67071aa906c630d38115b931f708a9389727dd108f4be2ee796abd8865afd"
   },
   "child_fixture_control_receipt": {
-    "path": "provenance/borrowed-root/strict-full32.json",
-    "sha256": "90e6fee3f25e904c157549e3e41846c230b517a4a1cb883c7fbffbaa6d86f1db"
+    "path": "provenance/next-stack/actual-closed-raw32.json",
+    "sha256": "99d5c8f648fef3e4ba46b417dfe7d001e70b92c073dd75eb6d7bc2c4495fe418"
   },
   "exact_head_ci": {
-    "path": "provenance/borrowed-root/CI/exact-head-global98-receipt.json",
-    "sha256": "dab6bd4cf42e0afd45ec6fb1335fc81a373fbc9140d69f0539aed67f5080feb8"
+    "path": "provenance/next-stack/exact-head-ci-receipt.json",
+    "sha256": "66793f4d320d4b1973c52354c02aec003b6b504cd3592aea3155e5a5d03bfc1e"
   },
-  "baseline_tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
-  "main_policy": "Main observational. Exact d784 baseline tree required, including identical-tree parent merge proof; new candidate must remain exact head/open/DRAFT.",
+  "baseline_tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e",
+  "main_policy": "Main observational; exact new parent Y baseline/source and child Z required. All historical adverse pairs retained.",
   "local_native_proof": {
-    "path": "provenance/borrowed-root/native-root-review.json",
-    "sha256": "82702c6acdf949e4a355631c55133c54ecf6781444ffdc35524dd79687195c32"
+    "path": "provenance/next-stack/actual-owner-terminal.json",
+    "sha256": "ed8984f5c50eef69e45063321b4003155530b24af776473d7271514ad1613700"
   },
   "local_complete_controls_proof": {
-    "path": "provenance/borrowed-root/complete-controls-root-review.json",
-    "sha256": "37a982192214b333e772f88a77009362f61fb66a5e34f9244016a94e1a7f68d4"
+    "path": "provenance/next-stack/nm2064-next-stack-complete-controls.json",
+    "sha256": "dc5fc00bd7b99df2bef41e8d59df7a1fc52496d7f42a728bc78bb20449a87bea"
   },
   "public_source_carry": {
-    "path": "provenance/borrowed-root/actual-public-source-carry.json",
-    "sha256": "a5468a4652895946efca8eea33d3c388c2d3d9cdb11340f4ddb65b0d82915fa0"
+    "path": "provenance/next-stack/top-source-carry.json",
+    "sha256": "f6d7f9acd717e0948980ed5984d402729728c6916b6dfdc0c64d8c390ce26cc5"
   }
 }

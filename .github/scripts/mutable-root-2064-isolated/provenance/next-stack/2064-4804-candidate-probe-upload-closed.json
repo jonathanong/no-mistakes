@@ -1,0 +1,52 @@
+{
+  "request": {
+    "utc": "2026-10-17T02:42:37.496268+00:00",
+    "repository": "jonathanong/no-mistakes",
+    "draft_release_id": 415271391,
+    "tag": "diagnostic-native-2076-099cfed-20261016",
+    "name": "2064-4804-candidate-probe",
+    "source": "/tmp/nm2064-next-stack-native/candidate/probe",
+    "bytes": 83391848,
+    "sha256": "5d6a928aeb181d577c648715968624e15d26f4196718aae9b323e27a6e0dfa33",
+    "producer": "48046084edf5f658191bde97e4674a14e2187b71",
+    "scope": "Upload verified native helper only to existing draft staging release, no publication, replacement, deletion or workflow dispatch"
+  },
+  "actual_exit": 0,
+  "asset": {
+    "url": "https://api.github.com/repos/jonathanong/no-mistakes/releases/assets/649324057",
+    "id": 649324057,
+    "node_id": "RA_kwDOSaSRXM4ms-YZ",
+    "name": "2064-4804-candidate-probe",
+    "label": "",
+    "uploader": {
+      "login": "jonathanong",
+      "id": 643505,
+      "node_id": "MDQ6VXNlcjY0MzUwNQ==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/643505?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jonathanong",
+      "html_url": "https://github.com/jonathanong",
+      "followers_url": "https://api.github.com/users/jonathanong/followers",
+      "following_url": "https://api.github.com/users/jonathanong/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jonathanong/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jonathanong/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jonathanong/subscriptions",
+      "organizations_url": "https://api.github.com/users/jonathanong/orgs",
+      "repos_url": "https://api.github.com/users/jonathanong/repos",
+      "events_url": "https://api.github.com/users/jonathanong/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jonathanong/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "content_type": "application/octet-stream",
+    "state": "uploaded",
+    "size": 83391848,
+    "digest": "sha256:5d6a928aeb181d577c648715968624e15d26f4196718aae9b323e27a6e0dfa33",
+    "download_count": 0,
+    "created_at": "2026-10-17T02:42:38Z",
+    "updated_at": "2026-10-17T02:42:41Z",
+    "browser_download_url": "https://github.com/jonathanong/no-mistakes/releases/download/untagged-c2ba798cfc5ea7de8bec/2064-4804-candidate-probe"
+  },
+  "draft_preserved": true
+}

@@ -1,0 +1,52 @@
+{
+  "request": {
+    "utc": "2026-10-17T02:37:26.614823+00:00",
+    "repository": "jonathanong/no-mistakes",
+    "draft_release_id": 415271391,
+    "tag": "diagnostic-native-2076-099cfed-20261016",
+    "name": "2054-4a1b-candidate-sql",
+    "source": "/tmp/nm2054-next-parent-helper-links/sql",
+    "bytes": 83033272,
+    "sha256": "1f7fe2887bf206719ab18c421d6a85fd28a0a81814408a34b39af6819b3a9044",
+    "producer": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+    "scope": "Upload verified native helper only to existing draft staging release, no publication, replacement, deletion or workflow dispatch"
+  },
+  "actual_exit": 0,
+  "asset": {
+    "url": "https://api.github.com/repos/jonathanong/no-mistakes/releases/assets/649313927",
+    "id": 649313927,
+    "node_id": "RA_kwDOSaSRXM4ms76H",
+    "name": "2054-4a1b-candidate-sql",
+    "label": "",
+    "uploader": {
+      "login": "jonathanong",
+      "id": 643505,
+      "node_id": "MDQ6VXNlcjY0MzUwNQ==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/643505?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jonathanong",
+      "html_url": "https://github.com/jonathanong",
+      "followers_url": "https://api.github.com/users/jonathanong/followers",
+      "following_url": "https://api.github.com/users/jonathanong/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jonathanong/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jonathanong/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jonathanong/subscriptions",
+      "organizations_url": "https://api.github.com/users/jonathanong/orgs",
+      "repos_url": "https://api.github.com/users/jonathanong/repos",
+      "events_url": "https://api.github.com/users/jonathanong/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jonathanong/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "content_type": "application/octet-stream",
+    "state": "uploaded",
+    "size": 83033272,
+    "digest": "sha256:1f7fe2887bf206719ab18c421d6a85fd28a0a81814408a34b39af6819b3a9044",
+    "download_count": 0,
+    "created_at": "2026-10-17T02:37:27Z",
+    "updated_at": "2026-10-17T02:37:30Z",
+    "browser_download_url": "https://github.com/jonathanong/no-mistakes/releases/download/untagged-c2ba798cfc5ea7de8bec/2054-4a1b-candidate-sql"
+  },
+  "draft_preserved": true
+}

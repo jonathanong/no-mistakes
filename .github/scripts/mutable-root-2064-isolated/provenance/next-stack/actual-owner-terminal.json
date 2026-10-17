@@ -1,0 +1,38 @@
+{
+  "status": "ACTUAL native build PASS; no timing claim",
+  "exit": 0,
+  "actual_tool_session": 50962,
+  "actual_tool_chunk": "eedb28",
+  "actual_tool_terminal": true,
+  "head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "tree": "0305ed0af71544a0a3975dea11d07d8c8d0d8093",
+  "source_after_exact": "Builder verified all23303 Git/live rows after completed addon; cleanHEAD",
+  "target_absent": true,
+  "artifacts": {
+    "cli": {
+      "path": "/tmp/nm2064-next-stack-native/candidate/cli",
+      "bytes": 83091456,
+      "sha256": "4ec7f28b4fb4c35bd8a2610ffae10dfe88b9e617acc11aac6ce5204142e40ff7"
+    },
+    "addon": {
+      "path": "/tmp/nm2064-next-stack-native/candidate/addon.node",
+      "bytes": 79517800,
+      "sha256": "30df0e0a09687ffbeaae2ee2575b65daf86897b06f54b4c67f9c7ddde7e6f051"
+    },
+    "probe": {
+      "path": "/tmp/nm2064-next-stack-native/candidate/probe",
+      "bytes": 83391848,
+      "sha256": "5d6a928aeb181d577c648715968624e15d26f4196718aae9b323e27a6e0dfa33"
+    }
+  },
+  "pins": {
+    "/tmp/nm2064-next-stack-native/request.json": "56c3303984459412ecdb6a43cd397134663610e5bc55bfa208c6a0c355af1c38",
+    "/tmp/nm2064-next-stack-native/build-once.py": "ca8b2475debb4339698ca0f5e69a3921bb7354e28ff0f00c9447dd635b1e459e",
+    "/tmp/nm2064-next-stack-native/candidate/closed-artifacts.json": "caf6972adfa157545476a43390cb5f67aa38623660300e8453f59d1375044d59",
+    "/tmp/nm2064-next-stack-native/candidate/closed-cli-stage.json": "324ef9b3ea125a49c623ef9dcd8ae1773b770fb5cdd130649c2e7f05ec0b5fde",
+    "/tmp/nm2064-next-stack-native/candidate/functional-deps-source-profile-manifest.json": "c13d3979f74707986318b9a6daa107086fb8d0b5fd7d5f62d4adc8053f993fba",
+    "/tmp/nm2064-next-stack-native/candidate/cleanup.json": "6e49dd29f0a71f73a2d033e3c38de64028a40ec8f7a5d101ee67efcdcc76ce76",
+    "/tmp/nm2064-next-stack-native/candidate/ledger.json": "3b2766b8033f5691452d5532df78e99bac077f6601caa5788d26112d96f71c3e",
+    "/tmp/nm2064-next-stack-native/candidate/rustc.stdout": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+  }
+}
