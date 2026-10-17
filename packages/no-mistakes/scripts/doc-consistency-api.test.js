@@ -44,8 +44,12 @@ test(
       ),
     );
     assert.ok(!rules.some((finding) => finding.file === "docs/file-disabled.md"));
-    assert.ok(!rules.some((finding) => finding.file === "docs/line-disabled.md" && finding.line === 2));
-    assert.ok(rules.some((finding) => finding.file === "docs/line-disabled.md" && finding.line === 3));
+    assert.ok(
+      !rules.some((finding) => finding.file === "docs/line-disabled.md" && finding.line === 2),
+    );
+    assert.ok(
+      rules.some((finding) => finding.file === "docs/line-disabled.md" && finding.line === 3),
+    );
   },
 );
 
