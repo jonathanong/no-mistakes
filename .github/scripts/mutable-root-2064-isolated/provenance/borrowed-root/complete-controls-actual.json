@@ -1,0 +1,27 @@
+{
+  "status": "PASS actual untimed existing e5 contracts; no performance/publication claim",
+  "actual_session": 29405,
+  "actual_exit": 0,
+  "actual_chunk": "6e7dc3",
+  "strict_comparator_actual_exit": 0,
+  "strict_comparator_chunk": "389d01",
+  "head": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "source_after_exact": true,
+  "shim_pass": 43,
+  "native_pass": 153,
+  "skipped": 0,
+  "full32_bytes": 915461181,
+  "raw_comparisons": {
+    "exact full raw bytes": 32
+  },
+  "SQL_bytes": 19221,
+  "utc": "2026-10-16T22:53:19.608604+00:00",
+  "pins": {
+    "/tmp/nm2064-borrowed-root-functional-actual01/receipt.json": "ec2ec4881f626a10fdd5f281dc34b9833b9994ceb4ac31a95fccdbff4f960f34",
+    "/tmp/nm2064-borrowed-root-functional-actual01/strict-full32-comparison.json": "90e6fee3f25e904c157549e3e41846c230b517a4a1cb883c7fbffbaa6d86f1db",
+    "/tmp/nm2064-borrowed-root-functional-draft/request-REVIEWED.json": "635508ffe0e11b7aabe215fe7dd93f96d997a894a5a8bec02cd4208acbf1cd89",
+    "/tmp/nm2064-borrowed-root-functional-draft/controls.py": "a8203a13295ec1fb1f20ec1f7d96463f6a3a5bb2bfc2ea7a76f8e66a7d1df535",
+    "/tmp/nm2064-borrowed-root-functional-draft/compare-full32.py": "70108dc3bdfae1bf1f57c31f469d403709e05e28cebe2c742a8d3e32ad270189",
+    "/tmp/nm2064-borrowed-root-functional-draft/actual-activation-source-closure.json": "f8134f2db4f0e54fdece619d33395e902e005df38d53edb15de06b6744fef79f"
+  }
+}

@@ -1,0 +1,8 @@
+effects:
+  valkey:
+    functions: [primary.get, session.info, session.scan]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [valkey]

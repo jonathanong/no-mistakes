@@ -1,0 +1,10 @@
+{
+  "session": 97848,
+  "exit": 0,
+  "chunk": "b5be8c",
+  "observed_utc": "2026-10-16T21:41:53.608031+00:00",
+  "receipt_sha256": "5d3f7dc70d8a45984c82d9ece312ca9127ca87307d89450e989dde27837b3de8",
+  "real_passed": 153,
+  "shim_passed": 43,
+  "skipped": 0
+}

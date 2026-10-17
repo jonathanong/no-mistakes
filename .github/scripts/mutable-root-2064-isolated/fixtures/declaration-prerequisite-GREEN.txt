@@ -1,0 +1,262 @@
+TAP version 13
+# Subtest: programmatic API proxies object options through async native addon calls
+ok 1 - programmatic API proxies object options through async native addon calls
+  ---
+  duration_ms: 11.005317
+  type: 'test'
+  ...
+# Subtest: testsWhy and analyzeProject clean generated why-plan directories
+ok 2 - testsWhy and analyzeProject clean generated why-plan directories
+  ---
+  duration_ms: 2.807852
+  type: 'test'
+  ...
+# Subtest: preparation write failures clean their temporary directory and preserve the error
+ok 3 - preparation write failures clean their temporary directory and preserve the error
+  ---
+  duration_ms: 1.386299
+  type: 'test'
+  ...
+# Subtest: analyzeProject waits for every preparation before cleaning generated plans
+ok 4 - analyzeProject waits for every preparation before cleaning generated plans
+  ---
+  duration_ms: 0.882633
+  type: 'test'
+  ...
+# Subtest: native exports, JavaScript exports, and declarations stay in parity
+ok 5 - native exports, JavaScript exports, and declarations stay in parity
+  ---
+  duration_ms: 1.389364
+  type: 'test'
+  ...
+# Subtest: native ESM imports expose every declared root API
+ok 6 - native ESM imports expose every declared root API
+  ---
+  duration_ms: 1.18234
+  type: 'test'
+  ...
+# Subtest: analyzeProject declarations mirror report-specific runtime requirements
+ok 7 - analyzeProject declarations mirror report-specific runtime requirements
+  ---
+  duration_ms: 0.510844
+  type: 'test'
+  ...
+# Subtest: query annotation configuration exposes the unknown SQL policy
+ok 8 - query annotation configuration exposes the unknown SQL policy
+  ---
+  duration_ms: 0.110642
+  type: 'test'
+  ...
+# Subtest: generatePostgresCatalog declarations separate complete and ordering catalogs
+ok 9 - generatePostgresCatalog declarations separate complete and ordering catalogs
+  ---
+  duration_ms: 0.304657
+  type: 'test'
+  ...
+# Subtest: SQL expression roots expose named contracts without opaque AST dispatch
+ok 10 - SQL expression roots expose named contracts without opaque AST dispatch
+  ---
+  duration_ms: 0.168831
+  type: 'test'
+  ...
+# Subtest: parsePostgresSql exposes named pure-source contracts and async batch overloads
+ok 11 - parsePostgresSql exposes named pure-source contracts and async batch overloads
+  ---
+  duration_ms: 0.381856
+  type: 'test'
+  ...
+# Subtest: executed PostgreSQL source extraction exposes its named async contract
+ok 12 - executed PostgreSQL source extraction exposes its named async contract
+  ---
+  duration_ms: 0.164464
+  type: 'test'
+  ...
+# Subtest: executed PostgreSQL source extraction compiles from the package root
+ok 13 - executed PostgreSQL source extraction compiles from the package root
+  ---
+  duration_ms: 285.266279
+  type: 'test'
+  ...
+# Subtest: PostgreSQL metadata facts export routine signatures and typed index operations
+ok 14 - PostgreSQL metadata facts export routine signatures and typed index operations
+  ---
+  duration_ms: 0.14414
+  type: 'test'
+  ...
+# Subtest: resolveCheck declarations mirror its mutually exclusive runtime inputs
+ok 15 - resolveCheck declarations mirror its mutually exclusive runtime inputs
+  ---
+  duration_ms: 0.050938
+  type: 'test'
+  ...
+# Subtest: resolveConfig declarations expose additive per-framework triggers
+ok 16 - resolveConfig declarations expose additive per-framework triggers
+  ---
+  duration_ms: 0.049811
+  type: 'test'
+  ...
+# Subtest: route coverage declarations expose integration ownership and helper arguments
+ok 17 - route coverage declarations expose integration ownership and helper arguments
+  ---
+  duration_ms: 0.059553
+  type: 'test'
+  ...
+# Subtest: Vitest project policy declarations expose repository-relative setup files
+ok 18 - Vitest project policy declarations expose repository-relative setup files
+  ---
+  duration_ms: 0.041267
+  type: 'test'
+  ...
+# Subtest: test plan declarations require current results but accept saved legacy plan documents
+ok 19 - test plan declarations require current results but accept saved legacy plan documents
+  ---
+  duration_ms: 0.191895
+  type: 'test'
+  ...
+# Subtest: graph declarations expose GitHub Actions workflow relationships and virtual nodes
+ok 20 - graph declarations expose GitHub Actions workflow relationships and virtual nodes
+  ---
+  duration_ms: 0.07664
+  type: 'test'
+  ...
+# Subtest: graph declarations expose tRPC relationships and virtual nodes
+ok 21 - graph declarations expose tRPC relationships and virtual nodes
+  ---
+  duration_ms: 0.045558
+  type: 'test'
+  ...
+# Subtest: graph declarations expose opt-in call relationships
+ok 22 - graph declarations expose opt-in call relationships
+  ---
+  duration_ms: 0.028525
+  type: 'test'
+  ...
+# Subtest: dependency declarations expose bounded import-closure inputs and compact output
+ok 23 - dependency declarations expose bounded import-closure inputs and compact output
+  ---
+  duration_ms: 0.058033
+  type: 'test'
+  ...
+# Subtest: declarations expose invocation controls on every analysis
+ok 24 - declarations expose invocation controls on every analysis
+  ---
+  duration_ms: 0.155526
+  type: 'test'
+  ...
+# Subtest: SELECT scope facts expose named public contracts
+ok 25 - SELECT scope facts expose named public contracts
+  ---
+  duration_ms: 0.227185
+  type: 'test'
+  ...
+# Subtest: INSERT facts expose named exported declaration contracts
+ok 26 - INSERT facts expose named exported declaration contracts
+  ---
+  duration_ms: 0.213536
+  type: 'test'
+  ...
+# Subtest: TypeScript module facts expose named contracts and async invocation options
+ok 27 - TypeScript module facts expose named contracts and async invocation options
+  ---
+  duration_ms: 0.309098
+  type: 'test'
+  ...
+# Subtest: nested DO constraints remain typed through procedural declaration paths
+ok 28 - nested DO constraints remain typed through procedural declaration paths
+  ---
+  duration_ms: 0.088069
+  type: 'test'
+  ...
+# Subtest: data-modifying CTE facts expose named exported declaration contracts
+ok 29 - data-modifying CTE facts expose named exported declaration contracts
+  ---
+  duration_ms: 0.215827
+  type: 'test'
+  ...
+# Subtest: SQL wrappers expose named execution and child-source contracts
+ok 30 - SQL wrappers expose named execution and child-source contracts
+  ---
+  duration_ms: 0.103603
+  type: 'test'
+  ...
+# Subtest: literal EXECUTE contracts export decoded SQL provenance
+ok 31 - literal EXECUTE contracts export decoded SQL provenance
+  ---
+  duration_ms: 0.051886
+  type: 'test'
+  ...
+# Subtest: structured trigger events and cast types remain named public contracts
+ok 32 - structured trigger events and cast types remain named public contracts
+  ---
+  duration_ms: 0.053047
+  type: 'test'
+  ...
+# Subtest: SQL recursive expression and INSERT lineage contracts export named additive types
+ok 33 - SQL recursive expression and INSERT lineage contracts export named additive types
+  ---
+  duration_ms: 0.231861
+  type: 'test'
+  ...
+# Subtest: Postgres predicate and value discriminants remain public
+ok 34 - Postgres predicate and value discriminants remain public
+  ---
+  duration_ms: 0.053967
+  type: 'test'
+  ...
+# Subtest: declared payload configuration types are named public exports
+ok 35 - declared payload configuration types are named public exports
+  ---
+  duration_ms: 0.048216
+  type: 'test'
+  ...
+# Subtest: reverse query declarations export bounded collection diagnostics
+ok 36 - reverse query declarations export bounded collection diagnostics
+  ---
+  duration_ms: 0.067845
+  type: 'test'
+  ...
+# Subtest: audit declarations export named artifacts, evidence and async report contracts
+ok 37 - audit declarations export named artifacts, evidence and async report contracts
+  ---
+  duration_ms: 0.151284
+  type: 'test'
+  ...
+# Subtest: scalar quantified query facts export typed operands and quantifier contracts
+ok 38 - scalar quantified query facts export typed operands and quantifier contracts
+  ---
+  duration_ms: 0.061237
+  type: 'test'
+  ...
+# Subtest: timeout policy declarations retain their complete public signatures
+ok 39 - timeout policy declarations retain their complete public signatures
+  ---
+  duration_ms: 0.126151
+  type: 'test'
+  ...
+# Subtest: timeout policy public type contracts compile without losing option fields
+ok 40 - timeout policy public type contracts compile without losing option fields
+  ---
+  duration_ms: 208.171008
+  type: 'test'
+  ...
+# Subtest: active progress exposes named public snapshot contracts and a live-only polling API
+ok 41 - active progress exposes named public snapshot contracts and a live-only polling API
+  ---
+  duration_ms: 0.160852
+  type: 'test'
+  ...
+# Subtest: Cargo warning declarations retain exported structured warning contracts
+ok 42 - Cargo warning declarations retain exported structured warning contracts
+  ---
+  duration_ms: 0.052613
+  type: 'test'
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 42
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 576.435083

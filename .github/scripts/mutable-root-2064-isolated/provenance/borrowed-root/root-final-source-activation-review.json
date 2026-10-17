@@ -1,0 +1,11 @@
+{
+  "status": "PASS root final source activation review",
+  "source_manifest": "df21246e50d17c4d0e07fe14111b566569c0fbdebc967fa84efd45cdf3063558",
+  "pins": 345,
+  "previous340_exact_except_hosted_spec": true,
+  "CI_raw_total_and_all98floors_verified": true,
+  "all_four_Codecov_exact_head_success": true,
+  "all_native_controls_assets_previously_closed": true,
+  "no_performance_claim": true,
+  "prior_adverse_run_preserved": 38972147818
+}

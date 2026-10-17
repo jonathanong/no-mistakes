@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/tmp/nm2064-current-parent-helper-links/sql-probe",
+    "/tmp/nm2064-b0b-sql-control/inputs/index-identity-feature-parity.sql",
+    "/tmp/nm2064-b0b-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "/tmp/nm2064-b0b-sql-control/inputs/legacy-default-full-facts.json"
+  ],
+  "scope": "UNTIMED single functional control, no timing acceptance",
+  "exit": 0,
+  "cleanup": [
+    {
+      "leader_exit": 0,
+      "owned_sid_matches_after_cleanup": [],
+      "proc_read_errors": []
+    }
+  ],
+  "stdout_bytes": 19221,
+  "stdout_sha256": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8",
+  "stderr_bytes": 0
+}

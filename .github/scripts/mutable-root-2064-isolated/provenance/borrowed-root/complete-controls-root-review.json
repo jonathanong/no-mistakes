@@ -1,0 +1,15 @@
+{
+  "status": "PASS independent complete native functional controls",
+  "head": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "shim_pass": 43,
+  "real_native_pass": 153,
+  "skipped": 0,
+  "api_scripts": 13,
+  "raw_streams_byte_exact_to_e5": 32,
+  "raw_bytes": 915461181,
+  "source_files_rehashed": 23260,
+  "source_after_exact": true,
+  "target_absent": true,
+  "strict_reader_used_fallback": false,
+  "scope_limit": "Untimed correctness only; no publicpush/CI/global98/performance claim"
+}

@@ -1,0 +1,43 @@
+{
+  "complete": true,
+  "head": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "rows": [
+    {
+      "role": "sql-probe",
+      "argv": [
+        "rustc",
+        "+stable",
+        "--edition=2021",
+        "--crate-name",
+        "nm_sql_functional_probe",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2064-acquisition-release/candidate/functional-deps",
+        "--extern",
+        "no_mistakes=/tmp/nm2064-acquisition-release/candidate/functional-deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/nm2054-b26-sql-control/probe.rs",
+        "-o",
+        "/tmp/nm2064-acquisition-sql-control-draft/sql-probe",
+        "--extern",
+        "serde_json=/tmp/nm2064-acquisition-release/candidate/functional-deps/libserde_json-55f37743dc7bb8c4.rlib"
+      ],
+      "exit": 0,
+      "sha256": "71e17df6653a72939dbc1aff0864e30f63e235a4cfa3b6b871c1bf82ec780e66",
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ]
+    }
+  ],
+  "scope": "Root-authorized SQL-only link from completed06fd CLIstage0 with immutable own750deps; fullwrapper3513 stilllive, no fullnativeclosure claim"
+}

@@ -1,0 +1,56 @@
+{
+  "status": "PASS actual release builder terminal0 and complete artifact/source readback",
+  "session": 3513,
+  "actual_exit": 0,
+  "actual_tool_chunk": "d080ec",
+  "ended_at_utc": "2026-10-16T22:51:38.651747+00:00",
+  "head": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "tree": "3bc608292725dd7830171df9c70f4e45bb4522b5",
+  "producer_label": "Unpublished local e5 + exact six-file acquisition overlay; not public e5 binary",
+  "stages": [
+    {
+      "label": "rustc",
+      "exit": 0
+    },
+    {
+      "label": "cli",
+      "exit": 0
+    },
+    {
+      "label": "probe",
+      "exit": 0
+    },
+    {
+      "label": "addon",
+      "exit": 0
+    }
+  ],
+  "artifacts": {
+    "cli": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/cli",
+      "bytes": 83055712,
+      "sha256": "796e16d31a9d8bc927017bcf57f6df7ced6039eb1bac29420302214bdd36094b"
+    },
+    "addon": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/addon.node",
+      "bytes": 79482584,
+      "sha256": "2c9459b0c9f2f0d77bb1ee02aa7e057d7dd8edb319e3226cc3e21fb9571aaa3f"
+    },
+    "probe": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/probe",
+      "bytes": 83356720,
+      "sha256": "4d86062dfda87d647c04b140bc98d76f3288cfd408c6990d15988d3e185d7c7a"
+    }
+  },
+  "source_rows": 23260,
+  "deps": 750,
+  "source_exact": true,
+  "target_absent": true,
+  "owned_cleanup": "Builder executed identity-aware OwnedProcess.finish for every command and asserted no owned members before target deletion; no other processes touched",
+  "warning": "sccache server shutdown warning retained in addon.stderr; actual compilation completed locally with fresh=false producer",
+  "no_performance_or_publication_claim": true,
+  "ledger": "/tmp/nm2064-acquisition-release/candidate/ledger.json",
+  "closed_artifacts": "/tmp/nm2064-acquisition-release/candidate/closed-artifacts.json",
+  "closed_artifacts_sha256": "e8eb503821c4bcdde355e04c1915b8b9ff7ee738c15e7284e18bcdeca03d5eb6",
+  "deps_manifest_sha256": "bb35ca8caa6862ecf8073b23a1a77a83f4e4359ad2bd24fed5209f6c79e90d6d"
+}

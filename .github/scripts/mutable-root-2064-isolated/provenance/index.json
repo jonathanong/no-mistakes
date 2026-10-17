@@ -1,0 +1,50 @@
+[
+  {
+    "original_path": "/tmp/nm2054-b26-evidence-draft/source-closure.json",
+    "payload": "3396d446e25f0ed8152dba2ab3c98230906da110237cc806d52592124557bb43.json",
+    "sha256": "3396d446e25f0ed8152dba2ab3c98230906da110237cc806d52592124557bb43",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2054-b26-root-untimed-readback.json",
+    "payload": "f71e9a28a2dce1f8ac95cce7d1ddd488592f74697adb755c8d417ba211c6a931.json",
+    "sha256": "f71e9a28a2dce1f8ac95cce7d1ddd488592f74697adb755c8d417ba211c6a931",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2054-b26-independent-semantic-review/independent-semantic-approval.json",
+    "payload": "9ce616f5559e09d1d19c9e34dd15e4c82c0ffcb5d83bdf68213f627d4ed155ae.json",
+    "sha256": "9ce616f5559e09d1d19c9e34dd15e4c82c0ffcb5d83bdf68213f627d4ed155ae",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2054-b26-evidence-draft/perf-final-protocol-review.json",
+    "payload": "67bacbe1061e9dd2e3f154af77e91c41ee54da9985d4b430799283e136e1a23f.json",
+    "sha256": "67bacbe1061e9dd2e3f154af77e91c41ee54da9985d4b430799283e136e1a23f",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2054-b26-evidence-draft/fresh-semantic-review.json",
+    "payload": "43ac97a6ea50a270fbe8897ba4dc431e60563efe194323612cbab28b702f68c7.json",
+    "sha256": "43ac97a6ea50a270fbe8897ba4dc431e60563efe194323612cbab28b702f68c7",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2054-b26-evidence-draft/measurement-plan.json",
+    "payload": "029b4d1fdff60dd3536d96b2d06cdd85160049426af563e487b12569b0814b50.json",
+    "sha256": "029b4d1fdff60dd3536d96b2d06cdd85160049426af563e487b12569b0814b50",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2076-main-e0b-source-carry/actual-production-dependency-carry.json",
+    "payload": "031759b4a61b434ebd7cf95fb3df8ed0f6a0407730cef472c934a3e7039a2f40.json",
+    "sha256": "031759b4a61b434ebd7cf95fb3df8ed0f6a0407730cef472c934a3e7039a2f40",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  },
+  {
+    "original_path": "/tmp/nm2076-privilege-separated-transport/root-source-review.json",
+    "payload": "0bd6e17aa74e31b3f04f6ce7f8388a529aeb8d576cf557e52b0520b842813e58.json",
+    "sha256": "0bd6e17aa74e31b3f04f6ce7f8388a529aeb8d576cf557e52b0520b842813e58",
+    "scope": "Historical authenticated provenance only, not remote runtime filesystem dependencies"
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "status": "PASS actual saved child native API and exact-head Rust fixture controls; observational binding, no new execution",
+  "head": "b0b7fccfba6e5f2bad0c6b2d38f02a88c69042aa",
+  "tree": "4c4e328d09deed24676e7c731c0aff50ccad70e9",
+  "actual_native_receipt": {
+    "path": "/tmp/nm2064-b0b-release-functional/actual-attempt3/receipt.json",
+    "sha256": "abd241256abc705e9d56511d3d1e71cd58f28fccdc6b90c2a5f54a9c1d57ef24"
+  },
+  "real_native": 151,
+  "declaration_shim": 42,
+  "actual_rust_ci": {
+    "run": 38946857531,
+    "job": 117128054895,
+    "full_raw_log": {
+      "path": "/tmp/nm2064-b0b-final-ci/rust-full.log",
+      "sha256": "76fab45ac33485729909a93770704eca70b57aaa1f39a8afe23dfeccee48af0f"
+    },
+    "selected_actual_PASS_lines": {
+      "replacement_patterns_keep_the_selected_rhs_receiver_identity": [
+        "2026-10-16T18:26:06.2013011Z test codebase::dependencies::extract::extract_value_flow::mutable_receiver_tests::assignment_rhs::replacement_patterns_keep_the_selected_rhs_receiver_identity ... ok"
+      ],
+      "replacement_rhs_prefix_queries_do_not_scan_history": [
+        "2026-10-16T18:26:06.2361180Z test codebase::dependencies::extract::extract_value_flow::mutable_receiver_tests::assignment_rhs::replacement_rhs_prefix_queries_do_not_scan_history ... ok"
+      ],
+      "replacement_rhs_canonical_destinations_share_diamond_arrivals": [
+        "2026-10-16T18:26:06.2923815Z test codebase::dependencies::extract::extract_value_flow::mutable_receiver_tests::assignment_rhs::replacement_rhs_canonical_destinations_share_diamond_arrivals ... ok"
+      ],
+      "replacement_rhs_repeated_possible_identity_shares_projection": [
+        "2026-10-16T18:26:06.2357228Z test codebase::dependencies::extract::extract_value_flow::mutable_receiver_tests::assignment_rhs::replacement_rhs_repeated_possible_identity_shares_projection ... ok"
+      ],
+      "captured_versions_bound_repeated_membership_probes": [
+        "2026-10-16T18:26:06.3096739Z test codebase::dependencies::extract::extract_value_flow::mutable_receiver_tests::probes::captured_versions_bound_repeated_membership_probes ... ok"
+      ],
+      "moved_keys_preserve_full_projection_facts_and_pending_capacity": [
+        "2026-10-16T18:26:06.4917170Z test codebase::dependencies::extract::extract_value_flow::mutation_projection::differential_tests::moved_keys_preserve_full_projection_facts_and_pending_capacity ... ok"
+      ],
+      "mutable_root_snapshots_bound_origin_projection_work": [
+        "2026-10-16T18:26:06.3608143Z test codebase::dependencies::extract::extract_value_flow::mutable_receiver_tests::scale::mutable_root_snapshots_bound_origin_projection_work ... ok"
+      ]
+    }
+  },
+  "saved_fixture_inventory": {
+    "path": "/tmp/nm2064-isolated-performance-source-draft/saved-child-controls.json",
+    "sha256": "9e35cfa2fe199e1c943d3ff5c78cdebbd0ac5fba462cd49ec085d478164af609"
+  },
+  "limits": "768/128 and exact d9 oracle assertions are actual CI Rust test evidence; not fabricated default-native counters. Future hosted fresh controls remain mandatory."
+}

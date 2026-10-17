@@ -1,0 +1,125 @@
+{
+  "spec": {
+    "pr_number": 2064,
+    "ci_run": 38968800513,
+    "candidate_head": "e5c0848878810cf2155ba9698282e8c2c8840178",
+    "actual_producer_baseline": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "baseline_tree": "be83adb6d510c7f107c97211a48638c6c76a1f87"
+  },
+  "responses": {
+    "git/ref/heads/main": {
+      "object": {
+        "sha": "observed-main-can-advance"
+      }
+    },
+    "pulls/2064": {
+      "state": "open",
+      "draft": true,
+      "head": {
+        "sha": "e5c0848878810cf2155ba9698282e8c2c8840178"
+      }
+    },
+    "actions/runs/38968800513": {
+      "head_sha": "e5c0848878810cf2155ba9698282e8c2c8840178",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "commits/e5c0848878810cf2155ba9698282e8c2c8840178/check-runs?per_page=100": {
+      "total_count": 4,
+      "check_runs": [
+        {
+          "name": "codecov/patch/rust",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "codecov/project/rust",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "codecov/patch/javascript",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "codecov/project/javascript",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "pulls/2054": {
+      "head": {
+        "sha": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+      },
+      "state": "open",
+      "merged": false,
+      "merge_commit_sha": null
+    },
+    "commits/d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3": {
+      "commit": {
+        "tree": {
+          "sha": "be83adb6d510c7f107c97211a48638c6c76a1f87"
+        }
+      }
+    },
+    "commits/saved-merge": {
+      "commit": {
+        "tree": {
+          "sha": "be83adb6d510c7f107c97211a48638c6c76a1f87"
+        }
+      }
+    }
+  },
+  "cases": {
+    "open": {},
+    "merged": {
+      "pulls/2054": {
+        "head": {
+          "sha": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+        },
+        "state": "closed",
+        "merged": true,
+        "merge_commit_sha": "saved-merge"
+      }
+    },
+    "changed_head": {
+      "pulls/2054": {
+        "head": {
+          "sha": "different"
+        },
+        "state": "open",
+        "merged": false,
+        "merge_commit_sha": null
+      }
+    },
+    "changed_merge_tree": {
+      "pulls/2054": {
+        "head": {
+          "sha": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+        },
+        "state": "closed",
+        "merged": true,
+        "merge_commit_sha": "saved-merge"
+      },
+      "commits/saved-merge": {
+        "commit": {
+          "tree": {
+            "sha": "different"
+          }
+        }
+      }
+    },
+    "closed_unmerged": {
+      "pulls/2054": {
+        "head": {
+          "sha": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+        },
+        "state": "closed",
+        "merged": false,
+        "merge_commit_sha": null
+      }
+    }
+  }
+}

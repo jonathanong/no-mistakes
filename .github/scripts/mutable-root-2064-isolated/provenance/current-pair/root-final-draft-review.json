@@ -1,0 +1,56 @@
+{
+  "status": "PASS root independent CLOSED DRAFT source/data review; activation metadata only authorized next",
+  "checkpoint_sha256": "dfa38a27b0bb6ee5f1c54dc50bef610b68d743ffbf7a2d7774ecd958efec11bc",
+  "source_files": 313,
+  "unchanged_kernels": 13,
+  "assets": [
+    {
+      "role": "baseline-cli",
+      "id": 648705190,
+      "producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+    },
+    {
+      "role": "baseline-addon.node",
+      "id": 648705342,
+      "producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+    },
+    {
+      "role": "baseline-probe",
+      "id": 648705461,
+      "producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+    },
+    {
+      "role": "baseline-sql-probe",
+      "id": 648705659,
+      "producer": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3"
+    },
+    {
+      "role": "candidate-cli",
+      "id": 648709110,
+      "producer": "e5c0848878810cf2155ba9698282e8c2c8840178"
+    },
+    {
+      "role": "candidate-addon.node",
+      "id": 648709247,
+      "producer": "e5c0848878810cf2155ba9698282e8c2c8840178"
+    },
+    {
+      "role": "candidate-probe",
+      "id": 648709420,
+      "producer": "e5c0848878810cf2155ba9698282e8c2c8840178"
+    },
+    {
+      "role": "candidate-sql-probe",
+      "id": 648709572,
+      "producer": "e5c0848878810cf2155ba9698282e8c2c8840178"
+    }
+  ],
+  "review": [
+    "All313source pins and13unchanged sampler/statistics/schedule/safety kernels verified",
+    "Actual8localnative/provenance source hashes and byte counts verified against rootuploadedserverdigest identities",
+    "Changed source reviewed: parent exacthead/tree and same-tree merge eligibility; exact2actualfullfact labels with pinned complete-token/statistics fallback; API115/153+43source locks; actualfixed8workflowassets and fresh e5 checkout",
+    "Actualnative/CI/global98/full32/SQL/signature/sourceunit receipts bound; oldadverse B26 preserved",
+    "No sampling changes, selective retries, field masks or cross-runner pooling introduced"
+  ],
+  "scope": "Allow status/rootreview/source-manifest activation then normal publication; no dispatch until exact published SHA reviewed"
+}

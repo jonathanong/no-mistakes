@@ -1,0 +1,11 @@
+{
+  "status": "PASS root independent source-pin and actual untimed closure readback; adapter and sampling not approved",
+  "utc": "2026-10-16T19:03:29.064854+00:00",
+  "source_pins": 29,
+  "source_closure_sha256": "3396d446e25f0ed8152dba2ab3c98230906da110237cc806d52592124557bb43",
+  "actual_terminal_sha256": "15fada06b4ffbe5570cd3a1f8fcd4ab82d5db4f09acd9dba862e0c0cc36c0c78",
+  "receipt_sha256": "e72f353e9bedaa6f09f13bd6e6fde8e4bfd4e327a591b4add6cfd152d1ddbbae",
+  "commands": 6,
+  "independent_semantic_review_sha256": "9ce616f5559e09d1d19c9e34dd15e4c82c0ffcb5d83bdf68213f627d4ed155ae",
+  "measurement_rows": 0
+}

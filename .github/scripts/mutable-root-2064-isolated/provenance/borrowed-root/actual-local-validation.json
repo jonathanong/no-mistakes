@@ -1,0 +1,126 @@
+{
+  "status": "PASS: focused semantic/work/coverage and both supported Clippy modes; no performance claim",
+  "observed_session": 18175,
+  "actual_exit": 0,
+  "actual_tool_chunk": "8f330f",
+  "commands": [
+    {
+      "label": "compiler",
+      "argv": [
+        "rustc",
+        "-Vv"
+      ],
+      "extra_env": {},
+      "started_utc": "2026-10-16T22:28:20.283298+00:00",
+      "owned_sid": 10,
+      "identity": {
+        "pid": 10,
+        "starttime": 41171837,
+        "pgid": 10,
+        "sid": 10
+      },
+      "exit": 0,
+      "ended_utc": "2026-10-16T22:28:21.286222+00:00"
+    },
+    {
+      "label": "default-lib-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--lib",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "extra_env": {},
+      "started_utc": "2026-10-16T22:28:21.286900+00:00",
+      "owned_sid": 20,
+      "identity": {
+        "pid": 20,
+        "starttime": 41171937,
+        "pgid": 20,
+        "sid": 20
+      },
+      "exit": 0,
+      "ended_utc": "2026-10-16T22:30:37.334979+00:00"
+    },
+    {
+      "label": "instrumented-all-targets-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--all-targets",
+        "--features",
+        "test-instrumentation",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "extra_env": {},
+      "started_utc": "2026-10-16T22:30:37.335308+00:00",
+      "owned_sid": 15691,
+      "identity": {
+        "pid": 15691,
+        "starttime": 41185542,
+        "pgid": 15691,
+        "sid": 15691
+      },
+      "exit": 0,
+      "ended_utc": "2026-10-16T22:31:46.153443+00:00"
+    },
+    {
+      "label": "coverage",
+      "argv": [
+        "cargo",
+        "llvm-cov",
+        "test",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--lib",
+        "--features",
+        "test-instrumentation",
+        "--json",
+        "--output-path",
+        "/tmp/nm2064-acquisition-roots-remaining-checks/coverage.json",
+        "assigned_acquisition_roots::tests::",
+        "--",
+        "--test-threads=1"
+      ],
+      "extra_env": {},
+      "started_utc": "2026-10-16T22:31:46.153674+00:00",
+      "owned_sid": 17530,
+      "identity": {
+        "pid": 17530,
+        "starttime": 41192424,
+        "pgid": 17530,
+        "sid": 17530
+      },
+      "exit": 0,
+      "ended_utc": "2026-10-16T22:34:25.884301+00:00"
+    }
+  ],
+  "source_checkpoint": {
+    "path": "/tmp/nm2064-acquisition-roots-validation-followup/source-checkpoint.json",
+    "sha256": "39db81ea1d5a75d5029329b92e162714196b3d1be575032ffc462ec180741418"
+  },
+  "source_after_exact": true,
+  "target_physically_absent": true,
+  "coverage_readback": {
+    "path": "/tmp/nm2064-acquisition-roots-remaining-checks/focused-coverage-readback.json",
+    "sha256": "a368845ea6c0ba054d05940615ecbd871eec9d9342725be65e80f812442dcfc7"
+  },
+  "prior_attempts_preserved": [
+    "/tmp/nm2064-acquisition-roots-validation",
+    "/tmp/nm2064-acquisition-roots-validation-followup"
+  ],
+  "known_default_libtest_configuration_issue": 2089,
+  "global98": "PENDING fresh exact-head CI",
+  "performance": "PENDING changed candidate; original B adverse retained"
+}

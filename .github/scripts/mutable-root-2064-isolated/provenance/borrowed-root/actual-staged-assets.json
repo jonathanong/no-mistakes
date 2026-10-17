@@ -1,0 +1,70 @@
+[
+  {
+    "role": "candidate-cli",
+    "name": "2064-borrowed-roots-candidate-cli",
+    "path": "/tmp/nm2064-acquisition-release/candidate/cli",
+    "bytes": 83055712,
+    "sha256": "796e16d31a9d8bc927017bcf57f6df7ced6039eb1bac29420302214bdd36094b",
+    "actual_producer": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+    "provenance": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/closed-artifacts.json",
+      "sha256": "e8eb503821c4bcdde355e04c1915b8b9ff7ee738c15e7284e18bcdeca03d5eb6"
+    },
+    "id": 649023492,
+    "asset_id": 649023492,
+    "digest": "sha256:796e16d31a9d8bc927017bcf57f6df7ced6039eb1bac29420302214bdd36094b",
+    "release_asset_name": null,
+    "scope": "ACTUAL closed fresh06fd native producer; public ref/CI and staged asset ID pending"
+  },
+  {
+    "role": "candidate-addon.node",
+    "name": "2064-borrowed-roots-candidate-addon.node",
+    "path": "/tmp/nm2064-acquisition-release/candidate/addon.node",
+    "bytes": 79482584,
+    "sha256": "2c9459b0c9f2f0d77bb1ee02aa7e057d7dd8edb319e3226cc3e21fb9571aaa3f",
+    "actual_producer": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+    "provenance": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/closed-artifacts.json",
+      "sha256": "e8eb503821c4bcdde355e04c1915b8b9ff7ee738c15e7284e18bcdeca03d5eb6"
+    },
+    "id": 649023691,
+    "asset_id": 649023691,
+    "digest": "sha256:2c9459b0c9f2f0d77bb1ee02aa7e057d7dd8edb319e3226cc3e21fb9571aaa3f",
+    "release_asset_name": null,
+    "scope": "ACTUAL closed fresh06fd native producer; public ref/CI and staged asset ID pending"
+  },
+  {
+    "role": "candidate-probe",
+    "name": "2064-borrowed-roots-candidate-probe",
+    "path": "/tmp/nm2064-acquisition-release/candidate/probe",
+    "bytes": 83356720,
+    "sha256": "4d86062dfda87d647c04b140bc98d76f3288cfd408c6990d15988d3e185d7c7a",
+    "actual_producer": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+    "provenance": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/closed-artifacts.json",
+      "sha256": "e8eb503821c4bcdde355e04c1915b8b9ff7ee738c15e7284e18bcdeca03d5eb6"
+    },
+    "id": 649023883,
+    "asset_id": 649023883,
+    "digest": "sha256:4d86062dfda87d647c04b140bc98d76f3288cfd408c6990d15988d3e185d7c7a",
+    "release_asset_name": null,
+    "scope": "ACTUAL closed fresh06fd native producer; public ref/CI and staged asset ID pending"
+  },
+  {
+    "role": "candidate-sql-probe",
+    "name": "2064-borrowed-roots-candidate-sql-probe",
+    "path": "/tmp/nm2064-acquisition-sql-control-draft/sql-probe",
+    "bytes": 83176240,
+    "sha256": "71e17df6653a72939dbc1aff0864e30f63e235a4cfa3b6b871c1bf82ec780e66",
+    "actual_producer": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+    "provenance": {
+      "path": "/tmp/nm2064-acquisition-sql-control-draft/actual.json",
+      "sha256": "94a04dec45b96fda94b634ea6f2b5ce98c54a9c4e11f760925419efca4d18a1e"
+    },
+    "id": 649024029,
+    "asset_id": 649024029,
+    "digest": "sha256:71e17df6653a72939dbc1aff0864e30f63e235a4cfa3b6b871c1bf82ec780e66",
+    "release_asset_name": null,
+    "scope": "ACTUAL closed fresh06fd native producer; public ref/CI and staged asset ID pending"
+  }
+]

@@ -1,0 +1,873 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "arm": "A26",
+      "workload": "facts-no_writes-values",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "128"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-no_writes-imports",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-writes-values",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "517"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-writes-imports",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-shared_histories-values",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1025"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-shared_histories-imports",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "513"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-jsx-values",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "facts-jsx-imports",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "hot-mutable-root-scale",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "A26",
+      "workload": "hot-mutable-pattern-phase-scale",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "A26",
+      "workload": "hot-mutable-pattern-deferred-diamond",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "19"
+    },
+    {
+      "arm": "A26",
+      "workload": "hot-mutable-pattern-eager-class-scale",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2"
+    },
+    {
+      "arm": "A26",
+      "workload": "hot-mutable-pattern-cold-class-scale",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2"
+    },
+    {
+      "arm": "A26",
+      "workload": "graph",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "graph",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937"
+    },
+    {
+      "arm": "A26",
+      "workload": "graph-observer",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "graph-observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937"
+    },
+    {
+      "arm": "A26",
+      "workload": "graph-no-calls",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "graph-no-calls",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "effects-mutable-let-direct-off",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "effects-mutable-let-direct-observer",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "effects-mutable-let-copied-off",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "A26",
+      "workload": "effects-mutable-let-copied-observer",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "A26",
+      "workload": "effects-mutable-pattern-deferred-diamond-off",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "A26",
+      "workload": "effects-mutable-pattern-deferred-diamond-observer",
+      "argv": [
+        "/tmp/nm2054-final-stack-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-no_writes-values",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "128"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-no_writes-imports",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-writes-values",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "517"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-writes-imports",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-shared_histories-values",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1025"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-shared_histories-imports",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "513"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-jsx-values",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "facts-jsx-imports",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "hot-mutable-root-scale",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "B26",
+      "workload": "hot-mutable-pattern-phase-scale",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "B26",
+      "workload": "hot-mutable-pattern-deferred-diamond",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "19"
+    },
+    {
+      "arm": "B26",
+      "workload": "hot-mutable-pattern-eager-class-scale",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2"
+    },
+    {
+      "arm": "B26",
+      "workload": "hot-mutable-pattern-cold-class-scale",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2"
+    },
+    {
+      "arm": "B26",
+      "workload": "graph",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "graph",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937"
+    },
+    {
+      "arm": "B26",
+      "workload": "graph-observer",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "graph-observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937"
+    },
+    {
+      "arm": "B26",
+      "workload": "graph-no-calls",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "graph-no-calls",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "effects-mutable-let-direct-off",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "effects-mutable-let-direct-observer",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "effects-mutable-let-copied-off",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "B26",
+      "workload": "effects-mutable-let-copied-observer",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1"
+    },
+    {
+      "arm": "B26",
+      "workload": "effects-mutable-pattern-deferred-diamond-off",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    },
+    {
+      "arm": "B26",
+      "workload": "effects-mutable-pattern-deferred-diamond-observer",
+      "argv": [
+        "/tmp/nm2064-current-parent-helper-links/probe",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0"
+    }
+  ],
+  "pins": {
+    "/tmp/nm2064-current-parent-vm-source/package/workloads.json": "cdd1b5e66757c37675876c30ad5e36e80657ce91843c7bbc6d28d56c739a6042",
+    "/tmp/nm2064-current-parent-full32/input-closure.json": "f241b6ddeec9c57aa1160c0e4f8bfb3217e75cb1c0930c70c77838dc39374072",
+    "/tmp/nm2054-final-stack-helper-links/probe-2054": "9ffeae3ec16ddb698476df17ca09f6fb1d8173a2d91d20ecebe0ebac50300012",
+    "/tmp/nm2064-current-parent-helper-links/probe": "e5fe159431e127758b4a21a2303c1db197de135fc6a702577557b4a892f592b0",
+    "/tmp/nm2054-current-stack-raw32/B28/receipt.json": "2f2b7653f07afb5529618a18693fb5894c27820ffcb113b387246e2be7b06dfe",
+    "/tmp/nm2064-current-parent-full32/C28/receipt.json": "c12e513c8149b51f3d36ed0cc3672c932c012893ee90df301996518219716481"
+  }
+}

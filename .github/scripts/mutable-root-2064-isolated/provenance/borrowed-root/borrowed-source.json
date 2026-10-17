@@ -1,0 +1,32 @@
+{
+  "root": "/tmp/no-mistakes-2064-acquisition-roots",
+  "base": "e5c0848878810cf2155ba9698282e8c2c8840178",
+  "files": [
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow.rs",
+      "sha256": "06c35f14474b704f99ea74e32b5c58b950a1f01a1e27b83185a1ad82a9d66536"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_acquisition_roots.rs",
+      "sha256": "4d0da850d701782b649769e1fd1e7e5213f325e052733ad122055bc4a1d26975"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_acquisition_roots_tests.rs",
+      "sha256": "f3f48d451745ab3eab5e2a0ad52f7c327600cb217d266dc0cff61fa99436ffa8"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_receiver_proof.rs",
+      "sha256": "58dcd4b36e21bd400860f2c5715997c6cd1b3439b3bb70781ec1534db19d8866"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/references.rs",
+      "sha256": "a3379010545741853681aedfc19235d16a45271a22f3418d23a56bd068aeb633"
+    },
+    {
+      "path": "test-cases/codebase-analysis/receiver-acquisition/assignment-rhs-borrowed-roots.mts",
+      "sha256": "925158a4a602d8825cdec1bdb811492d9f82d97ffcf935481b73036f41018817"
+    }
+  ],
+  "prior_attempt": "/tmp/nm2064-acquisition-roots-validation",
+  "correction": "Saved fixture isolated; only expected cfg membership work counter compared separately then reconciled for all-fields equality"
+}

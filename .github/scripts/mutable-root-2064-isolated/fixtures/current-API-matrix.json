@@ -1,0 +1,256 @@
+{
+  "scope": "Saved actual current parent115/43 and child153/43 API results; not a remote-run PASS",
+  "complete": true,
+  "records": [
+    {
+      "arm": "baseline",
+      "script": "api.test.js",
+      "counts": {
+        "tests": 43,
+        "pass": 43,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "mutable-receiver-api.test.js",
+      "counts": {
+        "tests": 67,
+        "pass": 67,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "receiver-suspension-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "receiver-inline-arguments-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "cross-file-inline-receiver-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "inline-owned-member-api.test.js",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "postgres-conditional-executors-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "postgres-source-api.test.js",
+      "counts": {
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "postgres-expression-arbiter-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "namespace-types-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "type-import-order-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "baseline",
+      "script": "effects-alternatives-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "api.test.js",
+      "counts": {
+        "tests": 43,
+        "pass": 43,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "mutable-receiver-api.test.js",
+      "counts": {
+        "tests": 67,
+        "pass": 67,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "receiver-suspension-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "receiver-inline-arguments-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "cross-file-inline-receiver-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "inline-owned-member-api.test.js",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "postgres-conditional-executors-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "postgres-source-api.test.js",
+      "counts": {
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "postgres-expression-arbiter-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "assignment-receiver-api.test.js",
+      "counts": {
+        "tests": 38,
+        "pass": 38,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "namespace-types-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "type-import-order-api.test.js",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "arm": "candidate",
+      "script": "effects-alternatives-api.test.js",
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      }
+    }
+  ]
+}

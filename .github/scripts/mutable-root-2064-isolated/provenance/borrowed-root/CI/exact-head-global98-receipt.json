@@ -1,0 +1,77 @@
+{
+  "status": "PASS exact-head TestCI/global98/fourCodecov; performance separate",
+  "head": "bea5a183c663410b61fed6e7619b6268103adbe6",
+  "run_id": 38985425258,
+  "rust_job_id": 117255660715,
+  "coverage": {
+    "regions": {
+      "count": 342120,
+      "missed": 5117,
+      "covered": 337003,
+      "actual_percent": 98.50432596749678,
+      "floor": 98
+    },
+    "functions": {
+      "count": 24749,
+      "missed": 161,
+      "covered": 24588,
+      "actual_percent": 99.34946866540062,
+      "floor": 98
+    },
+    "lines": {
+      "count": 231841,
+      "missed": 1523,
+      "covered": 230318,
+      "actual_percent": 99.3430842689602,
+      "floor": 98
+    }
+  },
+  "raw_total_line": "2026-10-17T00:20:58.8490414Z TOTAL                                                                                                      342120              5117    98.50%       24749               161    99.35%      231841              1523    99.34%           0                 0         -",
+  "floors": {
+    "lines": 98,
+    "functions": 98,
+    "regions": 98
+  },
+  "codecov": {
+    "codecov/patch/rust": {
+      "id": 117257496867,
+      "head_sha": "bea5a183c663410b61fed6e7619b6268103adbe6",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://app.codecov.io/gh/jonathanong/no-mistakes/pull/2064"
+    },
+    "codecov/project/rust": {
+      "id": 117257491528,
+      "head_sha": "bea5a183c663410b61fed6e7619b6268103adbe6",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://app.codecov.io/gh/jonathanong/no-mistakes/pull/2064"
+    },
+    "codecov/patch/javascript": {
+      "id": 117256963253,
+      "head_sha": "bea5a183c663410b61fed6e7619b6268103adbe6",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://app.codecov.io/gh/jonathanong/no-mistakes/pull/2064"
+    },
+    "codecov/project/javascript": {
+      "id": 117256956315,
+      "head_sha": "bea5a183c663410b61fed6e7619b6268103adbe6",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://app.codecov.io/gh/jonathanong/no-mistakes/pull/2064"
+    }
+  },
+  "latest_check_count": 40,
+  "non_success_latest_checks": [],
+  "pins": {
+    "/tmp/nm2064-bea5-completed-ci/run.json": "842995eca6ede4c3e96b59c743ecd657aa4d63ecb812a6602e3d3dd7a46553d1",
+    "/tmp/nm2064-bea5-completed-ci/jobs.json": "6abba1c624ec06caddf67ad781b55dcf20db4cc8d013ab8636df1e65b65a8520",
+    "/tmp/nm2064-bea5-completed-ci/checks.json": "e1b0690bdc32dbc19c4859953eb2821fc7d12978ebdd3f3a7f04900bafd458ff",
+    "/tmp/nm2064-bea5-completed-ci/status.json": "8391fce2634c2ae9135c0517ed90a8e2ad62cc98e81f1713259d7fc2281bccb0",
+    "/tmp/nm2064-bea5-completed-ci/rust.raw.log": "bf395c2dff419f46ed619e7211b817459a301e040680f5381a85e9f693e7cd5d"
+  },
+  "raw_flags_verified": true,
+  "no_ignore_filename_regex": true,
+  "utc": "2026-10-17T00:27:50.275506+00:00"
+}

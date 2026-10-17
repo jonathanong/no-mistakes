@@ -1,0 +1,26 @@
+{
+  "status": "PASS native bundle actual artifact independent readback",
+  "actual_terminal": 0,
+  "head": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "tree": "3bc608292725dd7830171df9c70f4e45bb4522b5",
+  "artifacts": {
+    "cli": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/cli",
+      "bytes": 83055712,
+      "sha256": "796e16d31a9d8bc927017bcf57f6df7ced6039eb1bac29420302214bdd36094b"
+    },
+    "addon": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/addon.node",
+      "bytes": 79482584,
+      "sha256": "2c9459b0c9f2f0d77bb1ee02aa7e057d7dd8edb319e3226cc3e21fb9571aaa3f"
+    },
+    "probe": {
+      "path": "/tmp/nm2064-acquisition-release/candidate/probe",
+      "bytes": 83356720,
+      "sha256": "4d86062dfda87d647c04b140bc98d76f3288cfd408c6990d15988d3e185d7c7a"
+    }
+  },
+  "cargo_producers_fresh_false": true,
+  "target_absent": true,
+  "scope_limit": "Controls pending; no publichead/CI/global98/performance or publication claim"
+}

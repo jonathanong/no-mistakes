@@ -1,0 +1,165 @@
+[
+  {
+    "source": "deadline.py",
+    "corrected": true,
+    "owned_leader": {
+      "pid": 12,
+      "starttime": 40990011,
+      "sid": 12,
+      "pgid": 12,
+      "exe": "/usr/bin/python3.12",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/nm2064-clock-ownership-correction/fixtures/clock_lookup.py",
+        "/tmp/tmp6yy50qo8/child.pid"
+      ]
+    },
+    "observed_children": [],
+    "recorded_child_pid": 13,
+    "clock_receipt": {
+      "argv": [
+        "gh",
+        "api",
+        "--paginate",
+        "--slurp",
+        "repos/jonathanong/no-mistakes/actions/runs/38972147818/attempts/1/jobs?per_page=100"
+      ],
+      "exit": 0,
+      "owned_identity": {
+        "pid": 12,
+        "starttime": 40990011,
+        "sid": 12,
+        "pgid": 12,
+        "exe": "/usr/bin/python3.12",
+        "argv": [
+          "/usr/bin/python3",
+          "/tmp/nm2064-clock-ownership-correction/fixtures/clock_lookup.py",
+          "/tmp/tmp6yy50qo8/child.pid"
+        ]
+      },
+      "owned_cleanup": [
+        {
+          "adopted": {
+            "pid": 13,
+            "state": "S",
+            "ppid": 11,
+            "pgid": 13,
+            "sid": 13,
+            "starttime": 40990013
+          },
+          "signal": 15
+        },
+        {
+          "adopted": {
+            "pid": 13,
+            "state": "S",
+            "ppid": 11,
+            "pgid": 13,
+            "sid": 13,
+            "starttime": 40990013
+          },
+          "signal": 9
+        },
+        {
+          "adopted": {
+            "pid": 13,
+            "state": "Z",
+            "ppid": 11,
+            "pgid": 13,
+            "sid": 13,
+            "starttime": 40990013
+          },
+          "reaped_status": 9
+        },
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "cleanup_complete": true,
+      "lookup_seconds": 0.31957539002178237
+    },
+    "final_test_cleanup": [
+      {
+        "leader_exit": 0,
+        "owned_sid_matches_after_cleanup": [],
+        "proc_read_errors": []
+      }
+    ]
+  },
+  {
+    "source": "deadline.original.py",
+    "corrected": false,
+    "owned_leader": {
+      "pid": 14,
+      "starttime": 40990043,
+      "sid": 14,
+      "pgid": 14,
+      "exe": "/usr/bin/python3.12",
+      "argv": []
+    },
+    "observed_children": [
+      {
+        "pid": 15,
+        "state": "S",
+        "ppid": 11,
+        "pgid": 15,
+        "sid": 15,
+        "starttime": 40990046
+      }
+    ],
+    "recorded_child_pid": 15,
+    "clock_receipt": {
+      "argv": [
+        "gh",
+        "api",
+        "--paginate",
+        "--slurp",
+        "repos/jonathanong/no-mistakes/actions/runs/38972147818/attempts/1/jobs?per_page=100"
+      ],
+      "exit": 0,
+      "lookup_seconds": 0.06475680903531611
+    },
+    "final_test_cleanup": [
+      {
+        "adopted": {
+          "pid": 15,
+          "state": "S",
+          "ppid": 11,
+          "pgid": 15,
+          "sid": 15,
+          "starttime": 40990046
+        },
+        "signal": 15
+      },
+      {
+        "adopted": {
+          "pid": 15,
+          "state": "S",
+          "ppid": 11,
+          "pgid": 15,
+          "sid": 15,
+          "starttime": 40990046
+        },
+        "signal": 9
+      },
+      {
+        "adopted": {
+          "pid": 15,
+          "state": "Z",
+          "ppid": 11,
+          "pgid": 15,
+          "sid": 15,
+          "starttime": 40990046
+        },
+        "reaped_status": 9
+      },
+      {
+        "leader_exit": 0,
+        "owned_sid_matches_after_cleanup": [],
+        "proc_read_errors": []
+      }
+    ]
+  }
+]

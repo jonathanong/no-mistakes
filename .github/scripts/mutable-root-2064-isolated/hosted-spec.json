@@ -1,0 +1,59 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "approved_diagnostic_commit": null,
+  "repository": "jonathanong/no-mistakes",
+  "main": "281673146341e6915c051aedfde6fd05ae6dd055",
+  "candidate_head": "bea5a183c663410b61fed6e7619b6268103adbe6",
+  "candidate_tree": "3bc608292725dd7830171df9c70f4e45bb4522b5",
+  "actual_producer_baseline": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+  "actual_producer_candidate": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "api_controls_complete": true,
+  "sampling_minimum_remaining_seconds": 600,
+  "job_seconds": 1800,
+  "operation_seconds": 1500,
+  "transfer_reserve_seconds": 300,
+  "node_version": "26.11.1",
+  "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
+  "review_provenance": {
+    "source_scope": "Genuine borrowed-root implementation; authentic06fd producer exactly whole-tree equivalent to publicbea5. Original e5 partial B adverse observations remain immutable.",
+    "parent_diagnostic_sha": "afbb0956d07e9bfa1e2e0cc61f45cd5897b334b8",
+    "original_source_manifest_sha256": "ca3b5f091f6a44d7bc851c14fa8ddc1d4c14e234a4fa0489232b371311159f7b",
+    "upstream_source_manifest": {
+      "path": "/tmp/nm2054-b26-hosted-source/package/.github/scripts/mutable-root-b26-isolated/source-manifest.json",
+      "sha256": "e30e1ff0339d29bd53e7c5cf08f6624cd4ab866d508f587e02669fa932035e8e"
+    }
+  },
+  "candidate_lock_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+  "pr_number": 2064,
+  "ci_run": 38985425258,
+  "root_review": {
+    "path": "provenance/borrowed-root/root-final-source-activation-review.json",
+    "sha256": "3a16f1a8c843efed338ec657048071f2d634666b81ee18e8da914e2e62f66cc1"
+  },
+  "child_sql_receipt": {
+    "path": "provenance/borrowed-root/SQL-functional.json",
+    "sha256": "dcdc2d12197b610e986b43ef65a78e83968992d851a3b8b6c12bb3c1814d410d"
+  },
+  "child_fixture_control_receipt": {
+    "path": "provenance/borrowed-root/strict-full32.json",
+    "sha256": "90e6fee3f25e904c157549e3e41846c230b517a4a1cb883c7fbffbaa6d86f1db"
+  },
+  "exact_head_ci": {
+    "path": "provenance/borrowed-root/CI/exact-head-global98-receipt.json",
+    "sha256": "dab6bd4cf42e0afd45ec6fb1335fc81a373fbc9140d69f0539aed67f5080feb8"
+  },
+  "baseline_tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
+  "main_policy": "Main observational. Exact d784 baseline tree required, including identical-tree parent merge proof; new candidate must remain exact head/open/DRAFT.",
+  "local_native_proof": {
+    "path": "provenance/borrowed-root/native-root-review.json",
+    "sha256": "82702c6acdf949e4a355631c55133c54ecf6781444ffdc35524dd79687195c32"
+  },
+  "local_complete_controls_proof": {
+    "path": "provenance/borrowed-root/complete-controls-root-review.json",
+    "sha256": "37a982192214b333e772f88a77009362f61fb66a5e34f9244016a94e1a7f68d4"
+  },
+  "public_source_carry": {
+    "path": "provenance/borrowed-root/actual-public-source-carry.json",
+    "sha256": "a5468a4652895946efca8eea33d3c388c2d3d9cdb11340f4ddb65b0d82915fa0"
+  }
+}

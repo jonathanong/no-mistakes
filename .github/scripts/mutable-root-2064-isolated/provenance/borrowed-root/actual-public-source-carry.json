@@ -1,0 +1,48 @@
+{
+  "status": "PASS published same-tree native source carry; no timing/readiness claim",
+  "actual_publication_session": 50420,
+  "actual_exit": 0,
+  "actual_chunk": "262a2a",
+  "public_head": "bea5a183c663410b61fed6e7619b6268103adbe6",
+  "public_tree": "3bc608292725dd7830171df9c70f4e45bb4522b5",
+  "artifact_producer": "06fd7a1e7e741961417cd1ee5e6e0a2229f2f837",
+  "artifact_tree": "3bc608292725dd7830171df9c70f4e45bb4522b5",
+  "whole_tree_equal": true,
+  "all_six_live_and_Git_exact": true,
+  "clean": true,
+  "config_restored": true,
+  "workspace_target_absent": true,
+  "hooks": "normal install/Husky/commit/push noforce/noSKIP",
+  "proofs": {
+    "/tmp/nm2064-acquisition-publication/result.json": "794e616b4a44dcfa60b523ef36b4440aa745dfc7608438ddaa3602c95e49e473",
+    "/tmp/nm2064-acquisition-publication/ledger.json": "e5bcd45d605e056fd78592348ae476c6c5033347d58613904620da4b3beb4eb7",
+    "/tmp/nm2064-acquisition-publication/staged-source-proof.json": "ae059e9ea1c6fa04ec9c7ece51be69b417649830ebdd227d02b31398159390b9",
+    "/tmp/nm2064-acquisition-publication/request-REVIEWED.json": "4e5d62b6d8b828840f7786db3f40fd77765aaa431706cdc9137d8c59a1cb43a4"
+  },
+  "files": [
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow.rs",
+      "sha256": "06c35f14474b704f99ea74e32b5c58b950a1f01a1e27b83185a1ad82a9d66536"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_acquisition_roots.rs",
+      "sha256": "4d0da850d701782b649769e1fd1e7e5213f325e052733ad122055bc4a1d26975"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_acquisition_roots_tests.rs",
+      "sha256": "f3f48d451745ab3eab5e2a0ad52f7c327600cb217d266dc0cff61fa99436ffa8"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/assigned_receiver_proof.rs",
+      "sha256": "58dcd4b36e21bd400860f2c5715997c6cd1b3439b3bb70781ec1534db19d8866"
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/references.rs",
+      "sha256": "a3379010545741853681aedfc19235d16a45271a22f3418d23a56bd068aeb633"
+    },
+    {
+      "path": "test-cases/codebase-analysis/receiver-acquisition/assignment-rhs-borrowed-roots.mts",
+      "sha256": "925158a4a602d8825cdec1bdb811492d9f82d97ffcf935481b73036f41018817"
+    }
+  ]
+}
