@@ -10,18 +10,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         captured_changed: bool,
     ) {
         if captured_changed {
-            if let Some(observer) = crate::diagnostics::current() {
+            if crate::diagnostics::work_enabled() {
                 let retained = super::captured_readers::remap::<true>(
                     &mut self.captured_binding_readers,
                     preserved,
                     indices,
                 );
-                observer.increment(
-                    "postgres.annotation.captured_reader_names_retained",
-                    retained as u64,
-                );
+                super::super::counters::note_names(retained as u64);
             } else {
-                // Counting compiles away when diagnostics are disabled.
+                // Counting compiles away when work counters are disabled.
                 super::captured_readers::remap::<false>(
                     &mut self.captured_binding_readers,
                     preserved,

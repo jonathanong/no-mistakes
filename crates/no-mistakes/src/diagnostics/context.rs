@@ -1,11 +1,12 @@
 use super::progress::ActiveSpanGuard;
 use super::{InvocationObserver, TimingKind};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 thread_local! {
     static ACTIVE: RefCell<Vec<Option<Arc<InvocationObserver>>>> = const { RefCell::new(Vec::new()) };
+    static WORK_ENABLED: Cell<bool> = const { Cell::new(false) };
     static TIMING_CONTEXT: RefCell<Vec<TimingKind>> = const { RefCell::new(Vec::new()) };
 }
 
@@ -16,23 +17,65 @@ pub fn current() -> Option<Arc<InvocationObserver>> {
     ACTIVE.with(|active| active.borrow().last().cloned().flatten())
 }
 
+/// Borrow the thread-local observer without cloning its `Arc`.
+///
+/// The closure must not re-enter this thread's observer stack (`current`,
+/// `with_current`, or `with_observer`); that stack borrow is held for the call.
+pub fn with_current<R>(operation: impl FnOnce(&InvocationObserver) -> R) -> Option<R> {
+    ACTIVE.with(|active| {
+        let active = active.borrow();
+        active
+            .last()
+            .and_then(|observer| observer.as_deref())
+            .map(operation)
+    })
+}
+
+/// True only when this thread's active observer records work counters.
+/// Hot loops use this as the diagnostics-off empty check.
+#[inline]
+pub(crate) fn work_enabled() -> bool {
+    WORK_ENABLED.with(Cell::get)
+}
+
+fn push_scope(observer: Option<Arc<InvocationObserver>>) {
+    ACTIVE.with(|active| active.borrow_mut().push(observer));
+    sync_work_enabled();
+}
+
+fn pop_scope() {
+    ACTIVE.with(|active| {
+        active
+            .borrow_mut()
+            .pop()
+            .expect("diagnostics observer scope must be active");
+    });
+    sync_work_enabled();
+}
+
+fn sync_work_enabled() {
+    let enabled = ACTIVE.with(|active| {
+        active
+            .borrow()
+            .last()
+            .and_then(|observer| observer.as_ref())
+            .is_some_and(|observer| observer.verbose())
+    });
+    WORK_ENABLED.with(|flag| flag.set(enabled));
+}
+
 pub struct InvocationGuard;
 
 impl InvocationGuard {
     pub fn install(observer: Arc<InvocationObserver>) -> Self {
-        ACTIVE.with(|active| active.borrow_mut().push(Some(observer)));
+        push_scope(Some(observer));
         Self
     }
 }
 
 impl Drop for InvocationGuard {
     fn drop(&mut self) {
-        ACTIVE.with(|active| {
-            active
-                .borrow_mut()
-                .pop()
-                .expect("diagnostics observer scope must be active");
-        });
+        pop_scope();
     }
 }
 
@@ -53,16 +96,11 @@ pub fn with_observer<T>(
             with_timing_kind(TimingKind::Serial, operation)
         }
         None => {
-            ACTIVE.with(|active| active.borrow_mut().push(None));
+            push_scope(None);
             struct DisabledGuard;
             impl Drop for DisabledGuard {
                 fn drop(&mut self) {
-                    ACTIVE.with(|active| {
-                        active
-                            .borrow_mut()
-                            .pop()
-                            .expect("diagnostics observer scope must be active");
-                    });
+                    pop_scope();
                 }
             }
             let _disabled = DisabledGuard;

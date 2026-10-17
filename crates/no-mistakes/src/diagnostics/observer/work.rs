@@ -121,6 +121,12 @@ const NAMES: &[&str] = &[
     "ts_facts.collections",
     "ts_facts.files",
     "workspace.builds",
+    "postgres.annotation.captured_reader_names_retained",
+    "postgres.annotation.captured_reader_rebuilds",
+    "postgres.annotation.incoming_dense_slots_copied",
+    "postgres.annotation.modules",
+    "postgres.annotation.reachability_walks",
+    "postgres.annotation.target_resolutions",
 ];
 
 #[cfg(test)]

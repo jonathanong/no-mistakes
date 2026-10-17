@@ -41,6 +41,21 @@ fn dense_branch_fixture_keeps_query_findings_and_tracks_copied_slots() {
         876,
         "twelve executor roots copy only incoming changed slots; the executor-free callback probe is no longer a speculative root"
     );
+    assert_eq!(diagnostics.work["postgres.annotation.modules"], 14);
+    assert_eq!(
+        diagnostics.work["postgres.annotation.reachability_walks"],
+        92
+    );
+    assert_eq!(
+        diagnostics.work["postgres.annotation.target_resolutions"],
+        24
+    );
+    assert!(!diagnostics
+        .work
+        .contains_key("postgres.annotation.captured_reader_rebuilds"));
+    assert!(!diagnostics
+        .work
+        .contains_key("postgres.annotation.captured_reader_names_retained"));
 }
 
 #[test]

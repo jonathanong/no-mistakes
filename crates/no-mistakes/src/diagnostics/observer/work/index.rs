@@ -88,6 +88,12 @@ fn longer(metric: &str) -> Option<usize> {
 #[inline]
 fn longest(metric: &str) -> Option<usize> {
     Some(match metric {
+        "postgres.annotation.captured_reader_names_retained" => 50,
+        "postgres.annotation.captured_reader_rebuilds" => 51,
+        "postgres.annotation.incoming_dense_slots_copied" => 52,
+        "postgres.annotation.modules" => 53,
+        "postgres.annotation.reachability_walks" => 54,
+        "postgres.annotation.target_resolutions" => 55,
         "resolver.classification_requests" => 25,
         "resolver.scope_cache_requests" => 30,
         "test_filter.project_filters" => 41,

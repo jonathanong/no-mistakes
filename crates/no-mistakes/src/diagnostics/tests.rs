@@ -358,3 +358,37 @@ fn concurrent_work_and_source_counts_preserve_exact_totals() {
     basic.record_source_read(std::path::Path::new("ignored.ts"));
     assert!(basic.source_read_snapshot().is_empty());
 }
+
+#[test]
+fn with_current_borrows_the_observer_without_cloning_its_arc() {
+    assert!(with_current(|_| ()).is_none());
+    assert!(!work_enabled());
+    let observer = InvocationObserver::new(true);
+    let guard = InvocationGuard::install(Arc::clone(&observer));
+    let installed = Arc::strong_count(&observer);
+    assert!(work_enabled());
+    assert_eq!(
+        with_current(|current| {
+            assert!(current.verbose());
+            current.increment("parse.requests", 1);
+            Arc::strong_count(&observer)
+        })
+        .unwrap(),
+        installed
+    );
+    assert_eq!(Arc::strong_count(&observer), installed);
+    assert_eq!(observer.snapshot().work["parse.requests"], 1);
+    let owned = current().expect("owned accessor still clones");
+    assert!(Arc::strong_count(&observer) > installed);
+    drop(owned);
+    with_observer(Some(InvocationObserver::new(false)), || {
+        assert!(current().is_some());
+        assert!(!work_enabled());
+    });
+    assert!(work_enabled());
+    with_observer(None, || assert!(!work_enabled()));
+    assert!(work_enabled());
+    drop(guard);
+    assert!(!work_enabled());
+    assert!(current().is_none());
+}

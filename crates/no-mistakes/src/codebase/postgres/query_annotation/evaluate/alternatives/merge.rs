@@ -57,12 +57,7 @@ pub(super) fn objects(
             }
         }
     }
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment(
-            "postgres.annotation.incoming_dense_slots_copied",
-            copied_slots as u64,
-        );
-    }
+    super::super::counters::note_slots(copied_slots as u64);
 }
 
 pub(super) fn definite(

@@ -13,8 +13,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
         let file = &self.files[path];
         let globals = &file.facts.globals;
-        self.module_environment(path);
-        self.prune_snapshot_state();
+        {
+            let _counters = super::counters::RootCounters::begin();
+            self.module_environment(path);
+            self.prune_snapshot_state();
+        }
         let env = self.modules[path];
         let unmodeled = &file.facts.unmodeled_calls;
         let scopes = self.scopes.clone();
@@ -63,6 +66,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .clone_from(&mapped_argument_owners);
                 self.mapped_parameter_indices
                     .clone_from(&mapped_parameter_indices);
+                let _counters = super::counters::RootCounters::begin();
                 self.expr(call, path, &env, 16, false);
             }
         }
@@ -130,6 +134,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     values.insert(name.clone(), Value::Unknown);
                 }
                 let mut env = self.environment(values);
+                let _counters = super::counters::RootCounters::begin();
                 self.steps(&function.body, path, &mut env, 16, true);
             }
         }

@@ -6,6 +6,7 @@ mod collections;
 mod composition;
 mod concat;
 mod control_flow;
+mod counters;
 mod member;
 use {concat::concat, scope::Scope};
 mod delete;
