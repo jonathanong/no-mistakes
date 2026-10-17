@@ -50,13 +50,15 @@ requirements. Apply them when optimizing core analysis or reporting performance.
 - Identity frame compaction must avoid scope/value copy-on-write remapping,
   while still pruning unreachable state. Skip equal captured-value writes so
   shared scopes and their indexes do not detach unnecessarily.
-- Restore primary state before rebuilding derived indexes, once. Retain exact
-  captured-reader indexes when ownership is unchanged. Entry frames retain
-  their capture origins/readers; update arm-created readers, including module
-  initials. Clear the whole reverse index only when every reader frame belongs
-  to the arm. Fully rebuild when compaction moves or drops capture ownership.
-  Guard exact reverse-index equality, a nonempty retained prefix, private
-  origins, nested closures, full-clear/re-add, and module-initial restoration.
+- Restore primary state before derived indexes, once. Keep exact reverse readers
+  when ownership is unchanged. Entry frames retain capture ownership; update only
+  arm-created readers, including module initials. Clear the reverse index only
+  when every reader belongs to the arm. On compaction, rebuild or remap using its
+  injective frame mapping; bound sparse storage. Guard full-rebuild equality,
+  retained prefixes, private origins, nested closures, full-clear/re-add and
+  module-initial restoration.
+- Reuse final-arm liveness only across unchanged graph/roots; keep the original
+  prune fallback. Guard full-state equality and actual walk counts.
 - Borrow unchanged incoming dense argument slots across branch joins; clone
   only new objects or differing incoming slots. Remap returned values directly
   with initial argument IDs as separate roots, without copying the return

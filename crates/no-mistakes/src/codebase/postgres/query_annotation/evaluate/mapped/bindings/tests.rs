@@ -162,3 +162,40 @@ fn alternative_capture_restore_keeps_original_readers_and_replaces_arm_readers()
         .work
         .contains_key("postgres.annotation.captured_reader_rebuilds"));
 }
+
+#[test]
+fn compaction_remaps_existing_readers_without_full_reconstruction() {
+    let files = FxHashMap::default();
+    let mut evaluator = evaluator(&files);
+    evaluator.scopes = vec![Scope::default(); 4];
+    evaluator.captured_bindings = FxHashMap::from_iter([
+        (0, FxHashMap::from_iter([("prefix".into(), 2)])),
+        (2, FxHashMap::from_iter([("cycle".into(), 0)])),
+        (3, FxHashMap::from_iter([("dropped".into(), 2)])),
+    ]);
+    evaluator.rebuild_captured_readers();
+    // Preserve frame zero, move frame two, and drop frame three. This is the
+    // exact forward relation produced by the injective compaction mapping.
+    evaluator.captured_bindings = FxHashMap::from_iter([
+        (0, FxHashMap::from_iter([("prefix".into(), 1)])),
+        (1, FxHashMap::from_iter([("cycle".into(), 0)])),
+    ]);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+    evaluator.remap_compacted_binding_indexes(1, &FxHashMap::from_iter([(2, 1)]), true);
+    let remapped = evaluator.captured_binding_readers.clone();
+    evaluator.remap_compacted_binding_indexes(1, &FxHashMap::default(), false);
+    assert_eq!(remapped, evaluator.captured_binding_readers);
+    let work = observer.snapshot().work;
+    assert!(!work.contains_key("postgres.annotation.captured_reader_rebuilds"));
+    assert_eq!(
+        work["postgres.annotation.captured_reader_names_retained"],
+        2
+    );
+    evaluator.rebuild_captured_readers();
+    assert_eq!(remapped, evaluator.captured_binding_readers);
+    assert_eq!(
+        observer.snapshot().work["postgres.annotation.captured_reader_rebuilds"],
+        1
+    );
+}

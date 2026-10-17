@@ -1,4 +1,5 @@
 mod bindings;
+mod captured_readers;
 mod fresh;
 mod fresh_index;
 mod owners;

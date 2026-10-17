@@ -64,6 +64,10 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             fresh_mapped_argument_bindings: Default::default(),
         };
         let env = evaluator.module_environment(&path);
+        super::captured_readers::tests::assert_matches_forward(
+            &evaluator.captured_binding_readers,
+            &evaluator.captured_bindings,
+        );
         if name == "bounded.cjs" {
             assert!(
                 evaluator.scopes.len() >= 33,
