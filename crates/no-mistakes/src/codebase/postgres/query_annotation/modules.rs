@@ -26,12 +26,10 @@ impl Module {
                     .or_insert_with(OnceLock::new);
             }
         }
-        // Static dependencies execute even when this module never reads one of
-        // their exports (including bare imports).
+        // Demand considers all runtime dependencies, even when evaluation never
+        // reads an export (including bare imports and function-local require).
         for import in &ts.imports {
-            if (import.kind == ImportKind::Static && import.function_scope.is_none())
-                || import.kind == ImportKind::Dynamic
-            {
+            if import.kind != ImportKind::Type && !import.computed {
                 targets
                     .entry(import.specifier.clone())
                     .or_insert_with(OnceLock::new);

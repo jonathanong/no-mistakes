@@ -70,7 +70,11 @@ identify deterministic finalization work; they do not change graph output or
 canonical edge order.
 
 PostgreSQL annotation checks report `postgres.annotation.project` separately
-from parsing, with `postgres.annotation.reachability_walks` counting the
+from parsing. `postgres.annotation.roots` counts evaluated roots across executor
+profiles: modules whose runtime imports cannot reach an executor are omitted.
+Unresolved, computed, and dynamic imports conservatively retain their modules
+and importers, including cycles. Executor-free callers that supply SQL literals
+to imported helpers remain roots. `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
 counts reverse capture-index reconstruction; unchanged compaction retains the

@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod demand;
 mod evaluator;
 mod output;
 use output::{prefix, projected_sql};
@@ -95,16 +96,20 @@ fn project_impl(
             .values()
             .any(|file| file.facts.array_prototype_exposed);
         let observer = crate::diagnostics::current();
-        let mut per_file = collected
+        let roots = demand::roots(&collected, &resolve);
+        if let Some(observer) = &observer {
+            observer.increment("postgres.annotation.roots", roots.len() as u64);
+        }
+        let mut per_file = roots
             .par_iter()
-            .map(|(path, _)| {
+            .map(|path| {
                 let events = crate::diagnostics::with_observer(observer.clone(), || {
                     let mut evaluator =
                         evaluator::new(&collected, &resolve, untrusted_array_intrinsics);
                     evaluator.run(path);
                     evaluator.events
                 });
-                (path.clone(), events)
+                ((*path).to_path_buf(), events)
             })
             .collect::<Vec<_>>();
         per_file.sort_by(|left, right| left.0.cmp(&right.0));

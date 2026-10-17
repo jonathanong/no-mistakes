@@ -12,72 +12,81 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 fn prepared() -> FileIdMap<CheckFileFacts> {
+    prepared_fixture(
+        "helper-tracing-target-reuse",
+        &[
+            "entry",
+            "barrel",
+            "origin",
+            "left",
+            "right",
+            "other",
+            "cycle-a",
+            "cycle-b",
+            "nested-a/entry",
+            "nested-a/origin",
+            "nested-b/entry",
+            "nested-b/origin",
+        ],
+    )
+}
+
+fn prepared_fixture(name: &str, names: &[&str]) -> FileIdMap<CheckFileFacts> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-target-reuse")
-        .canonicalize().unwrap();
-    [
-        "entry",
-        "barrel",
-        "origin",
-        "left",
-        "right",
-        "other",
-        "cycle-a",
-        "cycle-b",
-        "nested-a/entry",
-        "nested-a/origin",
-        "nested-b/entry",
-        "nested-b/origin",
-    ]
-    .into_iter()
-    .map(|name| {
-        let path = root.join(format!("{name}.mts"));
-        let source = std::fs::read_to_string(&path).unwrap();
-        let file = crate::ast::with_program(&path, &source, |program, _| {
-            let profiles = [
-                EmbeddedSqlOptions::configured("@app/db", &[]),
-                EmbeddedSqlOptions::configured("@app/other", &[]),
-            ];
-            CheckFileFacts {
-                ts: Arc::new(collect_file_facts_from_program(
-                    &path,
-                    TsFactPlan {
-                        imports: true,
-                        module_bindings: true,
-                        ..Default::default()
-                    },
-                    &TsFactContext::default(),
-                    &source,
-                    program,
-                    None,
-                    None,
-                )),
-                query_annotation: profiles
-                    .iter()
-                    .map(|options| {
-                        (
-                            options.clone(),
-                            query_annotation::collect(program, &source, options),
-                        )
-                    })
-                    .collect(),
-                embedded_sql: profiles
-                    .iter()
-                    .map(|options| {
-                        (
-                            options.clone(),
-                            extract_embedded_sql_from_program(&path, program, &source, options),
-                        )
-                    })
-                    .collect(),
-                source: Some(source.clone().into()),
-                ..Default::default()
-            }
-        })
+        .join("../../test-cases/rules/postgres-require-query-annotation/fixture")
+        .join(name)
+        .canonicalize()
         .unwrap();
-        (path, file)
-    })
-    .collect()
+    names
+        .iter()
+        .map(|name| {
+            let path = root.join(format!("{name}.mts"));
+            let source = std::fs::read_to_string(&path).unwrap();
+            let file = crate::ast::with_program(&path, &source, |program, _| {
+                let profiles = [
+                    EmbeddedSqlOptions::configured("@app/db", &[]),
+                    EmbeddedSqlOptions::configured("@app/other", &[]),
+                ];
+                CheckFileFacts {
+                    ts: Arc::new(collect_file_facts_from_program(
+                        &path,
+                        TsFactPlan {
+                            imports: true,
+                            module_bindings: true,
+                            ..Default::default()
+                        },
+                        &TsFactContext::default(),
+                        &source,
+                        program,
+                        None,
+                        None,
+                    )),
+                    query_annotation: profiles
+                        .iter()
+                        .map(|options| {
+                            (
+                                options.clone(),
+                                query_annotation::collect(program, &source, options),
+                            )
+                        })
+                        .collect(),
+                    embedded_sql: profiles
+                        .iter()
+                        .map(|options| {
+                            (
+                                options.clone(),
+                                extract_embedded_sql_from_program(&path, program, &source, options),
+                            )
+                        })
+                        .collect(),
+                    source: Some(source.clone().into()),
+                    ..Default::default()
+                }
+            })
+            .unwrap();
+            (path, file)
+        })
+        .collect()
 }
 
 #[test]
@@ -112,9 +121,13 @@ fn targets_and_indexes_are_shared_across_profiles_and_parallel_evaluators() {
     assert!(calls
         .keys()
         .any(|(_, specifier)| specifier == "./missing.mjs"));
+    // Root demand resolves every runtime edge, including unused imports.
+    assert!(calls
+        .keys()
+        .any(|(_, specifier)| specifier == "./unused.mjs"));
     assert!(!calls
         .keys()
-        .any(|(_, specifier)| specifier == "./unused.mjs" || specifier == "./type-only.mjs"));
+        .any(|(_, specifier)| specifier == "./type-only.mjs"));
     let snapshot = observer.snapshot();
     assert_eq!(
         snapshot.work["postgres.annotation.modules"],
@@ -230,4 +243,92 @@ fn targets_do_not_escape_their_resolver_projection() {
     );
     assert!(Arc::ptr_eq(&syntax, &files[&entry].ts));
     assert_eq!(files[&entry].query_annotation[0].1.calls[&span], None);
+}
+
+#[test]
+fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
+    let mut files = prepared_fixture(
+        "helper-tracing-demand-roots",
+        &[
+            "executor",
+            "caller",
+            "barrel",
+            "entry",
+            "cycle-a",
+            "cycle-b",
+            "unrelated",
+            "unrelated-chain",
+            "unrelated-cycle-a",
+            "unrelated-cycle-b",
+            "unresolved",
+            "opaque-consumer",
+            "computed",
+            "dynamic",
+            "required",
+            "type-only",
+        ],
+    );
+    for (_, file) in &mut files {
+        file.query_annotation.truncate(1);
+        file.embedded_sql.truncate(1);
+    }
+    let candidates = files.keys().cloned().collect::<BTreeSet<_>>();
+    let resolve = |specifier: &str, from: &std::path::Path| {
+        let target = from.parent().unwrap().join(specifier).with_extension("mts");
+        candidates.contains(&target).then_some(target)
+    };
+    let collected = files
+        .iter()
+        .map(|(path, file)| {
+            (
+                path.clone(),
+                super::File {
+                    module: Arc::new(super::Module::new(Arc::clone(&file.ts))),
+                    facts: &file.query_annotation[0].1,
+                    executors: file.embedded_sql[0].1.call_spans.iter().copied().collect(),
+                },
+            )
+        })
+        .collect();
+    let selected = super::demand::roots(&collected, &resolve)
+        .into_iter()
+        .map(|path| path.file_stem().unwrap().to_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        selected,
+        BTreeSet::from([
+            "executor",
+            "caller",
+            "barrel",
+            "entry",
+            "cycle-a",
+            "cycle-b",
+            "unresolved",
+            "opaque-consumer",
+            "computed",
+            "dynamic",
+            "required",
+        ])
+    );
+    drop(collected);
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(Arc::clone(&observer)), || {
+        project(&mut files, |specifier, from| {
+            let target = from.parent().unwrap().join(specifier).with_extension("mts");
+            candidates.contains(&target).then_some(target)
+        });
+    });
+    assert_eq!(observer.snapshot().work["postgres.annotation.roots"], 11);
+    let executor = files
+        .iter()
+        .find(|(path, _)| path.ends_with("executor.mts"))
+        .unwrap()
+        .1;
+    let source = executor.source.as_deref().unwrap();
+    let start = source.find("query(sql)").unwrap() as u32;
+    // Executor-free importers must supply their contextual unannotated SQL.
+    assert_eq!(
+        executor.query_annotation[0].1.calls[&(start, start + 10)].as_deref(),
+        Some("SELECT 1")
+    );
 }
