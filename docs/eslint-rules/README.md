@@ -91,3 +91,5 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 - [`gh-api-argument-safety`](gh-api-argument-safety.md) checks literal GitHub CLI API argv protocols.
 
 - [`no-argv-main-guard`](no-argv-main-guard.md) avoids symlink-sensitive main-module comparisons.
+
+- [`no-comment-phrases`](no-comment-phrases.md) flags configured phrases in line and block comments.

@@ -1,0 +1,25 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/no-comment-phrases": [
+      "error",
+      {
+        "patterns": [
+          {
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat",
+            "message": "Delete the compatibility tombstone and update its callers."
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "message": "Fallback configured phrase message."
+      }
+    ]
+  }
+}

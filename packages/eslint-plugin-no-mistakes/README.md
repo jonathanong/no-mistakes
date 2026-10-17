@@ -40,3 +40,6 @@ See [options and examples](../../docs/eslint-rules/gh-api-argument-safety.md).
 
 `no-argv-main-guard` is an opt-in rule for symlink-sensitive entrypoint comparisons.
 See [options and examples](../../docs/eslint-rules/no-argv-main-guard.md).
+
+`no-comment-phrases` is an opt-in rule for configured phrases in line and block comments.
+See [options and examples](../../docs/eslint-rules/no-comment-phrases.md).

@@ -1,0 +1,21 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/no-comment-phrases": [
+      "error",
+      {
+        "patterns": [
+          {
+            "pattern": "a*",
+            "flags": "g"
+          }
+        ]
+      }
+    ]
+  }
+}
