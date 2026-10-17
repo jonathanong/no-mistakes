@@ -20,7 +20,7 @@ mod owners;
 
 /// The module itself or any subpath of it (`@example/db/types`); a sibling
 /// package sharing the prefix (`@example/dbx`) does not match.
-pub(super) fn from_configured_module(source: &str, specifier: &str) -> bool {
+pub(crate) fn from_configured_module(source: &str, specifier: &str) -> bool {
     candidates::from_configured_module(source, specifier)
 }
 

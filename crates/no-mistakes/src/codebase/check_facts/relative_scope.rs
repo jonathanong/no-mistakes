@@ -80,7 +80,14 @@ pub(super) fn project_relative_executor_scopes(
         crate::perf_trace::trace("postgres.annotation.project", || {
             crate::codebase::postgres::query_annotation::project::project(
                 files,
-                |specifier, from| resolver.resolve(specifier, from),
+                |specifier, from| {
+                    // Canonical visibility also admits symlink aliases that do
+                    // not identify a prepared source. Keep those unresolved:
+                    // only an exact inventory identity proves an external edge.
+                    resolver
+                        .resolve(specifier, from)
+                        .filter(|target| visible.contains(target))
+                },
             );
         });
     }

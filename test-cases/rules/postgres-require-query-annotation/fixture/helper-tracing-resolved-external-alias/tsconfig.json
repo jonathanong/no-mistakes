@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@workspace/shared":["../helper-tracing-resolved-external-workspace/shared.mts"]}}}
