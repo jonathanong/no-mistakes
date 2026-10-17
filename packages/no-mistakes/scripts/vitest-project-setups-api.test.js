@@ -230,95 +230,104 @@ test(
   },
 );
 
-test(
-  "compiled CJS and ESM checks scope declared Vitest setup mocks per project",
-  { skip: !compiled, timeout: 20_000 },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    for (const [config, expected] of [
-      [
-        ".no-mistakes.yml",
-        [
-          "nested/nested.test.mts",
-          "nested/sibling.test.mts",
-          "ordered/order.test.mts",
-          "ordinary/cut.test.mts",
-          "ordinary/sibling.test.mts",
-          "other/uncovered.test.mts",
-          "overlap/helper-cut.test.mts",
-          "overlap/shared.test.mts",
-          "web/excluded.test.mts",
-          "web/genuine.test.mts",
-        ],
-      ],
-      [
-        ".no-mistakes-both.yml",
-        [
-          "nested/nested.test.mts",
-          "nested/sibling.test.mts",
-          "ordered/order.test.mts",
-          "ordinary/cut.test.mts",
-          "ordinary/sibling.test.mts",
-          "overlap/helper-cut.test.mts",
-          "web/excluded.test.mts",
-          "web/genuine.test.mts",
-        ],
-      ],
-      [".no-mistakes-selected.yml", ["overlap/helper-cut.test.mts", "web/genuine.test.mts"]],
-      [".no-mistakes-playwright.yml", ["overlap/shared.test.mts"]],
-      [".no-mistakes-runner-ignored.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-app-project.yml", ["web/genuine.test.mts"]],
-      [".no-mistakes-ordered.yml", []],
-      [".no-mistakes-reversed.yml", ["ordered/order.test.mts"]],
-      [".no-mistakes-nested-cut.yml", ["nested/nested.test.mts"]],
-      [".no-mistakes-nested-live.yml", []],
-      [".no-mistakes-nested-sibling.yml", ["nested/sibling.test.mts"]],
-      [".no-mistakes-ordinary.yml", ["ordinary/cut.test.mts", "ordinary/sibling.test.mts"]],
-      // Repository checks retain implicit Vitest projects beside narrower Jest matchers.
-      [".no-mistakes-runner-overlap.yml", ["other/uncovered.test.mts", "web/covered.test.mts"]],
-      [".no-mistakes-runner-reverse.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-runner-vitest-only.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-runner-vitest-config-overlap.yml", ["web/covered.test.mts"]],
-      [
-        ".no-mistakes-runner-jest-config-overlap.yml",
-        ["other/uncovered.test.mts", "web/covered.test.mts", "web/genuine.test.mts"],
-      ],
-      [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-stale-app.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-cjs-helper.yml", ["other/uncovered.test.mts", "web/genuine.test.mts"]],
-      [".no-mistakes-mixed-runners.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-disjoint-runners.yml", ["other/uncovered.test.mts"]],
-      [".no-mistakes-inherit.yml", []],
-      [".no-mistakes-independent.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-omitted.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-cleared.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-referenced.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-playwright-invalid-vitest.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-playwright-config.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-mixed-config-runners.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-partial-projects.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-partial-app.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-partial-selected.yml", []],
-      [".no-mistakes-chained-cuts.yml", []],
-      [".no-mistakes-policy-widened.yml", ["policy/genuine.case.mts"]],
-      [".no-mistakes-policy-broad.yml", ["policy/covered.case.mts", "policy/genuine.case.mts"]],
-      [".no-mistakes-policy-default.yml", ["policy/genuine.case.mts"]],
-      [".no-mistakes-lazy-requires.yml", ["lazy/ordinary.case.cjs", "lazy/setup.case.cjs"]],
-      [".no-mistakes-playwright-custom.yml", ["custom/sample.case.mts"]],
-      [".no-mistakes-repository-playwright.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-app-playwright.yml", ["web/covered.test.mts"]],
-      [".no-mistakes-shared-runner-path.yml", ["web/covered.test.mts"]],
-    ]) {
+// Each saved policy keeps its own deadline; one aggregate timer hid which case stalled.
+for (const [config, expected] of [
+  [
+    ".no-mistakes.yml",
+    [
+      "nested/nested.test.mts",
+      "nested/sibling.test.mts",
+      "ordered/order.test.mts",
+      "ordinary/cut.test.mts",
+      "ordinary/sibling.test.mts",
+      "other/uncovered.test.mts",
+      "overlap/helper-cut.test.mts",
+      "overlap/shared.test.mts",
+      "web/excluded.test.mts",
+      "web/genuine.test.mts",
+    ],
+  ],
+  [
+    ".no-mistakes-both.yml",
+    [
+      "nested/nested.test.mts",
+      "nested/sibling.test.mts",
+      "ordered/order.test.mts",
+      "ordinary/cut.test.mts",
+      "ordinary/sibling.test.mts",
+      "overlap/helper-cut.test.mts",
+      "web/excluded.test.mts",
+      "web/genuine.test.mts",
+    ],
+  ],
+  [".no-mistakes-selected.yml", ["overlap/helper-cut.test.mts", "web/genuine.test.mts"]],
+  [".no-mistakes-playwright.yml", ["overlap/shared.test.mts"]],
+  [".no-mistakes-runner-ignored.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-app-project.yml", ["web/genuine.test.mts"]],
+  [".no-mistakes-ordered.yml", []],
+  [".no-mistakes-reversed.yml", ["ordered/order.test.mts"]],
+  [".no-mistakes-nested-cut.yml", ["nested/nested.test.mts"]],
+  [".no-mistakes-nested-live.yml", []],
+  [".no-mistakes-nested-sibling.yml", ["nested/sibling.test.mts"]],
+  [".no-mistakes-ordinary.yml", ["ordinary/cut.test.mts", "ordinary/sibling.test.mts"]],
+  // Repository checks retain implicit Vitest projects beside narrower Jest matchers.
+  [".no-mistakes-runner-overlap.yml", ["other/uncovered.test.mts", "web/covered.test.mts"]],
+  [".no-mistakes-runner-reverse.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-runner-vitest-only.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-runner-vitest-config-overlap.yml", ["web/covered.test.mts"]],
+  [
+    ".no-mistakes-runner-jest-config-overlap.yml",
+    ["other/uncovered.test.mts", "web/covered.test.mts", "web/genuine.test.mts"],
+  ],
+  [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-stale-app.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-cjs-helper.yml", ["other/uncovered.test.mts", "web/genuine.test.mts"]],
+  [".no-mistakes-mixed-runners.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-disjoint-runners.yml", ["other/uncovered.test.mts"]],
+  [".no-mistakes-inherit.yml", []],
+  [".no-mistakes-independent.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-omitted.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-cleared.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-referenced.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-playwright-invalid-vitest.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-playwright-config.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-mixed-config-runners.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-partial-projects.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-partial-app.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-partial-selected.yml", []],
+  [".no-mistakes-chained-cuts.yml", []],
+  [".no-mistakes-policy-widened.yml", ["policy/genuine.case.mts"]],
+  [".no-mistakes-policy-broad.yml", ["policy/covered.case.mts", "policy/genuine.case.mts"]],
+  [".no-mistakes-policy-default.yml", ["policy/genuine.case.mts"]],
+  [".no-mistakes-lazy-requires.yml", ["lazy/ordinary.case.cjs", "lazy/setup.case.cjs"]],
+  [".no-mistakes-playwright-custom.yml", ["custom/sample.case.mts"]],
+  [".no-mistakes-repository-playwright.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-app-playwright.yml", ["web/covered.test.mts"]],
+  [".no-mistakes-shared-runner-path.yml", ["web/covered.test.mts"]],
+]) {
+  test(
+    `compiled CJS and ESM setup mock scope: ${config}`,
+    { skip: !compiled, timeout: 20_000 },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
       const options = { root, config: join(root, config) };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
       assert.deepEqual(report.rules.map((finding) => finding.file).sort(), expected, config);
-    }
-    for (const [config, expected] of [
-      [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
-      [".no-mistakes-ignored.yml", "missing from the analysis file inventory"],
-    ]) {
+    },
+  );
+}
+for (const [config, expected] of [
+  [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
+  [".no-mistakes-ignored.yml", "missing from the analysis file inventory"],
+]) {
+  test(
+    `compiled CJS and ESM setup mock inventory warning: ${config}`,
+    { skip: !compiled, timeout: 20_000 },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
       const options = { root, config: join(root, config) };
       const invalid = await cjs.check(options);
       assert.deepEqual(await esm.check(options), invalid);
@@ -327,7 +336,15 @@ test(
         invalid.warnings.some((warning) => warning.includes(expected)),
         invalid.warnings,
       );
-    }
+    },
+  );
+}
+test(
+  "compiled CJS and ESM setup mocks reject invalid repository paths",
+  { skip: !compiled, timeout: 20_000 },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
     const invalidPath = { root, config: join(root, ".no-mistakes-invalid.yml") };
     for (const api of [cjs, esm]) {
       await assert.rejects(api.check(invalidPath), /invalid repository-relative path/);
