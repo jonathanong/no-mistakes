@@ -1259,3 +1259,11 @@ retain that declaring package and selector. When several selected packages
 declare the same entry, all enabled targets are returned deterministically.
 Configured package scopes still apply to the declaring packages; external
 entries do not make neighboring helpers or other packages eligible.
+
+`check()` and `analyzeProject()` accept the same `forbidden-calls` argument
+predicates as the CLI through rule configuration. Both remain asynchronous and
+share prepared request facts. `ForbiddenCallArgumentLiteral`,
+`ForbiddenCallArgumentPredicate`, `ForbiddenCallArgumentConditions`, and
+`ForbiddenCallUnknownArguments` are exported declaration types. See
+[bounded argument predicates](rules/forbidden-calls.md#bounded-argument-predicates)
+for the explicit unknown policy and source-analysis limits.

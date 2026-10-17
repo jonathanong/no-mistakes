@@ -1,6 +1,6 @@
 use super::super::RuleFinding;
 use super::config::{self, Options, Traversal};
-use super::findings::finding_for_site;
+use super::findings::finding_for_site_with_arguments;
 use super::roots;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{CallTraversal, DepGraph, NodeId, ResolvedCallSite};
@@ -8,7 +8,6 @@ use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
 use crate::fx::FxHashSet;
 use anyhow::Result;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod invocations;
@@ -31,6 +30,7 @@ pub(crate) fn check_with_graph(
     vitest: Option<&super::super::PreparedVitestProjectCatalog>,
     playwright: Option<&super::super::PreparedPlaywrightProjectCatalog>,
     graph_files: &[PathBuf],
+    facts: Option<&dyn crate::codebase::dependencies::graph::TsFactLookup>,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
@@ -46,6 +46,7 @@ pub(crate) fn check_with_graph(
             vitest,
             playwright,
             graph_files,
+            facts,
         })?);
     }
     Ok(findings)
@@ -60,6 +61,7 @@ struct ApplicationCheck<'a> {
     vitest: Option<&'a super::super::PreparedVitestProjectCatalog>,
     playwright: Option<&'a super::super::PreparedPlaywrightProjectCatalog>,
     graph_files: &'a [PathBuf],
+    facts: Option<&'a dyn crate::codebase::dependencies::graph::TsFactLookup>,
 }
 fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
     let ApplicationCheck {
@@ -72,6 +74,7 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         vitest,
         playwright,
         graph_files,
+        facts,
     } = input;
     config::validate(options)?;
     let target_roots = super::super::target_roots(root, config, application);
@@ -91,6 +94,12 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         || format!("application #{index}"),
         |name| format!("{name}, application #{index}"),
     );
+    let argument_facts = options
+        .targets
+        .iter()
+        .any(|target| target.arguments().is_some())
+        .then_some(facts)
+        .flatten();
     let findings = candidate_sites(graph, &roots, options, &path_filter)
         .into_iter()
         .filter(|site| invocations.contains(&site.invocation))
@@ -99,35 +108,20 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         })
         .filter(|site| source_nodes.contains(&site_source_node(site)))
         .filter_map(|site| {
-            finding_for_site(root, application, &label, options, site)
-                .map(|finding| (site.offset, finding))
+            finding_for_site_with_arguments(
+                root,
+                application,
+                &label,
+                options,
+                site,
+                argument_facts
+                    .and_then(|facts| facts.get_ts_facts(&site.file))
+                    .and_then(|facts| super::arguments::for_call(facts, site.offset)),
+            )
+            .map(|finding| (site.offset, finding))
         })
         .collect::<Vec<_>>();
-    let mut totals = BTreeMap::new();
-    for (_, finding) in &findings {
-        *totals.entry(finding.clone()).or_insert(0usize) += 1;
-    }
-    let mut seen = BTreeMap::new();
-    let mut findings = findings
-        .into_iter()
-        .map(|(_, mut finding)| {
-            if totals.get(&finding).copied().unwrap_or_default() > 1 {
-                let occurrence = seen.entry(finding.clone()).or_insert(0usize);
-                *occurrence += 1;
-                finding.message = format!("{} (occurrence {})", finding.message, occurrence);
-            }
-            finding
-        })
-        .collect::<Vec<_>>();
-    findings.sort_by(|left, right| {
-        (&left.file, left.line, &left.message, &left.target).cmp(&(
-            &right.file,
-            right.line,
-            &right.message,
-            &right.target,
-        ))
-    });
-    Ok(findings)
+    Ok(super::findings::finish(findings))
 }
 fn candidate_sites<'a>(
     graph: &'a DepGraph,

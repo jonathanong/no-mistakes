@@ -1,0 +1,12 @@
+rules:
+  - name: escape-policy
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: escape.mjs }]
+      traversal: file
+      unknownArguments: ignore
+      targets:
+        - exact: execute
+          whenArguments:
+            all: [{ position: 1, arrayIncludes: '--root' }]

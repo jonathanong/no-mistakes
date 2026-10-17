@@ -43,8 +43,10 @@ pub(super) fn run(
         });
     }
     if let Some(graph_plan) = try_canonical_graph_plan(config)? {
-        let (required_facts, _) =
+        let (mut required_facts, _) =
             required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
+        required_facts.call_arguments |=
+            crate::codebase::rules::forbidden_calls::argument_facts_required(config);
         if !shared.graph_plan().covers(required_facts) {
             anyhow::bail!(
                 "shared check facts are missing graph facts required by configured codebase rules"

@@ -1,0 +1,215 @@
+{
+  "sourceType": "module",
+  "calls": [
+    {
+      "offset": 59,
+      "line": 2,
+      "values": [
+        {
+          "kind": "scalar",
+          "value": "text"
+        },
+        {
+          "kind": "scalar",
+          "value": 42
+        },
+        {
+          "kind": "scalar",
+          "value": true
+        },
+        {
+          "kind": "scalar",
+          "value": false
+        },
+        {
+          "kind": "scalar",
+          "value": null
+        },
+        {
+          "kind": "scalar",
+          "value": -7
+        },
+        {
+          "kind": "scalar",
+          "value": 8
+        },
+        {
+          "kind": "scalar",
+          "value": "plain"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 115,
+      "line": 3,
+      "values": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 186,
+      "line": 4,
+      "values": [
+        {
+          "kind": "array",
+          "items": [
+            {
+              "kind": "scalar",
+              "value": "arg"
+            }
+          ]
+        },
+        {
+          "kind": "object",
+          "properties": {
+            "cwd": {
+              "kind": "scalar",
+              "value": "/fixture"
+            }
+          }
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 254,
+      "line": 6,
+      "values": [
+        {
+          "kind": "array",
+          "items": [
+            {
+              "kind": "scalar",
+              "value": "flag"
+            }
+          ]
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 275,
+      "line": 7,
+      "values": [
+        {
+          "kind": "scalar",
+          "value": "first"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": 1
+    },
+    {
+      "offset": 311,
+      "line": 8,
+      "values": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 357,
+      "line": 9,
+      "values": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 450,
+      "line": 10,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 479,
+      "line": 11,
+      "values": [
+        {
+          "kind": "scalar",
+          "value": ""
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 491,
+      "line": 12,
+      "values": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 522,
+      "line": 13,
+      "values": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    }
+  ]
+}

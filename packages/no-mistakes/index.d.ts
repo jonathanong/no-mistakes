@@ -207,3 +207,5 @@ export function generatePostgresCatalog(
 export function generatePostgresCatalog(
   options: WithInvocationOptions<PostgresCatalogOptions>,
 ): Promise<PostgresCatalog>;
+
+export type * from "./forbidden-call-types";

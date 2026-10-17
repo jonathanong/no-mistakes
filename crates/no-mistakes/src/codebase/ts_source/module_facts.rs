@@ -2,14 +2,17 @@ use oxc_ast::ast::Program;
 use oxc_semantic::SemanticBuilder;
 use oxc_span::GetSpan;
 
+pub(crate) mod arguments;
 mod modules;
 mod report;
 pub use report::*;
 mod types;
 pub use types::*;
 
-/// Project source-local semantic facts without exposing parser or semantic ASTs.
-pub(crate) fn extract(program: &Program<'_>) -> TypeScriptModuleFacts {
+pub(crate) fn extract_with_arguments(
+    program: &Program<'_>,
+    collect: bool,
+) -> TypeScriptModuleFacts {
     let built = SemanticBuilder::new()
         .with_build_nodes(true)
         .with_check_syntax_error(true)
@@ -72,8 +75,17 @@ pub(crate) fn extract(program: &Program<'_>) -> TypeScriptModuleFacts {
         })
         .collect();
     modules::collect(&semantic, &mut facts);
+    if collect && facts.diagnostics.is_empty() {
+        facts.call_arguments = Some(std::sync::Arc::new(arguments::collect(&semantic, &facts)));
+    }
     facts
 }
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod argument_tests;
+
+#[cfg(test)]
+mod argument_matrix_tests;

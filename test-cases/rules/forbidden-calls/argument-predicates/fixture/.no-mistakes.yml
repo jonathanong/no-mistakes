@@ -1,0 +1,17 @@
+rules:
+  - name: no-live-analyzer-from-tests
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: repro.mjs }]
+      traversal: file
+      unknownCalls: ignore
+      unknownArguments: finding
+      targets:
+        - moduleExport: { module: 'node:child_process', export: execFile }
+          whenArguments:
+            all:
+              - { position: 1, arrayIncludes: '/workspace/node_modules/no-mistakes/bin/no-mistakes.js' }
+              - { position: 1, arrayIncludes: check }
+              - { position: 1, arrayExcludes: --root }
+              - { position: 2, property: cwd, equals: /workspace }

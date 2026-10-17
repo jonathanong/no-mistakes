@@ -40,7 +40,7 @@ fn file_traversal_filters_each_root_file_once_before_scanning_calls() {
     };
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let findings = crate::diagnostics::with_observer(Some(observer.clone()), || {
-        check_with_graph(&root, &config, &graph, None, None, &[]).unwrap()
+        check_with_graph(&root, &config, &graph, None, None, &[], None).unwrap()
     });
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/entry.mts");

@@ -1,0 +1,27 @@
+{
+  "sourceType": "script",
+  "calls": [
+    {
+      "offset": 80,
+      "line": 3,
+      "values": [
+        {
+          "kind": "scalar",
+          "value": "known"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 97,
+      "line": 4,
+      "values": [
+        {
+          "kind": "scalar",
+          "value": "text"
+        }
+      ],
+      "spreadFrom": null
+    }
+  ]
+}

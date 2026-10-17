@@ -1,19 +1,28 @@
 use super::super::RuleFinding;
-use super::config::{Options, Target, UnknownCalls};
+use super::config::{Options, Target, UnknownArguments, UnknownCalls};
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::RuleDef;
+use std::collections::BTreeMap;
 use std::path::Path;
 
-pub(super) fn finding_for_site(
+pub(super) fn finding_for_site_with_arguments(
     root: &Path,
     application: &RuleDef,
     application_label: &str,
     options: &Options,
     site: &ResolvedCallSite,
+    arguments: Option<&crate::codebase::ts_source::module_facts::arguments::ArgumentValues>,
 ) -> Option<RuleFinding> {
-    let target = target_label(root, site, &options.targets, &options.unknown_calls)?;
+    let target = target_label(
+        root,
+        site,
+        &options.targets,
+        &options.unknown_calls,
+        &options.unknown_arguments,
+        arguments,
+    )?;
     let message = application.message.as_deref().unwrap_or("forbidden call");
     Some(RuleFinding {
         rule: RULE_ID.to_string(),
@@ -29,13 +38,23 @@ fn target_label(
     site: &ResolvedCallSite,
     targets: &[Target],
     unknown_calls: &UnknownCalls,
+    unknown_arguments: &UnknownArguments,
+    arguments: Option<&crate::codebase::ts_source::module_facts::arguments::ArgumentValues>,
 ) -> Option<String> {
-    if let Some(label) = targets
-        .iter()
-        .find(|target| target_matches(root, target, site))
-        .map(describe_target)
-    {
-        return Some(label);
+    for target in targets {
+        if !target_matches(root, target, site) {
+            continue;
+        }
+        let Some(conditions) = target.arguments() else {
+            return Some(describe_target(target));
+        };
+        match super::arguments::matches(conditions, arguments) {
+            super::arguments::Match::Yes => return Some(describe_target(target)),
+            super::arguments::Match::Unknown if unknown_arguments == &UnknownArguments::Finding => {
+                return Some(format!("unknown arguments for {}", describe_target(target)));
+            }
+            _ => {}
+        }
     }
     (matches!(site.target, ResolvedCallTarget::Unknown) && unknown_calls == &UnknownCalls::Finding)
         .then(|| "unknown call".to_string())
@@ -97,4 +116,32 @@ fn describe_target(selector: &Target) -> String {
             selector.function.file, selector.function.symbol
         ),
     }
+}
+
+pub(super) fn finish(findings: Vec<(u32, RuleFinding)>) -> Vec<RuleFinding> {
+    let mut totals = BTreeMap::new();
+    for (_, finding) in &findings {
+        *totals.entry(finding.clone()).or_insert(0usize) += 1;
+    }
+    let mut seen = BTreeMap::new();
+    let mut findings = findings
+        .into_iter()
+        .map(|(_, mut finding)| {
+            if totals.get(&finding).copied().unwrap_or_default() > 1 {
+                let occurrence = seen.entry(finding.clone()).or_insert(0usize);
+                *occurrence += 1;
+                finding.message = format!("{} (occurrence {})", finding.message, occurrence);
+            }
+            finding
+        })
+        .collect::<Vec<_>>();
+    findings.sort_by(|left, right| {
+        (&left.file, left.line, &left.message, &left.target).cmp(&(
+            &right.file,
+            right.line,
+            &right.message,
+            &right.target,
+        ))
+    });
+    findings
 }

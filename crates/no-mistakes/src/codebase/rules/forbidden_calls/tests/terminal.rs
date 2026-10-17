@@ -1,4 +1,3 @@
-use super::super::findings;
 use super::*;
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget};
@@ -44,7 +43,7 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
     };
 
     assert_eq!(
-        findings::finding_for_site(&root, &app, "terminal, application #1", &opts, &site)
+        finding_for_site(&root, &app, "terminal, application #1", &opts, &site)
             .expect("typed parameter member call matches terminal selector")
             .target
             .as_deref(),
@@ -61,7 +60,7 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
         ..site
     };
     assert!(
-        findings::finding_for_site(&root, &app, "terminal, application #1", &opts, &bare).is_none(),
+        finding_for_site(&root, &app, "terminal, application #1", &opts, &bare).is_none(),
         "bare unknown identifiers must not match a terminal selector"
     );
 }

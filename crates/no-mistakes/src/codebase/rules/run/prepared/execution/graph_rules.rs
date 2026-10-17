@@ -37,6 +37,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 prepared_vitest_projects,
                 prepared_playwright_projects,
                 shared.graph_file_universe(),
+                Some(shared),
             )
         })?);
     }

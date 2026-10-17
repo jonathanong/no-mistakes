@@ -183,3 +183,49 @@ allowlist for aliases or namespace imports: configure the canonical target.
 [`forbidden-dependencies`](forbidden-dependencies.md) protects module
 reachability; `forbidden-calls` protects the binding-aware invocation boundary
 inside those modules.
+
+## Bounded argument predicates
+
+A target can add `whenArguments.all` to require literal argument conditions after
+its ordinary binding-aware selector matches. Positions are zero-based. Each
+predicate selects the argument itself or one literal `property`, then uses exactly
+one of `equals`, `arrayIncludes`, or `arrayExcludes` with a string, finite number,
+boolean, or null. Conditions are conjunctive.
+
+```yaml
+options:
+  unknownArguments: finding
+  targets:
+    - moduleExport: { module: 'node:child_process', export: execFile }
+      whenArguments:
+        all:
+          - position: 1
+            arrayIncludes: check
+          - position: 1
+            arrayExcludes: --root
+          - position: 2
+            property: cwd
+            equals: /workspace
+```
+
+This reports matching calls that launch checks against the live workspace without
+an explicit fixture root. Add `--root` to the literal argument array, use a fixture
+working directory, or remove the forbidden invocation. Existing suppression
+comments work unchanged. Imported aliases and static namespace members retain the
+same canonical target matching as target-only applications.
+
+Literal expressions and direct immutable scalar aliases are supported. Arrays
+and options objects require closed ownership: mutation, export/re-export, escape,
+captured carriers, uses inside loops, unsupported destructuring, dynamic expressions,
+and spreads produce unknown facts.
+`const` and `as const` do not freeze mutable contents. Missing arguments/properties
+and known incompatible shapes do not match. Unknown values never count as proof
+of array exclusion. `unknownArguments: finding` (the default) reports otherwise
+matching uncertain calls; `ignore` explicitly opts out. This is independent of
+`unknownCalls`, which still governs unresolved callees.
+
+Limits are 16 predicates, 32 positions, 128-byte property names, 4096-byte strings,
+and bounded depth and projection/reference work. Exhaustion produces unknown.
+Argument facts are requested only when a target declares these predicates and
+share the existing request's source inventory and parse. Target-only checks do
+not collect argument summaries.
