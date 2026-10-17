@@ -78,7 +78,16 @@ confidence bound. Missing budgets fail closed and produce
 `proposed-budgets.json` in the summary artifact. Incomplete samples, timeouts,
 signals, invalid resource counters and nonzero candidate exits cannot calibrate
 a budget. Historical published-binary failures remain visible but cannot supply
-candidate budgets.
+candidate budgets. A failed cohort retains the valid proposals from other cohorts
+and reports every incomplete or invalid group before failing the summary.
+
+The maximum-plus-three-standard-deviations rule is an empirical regression gate.
+Six samples and multiple metric/cohort comparisons do not establish a population
+false-positive guarantee; allocator or hosted-VM drift may require reviewed
+calibration across additional runs. Do not invent a relative floor without data.
+On a four-vCPU runner, automatic workers repeat the explicit four-worker setting.
+This does not exercise the 24-worker RSS growth described in #1734; larger worker
+counts require an explicitly configured larger runner and separate calibration.
 
 For initial calibration or an intentional runner/toolchain/fixture change, dispatch
 with `calibrate: true`, review raw samples and their `environment.json` provenance,
