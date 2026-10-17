@@ -31,10 +31,7 @@ pub(super) fn before_second_load() {
 
 impl super::ActiveDeadline {
     // Tests poison the process-wide lock on purpose. Production never calls this.
-    #[allow(
-        dead_code,
-        reason = "only the deadline tests clear a poisoned write lock"
-    )]
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(in crate::invocation::deadline) fn clear_poison_for_test(&self) {
         self.lock.clear_poison();
     }
