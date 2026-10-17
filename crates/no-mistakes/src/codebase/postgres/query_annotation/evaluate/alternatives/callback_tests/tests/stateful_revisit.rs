@@ -25,12 +25,14 @@ fn stateful_callback_revisits_observe_changed_lexical_arguments() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -73,11 +75,12 @@ fn stateful_callback_revisits_observe_changed_lexical_arguments() {
     );
     assert!(events.iter().any(|(_, value)| matches!(value, super::super::super::Value::Prefix(text, true, None) if text == "SELECT 1") || matches!(value, super::super::super::Value::Possible(values) if values.iter().any(|value| matches!(value, super::super::super::Value::Prefix(text, true, None) if text == "SELECT 1")))), "second invocation reads the prior unannotated slot");
     // Dynamic deletion changes semantic state even when stored slot values do not.
-    let super::super::super::Value::Function(function, _, captured) =
+    let super::super::super::Value::Function(function, owner, captured) =
         evaluator.scopes[root]["reader"].clone()
     else {
         panic!("saved reader callback");
     };
+    let captured = captured.environment(&owner, &evaluator.modules);
     let super::super::super::Value::Arguments(id) = evaluator.scopes[captured]["arguments"] else {
         panic!("saved lexical arguments identity");
     };

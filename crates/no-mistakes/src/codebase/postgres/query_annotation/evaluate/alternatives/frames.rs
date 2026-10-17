@@ -5,6 +5,7 @@ use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 struct Roots<'a> {
+    modules: &'a FxHashMap<std::path::PathBuf, Environment>,
     environments: &'a [Environment],
     arguments: &'a [u64],
     preserved: Environment,
@@ -60,6 +61,7 @@ pub(super) fn compact(
     let indices = compact_from_roots(
         scopes,
         Roots {
+            modules: cache.modules,
             environments: &roots,
             arguments: &argument_roots,
             preserved: original,
@@ -94,6 +96,7 @@ fn compact_from_roots(
     let reachable = reachable::collect_from_roots(
         scopes,
         reachable::RootSeeds {
+            modules: roots.modules,
             environments: roots.environments,
             arguments: roots.arguments,
             transient: roots.transient,
@@ -182,7 +185,7 @@ fn compact_from_roots(
 }
 
 mod state;
-pub(super) use state::{compact_modules, prune_mutations, prune_state};
+pub(super) use state::{compact_modules, prune_mutations, prune_state, FrameContext};
 
 #[cfg(test)]
 mod tests;

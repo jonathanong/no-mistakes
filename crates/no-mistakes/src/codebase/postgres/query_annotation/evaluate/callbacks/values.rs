@@ -37,8 +37,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     self.callback_values(&live, depth, visited);
                 }
                 Value::Function(function, path, captured) => {
+                    let captured = captured.environment(path, &self.modules);
                     let taints = self.invalidated_builders.len();
-                    self.invalidate_captured(*captured, function);
+                    self.invalidate_captured(captured, function);
                     if self.invalidated_builders.len() != taints {
                         visited.memo.clear();
                     }
@@ -46,7 +47,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         let key = (
                             path.clone(),
                             function.start,
-                            *captured,
+                            captured,
                             function.params.clone(),
                         );
                         if self
@@ -69,7 +70,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                                 .insert(key.clone());
                             let snapshot = self.memoized_callback_snapshot(
                                 path,
-                                *captured,
+                                captured,
                                 function,
                                 depth,
                                 &mut visited.memo,
@@ -77,7 +78,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                             visited
                                 .functions
                                 .insert(key.clone(), (depth, value.clone(), snapshot));
-                            let mut locals = scopes::locals(&self.scopes[*captured], function);
+                            let mut locals = scopes::locals(&self.scopes[captured], function);
                             if let Some(name) = &function.self_name {
                                 locals.insert(name.clone(), Value::Unknown);
                             }
@@ -88,8 +89,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                             // Opaque consumers do not supply a reference receiver.
                             scopes::bind_this(&mut locals, function, None);
                             let mut scope = self.environment(locals);
-                            self.register_mappings(scope, *captured, function, None);
-                            self.register_captured_bindings(scope, *captured, function);
+                            self.register_mappings(scope, captured, function, None);
+                            self.register_captured_bindings(scope, captured, function);
                             let mutating = self.callback_may_mutate(function, path, scope);
                             if mutating {
                                 visited.memo.clear();

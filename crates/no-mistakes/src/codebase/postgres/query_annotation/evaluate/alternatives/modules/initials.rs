@@ -56,8 +56,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let live = reachable::collect_from_roots(
             &self.scopes,
             reachable::RootSeeds {
+                modules: &self.modules,
                 environments: &[env],
-                ..Default::default()
+                ..reachable::RootSeeds::new(&self.modules)
             },
             &[],
             Arena {

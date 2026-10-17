@@ -145,6 +145,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 Value::Unknown
             };
         };
+        let captured = captured.environment(&function_path, &self.modules);
         if !function.supported
             || (!self.files[&function_path].facts.precise_records
                 && function.body.iter().any(|step| {

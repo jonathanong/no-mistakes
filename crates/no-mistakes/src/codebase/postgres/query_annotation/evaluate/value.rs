@@ -11,7 +11,7 @@ use std::{
 struct Data {
     values: Vec<Value>,
     contains_reference: OnceLock<bool>,
-    environments: OnceLock<FxHashSet<Environment>>,
+    environments: OnceLock<FxHashSet<super::Capture>>,
 }
 impl Clone for Data {
     fn clone(&self) -> Self {
@@ -36,15 +36,24 @@ impl Eq for Values {}
 
 impl Values {
     pub(super) fn contains_environment(&self) -> bool {
-        !self.environment_indices().is_empty()
+        !self.environments().is_empty()
     }
 
-    pub(super) fn environment_indices(&self) -> &FxHashSet<Environment> {
+    pub(super) fn environment_indices(&self) -> impl Iterator<Item = Environment> + '_ {
+        self.environments()
+            .iter()
+            .filter_map(|capture| match capture {
+                super::Capture::Lexical(frame) => Some(frame.index()),
+                super::Capture::Module => None,
+            })
+    }
+
+    fn environments(&self) -> &FxHashSet<super::Capture> {
         self.0.environments.get_or_init(|| {
-            fn collect(value: &Value, environments: &mut FxHashSet<Environment>) {
+            fn collect(value: &Value, environments: &mut FxHashSet<super::Capture>) {
                 match value {
-                    Value::Function(_, _, env) => {
-                        environments.insert(*env);
+                    Value::Function(_, _, capture) => {
+                        environments.insert(*capture);
                     }
                     Value::Promise(value) | Value::Evaluated(value, _) => {
                         collect(value, environments)
@@ -55,7 +64,7 @@ impl Values {
                     | Value::Record(values, _)
                     | Value::Joined(values)
                     | Value::Possible(values) => {
-                        environments.extend(values.environment_indices());
+                        environments.extend(values.environments().iter().copied());
                     }
                     _ => {}
                 }
@@ -161,7 +170,7 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     Possible(Values),
     Arguments(u64),
     Array(u64),
-    Function(Arc<Function>, PathBuf, Environment),
+    Function(Arc<Function>, PathBuf, super::Capture),
     Number(i64),
     Boolean(bool),
     Failure(&'static str),

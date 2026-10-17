@@ -4,11 +4,22 @@ use super::arena::Arena;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
-#[derive(Default)]
 pub(super) struct RootSeeds<'a> {
+    pub modules: &'a FxHashMap<std::path::PathBuf, Environment>,
     pub environments: &'a [Environment],
     pub arguments: &'a [u64],
     pub transient: &'a [TransientRoot],
+}
+
+impl<'a> RootSeeds<'a> {
+    pub fn new(modules: &'a FxHashMap<std::path::PathBuf, Environment>) -> Self {
+        Self {
+            modules,
+            environments: &[],
+            arguments: &[],
+            transient: &[],
+        }
+    }
 }
 
 #[derive(Default)]
@@ -22,14 +33,14 @@ pub(super) struct Reachable {
 }
 
 impl Reachable {
-    fn value(&mut self, value: &Value) {
+    fn value(&mut self, value: &Value, modules: &FxHashMap<std::path::PathBuf, Environment>) {
         match value {
-            Value::Function(_, _, env) => self.pending_env.push(*env),
+            Value::Function(_, path, capture) => self.pending_env.push(capture.environment(path, modules)),
             Value::Arguments(id) | Value::Array(id) => self.pending_args.push(*id),
             Value::Prefix(_, _, Some(id)) => {
                 self.identities.insert(*id);
             }
-            Value::Promise(value) | Value::Evaluated(value, _) => self.value(value),
+            Value::Promise(value) | Value::Evaluated(value, _) => self.value(value, modules),
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
@@ -42,7 +53,7 @@ impl Reachable {
                     && self.visited_values.insert(values.identity()) =>
             {
                 for value in values {
-                    self.value(value);
+                    self.value(value, modules);
                 }
             }
             _ => {}
@@ -78,7 +89,7 @@ pub(super) fn collect_from_roots(
         }
     }
     for value in returned {
-        found.value(value);
+        found.value(value, roots.modules);
     }
     while !found.pending_env.is_empty() || !found.pending_args.is_empty() {
         while let Some(env) = found.pending_env.pop() {
@@ -87,7 +98,7 @@ pub(super) fn collect_from_roots(
                     found.pending_env.extend(origins.values().copied());
                 }
                 for value in scopes[env].values() {
-                    found.value(value);
+                    found.value(value, roots.modules);
                 }
                 if let Some(bindings) = mapped.get(&env) {
                     found
@@ -106,7 +117,7 @@ pub(super) fn collect_from_roots(
                         .into_iter()
                         .flat_map(|slots| slots.values()),
                 ) {
-                    found.value(value);
+                    found.value(value, roots.modules);
                 }
             }
         }

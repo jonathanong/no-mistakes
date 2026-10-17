@@ -14,9 +14,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn r
 
 pub(super) fn remap_changed(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
     match value {
-        Value::Function(_, _, env) => {
-            if let Some(index) = indices.get(env) {
-                *env = *index;
+        Value::Function(_, _, super::super::super::Capture::Lexical(env)) => {
+            if let Some(index) = indices.get(&env.index()) {
+                *env = (*index).into();
             }
         }
         Value::Promise(value) | Value::Evaluated(value, _) => remap_changed(value, indices),
@@ -40,6 +40,5 @@ fn changes_environment(values: &Values, indices: &FxHashMap<Environment, Environ
     values.contains_environment()
         && values
             .environment_indices()
-            .iter()
-            .any(|env| indices.get(env).is_some_and(|after| after != env))
+            .any(|env| indices.get(&env).is_some_and(|after| *after != env))
 }

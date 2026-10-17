@@ -24,6 +24,7 @@ fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness()
     let result = compact_from_roots(
         &mut scopes,
         Roots {
+            modules: &Default::default(),
             environments: &[0],
             arguments: &[],
             preserved: 1,

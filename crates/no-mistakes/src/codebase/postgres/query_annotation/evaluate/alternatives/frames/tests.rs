@@ -27,7 +27,7 @@ fn remapping_changes_function_environments_only_in_written_snapshot() {
             self_name: None,
         }),
         "helper.ts".into(),
-        7,
+        7usize.into(),
     );
     let original = Values::from(vec![Value::Promise(Box::new(Value::Evaluated(
         Box::new(function),
@@ -52,7 +52,11 @@ fn remapping_changes_function_environments_only_in_written_snapshot() {
     fn environment(value: &Value) -> usize {
         match value {
             Value::Promise(inner) | Value::Evaluated(inner, _) => environment(inner),
-            Value::Function(_, _, env) => *env,
+            Value::Function(
+                _,
+                _,
+                crate::codebase::postgres::query_annotation::evaluate::Capture::Lexical(env),
+            ) => env.index(),
             _ => panic!("function disappeared"),
         }
     }
@@ -72,13 +76,17 @@ fn function_value(env: Environment) -> Value {
             self_name: None,
         }),
         "helper.ts".into(),
-        env,
+        env.into(),
     )
 }
 
 fn function_environment(value: &Value) -> Environment {
     match value {
-        Value::Function(_, _, env) => *env,
+        Value::Function(
+            _,
+            _,
+            crate::codebase::postgres::query_annotation::evaluate::Capture::Lexical(env),
+        ) => env.index(),
         Value::Promise(inner) | Value::Evaluated(inner, _) => function_environment(inner),
         _ => panic!("function disappeared"),
     }
@@ -135,6 +143,7 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
     let indices = compact_from_roots(
         &mut scopes,
         Roots {
+            modules: &Default::default(),
             environments: &[0],
             arguments: &[],
             preserved: 0,
@@ -211,6 +220,7 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
     let indices = compact_from_roots(
         &mut scopes,
         Roots {
+            modules: &Default::default(),
             environments: &[0],
             arguments: &[],
             preserved: 0,
@@ -266,6 +276,7 @@ fn initial_argument_roots_preserve_cycles_and_callbacks_without_copying_returns(
     let compacted = compact_from_roots(
         &mut scopes,
         Roots {
+            modules: &Default::default(),
             environments: &[0],
             arguments: &[42],
             preserved: 1,
@@ -290,4 +301,26 @@ fn initial_argument_roots_preserve_cycles_and_callbacks_without_copying_returns(
         panic!("returned value changed shape")
     };
     assert_eq!(text.as_ptr(), return_buffer, "the return was not copied");
+}
+
+#[test]
+fn module_captures_keep_nested_containers_shared_during_numeric_remapping() {
+    use crate::codebase::postgres::query_annotation::evaluate::Capture;
+    let Value::Function(function, path, _) = function_value(7) else {
+        unreachable!()
+    };
+    let values = Values::from(vec![Value::Promise(Box::new(Value::Function(
+        function,
+        path,
+        Capture::Module,
+    )))]);
+    assert!(values.contains_environment());
+    assert!(values.environment_indices().next().is_none());
+    let identity = values.identity();
+    let mut wrapped = Value::Object(values);
+    remap(&mut wrapped, &FxHashMap::from_iter([(7, 2)]));
+    let Value::Object(after) = wrapped else {
+        panic!("stored wrapper")
+    };
+    assert_eq!(after.identity(), identity);
 }

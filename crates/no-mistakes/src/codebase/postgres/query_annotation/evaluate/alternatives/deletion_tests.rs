@@ -34,12 +34,14 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
         let files = FxHashMap::from_iter([(
             path.clone(),
             File {
+                initial_template: Default::default(),
                 facts: &facts,
                 module: std::sync::Arc::new(Module::new(ts.clone().into())),
                 executors: Default::default(),
             },
         )]);
         let mut evaluator = Evaluator {
+            initial_template_observer: crate::diagnostics::current(),
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),

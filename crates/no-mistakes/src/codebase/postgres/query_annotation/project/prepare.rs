@@ -54,6 +54,7 @@ pub(super) fn profiles<'a>(
                     Some((
                         normalize_path(path),
                         File {
+                            initial_template: Default::default(),
                             module: Arc::clone(&modules[path]),
                             facts,
                             executors: embedded.call_spans.iter().copied().collect(),

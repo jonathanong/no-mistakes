@@ -53,9 +53,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let mut callbacks = Vec::new();
             for (key, budget, value, before) in functions {
                 if let Value::Function(function, path, captured) = &value {
+                    let captured = captured.environment(path, &self.modules);
                     let current = self.memoized_callback_snapshot(
                         path,
-                        *captured,
+                        captured,
                         function,
                         budget,
                         &mut comparison,

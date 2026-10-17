@@ -20,12 +20,14 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -104,6 +106,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
         (
             root.clone(),
             File {
+                initial_template: Default::default(),
                 facts: &root_facts,
                 module: std::sync::Arc::new(Module::new(root_ts.clone().into())),
                 executors: Default::default(),
@@ -112,6 +115,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
         (
             later.clone(),
             File {
+                initial_template: Default::default(),
                 facts: &later_facts,
                 module: std::sync::Arc::new(Module::new(later_ts.clone().into())),
                 executors: Default::default(),
@@ -119,6 +123,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
         ),
     ]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |specifier: &str, from: &Path| {
             (specifier == "./later.mts" && from == root.as_path()).then(|| later.clone())

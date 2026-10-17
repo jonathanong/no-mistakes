@@ -16,7 +16,7 @@ fn shared_temporary_containers_keep_each_heap_identity_once() {
     let value = Value::Promise(Box::new(Value::Evaluated(Box::new(value), true)));
     let mut roots = Vec::new();
     let mut visited = FxHashSet::default();
-    retain(&value, &mut roots, &mut visited);
+    retain(&value, &Default::default(), &mut roots, &mut visited);
     assert_eq!(visited.len(), 13);
     assert_eq!(roots.len(), 2);
     assert!(matches!(roots[0], TransientRoot::Argument(8)));
@@ -38,7 +38,7 @@ fn scalar_temporary_containers_do_not_allocate_root_entries() {
     }
     let mut roots = Vec::new();
     let mut visited = FxHashSet::default();
-    retain(&value, &mut roots, &mut visited);
+    retain(&value, &Default::default(), &mut roots, &mut visited);
     assert_eq!(roots.capacity(), 0);
     assert_eq!(visited.capacity(), 0);
 }
