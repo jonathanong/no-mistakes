@@ -33,63 +33,71 @@ pub(super) fn boundary(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, SERVER_ROUTE_CLIENT_BOUNDARY) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    Ok(RuleChunk::from_findings(
-        server_route_client_boundary::check_with_facts_for_aggregate(
-            req.root,
-            req.config,
-            req.shared,
-            req.inferred_roots,
-            req.defer_suppression,
-        )?,
-    ))
+    crate::perf_trace::trace("rules.server_route_client_boundary", || {
+        Ok(RuleChunk::from_findings(
+            server_route_client_boundary::check_with_facts_for_aggregate(
+                req.root,
+                req.config,
+                req.shared,
+                req.inferred_roots,
+                req.defer_suppression,
+            )?,
+        ))
+    })
 }
 
 pub(super) fn api_routes(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, NEXTJS_NO_API_ROUTES) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    Ok(RuleChunk::from_findings(
-        nextjs_no_api_routes::check_with_facts_for_aggregate(
-            req.root,
-            req.config,
-            req.shared,
-            req.inferred_roots,
-            req.defer_suppression,
-        )?,
-    ))
+    crate::perf_trace::trace("rules.nextjs_no_api_routes", || {
+        Ok(RuleChunk::from_findings(
+            nextjs_no_api_routes::check_with_facts_for_aggregate(
+                req.root,
+                req.config,
+                req.shared,
+                req.inferred_roots,
+                req.defer_suppression,
+            )?,
+        ))
+    })
 }
 
 pub(super) fn caching(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, NEXTJS_NO_CACHING) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    Ok(RuleChunk::from_findings(
-        nextjs_no_caching::check_with_facts_for_aggregate(
-            req.root,
-            req.config,
-            req.shared,
-            req.inferred_roots,
-            req.defer_suppression,
-        )?,
-    ))
+    crate::perf_trace::trace("rules.nextjs_no_caching", || {
+        Ok(RuleChunk::from_findings(
+            nextjs_no_caching::check_with_facts_for_aggregate(
+                req.root,
+                req.config,
+                req.shared,
+                req.inferred_roots,
+                req.defer_suppression,
+            )?,
+        ))
+    })
 }
 
 pub(super) fn storybook(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, REQUIRE_STORYBOOK_STORIES) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    Ok(RuleChunk::from_findings(storybook_findings(
-        StorybookFindingsRequest {
-            root: req.root,
-            config: req.config,
-            prepared_tsconfig_catalog: req.prepared_tsconfig_catalog,
-            shared: req.shared,
-            inferred_roots: req.inferred_roots,
-            session: req.session,
-            defer_suppression: req.defer_suppression,
-            sources: req.sources,
-        },
-    )?))
+    crate::perf_trace::trace("rules.require_storybook_stories", || {
+        Ok(RuleChunk::from_findings(storybook_findings(
+            StorybookFindingsRequest {
+                root: req.root,
+                config: req.config,
+                prepared_tsconfig_catalog: req.prepared_tsconfig_catalog,
+                shared: req.shared,
+                inferred_roots: req.inferred_roots,
+                session: req.session,
+                defer_suppression: req.defer_suppression,
+                sources: req.sources,
+            },
+        )?))
+    })
 }
 
 pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {

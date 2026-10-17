@@ -212,6 +212,7 @@ impl InvocationObserver {
                 }
             }
         }
+        super::memory::render(self.verbose, &mut output);
         if let Some(output) = output {
             self.emit_progress_output(output);
         }

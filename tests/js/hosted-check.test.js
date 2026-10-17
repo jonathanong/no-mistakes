@@ -5,6 +5,8 @@ const { createRequire } = require("node:module");
 const {
   packageManifest,
   formatSummary,
+  calibratedBudget,
+  enforceBudget,
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
@@ -173,4 +175,46 @@ test("uses fresh hosted pairs on both distinct issue trees and production defaul
     /NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes/,
   );
   assert.doesNotMatch(workflow, /--no-default-features|--skip-rule|--skip-category/);
+});
+
+// Constant and noisy measurements pin the actual calibration arithmetic, not a guessed percentage.
+test("calibrates wall/RSS headroom from six fresh samples and rejects slowed candidates", () => {
+  const samples = Array.from({ length: 6 }, (_, index) => ({
+    elapsed: 10 + index,
+    rss_kib: 100 + index * 10,
+    exit: 0,
+  }));
+  const budget = calibratedBudget(samples);
+  assert.equal(budget.wallSeconds, 15);
+  assert.equal(budget.rssKiB, 150);
+  assert.equal(budget.sampleCount, 6);
+  assert.ok(budget.wallSecondsMargin > 0);
+  assert.equal(budget.rssKiBMargin, budget.wallSecondsMargin * 10);
+  enforceBudget(samples, budget);
+  assert.throws(() => enforceBudget([{ ...samples[0], elapsed: 30 }], budget), /elapsed.*exceeds/);
+  assert.throws(() => enforceBudget([{ ...samples[0], rss_kib: 300 }], budget), /rss_kib.*exceeds/);
+  assert.throws(() => enforceBudget(samples, undefined), /Missing calibrated budget/);
+  assert.throws(
+    () => enforceBudget(samples, { ...budget, wallSeconds: null, wallSecondsMargin: null }),
+    /Invalid budget/,
+  );
+  assert.throws(() => enforceBudget([{ ...samples[0], exit: 124 }], budget), /did not complete/);
+  assert.throws(() => enforceBudget([{ ...samples[0], rss_kib: NaN }], budget), /rss_kib/);
+  assert.throws(() => calibratedBudget(samples.slice(1)), /six completed/);
+  assert.throws(() => calibratedBudget(samples.map((s) => ({ ...s, exit: 1 }))), /six completed/);
+  assert.throws(
+    () => calibratedBudget(samples.map((s) => ({ ...s, rss_kib: 0 }))),
+    /Invalid calibration/,
+  );
+});
+
+test("weekly runs use the event source and separate thread budgets", () => {
+  const workflow = readFileSync(
+    join(__dirname, "../../.github/workflows/hosted-check.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /schedule:/);
+  assert.match(workflow, /github.event.pull_request.head.sha \|\| github.sha/);
+  assert.match(workflow, /jobs: \["1", "4", "auto"\]/);
+  assert.match(workflow, /HOSTED_CHECK_JOBS: \$\{\{ matrix.jobs \}\}/);
 });
