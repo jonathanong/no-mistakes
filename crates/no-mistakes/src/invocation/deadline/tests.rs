@@ -342,7 +342,7 @@ fn readers_retry_an_odd_generation_and_a_changed_generation() {
             assert!(wait_odd.elapsed() < std::time::Duration::from_secs(5));
             std::thread::yield_now();
         }
-        let reader = scope.spawn(|| super::publish::published_deadline());
+        let reader = scope.spawn(super::publish::published_deadline);
         let wait_spin = std::time::Instant::now();
         while super::publish::ODD_SPINS.load(Ordering::Acquire) == 0 {
             assert!(wait_spin.elapsed() < std::time::Duration::from_secs(5));
@@ -360,7 +360,7 @@ fn readers_retry_an_odd_generation_and_a_changed_generation() {
     super::publish::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
     let replaced = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(40));
     std::thread::scope(|scope| {
-        let reader = scope.spawn(|| super::publish::published_deadline());
+        let reader = scope.spawn(super::publish::published_deadline);
         let wait_pause = std::time::Instant::now();
         while !super::publish::PAUSE_SECOND_REACHED.load(Ordering::Acquire) {
             assert!(wait_pause.elapsed() < std::time::Duration::from_secs(5));
