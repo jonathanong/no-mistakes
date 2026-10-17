@@ -1,4 +1,16 @@
 use super::*;
+use rayon::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+
+struct ReleasePhase<'a>(&'a AtomicUsize);
+
+impl Drop for ReleasePhase<'_> {
+    fn drop(&mut self) {
+        // Unblock workers if the test fails before the restore phase.
+        self.0.store(3, Ordering::Release);
+    }
+}
 
 #[test]
 fn committed_output_disables_later_deadline_checks() {
@@ -158,5 +170,93 @@ fn expired_command_keeps_its_phase_when_the_invocation_limit_is_live() {
     assert_eq!(
         error.to_string(),
         "invocation deadline elapsed during lock acquisition"
+    );
+}
+
+#[test]
+fn parallel_workers_observe_expiry_and_not_a_stale_deadline() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    // `clock::now` is `Instant::now` and is not injectable. `owner: None` applies
+    // the deadline to every worker; a thread owner would hide a stale snapshot.
+    const WORKERS: usize = 8;
+    let phase = Arc::new(AtomicUsize::new(0));
+    let started = Arc::new(AtomicUsize::new(0));
+    let saw_expiry = Arc::new(AtomicUsize::new(0));
+    let saw_stale = Arc::new(AtomicUsize::new(0));
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(WORKERS)
+        .build()
+        .expect("worker pool");
+    let phase_workers = Arc::clone(&phase);
+    let started_workers = Arc::clone(&started);
+    let saw_expiry_workers = Arc::clone(&saw_expiry);
+    let saw_stale_workers = Arc::clone(&saw_stale);
+
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            pool.install(|| {
+                (0..WORKERS).into_par_iter().for_each(|_| {
+                    started_workers.fetch_add(1, Ordering::Release);
+                    while phase_workers.load(Ordering::Acquire) == 0 {
+                        // Hammer the snapshot while the deadline is installed.
+                        let _ignored = check_timeout().is_err();
+                        std::thread::yield_now();
+                    }
+                    let began = Instant::now();
+                    loop {
+                        if phase_workers.load(Ordering::Acquire) >= 3 {
+                            break;
+                        }
+                        if check_timeout().is_err() {
+                            saw_expiry_workers.fetch_add(1, Ordering::Release);
+                            break;
+                        }
+                        if began.elapsed() > Duration::from_secs(5) {
+                            break;
+                        }
+                        std::hint::spin_loop();
+                    }
+                    while phase_workers.load(Ordering::Acquire) < 3 {
+                        std::thread::yield_now();
+                    }
+                    for _ in 0..128 {
+                        if check_timeout().is_err() {
+                            saw_stale_workers.fetch_add(1, Ordering::Release);
+                            break;
+                        }
+                    }
+                });
+            });
+        });
+
+        let _release = ReleasePhase(&phase);
+        let wait_started = Instant::now();
+        while started.load(Ordering::Acquire) < WORKERS {
+            assert!(
+                wait_started.elapsed() < Duration::from_secs(5),
+                "workers did not start polling"
+            );
+            std::thread::yield_now();
+        }
+        let guard =
+            DeadlineGuard::install_for_invocation(Some(Duration::from_millis(50)), None).unwrap();
+        phase.store(1, Ordering::Release);
+        let wait_expiry = Instant::now();
+        while saw_expiry.load(Ordering::Acquire) < WORKERS {
+            assert!(
+                wait_expiry.elapsed() < Duration::from_secs(5),
+                "workers that observed expiry: {}",
+                saw_expiry.load(Ordering::Acquire)
+            );
+            std::thread::yield_now();
+        }
+        drop(guard);
+    });
+    assert_eq!(
+        saw_stale.load(Ordering::Acquire),
+        0,
+        "restored deadline must not stay visible"
     );
 }
