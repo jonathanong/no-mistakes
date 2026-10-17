@@ -114,6 +114,9 @@ fn scan_code_char(
         mode.line_state.in_block_comment = true;
         return Some(CodeCharAction::Consumed);
     }
+    if ch == '<' && html_directive_comment(line, idx) {
+        return Some(CodeCharAction::Comment(4));
+    }
     if ch == '/' && next == Some('/') {
         return Some(CodeCharAction::Comment(2));
     }

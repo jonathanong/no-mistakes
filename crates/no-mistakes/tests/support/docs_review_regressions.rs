@@ -42,9 +42,11 @@ fn release_tooling_is_relocated_outside_the_tagged_source_inventory() {
     let paths = super::cli_docs_helpers::consumer_identifier_paths(&source);
     assert!(!paths.contains(&duplicate));
     assert!(paths.contains(&source.join("crates/no-mistakes/tests/docs_coverage.rs")));
-    assert!(tools
-        .join("crates/no-mistakes/tests/docs_coverage.rs")
-        .is_file());
+    assert!(
+        tools
+            .join("crates/no-mistakes/tests/docs_coverage.rs")
+            .is_file()
+    );
 
     let validation = run(step_command("Run Rust tests"));
     assert!(validation.status.success(), "{validation:?}");
@@ -177,6 +179,24 @@ fn reviewed_commands_and_rule_options_stay_accurate() {
             "required-doc-section.md",
             &["`glob`", "`requiredHeading`"][..],
         ),
+        (
+            "doc-consistency.md",
+            &[
+                "`requiredFiles`",
+                "`requiredHeading`",
+                "`requiredSubstrings`",
+                "`bannedSubstrings`",
+                "`bannedPatterns`",
+                "`files`",
+                "`pattern`",
+                "`message`",
+                "[`forbidden-calls`](forbidden-calls.md)",
+                "`moduleExport`",
+                "[`markdown-child-links`](markdown-child-links.md)",
+                "`requireWholeFile`",
+                "`countCanonicalHtmlListItems`",
+            ][..],
+        ),
         ("shellcheck-runner.md", &["`skillsLockfile`"][..]),
         (
             "test-no-dependency-pins.md",
@@ -217,14 +237,18 @@ fn reviewed_caveats_stay_explicit() {
         read_root("docs/rules/nextjs-no-caching.md").contains("There are no rule-local options.")
     );
     assert!(read_root("docs/rules/nextjs-no-api-routes.md").contains("`app/users/page.tsx`"));
-    assert!(read_root("docs/rules/package-json-required-fields.md")
-        .contains("not an additional option"));
+    assert!(
+        read_root("docs/rules/package-json-required-fields.md")
+            .contains("not an additional option")
+    );
     assert!(
         read_root("docs/rules/postgres-no-generated-column-writes.md")
             .contains("There are no direct\n`schema` or `embedded` options.")
     );
-    assert!(read_root("docs/rules/test-no-dependency-pins.md")
-        .contains("There is no user-facing `defaultInclude` option."));
+    assert!(
+        read_root("docs/rules/test-no-dependency-pins.md")
+            .contains("There is no user-facing `defaultInclude` option.")
+    );
 
     let architecture = read_root("docs/architecture.md");
     assert!(architecture.contains("different\nruntime environments"));

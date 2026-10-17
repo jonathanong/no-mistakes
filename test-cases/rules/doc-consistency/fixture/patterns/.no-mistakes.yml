@@ -1,0 +1,27 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      requiredFiles: [README.md]
+      requiredHeading: "## Owner"
+      bannedSubstrings: ["legacy\u0020API"]
+      bannedPatterns:
+        - files: ["docs/**/*.md"]
+          pattern: 'PIN-[0-9]{3}'
+          message: "Move this pin to versions.md."
+        - files: ["docs/**/*.md"]
+          pattern: '(?s)BEGIN-SECRET.*?END-SECRET'
+          message: "Move this secret block to versions.md."
+        - files: ["docs/**/*.md"]
+          pattern: ZZ
+          message: "repeated token"
+        # a* matches every letter a, so this pair stays on the file that contains only QQ.
+        - files: ["docs/zero-alt.md"]
+          pattern: 'a*|QQ'
+          message: "zero-width alternative is not a finding"
+        - files: ["docs/zero-alt.md"]
+          pattern: 'QQ|a*'
+          message: "non-empty alternative is a finding"
+        - files: ["docs/**/*.md"]
+          pattern: '(?m)^'
+          message: "line-start anchor is not a finding"
