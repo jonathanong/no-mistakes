@@ -3,19 +3,44 @@ use crate::codebase::dependencies::graph::playwright_route_layouts::collect_layo
 #[test]
 fn integration_route_edges_preserve_the_real_vitest_entry_owner() {
     let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/playwright/integration-route-coverage"),
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/playwright/integration-route-coverage"),
     );
     let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
-    let settings = crate::playwright::config::load_settings_from_visible(&root, None, &[], None, None, &snapshot).unwrap();
-    let facts = crate::playwright::analysis::pipeline_facts::standalone_facts(&root, &settings, Default::default(), &snapshot).unwrap();
+    let settings = crate::playwright::config::load_settings_from_visible(
+        &root,
+        None,
+        &[],
+        None,
+        None,
+        &snapshot,
+    )
+    .unwrap();
+    let facts = crate::playwright::analysis::pipeline_facts::standalone_facts(
+        &root,
+        &settings,
+        Default::default(),
+        &snapshot,
+    )
+    .unwrap();
     let all_files = snapshot.paths_for(&root);
     let edges = collect_playwright_route_edges(&root, None, &all_files, Some(&facts));
-    assert!(edges.contains(&(
-        NodeId::file(root.join("integration/web.test.ts")),
-        NodeId::file(root.join("web/app/healthz/page.tsx")), EdgeKind::RouteTest,
-    )), "{edges:?}");
-    assert!(!edges.iter().any(|(owner, _, kind)| *kind == EdgeKind::RouteTest && *owner == NodeId::file(root.join("integration/cases.ts"))));
-    assert!(!edges.iter().any(|(_, route, kind)| *kind == EdgeKind::RouteTest && *route == NodeId::file(root.join("web/app/unregistered/page.tsx"))));
+    assert!(
+        edges.contains(&(
+            NodeId::file(root.join("integration/web.test.ts")),
+            NodeId::file(root.join("web/app/healthz/page.tsx")),
+            EdgeKind::RouteTest,
+        )),
+        "{edges:?}"
+    );
+    assert!(!edges
+        .iter()
+        .any(|(owner, _, kind)| *kind == EdgeKind::RouteTest
+            && *owner == NodeId::file(root.join("integration/cases.ts"))));
+    assert!(!edges
+        .iter()
+        .any(|(_, route, kind)| *kind == EdgeKind::RouteTest
+            && *route == NodeId::file(root.join("web/app/unregistered/page.tsx"))));
 }
 
 #[test]
@@ -142,7 +167,7 @@ fn playwright_route_edges_reuse_shared_route_cache_instead_of_rescanning() {
 #[test]
 fn playwright_route_edges_borrow_cached_occurrences_across_repeated_analysis() {
     use crate::codebase::check_facts::{
-        CheckFactPlan, collect_check_facts_with_graph_files_and_playwright,
+        collect_check_facts_with_graph_files_and_playwright, CheckFactPlan,
     };
     use crate::codebase::dependencies::graph::TsFactLookup;
 
@@ -165,6 +190,7 @@ fn playwright_route_edges_borrow_cached_occurrences_across_repeated_analysis() {
             graph_selectors: false,
             graph_routes: true,
         },
+        None,
     )
     .unwrap()
     .unwrap();
@@ -332,6 +358,7 @@ fn playwright_fact_plan_covers_graph_consumers_without_rule_selections() {
             graph_selectors: true,
             graph_routes: true,
         },
+        None,
     )
     .unwrap();
     assert!(plan.is_some());
@@ -339,7 +366,8 @@ fn playwright_fact_plan_covers_graph_consumers_without_rule_selections() {
 
 #[test]
 fn playwright_fact_plan_for_consumers_surfaces_targeted_config_errors() {
-    let root = crate::playwright::test_support::fixture_path(&["playwright-configs", "multi-config"]);
+    let root =
+        crate::playwright::test_support::fixture_path(&["playwright-configs", "multi-config"]);
     let mut config = crate::config::v2::NoMistakesConfig {
         rules: vec![crate::config::v2::schema::RuleDef {
             rule: crate::playwright::rules::PLAYWRIGHT_COVERAGE.to_string(),
@@ -361,15 +389,14 @@ fn playwright_fact_plan_for_consumers_surfaces_targeted_config_errors() {
         None,
         &config,
         crate::playwright::rules::PlaywrightFactConsumers::default(),
+        None,
     ) {
         Ok(_) => panic!("expected targeted Playwright config validation error"),
         Err(error) => error,
     };
-    assert!(
-        error
-            .to_string()
-            .contains("no Playwright config found with name missing")
-    );
+    assert!(error
+        .to_string()
+        .contains("no Playwright config found with name missing"));
 }
 
 #[test]

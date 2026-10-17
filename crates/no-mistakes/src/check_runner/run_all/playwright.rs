@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use no_mistakes::codebase::check_facts::PlaywrightFactPlan;
 use no_mistakes::codebase::dependencies::graph::GraphBuildPlan;
+use no_mistakes::codebase::ts_source::VisiblePathSnapshot;
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::playwright::rules::{PlaywrightFactConsumers, PreparedPlaywrightRules};
 use std::path::Path;
@@ -11,6 +12,7 @@ pub(super) fn fact_plan(
     config: &NoMistakesConfig,
     canonical_graph_plan: Option<GraphBuildPlan>,
     prepared: Option<&PreparedPlaywrightRules>,
+    visible_paths: &VisiblePathSnapshot,
 ) -> Result<Option<PlaywrightFactPlan>> {
     let consumers = canonical_graph_plan
         .map(|plan| PlaywrightFactConsumers {
@@ -25,6 +27,7 @@ pub(super) fn fact_plan(
             config_path,
             config,
             consumers,
+            Some(visible_paths),
         )
         .context("failed to prepare Playwright shared facts"),
     }
