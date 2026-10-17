@@ -298,5 +298,7 @@ See [the rule reference](eslint-rules/no-comment-phrases.md).
 ### `forbidden-member-chains`
 
 Opt-in bans for configured static member chains. Each `chains` entry sets
-`path`, an optional `receiver` (`*` or a root name), and `message`. File scope
-stays on the lint config. See [the rule reference](eslint-rules/forbidden-member-chains.md).
+`path`, an optional `receiver` (`*` or a root name), and `message`. A malformed
+`path` is a schema error. Object destructuring of the final segment matches,
+and a named root ignores shadowing. File scope stays on the lint config. See
+[the rule reference](eslint-rules/forbidden-member-chains.md).

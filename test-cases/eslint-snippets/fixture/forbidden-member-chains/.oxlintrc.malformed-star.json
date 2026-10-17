@@ -1,0 +1,19 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/forbidden-member-chains": [
+      "error",
+      {
+        "chains": [
+          { "path": "records.*.entry", "message": "Use the entry helper." },
+          { "path": "records.entry", "message": "Use the entry helper." }
+        ]
+      }
+    ]
+  }
+}
