@@ -47,6 +47,7 @@ include!("discovery_preserve.rs");
 include!("visible_snapshot.rs");
 include!("disable_comments.rs");
 include!("comment_parser.rs");
+include!("comment_parser_html.rs");
 include!("comment_parser_modes.rs");
 include!("syntax_helpers.rs");
 

@@ -116,3 +116,71 @@ fn file_disable_stops_at_rust_outer_attribute() {
     let source = "#[cfg(test)]\n// no-mistakes-disable-file my-rule";
     assert!(!has_disable_file_comment(source, "my-rule"));
 }
+
+#[test]
+fn html_comments_match_file_line_and_next_line_directives() {
+    let file = "<!-- no-mistakes-disable-file my-rule -->\ncode";
+    let line = "PIN <!-- no-mistakes-disable-line my-rule-->";
+    let next = "<!-- no-mistakes-disable-next-line my-rule -->\nPIN";
+    assert!(has_disable_file_comment(file, "my-rule"));
+    assert!(!has_disable_file_comment(file, "other-rule"));
+    assert!(has_disable_line_comment(line, 1, "my-rule"));
+    assert!(!has_disable_line_comment(line, 1, "other-rule"));
+    assert!(has_disable_comment(next, 2, "my-rule"));
+    assert!(!has_disable_comment(next, 2, "other-rule"));
+    assert_eq!(
+        super::matching_disable_directive(file, Some(2), "my-rule"),
+        Some(super::DisableDirective::File { line: 1 })
+    );
+    assert_eq!(
+        super::matching_disable_directive(line, Some(1), "my-rule"),
+        Some(super::DisableDirective::Line { line: 1 })
+    );
+    assert_eq!(
+        super::matching_disable_directive(next, Some(2), "my-rule"),
+        Some(super::DisableDirective::NextLine { line: 1 })
+    );
+    assert_eq!(super::disabled_statement_lines(line, "my-rule"), vec![1]);
+    assert_eq!(super::disabled_statement_lines(next, "my-rule"), vec![2]);
+}
+
+#[test]
+fn html_comments_do_not_hide_other_comment_syntax() {
+    for (source, line, enabled) in [
+        (
+            "const s = \"<!-- no-mistakes-disable-line my-rule -->\";",
+            1,
+            false,
+        ),
+        ("a<!--\n// no-mistakes-disable-line my-rule", 2, true),
+        ("if (a<!--b) // no-mistakes-disable-line my-rule", 1, true),
+        (
+            "<!-- note --> x // no-mistakes-disable-line my-rule",
+            1,
+            true,
+        ),
+        ("<!-- no-mistakes-disable-line my-rule", 1, false),
+        ("// no-mistakes-disable-line my-rule", 1, true),
+        ("# no-mistakes-disable-line my-rule", 1, true),
+        ("-- no-mistakes-disable-line my-rule", 1, true),
+        ("<!-- no-mistakes-disable-line my-rule-extra-->", 1, false),
+    ] {
+        assert_eq!(
+            has_disable_line_comment(source, line, "my-rule"),
+            enabled,
+            "{source}"
+        );
+    }
+    assert!(!has_disable_file_comment(
+        "code\n<!-- no-mistakes-disable-file my-rule -->",
+        "my-rule"
+    ));
+    assert!(has_disable_file_comment(
+        "<!-- copyright -->\n<!-- no-mistakes-disable-file my-rule -->",
+        "my-rule"
+    ));
+    assert!(!has_disable_file_comment(
+        "<!-- no-mistakes-disable-file my-rule --> code",
+        "my-rule"
+    ));
+}

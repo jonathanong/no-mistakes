@@ -229,3 +229,24 @@ fn invalid_options_and_empty_rule_set() {
             .unwrap();
     assert!(findings.is_empty());
 }
+
+#[test]
+fn entrypoint_option_and_include_errors_propagate() {
+    let root = fixture_root("pass");
+    let files = [root.join("CLAUDE.md")];
+    let mut invalid_include = config_with_rule("{}");
+    invalid_include.rules[0].include = vec!["[".to_string()];
+    assert!(check(&root, &invalid_include).is_err());
+    assert!(check_with_files(&root, &invalid_include, &files).is_err());
+
+    let mut invalid_options = NoMistakesConfig::default();
+    invalid_options.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("true").unwrap(),
+        ..Default::default()
+    });
+    assert!(check_with_files(&root, &invalid_options, &files).is_err());
+}
+
+mod patterns;

@@ -470,6 +470,14 @@ rules:
     options: { tsconfig: tsconfig.json, baseDir: src }
   - rule: tsconfig-file-coverage
     options: { allow: [{ path: src/a.ts }], auxiliaryConfigs: [{ path: tsconfig.test.json }] }
+  - rule: doc-consistency
+    options:
+      bannedPatterns:
+        - pattern: PIN
+        - files: ["docs/**/*.md", ""]
+        - files: docs/*.md
+  - rule: doc-consistency
+    options: { bannedPatterns: true }
 "#,
     )
     .unwrap();
@@ -485,7 +493,15 @@ rules:
         "rules[7].options.dependabotPath[0]",
         "rules[10].options.baseDir[0]",
         "rules[11].options.auxiliaryConfigs[0].path",
+        "rules[12].options.bannedPatterns[1].files[0]",
+        "rules[12].options.bannedPatterns[2].files[0]",
     ] {
         assert!(fields.contains(&field), "missing {field}: {fields:?}");
     }
+    assert!(
+        !fields
+            .iter()
+            .any(|field| field.contains("bannedPatterns[0]")),
+        "an entry without files is not a path: {fields:?}"
+    );
 }
