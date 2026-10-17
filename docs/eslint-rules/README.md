@@ -87,3 +87,5 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`ts-no-export-renaming`](ts-no-export-renaming.md)                         | Keep value-export identities direct.           |
 | [`ts-no-function-aliases`](ts-no-function-aliases.md)                       | Reject wrappers that only alias another call.  |
 | [`ts-preserve-null-option-defaults`](ts-preserve-null-option-defaults.md)   | Preserve explicit null option values.          |
+
+- [`gh-api-argument-safety`](gh-api-argument-safety.md) checks literal GitHub CLI API argv protocols.

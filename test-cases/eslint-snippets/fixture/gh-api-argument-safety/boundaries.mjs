@@ -1,0 +1,24 @@
+import { execFile } from 'node:child_process';
+const { spawn: launch } = require('child_process');
+launch('gh', ['api', 'repos/O/R?state=open', '-Fstate=all']);
+execFile('gh', ['api', 'repos/O/R', '--method=GET', '--method=', '-Fstate=all']);
+execFile('gh', ['api', 'repos/O/R', `--method=${method}`, '-Fstate=all']);
+execFile('gh', ['api', `${endpoint}`, '-Fstate=all']);
+execFile('gh', ['api', 'repos/O/R', '--custom=value', '-Fstate=all']);
+execFile('gh', ['api', '--paginate', '--slurp', '--include', '--cache=1h', 'repos/O/R']);
+execFile('gh', ['api', '--jq', '.items[] | .name?', 'repos/O/R', '-Fstate=all']);
+execFile('gh', ['api', '--hostname', 'github.com', 'repos/O/R', '-XPOST', '--field=state=all']);
+execFile('gh', ['api']);
+execFile('gh', ['version', 'repos/O/R?state=open']);
+const name = 'execFile';
+client[name]('gh', ['api', 'repos/O/R?state=open']);
+execFile('gh', ['api', 'repos/O/R', '-F']);
+execFile('gh', ['api', '--method', 'GET', '-Fstate=all']);
+execFile('gh', ['api', , 'repos/O/R', '-Fstate=all']);
+// no-mistakes-disable-next-line other-rule -- this does not suppress this rule
+execFile('gh', ['api', 'repos/O/R?state=open']);
+execFile('gh', ['api', 'repos/O/R', '-X', '-Fvalue=1']);
+execFile('gh', ['api', 'repos/O/R', '--field=']);
+execFile('gh', ['api', `repos/${repo}/labels`, '-F', 'per_page=100']);
+execFile('gh', ['api', `graphql${suffix}`, '-F', 'query=query { viewer { login } }']);
+execFile('gh', ['api', `${prefix}/labels`, '-F', 'per_page=100']);
