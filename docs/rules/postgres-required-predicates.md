@@ -199,6 +199,8 @@ SQL findings honor `no-mistakes-disable-next-line postgres-required-predicates`,
 (expression partition keys) have no source line to comment, so suppress them
 with `allow: [{object, reason}]`, for example `object: table:events`. For a qualified catalog name use its full object ref, such as `table:public.events`. SQL findings use each relation occurrence’s host-file line. For SQL recovered from a helper in another module, the finding is reported in that module at the helper's line, so a directive there suppresses it.
 
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 ## Related rules
 
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated

@@ -171,6 +171,8 @@ embedded SQL parse failures point to their host call or declaration, so line
 suppression applies at the affected query. For a recovered imported helper,
 line suppression at the original SQL literal applies to that finding.
 
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 ## Related rules
 
 `postgres-required-predicates` requires predicates on named columns.

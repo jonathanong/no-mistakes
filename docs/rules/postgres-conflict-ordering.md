@@ -207,6 +207,10 @@ Use `no-mistakes-disable-next-line postgres-conflict-ordering` or
 `no-mistakes-disable-line` for a one-off. Prefer repairing the writer or a
 specific `safeDirective` explanation over a file-level suppression.
 
+## Helper attribution
+
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 ## Related rules
 
 [`postgres-lock-ordering`](postgres-lock-ordering.md) applies the same optional

@@ -407,6 +407,8 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`, `-- no-mistakes-disable-
 and `-- no-mistakes-disable-file` for `postgres-bounded-statements`. To exempt a table
 everywhere, use `allow: [{object: 'table:<name>', reason}]`.
 
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 A line directive covering the first line of a statement suppresses every relation
 finding in that statement, including when its `FROM` or target is on a later line.
 Directives on a relation's own reported line also work. This applies to SQL files

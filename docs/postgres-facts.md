@@ -426,20 +426,52 @@ these forms work:
   re-export outranks `export *`; two `export *` sources that declare the same
   name are ambiguous unless they reach one declaration.
 
+Helpers also compose with the rest of a builder:
+
+- **Conditional alternatives.** A hole after (or inside) a conditional append is
+  filled in every complete alternative, so the 16-version cap applies as it
+  always did; past the cap the call stays `Dynamic`.
+- **Statement-level builder helpers.** `appendOrdering(query);` on an imported
+  `SQLStatement`-parameter helper appends that helper's fixed fragments to
+  `query`, exactly like `query.append(...)`. The argument must be a tracked
+  local builder; the other arguments must be literals or plain identifiers.
+- **IIFE-local builders.** ``const built = (() => { const query = sql`...`; ...;
+  return query; })();`` gives `built` the final state of `query`, including its
+  finite alternatives and any holes. The function must be a directly invoked,
+  non-async, non-generator arrow or function expression with no name,
+  parameters or arguments, must not use `this` or `arguments`, must declare the
+  returned `const`/`let` itself, and must have exactly one `return`, last. The
+  `const` must be declared with `const`.
+
+Imports resolve through the same per-importing-file scoped resolver as the
+rest of the request, so a package's own `paths` win over the root's `@/*`.
+
 Everything else fails closed and stays `Dynamic`: an unresolved or external module,
 a module outside the checked files, a re-export chain past 8 hops, a re-export cycle,
 ambiguous `export *` names, `export * as ns`, namespace-import member calls
 (`ns.helper()`), CommonJS `require`, dynamic `import()`, a helper that calls
-another imported helper, a local variable shadowing the imported name, and any
-helper the walk could not summarize. A hole inside a conditional, loop, or
+another imported helper, a local variable shadowing the imported name, any
+helper the walk could not summarize, and an IIFE outside the exact shape above
+(parameters, arguments, `async`, generators, `this`, `arguments`, several
+returns, returning an outer or captured binding, statements after the return,
+a named function expression, or a `let` binding). A hole inside a loop or
 nested function that mutates an outer builder is not composed at all. A call
 that stays `Dynamic` keeps only the verified leading statement before the
 first hole, as before.
 
-Recovered SQL keeps the helper's physical lines: findings, source positions and
-`no-mistakes` suppression directives use the helper's own file and line, not
-the caller's. Each `(module, export)` pair is located once per request, however
-many calls import it.
+#### Helper-line attribution and suppression
+
+Recovered SQL keeps the helper's physical lines. Findings from every rule that
+consumes embedded statement facts (all of the `postgres-*` DML rules, including
+`postgres-required-predicates`, `postgres-explicit-columns`,
+`postgres-no-offset`, `postgres-bounded-statements`, `postgres-sql-shape-policy`
+and `postgres-sql-statement-policy`) are reported in the helper's module at the
+helper's line, so a directive written there applies. A directive in the calling
+file also suppresses the finding: file-level `no-mistakes-disable-file`, a
+directive on the executor call, or one on the imported-helper call. In that
+case the finding stays at the caller's location, so suppression accounting
+(`--include-suppressed`) is unchanged. Each `(module, export)` pair is located
+once per request, however many calls import it.
 
 ### Executor bindings
 
