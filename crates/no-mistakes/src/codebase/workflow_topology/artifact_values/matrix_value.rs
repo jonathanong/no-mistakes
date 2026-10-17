@@ -5,12 +5,13 @@
 
 use super::super::artifact_types::ArtifactValue;
 use super::super::value_primitives::OrderedJson;
-use dashmap::DashMap;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
 mod axes;
+#[cfg(test)]
+mod tests;
 use axes::{matrix_axis_values, matrix_combination_count, simple_matrix_axes};
 
 static MATRIX_REFERENCE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
@@ -25,6 +26,20 @@ static MATRIX_REFERENCE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
 /// value accounting for axes the string doesn't reference); anything else
 /// is `dynamic` (unresolvable without running the job).
 pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue {
+    artifact_value_observed(raw, matrix, std::mem::drop)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AxisRegexEvent {
+    Compiled,
+    Released,
+}
+
+fn artifact_value_observed(
+    raw: &str,
+    matrix: Option<&OrderedJson>,
+    mut observe: impl FnMut(AxisRegexEvent),
+) -> ArtifactValue {
     let axes = simple_matrix_axes(matrix);
     if !raw.contains("${{") {
         let instance_count = axes.as_ref().map(matrix_combination_count).unwrap_or(1);
@@ -71,20 +86,14 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
         if items.iter().any(|item| item.contains('$')) {
             // `replace_all` interprets `$0`/`$1`/`$$` in its replacement
             // string. Retain that behavior for axes whose values need it.
-            // Compile once per distinct axis name; the pattern cannot be shared
-            // across axes because the axis is part of the expression.
-            static AXIS_REFERENCE_PATTERNS: LazyLock<DashMap<String, Regex>> =
-                LazyLock::new(DashMap::new);
-            let expression = AXIS_REFERENCE_PATTERNS
-                .entry(axis.clone())
-                .or_insert_with(|| {
-                    Regex::new(&format!(
-                        r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
-                        regex::escape(axis)
-                    ))
-                    .expect("well-formed regex")
-                })
-                .clone();
+            // Axis names come from this request. Keep the input-derived regex
+            // local, outside the Cartesian expansion, never in a process cache.
+            let expression = Regex::new(&format!(
+                r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
+                regex::escape(axis)
+            ))
+            .expect("well-formed regex");
+            observe(AxisRegexEvent::Compiled);
             expanded_values = expanded_values
                 .into_iter()
                 .flat_map(|value| {
@@ -94,6 +103,8 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
                         .collect::<Vec<_>>()
                 })
                 .collect();
+            drop(expression);
+            observe(AxisRegexEvent::Released);
         } else {
             expanded_values = expanded_values
                 .into_iter()

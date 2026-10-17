@@ -1,0 +1,40 @@
+# Dollar replacement semantics deliberately preserve the old regex engine,
+# including $0/$1/$$, repeated axis references and introduced later references.
+requests:
+  - &same
+    raw: 'artifact-${{ matrix.os }}-${{ matrix.os }}-${{ matrix.node }}'
+    matrix:
+      os: ['$0', '$1', '$$']
+      node: ['20', '22']
+    compiled_axes: 1
+    expected:
+      kind: finite
+      raw: 'artifact-${{ matrix.os }}-${{ matrix.os }}-${{ matrix.node }}'
+      values: ['artifact-$-$-20', 'artifact-$-$-22', 'artifact-${{ matrix.os }}-${{ matrix.os }}-20', 'artifact-${{ matrix.os }}-${{ matrix.os }}-22', 'artifact---20', 'artifact---22']
+      instanceCounts:
+        'artifact-$-$-20': 1
+        'artifact-$-$-22': 1
+        'artifact-${{ matrix.os }}-${{ matrix.os }}-20': 1
+        'artifact-${{ matrix.os }}-${{ matrix.os }}-22': 1
+        'artifact---20': 1
+        'artifact---22': 1
+  - *same
+  - raw: '${{matrix.build-target}}-${{matrix.node}}'
+    matrix:
+      build-target: ['$${{matrix.node}}']
+      node: ['$$']
+    compiled_axes: 2
+    expected:
+      kind: finite
+      raw: '${{matrix.build-target}}-${{matrix.node}}'
+      values: ['$-$']
+      instanceCounts: {'$-$': 1}
+  - raw: '${{matrix.plain}}'
+    matrix:
+      plain: [linux, macos]
+    compiled_axes: 0
+    expected:
+      kind: finite
+      raw: '${{matrix.plain}}'
+      values: [linux, macos]
+      instanceCounts: {linux: 1, macos: 1}

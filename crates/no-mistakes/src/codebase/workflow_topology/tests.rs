@@ -38,7 +38,7 @@ use crate::config::v2::schema::CiConfig;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/workflow-topology")
