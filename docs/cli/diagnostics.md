@@ -72,6 +72,9 @@ canonical edge order.
 PostgreSQL annotation checks report `postgres.annotation.project` separately
 from parsing. `postgres.annotation.roots` counts evaluated roots across executor
 profiles: modules whose runtime imports cannot reach an executor are omitted.
+`postgres.annotation.parallel_passes` counts shared evaluator batches; all
+executor profiles and their demanded roots run in one parallel batch, with
+results merged in deterministic profile and source order.
 Unresolved, computed, and dynamic imports conservatively retain their modules
 and importers, including cycles. Executor-free callers that supply SQL literals
 to imported helpers remain roots. `postgres.annotation.reachability_walks` counts the
