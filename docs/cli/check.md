@@ -1,3 +1,5 @@
+<!-- cspell:ignore getrusage RUSAGE -->
+
 # `no-mistakes check`
 
 Run configured repository checks from `.no-mistakes.yml`.
