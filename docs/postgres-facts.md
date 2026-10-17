@@ -228,9 +228,12 @@ evaluation point, before the corresponding target is overwritten.
 
 If any possible outcome is opaque, if there are more than 16 versions, or if
 recovery exceeds the depth limit of 8, no partial version set is published.
-Loops, untagged `${...}` SQL-text interpolation, cross-file calls,
-`sql.raw(variable)`, and `sql.join` over non-literal input, spreads, or array
-holes remain `Dynamic` and retain the existing `unanalyzableSql` behavior.
+Loops, untagged `${...}` SQL-text interpolation other than the
+[literal-identifier helpers](#imported-and-literal-identifier-helpers) below,
+calls to imported helpers the request resolver cannot prove (see the same
+section for what it does resolve), `sql.raw(variable)`, and `sql.join` over
+non-literal input, spreads, or array holes remain `Dynamic` and retain the
+existing `unanalyzableSql` behavior.
 An unknown falsy result from `condition && sqlFragment` cannot prove whether
 a following `??` takes its fallback, so that composed call remains `Dynamic`.
 Present and absent fragments inside trusted templates and recoverable `||`
@@ -382,6 +385,62 @@ Rust callers constructing `EmbeddedSqlCall` with a struct literal must add
 `Debug` now include the version list. The legacy `kind` and `sql_text` fields
 retain their contract; Node source-fact and check JSON shapes remain unchanged.
 
+### Imported and literal-identifier helpers
+
+A helper is a function whose body is straight-line (no control flow), up to 8
+calls deep, with a single `return` of its SQL or `.append()` mutations on a
+`SQLStatement` parameter that it returns. The extractor summarizes each helper
+a file declares once, during that file's single AST pass, and records every
+call to an imported helper as a hole in the caller's SQL. The request's
+prepared resolver then fills the holes. Nothing is parsed or read a second
+time, and a call whose link cannot be proven stays `Dynamic` exactly as before.
+
+Three helper shapes recover:
+
+- **Fixed text**: a helper returning a string, template or `sql` fragment that
+  does not depend on its arguments. Any arguments are ignored.
+- **Literal identifiers**: a helper whose one `return` is an *untagged*
+  template literal whose every `${...}` is one of the helper's own parameters,
+  for example `` (col: string) => `(${col} IS NULL)` ``. A call that passes a
+  string literal for **every** parameter has the literals spliced in as SQL
+  text, so `ownerVisible('l.parent_id')` contributes `(l.parent_id IS NULL)`.
+  This works for same-file helpers too. A non-literal, missing, extra or
+  spread argument, a default, rest, optional or destructured parameter, a
+  parameter used anywhere but an interpolation of that template (including
+  `col.length`, `col + '...'` or a local alias), a literal containing a
+  newline, or an async or generator helper keeps the call `Dynamic`. Tagged
+  `sql` templates are different: their `${...}` values are bound parameters,
+  not SQL text.
+- **Statement builders**: a helper that appends fixed `sql` fragments to a
+  `SQLStatement` parameter and returns it. The caller supplies a trusted tagged
+  template or a fully recovered local builder, as for same-file helpers.
+
+Imports are resolved with the same resolver as the rest of the request, so
+these forms work:
+
+- relative specifiers with explicit extensions (`./visibility-sql.mts`);
+- `tsconfig` `paths` aliases such as `@modules/feed-query-builders`;
+- barrels. `export * from`, `export { name as alias } from`, `export { default
+  as name } from` and an imported name that is re-exported are followed for up
+  to **8 re-export hops** from the module the caller imports. An explicit
+  re-export outranks `export *`; two `export *` sources that declare the same
+  name are ambiguous unless they reach one declaration.
+
+Everything else fails closed and stays `Dynamic`: an unresolved or external module,
+a module outside the checked files, a re-export chain past 8 hops, a re-export cycle,
+ambiguous `export *` names, `export * as ns`, namespace-import member calls
+(`ns.helper()`), CommonJS `require`, dynamic `import()`, a helper that calls
+another imported helper, a local variable shadowing the imported name, and any
+helper the walk could not summarize. A hole inside a conditional, loop, or
+nested function that mutates an outer builder is not composed at all. A call
+that stays `Dynamic` keeps only the verified leading statement before the
+first hole, as before.
+
+Recovered SQL keeps the helper's physical lines: findings, source positions and
+`no-mistakes` suppression directives use the helper's own file and line, not
+the caller's. Each `(module, export)` pair is located once per request, however
+many calls import it.
+
 ### Executor bindings
 
 Imports decide which local identifiers execute SQL:
@@ -446,10 +505,13 @@ Each `EmbeddedSqlCall` records `kind`:
   Opaque statement-level and
   fluent appends likewise keep a verified leading `SELECT`, `UPDATE`, `INSERT`,
   `DELETE`, or `MERGE` as partial text. Incomplete prefixes such as `WITH`
-  remain fully opaque. Loops, nested functions that mutate an outer binding,
-  control flow in a helper, a parameter referenced outside a chain's
-  template-placeholder position, or a callee that isn't a same-file function,
-  classify as dynamic.
+  remain fully opaque. A call to a helper imported from another module is
+  composed in the same way once the request resolver proves the import (see
+  [Imported and literal-identifier helpers](#imported-and-literal-identifier-helpers)).
+  Loops, nested functions that mutate an outer binding, control flow in a
+  helper, a parameter referenced outside a chain's template-placeholder
+  position, or a callee that is neither a same-file function nor a proven
+  imported helper, classify as dynamic.
 - `Dynamic` — `let`, reassignment, interpolating templates, trusted tags
   that interpolate another SQL fragment, or incomplete composition. A present `sql_text` can be verified leading text rather than
   the complete runtime statement. Without `variants`, consumers must use it
