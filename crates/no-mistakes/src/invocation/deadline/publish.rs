@@ -3,22 +3,19 @@ use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::ptr;
-#[cfg(test)]
-use std::sync::atomic::AtomicBool;
 use std::sync::atomic::{fence, AtomicU64, Ordering};
 use std::sync::{LockResult, OnceLock, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::Duration;
 
+#[cfg(not(test))]
+mod pauses {
+    pub(super) fn after_odd_publish() {}
+    pub(super) fn on_odd_generation() {}
+    pub(super) fn before_second_load() {}
+}
+
 #[cfg(test)]
-pub(super) static PAUSE_WHILE_ODD: AtomicBool = AtomicBool::new(false);
-#[cfg(test)]
-pub(super) static PAUSE_ODD_REACHED: AtomicBool = AtomicBool::new(false);
-#[cfg(test)]
-pub(super) static ODD_SPINS: AtomicU64 = AtomicU64::new(0);
-#[cfg(test)]
-pub(super) static PAUSE_BEFORE_SECOND: AtomicBool = AtomicBool::new(false);
-#[cfg(test)]
-pub(super) static PAUSE_SECOND_REACHED: AtomicBool = AtomicBool::new(false);
+pub(super) mod pauses;
 
 pub(in crate::invocation) struct ActiveDeadline {
     lock: RwLock<Option<Deadline>>,
@@ -57,13 +54,7 @@ impl Published {
             // even generation.
             ptr::write_volatile(self.snapshot.get(), snapshot);
         }
-        #[cfg(test)]
-        if PAUSE_WHILE_ODD.load(Ordering::Acquire) {
-            PAUSE_ODD_REACHED.store(true, Ordering::Release);
-            while PAUSE_WHILE_ODD.load(Ordering::Acquire) {
-                std::hint::spin_loop();
-            }
-        }
+        pauses::after_odd_publish();
         fence(Ordering::Release);
         self.generation
             .store(generation.wrapping_add(1), Ordering::Release);
@@ -73,8 +64,7 @@ impl Published {
         loop {
             let first = self.generation.load(Ordering::Acquire);
             if first & 1 != 0 {
-                #[cfg(test)]
-                ODD_SPINS.fetch_add(1, Ordering::Relaxed);
+                pauses::on_odd_generation();
                 std::hint::spin_loop();
                 continue;
             }
@@ -84,13 +74,7 @@ impl Published {
                 ptr::read_volatile(self.snapshot.get().cast::<MaybeUninit<Option<Deadline>>>())
             };
             fence(Ordering::Acquire);
-            #[cfg(test)]
-            if PAUSE_BEFORE_SECOND.load(Ordering::Acquire) {
-                PAUSE_SECOND_REACHED.store(true, Ordering::Release);
-                while PAUSE_BEFORE_SECOND.load(Ordering::Acquire) {
-                    std::hint::spin_loop();
-                }
-            }
+            pauses::before_second_load();
             let second = self.generation.load(Ordering::Acquire);
             if first == second {
                 return unsafe {
@@ -151,13 +135,6 @@ pub(super) fn remaining_from_snapshots(
         .checked_duration_since(super::super::clock::now())
         .map(Some)
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::TimedOut, "command timed out"))
-}
-
-#[cfg(test)]
-impl ActiveDeadline {
-    pub(super) fn clear_poison_for_test(&self) {
-        self.lock.clear_poison();
-    }
 }
 
 pub(in crate::invocation) struct ActiveWriteGuard<'a> {

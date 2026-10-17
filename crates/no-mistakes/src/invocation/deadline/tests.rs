@@ -313,8 +313,8 @@ struct ReleasePublishPauses;
 
 impl Drop for ReleasePublishPauses {
     fn drop(&mut self) {
-        super::publish::PAUSE_WHILE_ODD.store(false, Ordering::Release);
-        super::publish::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_WHILE_ODD.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
     }
 }
 
@@ -324,10 +324,10 @@ fn readers_retry_an_odd_generation_and_a_changed_generation() {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let _release = ReleasePublishPauses;
-    super::publish::ODD_SPINS.store(0, Ordering::Release);
-    super::publish::PAUSE_ODD_REACHED.store(false, Ordering::Release);
-    super::publish::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
-    super::publish::PAUSE_WHILE_ODD.store(true, Ordering::Release);
+    super::publish::pauses::ODD_SPINS.store(0, Ordering::Release);
+    super::publish::pauses::PAUSE_ODD_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_WHILE_ODD.store(true, Ordering::Release);
     let published = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30));
 
     std::thread::scope(|scope| {
@@ -338,17 +338,17 @@ fn readers_retry_an_odd_generation_and_a_changed_generation() {
             *guard = Some(published);
         });
         let wait_odd = std::time::Instant::now();
-        while !super::publish::PAUSE_ODD_REACHED.load(Ordering::Acquire) {
+        while !super::publish::pauses::PAUSE_ODD_REACHED.load(Ordering::Acquire) {
             assert!(wait_odd.elapsed() < std::time::Duration::from_secs(5));
             std::thread::yield_now();
         }
         let reader = scope.spawn(super::publish::published_deadline);
         let wait_spin = std::time::Instant::now();
-        while super::publish::ODD_SPINS.load(Ordering::Acquire) == 0 {
+        while super::publish::pauses::ODD_SPINS.load(Ordering::Acquire) == 0 {
             assert!(wait_spin.elapsed() < std::time::Duration::from_secs(5));
             std::thread::yield_now();
         }
-        super::publish::PAUSE_WHILE_ODD.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_WHILE_ODD.store(false, Ordering::Release);
         assert_eq!(
             reader.join().unwrap().map(|deadline| deadline.expires_at),
             Some(published.expires_at)
@@ -356,20 +356,20 @@ fn readers_retry_an_odd_generation_and_a_changed_generation() {
         publisher.join().unwrap();
     });
 
-    super::publish::PAUSE_BEFORE_SECOND.store(true, Ordering::Release);
-    super::publish::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_BEFORE_SECOND.store(true, Ordering::Release);
+    super::publish::pauses::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
     let replaced = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(40));
     std::thread::scope(|scope| {
         let reader = scope.spawn(super::publish::published_deadline);
         let wait_pause = std::time::Instant::now();
-        while !super::publish::PAUSE_SECOND_REACHED.load(Ordering::Acquire) {
+        while !super::publish::pauses::PAUSE_SECOND_REACHED.load(Ordering::Acquire) {
             assert!(wait_pause.elapsed() < std::time::Duration::from_secs(5));
             std::thread::yield_now();
         }
         *active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(replaced);
-        super::publish::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
         assert_eq!(
             reader.join().unwrap().map(|deadline| deadline.expires_at),
             Some(replaced.expires_at)
