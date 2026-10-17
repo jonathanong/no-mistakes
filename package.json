@@ -44,7 +44,7 @@
     "oxfmt": "^0.72.0",
     "oxlint": "^1.87.0",
     "playwright": "1.64.0",
-    "pr-shepherd": "^0.56.4",
+    "pr-shepherd": "^0.58.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "storybook": "10.6.1",
