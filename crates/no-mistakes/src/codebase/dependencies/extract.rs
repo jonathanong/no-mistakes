@@ -248,7 +248,7 @@ mod import_metadata_tests;
 mod tests;
 
 #[cfg(all(test, feature = "test-instrumentation"))]
-#[path = "extract_statement_legacy.rs"]
+#[path = "extract_statement_legacy_tests.rs"]
 mod statement_legacy;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "extract_statement_mode.rs"]
