@@ -114,17 +114,23 @@ pub(crate) fn attach_jobs_pool_warning(json: String, warning: Option<JobsPoolWar
     value.to_string()
 }
 
-fn install_global_pool(requested: usize) -> usize {
-    match rayon::ThreadPoolBuilder::new()
-        .num_threads(requested)
-        .build_global()
-    {
-        Ok(()) => requested,
-        Err(error) if error.to_string().contains("already been initialized") => {
+fn pool_size_after_build(requested: usize, error: Option<&str>) -> usize {
+    match error {
+        None => requested,
+        Some(message) if message.contains("already been initialized") => {
             rayon::current_num_threads()
         }
-        Err(_) => requested,
+        Some(_) => requested,
     }
+}
+
+fn install_global_pool(requested: usize) -> usize {
+    let error = rayon::ThreadPoolBuilder::new()
+        .num_threads(requested)
+        .build_global()
+        .err()
+        .map(|error| error.to_string());
+    pool_size_after_build(requested, error.as_deref())
 }
 
 pub fn resolve_root(root: &Path, cwd: &Path) -> PathBuf {

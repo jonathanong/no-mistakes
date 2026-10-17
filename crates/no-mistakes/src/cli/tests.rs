@@ -103,6 +103,22 @@ fn rayon_thread_count_prefers_jobs_then_env_then_cpu_default() {
 }
 
 #[test]
+fn pool_size_after_build_keeps_the_request_unless_the_pool_exists() {
+    assert_eq!(super::pool_size_after_build(4, None), 4);
+    assert_eq!(
+        super::pool_size_after_build(4, Some("thread spawn failed")),
+        4
+    );
+    assert_eq!(
+        super::pool_size_after_build(
+            4,
+            Some("the global thread pool has already been initialized")
+        ),
+        rayon::current_num_threads()
+    );
+}
+
+#[test]
 fn jobs_pool_mismatch_warns_only_when_resolved_count_differs() {
     assert!(jobs_pool_mismatch(4, None).is_none());
     assert!(jobs_pool_mismatch(4, Some(4)).is_none());
