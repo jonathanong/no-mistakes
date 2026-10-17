@@ -115,7 +115,7 @@ describe(id, () => {
   it("rejects invalid patterns and still applies valid siblings", () => {
     const invalidOnly = check("comments.mjs", [
       "error",
-      { patterns: [{ pattern: "[", flags: "gg" }] },
+      { patterns: [{ pattern: "[", flags: "i" }] },
     ]);
     assert.equal(invalidOnly.length, 1);
     assert.equal(invalidOnly[0].messageId, "invalidPattern");
@@ -265,14 +265,61 @@ describe(id, () => {
       ["error", { patterns: [{ pattern: "" }] }],
       ["error", { patterns: [{}] }],
       ["error", { patterns: [{ pattern: "alpha", flags: 1 }] }],
+      ["error", { patterns: [{ pattern: "x", flags: "gg" }] }],
+      ["error", { patterns: [{ pattern: "x", flags: "z" }] }],
+      ["error", { patterns: [{ pattern: "x", flags: "gimgi" }] }],
+      ["error", { patterns: [{ pattern: "x", flags: "G" }] }],
+      ["error", { patterns: [{ pattern: "x", flags: "uv" }] }],
     ]) {
       assert.throws(() => check("strings.ts", ruleConfig), /Key "rules"/);
     }
+    assert.throws(
+      () => check("strings.ts", ["error", { patterns: [{ pattern: "x", flags: "gg" }] }]),
+      /should match pattern/,
+    );
+    assert.deepEqual(
+      lines("strings.ts", ["error", { patterns: [{ pattern: "alpha", flags: "" }] }]),
+      [],
+    );
+    assert.deepEqual(
+      lines("strings.ts", ["error", { patterns: [{ pattern: "alpha", flags: "im" }] }]),
+      [],
+    );
     const schema = plugin.rules[id].meta.schema[0];
+    const flagPattern = new RegExp(schema.properties.patterns.items.properties.flags.pattern);
     assert.equal(schema.additionalProperties, false);
     assert.equal(schema.properties.patterns.maxItems, 64);
     assert.deepEqual(schema.properties.patterns.items.required, ["pattern"]);
     assert.equal(schema.properties.requireSuppressionReason.type, "boolean");
+    assert.equal(flagPattern.source, "^(?!.*(.).*\\1)(?!.*u.*v)(?!.*v.*u)[dgimsuvy]*$");
+    for (const flags of ["", "d", "g", "i", "m", "s", "u", "v", "y", "gi", "yu", "gv"]) {
+      assert.equal(flagPattern.test(flags), true, flags);
+    }
+    for (const flags of ["gg", "z", "G", "gimgi", "g ", "ii", "x", "uv", "vu", "dgimsuvy"]) {
+      assert.equal(flagPattern.test(flags), false, flags);
+    }
+  });
+
+  it("rejects invalid flags when the oxlint config loads", () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+        "--config",
+        resolve(fixtureRoot, ".oxlintrc.bad-flags.json"),
+        "--format",
+        "json",
+        resolve(fixtureRoot, "comments.mjs"),
+        resolve(fixtureRoot, "strings.ts"),
+      ],
+      { encoding: "utf8" },
+    );
+    const output = `${result.stderr}\n${result.stdout}`;
+    assert.notEqual(result.status, 0, output);
+    assert.match(output, /no-mistakes\/no-comment-phrases/);
+    assert.match(output, /gg/);
+    assert.match(output, /should match pattern/);
+    assert.doesNotMatch(output, /Invalid comment phrase pattern/);
   });
 
   it("has real oxlint parity for comments, strings, regex, and reasons", () => {
