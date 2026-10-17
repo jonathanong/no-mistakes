@@ -130,14 +130,15 @@ impl Drop for DeadlineGuard {
 /// deadlines return before any clock read.
 fn applicable_deadline() -> Option<Deadline> {
     let deadline = publish::published_deadline()?;
-    if deadline.committed
-        || deadline
-            .owner
-            .is_some_and(|owner| owner != std::thread::current().id())
-    {
+    if !deadline.applies_here() {
         return None;
     }
-    Some(deadline)
+    Some(Deadline {
+        expires_at: deadline.expires_at,
+        timeout: deadline.timeout,
+        owner: None,
+        committed: false,
+    })
 }
 
 /// Deadline that has elapsed on two consecutive snapshots.

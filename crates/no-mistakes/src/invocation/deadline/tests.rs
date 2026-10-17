@@ -315,6 +315,7 @@ impl Drop for ReleasePublishPauses {
     fn drop(&mut self) {
         super::publish::pauses::PAUSE_WHILE_ODD.store(false, Ordering::Release);
         super::publish::pauses::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_BETWEEN_WORDS.store(false, Ordering::Release);
     }
 }
 
@@ -375,6 +376,75 @@ fn readers_retry_an_odd_generation_and_a_changed_generation() {
             Some(replaced.expires_at)
         );
     });
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+#[test]
+fn torn_atomic_words_are_discarded_for_the_next_complete_snapshot() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _release = ReleasePublishPauses;
+    let first = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30));
+    let second = Deadline {
+        expires_at: std::time::Instant::now() + std::time::Duration::from_secs(40),
+        timeout: std::time::Duration::from_secs(5),
+        owner: None,
+        committed: false,
+    };
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(first);
+    super::publish::pauses::PAUSE_BETWEEN_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_BETWEEN_WORDS.store(true, Ordering::Release);
+    std::thread::scope(|scope| {
+        let reader = scope.spawn(super::publish::published_deadline);
+        let wait_pause = std::time::Instant::now();
+        while !super::publish::pauses::PAUSE_BETWEEN_REACHED.load(Ordering::Acquire) {
+            assert!(wait_pause.elapsed() < std::time::Duration::from_secs(5));
+            std::thread::yield_now();
+        }
+        *active_deadline()
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(second);
+        super::publish::pauses::PAUSE_BETWEEN_WORDS.store(false, Ordering::Release);
+        let observed = reader.join().unwrap().expect("published deadline");
+        assert_eq!(observed.expires_at, second.expires_at);
+        assert_eq!(observed.timeout, second.timeout);
+    });
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+#[test]
+fn foreign_owner_snapshot_does_not_expire_on_this_thread() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let owner = std::thread::spawn(|| std::thread::current().id())
+        .join()
+        .unwrap();
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Deadline {
+        expires_at: std::time::Instant::now(),
+        timeout: std::time::Duration::from_secs(1),
+        owner: Some(owner),
+        committed: false,
+    });
+    check_timeout().unwrap();
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Deadline {
+        expires_at: std::time::Instant::now(),
+        timeout: std::time::Duration::from_secs(1),
+        owner: Some(std::thread::current().id()),
+        committed: false,
+    });
+    assert!(check_timeout().is_err());
     *active_deadline()
         .write()
         .unwrap_or_else(std::sync::PoisonError::into_inner) = None;

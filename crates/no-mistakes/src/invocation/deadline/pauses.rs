@@ -6,6 +6,9 @@ pub(in crate::invocation::deadline) static ODD_SPINS: AtomicU64 = AtomicU64::new
 pub(in crate::invocation::deadline) static PAUSE_BEFORE_SECOND: AtomicBool = AtomicBool::new(false);
 pub(in crate::invocation::deadline) static PAUSE_SECOND_REACHED: AtomicBool =
     AtomicBool::new(false);
+pub(in crate::invocation::deadline) static PAUSE_BETWEEN_WORDS: AtomicBool = AtomicBool::new(false);
+pub(in crate::invocation::deadline) static PAUSE_BETWEEN_REACHED: AtomicBool =
+    AtomicBool::new(false);
 
 pub(super) fn after_odd_publish() {
     if PAUSE_WHILE_ODD.load(Ordering::Acquire) {
@@ -24,6 +27,15 @@ pub(super) fn before_second_load() {
     if PAUSE_BEFORE_SECOND.load(Ordering::Acquire) {
         PAUSE_SECOND_REACHED.store(true, Ordering::Release);
         while PAUSE_BEFORE_SECOND.load(Ordering::Acquire) {
+            std::hint::spin_loop();
+        }
+    }
+}
+
+pub(super) fn between_words() {
+    if PAUSE_BETWEEN_WORDS.load(Ordering::Acquire) {
+        PAUSE_BETWEEN_REACHED.store(true, Ordering::Release);
+        while PAUSE_BETWEEN_WORDS.load(Ordering::Acquire) {
             std::hint::spin_loop();
         }
     }
