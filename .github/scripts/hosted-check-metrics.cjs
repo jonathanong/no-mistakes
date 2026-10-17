@@ -104,9 +104,13 @@ function enforceBudget(samples, budget) {
     ["rss_kib", "rssKiB"],
   ]) {
     const limit = budget[field] + budget[`${field}Margin`];
-    if (!Number.isFinite(limit) || limit <= 0) throw new Error(`Invalid budget: ${field}`);
+    if (
+      !Number.isFinite(budget[field]) || budget[field] <= 0 ||
+      !Number.isFinite(budget[`${field}Margin`]) || budget[`${field}Margin`] < 0 ||
+      !Number.isFinite(limit)
+    ) throw new Error(`Invalid budget: ${field}`);
     for (const sample of samples) {
-      if (!Number.isFinite(sample[metric]) || sample[metric] > limit)
+      if (!Number.isFinite(sample[metric]) || sample[metric] <= 0 || sample[metric] > limit)
         throw new Error(`${metric} ${sample[metric]} exceeds calibrated limit ${limit}`);
     }
   }
