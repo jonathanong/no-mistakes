@@ -16,8 +16,8 @@ Core check/evaluator optimizations must also follow [the crate rules](no-mistake
 - No hardcoded domain defaults: route roots, HTTP prefixes, queue factories, and
   worker locations must be configured instead of inferred from repo conventions.
 - Max workers: pools size `jobs` > `RAYON_NUM_THREADS` > all logical CPUs, and
-  secondary pools honor `jobs`. Peak RSS must not scale with workers: share
-  immutable per-root state (`Arc`/copy-on-write); measure `--jobs 1`/`4`/default.
+  secondary pools honor `jobs`. Never duplicate immutable per-root data per
+  worker (share via `Arc`/copy-on-write); measure RSS at `--jobs 1`/`4`/default.
 - Change the algorithm before trimming copies: when a hot path stays dominant
   after copy/clone PRs, demand-prune inputs (recall-safe), compute shared
   summaries once bottom-up, or make restores cost writes, not state size.
@@ -142,8 +142,8 @@ repo-wide call records for `traversal: file`; filter selected files first.
 ### Shared state in parallel loops
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`.
-Use `DashMap` so `entry(...).or_insert_with(...)` does not serialize
-unrelated keys. Per-item checks must not lock globals or clone shared `Arc`s
+Use `DashMap` so `entry(...).or_insert_with(...)` contends only within a
+shard, not on one global lock. Per-item checks must not lock globals or clone shared `Arc`s
 (deadlines, observers): read atomics or borrow. Never call the default
 `normalized_visible` (canonicalizes every path) on a repo-sized set per domain.
 
