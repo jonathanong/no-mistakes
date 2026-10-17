@@ -1,0 +1,5 @@
+{
+  "_comment": "Negative control: parsed values match, literal bytes differ by an escaped slash. The symbols byte oracle must reject this pair without canonicalizing JSON.",
+  "left": "{\"slash\":\"/\"}",
+  "right": "{\"slash\":\"\\/\"}"
+}

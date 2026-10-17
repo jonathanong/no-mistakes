@@ -366,5 +366,7 @@ fn assert_no_mutable_root_work(facts: &ValueFlowFacts) {
     );
 }
 
+// These counters exist only with test-instrumentation; an ungated module does not compile.
+#[cfg(feature = "test-instrumentation")]
 #[path = "replacement_demand.rs"]
 mod replacement_demand;
