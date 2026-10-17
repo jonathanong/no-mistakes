@@ -16,7 +16,7 @@ const {
   hashFile,
   packageManifest,
   CHECK_ARGS,
-  DEADLINE_SECONDS,
+  COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
@@ -52,7 +52,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
     fixtureTree,
     configSha256: configBefore,
     command: ["pnpm", ...checkArgs],
-    deadlineSeconds: DEADLINE_SECONDS,
+    deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
     sampleNumber,
     imageOS: process.env.ImageOS,
     imageVersion: process.env.ImageVersion,
@@ -105,7 +105,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
             "timeout",
             "--signal=TERM",
             "--kill-after=5s",
-            `${DEADLINE_SECONDS}s`,
+            `${COLLECTION_DEADLINE_SECONDS}s`,
             "pnpm",
             ...checkArgs,
           ],
@@ -129,7 +129,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         binaryVersion: command(native, ["--version"], fixture),
         signal: result.signal,
         processExit: result.status,
-        deadlineSeconds: DEADLINE_SECONDS,
+        deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
       };
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
       console.log(JSON.stringify(sample));
@@ -142,7 +142,9 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
     throw new Error("Consumer config changed");
   command("git", ["diff", "--exit-code", "HEAD"], fixture);
   if (failed)
-    throw new Error("Current check did not exit successfully before the 180-second deadline");
+    throw new Error(
+      `Current check did not exit successfully within the ${COLLECTION_DEADLINE_SECONDS}-second collection cap`,
+    );
 }
 
 if (require.main === module) {
@@ -166,4 +168,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { CHECK_ARGS, DEADLINE_SECONDS, parseTime, successful, aggregate };
+module.exports = { CHECK_ARGS, COLLECTION_DEADLINE_SECONDS, parseTime, successful, aggregate };

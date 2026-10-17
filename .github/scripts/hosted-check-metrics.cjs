@@ -1,9 +1,13 @@
-const { command, hashFile, packageManifest } = require("./hosted-check-runtime.cjs");
+const {
+  command,
+  hashFile,
+  packageManifest,
+  CHECK_ARGS,
+  COLLECTION_DEADLINE_SECONDS,
+  successful,
+} = require("./hosted-check-runtime.cjs");
 const { readFileSync, readdirSync, writeFileSync } = require("node:fs");
 const { join } = require("node:path");
-const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "0", "check"];
-const DEADLINE_SECONDS = 180;
-
 function parseTime(text, processExit) {
   const values = Object.fromEntries(
     text
@@ -24,10 +28,6 @@ function parseTime(text, processExit) {
     result.exit = processExit;
   }
   return result;
-}
-
-function successful(sample) {
-  return sample.exit === 0 && sample.elapsed < DEADLINE_SECONDS && !sample.signal;
 }
 
 function aggregate(samples) {
@@ -55,7 +55,6 @@ function aggregate(samples) {
     rssMaxKiB: resources.length ? Math.max(...resources.map((sample) => sample.rss_kib)) : null,
   };
 }
-
 function calibratedBudget(samples) {
   if (samples.length < 6 || !samples.every(successful))
     throw new Error("Calibration requires six completed successful samples");
@@ -77,7 +76,6 @@ function calibratedBudget(samples) {
   }
   return budget;
 }
-
 function enforceBudget(samples, budget) {
   if (!budget) throw new Error("Missing calibrated budget; inspect proposed-budgets.json");
   if (!samples.every(successful)) throw new Error("Candidate did not complete successfully");
@@ -187,7 +185,7 @@ module.exports = {
   packageManifest,
   sampleFiles,
   CHECK_ARGS,
-  DEADLINE_SECONDS,
+  COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
