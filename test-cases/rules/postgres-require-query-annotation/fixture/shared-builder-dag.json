@@ -1,0 +1,10 @@
+{
+  "comment": "Repeated aliases share immutable Values; traversal must visit each physical node once while preserving mutable argument-slot effects.",
+  "depth": 8,
+  "fanout": 3,
+  "roots": 4,
+  "builder": 7,
+  "live_arguments": 100,
+  "dead_builder": 8,
+  "extra_builder": 9
+}

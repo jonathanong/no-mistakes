@@ -8,8 +8,11 @@ pub(super) struct Reads {
     pub identities: FxHashSet<String>,
 }
 pub(super) fn names(function: &Function) -> Reads {
+    names_in(function, &function.body, &mut std::mem::drop::<usize>)
+}
+fn names_in(function: &Function, body: &[Step], borrowed_branch: &mut impl FnMut(usize)) -> Reads {
     let mut names = Reads::default();
-    for step in &function.body {
+    for step in body {
         match step {
             Step::Bind(_, value)
             | Step::Hoisted(_, value)
@@ -22,11 +25,8 @@ pub(super) fn names(function: &Function) -> Reads {
             Step::Branch(test, left, right) => {
                 expression(test, &mut names);
                 for body in [left, right] {
-                    let nested = Function {
-                        body: body.clone(),
-                        ..function.clone()
-                    };
-                    let reads = self::names(&nested);
+                    borrowed_branch(body.len());
+                    let reads = names_in(function, body, borrowed_branch);
                     names.values.extend(reads.values);
                     names.identities.extend(reads.identities);
                 }
@@ -34,7 +34,7 @@ pub(super) fn names(function: &Function) -> Reads {
             _ => {}
         }
     }
-    let shadowed = super::super::calls::scopes::shadow_names(function);
+    let shadowed = super::super::calls::scopes::shadow_names_in(function, body);
     for set in [&mut names.values, &mut names.identities] {
         set.retain(|name| !shadowed.contains(name));
     }
@@ -103,3 +103,7 @@ fn expression(expr: &Expr, names: &mut Reads) {
         _ => {}
     }
 }
+
+#[cfg(test)]
+#[path = "dependency_borrow_tests.rs"]
+mod dependency_borrow_tests;

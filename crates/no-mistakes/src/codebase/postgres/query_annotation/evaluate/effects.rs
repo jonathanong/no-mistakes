@@ -1,5 +1,9 @@
+mod builder_ids;
+#[cfg(test)]
+mod tests;
+
 use super::{Environment, Evaluator, Value};
-use crate::fx::{fx_set, FxHashSet};
+use crate::fx::FxHashSet;
 use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -22,10 +26,11 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     pub(super) fn invalidate_builders(&mut self, values: &[Value]) {
-        let mut ids = fx_set();
-        for value in values {
-            self.builder_ids(value, &mut ids);
-        }
+        let ids = self.collect_builder_ids(values, std::mem::drop);
+        self.invalidate_builder_ids(ids);
+    }
+
+    fn invalidate_builder_ids(&mut self, ids: FxHashSet<u64>) {
         // Most opaque calls carry no SQL builders. Do not scan every frame
         // (or detach shared snapshots) when there is nothing to invalidate.
         if ids.is_empty() {
@@ -45,34 +50,6 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    fn builder_ids(&self, value: &Value, ids: &mut FxHashSet<u64>) {
-        match value {
-            Value::Prefix(_, _, Some(id)) => {
-                ids.insert(*id);
-            }
-            Value::Promise(value) | Value::Evaluated(value, _) => self.builder_ids(value, ids),
-            Value::Aggregate(values)
-            | Value::References(values)
-            | Value::Object(values)
-            | Value::Record(values, _)
-            | Value::Joined(values)
-            | Value::Possible(values) => {
-                for value in values {
-                    self.builder_ids(value, ids);
-                }
-            }
-            Value::Arguments(id) | Value::Array(id) if ids.insert(*id) => {
-                // Container escape can replace live slots. Definite deletion
-                // disconnects the former value; possible deletion does not.
-                for (index, value) in self.argument_slots(*id) {
-                    if !self.definite_deleted_argument_slots.contains(&(*id, index)) {
-                        self.builder_ids(value, ids);
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
     pub(super) fn invalidate_captured(&mut self, env: Environment, function: &super::Function) {
         let mut shadowed = function.params.iter().cloned().collect::<FxHashSet<_>>();
         shadowed.extend(function.self_name.iter().cloned());

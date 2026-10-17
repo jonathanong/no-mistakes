@@ -14,6 +14,13 @@ impl Shadows<'_> {
 pub(in crate::codebase::postgres::query_annotation::evaluate) fn shadow_names(
     function: &Function,
 ) -> Shadows<'_> {
+    shadow_names_in(function, &function.body)
+}
+
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn shadow_names_in<'a>(
+    function: &'a Function,
+    body: &'a [Step],
+) -> Shadows<'a> {
     let mut shadowed = Shadows {
         names: FxHashSet::default(),
         construction_work: 0,
@@ -31,7 +38,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn shadow_names(
         shadowed.names.insert("this");
         shadowed.construction_work += 2;
     }
-    for step in &function.body {
+    for step in body {
         shadowed.construction_work += 1;
         match step {
             Step::Bind(local, _) | Step::Hoisted(local, _) | Step::Var(local) => {
