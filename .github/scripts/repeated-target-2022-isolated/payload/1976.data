@@ -1,0 +1,1 @@
+DO $$ BEGIN <<x>> LOOP RAISE NOTICE 'x'; END LOOP y; CREATE TABLE a(id int); END $$;

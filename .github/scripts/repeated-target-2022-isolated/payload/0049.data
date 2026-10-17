@@ -1,0 +1,11 @@
+{
+  "status": "PASS actual merged main whole Git tree equals published2ee8; explicit authentic099+five-overlay native carry retained",
+  "main": "281673146341e6915c051aedfde6fd05ae6dd055",
+  "published_candidate": "2ee8eabb7dbe2c4cd87f1cdc54b4cd4410584555",
+  "identical_tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+  "native_default_input_carry": "/tmp/nm2076-cold-lifetime-publication/root-exact-committed-source-carry.json",
+  "native_manifest": "/tmp/nm2076-cold-lifetime-release/candidate/closed-artifacts.json",
+  "native_producer_label": "099cfed26a23050aee6e9e8427af4de9b7eab4ef + five explicit overlays, not fabricated merged-main build",
+  "raw_api_sha256": "2c0dd4d6f968c1aab23f57529a199990948b60b5cc1f4aa9e84bf5218c994dca",
+  "observed": "2026-10-16T20:46:25.517082+00:00"
+}

@@ -1,0 +1,78 @@
+{
+  "status": "PASS root independent actual24 compiler layouts",
+  "proof": {
+    "path": "/tmp/nm2022-current-layouts/actual-complete24-layouts.json",
+    "sha256": "f5f8cc2b69f7e62f3c6db2c95d0a76d21b10e9118f403ceb7e29109ed40e1a8f"
+  },
+  "independently_decoded_IR": [
+    {
+      "variant": "candidate-default",
+      "numeric12": [
+        2672,
+        8,
+        248,
+        8,
+        1048,
+        8,
+        1936,
+        8,
+        128,
+        8,
+        360,
+        8
+      ]
+    },
+    {
+      "variant": "baseline-default",
+      "numeric12": [
+        2592,
+        8,
+        232,
+        8,
+        1032,
+        8,
+        1920,
+        8,
+        128,
+        8,
+        360,
+        8
+      ]
+    },
+    {
+      "variant": "candidate-instrumented",
+      "numeric12": [
+        2976,
+        8,
+        520,
+        8,
+        1320,
+        8,
+        2208,
+        8,
+        128,
+        8,
+        360,
+        8
+      ]
+    },
+    {
+      "variant": "baseline-instrumented",
+      "numeric12": [
+        2840,
+        8,
+        448,
+        8,
+        1248,
+        8,
+        2136,
+        8,
+        128,
+        8,
+        360,
+        8
+      ]
+    }
+  ],
+  "scope": "Fresh metadata-only6type/4variant records; sizes recorded explicitly, no CPU/RSS verdict implied."
+}

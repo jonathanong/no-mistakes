@@ -1,0 +1,253 @@
+{
+  "status": "PASS all four original baseline helpers linked from authentic new-main-equivalent core",
+  "ledger": [
+    {
+      "label": "graph-probe-2022",
+      "argv": [
+        "rustc",
+        "+stable",
+        "--edition=2021",
+        "--crate-name",
+        "nm_2022_graph_baseline",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps",
+        "--extern",
+        "no_mistakes=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs",
+        "-o",
+        "/tmp/nm-main281-shared-baseline/graph-probe-2022"
+      ],
+      "start": "2026-10-16T20:48:54.161571+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "end": "2026-10-16T20:52:33.220402+00:00",
+      "sha256": "3a40d1eb6eb838770872131625a918aa5866544a817c4821b7354faad9111675",
+      "bytes": 82358976
+    },
+    {
+      "label": "timing-probe-2022",
+      "argv": [
+        "rustc",
+        "+stable",
+        "--edition=2021",
+        "--crate-name",
+        "nm_2022_timing_baseline",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps",
+        "--extern",
+        "no_mistakes=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs",
+        "-o",
+        "/tmp/nm-main281-shared-baseline/timing-probe-2022"
+      ],
+      "start": "2026-10-16T20:52:33.250783+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "end": "2026-10-16T20:56:10.312309+00:00",
+      "sha256": "3f8003993e8b78b3437d72fef5c7201b62242e932cab9a4561a28a7701bb5bf9",
+      "bytes": 82348344
+    },
+    {
+      "label": "probe-2054",
+      "argv": [
+        "rustc",
+        "+stable",
+        "--edition=2021",
+        "--crate-name",
+        "nm_shared_analysis_probe",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps",
+        "--extern",
+        "no_mistakes=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/nm2019-three-arm-evidence/harness/main.rs",
+        "-o",
+        "/tmp/nm-main281-shared-baseline/probe-2054"
+      ],
+      "start": "2026-10-16T20:56:10.339339+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "end": "2026-10-16T20:59:51.392739+00:00",
+      "sha256": "4b47575c565d4a02a2de470aedfc5d2637e26ef685a14e10288de92ae2c5b029",
+      "bytes": 82637528
+    },
+    {
+      "label": "sql-2054",
+      "argv": [
+        "rustc",
+        "+stable",
+        "--edition=2021",
+        "--crate-name",
+        "nm_sql_functional_probe",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps",
+        "--extern",
+        "no_mistakes=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+        "/tmp/nm2054-b26-sql-control/probe.rs",
+        "-o",
+        "/tmp/nm-main281-shared-baseline/sql-2054",
+        "--extern",
+        "serde_json=/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libserde_json-55f37743dc7bb8c4.rlib"
+      ],
+      "start": "2026-10-16T20:59:51.422301+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "end": "2026-10-16T21:03:32.479551+00:00",
+      "sha256": "6b200822b80dec01588ff95f0d4e3acd4161d562950490c2c344c21ed4168a86",
+      "bytes": 82479184
+    }
+  ],
+  "source_provenance": {
+    "main": "281673146341e6915c051aedfde6fd05ae6dd055",
+    "tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+    "authentic_producer": "099+five-path overlay, original provenance unchanged;2751default inputs equivalent to2ee8 and281 whole tree equal2ee8",
+    "artifacts": "/tmp/nm2076-cold-lifetime-release/candidate",
+    "deps": "/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps",
+    "rlib": "/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libno_mistakes-6bc14b8bee5f2efc.rlib",
+    "serde": "/tmp/nm2076-cold-lifetime-release/candidate/cli-matching-deps/libserde_json-55f37743dc7bb8c4.rlib",
+    "serde_actual_cargo_producer": {
+      "reason": "compiler-artifact",
+      "package_id": "registry+https://github.com/rust-lang/crates.io-index#serde_json@1.0.151",
+      "manifest_path": "/home/jong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/Cargo.toml",
+      "target": {
+        "kind": [
+          "lib"
+        ],
+        "crate_types": [
+          "lib"
+        ],
+        "name": "serde_json",
+        "src_path": "/home/jong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/src/lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "default",
+        "float_roundtrip",
+        "indexmap",
+        "preserve_order",
+        "raw_value",
+        "std"
+      ],
+      "filenames": [
+        "/tmp/no-mistakes-2076-cold-lifetime/target/release/deps/libserde_json-55f37743dc7bb8c4.rlib",
+        "/tmp/no-mistakes-2076-cold-lifetime/target/release/deps/libserde_json-55f37743dc7bb8c4.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    "files": {
+      "/tmp/nm2019-three-arm-evidence/harness/effects.rs": "12203babbb23169230d89778b621c9672aa73ddbecb5e3eef811bbec5d073ba3",
+      "/tmp/nm2019-three-arm-evidence/harness/facts.rs": "752d24bff54f33b25266c1eaab79d6314b01f6fe1b00675746c1efc657fb29da",
+      "/tmp/nm2019-three-arm-evidence/harness/graph_semantics.rs": "baa9888dd8008820d570be7c60001c5829df03c6cf079ccf1b0e0164304b32cf",
+      "/tmp/nm2019-three-arm-evidence/harness/graph_timing.rs": "896190ef45127f2264d33b0610d7b20e78ca07fad33564c0a2a501c65dce6a5a",
+      "/tmp/nm2019-three-arm-evidence/harness/main.rs": "835e64fdb8191a0006dcefa9d2a690e97ed74becca0a0a7e424c492f76d026f7",
+      "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451",
+      "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44",
+      "/tmp/nm2054-b26-sql-control/probe.rs": "452b55563c7ea1c96b4b7d4a917889f295c94cfe8b43501ebd50d1600dc1360e",
+      "/tmp/nm-main281-shared-baseline/process_owner.py": "4b03c528c35735d0bbafd82bb12c908ff36d9c4e850f2fca2cf51b530ba18e1e",
+      "/tmp/nm-main281-shared-baseline/target_size.py": "1860b7afa0693f0f0918182061e53c8a9fcdabc0b2413e21d08d38fd1ebe85dd"
+    },
+    "rehashed_dependencies": 750,
+    "baseline_probes": [
+      [
+        "graph-probe-2022",
+        "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs",
+        "nm_2022_graph_baseline",
+        false
+      ],
+      [
+        "timing-probe-2022",
+        "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs",
+        "nm_2022_timing_baseline",
+        false
+      ],
+      [
+        "probe-2054",
+        "/tmp/nm2019-three-arm-evidence/harness/main.rs",
+        "nm_shared_analysis_probe",
+        false
+      ],
+      [
+        "sql-2054",
+        "/tmp/nm2054-b26-sql-control/probe.rs",
+        "nm_sql_functional_probe",
+        true
+      ]
+    ],
+    "original_manifests": {
+      "/tmp/nm2076-cold-lifetime-release/candidate/closed-artifacts.json": "83dedf521176f1b1fc3fca36040e4913335d40fb640b0e302b271bec1263e2ba",
+      "/tmp/nm2076-cold-lifetime-release/candidate/cli-dependencies.json": "c556b776aae4f909fee73e109c7b9f97793e75a07ae74836341854173cdbc825",
+      "/tmp/nm2076-cold-lifetime-release/candidate/cleanup.json": "6e49dd29f0a71f73a2d033e3c38de64028a40ec8f7a5d101ee67efcdcc76ce76"
+    },
+    "source_carry": {
+      "path": "/tmp/nm2076-cold-lifetime-publication/root-exact-committed-source-carry.json",
+      "sha256": "95df35989113882484e2e9454ee1adf89335ef9280aa90cc034b2ec2a2a22e15"
+    },
+    "scope": "Linkage/native preparation only. No timing or unchanged-source acceptance rerun. New main baseline, all old c896 evidence untouched."
+  }
+}

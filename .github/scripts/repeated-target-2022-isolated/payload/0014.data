@@ -1,0 +1,27 @@
+from pathlib import Path
+import json,hashlib,subprocess,sys,os,time,re
+sys.path.insert(0,'/tmp/nm2019-owned-first-path-binding-postupdate')
+from process_owner import OwnedProcess
+D=Path(__file__).parent;R=Path('/tmp/no-mistakes-2022-assignment-target-opt');O=D/'functional-api';O.mkdir();(O/'runtime').mkdir(mode=0o700);B=Path('/tmp/nm2022-combined-release-source-draft/candidate');assert json.load(open(B/'cleanup.json'))=={'target_absent':True,'source_after_exact':True};P=json.load(open(D/'native-stage-closure.json'));assert P['status']=='PASS actual completed native stages0 only; whole78126FAIL-at-timing preserved';S=json.load(open('/tmp/nm2022-combined-release-source-draft/final4e-source-inventory.json'));ledger=[];owners=[];deadline=time.monotonic()+300
+sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def verify():
+ assert P['head']=='4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b'
+ for path,digest in P['raw_pins'].items():assert sha(path)==digest
+ terminal=P['original_owner_terminal'];assert sha(terminal['path'])==terminal['sha256'];actual=json.load(open(terminal['path']));assert actual['actual_session']==78126 and actual['actual_tool_terminal_exit']==1
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()==P['head']
+ assert all(sha(R/p)==h for p,h in S.items())
+ for n,v in P['artifacts'].items():assert sha(B/({'addon':'addon.node','rlib':'library.rlib'}.get(n,n)))==v['sha256']
+try:
+ verify();scripts=['api.test.js','effects-alternatives-api.test.js','receiver-suspension-api.test.js','receiver-inline-arguments-api.test.js','cross-file-inline-receiver-api.test.js','inline-owned-member-api.test.js','postgres-conditional-executors-api.test.js','postgres-source-api.test.js','postgres-expression-arbiter-api.test.js','namespace-types-api.test.js','type-import-order-api.test.js']
+ for name in scripts:
+  addon=R/'fixtures/napi/test-addon.js' if name=='api.test.js' else B/'addon.node';env={**os.environ,'XDG_RUNTIME_DIR':str(O/'runtime'),'NO_MISTAKES_TEST_NAPI_ADDON_PATH':str(addon),'RAYON_NUM_THREADS':'4'};argv=['node','--test','--test-reporter=tap',str(R/'packages/no-mistakes/scripts'/name)];row={'file':name,'argv':argv};ledger.append(row)
+  with (O/(name+'.stdout')).open('wb') as out,(O/(name+'.stderr')).open('wb') as err:
+   p=subprocess.Popen(argv,cwd=R,env=env,stdout=out,stderr=err,start_new_session=True);o=OwnedProcess(p);owners.append(o)
+   try:
+    while p.poll() is None:assert time.monotonic()<deadline;time.sleep(.2)
+    row['exit']=p.wait();assert row['exit']==0
+   finally:o.finish();assert not o.members()
+  text=(O/(name+'.stdout')).read_text();c={k:int(re.findall(r'^# '+k+r' (\d+)$',text,re.M)[-1]) for k in ['tests','pass','fail','skipped']};assert c['tests']>0 and c['tests']==c['pass'] and c['fail']==c['skipped']==0;assert not (O/(name+'.stderr')).read_bytes();row['counts']=c;(O/'commands.json').write_text(json.dumps(ledger,indent=2)+'\n')
+ verify();shim=ledger[0]['counts']['pass'];native=sum(r['counts']['pass'] for r in ledger[1:]);assert shim==43 and native==48;(O/'PASS.json').write_text(json.dumps({'status':'PASS actualfullLTO native43shim/48real; no performanceclaim','producer_head':P['head'],'shim':shim,'native':native,'source_after_exact':True,'root_target_ownership':'No Cargo invoked, active root target untouched'},indent=2)+'\n');print('Native API43shim+48real PASS')
+finally:
+ for o in owners:o.finish();assert not o.members()

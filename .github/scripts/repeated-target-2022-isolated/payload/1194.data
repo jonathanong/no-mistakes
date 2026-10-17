@@ -1,0 +1,9 @@
+effects:
+  database:
+    functions: [read]
+    transactionFunctions: [primary.transaction]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [database]

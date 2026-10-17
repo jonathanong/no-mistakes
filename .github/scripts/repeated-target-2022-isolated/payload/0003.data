@@ -1,0 +1,42 @@
+{
+  "status": "PASS explicit composite native/helper closure; original whole-run FAIL retained",
+  "head": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "original_owner_terminal": {
+    "path": "/tmp/nm2022-combined-release-source-draft/actual-owner-terminal.json",
+    "bytes": 2771,
+    "sha256": "ea2dcb6f4e1be5de84a80d4d621a6481024a352751ddc4042c0ca3dc335d5769"
+  },
+  "continuation_owner_terminal": {
+    "path": "/tmp/nm2022-missing-timing-continuation/actual-owner-terminal.json",
+    "bytes": 291,
+    "sha256": "ba2c5b3e977f3fac2b4da61886ea6ea278acb3389eb9488e94c1bd4c9ce1ef12"
+  },
+  "continuation_receipt": {
+    "path": "/tmp/nm2022-missing-timing-continuation/receipt.json",
+    "bytes": 2647,
+    "sha256": "eeea2a34e1a5bac1a6586ff9fdc8f41bc563269fd03c53c18bc514e7275db800"
+  },
+  "original_failed_inventory": {
+    "path": "/tmp/nm2022-missing-timing-continuation/original-failed-output-inventory.json",
+    "bytes": 150713,
+    "sha256": "dd9e590e4bfccbf44866279c4a14be8d38312929637250abe3393b2dd39ddc26"
+  },
+  "source_inventory": {
+    "path": "/tmp/nm2022-combined-release-source-draft/final4e-source-inventory.json",
+    "sha256": "8401c2cbaac2747004eeecd06898a93cbe8acebf2f233a8472369c12fdc942ff"
+  },
+  "original_build_driver": {
+    "path": "/tmp/nm2022-combined-release-source-draft/build-once.py",
+    "bytes": 8458,
+    "sha256": "f73c615f41b84bc2cbe51df1cffd59237333693d00d64593c42d129578ce6d0e"
+  },
+  "original_request": {
+    "path": "/tmp/nm2022-combined-release-source-draft/request.json",
+    "bytes": 2089,
+    "sha256": "581ae0b0394760249e0220f40d968a00005566db542871f0ef628208d5602af9"
+  },
+  "all_source_exact": true,
+  "target_absent": true,
+  "no_analyzer_rebuild": true,
+  "scope": "CLI/addon/own core/graph from completed original stages0; only missing original timing helper linked in fresh bounded continuation0. No timing or native API execution."
+}

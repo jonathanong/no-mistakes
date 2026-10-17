@@ -1,0 +1,1 @@
+DO $$ <<"BEGIN">> BEGIN RAISE NOTICE 'x'; END "BEGIN"; $$;

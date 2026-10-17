@@ -1,0 +1,5 @@
+CREATE RECURSIVE TABLE invalid_table(x int);
+CREATE OR RECURSIVE VIEW invalid_view(x) AS SELECT 1;
+CREATE RECURSIVE MATERIALIZED VIEW invalid_materialized(x) AS SELECT 1;
+CREATE RECURSIVE VIEW missing_query(x) AS;
+SELECT 2;

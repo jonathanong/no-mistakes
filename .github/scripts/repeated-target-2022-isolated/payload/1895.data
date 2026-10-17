@@ -1,0 +1,10 @@
+DROP VIEW IF EXISTS app.v CASCADE;
+DROP MATERIALIZED VIEW app.mv RESTRICT;
+DROP TRIGGER IF EXISTS audit ON app.accounts;
+DROP FUNCTION IF EXISTS app.touch(uuid) CASCADE;
+DROP TABLE temporary_table;
+CREATE VIEW app.v AS SELECT id FROM app.accounts;
+DROP TRIGGER audit ON app.accounts CASCADE;
+DROP TRIGGER audit ON app.accounts RESTRICT;
+DROP FUNCTION app.touch(uuid) RESTRICT;
+DROP FUNCTION app.touch(uuid);

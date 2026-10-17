@@ -1,0 +1,3 @@
+INSERT INTO items (id)
+SELECT 1
+WHERE NOT EXISTS (SELECT 1 FROM items WHERE id = 1);

@@ -1,0 +1,18 @@
+effects:
+  postgres:
+    targets:
+      - { module: './psql.mjs', export: read }
+    returnedExecutors:
+      - { module: '@vendor/opaque-database', export: begin }
+      - { module: './review-wrappers.mjs', export: wrappedBegin }
+  valkey:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey-imported-receiver-mutations', export: primary.get }
+      - { module: '@vendor/valkey-default-origin-mutations', export: primary.get }
+      - { module: '@vendor/valkey-destructured-parameters', export: primary.get }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres, valkey]

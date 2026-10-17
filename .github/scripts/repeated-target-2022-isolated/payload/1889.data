@@ -1,0 +1,1 @@
+CREATE INDEX no_on_truncated_idx

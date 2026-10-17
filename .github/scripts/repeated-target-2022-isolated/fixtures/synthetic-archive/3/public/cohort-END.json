@@ -1,0 +1,1 @@
+{"status": "COMPLETE invocation; numerical and row eligibility separate", "cohort": 3, "indices": [6, 7], "run_id": "SYNTHETIC-NOT-A-RUN", "run_attempt": "1", "workflow_sha": "SYNTHETIC", "elapsed_s": 450, "resources_before": {"selected_cpus": [0, 1, 2, 3]}}

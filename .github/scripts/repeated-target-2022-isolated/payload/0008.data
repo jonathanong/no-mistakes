@@ -1,0 +1,101 @@
+{
+  "status": "PASS actual completed native stages0 only; whole78126FAIL-at-timing preserved",
+  "head": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "artifacts": {
+    "cli": {
+      "sha256": "7fd90e9c87714ffc9a44c22d9af176fb9c127ae471f520f66505a13e48305d27",
+      "bytes": 82685304,
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2022-combined-release/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2022-combined-release/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2022-combined-release/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2022-combined-release/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2022-combined-release/target/release/no-mistakes",
+          "fresh": false
+        }
+      ]
+    },
+    "addon": {
+      "sha256": "7fdd67c4d862060b7db3f5be8d5bfd35ab8b444c6b8a1faadb062c5d52a784bf",
+      "bytes": 79112520,
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2022-combined-release/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2022-combined-release/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2022-combined-release/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2022-combined-release/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ]
+    }
+  },
+  "original_owner_terminal": {
+    "path": "/tmp/nm2022-combined-release-source-draft/actual-owner-terminal.json",
+    "sha256": "ea2dcb6f4e1be5de84a80d4d621a6481024a352751ddc4042c0ca3dc335d5769"
+  },
+  "raw_pins": {
+    "/tmp/nm2022-combined-release-source-draft/candidate/cli.stdout": "8b6ce8bd209df45cb12d1087f4549167479758c205b8186814fc374233d203da",
+    "/tmp/nm2022-combined-release-source-draft/candidate/addon.stdout": "14be02316c100d181a23e2d473053839737248a025d4c03c1a21b280e120f289",
+    "/tmp/nm2022-combined-release-source-draft/candidate/ledger.json": "ef7eb14533fe5797967f5e83a6861d437c5077fc8a6c9b033a9b6a6a2f05e278",
+    "/tmp/nm2022-combined-release-source-draft/candidate/cleanup.json": "4d30ceea9c626b2666f4d0d7676aea19e6d38842dac139538b6a58170e8f4737",
+    "/tmp/nm2022-combined-release-source-draft/candidate/source-after.json": "d9bfb91eb7b1ff7596f44f32a8c40461803c4c411bbbd77e6d3231555513b93f",
+    "/tmp/nm2022-combined-release-source-draft/candidate/rustc.stdout": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+  },
+  "scope": "Only CLI/addon stage readiness for API tests, no helper/wholebuild/performance PASS."
+}

@@ -1,0 +1,28 @@
+-- Identical flat references must not imply identical roots.
+CREATE TABLE records (
+  id uuid DEFAULT uuid_generate_v7(),
+  case_id uuid DEFAULT (CASE WHEN true THEN uuid_generate_v7() ELSE NULL END),
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED,
+  shifted timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id) + interval '1 day') STORED,
+  cast_id uuid DEFAULT ("App"."MakeId"())::uuid,
+  unary_id bigint DEFAULT -make_number(),
+  args bigint DEFAULT f(id, r.id, "R"."Id", id, id + 1, g(id), 'id', (id), id::bigint, x => id),
+  clock timestamptz DEFAULT CURRENT_TIMESTAMP,
+  precise timestamptz DEFAULT CURRENT_TIMESTAMP(3),
+  now_day date DEFAULT CURRENT_DATE,
+  literal bigint DEFAULT 42,
+  wildcard bigint DEFAULT count(*),
+  filtered bigint DEFAULT count(id) FILTER (WHERE id IS NOT NULL),
+  distinct_id bigint DEFAULT count(DISTINCT id),
+  ordered_id bigint DEFAULT array_agg(id ORDER BY id),
+  windowed bigint DEFAULT row_number() OVER (),
+  other text DEFAULT ARRAY['x'],
+  nested bigint DEFAULT (SELECT f(id)),
+  utc text DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
+  query_array bigint[] DEFAULT ARRAY(SELECT id FROM records),
+  xml_value xml DEFAULT xmlparse(DOCUMENT '<id/>'),
+  unnamed_arg bigint DEFAULT f(r.x => id),
+  nulls bigint DEFAULT first_value(id) IGNORE NULLS OVER (),
+  percentile numeric DEFAULT percentile_cont(0.5) WITHIN GROUP (ORDER BY id),
+  typed_literal date DEFAULT DATE '2026-01-01'
+);

@@ -1,0 +1,69 @@
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'x') THEN
+    CREATE TYPE x AS ENUM ('a');
+  END IF;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE t IN SHARE ROW EXCLUSIVE MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE ONLY db.public.t, q IN SHARE UPDATE EXCLUSIVE MODE NOWAIT;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE "IN" IN SHARE MODE;
+END $$;
+-- Dotted attr_name accepts PostgreSQL ColLabel keywords.
+DO $$ BEGIN
+  LOCK TABLE public.select IN SHARE MODE;
+END $$;
+DO $$ BEGIN
+  IF true THEN LOCK TABLE t IN SHARE ROW EXCLUSIVE MODE; END IF;
+END $$;
+DO $$ BEGIN
+  IF true THEN INSERT INTO t(id) VALUES (1); END IF;
+END $$;
+DO $$ BEGIN
+  EXECUTE command;
+END $$;
+DO $$ BEGIN
+  BOGUS utility_command;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE t IN FOO MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE t SHARE MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE t IN "SHARE" MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE t IN 'SHARE' MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE public., q IN SHARE MODE;
+END $$;
+DO $$ BEGIN
+  "LOCK" TABLE t IN SHARE MODE;
+END $$;
+-- IN is a reserved keyword here, not a valid unquoted relation name.
+DO $$ BEGIN
+  LOCK TABLE IN IN SHARE MODE;
+END $$;
+-- PostgreSQL relation names have at most schema.table qualification depth.
+DO $$ BEGIN
+  LOCK TABLE a.b.c.d IN SHARE MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE JOIN IN SHARE MODE;
+END $$;
+DO $$ BEGIN
+  LOCK TABLE IS IN SHARE MODE;
+END $$;
+-- PostgreSQL rejects an empty quoted identifier.
+DO $$ BEGIN
+  LOCK TABLE "" IN SHARE MODE;
+END $$;

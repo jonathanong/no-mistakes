@@ -1,0 +1,10 @@
+{
+  "source": "/tmp/nm2022-isolated-run38958618099/frozen-capacity-observations.json",
+  "source_sha256": "187182c9cc50a746b575a8d3296055924cab972a82db68286eb37b71fc9ad257",
+  "observed_pilot_count": 10000,
+  "observed_minimum_cpu_seconds": {
+    "jsx-imports": 0.9121149999999999,
+    "jsx-values": 1.12516
+  },
+  "scope": "Saved pilot durations only. New counts are capacity arithmetic, not measured fit or future acceptance."
+}

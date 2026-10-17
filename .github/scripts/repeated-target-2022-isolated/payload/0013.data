@@ -1,0 +1,42 @@
+from pathlib import Path
+import datetime, hashlib, json, os, subprocess, time
+from process_owner import OwnedProcess
+D=Path(__file__).parent
+B=Path('/tmp/nm2022-combined-release-source-draft/candidate')
+R=Path('/tmp/no-mistakes-2022-assignment-target-opt')
+sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
+request=json.loads((D/'request.json').read_text())
+assert request['status']=='REVIEWED UNTIMED CLOSED NATIVE ONLY'
+completion_pin=request['build_completion'];assert sha(completion_pin['path'])==completion_pin['sha256']
+completion=json.loads(Path(completion_pin['path']).read_text());assert completion['status']=='PASS explicit composite native/helper closure; original whole-run FAIL retained'
+assert all(completion[k] for k in ['all_source_exact','target_absent','no_analyzer_rebuild'])
+for key,session,code in [('original_owner_terminal',78126,1),('continuation_owner_terminal',66569,0)]:
+ row=completion[key];assert sha(row['path'])==row['sha256'];actual=json.loads(Path(row['path']).read_text());assert actual['actual_session']==session and actual['actual_tool_terminal_exit']==code
+row=completion['continuation_receipt'];assert sha(row['path'])==row['sha256'];assert json.loads(Path(row['path']).read_text())['status'].startswith('PASS only missing original timing helper')
+assert json.loads((B/'cleanup.json').read_text())=={'target_absent':True,'source_after_exact':True}
+assert not (D/'actual-result.json').exists()
+deadline=time.monotonic()+900;owners=[];ledger=[];result={'status':'RUNNING'}
+def verify():
+ for path,digest in request['pins'].items():assert sha(path)==digest,path
+ for row in json.loads((D/'consumed-source-inputs.json').read_text())['files']:
+  path=Path(row['path']);assert path.stat().st_size==row['bytes'] and sha(path)==row['sha256'],str(path)
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()==request['candidate']
+ assert not subprocess.check_output(['git','status','--porcelain'],cwd=R).strip()
+ for path,digest in json.loads(Path(request['source_inventory']).read_text()).items():assert sha(R/path)==digest,path
+ provenance=json.loads((B/'closed-artifacts.json').read_text());assert provenance['head']==request['candidate']
+ for name,row in provenance['artifacts'].items():assert sha(B/({'addon':'addon.node','rlib':'library.rlib'}.get(name,name)))==row['sha256']
+try:
+ verify()
+ for label,script in [('native-api','validate-native-api.py'),('full182','collect-current-pair-semantics.py')]:
+  row={'label':label,'argv':['python3',str(D/script)],'started_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()};ledger.append(row)
+  with (D/(label+'.stdout')).open('wb') as out,(D/(label+'.stderr')).open('wb') as err:
+   p=subprocess.Popen(row['argv'],cwd=R,env={**os.environ,'RAYON_NUM_THREADS':'4'},stdout=out,stderr=err,start_new_session=True);owner=OwnedProcess(p);owners.append(owner)
+   try:row['actual_exit']=p.wait(timeout=max(.1,deadline-time.monotonic()));assert row['actual_exit']==0
+   finally:row['cleanup']=owner.finish();assert not owner.members()
+  row['ended_utc']=datetime.datetime.now(datetime.timezone.utc).isoformat();verify()
+ manifest=json.loads((D/'current-pair-semantics/semantic-manifest.json').read_text());assert manifest['status']=='complete' and len(manifest['raw_files'])==182
+ result.update(status='PASS actual native parity and full182/27 functional groups; no performance claim',raw_files=182)
+except BaseException as error:result.update(status='FAIL preserved actual outcome',error=repr(error));raise
+finally:
+ for owner in owners:owner.finish();assert not owner.members()
+ verify();result.update(source_after_exact=True,commands=ledger,ended_utc=datetime.datetime.now(datetime.timezone.utc).isoformat());(D/'actual-result.json').write_text(json.dumps(result,indent=2)+'\n')

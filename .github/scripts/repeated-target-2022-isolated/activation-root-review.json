@@ -1,0 +1,26 @@
+{
+  "status": "PASS root final DRAFT source/data review; metadata activation and normal publication authorized",
+  "utc": "2026-10-16T21:50:30.689381+00:00",
+  "source_peer": {
+    "path": "/tmp/nm2022-eight-capacity-protocol-draft/pr2054-stack-owner-adapter-source-review.json",
+    "sha256": "30e7076df4ca18deb4081eb06482a17800818e94cca86c1637f834875f45bbef"
+  },
+  "scientific_peer": {
+    "path": "/tmp/nm2022-eight-capacity-protocol-draft/peer-independent-scientific-source-review.json",
+    "sha256": "b523f169540a27942e0dacd05af4649aa653784263dd49f056289f4067336a5e"
+  },
+  "review": [
+    "All16 workloads/704 planned rows preserved; explicit100000cap/6CPUtarget/5CPUfloor and8fixed adjacent pairs; unchanged full assessor/bootstrap/gates",
+    "Fresh24actual compiler layouts independently decoded from actual96-byte constants",
+    "Eight authentic assets independently uploaded/serverdigest verified; trusted fixedlist AST matches exactroles and sourcecheckout4e",
+    "Actual43shim48native and full182/27groups PASS with public4e immutable90input Git lookup; originaltimeout and firstfunctional collection retained",
+    "All2327 consumed source inputs hashed; sourcepayload rejects ELF/credentials/Git/deps/current results",
+    "Cohort7 realpackaging+CLI RED/GREEN and fixedlistAST RED/GREEN;25actualsource tests PASS and actionlint/shellcheck PASS",
+    "Same-run signed transport, explicit1800s bound and420s retention reserve; no hostquietleases or cross-runner pooling"
+  ],
+  "input_freeze": {
+    "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/immutable-input-freeze.json",
+    "sha256": "f639a93ba9758035f919c9201bac5fd7be7fa8c17c154cc8d687870dd2aada8c"
+  },
+  "dispatch": "NOT authorized until published exact SHA source readback"
+}

@@ -1,0 +1,5 @@
+effects:
+  cache:
+    targets:
+      - module: '@vendor/valkey'
+        export: primary.get

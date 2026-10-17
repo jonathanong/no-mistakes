@@ -1,0 +1,14 @@
+DO;
+CREATE TABLE after_missing_body (id integer);
+DO LANGUAGE;
+CREATE TABLE after_missing_language (id integer);
+DO LANGUAGE 42 $$ BEGIN END $$;
+CREATE TABLE after_invalid_language (id integer);
+DO LANGUAGE plpgsql $$ BEGIN END $$ LANGUAGE plpgsql;
+CREATE TABLE after_duplicate_language (id integer);
+DO $$ BEGIN END $$ LANGUAGE;
+CREATE TABLE after_trailing_missing_language (id integer);
+DO LANGUAGE "PLPGSQL" $$ BEGIN CREATE TABLE omitted (id integer); END $$;
+DO $$ BEGIN CREATE TABLE valid_prefix (id integer); SELECT 'unterminated; END $$;
+DO $$ END $$;
+DO $$$$;

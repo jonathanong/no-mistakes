@@ -1,0 +1,149 @@
+name: Repeated target eight isolated x86 cohorts
+
+on:
+  workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: Exact reviewed diagnostic commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  pull-requests: read
+
+concurrency:
+  group: repeated-target-2022-isolated-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-download:
+    name: Trusted fixed native asset download only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch only the eight reviewed draft asset IDs
+        timeout-minutes: 15
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+        run: |
+          python3 - <<'PY'
+          import datetime, hashlib, json, os, pathlib, subprocess
+          assert os.environ['APPROVED_SHA'] == os.environ['GITHUB_SHA']
+          assert os.environ['GITHUB_REPOSITORY'] == 'jonathanong/no-mistakes'
+          out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'native-stage'
+          out.mkdir(exist_ok=False)
+          assets = [
+              ('2022-main281-baseline-graph-probe', 648621742, 82358976, '3a40d1eb6eb838770872131625a918aa5866544a817c4821b7354faad9111675'),
+              ('2022-main281-baseline-timing-probe', 648621906, 82348344, '3f8003993e8b78b3437d72fef5c7201b62242e932cab9a4561a28a7701bb5bf9'),
+              ('2076-lifetime-prototype-cli', 648454710, 82354464, '6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380'),
+              ('2076-lifetime-prototype-addon.node', 648454948, 78789784, '2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647'),
+              ('2022-4e62-candidate-graph-probe', 648698935, 82685504, '27beda3ea77eccff5a41a4f1a021ce2fde93dc08af8810e2ad0da15ec9173c36'),
+              ('2022-4e62-candidate-timing-probe', 648699084, 82674344, 'b0a6bec188cbbc1200f6841b052c71580288d625b054aea3963c390c1656299c'),
+              ('2022-4e62-candidate-cli', 648698547, 82685304, '7fd90e9c87714ffc9a44c22d9af176fb9c127ae471f520f66505a13e48305d27'),
+              ('2022-4e62-candidate-addon.node', 648698734, 79112520, '7fdd67c4d862060b7db3f5be8d5bfd35ab8b444c6b8a1faadb062c5d52a784bf'),
+          ]
+          proof = {'repository': os.environ['GITHUB_REPOSITORY'], 'run_id': os.environ['GITHUB_RUN_ID'],
+                   'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'workflow_sha': os.environ['GITHUB_SHA'],
+                   'producer': 'native-download', 'complete': False, 'assets': []}
+          def save():
+              (out / 'transport.json').write_text(json.dumps(proof, indent=2))
+          save()
+          for name, asset_id, size, digest in assets:
+              path = out / name
+              # Token remains on stdin to trusted curl; it never enters argv or the artifact.
+              config = '\n'.join([
+                  'url = "https://api.github.com/repos/jonathanong/no-mistakes/releases/assets/' + str(asset_id) + '"',
+                  'header = "Accept: application/octet-stream"',
+                  'header = "X-GitHub-Api-Version: 2022-11-28"',
+                  'header = "Authorization: Bearer ' + os.environ['GH_TOKEN'] + '"',
+                  'request = "GET"', 'location', 'fail-with-body', 'silent', 'show-error',
+                  'connect-timeout = 15', 'max-time = 90',
+              ])
+              with path.open('wb') as binary, (out / (name + '.stderr')).open('wb') as error:
+                  result = subprocess.run(['curl', '--config', '-'], input=config.encode(), stdout=binary,
+                                          stderr=error, timeout=100, check=False)
+              row = {'name': name, 'asset_id': asset_id, 'exit': result.returncode,
+                     'bytes': path.stat().st_size, 'sha256': hashlib.file_digest(path.open('rb'), 'sha256').hexdigest(),
+                     'utc': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+              proof['assets'].append(row)
+              save()
+              assert result.returncode == 0 and row['bytes'] == size and row['sha256'] == digest
+          proof['complete'] = True
+          save()
+          PY
+      - name: Retain verified transfer or partial download evidence
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: repeated-target-2022-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-stage/
+          if-no-files-found: error
+          retention-days: 7
+
+  measure:
+    name: Complete workload cohort ${{ matrix.cohort }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [0, 1, 2, 3, 4, 5, 6, 7]
+    needs: native-download
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Receive the verified same-run native transfer
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: repeated-target-2022-native-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-stage/
+      - name: Checkout reviewed diagnostic package
+        timeout-minutes: 1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Checkout exact candidate input tree
+        timeout-minutes: 1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b
+          fetch-depth: 0
+          path: candidate-source
+          persist-credentials: false
+      - name: Install matching Node runtime
+        timeout-minutes: 1
+        uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        with:
+          node-version: '26.11.1'
+      - name: Verify transferred pair, run controls and fixed measurement
+        timeout-minutes: 18
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          COHORT: ${{ matrix.cohort }}
+        run: |
+          test "$APPROVED_SHA" = "$GITHUB_SHA"
+          python3 .github/scripts/repeated-target-2022-isolated/hosted.py
+      - name: Package exact completed and partial evidence
+        if: ${{ always() }}
+        timeout-minutes: 3
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          COHORT: ${{ matrix.cohort }}
+        run: python3 .github/scripts/repeated-target-2022-isolated/pack-evidence.py
+      - name: Retain authenticated portable evidence carrier
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: repeated-target-2022-cohort-${{ matrix.cohort }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/2022-evidence-carrier/
+          compression-level: 1
+          if-no-files-found: error
+          retention-days: 7

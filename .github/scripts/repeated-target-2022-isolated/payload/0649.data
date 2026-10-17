@@ -1,0 +1,3 @@
+COMMENT FUNCTION f() IS 'missing ON';
+COMMENT ON UNSUPPORTED t IS 'wrong target';
+WRONG INDEX p RENAME TO q;

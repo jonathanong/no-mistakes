@@ -1,0 +1,1 @@
+SELECT 8 >>--gap'unterminated

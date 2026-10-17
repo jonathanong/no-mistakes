@@ -1,0 +1,43 @@
+version: 2
+queues:
+  factories:
+    - createQueue
+projects:
+  app:
+    type: nextjs
+    root: .
+    include:
+      - src/**
+      - packages/**
+      - tests/**
+tests:
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      unit:
+        integration_suites:
+          unit: [openai]
+rules:
+  - rule: unique-exports
+    scope: repository
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - src/app.tsx
+      forbiddenFiles:
+        - src/forbidden.ts
+  - rule: rust-no-inline-tests
+    scope: repository
+checks:
+  commands:
+    - name: lint
+      include:
+        - "**/*.{ts,tsx,mts}"
+      command:
+        - npm
+        - run
+        - lint
+      fileArgs: append
