@@ -1,27 +1,14 @@
 use crate::codebase::lang_frontends::{
-    collect_all_lang_facts, scan_kafka_file, topic_identity, LangFactMap, LangFileFacts,
-    LangFrontendConfig,
+    scan_kafka_file, topic_identity, LangFactMap, LangFileFacts, LangFrontendConfig,
 };
-
-fn language_frontend_source_store(
-    root: &Path,
-    all_files: &[PathBuf],
-    visible_paths: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
-) -> Arc<crate::codebase::ts_source::SourceStore> {
-    if let Some(snapshot) = visible_paths {
-        return snapshot.source_store_for(root);
-    }
-    Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
-        crate::codebase::ts_source::FileInventory::from_paths(all_files),
-    )))
-}
 
 fn collect_language_frontend_edges(
     root: &Path,
-    all_files: &[PathBuf],
+    all_files: &Arc<Vec<PathBuf>>,
     config_options: Option<&GraphConfigOptions>,
-    visible_paths: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+    sources: &Arc<crate::codebase::ts_source::SourceStore>,
     interner: &PathInterner,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Vec<Edge> {
     let Some(options) = config_options else {
         return Vec::new();
@@ -33,10 +20,9 @@ fn collect_language_frontend_edges(
     {
         return Vec::new();
     }
-    let sources = language_frontend_source_store(root, all_files, visible_paths);
     let mut edges = Vec::new();
     if !config_is_empty(&config) {
-        let facts = collect_all_lang_facts(root, all_files, &config, &sources);
+        let facts = session.lang_frontend_facts(root, all_files, &config, sources);
         emit_lang_edges(
             &facts.python,
             EdgeKind::PythonImport,
@@ -118,7 +104,14 @@ fn collect_language_frontend_edges(
         emit_route_edges(root, &facts.elixir, options, &mut edges, interner);
     }
     if !options.queue_enqueues.is_empty() || !options.queue_workers.is_empty() {
-        emit_kafka_edges(root, all_files, options, &sources, &mut edges, interner);
+        emit_kafka_edges(
+            root,
+            all_files.as_slice(),
+            options,
+            sources.as_ref(),
+            &mut edges,
+            interner,
+        );
     }
     edges
 }
@@ -149,4 +142,3 @@ fn config_is_empty(config: &LangFrontendConfig) -> bool {
         && config.elixir_apps.is_empty()
         && config.dart_packages.is_empty()
 }
-

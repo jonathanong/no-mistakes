@@ -17,7 +17,11 @@ pub use graph::{
     analyze_project_with_prepared_indexed, prepare_analysis, prepare_analysis_with_shared_facts,
     prepare_analysis_with_shared_facts_and_session, PreparedServerAnalysis, RelatedDirection,
 };
-pub(crate) use graph::{configure_fact_context, route_defs_from_prepared_facts_with_catalog};
+pub(crate) use graph::{
+    configure_fact_context, route_defs_from_prepared_facts_with_catalog,
+    PreparedClientRelationships,
+};
+pub(crate) use lang::merge_language_route_facts;
 pub use model::{PreparedProjectReport, ProjectReport};
 pub use related::related;
 pub use types::{Diagnostic, Edge, EdgeKind, Framework, ServerRoute, Severity, Summary};

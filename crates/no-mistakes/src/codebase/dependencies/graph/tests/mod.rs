@@ -69,6 +69,7 @@ include!("core_resolution.rs");
 include!("core.rs");
 include!("language_frontends.rs");
 include!("language_frontends_more.rs");
+include!("lang_facts_once.rs");
 mod node_sort;
 include!("scoped_universe.rs");
 include!("legacy_symbol_channel.rs");

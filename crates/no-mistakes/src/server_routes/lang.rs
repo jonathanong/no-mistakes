@@ -1,6 +1,4 @@
-use crate::codebase::lang_frontends::{
-    collect_all_lang_facts, lang_config_from_v2, lang_config_is_empty, LangFileFacts,
-};
+use crate::codebase::lang_frontends::{lang_config_from_v2, lang_config_is_empty, LangFileFacts};
 use crate::codebase::test_filter::TestFileFilter;
 use crate::config::v2::ConfigView;
 use crate::server_routes::graph::{build_filter, PreparedServerAnalysis};
@@ -10,7 +8,7 @@ use globset::GlobSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-pub(super) fn merge_language_route_facts(
+pub(crate) fn merge_language_route_facts(
     prepared: &PreparedServerAnalysis,
     facts: &mut HashMap<PathBuf, FileFacts>,
     cli_filter: Option<&GlobSet>,
@@ -35,7 +33,10 @@ fn merge_configured_lang_routes(
     let dataset = prepared.session.dataset(&prepared.root);
     let all_files = dataset.paths_for(&prepared.root);
     let sources = dataset.sources_for(&prepared.root);
-    let collected = collect_all_lang_facts(&prepared.root, &all_files, &lang, &sources);
+    let collected =
+        prepared
+            .session
+            .lang_frontend_facts(&prepared.root, &all_files, &lang, &sources);
     let config_route_filter = build_filter(&ConfigView::new(config).server_route_globs())
         .ok()
         .flatten();

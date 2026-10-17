@@ -10,7 +10,7 @@ pub(super) struct ClientRelationshipInputs<'a> {
 }
 
 impl PreparedClientRelationships {
-    fn new(
+    pub(crate) fn new(
         source_files: &[PathBuf],
         tsconfig: &TsConfig,
         session: &crate::codebase::analysis_session::AnalysisSession,

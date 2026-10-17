@@ -42,7 +42,8 @@ struct GraphEdgeBuildInputs<'a> {
 fn require_playwright_route_snapshot(
     snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
 ) -> Result<&crate::playwright::fsutil::VisiblePathSnapshot> {
-    snapshot.ok_or_else(|| anyhow::anyhow!("Playwright graph plan requires a visible-path snapshot"))
+    snapshot
+        .ok_or_else(|| anyhow::anyhow!("Playwright graph plan requires a visible-path snapshot"))
 }
 
 fn parsed_imports_for_plan<'a>(
@@ -137,15 +138,19 @@ fn collect_dotnet_edges_for_plan(
 
 fn merge_language_frontend_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    sources: &Arc<SourceStore>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
+    let files = inputs.graph_files.all_shared();
     let edges = collect_language_frontend_edges(
         inputs.root,
-        inputs.graph_files.all(),
+        &files,
         inputs.config_options,
-        inputs.visible_paths,
+        sources,
         &inputs.interner,
+        session,
     );
     for (from, to, _) in &edges {
         forward.entry(from.clone()).or_default();
