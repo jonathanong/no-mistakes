@@ -27,7 +27,7 @@
       "sha256": "3b3c1dafa65213e15ae35a2310f68b6e2b168c3564571379f1c31dffa8b68829"
     }
   },
-  "candidate_lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+  "candidate_lock_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
   "baseline_branch": "design/receiver-repeated-targets-1971",
   "baseline_head": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
   "baseline_tree": "213a7967bc49c6b93bd89c3bf2fc0acfd0f39679"

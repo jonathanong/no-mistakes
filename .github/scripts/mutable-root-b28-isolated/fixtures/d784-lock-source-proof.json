@@ -1,0 +1,8 @@
+{
+  "candidate_head": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+  "candidate_tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
+  "actual_path": "pnpm-lock.yaml",
+  "pnpm_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+  "old_wrong_Cargo_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+  "source": "Authenticated publicGitAPI bytes equal exact d784 Gitblob; originalrun38985517325failedbeforeSTART"
+}
