@@ -34,3 +34,6 @@ test and Vitest config files selected by your flat-config globs. It defaults to
 5,000 ms for configured test and hook timeouts and 30,000 ms for per-test and
 hook overrides. See the [rule documentation](../../docs/eslint-rules/vitest-timeout-cap.md)
 for options and examples.
+
+`gh-api-argument-safety` is an opt-in rule for structured endpoint fields and explicit API methods.
+See [options and examples](../../docs/eslint-rules/gh-api-argument-safety.md).

@@ -1,6 +1,7 @@
 "use strict";
 
 const rules = {
+  "gh-api-argument-safety": require("./rules/gh-api-argument-safety"),
   "async-call-disposition": require("./rules/async-call-disposition"),
   "async-try-catch-return-await": require("./rules/async-try-catch-return-await"),
   "await-array-methods": require("./rules/await-array-methods"),

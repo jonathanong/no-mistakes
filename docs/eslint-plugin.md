@@ -275,3 +275,9 @@ Same-module constants, aliases, config callbacks with a single return,
 object/array spreads and effective `mergeConfig` precedence are supported.
 See [the rule reference](eslint-rules/vitest-timeout-cap.md) for limits and
 `no-mistakes` file/line/next-line suppressions.
+
+### `gh-api-argument-safety`
+
+Opt-in literal GitHub CLI API argv checks. `wrappers` entries select `callee`,
+`argumentPosition`, and `includesApi`; `endpointMessage` and `methodMessage`
+customize diagnostics. See [the rule reference](eslint-rules/gh-api-argument-safety.md).
