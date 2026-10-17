@@ -1,0 +1,6 @@
+effects:
+  receiver:
+    targets:
+      - { module: '@vendor/exported-value', export: shared.get }
+      - { module: '@vendor/exported-value', export: shared.set }
+      - { module: '@vendor/exported-value', export: other.get }

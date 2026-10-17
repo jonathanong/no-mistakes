@@ -600,6 +600,11 @@ Callable bodies can refer to receiver aliases declared later: pending writes
 reuse the completed binding facts and each initializer's acquisition coordinates.
 Uncalled, unavailable, and escaped writers retain conservative unknown targets;
 declaration order does not establish execution.
+An immutable repository export alias of an external receiver, such as
+`export const receiver = shared`, keeps that external receiver's canonical
+identity through named re-exports. Repeated foreign helper reads of a written
+member become unknown; earlier method copies, other members, and distinct
+receiver exports keep their acquisition targets.
 Assignment-pattern receiver reads use RHS-before-LHS execution order, including
 computed targets and conditional root writes. Eager class writes borrow the normal
 collector's scoped binding facts; deferred field values retain their own execution
