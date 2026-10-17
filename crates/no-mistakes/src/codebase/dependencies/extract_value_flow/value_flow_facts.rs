@@ -32,6 +32,10 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub reference_callable_alias_index_entries: usize,
     #[cfg(feature = "test-instrumentation")]
+    pub reference_forward_sources: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_forward_writer_replays: usize,
+    #[cfg(feature = "test-instrumentation")]
     pub reference_component_links: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_component_root_steps: usize,

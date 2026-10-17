@@ -154,6 +154,7 @@ mod nested_receiver_cutoffs;
 #[path = "receiver_evaluation_order.rs"]
 mod receiver_evaluation_order;
 
+mod forward_receiver_aliases;
 #[path = "module_scope_receiver_reads.rs"]
 mod module_scope_receiver_reads;
 mod namespace_executor_shadows;

@@ -35,6 +35,12 @@ impl ImportCollector {
                     },
                 );
             }
+            if self.defer_forward_receiver_write(
+                &key, &path, &reads, root_read.read(), info, propagated,
+            ) {
+                affected.insert_owned(key.0, key.1);
+                continue;
+            }
             // RHS receipts need the root version even when terminal pruning is disabled.
             let (terminal, version) = self.classify_receiver_successor(
                 &key,

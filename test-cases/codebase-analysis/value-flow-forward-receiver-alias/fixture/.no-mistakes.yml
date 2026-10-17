@@ -1,0 +1,23 @@
+effects:
+  receiver:
+    targets:
+      - { module: '@vendor/forward-before', export: primary.get }
+      - { module: '@vendor/forward-before', export: replica.get }
+      - { module: '@vendor/forward-before', export: unrelated.get }
+      - { module: '@vendor/forward-after', export: primary.get }
+      - { module: '@vendor/forward-after', export: replica.get }
+      - { module: '@vendor/forward-after', export: unrelated.get }
+      - { module: '@vendor/forward-only-before', export: primary.get }
+      - { module: '@vendor/forward-only-before', export: replica.get }
+      - { module: '@vendor/forward-only-after', export: primary.get }
+      - { module: '@vendor/forward-only-after', export: replica.get }
+      - { module: '@vendor/forward-shadow', export: primary.get }
+      - { module: '@vendor/forward-shadow', export: replica.get }
+      - { module: '@vendor/forward-uncalled', export: primary.get }
+      - { module: '@vendor/forward-uncalled-after', export: primary.get }
+      - { module: '@vendor/forward-tdz', export: primary.get }
+      - { module: '@vendor/forward-escaped', export: primary.get }
+      - { module: '@vendor/forward-cyclic', export: primary.get }
+      - { module: '@vendor/forward-grouped', export: primary.get }
+      - { module: '@vendor/forward-grouped', export: replica.get }
+      - { module: '@vendor/forward-uninitialized', export: primary.get }

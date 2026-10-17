@@ -68,6 +68,7 @@ fn extract_import_facts_with_rhs_probe(
     collector.visit_program(program);
     collector.materialize_aggregate_aliases();
     collector.materialize_deferred_simple_aliases();
+    collector.finish_forward_receiver_writes();
     collector.finish_foreign_receiver_writes();
     collector.finish_default_mutations();
     finish_callable_assignment_facts(&mut collector);
