@@ -1,5 +1,6 @@
 use super::*;
 
+#[cfg(feature = "test-instrumentation")]
 fn replacement_work(facts: &ImportFacts) -> [usize; 5] {
     let flow = &facts.value_flow;
     [
@@ -31,11 +32,14 @@ fn imports_only_skip_replacement_bookkeeping_but_keep_import_and_scope_facts() {
     let imports_only = extract(false);
     let values = extract(true);
     // These work counters observe the actual hot-path prologues, not output size.
-    assert_eq!(replacement_work(&imports_only), [0; 5]);
-    assert!(replacement_work(&values)[..4]
-        .iter()
-        .all(|count| *count > 0));
-    assert_eq!(replacement_work(&values)[4], 0);
+    #[cfg(feature = "test-instrumentation")]
+    {
+        assert_eq!(replacement_work(&imports_only), [0; 5]);
+        assert!(replacement_work(&values)[..4]
+            .iter()
+            .all(|count| *count > 0));
+        assert_eq!(replacement_work(&values)[4], 0);
+    }
     assert_eq!(imports_only.imports, values.imports);
     assert_eq!(imports_only.function_calls, values.function_calls);
     assert_eq!(imports_only.callable_scope_ids, values.callable_scope_ids);
@@ -104,12 +108,14 @@ fn for_of_callable_proofs_keep_opaque_and_noncallable_fallbacks_conservative() {
     let capsule = facts.value_flow.replacements.as_ref().unwrap();
     assert!(capsule.requires_receiver_proof());
     assert!(!capsule.writes.is_empty());
+    #[cfg(feature = "test-instrumentation")]
     assert_eq!(facts.value_flow.replacement_loop_classifications, 5);
 }
 
 #[test]
 fn ordinary_import_fixtures_skip_per_expression_replacement_guards() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    #[cfg(feature = "test-instrumentation")]
     let mut entries = Vec::new();
     for relative in [
         "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
@@ -142,11 +148,13 @@ fn ordinary_import_fixtures_skip_per_expression_replacement_guards() {
             "{relative}"
         );
         // Count entry before the demand guard: post-guard counters hide ordinary-path work.
+        #[cfg(feature = "test-instrumentation")]
         entries.push((
             relative,
             facts.value_flow.replacement_expression_guard_entries,
         ));
     }
+    #[cfg(feature = "test-instrumentation")]
     assert!(entries.iter().all(|(_, count)| *count == 0), "{entries:?}");
 }
 
@@ -166,6 +174,7 @@ fn typed_invalidations_preserve_owner_semantics_and_ordinary_unary_walks() {
     assert_eq!(imports.imports, values.imports);
     assert_eq!(imports.function_calls, values.function_calls);
     assert_eq!(imports.callable_scope_ids, values.callable_scope_ids);
+    #[cfg(feature = "test-instrumentation")]
     assert_eq!(values.value_flow.replacement_expression_checks, 3);
     let capsule = values.value_flow.replacements.as_ref().unwrap();
     assert_eq!(capsule.writes.len(), 4);
@@ -193,3 +202,9 @@ mod callable_assignment_targets;
 #[cfg(feature = "test-instrumentation")]
 #[path = "statement_outline.rs"]
 mod statement_outline;
+
+// Default-feature compilation is what this suite protects. The module is absent
+// when counters exist, so it cannot name instrumentation-only fields.
+#[cfg(not(feature = "test-instrumentation"))]
+#[path = "default_feature_instrumentation.rs"]
+mod default_feature_instrumentation;

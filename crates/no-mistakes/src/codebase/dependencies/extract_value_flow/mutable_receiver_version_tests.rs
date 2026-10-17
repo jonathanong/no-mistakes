@@ -1,3 +1,4 @@
+#[cfg(feature = "test-instrumentation")]
 use super::*;
 
 #[test]
