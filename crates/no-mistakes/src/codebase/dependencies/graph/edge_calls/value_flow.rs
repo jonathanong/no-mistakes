@@ -18,8 +18,21 @@ pub(super) struct FlowFileIndex {
     async_callables: FxHashSet<CallableId>,
     generator_callables: FxHashSet<CallableId>,
 }
+#[cfg(feature = "test-instrumentation")]
+#[path = "value_flow/admission_probe.rs"]
+mod admission_probe;
+#[path = "value_flow/known_callable_admission.rs"]
+mod known_callable_admission;
+#[cfg(feature = "test-instrumentation")]
+#[path = "value_flow/admission_mode.rs"]
+pub(super) mod admission_mode;
 #[path = "value_flow/types.rs"]
 mod types;
+#[cfg(feature = "test-instrumentation")]
+use super::value_flow_metrics::{
+    ReplacementIncomingProbe, ReplacementLookupProbe, ReplacementPhysicalProbe,
+    ReplacementProbeSnapshot, ReplacementRhsProbe, ReplacementSourceCallProbe,
+};
 use types::{BoundArguments, FlowValue};
 
 type ParameterInputs = FxHashMap<(std::path::PathBuf, CallableId), Vec<ParameterInput>>;
@@ -65,6 +78,9 @@ struct ValueFlowResolution<'a, 'b> {
     indexes: &'a CallableResolutionIndexes,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,
+    replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
+    replacement_read: bool,
+    foreign_acquisition: bool,
     used_parameters: FxHashSet<(std::path::PathBuf, CallableId)>,
     parameters_enabled: bool,
     initializing: Vec<(std::path::PathBuf, CallableId, usize)>,
@@ -85,8 +101,8 @@ struct ValueFlowResolution<'a, 'b> {
     module_writer_phases: &'a execution_phases::ModuleWriterPhases,
     writer_dependencies: std::cell::RefCell<FxHashSet<(std::path::PathBuf, CallableId)>>,
     module_snapshot: Option<(std::path::PathBuf, u32)>,
-    // Only the current binding initializer owns this acquisition phase.
-    repeated_initializer: Option<(&'a std::path::Path, u32, Option<CallableId>)>,
+    // Only the current copied-member initializer owns this acquisition phase.
+    member_initializer: Option<(&'a std::path::Path, u32, Option<CallableId>, bool)>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
 
@@ -100,6 +116,8 @@ mod member_projection;
 mod member_reads;
 #[path = "value_flow/named.rs"]
 mod named;
+#[path = "value_flow/named_imports.rs"]
+mod named_imports;
 #[path = "value_flow/refine.rs"]
 mod refine;
 #[path = "value_flow/returned.rs"]
@@ -128,6 +146,7 @@ struct ValueInputs<'a> {
     cache: &'a ParameterCache,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,
+    replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
 }
 #[path = "value_flow/constructors.rs"]
 mod constructors;
@@ -179,11 +198,19 @@ use agreement::agreed_value;
 #[path = "value_flow/invocation_argument.rs"]
 mod invocation_argument;
 
+#[path = "value_flow/replacement_catalog.rs"]
+mod replacement_catalog;
+
+#[path = "value_flow/replacement_values.rs"]
+mod replacement_values;
+
 #[path = "value_flow/binding_reads.rs"]
 mod binding_reads;
 
 #[path = "value_flow/execution_phases.rs"]
 mod execution_phases;
+#[path = "value_flow/parameter_repeat.rs"]
+mod parameter_repeat;
 
 #[cfg(test)]
 #[path = "value_flow/execution_layout_tests.rs"]
@@ -197,3 +224,14 @@ mod parameter_values;
 
 #[path = "value_flow/annotation_values.rs"]
 mod annotation_values;
+
+#[path = "value_flow/choice_targets.rs"]
+mod choice_targets;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "value_flow/site_storage_tests.rs"]
+pub(super) mod site_storage;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "value_flow/opaque_entry_mode.rs"]
+pub(super) mod opaque_entry_mode;

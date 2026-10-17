@@ -17,6 +17,8 @@ struct AggregateAliasCandidate {
 
 #[derive(Default)]
 struct ImportCollector {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    statement_mode: statement_mode::Mode,
     bare_callable_callee: Option<u32>,
     /// 0-based byte offsets of each line start. Empty when line numbers are
     /// unused so the collector does not retain a full source copy.
@@ -41,6 +43,7 @@ struct ImportCollector {
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool)>,
     function_calls: Vec<FunctionCall>,
     value_flow: ValueFlowFacts,
+    callable_assignment_state: Option<Box<CallableAssignmentState>>,
     /// Cutoff for the current callable's body when its suffix is unreachable.
     /// Saved and restored around body traversal; absent for ordinary bodies.
     unreachable_value_binding_after: Option<u32>,
@@ -60,7 +63,10 @@ struct ImportCollector {
     unknown_calls: Vec<UnknownCall>,
     symbol_references: Vec<FunctionCall>,
     function_stack: Vec<String>,
-    function_id_stack: Vec<CallableId>,
+    function_id_stack: Vec<(CallableId, bool)>,
+    replacement_region: Option<ReplacementRegion>,
+    replacement_root_unsafe: bool,
+    replacement_statement_call: Option<(u32, u32)>,
     callable_scope_ids: FxHashSet<(CallableId, String)>,
     /// Static class members have a display scope derived from the class name,
     /// which is not unique across sibling lexical scopes. Preserve their
@@ -142,3 +148,17 @@ struct ImportCollector {
 }
 
 include!("extract_collector_maps.rs");
+
+#[derive(Default)]
+struct CallableAssignmentState {
+    assignments: Vec<extract_value_flow::CallableAssignment>,
+    uses: FxHashSet<(usize, String)>,
+    module_bindings: FxHashSet<String>,
+}
+impl ImportCollector {
+    fn is_mutable_module_binding(&self, name: &str) -> bool {
+        self.callable_assignment_state
+            .as_ref()
+            .is_some_and(|state| state.module_bindings.contains(name))
+    }
+}

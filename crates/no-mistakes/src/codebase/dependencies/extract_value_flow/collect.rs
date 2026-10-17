@@ -6,6 +6,7 @@ impl ImportCollector {
             return;
         }
         if let Some(init) = &declarator.init {
+            self.record_callable_initializer(declarator, immutable, init);
             let value = if self
                 .unreachable_value_binding_after
                 .is_some_and(|cutoff| declarator.span.start >= cutoff)
@@ -131,6 +132,7 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.record_replacement_call(call);
         let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
         self.value_flow.calls.push(ValueCall {
             context: self.current_function_id(),
@@ -155,6 +157,7 @@ impl ImportCollector {
         &mut self,
         statement: &oxc_ast::ast::ReturnStatement<'_>,
     ) {
+        self.invalidate_replacement_execution();
         if self.collect_value_flow {
             if let Some(owner) = self.current_function_id() {
                 let value = statement
@@ -186,3 +189,5 @@ impl ImportCollector {
         }
     }
 }
+
+include!("callable_assignment_initializers.rs");

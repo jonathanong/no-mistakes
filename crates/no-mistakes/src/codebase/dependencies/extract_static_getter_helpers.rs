@@ -116,6 +116,7 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
+    collector.record_replacement_assignment(assignment);
     let receipts = collector.begin_phase_receipts(&assignment.left);
     let mut phases =
         collector.begin_reference_destructuring_phases(&assignment.left, &assignment.right);
@@ -171,6 +172,12 @@ fn visit_update_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     update: &oxc_ast::ast::UpdateExpression<'a>,
 ) {
+    collector.record_callable_assignment(update.argument.as_assignment_target(), None, false, update.span.end);
+    collector.record_replacement_target(
+        update.argument.as_assignment_target(),
+        ValueExpression::Unknown,
+        update.span.end,
+    );
     record_assignment_target_writes(
         collector,
         update.argument.as_assignment_target(),

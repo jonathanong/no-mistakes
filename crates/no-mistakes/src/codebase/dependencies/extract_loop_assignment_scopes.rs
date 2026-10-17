@@ -27,7 +27,9 @@ fn visit_for_statement_with_scope<'a>(
         .is_some_and(|test| literal_truthiness(test) != Some(true));
     with_conditional_execution(collector, conditional, |collector| {
         with_conditional_receiver_write(collector, |collector| {
-            collector.visit_statement(&statement.body)
+            with_replacement_region(collector, statement.body.span(), false, true, |collector| {
+                collector.visit_statement(&statement.body)
+            });
         });
     });
     collector.repeat_depth -= 1;
@@ -85,7 +87,11 @@ fn visit_for_in_statement_with_scope<'a>(
     collector.annex_b_for_in_initializer = previous_initializer;
     collector.visit_expression(&statement.right);
     with_repeat_execution(collector, &statement.body, |collector, body| {
-        with_conditional_execution(collector, true, |collector| collector.visit_statement(body));
+        with_conditional_execution(collector, true, |collector| {
+            with_replacement_region(collector, body.span(), false, true, |collector| {
+                collector.visit_statement(body)
+            });
+        });
     });
     collector.pop_lexical_scope(pushed);
 }
@@ -111,9 +117,24 @@ fn visit_for_of_statement_with_scope<'a>(
         });
     });
     collector.visit_expression(&statement.right);
+    let (repeated, may_repeat, guaranteed_assignment) =
+        replacement_for_of_execution(collector, statement);
     with_repeat_execution(collector, &statement.body, |collector, body| {
-        with_conditional_execution(collector, true, |collector| collector.visit_statement(body));
+        with_conditional_execution(collector, true, |collector| {
+            with_replacement_region(collector, body.span(), repeated, may_repeat, |collector| {
+                collector.visit_statement(body);
+            });
+        });
     });
+    if let Some(completed_at) = guaranteed_assignment {
+        if let Some(state) = collector.callable_assignment_state.as_mut() {
+            for write in &mut state.assignments {
+                if write.completed_at == completed_at && write.callable.is_some() {
+                    write.guaranteed = true;
+                }
+            }
+        }
+    }
     collector.pop_lexical_scope(pushed);
 }
 
@@ -125,6 +146,8 @@ fn invalidate_for_statement_assignment_target(
     let Some(target) = left.as_assignment_target() else {
         return;
     };
+    collector.record_callable_assignment(target, None, false, completed_at);
+    collector.record_replacement_target(target, ValueExpression::Unknown, completed_at);
     for (name, path, _) in extract_value_flow::write_targets::targets(target) {
         collector.record_reassigned_callable_alias_path(
             &name,
@@ -134,3 +157,5 @@ fn invalidate_for_statement_assignment_target(
         );
     }
 }
+
+include!("extract_replacement_loop_proof.rs");

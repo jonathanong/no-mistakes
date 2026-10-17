@@ -117,17 +117,21 @@ fn expired_command_keeps_its_phase_when_the_invocation_limit_is_live() {
     let limit = Deadline {
         expires_at: clock::now() + Duration::from_secs(30),
         timeout: Duration::from_secs(30),
-        owner: None,
+        owner: Some(std::thread::current().id()),
         committed: false,
     };
     let previous_phase = current_phase();
     set_timeout_phase("command");
     let outcome = DeadlineGuard::install_for_invocation_with_deadline(
         Some(Duration::ZERO),
-        None,
+        Some(std::thread::current().id()),
         Some(limit),
     )
     .map(|guard| {
+        // Other tests stream subprocess output concurrently; this deliberately
+        // expired test deadline must only affect its owning test thread.
+        let foreign_timeout = std::thread::spawn(remaining_timeout).join().unwrap();
+        assert_eq!(foreign_timeout.unwrap(), None);
         let result = check_timeout();
         drop(guard);
         result

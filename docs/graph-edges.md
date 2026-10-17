@@ -437,7 +437,16 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   aliases and callable bindings are indexed by lexical `(binding scope, local
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
-  `invalidated_at`. Value initializers after a direct `return` or `throw` in a
+  `invalidated_at`. A mutable module binding assigned one literal function in
+  the single straight-line body of a guaranteed nonempty literal `for-of` loop
+  can also produce a canonical `call` edge for a later direct module call. The
+  proof requires one assignment site, one callable identity, and no value escape or
+  nested call through the binding. Empty or conditional loops, early exits,
+  unknown or later writes, and exported or escaped bindings remain unresolved.
+  Two later calls retain two incoming edges, so receiver acquisitions in their
+  callable body still account for the earlier invocation's write. The
+  [deferred-call fixtures](../test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-call-proof-controls.mts)
+  cover these limits. Value initializers after a direct `return` or `throw` in a
   branch remain unknown for deferred captures. This cutoff stays within that
   statement sequence, preserving initialized captures in reachable alternates.
   Dotted aliases follow that same cycle-safe chain, so
@@ -581,6 +590,16 @@ it elsewhere can expose invocations outside the canonical caller chain. Repeated
 Earlier writes, exported or deferred writers, and live receiver aliases remain
 conservative.
 
+Repeated imported-member replacement alternatives require a closed execution
+region: a guaranteed multi-item literal `for-of` body or the supported closed
+sequence of synchronous owner invocations. Calls within that proof must be to
+the same region or owner's tracked receiver members, immutable aliases of those methods, or
+closed synchronous getters returning them. Ordinary method arguments remain
+supported. Other calls and constructors make the new repeated-region proof
+unknown, including external calls whose effects are unspecified. Methods copied
+before the region retain their acquisition snapshot. This bounded proof does not
+infer general call purity or track receiver escapes through arbitrary functions.
+
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay
 conservative across loop executions. Direct arguments to inline helpers inherit
@@ -593,3 +612,11 @@ so writes from earlier iterations invalidate its original target. A loop-local
 alias of an earlier copied method does not reacquire the property. Methods copied
 before the loop keep their acquisition snapshots. Loop initializer and iterable expressions retain
 their existing one-time timing proof.
+
+Prepared mutable callable facts can exist without receiver replacement demand.
+`ValueFlowFacts::has_receiver_replacement_facts()` distinguishes an explicitly
+callable-only capsule from conservative/default or populated receiver evidence.
+Plain effect-name queries retain their scoped path for callable-only facts;
+missing, partial, failed, default, and foreign receiver facts keep conservative
+canonical call resolution. Callable-only storage does not create repeat regions
+or unsafe receiver owners. CLI and asynchronous Node report shapes are unchanged.

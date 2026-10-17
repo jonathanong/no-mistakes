@@ -576,6 +576,7 @@ jobs:
           tool: cargo-crap
 
       - name: Enforce CRAP threshold
+        id: rust-crap
         timeout-minutes: 2
         run: |
           set -o pipefail
@@ -590,6 +591,24 @@ jobs:
           path: |
             target/llvm-cov/crap-report.txt
             target/llvm-cov/lcov.info
+
+      - name: Summarize failing Rust CRAP rows
+        if: ${{ failure() && steps.rust-crap.outcome == 'failure' }}
+        timeout-minutes: 2
+        run: |
+          cargo crap --lcov target/llvm-cov/lcov.info --threshold 30 --missing skip \
+            --format markdown --min 30 --top 20 --output target/llvm-cov/crap-threshold.md
+          cat target/llvm-cov/crap-threshold.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain bounded Rust CRAP report
+        if: ${{ failure() && steps.rust-crap.outcome == 'failure' }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: rust-crap-threshold
+          path: target/llvm-cov/crap-threshold.md
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Enforce cyclomatic complexity threshold
         timeout-minutes: 2

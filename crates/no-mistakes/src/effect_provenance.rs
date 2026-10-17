@@ -64,6 +64,20 @@ impl EffectProvenance {
                     .find_map(|origin| self.members.get(origin))
             })
     }
+
+    pub(crate) fn matching_sites<'a>(
+        &'a self,
+        site: &'a ResolvedCallSite,
+    ) -> impl Iterator<Item = &'a EffectTargetConfig> + 'a {
+        site.typed_from
+            .iter()
+            .filter_map(|origin| self.typed.get(origin))
+            .chain(
+                site.returned_member_from
+                    .iter()
+                    .filter_map(|origin| self.members.get(origin)),
+            )
+    }
 }
 
 pub(crate) fn validate(config: &EffectKindConfig, kind: &str) -> anyhow::Result<()> {

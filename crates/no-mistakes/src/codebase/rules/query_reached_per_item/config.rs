@@ -1,5 +1,5 @@
 use super::RULE_ID;
-use crate::codebase::dependencies::graph::{GraphBuildPlan, ResolvedCallSite, ResolvedCallTarget};
+use crate::codebase::dependencies::graph::{GraphBuildPlan, KnownCallTargetRef, ResolvedCallSite};
 use crate::config::v2::{schema::EffectKindConfig, NoMistakesConfig};
 use anyhow::{bail, Result};
 use serde::Deserialize;
@@ -72,52 +72,73 @@ impl<'a> Sinks<'a> {
                         .map(|matched| transaction || matched)
                 });
         }
-        if self.provenance.match_site(site).is_some() {
-            return Some(true);
-        }
+        let provenance = self.provenance.match_site(site).map(|_| true);
         let returned = site.returned_from.iter().any(|(module, export)| {
             self.returned
                 .get(module.as_str())
                 .is_some_and(|exports| exports.contains(export.as_str()))
         });
-        sink(self.config, &site.source_callee)
-            .filter(|transaction| {
-                !*transaction
-                    || site.source_callee.contains('.')
-                    || !site.returned_from.is_empty()
-                    || !matches!(site.target, ResolvedCallTarget::RepositoryFunction { .. })
-            })
-            .map(|transaction| transaction || returned)
-            .or_else(|| {
-                if returned {
-                    return Some(true);
-                }
-                if matches!(site.target, ResolvedCallTarget::RepositoryFunction { .. })
-                    && site
-                        .target_node
-                        .as_ref()
-                        .is_some_and(|node| self.nodes.contains(node))
-                {
-                    return Some(false);
-                }
-                let ResolvedCallTarget::ModuleExport {
+        // Keep singleton trusted-provenance policy; alternatives must combine
+        // every independently matched leaf before classifying the occurrence.
+        let multiple = site.targets().len() > 1;
+        // Unknown possibilities add no query evidence, but a known plain
+        // export remains selectable without changing singleton precedence.
+        let alternative_identity =
+            multiple || (site.targets().len() > 0 && site.has_unknown_target());
+        if !multiple && (provenance.is_some() || returned) {
+            return Some(true);
+        }
+        let named = sink(self.config, &site.source_callee).filter(|transaction| {
+            !*transaction
+                || site.source_callee.contains('.')
+                || !site.returned_from.is_empty()
+                || site.targets().len() == 0
+                || site.targets().any(|candidate| {
+                    !matches!(
+                        candidate.target,
+                        KnownCallTargetRef::RepositoryFunction { .. }
+                    )
+                })
+        });
+        let resolved = site
+            .targets()
+            .filter_map(|candidate| match candidate.target {
+                KnownCallTargetRef::RepositoryFunction { .. } => candidate
+                    .node
+                    .is_some_and(|node| self.nodes.contains(node))
+                    .then_some(false),
+                KnownCallTargetRef::ModuleExport {
                     specifier,
                     export_path,
                     ..
-                } = &site.target
-                else {
-                    return None;
-                };
-                if export_path.contains('.') {
-                    if let Some(transaction) = sink(self.config, export_path) {
-                        return Some(transaction);
+                } => {
+                    if export_path.contains('.') {
+                        if let Some(transaction) = sink(self.config, export_path) {
+                            return Some(transaction);
+                        }
                     }
+                    self.targets
+                        .get(specifier)
+                        .is_some_and(|exports| exports.contains(export_path))
+                        .then_some(false)
+                        .or_else(|| {
+                            alternative_identity
+                                .then(|| sink(self.config, export_path))
+                                .flatten()
+                        })
                 }
-                self.targets
-                    .get(specifier.as_str())
-                    .is_some_and(|exports| exports.contains(export_path.as_str()))
-                    .then_some(false)
+                _ => None,
             })
+            .reduce(|left, right| left && right);
+        if !multiple {
+            return named.or(resolved);
+        }
+        provenance
+            .into_iter()
+            .chain(returned.then_some(true))
+            .chain(named)
+            .chain(resolved)
+            .reduce(|left, right| left && right)
     }
 }
 
@@ -153,35 +174,7 @@ pub(super) fn exempt(config: &EffectKindConfig, name: &str) -> bool {
     })
 }
 
-pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<()> {
-    if options.effects.is_empty() {
-        bail!("{RULE_ID}: options.effects must select at least one configured effect kind");
-    }
-    if options
-        .allow
-        .iter()
-        .any(|allow| allow.file.is_empty() || allow.line == Some(0))
-    {
-        bail!("{RULE_ID}: allow entries require a non-empty file and positive line when supplied");
-    }
-    for kind in &options.effects {
-        let Some(effect) = config.effects.get(kind) else {
-            bail!("{RULE_ID}: unknown effects kind `{kind}`");
-        };
-        crate::effect_provenance::validate(effect, kind)?;
-        anyhow::ensure!(
-            effect
-                .targets
-                .iter()
-                .chain(&effect.returned_executors)
-                .all(|target| {
-                    !target.module.trim().is_empty() && !target.export.trim().is_empty()
-                }),
-            "effects kind `{kind}` targets require non-empty module and export"
-        );
-    }
-    Ok(())
-}
+include!("config_validation.rs");
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {

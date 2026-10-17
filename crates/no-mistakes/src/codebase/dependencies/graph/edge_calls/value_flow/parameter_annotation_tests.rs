@@ -49,11 +49,12 @@ fn with_prepared_flow_in(
     let mut flow = ValueFlowResolution {
         inputs: &inputs, facts: &facts, resolver: &resolver, indexes: &indexes,
         incoming: &incoming, supers: &supers, cache: &cache,
+        replacements: None, replacement_read: false, foreign_acquisition: false,
         used_parameters: fx_set(), parameters_enabled: true, initializing: Vec::new(),
         visiting: fx_set(), calls_visiting: fx_set(), default_origins: None,
         acquisition_context: None, invocation_read: None, invocation_start: None,
         executing_read: None, module_writer_phases: &phases, writer_dependencies: Default::default(),
-        module_snapshot: None, repeated_initializer: None, member_read: None,
+        module_snapshot: None, member_initializer: None, member_read: None,
     };
     let path = &paths[0];
     let index = indexes.file(&facts, path).unwrap();

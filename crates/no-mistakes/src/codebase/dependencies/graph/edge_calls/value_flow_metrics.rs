@@ -33,6 +33,11 @@ pub fn dependency_links() -> usize {
     LAST_DEPENDENCIES.get()
 }
 
+#[path = "replacement_probe.rs"]
+mod replacements;
+pub use replacements::*;
+pub(super) use replacements::{record_replacements, ReplacementLookupProbe};
+
 pub(super) fn record_execution_steps(count: usize) {
     LAST_EXECUTION_STEPS.set(count);
 }

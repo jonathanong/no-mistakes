@@ -9,13 +9,38 @@ impl ValueFlowResolution<'_, '_> {
         location: Option<(u32, Option<CallableId>)>,
     ) -> FlowValue {
         let context = location.and_then(|(_, context)| context);
-        let enabled = location.is_some() && self.indexes.file(self.facts, file).is_some_and(|index| {
-            index.values.receiver_mutations.as_ref().is_some_and(|receivers| {
-                context.map_or(receivers.module_writer, |context| {
-                    receivers.writer_contexts.contains(&context)
-                })
-            })
-        });
+        // Source-file writers retain the existing timed/default-origin proof.
+        // Foreign writes have no ordering proof across repeated acquisitions.
+        let repeated_acquisition = self.foreign_acquisition && context.is_some()
+            || location.is_some_and(|(offset, context)| {
+                context.is_none()
+                    && self
+                        .replacements
+                        .is_some_and(|catalog| catalog.possible_repeat(file, offset, context))
+            });
+        if repeated_acquisition {
+            if let FlowValue::Target(target) = base.executor() {
+                if self
+                    .replacements
+                    .is_some_and(|catalog| catalog.mutated_member(file, target, member))
+                {
+                    self.replacement_read = true;
+                    return FlowValue::Unknown;
+                }
+            }
+        }
+        let enabled = location.is_some()
+            && self.indexes.file(self.facts, file).is_some_and(|index| {
+                index
+                    .values
+                    .receiver_mutations
+                    .as_ref()
+                    .is_some_and(|receivers| {
+                        context.map_or(receivers.module_writer, |context| {
+                            receivers.writer_contexts.contains(&context)
+                        })
+                    })
+            });
         let previous = self.member_read.take();
         if enabled {
             let (offset, context) = location.expect("enabled reads have a source location");

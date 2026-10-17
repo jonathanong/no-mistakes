@@ -64,16 +64,17 @@ impl ValueFlowResolution<'_, '_> {
             && Self::member_read_location(&binding.value).is_some_and(|(_, owner)| owner.is_none()))
             .then(|| (path.to_path_buf(), Self::member_read_location(&binding.value)
                 .expect("qualified static member initializer").0));
-        let previous_initializer = self.repeated_initializer.take();
-        self.repeated_initializer =
-            (binding.repeated && matches!(binding.value, ValueExpression::Member(..)))
+        let previous_initializer = self.member_initializer.take();
+        self.member_initializer =
+            ((binding.repeated || self.replacements.is_some())
+                && matches!(binding.value, ValueExpression::Member(..)))
                 .then(|| {
                     let (offset, context) = Self::member_read_location(&binding.value)?;
-                    Some((self.inputs.graph_files.visible_path(path)?, offset, context))
+                    Some((self.inputs.graph_files.visible_path(path)?, offset, context, binding.repeated))
                 })
                 .flatten();
         let value = self.value_projected(path, &binding.value, projection);
-        self.repeated_initializer = previous_initializer;
+        self.member_initializer = previous_initializer;
         self.module_snapshot = previous;
         value
     }
@@ -139,5 +140,21 @@ impl ValueFlowResolution<'_, '_> {
             context = Some(read.context);
         }
         context.map(|context| (available_at, read_at, context))
+    }
+    pub(super) fn imported_value(&self, file: &CallableFileIndex, base: &str) -> FlowValue {
+        if let Some(binding) = file.imported.get(base).filter(|binding| {
+            binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+        }) {
+            FlowValue::Target(ResolvedCallTarget::ModuleExport {
+                specifier: binding.specifier.clone(),
+                export_path: String::new(),
+                repository_target: None,
+                callable_id: None,
+            })
+        } else {
+            FlowValue::Target(
+                module_export_target(file, base, None, None).unwrap_or(ResolvedCallTarget::Unknown),
+            )
+        }
     }
 }

@@ -6,7 +6,7 @@ pub(super) fn apply_value(
     indexes: &CallableResolutionIndexes,
     site: &mut ResolvedCallSite,
     value: FlowValue,
-    edges: &mut Vec<Edge>,
+    replacement_read: bool,
 ) {
     let mut value = value;
     loop {
@@ -39,10 +39,18 @@ pub(super) fn apply_value(
                     .map(|value| {
                         let mut alternative = site.clone();
                         alternative.alternatives.clear();
-                        apply_value(inputs, facts, indexes, &mut alternative, value, edges);
+                        apply_value(
+                            inputs,
+                            facts,
+                            indexes,
+                            &mut alternative,
+                            value,
+                            replacement_read,
+                        );
                         alternative
                     })
                     .collect();
+                site.target = super::choice_targets::target(&site.alternatives);
                 return;
             }
             other => {
@@ -65,6 +73,21 @@ pub(super) fn apply_value(
     }
     if matches!(value, FlowValue::Promise(_) | FlowValue::Uncallable) {
         site.target = ResolvedCallTarget::Unknown;
+        site.target_node = None;
+        return;
+    }
+    if replacement_read
+        || matches!(
+            value,
+            FlowValue::Target(ResolvedCallTarget::Alternatives(_))
+        )
+    {
+        // A replacement read owns Unknown too; never retain its stale initial edge.
+        site.target = match value {
+            FlowValue::Target(target) => target,
+            _ => ResolvedCallTarget::Unknown,
+        };
+        site.target_node = None;
         return;
     }
     let (target, exact_id) = match value {
@@ -100,11 +123,6 @@ pub(super) fn apply_value(
     };
     if let Some(node) = graph_call_target_node(&inputs.interner, facts, indexes, &target, exact_id)
     {
-        let source = site.caller.as_deref().map_or_else(
-            || NodeId::file_in(&inputs.interner, &site.file),
-            |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
-        );
-        edges.push((source, node.clone(), EdgeKind::Call));
         site.target_node = Some(node);
     }
     site.target = target;

@@ -19,6 +19,7 @@ struct CallableFileIndex {
     exported_scopes: FxHashSet<String>,
     class_scopes: FxHashSet<String>,
     callable_bindings: ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
+    callable_assignments: ScopedNameMap<IndexedCallableAssignment>,
     imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     type_imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported: FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
@@ -34,13 +35,6 @@ struct CallableFileIndex {
     stars: Vec<String>,
     namespaces: NamespaceTable,
 }
-#[derive(Clone)]
-struct IndexedAlias {
-    target: String,
-    declared_at: u32,
-    invalidated_at: Option<u32>,
-}
-
 #[derive(Clone)]
 struct ClassBindingTarget {
     scope: String,
@@ -87,8 +81,13 @@ impl CallableFileIndex {
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
-            values: FlowFileIndex::new(&file.value_flow, &file.callable_scope_ids, &file.function_calls),
+            values: FlowFileIndex::new(
+                &file.value_flow,
+                &file.callable_scope_ids,
+                &file.function_calls,
+            ),
             known_scopes: file.callable_scopes.iter().cloned().collect(),
+            callable_assignments: index_closed_callable_assignments(file),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes,
             callable_bindings,
@@ -98,7 +97,11 @@ impl CallableFileIndex {
                 .filter(|binding| !binding.is_type_only)
                 .map(|binding| (binding.local.clone(), binding.clone()))
                 .collect(),
-            type_imported: file.imported_bindings.iter().map(|binding| (binding.local.clone(), binding.clone())).collect(),
+            type_imported: file
+                .imported_bindings
+                .iter()
+                .map(|binding| (binding.local.clone(), binding.clone()))
+                .collect(),
             exported: file
                 .exported_bindings
                 .iter()
@@ -218,4 +221,17 @@ pub use value_flow_metrics::origin_nodes as benchmark_probe_origin_nodes;
 pub use value_flow_metrics::dependency_links as benchmark_probe_parameter_dependency_links;
 
 #[cfg(feature = "test-instrumentation")]
+pub use value_flow_metrics::{
+    replacement_snapshot as benchmark_probe_replacements, ReplacementIncomingProbe,
+    ReplacementPhysicalProbe, ReplacementProbeSnapshot, ReplacementRhsProbe,
+    ReplacementSourceCallProbe,
+};
+
+#[cfg(feature = "test-instrumentation")]
 pub use value_flow_metrics::execution_steps as benchmark_probe_execution_phase_steps;
+
+#[cfg(feature = "test-instrumentation")]
+pub use value_flow::admission_mode::with_original_admission as benchmark_probe_with_original_admission;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+pub use value_flow::opaque_entry_mode::with_original_entries as benchmark_probe_with_original_entries;

@@ -75,6 +75,7 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
     let index = CallableFileIndex {
         type_imported: fx_map(),
         values: Default::default(),
+        callable_assignments: fx_map(),
         known_scopes: ["target".to_string()].into_iter().collect(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),
@@ -150,6 +151,7 @@ fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
     let index = CallableFileIndex {
         type_imported: fx_map(),
         values: Default::default(),
+        callable_assignments: fx_map(),
         known_scopes: fx_set(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),
@@ -350,6 +352,7 @@ fn local_callable_id_walks_parents_and_rejects_dotted_bindings() {
     let index = CallableFileIndex {
         type_imported: fx_map(),
         values: Default::default(),
+        callable_assignments: fx_map(),
         known_scopes: fx_set(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),

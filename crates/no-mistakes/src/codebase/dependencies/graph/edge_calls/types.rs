@@ -41,8 +41,12 @@ pub enum ResolvedCallTarget {
         file: std::path::PathBuf,
         scope: String,
     },
+    /// Known possible callees of this one occurrence, without inventing calls.
+    Alternatives(std::sync::Arc<ResolvedCallAlternatives>),
     Unknown,
 }
+
+include!("target_alternatives.rs");
 
 fn module_export_target(
     file: &CallableFileIndex,

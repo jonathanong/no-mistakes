@@ -1,0 +1,9 @@
+effects:
+  replacement:
+    targets:
+      - { module: '@vendor/valkey', export: replica.get }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [replacement]

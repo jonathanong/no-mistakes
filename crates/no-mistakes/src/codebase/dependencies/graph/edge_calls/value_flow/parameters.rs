@@ -33,6 +33,10 @@ impl ValueFlowResolution<'_, '_> {
                         indexes: self.indexes,
                         incoming: self.incoming,
                         supers: self.supers,
+                        replacements: self.replacements,
+                        replacement_read: false,
+                        // Cache agreement must not inherit the ambient query.
+                        foreign_acquisition: false,
                         cache: self.cache,
                         parameters_enabled: true,
                         initializing: self.initializing.clone(),
@@ -47,7 +51,7 @@ impl ValueFlowResolution<'_, '_> {
                         module_writer_phases: self.module_writer_phases,
                         writer_dependencies: Default::default(),
                         module_snapshot: None,
-                        repeated_initializer: None,
+                        member_initializer: None,
                         member_read: None,
                     };
                     flow.visiting.insert((

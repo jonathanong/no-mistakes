@@ -103,6 +103,7 @@ include!("extract_kinds.rs");
 mod extract_value_flow;
 
 include!("extract_per_item.rs");
+include!("extract_replacements.rs");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownCall {
@@ -180,6 +181,7 @@ include!("extract_import_facts.rs");
 include!("extract_import_extractor.rs");
 
 include!("extract_entrypoints.rs");
+include!("extract_callable_assignments_finish.rs");
 include!("extract_entrypoints_predeclare.rs");
 include!("extract_namespace_facts.rs");
 include!("extract_namespace_scan.rs");
@@ -244,3 +246,10 @@ mod extra_tests;
 mod import_metadata_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract_statement_legacy_tests.rs"]
+mod statement_legacy;
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract_statement_mode.rs"]
+mod statement_mode;
