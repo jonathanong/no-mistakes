@@ -1,0 +1,44 @@
+{
+  "status": "DRAFT_DISABLED",
+  "pairs": {
+    "2127": {
+      "baseline": "21b478d65e404174f32b01f2ac50f64f85db00e3",
+      "candidate": "0cca32b4f8c825d5565099052e99f1462ba2298d",
+      "trees": {
+        "baseline": "3a35f0db32a19296a071d11efe997a9b245f40ed",
+        "candidate": "87908720ea0ae9c617fd71fa167cf4ff2c931b6d"
+      }
+    },
+    "2129": {
+      "baseline": "1bd460783f04ec2fd440e1c7934a26c9655bbc3f",
+      "candidate": "fa21297e863d460c6399be0dbf280d6bbe948be3",
+      "trees": {
+        "baseline": "c3b4d99348af83437113b241203c292200ba27eb",
+        "candidate": "d7fefd96a9b541b6e26755e1f57193a361f05845"
+      }
+    }
+  },
+  "toolchain": "1.99.1",
+  "node": "24",
+  "pnpm": "11.24.0",
+  "profile": "release,opt3,fullLTO,cgu1,debug0,default+mermaid,incremental0",
+  "child_cap": 180,
+  "timed_order": [
+    "ABBA",
+    "BAAB"
+  ],
+  "diagnostics": [
+    "off",
+    "on"
+  ],
+  "workers": [
+    "1",
+    "4",
+    "default"
+  ],
+  "rows_per_cell": 8,
+  "cells": 24,
+  "total_rows": 192,
+  "inference": "DESCRIPTIVE_ONLY_TWO_BLOCKS; no fabricated CI/gate or required universalwin",
+  "scope": "WholeactualasyncCJSanalyzeProject awaited, raw-native+ESMbyte/structuredparitycontrols; notCLIproxy/serializer-onlyspan"
+}

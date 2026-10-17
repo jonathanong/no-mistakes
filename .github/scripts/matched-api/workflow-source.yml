@@ -1,0 +1,245 @@
+name: Matched asynchronous API diagnostics
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        required: true
+        type: string
+      approved_source_sha:
+        required: true
+        type: string
+      package_manifest_sha256:
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: matched-api-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: ${{ inputs.confirm != 'DRAFT_DISABLED' }} # Exact protocol/source/package guards also required.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    env:
+      APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PACKAGE_MANIFEST_SHA256: ${{ inputs.package_manifest_sha256 }}
+      PROTOCOL_SHA256: ${{ inputs.confirm }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pair: '2127'
+            arm: baseline
+            source: 21b478d65e404174f32b01f2ac50f64f85db00e3
+          - pair: '2127'
+            arm: candidate
+            source: 0cca32b4f8c825d5565099052e99f1462ba2298d
+          - pair: '2129'
+            arm: baseline
+            source: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+          - pair: '2129'
+            arm: candidate
+            source: fa21297e863d460c6399be0dbf280d6bbe948be3
+    steps:
+      - name: Anchor actual job budget
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          path: controller
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ matrix.source }}
+          persist-credentials: false
+          path: native
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: 1.99.1
+      - name: Fresh matched ARM addon
+        timeout-minutes: 42
+        run: python3 controller/.github/scripts/matched-api/build.py "$GITHUB_WORKSPACE/native" '${{ matrix.pair }}' '${{ matrix.arm }}' "$GITHUB_WORKSPACE/result"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: api-native-${{ matrix.pair }}-${{ matrix.arm }}
+          path: result
+          if-no-files-found: error
+          retention-days: 14
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    env:
+      APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PACKAGE_MANIFEST_SHA256: ${{ inputs.package_manifest_sha256 }}
+      PROTOCOL_SHA256: ${{ inputs.confirm }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: representative
+            diagnostics: 'off'
+            jobs: '1'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: representative
+            diagnostics: 'off'
+            jobs: '4'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: representative
+            diagnostics: 'off'
+            jobs: 'default'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: representative
+            diagnostics: 'on'
+            jobs: '1'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: representative
+            diagnostics: 'on'
+            jobs: '4'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: representative
+            diagnostics: 'on'
+            jobs: 'default'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: stress
+            diagnostics: 'off'
+            jobs: '1'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: stress
+            diagnostics: 'off'
+            jobs: '4'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: stress
+            diagnostics: 'off'
+            jobs: 'default'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: stress
+            diagnostics: 'on'
+            jobs: '1'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: stress
+            diagnostics: 'on'
+            jobs: '4'
+          - pair: '2127'
+            fixture: 21b478d65e404174f32b01f2ac50f64f85db00e3
+            case: stress
+            diagnostics: 'on'
+            jobs: 'default'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: representative
+            diagnostics: 'off'
+            jobs: '1'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: representative
+            diagnostics: 'off'
+            jobs: '4'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: representative
+            diagnostics: 'off'
+            jobs: 'default'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: representative
+            diagnostics: 'on'
+            jobs: '1'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: representative
+            diagnostics: 'on'
+            jobs: '4'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: representative
+            diagnostics: 'on'
+            jobs: 'default'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: control
+            diagnostics: 'off'
+            jobs: '1'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: control
+            diagnostics: 'off'
+            jobs: '4'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: control
+            diagnostics: 'off'
+            jobs: 'default'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: control
+            diagnostics: 'on'
+            jobs: '1'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: control
+            diagnostics: 'on'
+            jobs: '4'
+          - pair: '2129'
+            fixture: 1bd460783f04ec2fd440e1c7934a26c9655bbc3f
+            case: control
+            diagnostics: 'on'
+            jobs: 'default'
+    steps:
+      - name: Anchor actual job budget
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          path: controller
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ matrix.fixture }}
+          persist-credentials: false
+          path: fixture
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: '24'
+      - name: Pinned facade dependencies, no scripts
+        timeout-minutes: 5
+        working-directory: fixture
+        run: |
+          npm install --global pnpm@11.24.0
+          pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: api-native-${{ matrix.pair }}-baseline
+          path: artifacts/${{ matrix.pair }}-baseline
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: api-native-${{ matrix.pair }}-candidate
+          path: artifacts/${{ matrix.pair }}-candidate
+      - name: Exact API parity and fixed matched blocks
+        timeout-minutes: 42
+        run: python3 controller/.github/scripts/matched-api/measure.py "$GITHUB_WORKSPACE/artifacts" "$GITHUB_WORKSPACE/fixture" "$GITHUB_WORKSPACE/evidence" '${{ matrix.pair }}' '${{ matrix.case }}' '${{ matrix.diagnostics }}' '${{ matrix.jobs }}'
+      - name: Descriptive within-cell analysis
+        run: python3 controller/.github/scripts/matched-api/analyze.py evidence/rows.json > evidence/descriptive.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: api-evidence-${{ matrix.pair }}-${{ matrix.case }}-${{ matrix.diagnostics }}-${{ matrix.jobs }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 14

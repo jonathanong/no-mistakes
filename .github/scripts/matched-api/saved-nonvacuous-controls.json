@@ -1,0 +1,63 @@
+{
+  "positive": {
+    "reports": [
+      {
+        "type": "importUsages",
+        "id": "usages-0",
+        "result": {
+          "roots": [
+            "repo"
+          ],
+          "files": [
+            {
+              "path": "src/main.mts",
+              "imports": [
+                {
+                  "specifier": "./dep.mts",
+                  "kind": "static",
+                  "line": 1,
+                  "packageName": null,
+                  "sideEffectOnly": false,
+                  "reExport": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "roots_only": {
+    "reports": [
+      {
+        "type": "importUsages",
+        "id": "usages-0",
+        "result": {
+          "roots": [
+            "repo"
+          ],
+          "files": []
+        }
+      }
+    ]
+  },
+  "empty_imports": {
+    "reports": [
+      {
+        "type": "importUsages",
+        "id": "usages-0",
+        "result": {
+          "roots": [
+            "repo"
+          ],
+          "files": [
+            {
+              "path": "src/main.mts",
+              "imports": []
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
