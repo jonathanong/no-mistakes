@@ -48,4 +48,4 @@ mod tests;
 #[cfg(test)]
 mod deadline_evidence_tests;
 
-use super::report_dispatch::json_raw_report;
+use super::report_adapter::json_raw_report;

@@ -189,9 +189,11 @@ fn traverse_args(
 }
 
 #[cfg(not(test))]
-#[path = "analyze_project/report_serialization.rs"]
-mod report_dispatch;
+#[path = "analyze_project/report_adapter.rs"]
+mod report_adapter;
 #[cfg(test)]
 #[path = "analyze_project/byte_oracle_tests.rs"]
+mod report_adapter;
+#[path = "analyze_project/report_serialization.rs"]
 mod report_dispatch;
-use report_dispatch::run_report;
+use report_adapter::run_report;

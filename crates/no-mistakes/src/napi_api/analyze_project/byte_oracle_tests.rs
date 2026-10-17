@@ -10,7 +10,7 @@ pub(super) fn json_raw_report<T: serde::Serialize + ?Sized>(value: &T) -> Box<Ra
         return RawValue::from_string(value.to_string())
             .expect("JSON Value re-serialize never fails");
     }
-    serde_json::value::to_raw_value(value).expect("JSON serialization of Rust structs never fails")
+    super::report_dispatch::json_raw_report(value)
 }
 
 pub(super) fn run_report(
@@ -19,9 +19,9 @@ pub(super) fn run_report(
     context: &context::AnalyzeProjectContext,
 ) -> AnyhowResult<Box<RawValue>> {
     if !ORACLE_ENABLED.get() {
-        return run_report_inner(request, options, context);
+        return super::report_dispatch::run_report(request, options, context);
     }
-    let new = run_report_inner(request, options, context)?;
+    let new = super::report_dispatch::run_report(request, options, context)?;
     OLD_TYPED_SERIALIZER.set(true);
     let old_result = run_report_inner(request, options, context);
     OLD_TYPED_SERIALIZER.set(false);
