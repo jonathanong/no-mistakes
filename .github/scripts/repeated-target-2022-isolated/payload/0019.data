@@ -22,7 +22,7 @@ import semantics  # noqa: E402
 import napi_parity  # noqa: E402
 from pair import SPEC  # noqa: E402
 
-GIT = Path('/tmp/no-mistakes-2022-assignment-target-opt')
+GIT = Path('/tmp/no-mistakes-2022-current-producer-e193')
 semantics.ROOT = GIT
 napi_parity.ROOT = GIT
 ROOT = Path('/tmp/nm2022-main281-current-pair-functional/current-pair-semantics')

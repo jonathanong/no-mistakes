@@ -112,7 +112,7 @@ G = Path('/tmp/no-mistakes-2022-region-production')
 assert not G.exists()
 # Historical source-closure snapshot: restore authenticated frozen bytes only.
 # The separate CURRENT_GIT checkout below owns all live Git/facade queries.
-CURRENT_GIT = Path('/tmp/no-mistakes-2022-assignment-target-opt')
+CURRENT_GIT = Path('/tmp/no-mistakes-2022-current-producer-e193')
 assert not CURRENT_GIT.exists()
 command(['git', 'clone', '--shared', '--no-checkout', str(Path('candidate-source').resolve()), str(CURRENT_GIT)], 'current-pair-local-git-clone')
 command(['git', 'checkout', '--detach', plan['candidate_actual_compiler']], 'current-pair-producer-checkout', cwd=CURRENT_GIT)

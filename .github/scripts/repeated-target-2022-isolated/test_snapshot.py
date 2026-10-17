@@ -22,7 +22,7 @@ class Snapshot(unittest.TestCase):
         collector = next(row for row in json.loads((D / 'payload-index.json').read_text())
                          if row['path'].endswith('/collect-current-pair-semantics.py'))
         source = (D / 'payload' / collector['payload']).read_text()
-        self.assertIn("GIT = Path('/tmp/no-mistakes-2022-assignment-target-opt')", source)
+        self.assertIn("GIT = Path('/tmp/no-mistakes-2022-current-producer-e193')", source)
         self.assertIn('semantics.ROOT = GIT', source)
         self.assertIn('napi_parity.ROOT = GIT', source)
 
@@ -62,3 +62,22 @@ class Snapshot(unittest.TestCase):
             target.unlink()
             exec(code, namespace)
             self.assertEqual(target.read_bytes(), frozen.read_bytes())
+
+    def test_current_git_root_never_overlaps_frozen_payload_and_saved_metadata(self):
+        rows = json.loads((D / 'payload-index.json').read_text())
+        tree = ast.parse((D / 'hosted.py').read_text())
+        assignment = next(n for n in tree.body if isinstance(n, ast.Assign)
+                          and any(isinstance(t, ast.Name) and t.id == 'CURRENT_GIT' for t in n.targets))
+        current = Path(ast.literal_eval(assignment.value.args[0]))
+        self.assertFalse(any(current == Path(r['path']) or current in Path(r['path']).parents for r in rows))
+        for name in ['current-pair-collector.py', 'preflight.py']:
+            self.assertIn(f"GIT = Path('{current}')", (D / name).read_text())
+        collisions = json.loads((D / 'fixtures/current-producer-collisions.json').read_text())
+        self.assertEqual(len(collisions), 3)
+        for proof in collisions:
+            row = next(r for r in rows if r['path'] == proof['path'])
+            old = (D / 'payload' / row['payload']).read_bytes()
+            new = (D / 'fixtures' / proof['fixture']).read_bytes()
+            self.assertEqual(hashlib.sha256(old).hexdigest(), proof['payload_sha256'])
+            self.assertEqual(hashlib.sha256(new).hexdigest(), proof['actual_e193_sha256'])
+            self.assertNotEqual(old, new)

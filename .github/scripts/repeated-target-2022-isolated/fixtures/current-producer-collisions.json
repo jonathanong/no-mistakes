@@ -1,0 +1,26 @@
+[
+  {
+    "path": "/tmp/no-mistakes-2022-assignment-target-opt/package.json",
+    "payload_sha256": "694062f5d2654e0f03685057106f652cc687ea340a44bcb2bc8ca50842c51961",
+    "actual_e193_sha256": "f332aa970650cd5daa6919a2b1bcdc8e7afd08a8df32035b3ae59d31becca3ce",
+    "payload_bytes": 1970,
+    "actual_e193_bytes": 1970,
+    "fixture": "current-producer-metadata-0.data"
+  },
+  {
+    "path": "/tmp/no-mistakes-2022-assignment-target-opt/packages/no-mistakes/package.json",
+    "payload_sha256": "a481f15c1be0c421a6ae42aee36ee92cd2df030e7b751548dc3819a250bb2411",
+    "actual_e193_sha256": "774cd016504c0a4a54086f90110ffb2db792d73c45d9eb1b63a61c0c93c743c3",
+    "payload_bytes": 2007,
+    "actual_e193_bytes": 2007,
+    "fixture": "current-producer-metadata-1.data"
+  },
+  {
+    "path": "/tmp/no-mistakes-2022-assignment-target-opt/pnpm-lock.yaml",
+    "payload_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+    "actual_e193_sha256": "d84416b923a34fa01f86a200dba223aceddef4c00e942c88fb99b2c509d534de",
+    "payload_bytes": 186674,
+    "actual_e193_bytes": 186674,
+    "fixture": "current-producer-metadata-2.data"
+  }
+]

@@ -13,7 +13,7 @@ D = Path(__file__).resolve().parent
 from contracts import layouts
 layout_count = layouts(json.loads((D / 'plan.json').read_text()))
 ROOT = Path('/tmp/nm2022-main281-current-pair-functional/current-pair-semantics')
-GIT = Path('/tmp/no-mistakes-2022-assignment-target-opt')
+GIT = Path('/tmp/no-mistakes-2022-current-producer-e193')
 # The reviewed current-pair adapter declares the authentic overlay baseline
 # and performs public-facade lookups at its source-equivalent main revision.
 runpy.run_path('/tmp/nm2022-main281-current-pair-functional/collect-current-pair-semantics.py', run_name='__main__')

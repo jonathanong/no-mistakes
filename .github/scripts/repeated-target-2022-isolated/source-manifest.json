@@ -1,5 +1,5 @@
 {
-  "status": "REVIEWED SOURCE activated; publication pending explicit payload approval; root sole dispatch",
+  "status": "REVIEWED source correction pending final review/publication; no execution",
   "files": [
     {
       "path": ".gitattributes",
@@ -69,7 +69,7 @@
     {
       "path": "current-pair-collector.py",
       "bytes": 13506,
-      "sha256": "d39597418e60a8885b93a941b266e784bf6d935acb21db1ed1f8e001be1de7c5"
+      "sha256": "297edd9fd2b7b8dbda8ad1b1112e192a946ad4efd158e237ff00375e4bcaf5c8"
     },
     {
       "path": "facade_lookup.py",
@@ -100,6 +100,26 @@
       "path": "fixtures/current-layout-source-review.json",
       "bytes": 295,
       "sha256": "1f01469ab17702b7344d77ffbd32ebbca864e3382f93cdd3aa8d2c2993135cb3"
+    },
+    {
+      "path": "fixtures/current-producer-collisions.json",
+      "bytes": 1149,
+      "sha256": "af6a32ddf2d99ee0165284c59fd3668f7ed168f8b093eb8312a2a2c29fc0a8fd"
+    },
+    {
+      "path": "fixtures/current-producer-metadata-0.data",
+      "bytes": 1970,
+      "sha256": "f332aa970650cd5daa6919a2b1bcdc8e7afd08a8df32035b3ae59d31becca3ce"
+    },
+    {
+      "path": "fixtures/current-producer-metadata-1.data",
+      "bytes": 2007,
+      "sha256": "774cd016504c0a4a54086f90110ffb2db792d73c45d9eb1b63a61c0c93c743c3"
+    },
+    {
+      "path": "fixtures/current-producer-metadata-2.data",
+      "bytes": 186674,
+      "sha256": "d84416b923a34fa01f86a200dba223aceddef4c00e942c88fb99b2c509d534de"
     },
     {
       "path": "fixtures/current-query-api.data",
@@ -7869,7 +7889,7 @@
     {
       "path": "hosted.py",
       "bytes": 8138,
-      "sha256": "17c5d04ec53cfbe93c93bd8db119ee8e8fe175123c8be1f8184294b32fcd4c73"
+      "sha256": "cce849eb7536e46cab65140cfad7c7710b496ba78dff7ff9a667eaabd0a0d9a8"
     },
     {
       "path": "immutable-input-freeze.json",
@@ -7984,7 +8004,7 @@
     {
       "path": "payload/0019.data",
       "bytes": 13506,
-      "sha256": "d39597418e60a8885b93a941b266e784bf6d935acb21db1ed1f8e001be1de7c5"
+      "sha256": "297edd9fd2b7b8dbda8ad1b1112e192a946ad4efd158e237ff00375e4bcaf5c8"
     },
     {
       "path": "payload/0020.data",
@@ -19604,7 +19624,7 @@
     {
       "path": "payload-index.json",
       "bytes": 613064,
-      "sha256": "b4ee5ede37b7be43dc601f7e4b00b25416c40b06bc8e0381db6565dcdb409d9f"
+      "sha256": "e0445103de2ecfada408af2f2581ce041dad4062f9606324a55d80ee418418bb"
     },
     {
       "path": "plan.json",
@@ -19614,7 +19634,7 @@
     {
       "path": "preflight.py",
       "bytes": 4781,
-      "sha256": "71f77d8d90f6dd7625c8f0c57b6df25fee6051f7586a702868419a8a270af248"
+      "sha256": "1942bcee1d3be5d5e3ede78a6813cec09843b39cf3aebb9ab6acfe2f83373cfc"
     },
     {
       "path": "prepare-payload.py",
@@ -19783,8 +19803,8 @@
     },
     {
       "path": "test_snapshot.py",
-      "bytes": 3583,
-      "sha256": "fba60e46ea4a6ecb76c68f40fca87f355e62d3726776359552e6ab7546d6d0d0"
+      "bytes": 4889,
+      "sha256": "40a75c1dfe012f126e136fcc38f1bc963aafc29509815fcc85dabbd7ff7a490e"
     },
     {
       "path": "test_version_carry.py",
