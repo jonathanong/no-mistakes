@@ -49,7 +49,11 @@ class Boundaries(unittest.TestCase):
             self.assertEqual(hashlib.sha256((D / 'protocol' / name).read_bytes()).hexdigest(), expected)
 
     def test_historical_24_layout_proof_not_invented(self):
-        self.assertEqual(contracts.layouts(json.loads((D / 'fixtures/historical-five-plan.json').read_text())), 24)
+        plan = json.loads((D / 'fixtures/historical-five-plan.json').read_text())
+        # Historical byte pins remain authentic; source units must be portable.
+        for key in ['proof', 'root_review']:
+            plan['layout_gate'][key]['path'] = str(D / 'fixtures' / ('historical-layout-' + key + '.json'))
+        self.assertEqual(contracts.layouts(plan), 24)
 
     def test_no_write_token_in_measurement_job(self):
         workflow = (D / 'workflow.yml').read_text()

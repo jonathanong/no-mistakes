@@ -77,6 +77,16 @@
       "sha256": "ea2aa18cd537d9e17562141b486777579a826cf06a5b23d0037f091b408bac8c"
     },
     {
+      "path": "fixtures/historical-layout-proof.json",
+      "bytes": 16094,
+      "sha256": "0cb093728b971e38d0b505331ff0542293db0bbdfb8a6d73b5456ab5c293280e"
+    },
+    {
+      "path": "fixtures/historical-layout-root_review.json",
+      "bytes": 1364,
+      "sha256": "b4d29544c5a54654be191dc19881d626b78b0405358f021f0470f0e1f48f9c25"
+    },
+    {
       "path": "fixtures/public-facade-object/objects.json",
       "bytes": 226,
       "sha256": "a97fefeaa3d3f43e2989224a0c0fa5dc81e9ef7b82edbe9bb5d09677a5a06372"
@@ -19648,8 +19658,8 @@
     },
     {
       "path": "test_contracts.py",
-      "bytes": 3772,
-      "sha256": "585aad8096b18e6616acdff92d5a144e7a824320ec57fa06c8c64db822f717ef"
+      "bytes": 4025,
+      "sha256": "a8044de7d44e3b75573c0726f5a520bc403174e76d98921e2b548c76ecbd09fc"
     },
     {
       "path": "test_facade_lookup.py",
