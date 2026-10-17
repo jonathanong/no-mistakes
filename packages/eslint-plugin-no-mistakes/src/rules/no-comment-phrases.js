@@ -5,6 +5,10 @@ const { ruleSuppression } = require("../rule-suppression");
 const DEFAULT_MESSAGE =
   "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.";
 
+// Unique members of the JS RegExp flag set. Repeats and other characters are
+// config errors, not one invalidPattern diagnostic per linted file.
+const FLAG_PATTERN = "^(?!.*(.).*\\1)[dgimsuvy]*$";
+
 // Compiled once per file application. `g` and `y` keep state on the RegExp, so
 // each comment is tested once from index 0. A zero-width success reports that
 // comment once and cannot loop; sticky patterns match only at the start.
@@ -47,7 +51,7 @@ module.exports = {
               type: "object",
               properties: {
                 pattern: { type: "string", minLength: 1 },
-                flags: { type: "string" },
+                flags: { type: "string", pattern: FLAG_PATTERN },
                 message: { type: "string", minLength: 1 },
               },
               required: ["pattern"],

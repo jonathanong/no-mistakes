@@ -41,8 +41,12 @@ report nothing.
 `patterns` has at most 64 entries. Each entry requires `pattern` (a RegExp
 source) and may set `flags` and a scoped `message`. The top-level `message` is
 the fallback when an entry has no `message`. Patterns are compiled once per
-file. An invalid source or `flags` string produces one `invalidPattern`
-diagnostic and that entry is skipped; valid entries still run.
+file. `flags` is optional. When set, it must be a string of JS RegExp flags
+(`d`, `g`, `i`, `m`, `s`, `u`, `v`, `y`), each at most once, in any order; an
+empty string is allowed. A repeated flag or a character outside that set, such
+as `gg` or `z`, is rejected when the config loads, in both ESLint and Oxlint,
+instead of once per linted file. An invalid pattern source still produces one
+`invalidPattern` diagnostic and that entry is skipped; valid entries still run.
 
 `g` and `y` do not change how many times a comment is reported. Each comment is
 tested once, with the expression's match index reset to 0 before and after the
