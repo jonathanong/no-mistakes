@@ -161,7 +161,14 @@ fn compact_from_roots(
             }
         })
         .collect();
-    let captured_changed = captures::remap(captured, roots.preserved, &indices);
+    let captured_changed = captures::remap_after_compaction(
+        captured,
+        scopes.len(),
+        roots.preserved,
+        &indices,
+        environments_changed,
+        &mut std::mem::drop::<Environment>,
+    );
     freshness::remap(fresh, roots.preserved, &indices);
     scopes.truncate(roots.preserved);
     scopes.extend(frames);
@@ -178,3 +185,6 @@ pub(super) use state::{compact_modules, prune_mutations, prune_state};
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod identity_tests;
