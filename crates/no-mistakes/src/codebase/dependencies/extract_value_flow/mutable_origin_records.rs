@@ -59,40 +59,6 @@ impl ReceiverBindingOrigins {
         }
     }
 }
-impl ReceiverBindingOrigins {
-    #[cfg(feature = "test-instrumentation")]
-    pub(in super::super) fn record_counts(&self, facts: &mut ValueFlowFacts) {
-        facts.receiver_only_nodes = self.arena.len();
-        facts.receiver_only_lookups = self.lookups.get();
-        facts.receiver_only_visits = self.visits.get();
-        facts.receiver_only_pending_spills = self.spills.get();
-        facts.receiver_only_membership_probes = self.membership_probes.get();
-        facts.receiver_only_owned_keys = self.owned_keys;
-        facts.receiver_only_snapshot_queries = self.snapshot_queries.get();
-        for states in self
-            .roots
-            .values()
-            .flat_map(|names| names.values())
-            .flat_map(|root| root.owners.values())
-        {
-            facts.receiver_only_snapshot_tree_buffers += states.snapshots.tree_buffer();
-            for (total, count) in facts
-                .receiver_only_insertion_order
-                .iter_mut()
-                .zip(states.insertion_order)
-            {
-                *total += count;
-            }
-        }
-        facts.receiver_only_predecessor_queries = self
-            .roots
-            .values()
-            .flat_map(|names| names.values())
-            .map(|root| root.predecessor_queries)
-            .sum();
-    }
-}
-
 impl RootOrigins {
     fn record(
         &mut self,

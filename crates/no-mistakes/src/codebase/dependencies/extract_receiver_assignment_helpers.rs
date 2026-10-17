@@ -78,6 +78,7 @@ fn visit_assignment_expression_with_receiver_effects<'a>(
 ) {
     #[cfg(feature = "test-instrumentation")]
     extract_value_flow::ordinary_demand_metrics::site(5);
+    let rhs_frame = collector.begin_assignment_rhs(assignment);
     collector.prepare_mutable_pattern_roots(&assignment.left);
     let receipts = collector.begin_phase_receipts(&assignment.left);
     let mut phases =
@@ -110,6 +111,7 @@ fn visit_assignment_expression_with_receiver_effects<'a>(
         collector.visit_expression(&assignment.right);
     });
     collector.fresh_receiver_effects.active = previous_fresh_evaluation;
+    collector.finish_assignment_rhs(assignment, rhs_frame);
     collector.record_mutable_receiver_assignment(assignment);
     if let Some(phases) = phases {
         collector.finish_destructuring_phases(phases);

@@ -1,19 +1,23 @@
 use super::*;
 
 impl ImportCollector {
+    fn assignment_rhs_receiver_context_available(&self) -> bool {
+        #[cfg(feature = "test-instrumentation")]
+        ordinary_demand_metrics::ASSIGNMENT_CONTEXT_CHECKS.with(|count| count.set(count.get() + 1));
+        self.receiver_root_phases.is_none() && self.fresh_receiver_effects.phases.is_none()
+    }
     pub(super) fn assignment_member_value_interested(
         &self,
         assignment: &AssignmentExpression<'_>,
     ) -> Option<(usize, String, bool, bool)> {
         if !self.collect_value_flow
-            || self.receiver_root_phases.is_some()
-            || self.fresh_receiver_effects.phases.is_some()
             || !assignment.operator.is_assign()
             || !matches!(
                 assignment.left,
                 AssignmentTarget::StaticMemberExpression(_)
                     | AssignmentTarget::ComputedMemberExpression(_)
             )
+            || !self.assignment_rhs_receiver_context_available()
         {
             return None;
         }

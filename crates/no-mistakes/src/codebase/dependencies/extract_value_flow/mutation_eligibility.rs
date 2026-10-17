@@ -57,10 +57,43 @@ impl ImportCollector {
             traversal.exit_ordinary(key);
             return;
         }
-        if root_read.read().is_some() && traversal.exit_single_version(key) {
+        if traversal.exit_single_version(key) {
             return;
         }
         let version = self.projected_root_version(key, root_read);
         traversal.exit(key, version);
+    }
+}
+
+#[derive(Clone, Copy)]
+pub(in super::super) struct MutationInfo<'a> {
+    pub(in super::super) metadata: mutation_metadata::MutationMetadata,
+    pub(in super::super) assigned_member: Option<&'a str>,
+    pub(in super::super) completed_at: u32,
+    pub(in super::super) has_assignment: bool,
+    pub(in super::super) proof: Option<&'a mutable_deferred::DeferredProof>,
+}
+
+#[cfg(feature = "test-instrumentation")]
+impl ImportCollector {
+    pub(in super::super) fn record_projection_counts<R: nested::RootCoordinate>(
+        &mut self,
+        traversal: receiver_traversal::ReceiverTraversal,
+        binding_visits: usize,
+        capacity: usize,
+    ) {
+        traversal.record_counts(&mut self.value_flow);
+        self.value_flow.reference_binding_visits += binding_visits;
+        self.value_flow.reference_pending_capacity += capacity;
+        self.value_flow.reference_pending_bytes +=
+            capacity * std::mem::size_of::<mutation_projection::PendingMutation<R>>();
+    }
+}
+
+impl ImportCollector {
+    pub(super) fn projection_rhs_origins(&self) -> bool {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        mutation_projection::admission_tests::query();
+        self.prior_member_mutations.has_assigned_origins()
     }
 }

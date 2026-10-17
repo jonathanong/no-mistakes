@@ -15,7 +15,7 @@ pub(super) struct AssignedTraversal {
 #[derive(Default)]
 struct AssignedState {
     active: FxHashMap<(usize, String), usize>,
-    visited: state::Visits,
+    visited: state::TraversalState,
 }
 impl AssignedTraversal {
     pub(super) fn enter(
@@ -38,6 +38,9 @@ impl AssignedTraversal {
             return None;
         }
         let reads = state.visited.enter(key, path, reads)?;
+        // RHS cycles use receipt-qualified path depth above. Release the
+        // canonical binding-only activity while retaining its cutoff selection.
+        state.visited.remove_active(key);
         state.active.insert(key.clone(), path.len());
         self.active.push((index, previous));
         Some(reads)

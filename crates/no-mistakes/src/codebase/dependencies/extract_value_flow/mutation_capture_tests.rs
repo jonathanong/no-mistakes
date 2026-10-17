@@ -29,8 +29,11 @@ fn combined_history_preserves_each_dynamic_prefix_capture_and_coarse_only_writes
         &path,
         &reads,
         Some((Some("get".into()), completed_at)),
-        &metadata,
-        true,
+        mutation_metadata::Tracking {
+            metadata: &metadata,
+            propagated: true,
+            root_read: None,
+        },
     );
     let history = collector.prior_member_mutations.history(&key).unwrap().0;
     assert!(history.has_assignments);
@@ -84,7 +87,17 @@ fn combined_history_preserves_each_dynamic_prefix_capture_and_coarse_only_writes
         );
     }
     let mut coarse = ImportCollector::default();
-    coarse.remember_member_mutation(&key, &path, &reads, None, &metadata, false);
+    coarse.remember_member_mutation(
+        &key,
+        &path,
+        &reads,
+        None,
+        mutation_metadata::Tracking {
+            metadata: &metadata,
+            propagated: false,
+            root_read: None,
+        },
+    );
     let history = coarse.prior_member_mutations.history(&key).unwrap().0;
     assert!(history.has_unassigned);
     assert!(!history.has_assignments);

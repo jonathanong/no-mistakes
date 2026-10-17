@@ -22,4 +22,3 @@ fn import_line_at(line_starts: &[u32], byte_offset: usize) -> u32 {
         Err(index) => index as u32,
     }
 }
-

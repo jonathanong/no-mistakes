@@ -5,6 +5,7 @@ pub(super) fn append<R: nested::RootCoordinate>(
     exit_position: usize,
     key: (usize, String),
     root_read: R,
+    assigned_exit: bool,
     references: reference_output::ReferenceOutput<nested::ReceiverWrite<R>>,
 ) {
     #[cfg(all(test, feature = "test-instrumentation"))]
@@ -17,7 +18,7 @@ pub(super) fn append<R: nested::RootCoordinate>(
             ((key, Vec::new()), Vec::new(), root_read),
             true,
             false,
-            false,
+            assigned_exit,
         ),
     );
     #[cfg(feature = "test-instrumentation")]

@@ -40,6 +40,10 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
         "mutable-let-foreign-root.mts",
         "mutable-root-target-metadata.ts",
         "mutable-projection-wide.ts",
+        "assignment-rhs-restored.mts",
+        "assignment-rhs-saved-choice.mts",
+        "assignment-rhs-diamond-4.mts",
+        "assignment-rhs-pattern-named.mts",
     ] {
         let file = root.join("src/nested-receiver-containers").join(name);
         let source = std::fs::read_to_string(&file).unwrap();
