@@ -29,16 +29,18 @@ pub(super) fn has_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {
 }
 
 /// A completed call and where it goes: file, profile index, original span.
-type Completed = (PathBuf, usize, (u32, u32), EmbeddedSqlCall);
+type Completed = (PathBuf, usize, (u32, u32), EmbeddedSqlCall, Vec<u32>);
 
 pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) {
     let completed = complete(files, resolve);
-    for (path, profile, span, call) in completed {
+    for (path, profile, span, call, lines) in completed {
         if let Some(file) = files.get_mut(&path) {
-            file.embedded_sql[profile].1.apply_imported_sql(span, call);
+            file.embedded_sql[profile]
+                .1
+                .apply_imported_sql(span, call, lines);
         }
     }
 }
@@ -54,7 +56,8 @@ fn complete(
             for pending in &embedded.pending_imported {
                 if let Some(call) = complete_call(&mut locator, files, path, file, options, pending)
                 {
-                    completed.push((path.clone(), profile, pending.span, call));
+                    let lines = pending.sites.iter().map(|(_, site)| site.line).collect();
+                    completed.push((path.clone(), profile, pending.span, call, lines));
                 }
             }
         }

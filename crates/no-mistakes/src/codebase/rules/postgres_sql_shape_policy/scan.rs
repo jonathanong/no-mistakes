@@ -16,7 +16,7 @@ pub(super) fn scan(
     facts: &CheckFactMap,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root);
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     let mut fragment_findings = fragments::Findings::default();
     for path in files
         .iter()

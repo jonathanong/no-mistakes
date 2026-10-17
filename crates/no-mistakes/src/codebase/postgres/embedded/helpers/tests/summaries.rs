@@ -14,6 +14,7 @@ fn literals(values: &[&str]) -> ImportedSite {
             .iter()
             .map(|value| SiteArg::Literal((*value).into()))
             .collect(),
+        line: 1,
     }
 }
 
@@ -98,6 +99,7 @@ fn parameters_are_spliced_wherever_they_are_interpolated() {
     let scalar = ImportedSite {
         local: "helper".into(),
         args: vec![SiteArg::Scalar],
+        line: 1,
     };
     let template = summary(&facts, "arrow").expect("arrow");
     assert!(template.fill(&scalar, origin).is_none());
@@ -153,6 +155,7 @@ fn a_statement_builder_helper_fills_only_a_matching_builder_call() {
     let call = |args: Vec<SiteArg>| ImportedSite {
         local: "helper".into(),
         args,
+        line: 1,
     };
     let filled = builder
         .fill(&call(vec![SiteArg::Builder, SiteArg::Scalar]), origin)

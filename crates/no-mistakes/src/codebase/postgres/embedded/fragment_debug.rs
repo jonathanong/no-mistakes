@@ -27,6 +27,8 @@ pub struct EmbeddedSqlFileFacts {
     pub(crate) exported_helpers: crate::fx::FxHashMap<String, super::helpers::HelperSummary>,
     /// Executor SQL that is complete once imported helpers resolve.
     pub(crate) pending_imported: Vec<super::helpers::PendingImportedSql>,
+    /// Caller lines of the imported-helper calls completed into a call, by span.
+    pub(crate) imported_call_lines: crate::fx::FxHashMap<(u32, u32), Vec<u32>>,
     /// Real TypeScript comments from the same parse, excluding SQL literal text.
     pub(crate) source_comment_spans: Vec<(u32, u32)>,
     pub fragments: Vec<EmbeddedSqlFragment>,
@@ -62,7 +64,12 @@ impl std::fmt::Debug for EmbeddedSqlFileFacts {
 impl EmbeddedSqlFileFacts {
     /// Replace the unrecovered call at `span` with its completed form. Only a
     /// call still left `Dynamic` by the walk is replaced.
-    pub(crate) fn apply_imported_sql(&mut self, span: (u32, u32), completed: EmbeddedSqlCall) {
+    pub(crate) fn apply_imported_sql(
+        &mut self,
+        span: (u32, u32),
+        completed: EmbeddedSqlCall,
+        lines: Vec<u32>,
+    ) {
         let Some(index) = self
             .call_spans
             .iter()
@@ -72,6 +79,7 @@ impl EmbeddedSqlFileFacts {
         };
         if self.calls[index].kind == super::EmbeddedSqlKind::Dynamic {
             self.calls[index] = completed;
+            self.imported_call_lines.insert(span, lines);
         }
     }
 }

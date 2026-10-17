@@ -42,7 +42,7 @@ pub(super) fn scan(
         );
     }
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root);
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if let Some(catalog) = &catalog {
         if opts.partition_keys {
             if let Some(path) = &opts.schema_catalog_path {

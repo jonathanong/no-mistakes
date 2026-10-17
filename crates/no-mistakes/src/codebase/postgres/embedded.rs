@@ -89,6 +89,7 @@ pub fn extract_embedded_sql_from_program(
         call_spans: collected.call_spans,
         exported_helpers: collected.exported_helpers,
         pending_imported: collected.pending_imported,
+        imported_call_lines: Default::default(),
         source_comment_spans: program
             .comments
             .iter()

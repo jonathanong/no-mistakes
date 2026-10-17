@@ -57,6 +57,13 @@ export function nestedFragment() {
   query(outer);
 }
 
+export function fragmentWithBind(id: string) {
+  const inner = sql`SELECT ${id} WHERE `;
+  inner.append(ownerVisible("x"));
+  const outer = sql`SELECT 3 `;
+  outer.append(inner);
+}
+
 export function alternatives(flag: boolean) {
   const text = flag ? ownerVisible("a") : "SELECT 1";
   query(text);

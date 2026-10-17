@@ -40,6 +40,7 @@ fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
             ImportedSite {
                 local: "ownerVisible".into(),
                 args: vec![SiteArg::Literal("l.parent_id".into())],
+                line: 8,
             }
         )]
     );
@@ -136,6 +137,17 @@ fn a_builder_fragment_that_held_a_hole_keeps_only_its_leading_statement() {
         .fragments
         .iter()
         .any(|fragment| fragment.sql_text.as_deref() == Some("SELECT 1 WHERE ")));
+}
+
+#[test]
+fn a_trimmed_fragment_publishes_only_the_binds_that_remain() {
+    let facts = extract("pending.ts");
+    let trimmed = facts
+        .fragments
+        .iter()
+        .find(|fragment| fragment.sql_text.as_deref() == Some("SELECT sql_placeholder_1 WHERE "))
+        .expect("trimmed fragment");
+    assert_eq!(trimmed.recovered_placeholder_positions, [(1, 8)]);
 }
 
 #[test]

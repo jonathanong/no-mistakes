@@ -22,6 +22,8 @@ pub(crate) struct ImportedSite {
     /// The callee's local name; the projection looks up its import binding.
     pub(crate) local: String,
     pub(crate) args: Vec<SiteArg>,
+    /// Line of the call in the caller's file.
+    pub(crate) line: u32,
 }
 
 /// Executor SQL that is complete once the holes of `sites` are filled.

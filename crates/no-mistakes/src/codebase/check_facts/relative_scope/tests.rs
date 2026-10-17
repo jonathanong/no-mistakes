@@ -127,6 +127,7 @@ fn files_without_relative_candidates_are_left_untouched() {
                     call_spans: vec![(0, 0)],
                     exported_helpers: Default::default(),
                     pending_imported: Vec::new(),
+                    imported_call_lines: Default::default(),
                     source_comment_spans: Vec::new(),
                     fragments: Vec::new(),
                     fragment_variants: Vec::new(),

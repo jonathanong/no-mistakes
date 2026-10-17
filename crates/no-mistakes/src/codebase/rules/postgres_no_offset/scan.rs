@@ -17,7 +17,7 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root);
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for path in files {
         let rel = relative_slash_path(root, path);
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);

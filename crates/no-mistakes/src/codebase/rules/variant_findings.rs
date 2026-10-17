@@ -1,25 +1,51 @@
 use super::{PostgresFindings, RuleFinding};
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::SqlStatementFileFacts;
+use crate::codebase::ts_source::SourceStore;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
 type Identity = (String, usize, String, Option<String>);
 
 #[derive(Default)]
-pub(crate) struct VariantFindingDedup {
+pub(crate) struct VariantFindingDedup<'a> {
     seen: FxHashSet<Identity>,
     merged: FxHashMap<Identity, (usize, FxHashSet<String>)>,
     /// Lets a finding on SQL recovered from another module name that module.
     root: Option<PathBuf>,
+    /// Reads the executor's file to honor directives written at the call site.
+    sources: Option<&'a SourceStore>,
 }
 
-impl VariantFindingDedup {
-    pub(crate) fn for_root(root: &Path) -> Self {
+impl<'a> VariantFindingDedup<'a> {
+    pub(crate) fn for_root(root: &Path, sources: &'a SourceStore) -> Self {
         Self {
             root: Some(root.to_path_buf()),
+            sources: Some(sources),
             ..Self::default()
         }
+    }
+
+    /// The caller-side line whose directive suppresses `rule`, when SQL
+    /// recovered from another module is executed by a call that opts out. The
+    /// executor call and each imported-helper call count, as does a file-level
+    /// opt-out, so moving a finding to the helper never removes a suppression.
+    fn caller_suppression(
+        &self,
+        facts: &SqlStatementFileFacts,
+        locations: &crate::codebase::postgres::statements::SqlVariantLocations,
+        rule: &str,
+    ) -> Option<(String, usize)> {
+        let (root, sources) = (self.root.as_deref()?, self.sources?);
+        let source = super::read_source(sources, &facts.path)?;
+        let lines = std::iter::once(locations.original_call_line)
+            .chain(locations.caller_lines.iter().copied());
+        let line = lines.into_iter().find(|line| {
+            crate::codebase::ts_source::matching_disable_directive(&source, Some(*line), rule)
+                .is_some()
+        })?;
+        let file = crate::codebase::ts_source::relative_slash_path(root, &facts.path);
+        Some((file, line as usize))
     }
 
     /// The module whose physical lines `position` counts, when it is not the
@@ -48,6 +74,15 @@ impl VariantFindingDedup {
     ) {
         if let Some(locations) = &facts.variant_locations {
             if let Some(position) = locations.position(site) {
+                if self.foreign_file(facts, position).is_some() {
+                    if let Some((file, line)) =
+                        self.caller_suppression(facts, locations, &finding.rule)
+                    {
+                        move_line(&mut finding, Some(file), line);
+                        output.push_at(finding, None);
+                        return;
+                    }
+                }
                 // A rule that has not named the module itself still carries the
                 // executor's file, and `source` is then that file's text too.
                 let retarget = self

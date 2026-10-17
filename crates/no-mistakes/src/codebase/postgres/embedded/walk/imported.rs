@@ -74,6 +74,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn recover_call(
         ImportedSite {
             local: name.to_string(),
             args,
+            line,
         },
     );
     let hole = plain(

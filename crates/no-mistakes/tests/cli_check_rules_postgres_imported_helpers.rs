@@ -181,6 +181,37 @@ fn a_directive_in_the_helper_module_suppresses_its_own_findings() {
 }
 
 #[test]
+fn a_package_alias_wins_over_the_roots_same_named_alias() {
+    // The decoy at the root declares line 6; the package's own helper is line 2.
+    assert_eq!(
+        required("imported-monorepo-paths"),
+        expect(&[("packages/app/src/visibility.mts", 2, VIEW)])
+    );
+}
+
+#[test]
+fn caller_directives_still_suppress_sql_reported_in_the_helper() {
+    // File-level, executor-line, and helper-call-line directives in the caller
+    // each suppress; only the function with no directive reaches the helper.
+    assert_eq!(
+        required("imported-suppressed-caller"),
+        expect(&[("src/helper.mts", 2, VIEW)])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "imported-suppressed-caller"),
+        expect(&[("src/helper.mts", 2, "offset#3")])
+    );
+    let report = run(REQUIRED, "imported-suppressed-caller", true);
+    let suppressed = report["suppressed"].as_array().unwrap();
+    // Two in the file-suppressed caller, three in the line-suppressed one.
+    assert_eq!(suppressed.len(), 5, "{report}");
+    assert!(suppressed
+        .iter()
+        .all(|entry| entry["file"].as_str().unwrap().starts_with("src/")
+            && entry["file"] != "src/helper.mts"));
+}
+
+#[test]
 fn non_literal_or_missing_arguments_stay_unanalyzable() {
     assert_eq!(
         required("imported-nonliteral-arg"),
