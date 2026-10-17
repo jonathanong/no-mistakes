@@ -1,45 +1,92 @@
 use crate::codebase::postgres::query_annotation::{Expr, Function, Step};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) fn exported_reaches(
-    globals: &BTreeMap<String, Expr>,
-    exported: &str,
-    target: &str,
-    visiting: &mut BTreeSet<String>,
-) -> bool {
-    if exported == target {
-        return true;
-    }
-    if !visiting.insert(exported.to_string()) {
-        return false;
-    }
-    let reaches = globals
-        .get(exported)
-        .is_some_and(|value| value_reaches(globals, value, target, visiting, &[]));
-    visiting.remove(exported);
-    reaches
+pub(super) enum ExportReachability<'a> {
+    All,
+    Selected(BTreeSet<&'a str>),
 }
 
-fn value_reaches(
-    globals: &BTreeMap<String, Expr>,
-    value: &Expr,
-    target: &str,
-    visiting: &mut BTreeSet<String>,
+impl ExportReachability<'_> {
+    // Callers query only globals from the module being analyzed.
+    pub(super) fn contains(&self, global: &str) -> bool {
+        match self {
+            Self::All => true,
+            Self::Selected(names) => names.contains(global),
+        }
+    }
+}
+
+pub(super) fn export_reachable_globals<'a>(
+    globals: &'a BTreeMap<String, Expr>,
+    exported: impl IntoIterator<Item = &'a str>,
+) -> ExportReachability<'a> {
+    if globals.is_empty() {
+        return ExportReachability::All;
+    }
+    let mut exported = exported.into_iter();
+    // The old equality check allocated nothing for a sole exported global.
+    if globals.len() == 1 {
+        return if exported.any(|name| globals.contains_key(name)) {
+            ExportReachability::All
+        } else {
+            ExportReachability::Selected(BTreeSet::new())
+        };
+    }
+    let mut reachable: BTreeSet<_> = exported.collect();
+    // Selection only asks about globals. Fully exported modules need no return
+    // traversal, matching the old exported == target shortcut even for large bodies.
+    if globals.keys().all(|name| reachable.contains(name.as_str())) {
+        return ExportReachability::All;
+    }
+    let seeds: Vec<_> = reachable.iter().copied().collect();
+    for name in seeds {
+        expand_global(globals, name, &mut reachable);
+    }
+    ExportReachability::Selected(reachable)
+}
+
+fn visit_global<'a>(
+    globals: &'a BTreeMap<String, Expr>,
+    name: &'a str,
+    reachable: &mut BTreeSet<&'a str>,
+) {
+    if reachable.insert(name) {
+        expand_global(globals, name, reachable);
+    }
+}
+
+fn expand_global<'a>(
+    globals: &'a BTreeMap<String, Expr>,
+    name: &'a str,
+    reachable: &mut BTreeSet<&'a str>,
+) {
+    if let Some(value) = globals.get(name) {
+        visits::record();
+        // A global binding has its own lexical scope, independent of its caller.
+        value_reaches(globals, value, reachable, &[]);
+    }
+}
+
+fn value_reaches<'a>(
+    globals: &'a BTreeMap<String, Expr>,
+    value: &'a Expr,
+    reachable: &mut BTreeSet<&'a str>,
     scopes: &[&Function],
-) -> bool {
+) {
     match value {
         Expr::Name(name) => {
-            !scopes.iter().any(|function| shadowed(function, name))
-                && exported_reaches(globals, name, target, visiting)
+            if !scopes.iter().any(|function| shadowed(function, name)) {
+                visit_global(globals, name, reachable);
+            }
         }
         Expr::Spread(value)
         | Expr::Member(value, _)
         | Expr::Index(value, _)
         | Expr::OpaqueCallback(value)
-        | Expr::Discard(value) => value_reaches(globals, value, target, visiting, scopes),
+        | Expr::Discard(value) => value_reaches(globals, value, reachable, scopes),
         Expr::ComputedMember(value, key) | Expr::Append(value, key) => {
-            value_reaches(globals, value, target, visiting, scopes)
-                || value_reaches(globals, key, target, visiting, scopes)
+            value_reaches(globals, value, reachable, scopes);
+            value_reaches(globals, key, reachable, scopes);
         }
         Expr::Record(values, _)
         | Expr::Object(values)
@@ -48,57 +95,54 @@ fn value_reaches(
         | Expr::Sequence(values)
         | Expr::Alternatives(values) => values
             .iter()
-            .any(|value| value_reaches(globals, value, target, visiting, scopes)),
+            .for_each(|value| value_reaches(globals, value, reachable, scopes)),
         Expr::Function(function) => {
             let mut nested = scopes.to_vec();
             nested.push(function);
             returns_reach(
                 globals,
                 &function.body,
-                target,
-                visiting,
+                reachable,
                 &nested,
                 !scopes.is_empty(),
             )
         }
-        _ => false,
+        _ => (),
     }
 }
 
 // New branch traversal stays conservative for unsupported local bindings and
 // respects lexical shadows. Existing top-level return traversal is unchanged.
-fn returns_reach(
-    globals: &BTreeMap<String, Expr>,
-    steps: &[Step],
-    target: &str,
-    visiting: &mut BTreeSet<String>,
+fn returns_reach<'a>(
+    globals: &'a BTreeMap<String, Expr>,
+    steps: &'a [Step],
+    reachable: &mut BTreeSet<&'a str>,
     scopes: &[&Function],
     branch_return: bool,
-) -> bool {
-    steps.iter().any(|step| match step {
+) {
+    steps.iter().for_each(|step| match step {
         Step::Return(value) => value_reaches(
             globals,
             value,
-            target,
-            visiting,
+            reachable,
             if branch_return { scopes } else { &[] },
         ),
         Step::Branch(test, left, right) if !blocked(steps) && !blocked(left) && !blocked(right) => {
             match test {
                 Expr::Boolean(false) | Expr::Number(0) => {
-                    returns_reach(globals, right, target, visiting, scopes, true)
+                    returns_reach(globals, right, reachable, scopes, true)
                 }
                 Expr::Boolean(true) | Expr::Number(_) => {
-                    returns_reach(globals, left, target, visiting, scopes, true)
+                    returns_reach(globals, left, reachable, scopes, true)
                 }
                 _ => {
-                    returns_reach(globals, left, target, visiting, scopes, true)
-                        || returns_reach(globals, right, target, visiting, scopes, true)
+                    returns_reach(globals, left, reachable, scopes, true);
+                    returns_reach(globals, right, reachable, scopes, true);
                 }
             }
         }
-        _ => false,
-    })
+        _ => (),
+    });
 }
 
 fn blocked(steps: &[Step]) -> bool {
@@ -124,3 +168,10 @@ fn shadowed(function: &Function, name: &str) -> bool {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(not(test))]
+#[path = "reachability/runtime.rs"]
+mod visits;
+#[cfg(test)]
+#[path = "reachability/tests/visits.rs"]
+mod visits;
