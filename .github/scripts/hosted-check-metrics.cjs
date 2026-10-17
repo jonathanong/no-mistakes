@@ -87,10 +87,13 @@ function enforceBudget(samples, budget) {
   ]) {
     const limit = budget[field] + budget[`${field}Margin`];
     if (
-      !Number.isFinite(budget[field]) || budget[field] <= 0 ||
-      !Number.isFinite(budget[`${field}Margin`]) || budget[`${field}Margin`] < 0 ||
+      !Number.isFinite(budget[field]) ||
+      budget[field] <= 0 ||
+      !Number.isFinite(budget[`${field}Margin`]) ||
+      budget[`${field}Margin`] < 0 ||
       !Number.isFinite(limit)
-    ) throw new Error(`Invalid budget: ${field}`);
+    )
+      throw new Error(`Invalid budget: ${field}`);
     for (const sample of samples) {
       if (!Number.isFinite(sample[metric]) || sample[metric] <= 0 || sample[metric] > limit)
         throw new Error(`${metric} ${sample[metric]} exceeds calibrated limit ${limit}`);
@@ -133,7 +136,10 @@ function budgetReport(groups, budgets, calibrate) {
       for (const variant of ["published", "current"]) {
         const group = `${commit}/${jobs}/${variant}`;
         const values = groups.get(group) || [];
-        if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6) {
+        if (
+          values.length !== 6 ||
+          new Set(values.map((sample) => sample.sampleNumber)).size !== 6
+        ) {
           failures.push(`Incomplete samples: ${group}`);
           continue;
         }
@@ -166,7 +172,11 @@ function summarize(directory) {
   if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, table);
   console.log(table);
   const budgets = JSON.parse(readFileSync(join(__dirname, "hosted-check-budgets.json"), "utf8"));
-  const { proposed, failures } = budgetReport(groups, budgets, process.env.HOSTED_CHECK_CALIBRATE === "true");
+  const { proposed, failures } = budgetReport(
+    groups,
+    budgets,
+    process.env.HOSTED_CHECK_CALIBRATE === "true",
+  );
   writeFileSync(join(directory, "proposed-budgets.json"), JSON.stringify(proposed, null, 2));
   if (failures.length) throw new Error(failures.join("\n"));
 }
