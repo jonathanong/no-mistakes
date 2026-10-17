@@ -1,0 +1,6 @@
+[progress] {"active":[],"completed":[{"label":"postgres.annotation.project","durationMs":1.0,"parallel":false}]}
+[work] ast.walks: 3
+[work] postgres.annotation.modules: 7
+[work] postgres.annotation.target_resolutions: 9
+[work] postgres.annotation.reachability_walks: 11
+[work] postgres.annotation.captured_reader_rebuilds: 0

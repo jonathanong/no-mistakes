@@ -1,0 +1,44 @@
+{
+  "status": "REVIEWED_2109_MATCHED_DIAGNOSTIC",
+  "baseline": "9fae20aa5debc027319aefb29f26a3776856719e",
+  "candidate": "cbfa4fbe7de0f5b7aa02d4e579bc8752719f2e06",
+  "source_trees": {
+    "baseline": "7970fbe77be015e8da3b487ea0b457a17ec70953",
+    "candidate": "b6702393dea6ed08e6c0f7f9eb7b0d7c1c4541b1"
+  },
+  "consumer_commit": "f38a048f5eeff0438fc59a15e9eb742def575a36",
+  "consumer_tree": "d811b8d2299b36192996a2944c1ea13c1c9bf9ad",
+  "consumer_entries": 21088,
+  "consumer_symlinks": 34,
+  "consumer_canonical_sha256": "986e3abe8ed41e0395fbfb4ef3ee2ba8f47b35efbe1eed045f603b8d1b958fbb",
+  "cases": [
+    "consumer-off",
+    "consumer-on",
+    "control-off",
+    "control-on"
+  ],
+  "orders": [
+    "ABBA",
+    "BAAB",
+    "BAAB",
+    "ABBA"
+  ],
+  "rows_total": 64,
+  "runtime_jobs": 4,
+  "runner": "ubuntu-24.04-arm",
+  "target": "aarch64-unknown-linux-gnu",
+  "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+  "profile": "repository release opt3/fullLTO/cg1/debug0;default+mermaid",
+  "fresh_cli_producers": 2,
+  "native_reuse": false,
+  "timing_vm_policy": "16blockVMs,within-block paired matchingVM;4fixedblocks/case,ratiosonly,norawcrossVMpool",
+  "block_job_seconds": 1800,
+  "preflight_job_seconds": 1800,
+  "max_child_seconds": 180,
+  "address_space_bytes": 9000000000,
+  "raw_stream_cap_bytes": 33554432,
+  "acceptance": "Fullreports/exits/workcounterparity first; report matched projection/wall/CPU/RSS with all flat/adverse/inconclusive strata. Core rejects reproduced representative slowdowns. No estimated2-10% requirement or inventedmanualgate. No automatic readiness.",
+  "producer_job_seconds": 1800,
+  "preflight_initial_child_seconds": 150,
+  "whole_artifact_manifests_required": true
+}

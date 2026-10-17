@@ -1,87 +1,242 @@
-name: Historical receiver native experiment
-
+name: Borrowed diagnostics matched ARM evidence
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/receiver-fact-native.yml'
-      - '.github/scripts/receiver-fact-native/**'
-      - 'docs/performance/receiver-native-hosted.md'
   workflow_dispatch:
-
+    inputs:
+      confirm:
+        description: Exact reviewed protocol SHA256
+        type: string
+        required: true
+      approved_source_sha:
+        description: Exact reviewed published workflow source commit
+        type: string
+        required: true
+      package_manifest_sha256:
+        description: Exact complete package manifest SHA256
+        type: string
+        required: true
 permissions:
   contents: read
-
 concurrency:
-  group: receiver-native-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
+  group: counters-2109-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  PROTOCOL_SHA256: ${{ inputs.confirm }}
+  APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+  PACKAGE_MANIFEST_SHA256: ${{ inputs.package_manifest_sha256 }}
+  PYTHONDONTWRITEBYTECODE: '1'
 jobs:
-  historical-x86:
-    name: Historical native x86 pair
-    runs-on: ubuntu-24.04
-    timeout-minutes: 180
-    env:
-      # Exact historical compiler; source worktrees must not select their moving stable alias.
-      RUSTUP_TOOLCHAIN: '1.99.0'
-      DRIVER: .github/scripts/receiver-fact-native
+  build:
+    if: ${{ inputs.approved_source_sha == github.sha && inputs.confirm != 'DRAFT_DISABLED' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arm: baseline
+            source: 9fae20aa5debc027319aefb29f26a3776856719e
+          - arm: candidate
+            source: cbfa4fbe7de0f5b7aa02d4e579bc8752719f2e06
     steps:
-      - name: Checkout experiment and public probe
-        id: checkout
-        timeout-minutes: 5
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Anchor whole job before network and setup
+        timeout-minutes: 1
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
         with:
           persist-credentials: false
-      - name: Set isolated runtime output path
+          path: controller
+      - name: Verify exact approved source and package before work
         timeout-minutes: 1
-        run: printf 'EXPERIMENT_ROOT=%s/receiver-native-2012\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - name: Test saved report fixtures
+        run: python3 controller/.github/scripts/counters-2109/adapter.py begin evidence
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         timeout-minutes: 2
-        run: python3 -m unittest discover -s "$DRIVER" -p 'test_*.py'
-      - name: Install historical compiler
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         with:
-          toolchain: '1.99.0'
-      - name: Preflight and pin historical source pair
-        id: preflight
+          ref: ${{ matrix.source }}
+          persist-credentials: false
+          path: native
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         timeout-minutes: 3
-        run: python3 "$DRIVER/build.py" prepare --root "$EXPERIMENT_ROOT"
-      - name: Build exact release pair sequentially
-        timeout-minutes: 90
-        run: python3 "$DRIVER/build.py" opt3 --root "$EXPERIMENT_ROOT"
-      - name: Measure release pair after builds finish
-        id: release-samples
-        timeout-minutes: 15
-        run: python3 "$DRIVER/measure.py" opt3 --root "$EXPERIMENT_ROOT"
-      - name: Remove only owned release compilation target
-        if: ${{ always() && steps.preflight.outcome == 'success' }}
-        timeout-minutes: 2
-        run: python3 "$DRIVER/build.py" cleanup-opt3 --root "$EXPERIMENT_ROOT"
-      - name: Build separate original-profile opt0 pair
-        if: ${{ success() && steps.release-samples.outcome == 'success' }}
-        timeout-minutes: 25
-        run: python3 "$DRIVER/build.py" opt0 --root "$EXPERIMENT_ROOT"
-      - name: Measure separate opt0 control
-        timeout-minutes: 12
-        run: python3 "$DRIVER/measure.py" opt0 --root "$EXPERIMENT_ROOT"
-      - name: Remove only owned opt0 compilation target
-        if: ${{ always() && steps.preflight.outcome == 'success' }}
-        timeout-minutes: 2
-        run: python3 "$DRIVER/build.py" cleanup-opt0 --root "$EXPERIMENT_ROOT"
-      - name: Verify and summarize every retained row
-        if: ${{ always() && steps.checkout.outcome == 'success' }}
-        timeout-minutes: 2
-        run: |
-          status=0
-          python3 "$DRIVER/report.py" --root "$EXPERIMENT_ROOT" || status=$?
-          cat "$EXPERIMENT_ROOT/public/summary.md" >> "$GITHUB_STEP_SUMMARY"
-          exit "$status"
-      - name: Retain curated readable measurements only
-        if: ${{ always() && steps.checkout.outcome == 'success' }}
-        timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: receiver-native-2012-x86-readable
-          path: ${{ env.EXPERIMENT_ROOT }}/public/
+          toolchain: 1.99.1
+      - name: Fresh exact ARM CLI producer
+        id: native
+        timeout-minutes: 26
+        run: python3 controller/.github/scripts/counters-2109/build.py "$GITHUB_WORKSPACE/native" '${{ matrix.arm }}' "$GITHUB_WORKSPACE/evidence/native"
+      - name: Seal every available raw and partial file
+        if: ${{ always() }}
+        timeout-minutes: 1
+        env:
+          STAGE_OUTCOME: ${{ steps.native.outcome }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 controller/.github/scripts/counters-2109/adapter.py finish evidence
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: hotcounter-native-${{ matrix.arm }}
+          path: evidence
           if-no-files-found: error
-          retention-days: 30
+          include-hidden-files: true
+          retention-days: 14
+  preflight:
+    if: ${{ success() && inputs.approved_source_sha == github.sha }}
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Anchor whole job before network and setup
+        timeout-minutes: 1
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+          path: controller
+      - name: Verify exact approved source and package before work
+        timeout-minutes: 1
+        run: python3 controller/.github/scripts/counters-2109/adapter.py begin evidence
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          repository: vouchington/vouchington
+          ref: f38a048f5eeff0438fc59a15e9eb742def575a36
+          persist-credentials: false
+          path: consumer
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 2
+        with:
+          name: hotcounter-native-baseline
+          path: artifacts/baseline
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 2
+        with:
+          name: hotcounter-native-candidate
+          path: artifacts/candidate
+      - name: Eight untimed full checks and duration-only seal
+        id: preflight
+        timeout-minutes: 26
+        run: python3 controller/.github/scripts/counters-2109/collect.py preflight --artifacts "$GITHUB_WORKSPACE/artifacts" --root "$GITHUB_WORKSPACE/consumer" --output "$GITHUB_WORKSPACE/evidence/preflight"
+      - name: Seal every available raw and partial file
+        if: ${{ always() }}
+        timeout-minutes: 1
+        env:
+          STAGE_OUTCOME: ${{ steps.preflight.outcome }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 controller/.github/scripts/counters-2109/adapter.py finish evidence
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: hotcounter-preflight
+          path: evidence
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
+  blocks:
+    if: ${{ success() && inputs.approved_source_sha == github.sha }}
+    needs: [build, preflight]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [consumer-off, consumer-on, control-off, control-on]
+        block: [0, 1, 2, 3]
+    steps:
+      - name: Anchor whole job before network and setup
+        timeout-minutes: 1
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+          path: controller
+      - name: Verify exact approved source and package before work
+        timeout-minutes: 1
+        run: python3 controller/.github/scripts/counters-2109/adapter.py begin evidence
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          repository: vouchington/vouchington
+          ref: f38a048f5eeff0438fc59a15e9eb742def575a36
+          persist-credentials: false
+          path: consumer
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 2
+        with:
+          name: hotcounter-native-baseline
+          path: artifacts/baseline
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 2
+        with:
+          name: hotcounter-native-candidate
+          path: artifacts/candidate
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 2
+        with:
+          name: hotcounter-preflight
+          path: preflight
+      - name: Two fresh warmups and one fixed complete balanced block
+        id: block
+        timeout-minutes: 26
+        run: python3 controller/.github/scripts/counters-2109/collect.py block --case '${{ matrix.case }}' --block '${{ matrix.block }}' --preflight "$GITHUB_WORKSPACE/preflight/preflight" --artifacts "$GITHUB_WORKSPACE/artifacts" --root "$GITHUB_WORKSPACE/consumer" --output "$GITHUB_WORKSPACE/evidence/block"
+      - name: Seal every available raw and partial file
+        if: ${{ always() }}
+        timeout-minutes: 1
+        env:
+          STAGE_OUTCOME: ${{ steps.block.outcome }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 controller/.github/scripts/counters-2109/adapter.py finish evidence
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: hotcounter-block-${{ matrix.case }}-${{ matrix.block }}
+          path: evidence
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
+  aggregate:
+    if: ${{ always() && inputs.approved_source_sha == github.sha }}
+    needs: [build, preflight, blocks]
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - name: Anchor whole job before network and setup
+        timeout-minutes: 1
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+          path: controller
+      - name: Verify exact approved source and package before work
+        timeout-minutes: 1
+        run: python3 controller/.github/scripts/counters-2109/adapter.py begin evidence
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          pattern: hotcounter-block-*
+          path: blocks
+      - name: Rehash complete official carriers and independently reparse all rows
+        id: aggregate
+        timeout-minutes: 2
+        run: python3 controller/.github/scripts/counters-2109/aggregate.py "$GITHUB_WORKSPACE/blocks" "$GITHUB_WORKSPACE/evidence/aggregate"
+      - name: Seal every available raw and partial file
+        if: ${{ always() }}
+        timeout-minutes: 1
+        env:
+          STAGE_OUTCOME: ${{ steps.aggregate.outcome }}
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 controller/.github/scripts/counters-2109/adapter.py finish evidence
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: hotcounter-aggregate
+          path: evidence
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14

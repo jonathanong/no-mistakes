@@ -1,0 +1,29 @@
+[
+  {
+    "path": "common.py",
+    "source": "/tmp/nm2126-fence-correction-diagnostic-BOUND/package/common.py",
+    "original_sha256": "0ef22498aabf67b6ab9753de3f313336103d53201af1d893f01a405ef5af8d7e",
+    "sha256": "aa31a98243b7182239b9fb93aace797de04534412231399da6a6d0801b92eafd",
+    "derivation": "Only anchored operational job/step limits45min\u219230min and budget comment; ownership/math unchanged."
+  },
+  {
+    "path": "process_owner.py",
+    "sha256": "a5b0682d81d1654684273c3c8c691d0e1a15c9097454ac6068b6924ab77922d4",
+    "source": "/tmp/nm2126-fence-correction-diagnostic-BOUND/package/process_owner.py"
+  },
+  {
+    "path": "subreaper.py",
+    "sha256": "f125ade37d956277d59eab7ff43253e96d2195775b6573f9ee0965bb5353f399",
+    "source": "/tmp/nm2126-fence-correction-diagnostic-BOUND/package/subreaper.py"
+  },
+  {
+    "path": "target_size.py",
+    "sha256": "1860b7afa0693f0f0918182061e53c8a9fcdabc0b2413e21d08d38fd1ebe85dd",
+    "source": "/tmp/nm2126-fence-correction-diagnostic-BOUND/package/target_size.py"
+  },
+  {
+    "path": "kernel_assess.py",
+    "sha256": "081af4ac3c44a4eecc6160103edadf9f43b3cf4ff6c3526f2ecef94ad9f01865",
+    "source": "/tmp/nm2091-consumer-measurement-DRAFT/assess.py"
+  }
+]

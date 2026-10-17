@@ -1,0 +1,50 @@
+{
+  "consumer": {
+    "exit": 1,
+    "parsed": {
+      "report": {
+        "advisories": [],
+        "codebase": [],
+        "integration": [],
+        "queues": [],
+        "react": [],
+        "rules": [
+          {
+            "rule": "postgres-require-query-annotation",
+            "file": "query.mts",
+            "line": 1,
+            "message": "annotation required"
+          },
+          {
+            "rule": "query-reached-per-item",
+            "file": "query.mts",
+            "line": 2,
+            "message": "batch required"
+          }
+        ],
+        "warnings": []
+      }
+    }
+  },
+  "control": {
+    "exit": 1,
+    "parsed": {
+      "report": {
+        "advisories": [],
+        "codebase": [],
+        "integration": [],
+        "queues": [],
+        "react": [],
+        "rules": [
+          {
+            "rule": "query-reached-per-item",
+            "file": "query.mts",
+            "line": 2,
+            "message": "batch required"
+          }
+        ],
+        "warnings": []
+      }
+    }
+  }
+}

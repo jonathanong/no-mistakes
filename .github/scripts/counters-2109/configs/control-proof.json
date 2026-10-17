@@ -1,0 +1,67 @@
+{
+  "original": "/tmp/vouchington-2091-f38a/.no-mistakes.yml",
+  "sha256": "c9fe0bae7cb65b06cbe89b66773bac19b3176a8601f4860e857d42dce169897c",
+  "removed_only_rule": "postgres-require-query-annotation",
+  "removed_applications": [
+    {
+      "name": "runtime queries identify executed statements",
+      "rule": "postgres-require-query-annotation",
+      "scope": "repository",
+      "options": {
+        "unanalyzableSql": "ignore",
+        "importSpecifier": "@data-stores/psql",
+        "executorFactoryNames": [
+          "beginTransaction",
+          "beginBoundedTransaction"
+        ],
+        "executorTypeNames": [
+          "TransactionQuery",
+          "QueryExecutor"
+        ],
+        "include": [
+          "backend/**/*.{ts,mts}"
+        ],
+        "exclude": [
+          "**/*.test.*",
+          "**/__tests__/**",
+          "**/test-helpers/**",
+          "backend/scripts/seeds/**",
+          "backend/data-stores/psql/migration-runner/**"
+        ]
+      }
+    },
+    {
+      "name": "development runtime helper queries identify executed statements",
+      "rule": "postgres-require-query-annotation",
+      "scope": "repository",
+      "options": {
+        "unanalyzableSql": "ignore",
+        "importSpecifier": "@data-stores/psql",
+        "executorFactoryNames": [
+          "beginTransaction",
+          "beginBoundedTransaction"
+        ],
+        "executorTypeNames": [
+          "TransactionQuery",
+          "QueryExecutor"
+        ],
+        "include": [
+          "backend/test-helpers/entities/create-test-entities.mts",
+          "backend/test-helpers/entities/rss-feeds.mts",
+          "backend/test-helpers/entities/topics/core.mts",
+          "backend/test-helpers/entities/urls.mts",
+          "backend/test-helpers/entities/users-direct.mts"
+        ]
+      }
+    }
+  ],
+  "removed_indices": [
+    99,
+    100
+  ],
+  "explicit_root": "/tmp/vouchington-2091-f38a",
+  "no_extends": true,
+  "control": "/tmp/nm2091-consumer-measurement-DRAFT/configs/no-annotation.yml",
+  "control_sha256": "e1b6ddcb1b443ec4491936be29e3af48556f3c673aa844baad0839f99ccd0e8a",
+  "untimed_preflight_required": "All other JSON fields/findings/warnings/advisories must match original configuration after removing ONLY annotation-rule findings; source scope unchanged"
+}

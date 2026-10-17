@@ -1,0 +1,27 @@
+{
+  "scope": "Synthetic pure-source contract fixture, not a native result",
+  "case": "consumer-on",
+  "arm": "baseline",
+  "exit": 1,
+  "stdout_sha256": "report",
+  "stdout_bytes": 97,
+  "wall": 60,
+  "parsed": {
+    "work": {
+      "ast.walks": 3,
+      "postgres.annotation.modules": 7,
+      "postgres.annotation.target_resolutions": 9,
+      "postgres.annotation.reachability_walks": 11,
+      "postgres.annotation.captured_reader_rebuilds": 0
+    },
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

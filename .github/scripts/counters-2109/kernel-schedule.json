@@ -1,0 +1,178 @@
+[
+  {
+    "case": "consumer-off",
+    "block": 0,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "consumer-off",
+    "block": 1,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "consumer-off",
+    "block": 2,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "consumer-off",
+    "block": 3,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "consumer-on",
+    "block": 0,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "consumer-on",
+    "block": 1,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "consumer-on",
+    "block": 2,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "consumer-on",
+    "block": 3,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "control-off",
+    "block": 0,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "control-off",
+    "block": 1,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "control-off",
+    "block": 2,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "control-off",
+    "block": 3,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "control-on",
+    "block": 0,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  },
+  {
+    "case": "control-on",
+    "block": 1,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "control-on",
+    "block": 2,
+    "order": "BAAB",
+    "arms": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ]
+  },
+  {
+    "case": "control-on",
+    "block": 3,
+    "order": "ABBA",
+    "arms": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ]
+  }
+]

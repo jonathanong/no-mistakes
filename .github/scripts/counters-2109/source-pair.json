@@ -1,0 +1,26 @@
+{
+  "baseline": "9fae20aa5debc027319aefb29f26a3776856719e",
+  "baseline_tree": "7970fbe77be015e8da3b487ea0b457a17ec70953",
+  "candidate": "cbfa4fbe7de0f5b7aa02d4e579bc8752719f2e06",
+  "candidate_tree": "b6702393dea6ed08e6c0f7f9eb7b0d7c1c4541b1",
+  "original_candidate": "490ce78f58950efa331ea4aea9ded69b54ec1b74",
+  "all_13_changed_file_bytes_exact_original": true,
+  "candidate_clean": true,
+  "source_paths": [
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/merge.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/reachable.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/bindings.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/fresh_index.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/modules.rs",
+    "crates/no-mistakes/src/diagnostics.rs",
+    "crates/no-mistakes/src/diagnostics/context.rs",
+    "crates/no-mistakes/src/diagnostics/context_borrow_tests.rs",
+    "crates/no-mistakes/src/diagnostics/observer/work.rs",
+    "crates/no-mistakes/src/diagnostics/observer/work/index.rs",
+    "crates/no-mistakes/src/diagnostics/observer/work_tests.rs",
+    "crates/no-mistakes/src/perf_trace.rs",
+    "crates/no-mistakes/src/perf_trace/tests.rs"
+  ],
+  "cargo_lock_equal": true,
+  "cargo_toml_equal": true
+}
