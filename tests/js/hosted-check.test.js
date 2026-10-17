@@ -11,13 +11,13 @@ const {
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
-  DEADLINE_SECONDS,
+  COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
 
-test("keeps the consumer's exact default command and deadline", () => {
+test("keeps the consumer's exact default command and separate collection cap", () => {
   assert.deepEqual(CHECK_ARGS, [
     "exec",
     "no-mistakes",
@@ -27,7 +27,7 @@ test("keeps the consumer's exact default command and deadline", () => {
     "0",
     "check",
   ]);
-  assert.equal(DEADLINE_SECONDS, 180);
+  assert.equal(COLLECTION_DEADLINE_SECONDS, 600);
 });
 
 test("finds the published manifest without requesting a private package export", () => {
@@ -51,8 +51,9 @@ test("retains deadline failures and GNU time resource measurements", () => {
     exit: 124,
   });
   assert.equal(successful(sample), false);
-  assert.equal(successful({ ...sample, elapsed: 180, exit: 0 }), false);
-  assert.equal(successful({ ...sample, elapsed: 179.99, exit: 0 }), true);
+  assert.equal(successful({ ...sample, deadlineSeconds: 180, elapsed: 180, exit: 0 }), false);
+  assert.equal(successful({ ...sample, elapsed: 600, exit: 0 }), false);
+  assert.equal(successful({ ...sample, deadlineSeconds: 180, elapsed: 179.99, exit: 0 }), true);
   assert.equal(successful({ ...sample, elapsed: 179, exit: 0, signal: "SIGTERM" }), false);
   assert.equal(successful({ ...sample, elapsed: 179, exit: 1 }), false);
   assert.throws(() => parseTime("elapsed=1\n"), /Missing GNU time field/);
@@ -210,6 +211,45 @@ test("calibrates wall/RSS headroom from six fresh samples and rejects slowed can
     () => calibratedBudget(samples.map((s) => ({ ...s, rss_kib: 0 }))),
     /Invalid calibration/,
   );
+});
+
+// Synthetic saved samples exercise completion beyond the historical collection cap.
+// Increasing collection time must not silently widen an enforced regression budget.
+test("calibrates completed runs beyond 180 seconds while enforcing measured budgets", () => {
+  const samples = JSON.parse(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/completed-over-180.json"), "utf8"),
+  );
+  assert.ok(samples.every(successful));
+  const budget = calibratedBudget(samples);
+  assert.equal(budget.wallSeconds, 186);
+  enforceBudget(samples, budget);
+  const slower = { ...samples[0], elapsed: 250 };
+  assert.equal(successful(slower), true);
+  assert.throws(() => enforceBudget([slower], budget), /elapsed 250 exceeds calibrated limit/);
+  assert.throws(
+    () => enforceBudget([{ ...samples[0], rss_kib: 1000 }], budget),
+    /rss_kib.*exceeds/,
+  );
+  assert.equal(successful({ ...samples[0], deadlineSeconds: 180 }), false);
+  assert.throws(
+    () => calibratedBudget(samples.map((sample) => ({ ...sample, exit: 124 }))),
+    /six completed/,
+  );
+});
+
+test("bounds both collection commands and leaves time for artifacts", () => {
+  const workflow = readFileSync(
+    join(__dirname, "../../.github/workflows/hosted-check.yml"),
+    "utf8",
+  );
+  const section = workflow.slice(workflow.indexOf("  sample:"), workflow.indexOf("  summarize:"));
+  assert.match(section, /timeout-minutes: 30/);
+  assert.match(section, /600-second collection cap\n[\s\S]*?timeout-minutes: 22/);
+  assert.match(
+    section,
+    /Upload measurements, provenance, and raw logs\n[\s\S]*?timeout-minutes: 3/,
+  );
+  assert.ok(22 * 60 > 2 * (COLLECTION_DEADLINE_SECONDS + 5));
 });
 
 test("weekly runs use the event source and separate thread budgets", () => {

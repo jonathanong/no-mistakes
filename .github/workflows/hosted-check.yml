@@ -132,7 +132,8 @@ jobs:
     name: ${{ matrix.fixture.name }} jobs ${{ matrix.jobs }} pair ${{ matrix.sample }}
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # 22 minutes for two capped commands, plus setup and artifact upload.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 6
@@ -197,8 +198,9 @@ jobs:
           name: hosted-production-cli
           path: production-cli
 
-      - name: Measure both exact public commands with a 180-second deadline
-        timeout-minutes: 7
+      - name: Measure both exact public commands with a 600-second collection cap
+        # Two 600-second commands + two 5-second kill grace periods + overhead.
+        timeout-minutes: 22
         env:
           SAMPLE_NUMBER: ${{ matrix.sample }}
           HOSTED_CHECK_JOBS: ${{ matrix.jobs }}
@@ -211,7 +213,7 @@ jobs:
 
       - name: Upload measurements, provenance, and raw logs
         if: ${{ always() }}
-        timeout-minutes: 5
+        timeout-minutes: 3
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: hosted-check-${{ matrix.fixture.name }}-${{ matrix.jobs }}-${{ matrix.sample }}

@@ -3,7 +3,7 @@
 # Hosted full-check performance
 
 [Issue #1917](https://github.com/jonathanong/no-mistakes/issues/1917) concerns
-the 180-second command deadline on GitHub-hosted `ubuntu-latest`. The separate
+large-repository full-check performance on GitHub-hosted `ubuntu-latest`. The separate
 `Hosted full-check performance` workflow leaves the existing ARM CodSpeed and
 local Criterion comparison contract unchanged.
 
@@ -44,7 +44,12 @@ the published npm binary from the consumer lockfile, whose compiler is not
 independently established. This comparison is published versus source-built,
 not a claim that both binaries used identical compilers.
 
-GNU timeout sends SIGTERM at 180 seconds to the command process group and allows
+The 600-second per-command collection cap bounds CI cost; it is not a runtime
+acceptance target. Wall-time and RSS regression budgets are calibrated separately
+from completed observations. The former 180-second cap censored slow samples
+before their completion and is retained only in historical evidence.
+
+GNU timeout sends SIGTERM at 600 seconds to the command process group and allows
 at most five seconds for termination before SIGKILL. A deadline exit or any
 nonzero check exit remains a failed sample. Known baseline failures are retained
 as measurements; candidate failures fail the pair and summary jobs. GNU time
@@ -52,7 +57,10 @@ records elapsed, user, system, maximum RSS in KiB, and exit. Elapsed time for a
 stopped command includes termination cleanup; it is censored and must not be
 presented as completed-check time. Raw stdout/stderr, time output, binary hashes,
 source/compiler/build provenance, image version, CPU model, available CPUs, and
-automatic Rayon job policy are uploaded even after candidate failure.
+automatic Rayon job policy are uploaded even after candidate failure. Each sample
+records its own collection cap, so changing the cap does not reinterpret archived
+outcomes. The measurement step allows 22 minutes for both commands and kill
+grace; the 30-minute job includes preparation and a three-minute artifact upload.
 
 Resource maxima exclude timeout exits 124/137, signaled samples, and missing
 wrapper statuses because descendant accounting may be incomplete. The resource
@@ -93,7 +101,8 @@ one machine or a statistical power calibration. Both binaries within a pair
 share hardware; their compilers and features can still differ. A reviewed budget
 spanning CPU families must state which runner population it covers and why the
 uncensored observations justify its limits. Do not change analyzer behavior or
-the command deadline to compensate for hardware heterogeneity.
+a calibrated budget to compensate for hardware heterogeneity. Collection-cap
+changes permit uncensored measurement; they do not redefine a regression limit.
 
 On a four-vCPU runner, automatic workers repeat the explicit four-worker setting.
 This does not exercise the 24-worker RSS growth described in #1734; larger worker
