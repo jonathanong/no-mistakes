@@ -148,3 +148,27 @@ test("pre-push enforces the same documentation spelling scope as CI", () => {
   assert.match(workflow, /pnpm run lint:spell/);
   assert.match(hook, /wait "\$pid_cspell" \|\| fail=1/);
 });
+
+test("native API timeout leaves startup and teardown room after the observed Windows suite", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/windows-native-api-timing.json"),
+      "utf8",
+    ),
+  );
+  const duration = Number(observed.observedLogLines.join("\n").match(/Duration\s+(\d+\.\d+)s/)[1]);
+  assert.match(observed.observedLogLines.join("\n"), /252 passed.*2 skipped/);
+  assert.equal(observed.step.conclusion, "failure");
+  const required = duration + observed.startupTeardownReserveSeconds;
+  assert.ok(required > 120, "the observed suite cannot safely fit the former two-minute step");
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const minutes = Number(
+    native.match(/name: Run real N-API API test\n\s+timeout-minutes: (\d+)/)[1],
+  );
+  assert.ok(minutes * 60 >= required, "native API step must include launcher/teardown reserve");
+  assert.ok(minutes <= 5, "keep the correction bounded rather than removing its deadline");
+  assert.match(native, /\n    timeout-minutes: 20\n/);
+  const linux = workflow.split("\n  native-tests:\n")[0];
+  assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 2\n/);
+});

@@ -448,7 +448,7 @@ jobs:
         run: '"${{ matrix.binary }}" --version'
 
       - name: Run real N-API API test
-        timeout-minutes: 2
+        timeout-minutes: 5
         shell: bash
         run: |
           set -euo pipefail
