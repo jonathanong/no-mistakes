@@ -70,9 +70,9 @@ stderr; this harness does not inject timing flags or change CLI output.
 
 Wall and peak-RSS budgets live in `.github/scripts/hosted-check-budgets.json`, keyed
 by the exact consumer commit and worker selection. Every completed candidate
-sample must stay below both the stored observed maximum and three sample standard
-deviations of headroom. The headroom percentage is derived separately from the
-six measured wall/RSS samples, rather than choosing one arbitrary regression
+sample must stay at or below the stored observed maximum plus a margin of three
+sample standard deviations. The margin is derived separately for wall time and
+RSS from the six measured samples, rather than choosing one arbitrary regression
 percentage. Six samples estimate variance; they do not establish a population
 confidence bound. Missing budgets fail closed and produce
 `proposed-budgets.json` in the summary artifact. Incomplete samples, timeouts,

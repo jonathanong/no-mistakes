@@ -18,19 +18,28 @@ fn diagnostic(verbose: bool, sample: impl FnOnce() -> Option<u64>) -> Option<Str
 
 #[cfg(unix)]
 pub(super) fn peak_rss_kib() -> Option<u64> {
-    let mut usage = std::mem::MaybeUninit::<libc::rusage>::uninit();
-    // SAFETY: getrusage initializes the supplied rusage on success.
-    if unsafe { libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()) } != 0 {
+    sampled_peak_rss(
+        |usage| {
+            // SAFETY: usage points to an initialized writable rusage value.
+            unsafe { libc::getrusage(libc::RUSAGE_SELF, usage) }
+        },
+        cfg!(target_os = "macos"),
+    )
+}
+
+#[cfg(unix)]
+fn sampled_peak_rss(
+    sample: impl FnOnce(&mut libc::rusage) -> libc::c_int,
+    bytes: bool,
+) -> Option<u64> {
+    // SAFETY: rusage contains only integer fields and integer-only time values.
+    let mut usage: libc::rusage = unsafe { std::mem::zeroed() };
+    if sample(&mut usage) != 0 {
         return None;
     }
-    // SAFETY: the successful syscall initialized usage.
-    let rss = u64::try_from(unsafe { usage.assume_init() }.ru_maxrss).ok()?;
+    let rss = u64::try_from(usage.ru_maxrss).ok()?;
     // Darwin reports bytes; Linux and the other supported Unix targets use KiB.
-    Some(if cfg!(target_os = "macos") {
-        rss / 1024
-    } else {
-        rss
-    })
+    Some(if bytes { rss / 1024 } else { rss })
 }
 
 #[cfg(not(unix))]
