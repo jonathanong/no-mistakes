@@ -58,11 +58,18 @@ and `calleeNamePatterns?: string[]`.
 
 ### `require-options-on-imported-call`
 
-`targets` is an array whose objects set `sourceSpecifierPatterns: string[]`,
-`calleeNamePatterns: string[]`, `optionsPosition` (one-based),
-`requiredProperties: string[]`, and optional `propertyMatch?: "any" | "all"`
-(default `"any"`). Empty `targets` disables the rule. A required property
-whose statically visible value is definitely `undefined` does not count.
+`targets` is an array whose objects set `optionsPosition` (one-based),
+`requiredProperties: string[]`, and one selector kind. Imported targets set
+`sourceSpecifierPatterns: string[]` and `calleeNamePatterns: string[]`. Global
+targets set `globalNamePatterns: string[]`. Receiver-shaped targets set
+`calleeNamePatterns` and `receiverPatterns: string[]` (`*` is one dotted
+segment, `**` any prefix). Optional `propertyMatch?: "any" | "all"` defaults
+to `"any"`. Optional per-target `message` or top-level `message` replaces the
+report text. `checkedPathPatterns?: string[]` limits files (empty checks every
+file) and `allowedPathPatterns?: string[]` skips matches. Empty `targets`
+disables the rule. A required property whose statically visible value is
+definitely `undefined` does not count. A later spread does not erase an
+earlier explicit key.
 
 ### `module-mock-boundary`
 
