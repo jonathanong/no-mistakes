@@ -377,3 +377,40 @@ fn scoped_callable_fixtures_preserve_dense_and_sparse_probe_semantics() {
         assert!(index.class_id(fixture.class_scope, "missing").is_none());
     }
 }
+
+#[test]
+fn annotation_work_maps_match_pristine_diagnostics_counters() {
+    for (fixture, expected) in [
+        (
+            "postgres-branch-copies",
+            include_str!(
+                "../../../../fixtures/performance/diagnostics-counters/branch-copies.json"
+            ),
+        ),
+        (
+            "postgres-annotations",
+            include_str!("../../../../fixtures/performance/diagnostics-counters/annotations.json"),
+        ),
+    ] {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/performance")
+            .join(fixture)
+            .canonicalize()
+            .unwrap();
+        let plain = check_json(&root).unwrap();
+        let (observed, diagnostics) = check_json_observed(&root, true).unwrap();
+        assert_eq!(observed, plain);
+        // Freeze the complete annotation map from ef62b0, including absent
+        // zero metrics, so counter storage changes cannot alter its public shape.
+        let annotation = diagnostics
+            .work
+            .into_iter()
+            .filter(|(metric, _)| metric.starts_with("postgres.annotation."))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        assert_eq!(
+            serde_json::to_value(annotation).unwrap(),
+            serde_json::from_str::<serde_json::Value>(expected).unwrap(),
+            "{fixture}"
+        );
+    }
+}

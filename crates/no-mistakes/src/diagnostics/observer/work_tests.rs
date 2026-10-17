@@ -43,3 +43,34 @@ fn unknown_metrics_in_every_length_bucket_use_extensions() {
         assert_eq!(counters.snapshot()[metric], 1);
     }
 }
+
+#[test]
+fn annotation_counters_are_live_core_slots_in_parallel() {
+    let counters = WorkCounters::new();
+    let metrics = [
+        "postgres.annotation.modules",
+        "postgres.annotation.target_resolutions",
+        "postgres.annotation.reachability_walks",
+        "postgres.annotation.incoming_dense_slots_copied",
+        "postgres.annotation.captured_reader_rebuilds",
+        "postgres.annotation.captured_reader_names_retained",
+        "postgres.annotation.roots",
+    ];
+    std::thread::scope(|scope| {
+        for _ in 0..4 {
+            scope.spawn(|| {
+                for metric in metrics {
+                    counters.increment(metric, 0);
+                    for _ in 0..100 {
+                        counters.increment(metric, 1);
+                    }
+                }
+            });
+        }
+    });
+    assert!(counters.extensions.get().is_none());
+    assert_eq!(
+        counters.snapshot(),
+        metrics.into_iter().map(|metric| (metric, 400)).collect()
+    );
+}

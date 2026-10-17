@@ -102,9 +102,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_captured_readers(
         &mut self,
     ) {
-        if let Some(observer) = crate::diagnostics::current() {
-            observer.increment("postgres.annotation.captured_reader_rebuilds", 1);
-        }
+        crate::diagnostics::with_current(|observer| {
+            if let Some(observer) = observer {
+                observer.increment("postgres.annotation.captured_reader_rebuilds", 1);
+            }
+        });
         self.captured_binding_readers.clear();
         for (frame, bindings) in &self.captured_bindings {
             for (name, origin) in bindings {

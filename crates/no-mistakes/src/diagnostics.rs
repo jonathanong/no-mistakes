@@ -12,8 +12,8 @@ mod request;
 use std::sync::Arc;
 
 pub use context::{
-    current, current_timing_kind, measure_if_enabled, with_observer, with_timing_kind,
-    InvocationGuard, LegacyDiagnosticsGuard,
+    current, current_timing_kind, measure_if_enabled, with_current, with_observer,
+    with_timing_kind, InvocationGuard, LegacyDiagnosticsGuard,
 };
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
 pub use progress::{ActiveSpanSnapshot, CompletedSpanSnapshot, ProgressGuard, ProgressSnapshot};

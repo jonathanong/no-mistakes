@@ -16,6 +16,13 @@ pub fn current() -> Option<Arc<InvocationObserver>> {
     ACTIVE.with(|active| active.borrow().last().cloned().flatten())
 }
 
+/// Borrow this thread's observer without incrementing its shared reference count.
+/// Keep callbacks short: they must not install or remove an observer scope while
+/// the thread-local stack is borrowed. Use [`current`] when retaining ownership.
+pub fn with_current<T>(operation: impl FnOnce(Option<&InvocationObserver>) -> T) -> T {
+    ACTIVE.with(|active| operation(active.borrow().last().and_then(Option::as_deref)))
+}
+
 pub struct InvocationGuard;
 
 impl InvocationGuard {
