@@ -171,3 +171,22 @@ fn collect_static_zero_arg_paths_handles_various_quote_styles() {
         "template-literal route not found"
     );
 }
+
+#[test]
+fn static_zero_arg_path_regex_is_compiled_once() {
+    let source = include_str!("../statics.rs");
+    assert!(source.contains("static STATIC_ZERO_ARG_PATH: LazyLock<Regex>"));
+    let body = source
+        .split_once("pub fn collect_static_zero_arg_paths(")
+        .map(|(_, body)| body)
+        .expect("static route helper must remain present");
+    assert!(
+        !body.contains("Regex::new("),
+        "collect_static_zero_arg_paths must not compile its route helper per call"
+    );
+    let paths = collect_static_zero_arg_paths(r#"const routes = { home: () => "/home" };"#);
+    assert_eq!(
+        paths.get("home").map(Vec::as_slice),
+        Some(["/home".to_string()].as_slice())
+    );
+}

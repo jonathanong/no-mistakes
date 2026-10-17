@@ -1,14 +1,17 @@
 use crate::playwright::ast;
 use oxc_ast::ast::CallExpression;
+use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
+
+static STATIC_ZERO_ARG_PATH: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"([A-Za-z_$][\w$]*)\s*:\s*\(\s*\)\s*=>\s*(?:"([^"`]+)"|'([^'`]+)'|`([^'"`]+)`)"#)
+        .expect("static route helper regex should compile")
+});
 
 pub fn collect_static_zero_arg_paths(source: &str) -> HashMap<String, Vec<String>> {
-    let pattern = regex::Regex::new(
-        r#"([A-Za-z_$][\w$]*)\s*:\s*\(\s*\)\s*=>\s*(?:"([^"`]+)"|'([^'`]+)'|`([^'"`]+)`)"#,
-    )
-    .expect("static route helper regex should compile");
     let mut candidates: HashMap<String, (Vec<String>, usize)> = HashMap::new();
-    for captures in pattern.captures_iter(source) {
+    for captures in STATIC_ZERO_ARG_PATH.captures_iter(source) {
         let full_match = captures.get(0).expect("full capture should exist");
         if !source_offset_is_code(source, full_match.start()) {
             continue;
