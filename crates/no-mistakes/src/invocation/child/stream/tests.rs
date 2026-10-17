@@ -54,6 +54,11 @@ fn captures_nonzero_exit_status() {
 // chunk or one channel slot.
 #[test]
 fn handles_a_line_spanning_many_chunks_without_truncation() {
+    // Deadline tests share this process and install a global deadline. Hold
+    // their lock so an expired deadline cannot fail this command.
+    let _serial = super::super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     const LINE_BYTES: usize = 10 * 1024 * 1024;
     // Generated via a pipeline (not passed as an argv string) since a 10 MB
     // command-line argument would exceed the OS's ARG_MAX.

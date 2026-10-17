@@ -1,4 +1,16 @@
 use super::*;
+use rayon::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+
+struct ReleasePhase<'a>(&'a AtomicUsize);
+
+impl Drop for ReleasePhase<'_> {
+    fn drop(&mut self) {
+        // Unblock workers if the test fails before the restore phase.
+        self.0.store(3, Ordering::Release);
+    }
+}
 
 #[test]
 fn committed_output_disables_later_deadline_checks() {
@@ -159,4 +171,317 @@ fn expired_command_keeps_its_phase_when_the_invocation_limit_is_live() {
         error.to_string(),
         "invocation deadline elapsed during lock acquisition"
     );
+}
+
+#[test]
+fn parallel_workers_observe_expiry_and_not_a_stale_deadline() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    // `clock::now` is `Instant::now` and is not injectable. `owner: None` applies
+    // the deadline to every worker; a thread owner would hide a stale snapshot.
+    const WORKERS: usize = 8;
+    let phase = Arc::new(AtomicUsize::new(0));
+    let started = Arc::new(AtomicUsize::new(0));
+    let saw_expiry = Arc::new(AtomicUsize::new(0));
+    let saw_stale = Arc::new(AtomicUsize::new(0));
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(WORKERS)
+        .build()
+        .expect("worker pool");
+    let phase_workers = Arc::clone(&phase);
+    let started_workers = Arc::clone(&started);
+    let saw_expiry_workers = Arc::clone(&saw_expiry);
+    let saw_stale_workers = Arc::clone(&saw_stale);
+
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            pool.install(|| {
+                (0..WORKERS).into_par_iter().for_each(|_| {
+                    started_workers.fetch_add(1, Ordering::Release);
+                    while phase_workers.load(Ordering::Acquire) == 0 {
+                        // Hammer the snapshot while the deadline is installed.
+                        let _ignored = check_timeout().is_err();
+                        std::thread::yield_now();
+                    }
+                    let began = Instant::now();
+                    loop {
+                        if phase_workers.load(Ordering::Acquire) >= 3 {
+                            break;
+                        }
+                        if check_timeout().is_err() {
+                            saw_expiry_workers.fetch_add(1, Ordering::Release);
+                            break;
+                        }
+                        if began.elapsed() > Duration::from_secs(5) {
+                            break;
+                        }
+                        std::hint::spin_loop();
+                    }
+                    while phase_workers.load(Ordering::Acquire) < 3 {
+                        std::thread::yield_now();
+                    }
+                    for _ in 0..128 {
+                        if check_timeout().is_err() {
+                            saw_stale_workers.fetch_add(1, Ordering::Release);
+                            break;
+                        }
+                    }
+                });
+            });
+        });
+
+        let _release = ReleasePhase(&phase);
+        let wait_started = Instant::now();
+        while started.load(Ordering::Acquire) < WORKERS {
+            assert!(
+                wait_started.elapsed() < Duration::from_secs(5),
+                "workers did not start polling"
+            );
+            std::thread::yield_now();
+        }
+        let guard =
+            DeadlineGuard::install_for_invocation(Some(Duration::from_millis(50)), None).unwrap();
+        phase.store(1, Ordering::Release);
+        let wait_expiry = Instant::now();
+        while saw_expiry.load(Ordering::Acquire) < WORKERS {
+            assert!(
+                wait_expiry.elapsed() < Duration::from_secs(5),
+                "workers that observed expiry: {}",
+                saw_expiry.load(Ordering::Acquire)
+            );
+            std::thread::yield_now();
+        }
+        drop(guard);
+    });
+    assert_eq!(
+        saw_stale.load(Ordering::Acquire),
+        0,
+        "restored deadline must not stay visible"
+    );
+}
+
+fn sample_deadline(expires_at: std::time::Instant) -> Deadline {
+    Deadline {
+        expires_at,
+        timeout: std::time::Duration::from_secs(1),
+        owner: None,
+        committed: false,
+    }
+}
+
+#[test]
+fn second_snapshot_drops_an_expired_deadline_that_was_replaced() {
+    let expired = sample_deadline(std::time::Instant::now());
+    let live = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30));
+    let mut loads = 0;
+    let found = super::publish::expiry_reference::consecutive_expired(|| {
+        loads += 1;
+        if loads == 1 {
+            Some(expired)
+        } else {
+            Some(live)
+        }
+    });
+    assert!(found.is_none());
+    assert!(
+        super::publish::remaining_from_snapshots(|| Some(live))
+            .unwrap()
+            .expect("live deadline remains")
+            > std::time::Duration::from_secs(20)
+    );
+    let mut loads = 0;
+    assert!(super::publish::remaining_from_snapshots(|| {
+        loads += 1;
+        if loads == 1 {
+            Some(expired)
+        } else {
+            None
+        }
+    })
+    .unwrap()
+    .is_none());
+    assert_eq!(
+        super::publish::remaining_from_snapshots(|| Some(expired))
+            .unwrap_err()
+            .kind(),
+        std::io::ErrorKind::TimedOut
+    );
+}
+
+struct ReleasePublishPauses;
+
+impl Drop for ReleasePublishPauses {
+    fn drop(&mut self) {
+        super::publish::pauses::PAUSE_WHILE_ODD.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
+        super::publish::pauses::PAUSE_BETWEEN_WORDS.store(false, Ordering::Release);
+    }
+}
+
+#[test]
+fn readers_retry_an_odd_generation_and_a_changed_generation() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _release = ReleasePublishPauses;
+    super::publish::pauses::ODD_SPINS.store(0, Ordering::Release);
+    super::publish::pauses::PAUSE_ODD_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_WHILE_ODD.store(true, Ordering::Release);
+    let published = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30));
+
+    std::thread::scope(|scope| {
+        let publisher = scope.spawn(|| {
+            let mut guard = active_deadline()
+                .write()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            *guard = Some(published);
+        });
+        let wait_odd = std::time::Instant::now();
+        while !super::publish::pauses::PAUSE_ODD_REACHED.load(Ordering::Acquire) {
+            assert!(wait_odd.elapsed() < std::time::Duration::from_secs(5));
+            std::thread::yield_now();
+        }
+        let reader = scope.spawn(super::publish::published_deadline);
+        let wait_spin = std::time::Instant::now();
+        while super::publish::pauses::ODD_SPINS.load(Ordering::Acquire) == 0 {
+            assert!(wait_spin.elapsed() < std::time::Duration::from_secs(5));
+            std::thread::yield_now();
+        }
+        super::publish::pauses::PAUSE_WHILE_ODD.store(false, Ordering::Release);
+        assert_eq!(
+            reader.join().unwrap().map(|deadline| deadline.expires_at),
+            Some(published.expires_at)
+        );
+        publisher.join().unwrap();
+    });
+
+    super::publish::pauses::PAUSE_BEFORE_SECOND.store(true, Ordering::Release);
+    super::publish::pauses::PAUSE_SECOND_REACHED.store(false, Ordering::Release);
+    let replaced = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(40));
+    std::thread::scope(|scope| {
+        let reader = scope.spawn(super::publish::published_deadline);
+        let wait_pause = std::time::Instant::now();
+        while !super::publish::pauses::PAUSE_SECOND_REACHED.load(Ordering::Acquire) {
+            assert!(wait_pause.elapsed() < std::time::Duration::from_secs(5));
+            std::thread::yield_now();
+        }
+        *active_deadline()
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(replaced);
+        super::publish::pauses::PAUSE_BEFORE_SECOND.store(false, Ordering::Release);
+        assert_eq!(
+            reader.join().unwrap().map(|deadline| deadline.expires_at),
+            Some(replaced.expires_at)
+        );
+    });
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+#[test]
+fn torn_atomic_words_are_discarded_for_the_next_complete_snapshot() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _release = ReleasePublishPauses;
+    let first = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30));
+    let second = Deadline {
+        expires_at: std::time::Instant::now() + std::time::Duration::from_secs(40),
+        timeout: std::time::Duration::from_secs(5),
+        owner: None,
+        committed: false,
+    };
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(first);
+    super::publish::pauses::PAUSE_BETWEEN_REACHED.store(false, Ordering::Release);
+    super::publish::pauses::PAUSE_BETWEEN_WORDS.store(true, Ordering::Release);
+    std::thread::scope(|scope| {
+        let reader = scope.spawn(super::publish::published_deadline);
+        let wait_pause = std::time::Instant::now();
+        while !super::publish::pauses::PAUSE_BETWEEN_REACHED.load(Ordering::Acquire) {
+            assert!(wait_pause.elapsed() < std::time::Duration::from_secs(5));
+            std::thread::yield_now();
+        }
+        *active_deadline()
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(second);
+        super::publish::pauses::PAUSE_BETWEEN_WORDS.store(false, Ordering::Release);
+        let observed = reader.join().unwrap().expect("published deadline");
+        assert_eq!(observed.expires_at, second.expires_at);
+        assert_eq!(observed.timeout, second.timeout);
+    });
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+#[test]
+fn foreign_owner_snapshot_does_not_expire_on_this_thread() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let owner = std::thread::spawn(|| std::thread::current().id())
+        .join()
+        .unwrap();
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Deadline {
+        expires_at: std::time::Instant::now(),
+        timeout: std::time::Duration::from_secs(1),
+        owner: Some(owner),
+        committed: false,
+    });
+    check_timeout().unwrap();
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Deadline {
+        expires_at: std::time::Instant::now(),
+        timeout: std::time::Duration::from_secs(1),
+        owner: Some(std::thread::current().id()),
+        committed: false,
+    });
+    assert!(check_timeout().is_err());
+    *active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+#[test]
+fn poisoned_deadline_write_still_publishes_the_guard() {
+    let _serial = super::super::deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _clear = ClearDeadlinePoison;
+    let panicked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut guard = active_deadline()
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        *guard = Some(Deadline {
+            owner: Some(std::thread::current().id()),
+            ..sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30))
+        });
+        assert!(guard.is_some());
+        panic!("poison the deadline lock");
+    }));
+    assert!(panicked.is_err());
+    let mut guard = match active_deadline().write() {
+        Ok(_) => panic!("a panic while holding the write guard poisons it"),
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    *guard = None;
+    drop(guard);
+    active_deadline().clear_poison_for_test();
+    assert!(active_deadline().read().unwrap().is_none());
+}
+
+struct ClearDeadlinePoison;
+
+impl Drop for ClearDeadlinePoison {
+    fn drop(&mut self) {
+        active_deadline().clear_poison_for_test();
+    }
 }
