@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const { join } = require("node:path");
 const { readFileSync } = require("node:fs");
 const test = globalThis.test || require("node:test").test;
@@ -129,7 +130,7 @@ test(
 );
 
 // Ordinary discovery skips native behavior; keep its real-addon CI bridge explicit.
-test("CI registers inline method acquisitions with the compiled addon", () => {
+test("CI registers inline acquisitions and mutable receiver cases exactly once", () => {
   const workflow = readFileSync(join(__dirname, "../../../.github/workflows/ci.yml"), "utf8");
   const steps = workflow
     .split("      - name: Run real N-API API test")
@@ -142,5 +143,33 @@ test("CI registers inline method acquisitions with the compiled addon", () => {
     assert.match(step, /NO_MISTAKES_TEST_NAPI_ADDON_PATH=/u);
     assert.match(step, /pnpm exec vitest run/u);
     assert.ok(step.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+  }
+
+  const entries = steps.map((step) =>
+    [...step.matchAll(/(?:packages|tests)\/[\w./-]+\.test\.(?:js|mjs)/gu)].map(([entry]) => entry),
+  );
+  const mutable = "packages/no-mistakes/scripts/mutable-receiver-api.test.js";
+  const child = spawnSync(
+    process.execPath,
+    [
+      join(__dirname, "../../../fixtures/napi/compiled-test-registration/collect.js"),
+      ...new Set([mutable, ...entries.flat()]),
+    ],
+    { cwd: join(__dirname, "../../.."), encoding: "utf8" },
+  );
+  assert.equal(child.status, 0, child.stderr);
+  const registrations = new Map(JSON.parse(child.stdout).map(({ entry, names }) => [entry, names]));
+  const mutableNames = registrations.get(mutable);
+  assert.ok(mutableNames.length > 0, "collect actual receiver tests without executing native work");
+  assert.equal(new Set(mutableNames).size, mutableNames.length, "receiver test names are unique");
+  for (const selected of entries) {
+    const names = selected.flatMap((entry) => registrations.get(entry));
+    for (const name of mutableNames) {
+      assert.equal(
+        names.filter((registered) => registered === name).length,
+        1,
+        `each native CI step must register receiver test exactly once: ${name}`,
+      );
+    }
   }
 });

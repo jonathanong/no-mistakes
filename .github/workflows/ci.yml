@@ -303,6 +303,7 @@ jobs:
         timeout-minutes: 5
         run: pnpm run test:ci
 
+      # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
       - name: Run real N-API API test
         timeout-minutes: 2
         run: >-
@@ -310,7 +311,6 @@ jobs:
           pnpm exec vitest run
           packages/no-mistakes/scripts/real-napi-api.test.js
           packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js
-          packages/no-mistakes/scripts/mutable-receiver-api.test.js
           packages/no-mistakes/scripts/namespace-types-api.test.js
           packages/no-mistakes/scripts/preserved-provenance-api.test.js
           packages/no-mistakes/scripts/vitest-project-setups-api.test.js
