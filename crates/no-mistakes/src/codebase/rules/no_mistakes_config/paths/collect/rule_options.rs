@@ -1,4 +1,4 @@
-use super::{Kind, Ref, path_kind, push};
+use super::{path_kind, push, Kind, Ref};
 use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 

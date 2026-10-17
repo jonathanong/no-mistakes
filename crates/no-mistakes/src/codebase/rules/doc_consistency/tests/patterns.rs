@@ -1,9 +1,9 @@
-use super::super::{RULE_ID, check, check_with_files, check_with_files_and_sources};
+use super::super::{check, check_with_files, check_with_files_and_sources, RULE_ID};
 use super::{config_with_rule, fixture_root};
 use crate::codebase::rules::suppression::SuppressionDirectiveKind;
-use crate::codebase::rules::{RuleFinding, source_store_for_files};
-use crate::config::v2::NoMistakesConfig;
+use crate::codebase::rules::{source_store_for_files, RuleFinding};
 use crate::config::v2::schema::{RuleDef, RuleScope};
+use crate::config::v2::NoMistakesConfig;
 use std::path::Path;
 
 const PIN: &str = "Move this pin to versions.md.";
@@ -201,21 +201,15 @@ fn include_scope_intersects_pattern_globs() {
     config.rules[0].include = vec!["docs/living.md".to_string()];
     let findings = check(&root, &config).unwrap();
     assert!(findings.iter().any(|finding| finding.file == "README.md"));
-    assert!(
-        findings
-            .iter()
-            .all(|finding| { finding.file == "docs/living.md" || finding.file == "README.md" })
-    );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file == "docs/living.md" && finding.line == 11)
-    );
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| finding.file == "docs/crlf.md")
-    );
+    assert!(findings
+        .iter()
+        .all(|finding| { finding.file == "docs/living.md" || finding.file == "README.md" }));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "docs/living.md" && finding.line == 11));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "docs/crlf.md"));
 }
 
 #[test]
@@ -223,16 +217,12 @@ fn supplied_inventory_is_not_rediscovered() {
     let (root, config) = patterns_config();
     let crlf = root.join("docs/crlf.md");
     let findings = check_with_files(&root, &config, &[crlf]).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file == "docs/crlf.md")
-    );
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| finding.file == "docs/living.md")
-    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "docs/crlf.md"));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "docs/living.md"));
     assert!(findings.iter().any(|finding| finding.file == "README.md"));
 }
 
@@ -410,11 +400,9 @@ fn pattern_text_and_messages_keep_author_spacing() {
         &living,
     )
     .unwrap();
-    assert!(
-        trimmed
-            .iter()
-            .all(|finding| finding.message == "spaced message")
-    );
+    assert!(trimmed
+        .iter()
+        .all(|finding| finding.message == "spaced message"));
     assert!(trimmed.iter().any(|finding| finding.line == 3));
 }
 

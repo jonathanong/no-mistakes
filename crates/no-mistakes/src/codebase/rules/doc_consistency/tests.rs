@@ -1,7 +1,7 @@
 use super::*;
 use crate::config::v2::{
-    NoMistakesConfig,
     schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
 };
 use std::path::Path;
 
@@ -218,11 +218,9 @@ fn invalid_options_and_empty_rule_set() {
         ..Default::default()
     });
     assert!(check(&root, &invalid).is_err());
-    assert!(
-        check(&root, &NoMistakesConfig::default())
-            .unwrap()
-            .is_empty()
-    );
+    assert!(check(&root, &NoMistakesConfig::default())
+        .unwrap()
+        .is_empty());
 
     let files = [root.join("CLAUDE.md")];
     let sources = super::super::source_store_for_files(&files);

@@ -1,7 +1,7 @@
 use super::*;
 use crate::config::v2::{
-    NoMistakesConfig,
     schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
 };
 use std::path::{Path, PathBuf};
 
@@ -133,11 +133,9 @@ fn disabled_rule_is_silent() {
     let config: NoMistakesConfig =
         serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
             .unwrap();
-    assert!(
-        check_with_files(&root, &config, &files(&root))
-            .unwrap()
-            .is_empty()
-    );
+    assert!(check_with_files(&root, &config, &files(&root))
+        .unwrap()
+        .is_empty());
 }
 
 #[test]
