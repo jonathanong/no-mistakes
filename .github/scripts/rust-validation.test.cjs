@@ -84,6 +84,11 @@ test("CI, release, and pre-push Clippy validate the locked all-feature workspace
   }
 });
 
+test("CI Clippy also builds default-feature test targets", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  assert.match(workflow, /run: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings\n/);
+});
+
 test("pre-push Clippy uses the workflow scope", () => {
   const hook = readFileSync(path.join(root, ".husky/pre-push"), "utf8");
   assert.match(
