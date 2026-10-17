@@ -312,6 +312,7 @@ jobs:
           packages/no-mistakes/scripts/namespace-types-api.test.js
           packages/no-mistakes/scripts/preserved-provenance-api.test.js
           packages/no-mistakes/scripts/vitest-project-setups-api.test.js
+          tests/js/compiled-api-runtime.test.js
           packages/no-mistakes/scripts/annex-b-for-in-api.test.js
           packages/no-mistakes/scripts/type-import-order-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
