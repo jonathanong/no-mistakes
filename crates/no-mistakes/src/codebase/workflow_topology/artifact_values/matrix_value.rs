@@ -5,6 +5,7 @@
 
 use super::super::artifact_types::ArtifactValue;
 use super::super::value_primitives::OrderedJson;
+use dashmap::DashMap;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
@@ -70,11 +71,20 @@ pub fn artifact_value(raw: &str, matrix: Option<&OrderedJson>) -> ArtifactValue 
         if items.iter().any(|item| item.contains('$')) {
             // `replace_all` interprets `$0`/`$1`/`$$` in its replacement
             // string. Retain that behavior for axes whose values need it.
-            let expression = Regex::new(&format!(
-                r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
-                regex::escape(axis)
-            ))
-            .expect("well-formed regex");
+            // Compile once per distinct axis name; the pattern cannot be shared
+            // across axes because the axis is part of the expression.
+            static AXIS_REFERENCE_PATTERNS: LazyLock<DashMap<String, Regex>> =
+                LazyLock::new(DashMap::new);
+            let expression = AXIS_REFERENCE_PATTERNS
+                .entry(axis.clone())
+                .or_insert_with(|| {
+                    Regex::new(&format!(
+                        r"\$\{{\{{\s*matrix\.{}\s*\}}\}}",
+                        regex::escape(axis)
+                    ))
+                    .expect("well-formed regex")
+                })
+                .clone();
             expanded_values = expanded_values
                 .into_iter()
                 .flat_map(|value| {

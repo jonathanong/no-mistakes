@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -7,7 +6,7 @@ mod regexes;
 
 use regexes::{
     conditional_item_group_regex, conditional_property_group_regex, msbuild_condition_regex,
-    static_compile_operation_regex, xml_comment_regex,
+    static_compile_operation_regex, static_item_regex, xml_comment_regex, xml_tag, xml_tag_last,
 };
 
 use super::project_items::default_compile_files;
@@ -40,13 +39,6 @@ pub(in crate::codebase::dotnet) fn parse_project_static(
         package_references: static_package_references(source),
         ..Default::default()
     }
-}
-
-fn xml_tag(source: &str, tag: &str) -> Option<String> {
-    let re = Regex::new(&format!(r"(?is)<{tag}>\s*([^<]+?)\s*</{tag}>")).ok()?;
-    re.captures(source)
-        .and_then(|cap| cap.get(1))
-        .map(|m| m.as_str().trim().to_string())
 }
 
 fn is_test_project(source: &str) -> bool {
@@ -152,14 +144,6 @@ fn strip_conditional_property_groups(source: &str) -> Cow<'_, str> {
     conditional_property_group_regex().replace_all(source, "")
 }
 
-fn xml_tag_last(source: &str, tag: &str) -> Option<String> {
-    let re = Regex::new(&format!(r"(?is)<{tag}>\s*([^<]+?)\s*</{tag}>")).ok()?;
-    re.captures_iter(source)
-        .last()
-        .and_then(|cap| cap.get(1))
-        .map(|value| value.as_str().trim().to_string())
-}
-
 fn static_project_references(project_dir: &Path, source: &str) -> BTreeSet<PathBuf> {
     static_path_includes(project_dir, source, "ProjectReference")
 }
@@ -201,11 +185,4 @@ fn static_item_values(source: &str, element: &str, attribute: &str) -> BTreeSet<
                 .unwrap_or_default()
         })
         .collect()
-}
-
-fn static_item_regex(element: &str, attribute: &str) -> Regex {
-    Regex::new(&format!(
-        r#"(?is)<{element}\b[^>]*\b{attribute}\s*=\s*["']([^"']+)["']"#
-    ))
-    .expect("valid static MSBuild item regex")
 }

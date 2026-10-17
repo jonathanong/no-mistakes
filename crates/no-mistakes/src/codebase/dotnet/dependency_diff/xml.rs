@@ -1,5 +1,6 @@
 use super::DotnetDependencyDiagnostic;
 use regex::Regex;
+use std::sync::LazyLock;
 
 mod fingerprints;
 mod parser;
@@ -188,8 +189,7 @@ pub(super) fn validate_xml(source: &str) -> Result<(), DotnetDependencyDiagnosti
     dependency_items(source, &[]).map(|_| ())
 }
 pub(super) fn normalize_xml(source: &str) -> String {
-    Regex::new(r">\s+<")
-        .expect("valid XML trivia expression")
-        .replace_all(source, "><")
-        .into_owned()
+    static XML_TRIVIA: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r">\s+<").expect("valid XML trivia expression"));
+    XML_TRIVIA.replace_all(source, "><").into_owned()
 }

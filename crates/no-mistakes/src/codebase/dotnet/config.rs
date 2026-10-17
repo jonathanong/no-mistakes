@@ -1,6 +1,7 @@
 use regex::Regex;
 use std::collections::HashSet;
 use std::path::Path;
+use std::sync::LazyLock;
 
 use super::{msbuild_path, normalize_path, DotnetConfigProject};
 
@@ -61,9 +62,12 @@ fn parse_solution_projects(
     solution_dir: &Path,
     source: &str,
 ) -> Vec<DotnetConfigProject> {
-    let re = Regex::new(r#"(?m)^Project\("\{[^"]+\}"\)\s*=\s*"([^"]+)",\s*"([^"]+\.csproj)""#)
-        .expect("valid regex");
-    re.captures_iter(source)
+    static SOLUTION_PROJECT: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r#"(?m)^Project\("\{[^"]+\}"\)\s*=\s*"([^"]+)",\s*"([^"]+\.csproj)""#)
+            .expect("valid regex")
+    });
+    SOLUTION_PROJECT
+        .captures_iter(source)
         .filter_map(|cap| {
             let name = cap.get(1)?.as_str().to_string();
             let project_path =
