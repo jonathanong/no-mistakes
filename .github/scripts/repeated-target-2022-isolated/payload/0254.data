@@ -1,12 +1,11 @@
-import sql from "sql-template-strings";
-import { write } from "@example/db";
+import { query } from "@example/db";
 
-function buildExpireItemsQuery() {
-  const query = sql`WITH stale AS (SELECT id FROM items WHERE expired) `;
-  query.append(sql`UPDATE items SET gone = true FROM stale WHERE items.id = stale.id`);
-  return query;
+const sql = () => "DROP TABLE users";
+
+function build(id: number) {
+  return sql`SELECT * FROM topics WHERE id = ${id}`;
 }
 
-export async function expireItems() {
-  await write(buildExpireItemsQuery());
+export function run() {
+  return query(build(1));
 }

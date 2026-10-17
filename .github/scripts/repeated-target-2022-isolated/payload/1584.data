@@ -1,5 +1,7 @@
-import { query } from '@example/db'
+import { query } from "@example/db";
 
-export function findRow(id: string, status: string) {
-  return query(`SELECT * FROM items WHERE id = ${id} AND status = ${status}`)
+export const sql = "SELECT id FROM topics";
+
+export function load() {
+  return query(sql);
 }

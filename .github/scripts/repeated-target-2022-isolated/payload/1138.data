@@ -1,7 +1,9 @@
-import { closedReceiver, rhs } from '@vendor/producer';
-function run() {
-  closedReceiver.get('key');
-  closedReceiver.get = rhs.get;
+import { primary } from '@vendor/valkey';
+function replacement() {}
+
+function objectAfterWrite(options) {
+  const alias = options;
+  primary.get = replacement;
+  alias.client.get('key');
 }
-run();
-run();
+objectAfterWrite({ client: primary });

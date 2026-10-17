@@ -1,3 +1,4 @@
-import { forwardedReceiver } from '@vendor/source-timing';
-function acquire(method = forwardedReceiver.get) { return method; }
-export function forward() { return acquire(); }
+import { primary } from '@vendor/valkey';
+function replacement() {}
+// Setup inherits enclosing execution; per-item positions must remain repeatable.
+for (const value of [((client = primary) => { const get = client.get; primary.get = replacement; get(); return 1; })()]) {}

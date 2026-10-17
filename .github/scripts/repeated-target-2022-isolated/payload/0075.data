@@ -1,1 +1,7 @@
-export const answer = 42;
+projects:
+  fixture:
+    type: nextjs
+    root: .
+rules:
+  - rule: nextjs-no-caching
+    projects: [fixture]

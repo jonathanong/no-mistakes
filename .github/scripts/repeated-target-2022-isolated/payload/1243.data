@@ -1,3 +1,2 @@
-import { localRun, execute as alias } from './local-value.mjs';
-localRun();
-for (const item of ['one']) { alias(item); }
+import { begin } from '@vendor/opaque-database';
+export default begin();

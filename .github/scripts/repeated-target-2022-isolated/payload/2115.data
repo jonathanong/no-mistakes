@@ -1,25 +1,209 @@
-import type { DependencyResult, SymbolsResult, TestPlan } from "./types";
+import type { TypeScriptModulesOptions, TypeScriptModulesReport } from "./typescript-module-types";
+export type * from "./typescript-module-types";
+/** Analyze selected TS/JS modules asynchronously with source-local binding semantics. */
+export function analyzeTypeScriptModules(
+  options: WithInvocationOptions<TypeScriptModulesOptions>,
+): Promise<TypeScriptModulesReport>;
+import type { PostgresSqlSource, PostgresSqlFacts } from "./postgres-source-types";
+export { extractExecutedPostgresSql } from "./executed-postgres-sql-types";
+export * from "./postgres-source-types";
+/** Parse SQL on the native async worker without repository I/O or a database. */
+export function parsePostgresSql(source: PostgresSqlSource): Promise<PostgresSqlFacts>;
+export function parsePostgresSql(sources: PostgresSqlSource[]): Promise<PostgresSqlFacts[]>;
+import type {
+  PostgresCatalog,
+  PostgresCatalogOptions,
+  PostgresCompleteCatalog,
+  PostgresOrderingCatalog,
+} from "./postgres-catalog-types";
+import type {
+  CheckReport,
+  AnalyzeProjectOptions,
+  AnalyzeProjectResult,
+  CallSitesOptions,
+  CallSitesResult,
+  CheckOptions,
+  DeadExportsOptions,
+  DeadExportsResult,
+  DependencyResult,
+  ExportsOfOptions,
+  ExportsOfResult,
+  FetchReport,
+  FetchesOptions,
+  FlowOptions,
+  FlowReport,
+  ImportUsagesOptions,
+  ImportUsagesResult,
+  ImportersOptions,
+  ImportersResult,
+  MermaidValidationOptions,
+  MermaidValidationResult,
+  ResolveCheckOptions,
+  ResolveCheckFilesOptions,
+  ResolveCheckResult,
+  ResolveCheckBatchResult,
+  ResolvedConfig,
+  GraphEdge,
+  PlaywrightOptions,
+  PlaywrightRelatedOptions,
+  ProjectOptions,
+  QueueCheckFinding,
+  QueueEdge,
+  QueueReport,
+  ReactComponentFacts,
+  ReactUsagesReport,
+  ReactViolation,
+  ServerRoutesReport,
+  ServerContractsReport,
+  SignatureImpactResult,
+  SymbolsListOptions,
+  SymbolsOptions,
+  SymbolsResult,
+  SymbolsSignatureImpactOptions,
+  TestGraph,
+  TestPlan,
+  TestsImpactOptions,
+  TestsPlanDocumentOptions,
+  TestsPlanOptions,
+  TestsTargetsOptions,
+  TestsTargetsReport,
+  TestsWhyOptions,
+  TraverseGraphOptions,
+  TraverseOptions,
+  TraversePathsOptions,
+  ImportClosureResult,
+  WhyStep,
+  WithInvocationOptions,
+  WritePlanningImpactArtifactsOptions,
+  PlanningImpactArtifacts,
+} from "./types";
 
-/** Input for writing a private, CLI-compatible planning-impact artifact set. */
-export interface WritePlanningImpactArtifactsOptions {
-  /** Repository root passed to the prepared `analyzeProject()` request. */
-  root: string;
-  /**
-   * Path to a private regular manifest directly inside `outputDirectory`. Its newline-delimited
-   * contents are literal repository-relative changed-file paths; only empty records are ignored.
-   */
-  changedFilesManifest: string;
-  /** Existing private directory with exactly mode `0700` that receives artifacts; unavailable on Windows. */
-  outputDirectory: string;
-  /** Omit the import/workspace relationship filter for structural reports. */
-  broad?: boolean;
-}
+export * from "./types";
+export * from "./index-ci-infra";
 
-/** Structured result mirrored by `dependencies.json`, `dependents.json`, `symbols.json`, and `plan.json`. */
-export interface PlanningImpactArtifacts {
-  outputDirectory: string;
-  dependencies: DependencyResult;
-  dependents: DependencyResult;
-  symbols: SymbolsResult;
-  plan: TestPlan;
-}
+export function dependencies(
+  options: WithInvocationOptions<TraversePathsOptions>,
+): Promise<ImportClosureResult>;
+export function dependencies(
+  options: WithInvocationOptions<TraverseGraphOptions>,
+): Promise<DependencyResult>;
+export function dependents(
+  options: WithInvocationOptions<TraverseOptions>,
+): Promise<DependencyResult>;
+export function related(options: WithInvocationOptions<TraverseOptions>): Promise<DependencyResult>;
+export function analyzeProject(
+  options: WithInvocationOptions<AnalyzeProjectOptions>,
+): Promise<AnalyzeProjectResult>;
+export function writePlanningImpactArtifacts(
+  options: WithInvocationOptions<WritePlanningImpactArtifactsOptions>,
+): Promise<PlanningImpactArtifacts>;
+export function symbols(
+  options: WithInvocationOptions<SymbolsSignatureImpactOptions>,
+): Promise<SignatureImpactResult>;
+export function symbols(options: WithInvocationOptions<SymbolsListOptions>): Promise<SymbolsResult>;
+export function symbols(
+  options: WithInvocationOptions<SymbolsOptions>,
+): Promise<SymbolsResult | SignatureImpactResult>;
+export function importUsages(
+  options?: WithInvocationOptions<ImportUsagesOptions>,
+): Promise<ImportUsagesResult>;
+export function importers(
+  options: WithInvocationOptions<ImportersOptions>,
+): Promise<ImportersResult>;
+export function exportsOf(
+  options: WithInvocationOptions<ExportsOfOptions>,
+): Promise<ExportsOfResult>;
+export function deadExports(
+  options: WithInvocationOptions<DeadExportsOptions>,
+): Promise<DeadExportsResult>;
+export function callSites(
+  options: WithInvocationOptions<CallSitesOptions>,
+): Promise<CallSitesResult>;
+export function resolveCheck(
+  options: WithInvocationOptions<ResolveCheckOptions>,
+): Promise<ResolveCheckResult>;
+export function resolveCheck(
+  options: WithInvocationOptions<ResolveCheckFilesOptions>,
+): Promise<ResolveCheckBatchResult>;
+export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<FetchReport>;
+export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
+export function check(options?: WithInvocationOptions<CheckOptions>): Promise<CheckReport>;
+export function resolveConfig(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ResolvedConfig>;
+export function validateMermaidMarkdown(
+  options: WithInvocationOptions<MermaidValidationOptions>,
+): Promise<MermaidValidationResult>;
+export function testsPlan(options: WithInvocationOptions<TestsPlanOptions>): Promise<TestPlan>;
+export function testsImpact(options: WithInvocationOptions<TestsImpactOptions>): Promise<TestPlan>;
+export function testsTargets(
+  options: WithInvocationOptions<TestsTargetsOptions>,
+): Promise<TestsTargetsReport>;
+export function testsWhy(
+  options: WithInvocationOptions<TestsWhyOptions>,
+): Promise<Record<string, WhyStep[]>>;
+export function testsComment(
+  options: WithInvocationOptions<TestsPlanDocumentOptions>,
+): Promise<string>;
+export function testsGraph(
+  options: WithInvocationOptions<TestsPlanDocumentOptions>,
+): Promise<TestGraph>;
+export function testsGraphMermaid(
+  options: WithInvocationOptions<TestsPlanDocumentOptions>,
+): Promise<string>;
+export function playwrightCheck(
+  options?: WithInvocationOptions<PlaywrightOptions>,
+): Promise<unknown>;
+export function playwrightEdges(
+  options?: WithInvocationOptions<PlaywrightOptions>,
+): Promise<unknown>;
+export function playwrightRelated(
+  options: WithInvocationOptions<PlaywrightRelatedOptions>,
+): Promise<unknown>;
+export function playwrightTests(
+  options?: WithInvocationOptions<PlaywrightOptions>,
+): Promise<unknown>;
+export function queues(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueReport>;
+export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
+export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
+export function queueCheck(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<QueueCheckFinding[]>;
+export function serverRoutes(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ServerRoutesReport>;
+export function serverRouteList(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<unknown[]>;
+export function serverRouteEdges(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<GraphEdge[]>;
+export function serverRouteRelated(
+  options: WithInvocationOptions<ProjectOptions>,
+): Promise<GraphEdge[]>;
+export function serverContracts(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ServerContractsReport>;
+export function reactAnalyze(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ReactComponentFacts[]>;
+export function reactCheck(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ReactViolation[]>;
+export function reactUsages(
+  options: WithInvocationOptions<ProjectOptions & { target: string }>,
+): Promise<ReactUsagesReport>;
+
+/**
+ * Observe committed PostgreSQL metadata in a read-only transaction and return the catalog that
+ * `schemaCatalogPath` reads. Requires psql. `coverage: "ordering"` returns only the ordering facts.
+ */
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions & { coverage: "ordering" }>,
+): Promise<PostgresOrderingCatalog>;
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions & { coverage?: "complete" }>,
+): Promise<PostgresCompleteCatalog>;
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions>,
+): Promise<PostgresCatalog>;

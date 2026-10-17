@@ -1,44 +1,75 @@
-#!/usr/bin/env node
-"use strict";
+const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
-const { readFileSync, writeFileSync } = require("node:fs");
-const { join, resolve } = require("node:path");
+test(
+  "compiled wrapper boundaries retain conflict identifiers and SELECT INTO neighbors",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = readFileSync(
+      join(
+        __dirname,
+        "../../../fixtures/postgres-facts/source/wrapper-insert-identifier-boundaries.sql",
+      ),
+      "utf8",
+    );
+    const result = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 8);
+    const atomic = result.statements[0].function.wrapper;
+    assert.equal(atomic.complete, true);
+    for (const child of [
+      atomic.statements[0],
+      ...result.statements.slice(4, 6).map((parent) => parent.wrapper.statements[0]),
+    ]) {
+      assert.equal(child.insert.complete, true);
+      assert.equal(child.insert.onConflict.predicate.sql, "id > 0");
+      assert.equal(child.insert.source.query.columns[0].name.parts[0].identity, "begin");
+      assert.equal(sql.slice(child.span.start.offset, child.span.end.offset), child.sql);
+    }
+    assert.equal(result.statements[1].sql, "SELECT 111;");
+    assert.equal(result.statements[3].sql, "SELECT 112;");
+    assert.equal(result.statements[2].function.wrapper.complete, false);
+    assert.match(result.statements[2].function.wrapper.diagnostics[0].message, /SELECT INTO/);
+    for (const parent of result.statements.slice(6)) {
+      assert.equal(parent.wrapper.complete, false);
+      assert.equal(parent.wrapper.statements[0].sql, "SELECT 1 case INTO tmp");
+    }
+  },
+);
 
-const PACKAGE_NAMES = [
-  "no-mistakes-darwin-arm64",
-  "no-mistakes-linux-arm64-gnu",
-  "no-mistakes-linux-x64-gnu",
-  "no-mistakes-win32-x64-msvc",
-];
-
-function manifest(path) {
-  return JSON.parse(readFileSync(path, "utf8"));
-}
-
-function writeManifest(path, value) {
-  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function syncNativePackageVersions(root, version) {
-  const packageRoot = join(root, "packages");
-  for (const name of PACKAGE_NAMES) {
-    const path = join(packageRoot, name, "package.json");
-    const value = manifest(path);
-    value.version = version;
-    writeManifest(path, value);
-  }
-  const mainPath = join(packageRoot, "no-mistakes", "package.json");
-  const main = manifest(mainPath);
-  for (const name of PACKAGE_NAMES) main.optionalDependencies[name] = version;
-  writeManifest(mainPath, main);
-}
-
-function main(argv = process.argv.slice(2)) {
-  const version = argv[0];
-  if (!version) throw new Error("usage: sync-native-package-versions.js <version>");
-  syncNativePackageVersions(resolve(__dirname, "..", "..", ".."), version);
-}
-
-if (require.main === module) main();
-
-module.exports = { PACKAGE_NAMES, syncNativePackageVersions };
+test(
+  "compiled metadata preserves qualified END targets and malformed body neighbors",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = readFileSync(
+      join(__dirname, "../../../fixtures/postgres-facts/source/metadata-qualified-end.sql"),
+      "utf8",
+    );
+    const result = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 7);
+    for (const parent of result.statements.slice(0, 3)) {
+      assert.equal(parent.comment.name.parts.at(-1).identity, "end");
+      assert.equal(sql.slice(parent.span.start.offset, parent.span.end.offset), parent.sql);
+    }
+    const declaration = result.statements[3].function.wrapper;
+    assert.equal(declaration.complete, true);
+    assert.equal(declaration.statements.length, 2);
+    for (const child of declaration.statements) {
+      assert.equal(child.comment.name.parts.at(-1).identity, "end");
+      assert.equal(sql.slice(child.span.start.offset, child.span.end.offset), child.sql);
+    }
+    assert.equal(result.statements[4].block.complete, true);
+    assert.equal(result.statements[5].function.wrapper.complete, false);
+    assert.equal(result.statements[6].sql, "SELECT 99;");
+  },
+);

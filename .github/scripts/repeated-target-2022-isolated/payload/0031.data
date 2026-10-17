@@ -1,91 +1,132 @@
-"""Workload-local balanced integrity and CPU/wall/RSS uncertainty summaries."""
-import math
-import random
-import statistics
+"""One-arm release build; two independent ARM jobs call this concurrently."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tomllib
+
+from common import require, resources
+from pair import HERE, ROOT, SPEC, reviewed_stage, source_inventory
+from proposal_guard import git
+from transfer import record
 
 
-def validate(rows, blocks):
-    assert len(rows) == 2 * blocks * 4
-    assert len({row['count'] for row in rows}) == 1
-    assert len({tuple(row['affinity']) for row in rows}) == 1
-    assert len(rows[0]['affinity']) == 4
-    for order in ('ABBA', 'BAAB'):
-        for block in range(blocks):
-            group = [r for r in rows if (r['order'], r['block']) == (order, block)]
-            assert [r['position'] for r in group] == list(range(4))
-            assert [r['arm'] for r in group] == ['baseline' if c == 'A' else 'candidate' for c in order]
-    for row in rows:
-        assert row['valid'] and row['count'] > 0 and row['rayon_workers'] == 4
-        assert abs(row['cpu_s'] - row['user_s'] - row['system_s']) < 1e-8
-        assert all(math.isfinite(row[key]) and row[key] > 0 for key in ('cpu_s', 'wall_s', 'rss_kib'))
+def digest(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def metric_stable(rows, metric, minimum_cpu=1):
-    if metric == 'cpu_s' and min(row['cpu_s'] for row in rows) < minimum_cpu:
-        return False
-    changes = []
-    for arm in ('baseline', 'candidate'):
-        values = [r[metric] for r in rows if r['arm'] == arm]
-        if max(values) / min(values) > 1.10:
-            return False
-    for order in ('ABBA', 'BAAB'):
-        group = [r for r in rows if r['order'] == order]
-        a, b = [statistics.mean(r[metric] for r in group if r['arm'] == arm) for arm in ('baseline', 'candidate')]
-        changes.append(100 * (b / a - 1))
-    return abs(changes[0] - changes[1]) <= 5
+def run(args, cwd=None, env=None, log=None):
+    result=subprocess.run(args,cwd=cwd,env=env,capture_output=True)
+    if log:
+        Path(log).parent.mkdir(parents=True,exist_ok=True)
+        Path(log).write_bytes(result.stdout+b'\n--- stderr ---\n'+result.stderr)
+    require(result.returncode==0,'build_command_failed',tool=args[0],exit_code=result.returncode)
+    return result.stdout
 
 
-def stable(rows, minimum_cpu=1):
-    return metric_stable(rows, 'cpu_s', minimum_cpu)
+def extract_artifact(data, kind, source, expected_features=None):
+    rows=[json.loads(line) for line in data.splitlines() if line.startswith(b'{')]
+    expected_name='no-mistakes' if kind=='bin' else 'no_mistakes'
+    artifacts=[r for r in rows if r.get('reason')=='compiler-artifact' and r['target']['name']==expected_name]
+    selected=[r for r in artifacts if kind in r['target']['kind'] or (kind=='bin' and r.get('executable'))]
+    require(len(selected)==1,'artifact_count_or_kind_mismatch',kind=kind,count=len(selected))
+    item=selected[0]
+    require(item['fresh'] is False,'owned_artifact_reused',kind=kind)
+    require(Path(item['target']['src_path']).resolve()==source,'artifact_source_changed',kind=kind)
+    require(sorted(item['features'])==sorted(expected_features or SPEC['features']),'artifact_features_changed',kind=kind)
+    require(item['profile']=={'opt_level':'3','debuginfo':0,'debug_assertions':False,'overflow_checks':False,'test':False},'artifact_profile_changed',kind=kind)
+    return item
 
 
-def describe_pilot(rows):
-    validate(rows, 1)
-    metrics = {}
-    for metric in ('cpu_s', 'wall_s', 'rss_kib'):
-        means = {arm: statistics.mean(r[metric] for r in rows if r['arm'] == arm) for arm in ('baseline', 'candidate')}
-        percent = 100 * (means['candidate'] / means['baseline'] - 1)
-        direction = 'higher' if percent > 0 else 'lower' if percent < 0 else 'flat'
-        metrics[metric] = {'status': f'pilot {direction} ({percent:+.2f}%); long withheld',
-            'descriptive_mean_percent':percent,
-            'range':{arm:[min(r[metric] for r in rows if r['arm'] == arm), max(r[metric] for r in rows if r['arm'] == arm)] for arm in ('baseline', 'candidate')}}
-    return {'phase':'pilot', 'samples':len(rows), 'metrics':metrics,
-            'inference':'Descriptive8rowpilot only; no long-run confirmation or bootstrap claim'}
+def cargo_environment(target):
+    env=os.environ.copy()
+    for key in list(env):
+        if key.startswith('CARGO_PROFILE_') or key in ('RUSTC_WRAPPER','RUSTC_WORKSPACE_WRAPPER'):
+            env.pop(key,None)
+    env.update(CARGO_TARGET_DIR=str(target),CARGO_BUILD_JOBS=str(SPEC['build_jobs']),CARGO_INCREMENTAL='0',
+               RUSTUP_TOOLCHAIN=SPEC['toolchain'],RUSTFLAGS='',CARGO_ENCODED_RUSTFLAGS='')
+    return env
 
 
-def assess(rows, blocks=4):
-    validate(rows, blocks)
-    result = {'status': 'inconclusive', 'metrics': {}}
-    for metric in ('cpu_s', 'wall_s', 'rss_kib'):
-        paired, orders = [], {}
-        for order in ('ABBA', 'BAAB'):
-            group = [r for r in rows if r['order'] == order]
-            means = {arm: statistics.mean(r[metric] for r in group if r['arm'] == arm) for arm in ('baseline', 'candidate')}
-            orders[order] = 100 * (means['candidate'] / means['baseline'] - 1)
-            for block in range(blocks):
-                group = [r for r in rows if (r['order'], r['block']) == (order, block)]
-                a, b = [statistics.mean(r[metric] for r in group if r['arm'] == arm) for arm in ('baseline', 'candidate')]
-                paired.append(math.log(b / a))
-        rng = random.Random(1971)
-        bootstrap = sorted(100 * math.expm1(statistics.mean(rng.choices(paired, k=len(paired)))) for _ in range(10000))
-        cv = {arm: statistics.stdev([r[metric] for r in rows if r['arm'] == arm]) /
-              statistics.mean(r[metric] for r in rows if r['arm'] == arm) for arm in ('baseline', 'candidate')}
-        interval = [bootstrap[249], bootstrap[9749]]
-        status = 'inconclusive'
-        if metric_stable(rows, metric, minimum_cpu=5) and max(cv.values()) <= .03:
-            if min(orders.values()) > 0 and interval[0] > 0:
-                status = 'higher cost observed; adjacent reverse confirmation required'
-            elif max(orders.values()) < 0 and interval[1] < 0:
-                status = 'lower cost observed'
-        result['metrics'][metric] = {'status': status, 'paired_percent': 100 * math.expm1(statistics.mean(paired)),
-            'orders_percent': orders, 'descriptive_bootstrap_95_percent': interval, 'arm_cv': cv,
-            'median_per_request_ms' if metric != 'rss_kib' else 'median_peak_rss_kib': {
-                arm: statistics.median(r[metric] * 1000 / r['count'] if metric != 'rss_kib' else r[metric]
-                    for r in rows if r['arm'] == arm) for arm in ('baseline', 'candidate')},
-            'range': {arm: [min(r[metric] for r in rows if r['arm'] == arm), max(r[metric] for r in rows if r['arm'] == arm)] for arm in ('baseline', 'candidate')}}
-    statuses = [metric['status'] for metric in result['metrics'].values()]
-    if any(status.startswith('higher cost observed') for status in statuses):
-        result['status'] = 'higher cost observed; adjacent reverse confirmation required'
-    elif any(status == 'lower cost observed' for status in statuses):
-        result['status'] = 'lower cost observed; other metrics require independent review'
-    return result
+def checkout_arm(root, arm):
+    source=root/arm/'source'
+    require(not source.exists(),'owned_source_already_exists',arm=arm)
+    source.parent.mkdir(parents=True,exist_ok=True)
+    revision=SPEC[arm]['revision']
+    ref='main' if arm=='baseline' else 'refs/pull/2022/merge'
+    run(['git','fetch','--no-tags','origin',ref],cwd=ROOT)
+    require(git(ROOT,'rev-parse','FETCH_HEAD')==revision,'live_pair_ref_changed',arm=arm)
+    run(['git','worktree','add','--detach',str(source),revision],cwd=ROOT)
+    require(git(source,'rev-parse','HEAD')==revision,'checked_out_revision_changed')
+    require(git(source,'rev-parse','HEAD^{tree}')==SPEC[arm]['tree'],'checked_out_tree_changed')
+    require(digest(source/'Cargo.lock')==SPEC['lock_sha256'],'lock_changed')
+    profile=tomllib.loads((source/'Cargo.toml').read_text())['profile']['release']
+    require(profile['lto'] is True and profile['codegen-units']==1,'release_profile_changed')
+    rows,proof=source_inventory(source)
+    require(proof==SPEC['source_git_inventory_sha256'][arm],'source_inventory_changed')
+    return source,rows,proof
+
+
+def link_probe(source_file,output,rlib,target,env,extra=(),log=None):
+    args=['rustc',str(source_file),'--edition=2021','-C','opt-level=3','-C','lto=true','-C','codegen-units=1',
+          '-L','dependency='+str(target/'release/deps'),'--extern','no_mistakes='+str(rlib),*extra,'-o',str(output)]
+    run(args,env=env,log=log or output.with_suffix('.link.log'))
+    require(output.is_file(),'linked_probe_missing')
+
+
+def graph_probe_cfg(arm):
+    require(arm in ('baseline', 'candidate'), 'unknown_arm')
+    return 'alternatives_api' if arm == 'candidate' else None
+
+
+def cleanup_owned_target(target, owner):
+    require(target.parent == owner and not target.is_symlink(), 'target_cleanup_not_owned')
+    if target.exists():
+        shutil.rmtree(target)
+
+
+def build(arm):
+    require(arm in ('baseline','candidate'),'unknown_arm')
+    reviewed_stage('production-build')
+    root=Path(os.environ['RUNNER_TEMP'])/'repeated-target-2022'
+    root.mkdir(parents=True,exist_ok=True)
+    machine=resources(root,build=True)
+    require(machine['effective_available_memory_bytes']>=SPEC['min_ram_gib_per_build_job']*1024**3,'build_memory_below_reviewed_floor')
+    rustc=run(['rustc','-Vv']).decode()
+    require(rustc.startswith('rustc 1.99.1 (58cf8f9c3 ') and 'host: '+SPEC['target'] in rustc,'compiler_or_target_changed')
+    source,rows,proof=checkout_arm(root,arm)
+    work=root/arm;target=work/'target';private=work/'private';private.mkdir(exist_ok=True)
+    require(not target.is_symlink(),'target_symlink')
+    try:
+        env=cargo_environment(target)
+        cargo_args=['cargo','build','--locked','--release','-p','no-mistakes','--lib','--bin','no-mistakes','--message-format=json']
+        production=run(cargo_args,cwd=source,env=env,log=private/'production-cargo.log')
+        lib=extract_artifact(production,'rlib',source/'crates/no-mistakes/src/lib.rs')
+        cli=extract_artifact(production,'bin',source/'crates/no-mistakes/src/main.rs')
+        rlib=next(Path(p) for p in lib['filenames'] if p.endswith('.rlib'))
+        cli_path=Path(cli['executable'])
+        require(rlib.is_file() and cli_path.is_file(),'production_artifact_missing')
+        native_args=['cargo','rustc','--locked','--release','-p','no-mistakes','--lib','--crate-type','cdylib','--message-format=json']
+        native=run(native_args,cwd=source,env=env,log=private/'native-cargo.log')
+        addon=extract_artifact(native,'cdylib',source/'crates/no-mistakes/src/lib.rs')
+        so=next(Path(p) for p in addon['filenames'] if p.endswith('.so'))
+        require(so.is_file(),'native_addon_missing')
+        transfer=work/'transfer';transfer.mkdir()
+        shutil.copyfile(cli_path,transfer/'cli')
+        shutil.copyfile(so,transfer/'addon.node')
+        link_probe(HERE/'timing-probe.rs',transfer/'timing-probe',rlib,target,env,log=private/'timing-link.log')
+        # Main lacks PR #2022's alternatives API; the historical probe uses
+        # its legacy branch for baseline and its typed branch for the merge.
+        cfg = graph_probe_cfg(arm)
+        extra = ['--cfg', cfg] if cfg else []
+        link_probe(HERE/'graph-probe.rs',transfer/'graph-probe',rlib,target,env,extra,log=private/'graph-link.log')
+        (transfer/'cargo.jsonl').write_bytes(production+native)
+        (transfer/'source-inventory.json').write_text(json.dumps({'revision':SPEC[arm]['revision'],'tree':SPEC[arm]['tree'],'rows':rows,'sha256':proof},sort_keys=True)+'\n')
+        manifest=record(transfer,arm,SPEC[arm]['revision'],SPEC[arm]['tree'],proof,rustc,
+                        SPEC['features'],SPEC['release_profile'],cfg)
+        manifest['machine']=machine
+        (work/'build-record.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+        return manifest
+    finally:
+        cleanup_owned_target(target, work)

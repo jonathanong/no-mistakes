@@ -1,9 +1,8 @@
-import { query } from "@example/db";
+import { describe, expect, it } from "vitest";
+import { formatCore } from "@core/index";
 
-const sql = "SELECT id FROM topics";
-do sql.append(" WHERE id = 1");
-while (flag);
-
-export function load() {
-  return query(sql);
-}
+describe("formatCore", () => {
+  it("formats ids", () => {
+    expect(formatCore({ id: "fixture" })).toBe("FIXTURE");
+  });
+});

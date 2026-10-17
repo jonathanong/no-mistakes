@@ -1,33 +1,63 @@
 import { read, sql } from '@example/db';
-export const query = sql`SELECT 1`;
-function appendKnown(target: unknown) { target.append(sql`; DELETE FROM records`); }
-function invoke(flag: boolean, unused: unknown, callback: () => void) {
-  if (flag) { const local = 1; arguments[2](); }
-}
-export function argumentsCallback(flag: boolean, input: unknown[]) {
-  const callback = () => { for (const value of input) appendKnown(query); read(query); };
-  invoke(flag, 0, callback);
-}
-function uninvoked(flag: boolean, unused: unknown, callback: () => void) {
-  if (flag) { const local = 1; }
-}
-export function unusedArguments(flag: boolean, input: unknown[]) {
-  const callback = () => { for (const value of input) appendKnown(query); read(query); };
-  uninvoked(flag, 0, callback);
-}
-function staticFalse(unused: unknown, callback: () => void) {
-  if (false) { const local = 1; arguments[1](); }
-}
-export function falseArguments(input: unknown[]) {
-  const callback = () => { for (const value of input) appendKnown(query); read(query); };
-  staticFalse(0, callback);
+export function separator(separator: unknown) { read(`/* effects/separator */ SELECT ${['1'].join(separator)}`); }
+export function asynchronousMap() { read(`/* effects/async-map */ SELECT ${['1'].map(async value => value).join(', ')}`); }
+export function unsupportedMap() { read(`/* effects/unsupported-map */ SELECT ${['1'].map((...values) => values[0]).join(', ')}`); }
+export function capturedCallbackEffect() {
+  const query = sql`/* effects/captured */ SELECT 1`;
+  ['1'].forEach(() => { arbitraryMutation(); });
   read(query);
 }
-function aliasInvoke(flag: boolean, unused: unknown, callback: () => void) {
-  const slots = arguments;
-  if (flag) { const local = 1; slots[2](); }
+export function opaqueCondition() {
+  const query = sql`/* effects/condition */ SELECT 1`;
+  if (opaqueTest()) query.append(sql` WHERE true`);
+  read(query);
 }
-export function aliasedArguments(flag: boolean, input: unknown[]) {
-  const callback = () => { for (const value of input) appendKnown(query); read(query); };
-  aliasInvoke(flag, 0, callback);
+export function sparseMutation() {
+  const parts = ['1'];
+  parts[9] = '2';
+  read(`/* effects/sparse-mutation */ SELECT ${parts.join(', ')}`);
 }
+export function spreadArguments(values: unknown[]) { read(`/* effects/spread-arguments */ SELECT ${['1'].map(...values).join(', ')}`); }
+export function liveMapElements() {
+  const parts = ['first AS (SELECT 1)', 'second AS (SELECT 2)'];
+  const ctes = parts.map((value, index) => {
+    if (index === 0) parts[1] = 'second AS (DELETE FROM records RETURNING id)';
+    return value;
+  });
+  read(`/* effects/live-elements */ WITH ${ctes.join(', ')} SELECT * FROM first`);
+}
+export function conditions() {
+  const parts = [1, 2].map((value, index) => {
+    if (index != 0) return '2';
+    if (index <= 0) return '1';
+    return '3';
+  });
+  read(`/* effects/comparisons */ SELECT ${parts.join()}`);
+}
+export function unknownReturningCondition() {
+  const query = sql`/* effects/returned-condition */ SELECT 1`;
+  function helper() { return opaqueTest() ? 'one' : 'two'; }
+  const result = helper();
+  read(query);
+}
+export function mappedBranches(flag: boolean) {
+  const parts = ['first', 'second'].map(name => flag ? `${name} AS (SELECT 1)` : `${name} AS (SELECT 2)`);
+  read(`/* effects/mapped-branches */ WITH ${parts.join(', ')} SELECT * FROM first`);
+}
+export function unsupportedArithmetic() { read(`/* effects/arithmetic */ SELECT ${3 % 2}`); }
+export function deletedElement() {
+  const parts = ['1', '2'];
+  delete parts[0];
+  read(`/* effects/deletion */ SELECT ${parts.join(', ')}`);
+}
+function unrelatedDeletion(value: unknown) {
+  delete arguments[0];
+  read(`/* effects/unrelated-deletion */ SELECT ${['1'].join(', ')}`);
+}
+export function unchangedArray() { unrelatedDeletion('unused'); }
+export function overflow() { read(`/* effects/overflow */ SELECT ${9007199254740990 + 2}`); }
+function falseBranch() {
+  if (false) return '/* effects/false-branch */ WITH removed AS (DELETE FROM records RETURNING id) SELECT id FROM removed';
+  return '/* effects/false-branch */ SELECT 1';
+}
+export function knownFalseBranch() { read(falseBranch()); }

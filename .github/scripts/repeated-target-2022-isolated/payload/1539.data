@@ -1,12 +1,15 @@
 import { query } from "@example/db";
 
-function build() {
-  return "DELETE FROM users";
+class String {
+  static raw() {
+    return "DELETE FROM users";
+  }
 }
 
-export function run() {
-  function build() {
-    return "SELECT * FROM topics";
-  }
+function build() {
+  return String.raw`SELECT 1`;
+}
+
+export function load() {
   return query(build());
 }

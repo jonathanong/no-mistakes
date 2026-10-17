@@ -1,10 +1,17 @@
-import { primary, session } from '@vendor/valkey';
+import { foreignSnapshot } from '@vendor/valkey';
+import { acquireCopied, acquireLive, acquireAfter, mutateForeign } from './foreign-repeated-helper.mjs';
 function replacement() {}
-function inner({ client }) { client.get('key'); }
-function identifier(options) { options.client.get('key'); }
-function outer(options) { inner(options); identifier(options); primary.get = replacement; }
-outer({ client: primary });
-function innerAfter({ client }) { client.get('key'); }
-function identifierAfter(options) { options.client.get('key'); }
-function outerBefore(options) { session.get = replacement; innerAfter(options); identifierAfter(options); }
-outerBefore({ client: session });
+function forwardCopied() { return acquireCopied(); }
+for (const key of ['a', 'b']) {
+  (function foreignCopied(fn) { fn(key); })(forwardCopied());
+  foreignSnapshot.get = replacement;
+}
+function forwardLive() { return acquireLive(); }
+for (const key of ['a', 'b']) {
+  (function foreignRepeated(fn) { fn(key); })(forwardLive());
+  mutateForeign();
+}
+function forwardAfter() { return acquireAfter(); }
+for (const key of ['a', 'b']) {
+  (function foreignAfterWrite(fn) { fn(key); })(forwardAfter());
+}

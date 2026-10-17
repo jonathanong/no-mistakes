@@ -1,52 +1,53 @@
 import { read, sql } from '@example/db';
 export const query = sql`SELECT 1`;
 function appendKnown(target: unknown) { target.append(sql`; DELETE FROM records`); }
-export function computedObject(flag: boolean, input: unknown[]) {
+export function recordAlias(flag: boolean, input: unknown[]) {
   if (flag) {
     const callback = () => { for (const value of input) appendKnown(query); read(query); };
-    const holder = { ['run']: callback };
-    holder.run();
-  }
-}
-export function spreadObject(flag: boolean, input: unknown[]) {
-  if (flag) {
-    const callback = () => { for (const value of input) appendKnown(query); read(query); };
-    const holder = { ...{}, run: callback };
-    holder.run();
-  }
-}
-export function namedSpread(flag: boolean, input: unknown[]) {
-  if (flag) {
-    const callback = () => { for (const value of input) appendKnown(query); read(query); };
-    const base = { run: callback }; const holder = { ...base };
-    holder.run();
-  }
-}
-export function objectAlias(flag: boolean, input: unknown[]) {
-  if (flag) {
-    const callback = () => { for (const value of input) appendKnown(query); read(query); };
-    const holder = { ['run']: callback }; const alias = holder;
+    const holder = { run: callback };
+    const alias = holder;
     alias.run();
   }
 }
-export function uninvokedObject(flag: boolean, input: unknown[]) {
+export function arrayAlias(flag: boolean, input: unknown[]) {
   if (flag) {
     const callback = () => { for (const value of input) appendKnown(query); read(query); };
-    const holder = { ['run']: callback };
-
+    const holder = [callback];
+    const alias = holder;
+    alias[0]();
   }
 }
-export function falseObject(input: unknown[]) {
+export function uninvokedAlias(flag: boolean, input: unknown[]) {
+  if (flag) {
+    const callback = () => { for (const value of input) appendKnown(query); read(query); };
+    const holder = { run: callback };
+    const alias = holder;
+  }
+}
+export function falseAlias(input: unknown[]) {
   if (false) {
     const callback = () => { for (const value of input) appendKnown(query); read(query); };
-    const holder = { ['run']: callback };
-    holder.run();
+    const holder = [callback];
+    const alias = holder;
+    alias[0]();
   }
   read(query);
 }
-export function deepObject(flag: boolean, input: unknown[]) {
+export function publishedInsideArm(flag: boolean, input: unknown[]) {
   if (flag) {
-    const holder = { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { child: { ['run']: () => { for (const value of input) appendKnown(query); read(query); } } } } } } } } } } } } } } } } } } } } } } } } } } };
-    holder.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.run();
+    const holder = [() => { read(query); }];
+    const alias = holder;
+    // Publishing through an alias must update the same prepared container.
+    alias[0] = () => { for (const value of input) appendKnown(query); read(query); };
+    holder[0]();
+  }
+}
+export function publishedOuterAlias(flag: boolean, input: unknown[]) {
+  const holder = [() => { read(query); }];
+  const alias = holder;
+  if (flag) {
+    const trigger = 0;
+    alias[0] = () => { for (const value of input) appendKnown(query); read(query); };
+    holder[0]();
   }
 }

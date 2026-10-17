@@ -1,10 +1,18 @@
-import { query, sql } from "@example/db";
+import sql from 'sql-template-strings'
+import { read } from '@example/db'
 
-query(`/* posts/update */ WITH changed AS (UPDATE posts SET seen = true RETURNING id)
-SELECT id FROM changed`);
-query(flag ? "/* posts/one */ TABLE posts" : "/* posts/two */ SELECT 2");
-query(dynamicSql);
-// One conditional alternative has a generated interpolation marker.
-query(flag ? sql`/* posts/runtime */ SELECT ${runtimeSql}` : "/* posts/static */ SELECT 1");
-// An untrusted interpolated branch stays opaque, rather than inventing alternatives.
-query(flag ? `/* posts/unsafe */ SELECT ${runtimeSql}` : "/* posts/other */ SELECT 3");
+const api = {
+  query: sql`/* receiver argument */ SELECT 1`,
+  execute(_value: number) {
+    return read(this.query)
+  },
+}
+
+function append(query: typeof sql) {
+  query.append(' UPDATE posts SET title = title')
+  return 1
+}
+
+export function run() {
+  return api.execute(append(api.query))
+}

@@ -1,12 +1,3 @@
-rules:
-  - rule: postgres-idempotent-insert
-    scope: repository
-    options:
-      importSpecifier: "@example/db"
-      sqlInclude: ["sql/**/*.sql"]
-      scanEmbedded: false
-      checkConvergence: false
-      checkVolatility: false
-      checkArbiter: true
-      checkTriggers: false
-      checkGenerated: false
+export function local() {
+  return "key";
+}

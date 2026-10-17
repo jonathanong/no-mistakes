@@ -1,7 +1,9 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
-const box = { client };
-if (flag) { box.client = {}; }
-box.client.get = replacement;
-function guardedAfter(value) { value.get('key'); }
-guardedAfter(client);
+const holder = { box: { client } };
+let unused;
+holder.box.client = {};
+({ first: unused = (holder.box.client.get = replacement), second: holder.other } = { get first() { holder.box = { client }; return undefined; } });
+
+function globalPhaseRhsGetter(value) { value.get('key'); }
+globalPhaseRhsGetter(client);

@@ -1,9 +1,6 @@
-effects:
-  postgres:
-    typedExecutors:
-      - { module: database-client, export: Namespace.Query }
 rules:
-  - rule: query-reached-per-item
+  - rule: postgres-idempotent-insert
     scope: repository
     options:
-      effects: [postgres]
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/**/*.sql"]

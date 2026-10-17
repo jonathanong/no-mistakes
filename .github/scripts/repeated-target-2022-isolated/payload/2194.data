@@ -1,95 +1,82 @@
 const assert = require("node:assert/strict");
-const test = globalThis.test || require("node:test").test;
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
 
-const packageRoot = join(__dirname, "..");
-const repositoryRoot = join(packageRoot, "..", "..");
-const addonPath = join(repositoryRoot, "fixtures", "napi", "test-addon.js");
-const indexPath = join(packageRoot, "index.js");
-const planningPath = join(packageRoot, "planning.js");
-const fixture = JSON.parse(
-  readFileSync(join(repositoryRoot, "fixtures", "node-api", "report-dtos", "reports.json"), "utf8"),
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const source = (name) => ({
+  fileName: name,
+  source: readFileSync(
+    join(__dirname, "../../../fixtures/postgres-facts/executed-source", name),
+    "utf8",
+  ),
+});
+
+test(
+  "compiled CJS and ESM recover private entrypoints returned from branch arms",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [name, expected] of [
+      ["control-flow-branch-returned-functions.ts", 2],
+      ["control-flow-returned-entrypoint-wrappers.ts", 3],
+    ]) {
+      const options = {
+        sources: [source(name)],
+        importSpecifier: "@example/db",
+        trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+        resolveImports: true,
+      };
+      const pending = cjs.extractExecutedPostgresSql(options);
+      assert.ok(pending instanceof Promise);
+      const rows = await pending;
+      assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
+      assert.equal(rows.length, expected);
+      for (const row of rows) {
+        assert.equal(row.complete, true, JSON.stringify(row));
+        assert.equal(row.onlyValuePlaceholders, false);
+        assert.equal(row.incompleteReason, null);
+        assert.ok(row.sqlText.includes("; DELETE FROM records"), JSON.stringify(row));
+      }
+    }
+    const selectedOptions = {
+      sources: [source("control-flow-returned-entrypoint-static-branches.ts")],
+      importSpecifier: "@example/db",
+      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+      resolveImports: true,
+    };
+    const selectedRows = await cjs.extractExecutedPostgresSql(selectedOptions);
+    assert.deepEqual(await esm.extractExecutedPostgresSql(selectedOptions), selectedRows);
+    assert.equal(selectedRows.length, 2);
+    assert.ok(selectedRows.every((row) => row.complete));
+    assert.deepEqual(
+      selectedRows.find((row) => row.line === 2),
+      {
+        fileName: "control-flow-returned-entrypoint-static-branches.ts",
+        line: 2,
+        annotation: "returns/contextual",
+        sqlText: "/* returns/contextual */ SELECT 8",
+        complete: true,
+        onlyValuePlaceholders: false,
+        kind: "composed",
+        incompleteReason: null,
+      },
+    );
+    assert.ok(selectedRows.find((row) => row.line === 9).sqlText.includes("DELETE FROM records"));
+    const options = {
+      sources: [source("control-flow-returned-entrypoint-unsupported.ts")],
+      importSpecifier: "@example/db",
+      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+      resolveImports: true,
+    };
+    const rows = await cjs.extractExecutedPostgresSql(options);
+    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
+    assert.equal(rows.length, 2);
+    for (const row of rows) {
+      assert.equal(row.complete, false, JSON.stringify(row));
+      assert.equal(row.onlyValuePlaceholders, false);
+      assert.ok(row.incompleteReason);
+    }
+  },
 );
-
-function loadApiWithFixtureNative() {
-  delete require.cache[require.resolve(indexPath)];
-  delete require.cache[require.resolve(planningPath)];
-  delete require.cache[addonPath];
-
-  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
-  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
-    fetchesJson: async () => JSON.stringify(fixture.fetches),
-    checkJson: async (json) =>
-      JSON.stringify(
-        JSON.parse(json).includeSuppressed ? fixture.checkWithSuppressed : fixture.check,
-      ),
-    queuesJson: async () => JSON.stringify(fixture.queues),
-    reactAnalyzeJson: async () => JSON.stringify(fixture.reactAnalyze),
-  };
-
-  return {
-    api: require(indexPath),
-    restore() {
-      if (previous) globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
-      else delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
-      delete require.cache[require.resolve(indexPath)];
-      delete require.cache[require.resolve(planningPath)];
-      delete require.cache[addonPath];
-    },
-  };
-}
-
-test("Node report DTO fixture preserves fetch, queue, React, and check shapes", async () => {
-  const loaded = loadApiWithFixtureNative();
-  try {
-    assert.deepEqual(await loaded.api.fetches({ root: "/fixture" }), fixture.fetches);
-    assert.deepEqual(await loaded.api.queues({ root: "/fixture" }), fixture.queues);
-    assert.deepEqual(await loaded.api.reactAnalyze({ root: "/fixture" }), fixture.reactAnalyze);
-    const baselineCheck = await loaded.api.check({ root: "/fixture" });
-    const checkWithSuppressed = await loaded.api.check({
-      root: "/fixture",
-      includeSuppressed: true,
-    });
-    assert.deepEqual(baselineCheck, fixture.check);
-    assert.equal(Object.hasOwn(baselineCheck, "suppressed"), false);
-    assert.deepEqual(checkWithSuppressed, fixture.checkWithSuppressed);
-    assert.deepEqual(checkWithSuppressed.suppressed, fixture.checkWithSuppressed.suppressed);
-    const { suppressed, ...optedInBaseline } = checkWithSuppressed;
-    assert.deepEqual(optedInBaseline, baselineCheck);
-    assert.ok(suppressed.length > 0);
-  } finally {
-    loaded.restore();
-  }
-});
-
-test("Node report declarations name every fixture collection precisely", () => {
-  const declarations = [
-    "check-report-types.d.ts",
-    "fetch-report-types.d.ts",
-    "queue-report-types.d.ts",
-    "react-report-types.d.ts",
-  ]
-    .map((file) => readFileSync(join(packageRoot, file), "utf8"))
-    .join("\n");
-  assert.match(declarations, /queues: QueueCheckFinding\[\];/);
-  assert.match(declarations, /rules: RuleFinding\[\];/);
-  assert.match(declarations, /duplicates: DuplicateApiCall\[\];/);
-  assert.match(declarations, /unsupported: UnsupportedApiCall\[\];/);
-  assert.match(declarations, /fetches: ReactFetchCall\[\];/);
-  assert.match(declarations, /children: ReactComponentRef\[\];/);
-  assert.match(declarations, /inheritedFromChildren\?: ReactAggregatedFacts;/);
-  assert.match(declarations, /detail: string \| null;/);
-  assert.match(declarations, /suppressed\?: SuppressedFinding\[\];/);
-  assert.match(
-    declarations,
-    /domain: "react" \| "queues" \| "rules" \| "filesystem" \| "integration" \| "codebase" \| "advisories";/,
-  );
-  assert.match(declarations, /sourceFile: string;/);
-  assert.match(declarations, /kind: "file" \| "line" \| "nextLine";/);
-  assert.match(declarations, /rawJob: string \| null;/);
-  assert.match(declarations, /exportedName: string \| null;/);
-  assert.doesNotMatch(declarations, /queues: unknown\[\]/);
-  assert.doesNotMatch(declarations, /duplicates: unknown\[\]/);
-  assert.doesNotMatch(declarations, /fetches: unknown\[\]/);
-});

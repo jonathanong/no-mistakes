@@ -1,71 +1,47 @@
-"""Fail-closed executable stages; no event polling and no implicit dispatch."""
-import argparse
+"""Isolated, untimed default/instrumented layout jobs for one source arm."""
 import json
 import os
 from pathlib import Path
-import sys
 
-from common import ExperimentFailure, failure_record, identity, write
-from pair import SPEC, reviewed_stage
-
-
-def root():
-    return Path(os.environ['RUNNER_TEMP'])/'repeated-target-2022'
+from common import resources, require
+from pair import HERE, SPEC, reviewed_stage
+from build_arm import cargo_environment, checkout_arm, cleanup_owned_target, digest, extract_artifact, link_probe, run
 
 
-def execute(stage,arm=None):
-    destination=root()
-    destination.mkdir(parents=True,exist_ok=True)
-    if stage=='pair-preflight':
-        snapshot=reviewed_stage(stage)
-        write(destination/'public/pair-preflight.json',{'status':'reviewed exact source pair',
-              'remote':snapshot,'machine':identity(destination),'driver_revision':os.environ['APPROVED_DIAGNOSTIC_COMMIT'],
-              'baseline':SPEC['baseline']['revision'],'candidate':SPEC['candidate']['revision']})
-    elif stage=='production-build':
-        assert arm in ('baseline','candidate')
-        from build_arm import build
-        build(arm)
-    elif stage=='layout-build':
-        assert arm in ('baseline','candidate')
-        from layout_arm import layout
-        layout(arm)
-    elif stage=='semantic-preflight':
-        from semantics import preflight
-        preflight(destination)
-    elif stage=='napi-parity':
-        reviewed_stage(stage)
-        from napi_parity import run
-        run(destination)
-    elif stage=='sample':
-        reviewed_stage(stage)
-        assert (destination/'public/semantic-preflight.json').is_file()
-        assert (destination/'public/napi-parity.json').is_file()
-        from measure import measure
-        measure(destination)
-    elif stage=='summary':
-        # Preserve every existing row even when the remote source pair drifts or
-        # earlier stages fail. report() labels such a run ineligible.
-        from report import report
-        return report(destination)
-    else:raise ValueError(stage)
-    return 0
-
-
-def main():
-    parser=argparse.ArgumentParser()
-    parser.add_argument('stage',choices=('pair-preflight','production-build','layout-build',
-        'semantic-preflight','napi-parity','sample','summary'))
-    parser.add_argument('--arm',choices=('baseline','candidate'))
-    args=parser.parse_args()
+def layout(arm):
+    require(arm in ('baseline','candidate'),'unknown_arm')
+    reviewed_stage('layout-build')
+    root=Path(os.environ['RUNNER_TEMP'])/'repeated-target-2022'
+    root.mkdir(parents=True,exist_ok=True)
+    resources(root,build=True)
+    source,rows,proof=checkout_arm(root,arm)
+    target_source=source/'crates/no-mistakes/src/codebase/dependencies/extract_collector.rs'
+    before=target_source.read_bytes()
+    output=root/arm/'layout-public';output.mkdir(parents=True,exist_ok=True)
     try:
-        return execute(args.stage,args.arm)
-    except Exception as error:
-        destination=root()/'public'
-        destination.mkdir(parents=True,exist_ok=True)
-        write(destination/(args.stage+'-failure.json'),failure_record(error,args.stage,arm=args.arm))
-        print(json.dumps(failure_record(error,args.stage,arm=args.arm),sort_keys=True))
-        return 1
-
-
-if __name__=='__main__':
-    sys.exit(main())
+        target_source.write_bytes(before+b'\n'+(HERE/'layout-helper.rs').read_bytes())
+        for instrumented in (False,True):
+            mode='instrumented' if instrumented else 'default'
+            target=root/arm/('layout-target-'+mode)
+            env=cargo_environment(target)
+            args=['cargo','rustc','--locked','--release','-p','no-mistakes','--lib','--message-format=json']
+            if instrumented:args+=['--features','test-instrumentation']
+            args+=['--','--cfg','receiver_layout_probe','--check-cfg','cfg(receiver_layout_probe)']
+            data=run(args,cwd=source,env=env,log=root/arm/(mode+'-cargo.log'))
+            expected=SPEC['features']+(['test-instrumentation'] if instrumented else [])
+            artifact=extract_artifact(data,'rlib',source/'crates/no-mistakes/src/lib.rs',expected)
+            rlib=next(Path(p) for p in artifact['filenames'] if p.endswith('.rlib'))
+            binary=root/arm/('layout-'+mode)
+            link_probe(HERE/'layout-probe.rs',binary,rlib,target,env)
+            rows=[line.split('\t') for line in run([str(binary)]).decode().splitlines()]
+            require(len(rows)==6 and all(len(row)==3 for row in rows),'layout_rows_changed')
+            record={'revision':SPEC[arm]['revision'],'tree':SPEC[arm]['tree'],'source_inventory_sha256':proof,
+                    'mode':mode,'helper_sha256':digest(HERE/'layout-helper.rs'),'binary_sha256':digest(binary),
+                    'features':expected,'layouts':[{'type':name,'size':int(size),'align':int(align)} for name,size,align in rows]}
+            (output/(mode+'.json')).write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+    finally:
+        target_source.write_bytes(before)
+        for mode in ('default','instrumented'):
+            cleanup_owned_target(root/arm/('layout-target-'+mode),root/arm)
+        require(target_source.read_bytes()==before,'layout_source_not_restored')
+    return output

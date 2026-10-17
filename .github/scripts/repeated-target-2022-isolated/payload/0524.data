@@ -1,4 +1,7 @@
-import { query } from '@data-stores/psql';
-export function execute() {
-  query('SELECT 99');
+import { read } from '@example/db'
+
+export const api = {
+  run: (sql: string) => read(sql),
 }
+
+api.run('/* exported/inline */ SELECT 1')

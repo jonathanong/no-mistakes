@@ -1,7 +1,7 @@
-import { configure } from "./playwright.helper";
+import { defineConfig } from 'vitest/config'
 
-export default configure({
-  testDir: "./tests",
-  testMatch: "**/*.ts",
-  use: { testIdAttribute: "data-testid" },
-});
+export default defineConfig({
+  test: {
+    include: ['tests/**/*.test.ts'],
+  },
+})

@@ -1,6 +1,2 @@
-CREATE TABLE unproven_constraints (
-  id integer PRIMARY KEY,
-  CONSTRAINT valid_check CHECK (id > 0)
-);
-ALTER TABLE unproven_constraints ADD CONSTRAINT later_check CHECK (id > 1);
-ALTER TABLE unproven_constraints ADD COLUMN later_column integer;
+-- Internal typed-parser fixture; public IF facts require DO ownership.
+IF true THEN ALTER TABLE children ADD COLUMN note text; END IF;

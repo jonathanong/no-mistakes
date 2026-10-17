@@ -1,4 +1,5 @@
 import { primary } from '@vendor/valkey';
-function replacement() {}
-primary.get = replacement;
-(({ options = { client: primary } } = {}) => options.client.get())();
+declare const unknownClient: unknown;
+function f(client = primary) { const alias = client; alias.get(); }
+f();
+f(unknownClient);

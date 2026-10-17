@@ -1,12 +1,5 @@
-{
-  "entry.mts": [
-    9,
-    57,
-    61,
-    63,
-    64
-  ],
-  "import-after.mts": [
-    6
-  ]
+import { query } from "@example/db";
+
+export function load() {
+  return query("INSERT INTO items (id) VALUES (1)");
 }

@@ -1,8 +1,7 @@
-import { expect, it, vi } from "vitest";
+export interface CoreValue {
+  id: string;
+}
 
-vi.mock("../src/feature", () => ({ feature: "mocked" }));
-
-it("loads the feature", async () => {
-  const { loadFeature } = await import("../src/lazy");
-  await expect(loadFeature()).resolves.toEqual({ feature: "mocked" });
-});
+export function formatCore(value: CoreValue): string {
+  return value.id.toUpperCase();
+}

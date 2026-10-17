@@ -1,10 +1,11 @@
 import { query } from "@example/db";
 
-const sql = "SELECT id FROM topics";
-// Conditional static appends keep this recovered SELECT and classify Dynamic
-// so conflict-ordering ignores it, rather than composing the branch as
-// always-on SQL.
-if (flag) sql.append(" WHERE id = 1");
+function idColumn() {
+  return "post_id";
+}
+
+const sql = "SELECT id FROM topics WHERE ";
+sql.append(idColumn());
 
 export function load() {
   return query(sql);

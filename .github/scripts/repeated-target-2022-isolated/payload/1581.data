@@ -1,10 +1,5 @@
-import tag from "sql-template-strings";
-// Type-only and side-effect imports must not mark `tag` (or `sql`) as a shadow.
-import type DefaultSql from "untrusted-tag-library";
-import { type sql } from "other-untrusted";
-import "sql-template-strings";
-import { query } from "@example/db";
-
-export function load(id: number) {
-  return query(tag`SELECT * FROM topics WHERE id = ${id}`);
-}
+INSERT INTO archive SELECT * FROM live
+WITH changed AS (UPDATE items SET note = NULL RETURNING *) SELECT * FROM changed
+WITH changed AS (INSERT INTO items (note) VALUES (NULL) RETURNING *) DELETE FROM logs
+UPDATE logs SET note = 'select' /* SELECT */
+SELECT 'update', $$insert$$, "merge" -- UPDATE

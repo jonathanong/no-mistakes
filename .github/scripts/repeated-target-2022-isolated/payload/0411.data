@@ -1,9 +1,4 @@
-import { query, sql } from "@example/db";
-query("SELECT id FROM users LIMIT 1");
-const q = sql`SELECT id FROM users WHERE id = ${id}`;
-query(q);
-let mutable = "SELECT id FROM users";
-query(mutable); // Legacy nonbranching mutable call retains its opaque policy.
-query(`SELECT id
-FROM users
-LIMIT 1`);
+-- Derived write targets accepted by the parser have no named table identity.
+UPDATE (SELECT id FROM users) u SET id = 1;
+MERGE INTO (SELECT id FROM users) u USING accounts a ON u.id = a.id
+WHEN MATCHED THEN UPDATE SET id = a.id;

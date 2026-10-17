@@ -1,2 +1,5 @@
-// Named default declarations create module bindings.
-export default function sql() { return sql`/* self */ SELECT 1`; }
+import { query } from 'somewhere-else'
+
+export function run() {
+  return query('SELECT 1')
+}

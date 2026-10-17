@@ -1,94 +1,73 @@
-import type {
-  PostgresSqlIdentifier,
-  PostgresSqlName,
-  PostgresSqlSpan,
-  PostgresSqlType,
-} from "./postgres-source-types";
-/** Syntactic root; wrappers never promote a nested call through an unrelated operator. */
-export type PostgresSqlExpressionRoot =
-  | { kind: "columnReference"; name: PostgresSqlName }
-  | {
-      kind: "functionCall";
-      name: PostgresSqlName;
-      arguments: PostgresSqlCallArgument[];
-      argumentsComplete: boolean;
-      syntax: PostgresSqlFunctionSyntax;
-      modifiers: string[];
+{
+  "name": "no-mistakes",
+  "version": "0.91.2",
+  "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for coding agents",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "directory": "packages/no-mistakes"
+  },
+  "bin": {
+    "no-mistakes": "bin/no-mistakes.js"
+  },
+  "files": [
+    "bin/",
+    "*.d.ts",
+    "index.js",
+    "index.mjs",
+    "planning-impact-artifacts.js",
+    "planning-impact-artifacts-errors.js",
+    "planning-impact-artifacts-files.js",
+    "planning-impact-artifacts-inputs.js",
+    "planning-impact-artifacts-lock.js",
+    "planning-impact-artifacts-privacy.js",
+    "planning-impact-cli.js",
+    "planning.js",
+    "planning-artifact-inputs.js",
+    "workflow-topology-index.js",
+    "workflow-topology-index-helpers.js",
+    "scripts/native-package.js",
+    "README.md",
+    "LICENSE",
+    "test-timeout-policy/*.mjs",
+    "test-timeout-policy/*.d.mts",
+    "!test-timeout-policy/*.test.mjs"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./planning.js": "./planning.js",
+    "./workflow-topology-index.js": "./workflow-topology-index.js",
+    "./test-timeout-policy": {
+      "types": "./test-timeout-policy/index.d.mts",
+      "import": "./test-timeout-policy/index.mjs"
+    },
+    "./test-timeout-policy/plugin": {
+      "types": "./test-timeout-policy/plugin.d.mts",
+      "import": "./test-timeout-policy/plugin.mjs"
     }
-  | { kind: "parenthesized"; expression: PostgresSqlExpressionRoot }
-  | {
-      kind: "cast";
-      dataType: string;
-      dataTypeFacts: PostgresSqlType;
-      expression: PostgresSqlExpressionRoot;
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "vitest": "^5.0.3"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
     }
-  | { kind: "nullTest"; negated: boolean }
-  | { kind: "distinctness"; negated: boolean }
-  | { kind: "parameter"; placeholder: string }
-  | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
-  | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
-  | { kind: "binary"; operator: string }
-  | { kind: "unary"; operator: string; expression: PostgresSqlExpressionRoot }
-  | { kind: "array" | "case" | "subquery" | "other" };
-export type PostgresSqlExpressionChildRole =
-  | "argument"
-  | "arrayElement"
-  | "binaryLeft"
-  | "binaryRight"
-  | "caseOperand"
-  | "caseWhenCondition"
-  | "caseWhenResult"
-  | "caseElse"
-  | "castOperand"
-  | "filterPredicate"
-  | "parenthesizedExpression"
-  | "unaryOperand"
-  | "nullOperand"
-  | "distinctLeft"
-  | "distinctRight"
-  | "other";
-export type PostgresSqlExpressionChildRoot =
-  | { kind: "columnReference"; name: PostgresSqlName }
-  | {
-      kind: "functionCall";
-      name: PostgresSqlName;
-      argumentsComplete: boolean;
-      syntax: PostgresSqlFunctionSyntax;
-      modifiers: string[];
-    }
-  | { kind: "parenthesized" }
-  | { kind: "cast"; castKind: string; dataType: string; dataTypeFacts: PostgresSqlType }
-  | { kind: "nullTest"; negated: boolean }
-  | { kind: "distinctness"; negated: boolean }
-  | { kind: "parameter"; placeholder: string }
-  | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
-  | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
-  | { kind: "binary" | "unary"; operator: string }
-  | { kind: "array" | "case" | "subquery" | "other" };
-export interface PostgresSqlExpressionChild {
-  role: PostgresSqlExpressionChildRole;
-  index: number | null;
-  argumentName?: PostgresSqlIdentifier;
-  sql: string;
-  span: PostgresSqlSpan | null;
-  root: PostgresSqlExpressionChildRoot;
-  children: PostgresSqlExpressionChild[];
-  /** Complete represented syntax; a missing provenance span does not imply missing structure. */
-  childrenComplete: boolean;
+  },
+  "optionalDependencies": {
+    "no-mistakes-darwin-arm64": "0.91.2",
+    "no-mistakes-linux-arm64-gnu": "0.91.2",
+    "no-mistakes-linux-x64-gnu": "0.91.2",
+    "no-mistakes-win32-x64-msvc": "0.91.2"
+  }
 }
-/** Bare CURRENT_TIMESTAMP is a value function; CURRENT_TIMESTAMP(3) uses call syntax. */
-export type PostgresSqlFunctionSyntax = "call" | "value";
-export interface PostgresSqlCallArgument {
-  name: PostgresSqlIdentifier | null;
-  sql: string;
-  span: PostgresSqlSpan | null;
-  root: PostgresSqlExpressionRoot;
-}
-
-/** Numbers preserve decimal spelling; string values are parser-decoded. */
-export type PostgresSqlLiteralValue =
-  | { kind: "null" }
-  | { kind: "string"; value: string }
-  | { kind: "number"; value: string }
-  | { kind: "boolean"; value: boolean }
-  | { kind: "other"; sql: string };

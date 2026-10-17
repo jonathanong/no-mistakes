@@ -1,12 +1,28 @@
 import { read, sql } from '@example/db';
 
-// Rest parameters intentionally keep this helper unsupported. Its append must
-// prevent a legacy return prefix from reviving a potentially modified builder.
-function unsupportedAppend(query: unknown, ...unused: unknown[]) {
-  query.append(sql` DELETE FROM records`);
-  return query;
-}
-export function unsupportedAppendIsNotAReadProof() {
+export function mappedBuilderAlias() {
   const query = sql`SELECT 1`;
-  read(unsupportedAppend(query));
+  const mapped = [false, true].map(append => {
+    if (append) query.append(sql`; DELETE FROM records`);
+    return query;
+  });
+  read(mapped[0]);
+}
+
+export function mappedNestedBuilderAlias() {
+  const query = sql`SELECT 1`;
+  const mapped = [false, true].map(append => {
+    if (append) query.append(sql`; DELETE FROM records`);
+    return { query };
+  });
+  read(mapped[0].query);
+}
+
+export function mappedArrayBuilderAlias() {
+  const query = sql`SELECT 1`;
+  const mapped = [false, true].map(append => {
+    if (append) query.append(sql`; DELETE FROM records`);
+    return [query];
+  });
+  read(mapped[0][0]);
 }

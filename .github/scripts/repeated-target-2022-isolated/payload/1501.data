@@ -1,11 +1,12 @@
 import { query } from "@example/db";
 
 function build() {
-  return "SELECT id FROM topics";
+  return "SELECT 1";
 }
 
-let sql = build();
-
 export function load() {
-  return query(sql);
+  for (const build = () => "DELETE FROM users"; false; ) {
+    void build;
+  }
+  return query(build());
 }

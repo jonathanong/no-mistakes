@@ -1,11 +1,10 @@
-import { query, sql } from "@example/db";
+import sql from "sql-template-strings";
+import { query } from "@example/db";
 
-const notDeleted = sql`AND deleted_at IS NULL`;
-let filter = sql``;
+function build(id: number) {
+  return sql`SELECT * FROM topics WHERE id = ${id}`;
+}
 
-export function load(accountId: string, archived: boolean) {
-  // `active` aliases a fragment binding through a conditional.
-  const active = archived ? filter : notDeleted;
-  filter = sql`AND archived_at IS NOT NULL`;
-  return query(sql`SELECT id FROM documents WHERE account_id = ${accountId} ${active}`);
+export function run() {
+  return query(build(1));
 }

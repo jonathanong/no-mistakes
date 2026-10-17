@@ -1,1 +1,1 @@
-export type Executor<T> = (sql: string) => Promise<unknown>;
+not a valid INSERT INTO statement

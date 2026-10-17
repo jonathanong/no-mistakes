@@ -1,11 +1,128 @@
-import type { PostgresSqlName } from "./postgres-source-types";
-export interface PostgresSqlDrop {
-  objectType: string;
-  names: PostgresSqlName[];
-  table: PostgresSqlName | null;
-  signatures: string[];
-  ifExists: boolean;
-  cascade: boolean;
-  restrict: boolean;
-  temporary: boolean;
+// Named query modes (issue #419): data-pw, effects, rsc-callers, registry-extension.
+
+export interface DataPwOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
+  /** The selector-attribute value to find (e.g. `search-bar`). */
+  value: string;
+  /** Attribute names to scan instead of the configured `testIds`. */
+  attributes?: string[];
+  /** Source path prefixes to scan instead of the configured `selectorRoots`. */
+  scan?: string[];
+  /** Comma-separated subset of `source,test` (default: both). */
+  include?: string;
+}
+
+export interface DataPwHit {
+  file: string;
+  line: number;
+  attribute: string;
+}
+
+export interface DataPwReport {
+  value: string;
+  attributes: string[];
+  /** Source-file matches. Omitted when `--include test`. */
+  source?: DataPwHit[];
+  /** Test-file matches. Omitted when `--include source`. */
+  test?: DataPwHit[];
+}
+
+export interface EffectsOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
+  tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
+  /** Effect family from config; supports spelling lists and binding-aware module/export targets. */
+  kind: string;
+  /** Entry file whose transitive imports are scanned. */
+  entry: string;
+  /** Restrict to one or more configured categories. */
+  categories?: string[];
+  /** Maximum traversal depth (default: unlimited). */
+  depth?: number;
+}
+
+/** One distinct configured match for a physical call occurrence. */
+export interface EffectCallAlternative {
+  callee: string;
+  category?: string;
+}
+
+export interface EffectCallSite {
+  file: string;
+  line: number;
+  callee: string;
+  category?: string;
+  caller?: string;
+  depth: number;
+  /** Sorted distinct matches, omitted unless multiple matches remain after category projection. */
+  alternatives?: EffectCallAlternative[];
+}
+
+export interface EffectsReport {
+  kind: string;
+  entry: string;
+  callSites: EffectCallSite[];
+  /** Physical occurrence count per matched category; sums can exceed callSites.length. */
+  byCategory: Record<string, number>;
+}
+
+export interface RscCallersOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
+  tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
+  /** Component file to find RSC callers of. */
+  component: string;
+  /** Maximum traversal depth (default: unlimited). */
+  depth?: number;
+}
+
+export interface RscCaller {
+  file: string;
+  kind: "page" | "component";
+  environment: "server" | "client" | "unknown";
+  depth: number;
+}
+
+export interface RscCallersReport {
+  component: string;
+  callers: RscCaller[];
+}
+
+export interface RegistryExtensionOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Registry file to summarize the entry pattern of. */
+  registryFile: string;
+}
+
+export interface RegistryEntryImport {
+  specifier: string;
+  symbol?: string;
+  local: string;
+  kind: string;
+}
+
+export interface RegistryEntry {
+  line: number;
+  import?: RegistryEntryImport;
+  callShape: string;
+}
+
+export interface RegistryExtensionReport {
+  registryFile: string;
+  patternKind: string;
+  registrant?: string;
+  confidence: string;
+  entries: RegistryEntry[];
+  template?: string;
+  notes: string[];
 }

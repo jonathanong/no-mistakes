@@ -1,9 +1,14 @@
-effects:
-  database:
-    functions: [read]
-    transactionFunctions: [primary.transaction]
-rules:
-  - rule: query-reached-per-item
-    scope: repository
-    options:
-      effects: [database]
+import { sharedReceiver, rhsCopiedReceiver, unrelatedReceiver, rhsSource, rhs } from '@vendor/producer';
+for (const item of ['a', 'b']) {
+  sharedReceiver.get(item);
+  sharedReceiver.get = rhs.get;
+  sharedReceiver.set(item, 'value');
+}
+for (const item of ['a', 'b']) {
+  rhsCopiedReceiver.get(item);
+  rhsCopiedReceiver.get = rhsSource.get;
+}
+for (const item of ['a', 'b']) {
+  unrelatedReceiver.get(item);
+  unrelatedReceiver.get = rhsSource.set;
+}

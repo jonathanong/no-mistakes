@@ -1,6 +1,8 @@
 import { read } from '@example/db'
-import * as statements from './priority-helper.js'
 
-export function list() {
-  return read(statements.query)
+function run(sql: string) {
+  return read(sql)
 }
+
+export const callback = [run][0]
+run('/* exported/indexed */ SELECT id FROM posts')

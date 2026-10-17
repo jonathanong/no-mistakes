@@ -1,8 +1,3 @@
 {
-  "name": "performance-root",
-  "private": true,
-  "workspaces": ["packages/*"],
-  "dependencies": {
-    "@fixture/core": "workspace:*"
-  }
+  "hex": "612e6d74730aff0a"
 }

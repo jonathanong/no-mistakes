@@ -1,3 +1,2 @@
-CREATE TABLE first (id int);
-CREATE TABLE broken (id );
-CREATE TABLE last (id text);
+COMMENT ON TABLE cursor_table IS 'first';
+COMMENT ON FUNCTION cursor_function() IS 'second'

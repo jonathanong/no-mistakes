@@ -1,2 +1,8 @@
-import { begin } from '@vendor/opaque-database';
-export default begin();
+effects:
+  valkey:
+    functions: [primary.get, session.info, session.scan]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [valkey]

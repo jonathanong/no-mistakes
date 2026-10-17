@@ -1,7 +1,2 @@
-name: Edited
-on: push
-jobs:
-  edited:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo edited
+const target = "./shared";
+export const load = () => import(target);

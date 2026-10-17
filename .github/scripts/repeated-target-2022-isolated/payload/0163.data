@@ -1,12 +1,14 @@
-import { query } from "@example/db";
+import sql from "sql-template-strings";
+import { read } from "@example/db";
 
-const text = sql`SELECT * FROM topics WHERE id = ${1}`;
-text.append(sql` AND status = ${2}`);
-
-export function load() {
-  return query(text);
+function buildScopeCondition(scope: string) {
+  return sql` AND tenant_id = ${scope}`;
 }
 
-function sql(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return strings.join("");
+export async function listTopics(scope: string) {
+  const scopeCondition = buildScopeCondition(scope);
+  const query = sql`SELECT id FROM topics WHERE published = true`;
+  query.append(scopeCondition);
+  query.append(sql` ORDER BY id`);
+  return read(query);
 }

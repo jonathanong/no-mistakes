@@ -1,2 +1,12 @@
-INSERT INTO users (email, name) VALUES ('a', 'n')
-ON CONFLICT (email, lower(name)) DO UPDATE SET name = 'b';
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/**/*.sql"]
+      scanEmbedded: false
+      checkConvergence: false
+      checkVolatility: false
+      checkArbiter: true
+      checkTriggers: false
+      checkGenerated: false

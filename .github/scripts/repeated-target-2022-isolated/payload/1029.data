@@ -1,6 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-const get = primary.get;
-// Invoke before the later write: earlier copied-argument timing is covered separately.
-(({ method }) => method())({ method: get });
-primary.get = replacement;
+function f(client = primary) { const alias = client; const get = alias.get; primary.get = replacement; get(); }
+f();

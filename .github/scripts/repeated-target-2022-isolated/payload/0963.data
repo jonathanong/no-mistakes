@@ -1,1 +1,1 @@
-export function factory() { return ({ client }) => client.get(); }
+export { factory } from './provider-reexported.mjs';

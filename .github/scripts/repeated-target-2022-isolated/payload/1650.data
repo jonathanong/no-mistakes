@@ -1,5 +1,10 @@
-import { query, sql } from "@example/db";
-query(sql`SELECT 1 ${sql`ignored` && sql`LIMIT 1`}`);
-query(sql`SELECT 2 ${sql`` && sql`LIMIT 2`}`); // Even an empty builder is a truthy object.
-query(sql`SELECT 3 ${sql.raw("") && sql`LIMIT 3`}`);
-query(sql`SELECT 4 ${(flag ? sql`` : sql`ignored`) && sql`LIMIT 4`}`);
+import { query } from "@example/db";
+import { sql } from "@example/dbx";
+
+export function load(accountId: string) {
+  return query(sql`
+    SELECT id
+    FROM documents
+    WHERE account_id = ${accountId}
+  `);
+}

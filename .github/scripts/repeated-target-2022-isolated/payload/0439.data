@@ -1,10 +1,7 @@
-import { read, sql } from '@example/db';
+import { withTransaction } from '@example/db'
 
-// An opaque consumer may execute callbacks held in live array slots.
-export function arrayCallbacks(consume: unknown) {
-  const query = sql`SELECT 1`;
-  consume([() => {
-    query.append(sql`; DELETE FROM records`);
-    read(query);
-  }]);
+export async function insert() {
+  return withTransaction(async () => {
+    return query('INSERT INTO t (id) VALUES ($1)')
+  })
 }

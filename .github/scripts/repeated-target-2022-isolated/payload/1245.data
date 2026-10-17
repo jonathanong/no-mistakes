@@ -1,9 +1,20 @@
-import { primary as client } from '@vendor/valkey';
-function replacement() {}
+import { primary, session } from '@vendor/valkey';
 const items = ['one'];
-const box = { wrapper: { client } };
-const savedWrapper = box.wrapper;
-box.wrapper = {};
-savedWrapper.client.get = replacement;
-function acquiredBeforeContainer(value) { value.get('key'); }
-for (const item of items) { acquiredBeforeContainer(client); }
+// Inherited properties suppress defaults; explicit own undefined does not.
+function inherited({ constructor: client = session }) { client.info('key'); }
+for (const item of items) { inherited({}); }
+function ownUndefined({ constructor: client = session }) { client.info('key'); }
+for (const item of items) { ownUndefined({ constructor: undefined }); }
+function ownClient({ constructor: client = primary }) { client.info('key'); }
+for (const item of items) { ownClient({ constructor: session }); }
+function inheritedNames({ toString: client = session }) { client.info('key'); }
+for (const item of items) { inheritedNames({}); }
+const nullProto = { __proto__: null };
+function absentConstructor({ constructor: client = primary } = nullProto) { client.get('key'); }
+for (const item of items) { absentConstructor(); }
+const ownProto = { ['__proto__']: null };
+function computedProto({ constructor: client = primary } = ownProto) { client.get('key'); }
+for (const item of items) { computedProto(); }
+const wrappedNull = { __proto__: (null as null) };
+function wrappedConstructor({ constructor: client = primary } = wrappedNull) { client.get('key'); }
+for (const item of items) { wrappedConstructor(); }

@@ -1,31 +1,16 @@
--- Source-level WITH is an unsupported VALUES modifier. The row stays mapped.
-INSERT INTO t(id)
-WITH seed AS (SELECT 1)
-VALUES (1)
-RETURNING id;
-
--- The CTE form must map that same VALUES row, not unsupportedSource.
-WITH changed AS (
-  INSERT INTO t(id)
-  WITH seed AS (SELECT 1)
-  VALUES (1)
-  RETURNING id
-)
-SELECT * FROM changed;
-
--- Non-RETURNING CTE inserts still omit columnSources. The seed CTE stays recorded.
-WITH plain AS (
-  INSERT INTO t(id)
-  WITH seed AS (SELECT 1)
-  VALUES (1)
-)
-SELECT 1;
-
--- SELECT sources record this same source-level seed on the source query scope.
-WITH changed AS (
-  INSERT INTO t(id)
-  WITH seed AS (SELECT 1)
-  SELECT 1
-  RETURNING id
-)
-SELECT * FROM changed;
+-- Argument order is deliberate: consumers need facts, not a replay policy.
+INSERT INTO public."café" AS target (id, value) VALUES (1, 2)
+ON CONFLICT (id) DO UPDATE SET
+  value = COALESCE(target.value, CURRENT_TIMESTAMP),
+  reversed = COALESCE(CURRENT_TIMESTAMP, target.value),
+  direct = EXCLUDED.value,
+  nested = lower(COALESCE(EXCLUDED.value, target.value)) || upper('λ'),
+  choice = CASE target.id WHEN 1 THEN EXCLUDED.value WHEN 2 THEN target.value ELSE 'λ' END,
+  searched = CASE WHEN target.id > 0 THEN COALESCE(target.value, EXCLUDED.value) END,
+  wrapped = -(CAST((COALESCE(target.id, EXCLUDED.id)) AS integer)),
+  opaque = sum(DISTINCT target.id) FILTER (WHERE target.id > 0),
+  wildcard = count(*),
+  windowed = sum(target.id) OVER (),
+  named = custom_call(first_arg => target.value, second_arg => EXCLUDED.value),
+  null_treatment = first_value(target.id) IGNORE NULLS,
+  direct_target = target.value;

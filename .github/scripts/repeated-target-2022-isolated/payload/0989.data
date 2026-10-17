@@ -1,4 +1,17 @@
-import { primary } from '@vendor/valkey';
-function replacement() {}
-(async (client = primary) => { const alias = client; await Promise.resolve(); alias.get(); })();
-primary.get = replacement;
+{
+  "kind": "database",
+  "entry": "src/entry.mts",
+  "callSites": [
+    {
+      "file": "src/entry.mts",
+      "line": 4,
+      "callee": "replica.write",
+      "category": "write",
+      "caller": "invoke",
+      "depth": 0
+    }
+  ],
+  "byCategory": {
+    "write": 1
+  }
+}

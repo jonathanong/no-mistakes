@@ -1,9 +1,12 @@
-import { read } from '@example/db'
-
-function run(sql: string) {
-  return read(sql)
+export function appendLiteral(query: { append: (suffix: string) => void }) {
+  query.append(' WHERE id = 1')
 }
 
-const key = Math.random() ? 'run' : 'other'
-export const callback = { run }[key]
-run('/* exported/dynamic-key */ SELECT id FROM posts')
+export function appendConcatenated(query: { append: (suffix: string) => void }) {
+  query.append(' ORDER BY ' + 'id')
+}
+
+export async function appendAfterGate(query: { append: (suffix: string) => void }) {
+  await Promise.resolve('ready')
+  query.append(' UPDATE posts SET title = title')
+}

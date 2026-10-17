@@ -1,352 +1,371 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { mkdtemp, mkdir, readFile, rm, writeFile } = require("node:fs/promises");
+const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
-const executedSource = (name) => ({
-  fileName: name,
-  source: readFileSync(
-    join(__dirname, "../../../fixtures/postgres-facts/executed-source", name),
-    "utf8",
-  ),
+const {
+  boundedDiagnostic,
+  main,
+  parsePlanningImpactArgs,
+  runPlanningImpact,
+} = require("../planning-impact-cli");
+const {
+  firstSubcommand,
+  launchNative,
+  main: launcherMain,
+  planningImpactArgs,
+  runIfMain,
+} = require("../bin/no-mistakes.js");
+
+test("parses the planning-impact artifact command and its invocation controls", () => {
+  assert.deepEqual(
+    parsePlanningImpactArgs(
+      [
+        "--changed-files",
+        "changed.txt",
+        "--output-dir=output",
+        "--broad",
+        "--timeout",
+        "0",
+        "--lock-timeout",
+        "12",
+        "--fail-on-lock",
+        "-j",
+        "2",
+        "--profile",
+        "ci",
+      ],
+      "/repo",
+    ),
+    {
+      root: "/repo",
+      changedFilesManifest: "changed.txt",
+      outputDirectory: "output",
+      broad: true,
+      timeout: 0,
+      lockTimeout: 12,
+      failOnLock: true,
+      jobs: 2,
+      profile: "ci",
+    },
+  );
+});
+
+test("reports help and rejects missing or unknown planning-impact arguments", () => {
+  assert.equal(parsePlanningImpactArgs(["--help"], "/repo"), null);
+  assert.throws(
+    () => parsePlanningImpactArgs(["--changed-files", "changed.txt"], "/repo"),
+    /usage: no-mistakes planning-impact/,
+  );
+  assert.throws(
+    () => parsePlanningImpactArgs(["--changed-files", "x", "--output-dir", "y", "--wat"], "/repo"),
+    /Unknown option/,
+  );
+  assert.throws(
+    () =>
+      parsePlanningImpactArgs(["--changed-files", "x", "--output-dir", "y", "--jobs=-1"], "/repo"),
+    /jobs must be a non-negative integer/,
+  );
+  assert.throws(
+    () =>
+      parsePlanningImpactArgs(
+        ["--changed-files", "x", "--output-dir", "y", "--timeout=9007199254740992"],
+        "/repo",
+      ),
+    /timeout must be a safe integer/,
+  );
+  assert.throws(
+    () =>
+      parsePlanningImpactArgs(
+        ["--changed-files", "x", "--output-dir", "y", "--profile", "dev"],
+        "/repo",
+      ),
+    /profile must be "ci"/,
+  );
+  assert.throws(
+    () =>
+      parsePlanningImpactArgs(["--changed-files", "x", "--output-dir", "y", "unexpected"], "/repo"),
+    /Unexpected argument/,
+  );
+});
+
+test("does not call the writer for help and renders no success output", async () => {
+  let calls = 0;
+  assert.equal(
+    await runPlanningImpact(["--help"], "/repo", async () => {
+      calls += 1;
+    }),
+    null,
+  );
+  assert.equal(calls, 0);
+  let stdout = "";
+  await main(
+    ["--changed-files", "changed.txt", "--output-dir", "output"],
+    "/repo",
+    { stdout: { write: (value) => (stdout += value) } },
+    async () => {},
+  );
+  assert.equal(stdout, "");
+  assert.equal(boundedDiagnostic("failure"), "failure\n");
+});
+
+test("loads the public writer lazily when main receives no writer", async () => {
+  const indexPath = require.resolve("../index");
+  const previous = require.cache[indexPath];
+  const calls = [];
+  require.cache[indexPath] = {
+    exports: { writePlanningImpactArtifacts: async (options) => calls.push(options) },
+  };
+  try {
+    await main(["--changed-files", "changed.txt", "--output-dir", "output"], "/repo", {
+      stdout: { write() {} },
+    });
+    assert.deepEqual(calls, [
+      {
+        root: "/repo",
+        changedFilesManifest: "changed.txt",
+        outputDirectory: "output",
+        broad: false,
+      },
+    ]);
+  } finally {
+    if (previous) require.cache[indexPath] = previous;
+    else delete require.cache[indexPath];
+  }
+});
+
+test("runs the public writer with cwd as root", async () => {
+  const calls = [];
+  await runPlanningImpact(
+    ["--changed-files", "changed.txt", "--output-dir", "output", "--broad"],
+    "/repo",
+    async (options) => calls.push(options),
+  );
+  assert.deepEqual(calls, [
+    {
+      root: "/repo",
+      changedFilesManifest: "changed.txt",
+      outputDirectory: "output",
+      broad: true,
+    },
+  ]);
+});
+
+test("prints help before loading the native addon", async () => {
+  let stdout = "";
+  await main(["--help"], "/repo", { stdout: { write: (value) => (stdout += value) } });
+  assert.match(stdout, /usage: no-mistakes planning-impact/);
+});
+
+test("bounds CLI diagnostics without splitting UTF-8 characters", () => {
+  const detail = "é".repeat(4_096);
+  assert.ok(Buffer.byteLength(boundedDiagnostic(new Error(detail))) <= 4_096);
+  assert.equal(boundedDiagnostic(new Error(detail)).includes("\ufffd"), false);
+});
+
+test("runs the CLI entry only when the module is executed directly", () => {
+  let started = false;
+  runIfMain(module, module, () => {
+    started = true;
+  });
+  assert.equal(started, true);
+  runIfMain({}, module, () => {
+    started = false;
+  });
+  assert.equal(started, true);
+});
+
+test("forwards a positive millisecond invocation budget without mistaking it for a command", () => {
+  const args = [
+    "--changed-files",
+    "changed.txt",
+    "--output-dir",
+    "output",
+    "--invocation-timeout-ms",
+    "3500",
+  ];
+  assert.equal(parsePlanningImpactArgs(args, "/repo").invocationTimeoutMs, 3500);
+  assert.equal(
+    firstSubcommand(["--invocation-timeout-ms", "3500", "planning-impact"]),
+    "planning-impact",
+  );
+  assert.equal(
+    firstSubcommand(["--invocation-timeout-ms=3500", "planning-impact"]),
+    "planning-impact",
+  );
+  for (const value of ["0", "-1", "1.5", "Infinity", "9007199254740992"]) {
+    assert.throws(
+      () => parsePlanningImpactArgs([...args.slice(0, -1), value], "/repo"),
+      /invocation-timeout-ms/,
+    );
+  }
+});
+
+test("recognizes planning-impact only as the first actual subcommand", () => {
+  assert.equal(firstSubcommand(["--timeout", "5", "planning-impact"]), "planning-impact");
+  assert.equal(firstSubcommand(["--jobs=2", "planning-impact"]), "planning-impact");
+  assert.equal(firstSubcommand(["--fail-on-lock", "planning-impact"]), "planning-impact");
+  assert.equal(firstSubcommand(["--", "planning-impact"]), undefined);
+  assert.equal(firstSubcommand([]), undefined);
+  assert.equal(firstSubcommand(["--timings", "planning-impact"]), "--timings");
+  assert.equal(firstSubcommand(["--wat", "planning-impact"]), "--wat");
+  assert.equal(firstSubcommand(["dependencies", "planning-impact"]), "dependencies");
+  assert.deepEqual(
+    planningImpactArgs([
+      "--timeout",
+      "5",
+      "planning-impact",
+      "--changed-files",
+      "x",
+      "--output-dir",
+      "y",
+    ]),
+    ["--timeout", "5", "--changed-files", "x", "--output-dir", "y"],
+  );
+});
+
+test("forwards a successful planning command and native command unchanged", async () => {
+  const planningCalls = [];
+  await launcherMain(["--profile", "ci", "planning-impact", "--help"], {
+    runPlanning: async (args) => planningCalls.push(args),
+  });
+  assert.deepEqual(planningCalls, [["--profile", "ci", "--help"]]);
+  const nativeCalls = [];
+  await launcherMain(["dependencies", "src/a.ts"], {
+    launchNativeFn: (args) => nativeCalls.push(args),
+  });
+  await launcherMain(["--", "planning-impact"], {
+    launchNativeFn: (args) => nativeCalls.push(args),
+  });
+  assert.deepEqual(nativeCalls, [
+    ["dependencies", "src/a.ts"],
+    ["--", "planning-impact"],
+  ]);
+});
+
+test("runs the default planning command through the launcher", async () => {
+  let stdout = "";
+  await launcherMain(["planning-impact", "--help"], {
+    io: { stdout: { write: (value) => (stdout += value) } },
+  });
+  assert.match(stdout, /usage: no-mistakes planning-impact/);
+});
+
+test("bounds a rejected planning command at the launcher boundary", async () => {
+  let stderr = "";
+  const io = { exitCode: undefined, stderr: { write: (value) => (stderr += value) } };
+  await launcherMain(["planning-impact"], {
+    io,
+    runPlanning: async () => {
+      throw new Error("é".repeat(4_096));
+    },
+  });
+  assert.equal(io.exitCode, 1);
+  assert.ok(Buffer.byteLength(stderr) <= 4_096);
+  assert.equal(stderr.includes("\ufffd"), false);
+});
+
+test("delegates native arguments unchanged and propagates its exit code", async () => {
+  const calls = [];
+  const handlers = {};
+  const child = { on: (event, handler) => (handlers[event] = handler) };
+  const io = { exitCode: undefined };
+  launchNative(
+    ["--timeout", "5", "dependencies", "src/a.ts"],
+    (file, argv, options) => {
+      calls.push({ file, argv, options });
+      return child;
+    },
+    io,
+    process.kill,
+    () => ({ cliPath: "/native/no-mistakes" }),
+  );
+  handlers.exit(23, null);
+  assert.deepEqual(calls[0].argv, ["--timeout", "5", "dependencies", "src/a.ts"]);
+  assert.equal(io.exitCode, 23);
+});
+
+test("reports native spawn errors and preserves signal or null-code exits", () => {
+  const handlers = {};
+  const io = { exitCode: undefined, stderr: { write: (value) => (io.error = value) } };
+  launchNative(
+    [],
+    () => ({ on: (event, handler) => (handlers[event] = handler) }),
+    io,
+    process.kill,
+    () => ({ cliPath: "/native/no-mistakes" }),
+  );
+  handlers.error(new Error("spawn failed"));
+  assert.equal(io.exitCode, 1);
+  assert.equal(io.error, "spawn failed\n");
+  handlers.error("spawn failed");
+  assert.equal(io.error, "spawn failed\n");
+  handlers.exit(null, null);
+  assert.equal(io.exitCode, 1);
+
+  const signalHandlers = {};
+  const signals = [];
+  launchNative(
+    [],
+    () => ({ on: (event, handler) => (signalHandlers[event] = handler) }),
+    { stderr: { write() {} } },
+    (pid, signal) => signals.push({ pid, signal }),
+    () => ({ cliPath: "/native/no-mistakes" }),
+  );
+  signalHandlers.exit(null, "SIGTERM");
+  assert.deepEqual(signals, [{ pid: process.pid, signal: "SIGTERM" }]);
+});
+
+test("reports a selected-platform resolver failure before attempting to spawn", () => {
+  const io = { exitCode: undefined, stderr: { write: (value) => (io.error = value) } };
+  const result = launchNative(
+    ["dependencies", "src/a.ts"],
+    () => assert.fail("the CLI must not spawn without its matching platform package"),
+    io,
+    process.kill,
+    () => {
+      throw new Error("The optional native package no-mistakes-darwin-arm64 is unavailable.");
+    },
+  );
+  assert.equal(result, undefined);
+  assert.equal(io.exitCode, 1);
+  assert.match(io.error, /no-mistakes-darwin-arm64/);
+  const stringIo = { exitCode: undefined, stderr: { write: (value) => (stringIo.error = value) } };
+  launchNative(
+    ["dependencies"],
+    () => assert.fail("the CLI must not spawn without its matching platform package"),
+    stringIo,
+    process.kill,
+    () => {
+      throw "unavailable";
+    },
+  );
+  assert.equal(stringIo.exitCode, 1);
+  assert.equal(stringIo.error, "unavailable\n");
 });
 
 test(
-  "compiled nested helpers without executors return no SQL and preserve other sources",
-  { skip: !compiled },
+  "the real addon writes dependency, dependent, symbol, and plan artifacts",
+  { skip: !process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node"), timeout: 20_000 },
   async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    for (const resolveImports of [false, true]) {
-      const options = {
-        sources: [executedSource("nested-builder-no-executor.mts")],
-        importSpecifier: "@data-stores/psql",
-        executorNames: ["query", "read", "write"],
-        resolveImports,
-      };
-      const pending = cjs.extractExecutedPostgresSql(options);
-      assert.ok(pending instanceof Promise);
-      assert.deepEqual(await pending, []);
-      assert.deepEqual(await esm.extractExecutedPostgresSql(options), []);
-      const mixed = {
-        ...options,
-        sources: [...options.sources, executedSource("nested-builder-control.mts")],
-      };
-      const rows = await cjs.extractExecutedPostgresSql(mixed);
-      assert.deepEqual(await esm.extractExecutedPostgresSql(mixed), rows);
-      assert.equal(rows.length, 1);
-      assert.equal(rows[0].fileName, "nested-builder-control.mts");
-      assert.equal(rows[0].sqlText, "SELECT 99");
-      assert.equal(rows[0].complete, true);
-    }
-  },
-);
-
-test(
-  "compiled temporary callback operands survive nested branches",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const options = {
-      sources: [executedSource("transient-array-callbacks.mts")],
-      importSpecifier: "@example/db",
-      resolveImports: true,
-      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-    };
-    const rows = await cjs.extractExecutedPostgresSql(options);
-    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
-    for (const annotation of [
-      "transient/argument",
-      "transient/element",
-      "transient/private",
-      "transient/worklist",
-    ]) {
-      assert.ok(
-        rows.some(
-          (row) => row.annotation === annotation && row.sqlText?.endsWith("; DELETE FROM records"),
-        ),
-        JSON.stringify(rows),
-      );
-    }
-  },
-);
-
-const fixtureRoot = join(
-  __dirname,
-  "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing",
-);
-const reviewFixtureRoot = join(
-  __dirname,
-  "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-review",
-);
-const reachabilityFixtureRoot = join(
-  __dirname,
-  "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-reachability",
-);
-
-test(
-  "compiled CJS and ESM retain imported helper findings with mixed SQL profiles",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const report = await cjs.check({ root: reachabilityFixtureRoot });
-    assert.deepEqual(await esm.check({ root: reachabilityFixtureRoot }), report);
-    assert.deepEqual(report.warnings, []);
-    assert.deepEqual(
-      report.rules.map((finding) => [finding.rule, finding.file, finding.line]),
-      [
-        ["postgres-conflict-ordering", "src/helper.mts", 3],
-        ["postgres-require-query-annotation", "src/helper.mts", 3],
-      ],
-    );
-  },
-);
-
-function markedLines(source, kinds) {
-  return source
-    .split("\n")
-    .flatMap((line, index) =>
-      kinds.some((kind) => line.includes(`// ${kind}:`)) ? [index + 1] : [],
-    );
-}
-
-function markedFiles(root, files, kinds) {
-  return files
-    .flatMap((file) =>
-      markedLines(readFileSync(join(root, file), "utf8"), kinds).map((line) => [
-        "postgres-require-query-annotation",
-        file,
-        line,
-      ]),
-    )
-    .sort((left, right) => left[1].localeCompare(right[1]) || left[2] - right[2]);
-}
-
-test(
-  "compiled CJS and ESM trace helper SQL and report unanalyzable executor arguments",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const source = readFileSync(join(fixtureRoot, "src/orders.mts"), "utf8");
-    const report = await cjs.check({ root: fixtureRoot });
-    assert.deepEqual(await esm.check({ root: fixtureRoot }), report);
-    assert.deepEqual(report.warnings, []);
-    assert.deepEqual(
-      report.rules.map((finding) => [finding.rule, finding.file, finding.line]),
-      markedLines(source, ["finding", "unanalyzable"]).map((line) => [
-        "postgres-require-query-annotation",
-        "src/orders.mts",
-        line,
-      ]),
-    );
-
-    const ignore = await cjs.check({
-      root: fixtureRoot,
-      config: join(fixtureRoot, ".no-mistakes-ignore.yml"),
-    });
-    assert.deepEqual(
-      await esm.check({
-        root: fixtureRoot,
-        config: join(fixtureRoot, ".no-mistakes-ignore.yml"),
-      }),
-      ignore,
-    );
-    assert.deepEqual(ignore.warnings, []);
-    assert.deepEqual(
-      ignore.rules.map((finding) => [finding.rule, finding.file, finding.line]),
-      markedLines(source, ["finding"]).map((line) => [
-        "postgres-require-query-annotation",
-        "src/orders.mts",
-        line,
-      ]),
-    );
-  },
-);
-
-test(
-  "compiled CJS and ESM preserve query helper captures and imported export resolution",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const source = readFileSync(join(reviewFixtureRoot, "src/query.mts"), "utf8");
-    const reviewedSources = [
-      "src/query.mts",
-      "src/import-equals.mts",
-      "src/local-tag.mts",
-      "src/named-tags.mts",
-      "src/destructured-tag.mts",
-      "src/raw-assertion.ts",
-      "src/raw-deleted.mts",
-      "src/raw-reassigned.mts",
-      "src/raw-shadowed.mts",
-    ];
-    const report = await cjs.check({ root: reviewFixtureRoot });
-    assert.deepEqual(await esm.check({ root: reviewFixtureRoot }), report);
-    assert.deepEqual(report.warnings, []);
-    assert.deepEqual(
-      report.rules.map((finding) => [finding.rule, finding.file, finding.line]),
-      markedFiles(reviewFixtureRoot, reviewedSources, ["finding", "unanalyzable"]),
-    );
-    const transactionLine =
-      source.split("\n").findIndex((line) => line.includes("// finding:transaction-same-line")) + 1;
-    assert.equal(
-      report.rules.filter(
-        (finding) => finding.file === "src/query.mts" && finding.line === transactionLine,
-      ).length,
-      1,
-      "BEGIN and an unrelated annotated query on the same line must not hide the configured transaction query",
-    );
-
-    const ignore = await cjs.check({
-      root: reviewFixtureRoot,
-      config: join(reviewFixtureRoot, ".no-mistakes-ignore.yml"),
-    });
-    assert.deepEqual(
-      await esm.check({
-        root: reviewFixtureRoot,
-        config: join(reviewFixtureRoot, ".no-mistakes-ignore.yml"),
-      }),
-      ignore,
-    );
-    assert.deepEqual(ignore.warnings, []);
-    assert.deepEqual(
-      ignore.rules.map((finding) => [finding.rule, finding.file, finding.line]),
-      markedFiles(reviewFixtureRoot, reviewedSources, ["finding"]),
-      "a known unannotated imported helper remains a finding when unanalyzableSql is ignored",
-    );
-  },
-);
-
-test(
-  "compiled helper tracing uses each importer catalog and honors a forced config",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-monorepo",
-    );
-    for (const config of [".no-mistakes.yml", ".no-mistakes-report.yml"]) {
-      const options = { root, config: join(root, config) };
-      const report = await cjs.check(options);
-      assert.deepEqual(await esm.check(options), report);
-      assert.deepEqual(report.warnings, []);
-      assert.deepEqual(
-        report.rules.map(({ file, line, target }) => [file, line, target]),
-        [["packages/bad/src/query.mts", 3, "annotation"]],
-      );
-      const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
-      assert.deepEqual(batch.reports[0].result, report);
-    }
-    // Explicit ownership deliberately replaces package-local aliases.
-    const forced = { root, tsconfig: join(root, "tsconfig.json") };
-    const report = await cjs.check(forced);
-    assert.deepEqual(await esm.check(forced), report);
-    assert.deepEqual(report.rules, []);
-    const batch = await cjs.analyzeProject({ ...forced, reports: [{ type: "check" }] });
-    assert.deepEqual(batch.reports[0].result, report);
-  },
-);
-
-// Keep each saved scenario within the runner's unchanged per-test deadline.
-for (const scenario of [
-  "helper-tracing-post-merge",
-  "helper-tracing-tag-callback",
-  "helper-tracing-alternative-callback",
-  "helper-tracing-named-delete",
-  "helper-tracing-argument-members",
-  "helper-tracing-discarded-values",
-  "helper-tracing-call-argument-order",
-  "helper-tracing-live-binding",
-  "helper-tracing-argument-slot-write",
-  "helper-tracing-destructuring-alias",
-  "helper-tracing-arm-module",
-  "helper-tracing-argument-length",
-  "helper-tracing-returned-callbacks",
-  "helper-tracing-deleted-slot-callback",
-  "helper-tracing-module-sibling",
-  "helper-tracing-module-sibling-reverse",
-  "helper-tracing-callback-installers",
-  "helper-tracing-mapped-scalar",
-  "helper-tracing-mapped-formal-callback",
-  "helper-tracing-argument-alias-write",
-  "helper-tracing-dynamic-delete-slot-write",
-  "helper-tracing-callback-revisit",
-  "helper-tracing-imported-callback-revisit",
-  "helper-tracing-unary-argument-index",
-]) {
-  test(
-    `compiled helper value contexts retain parameter and arguments ownership: ${scenario}`,
-    { skip: !compiled },
-    async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const root = join(
-        __dirname,
-        `../../../test-cases/rules/postgres-require-query-annotation/fixture/${scenario}`,
-      );
-      for (const config of [".no-mistakes.yml", ".no-mistakes-ignore.yml"]) {
-        const options = { root, config: join(root, config) };
-        const report = await cjs.check(options);
-        assert.deepEqual(await esm.check(options), report);
-        assert.deepEqual(report.warnings, []);
-        assert.deepEqual(
-          report.rules.map(({ rule, file, line }) => [rule, file, line]),
-          markedFiles(
-            root,
-            scenario === "helper-tracing-arm-module"
-              ? ["src/query.mts", "src/state.mts"]
-              : ["helper-tracing-mapped-scalar", "helper-tracing-callback-revisit"].includes(
-                    scenario,
-                  )
-                ? ["src/query.cjs"]
-                : scenario === "helper-tracing-imported-callback-revisit"
-                  ? ["src/query.mts", "src/helper.mts"]
-                  : scenario === "helper-tracing-mapped-formal-callback"
-                    ? ["src/query.mts", "src/helper.cjs"]
-                    : [
-                          "helper-tracing-argument-alias-write",
-                          "helper-tracing-dynamic-delete-slot-write",
-                        ].includes(scenario)
-                      ? ["src/query.mts", "src/sloppy.cjs"]
-                      : ["src/query.mts"],
-            config.includes("ignore") ? ["finding"] : ["finding", "unanalyzable"],
-          ),
-        );
-        const batch = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
-        assert.deepEqual(batch.reports[0].result, report);
+    const root = join(__dirname, "..", "..", "..", "fixtures", "napi", "real-addon-dependencies");
+    const output = await mkdtemp(join(tmpdir(), "no-mistakes-planning-cli-"));
+    const manifest = join(output, "changed-files.txt");
+    try {
+      await mkdir(output, { recursive: true, mode: 0o700 });
+      await writeFile(manifest, "entry.ts\n");
+      let stdout = "";
+      await main(["--changed-files", manifest, "--output-dir", output], root, {
+        stdout: { write: (value) => (stdout += value) },
+      });
+      assert.equal(stdout, "");
+      for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+        assert.equal(await readFile(join(output, `${name}.status`), "utf8"), "0\n");
+        assert.notEqual(JSON.parse(await readFile(join(output, `${name}.json`), "utf8")), null);
       }
-    },
-  );
-}
-
-test(
-  "compiled removed child callbacks survive an earlier worklist branch",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const options = {
-      sources: [executedSource("transient-replaced-child.mts")],
-      importSpecifier: "@example/db",
-      resolveImports: true,
-      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-    };
-    const rows = await cjs.extractExecutedPostgresSql(options);
-    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
-    assert.ok(
-      rows.some(
-        (row) =>
-          row.annotation === "transient/replaced-child" &&
-          row.sqlText?.endsWith("; DELETE FROM records"),
-      ),
-      JSON.stringify(rows),
-    );
+    } finally {
+      await rm(output, { recursive: true, force: true });
+    }
   },
 );

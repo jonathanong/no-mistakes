@@ -1,3 +1,18 @@
-export function Button({ label }: { label: string }) {
-  return <button data-pw="fixture-button">{label}</button>;
+{
+  "roots": ["entry.ts"],
+  "files": [
+    {
+      "path": "dependency.ts",
+      "depth": 1,
+      "via": ["import"]
+    }
+  ],
+  "diagnostics": [],
+  "tsconfig_provenance": [
+    {
+      "importer": "entry.ts",
+      "config": null,
+      "forced": false
+    }
+  ]
 }

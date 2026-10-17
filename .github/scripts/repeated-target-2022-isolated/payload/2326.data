@@ -1,2 +1,9 @@
-type Namespace = { Query: (id: string) => void };
-export type { Namespace };
+effects:
+  postgres:
+    typedExecutors:
+      - { module: './executor.mts', export: Executor }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

@@ -1,15 +1,11 @@
 import { query } from "@example/db";
 
-function build() {
-  return "SELECT id FROM topics";
+async function buildSql() {
+  return "SELECT 1";
 }
 
-function externalBuilder() {
-  return "UNTRUSTED";
-}
+const sql = buildSql();
 
 export function load() {
-  for (const build of [externalBuilder]) {
-    return query(build());
-  }
+  return query(sql);
 }

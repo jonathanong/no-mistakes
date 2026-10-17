@@ -1,12 +1,8 @@
 import { query } from "@example/db";
 
-declare const parts: string[];
+const sql = "SELECT id FROM topics";
+sql.append(...parts);
 
-function selectTopics() {
-  return "SELECT id FROM topics";
-}
-
-export function load(selectTopics: () => string) {
-  const statement = selectTopics().append(...parts);
-  return query(statement);
+export function load() {
+  return query(sql);
 }

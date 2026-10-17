@@ -1,10 +1,7 @@
 import { read } from '@example/db'
+import { query } from './eager-builder'
+import { unused } from './eager-mutator'
 
-function run(sql: string) {
-  return read(sql)
+export function eagerRead() {
+  return read(query)
 }
-
-var first = second
-var second = first
-export const api = { first, run }
-run('/* exported/cyclic */ SELECT id FROM posts')

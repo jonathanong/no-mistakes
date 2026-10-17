@@ -1,13 +1,17 @@
 import { query } from "@example/db";
 
-function sql() {
-  return process.env.SQL;
+function build() {
+  return "SELECT id FROM topics";
 }
 
-function build() {
-  return sql`SELECT 1`;
+function externalBuilder() {
+  return "UNTRUSTED";
 }
+
+build = externalBuilder;
+
+const sql = build();
 
 export function load() {
-  return query(build());
+  return query(sql);
 }

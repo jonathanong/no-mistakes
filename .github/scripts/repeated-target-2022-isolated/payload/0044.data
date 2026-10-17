@@ -1,220 +1,91 @@
-"""Bounded setup, exact-pair, transfer, and row-retention mutations; no ARM run."""
-import json
-import tempfile
-import unittest
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
-import yaml
-
-from proposal_guard import check
-from transfer import ALLOWED, record, verify
-from semantics import canonical_graph, sha
-from build_arm import extract_artifact, graph_probe_cfg
-from measure import capture_two_arms, complete_sample_row
-from report import report
-from napi_parity import adapter_lock_notice_count
-from common import ExperimentFailure
-
-HERE = Path(__file__).resolve().parent
-OLD = Path('/tmp/nm2022-v4-corrected-proposal/.github/scripts/repeated-target-native-1971')
+"""Workload-local balanced integrity and CPU/wall/RSS uncertainty summaries."""
+import math
+import random
+import statistics
 
 
-class ProposalTests(unittest.TestCase):
-    def test_native_adapter_allows_only_exact_retained_lock_notice_lines(self):
-        self.assertEqual(adapter_lock_notice_count(b''), 0)
-        self.assertEqual(adapter_lock_notice_count(
-            b'waiting for lock held by pid 123 for 0s\n'
-            b'waiting for lock held by another no-mistakes invocation for 0s\n'), 2)
-        for changed in (b'warning: waiting for lock held by pid 123 for 0s\n',
-                        b'waiting for lock held by pid 123 for 1s\n',
-                        b'waiting for lock held by pid 123 for 0s\nother failure\n',
-                        b'\xff'):
-            with self.subTest(changed=changed), self.assertRaises(ExperimentFailure):
-                adapter_lock_notice_count(changed)
-
-    def test_original_sixteen_workloads_retained_exactly(self):
-        spec = json.loads((HERE / 'pair.json').read_text())
-        old = json.loads((OLD / 'pair.json').read_text())
-        self.assertEqual(spec['workloads'], old['workloads'])
-        self.assertEqual(spec['workload_count'], 16)
-        self.assertEqual(spec['sampling']['long_orders'], ['ABBA', 'BAAB'])
-        self.assertEqual(spec['sampling']['long_blocks_per_order'], 4)
-        self.assertEqual(spec['sampling']['metrics'], ['cpu_s', 'user_s', 'system_s', 'wall_s', 'rss_kib'])
-
-    def test_push_registers_only_and_every_runtime_checkout_is_full(self):
-        workflow = yaml.safe_load((HERE / 'workflow-proposal.yml').read_text())
-        jobs = workflow['jobs']
-        self.assertEqual(jobs['registration']['if'], "${{ github.event_name == 'push' }}")
-        self.assertEqual(jobs['pair-preflight']['if'], "${{ github.event_name == 'workflow_dispatch' }}")
-        self.assertEqual(jobs['production-build']['needs'], 'pair-preflight')
-        self.assertEqual(jobs['layout-build']['needs'], 'pair-preflight')
-        self.assertEqual(jobs['measurement']['if'], "${{ github.event_name == 'workflow_dispatch' && always() }}")
-        self.assertEqual(set(jobs['measurement']['needs']), {'pair-preflight', 'production-build', 'layout-build'})
-        for name in ('pair-preflight', 'production-build', 'layout-build', 'measurement'):
-            checkout = [step for step in jobs[name]['steps'] if step.get('uses', '').startswith('actions/checkout@')]
-            self.assertEqual(len(checkout), 1)
-            self.assertEqual(checkout[0]['with']['fetch-depth'], 0)
-
-    def test_workflow_timeouts_match_reviewed_pair_budgets(self):
-        spec = json.loads((HERE / 'pair.json').read_text())
-        jobs = yaml.safe_load((HERE / 'workflow-proposal.yml').read_text())['jobs']
-        budgets = spec['budgets_minutes']
-        self.assertEqual(jobs['measurement']['timeout-minutes'], budgets['measurement_job'])
-        steps = jobs['measurement']['steps']
-        for stage, budget in (('semantic-preflight', 'semantic_preflight'),
-                              ('napi-parity', 'napi_parity'),
-                              ('sample', 'sample'), ('summary', 'summary')):
-            selected = [step for step in steps if 'stage.py ' + stage in step.get('run', '')]
-            self.assertEqual(len(selected), 1, stage)
-            self.assertEqual(selected[0]['timeout-minutes'], budgets[budget], stage)
-
-    def test_baseline_graph_probe_keeps_legacy_compile_shape(self):
-        self.assertIsNone(graph_probe_cfg('baseline'))
-        self.assertEqual(graph_probe_cfg('candidate'), 'alternatives_api')
-        source = (HERE / 'graph-probe.rs').read_text()
-        self.assertIn('#[cfg(not(alternatives_api))]', source)
-        self.assertIn('#[cfg(alternatives_api)]', source)
-
-    def test_exact_pair_remains_draft_and_rejects_every_stage(self):
-        spec = json.loads((HERE / 'pair.json').read_text())
-        self.assertEqual(spec['baseline']['revision'], '63760fa2a58b931498b9609afdc749dde12063aa')
-        self.assertEqual(spec['candidate']['revision'], 'f6eafbf01485e66c99aa8d6ef7bb594d9d27e2b1')
-        self.assertEqual(spec['candidate']['merge_parents'],
-                         [spec['baseline']['revision'], spec['pr']['head_sha']])
-        self.assertEqual(spec['pr']['required_successful_ci_run'], 38809097005)
-        self.assertEqual(spec['pr']['four_codecov_check_runs'], {
-            'codecov/patch/rust': 116681517694,
-            'codecov/project/rust': 116681510341,
-            'codecov/patch/javascript': 116679111078,
-            'codecov/project/javascript': 116679096645,
-        })
-        for stage in ('pair-preflight', 'production-build', 'layout-build',
-                      'semantic-preflight', 'napi-parity', 'sample', 'summary'):
-            with self.subTest(stage=stage), self.assertRaisesRegex(AssertionError, 'draft experiment'):
-                check(spec, Path('/missing-source'), stage)
-
-    def test_exact_overlay_requires_external_sha_and_synthetic_merge_parents(self):
-        spec = json.loads((HERE / 'pair.json').read_text())
-        baseline, source, merge, driver = ('a' * 40, 'b' * 40, 'c' * 40, 'd' * 40)
-        spec.update(status='REVIEWED AND FROZEN', inputs={},
-                    source_git_inventory_sha256={'baseline': 'e' * 64, 'candidate': 'f' * 64})
-        spec['baseline'].update(revision=baseline, tree='1' * 40)
-        spec['candidate'].update(revision=merge, proposed_revision=merge, tree='2' * 40, pr_head=source)
-        spec['pr'].update(head_sha=source, required_successful_ci_run=1,
-                          four_codecov_check_runs={name: i for i, name in enumerate(
-                              ('codecov/patch/rust', 'codecov/project/rust',
-                               'codecov/patch/javascript', 'codecov/project/javascript'), 1)})
-        spec['diagnostic_parent'] = source
-        spec['semantic_policy'].update(status='REVIEWED FULL REPORTS', report_hashes={'graph': {'a': 'x'}})
-        def fake_git(_repo, *args):
-            if args == ('rev-parse', merge + '^{tree}'):
-                return '2' * 40
-            if args == ('rev-parse', baseline + '^{tree}'):
-                return '1' * 40
-            if args == ('show', '-s', '--format=%P', merge):
-                return baseline + ' ' + source
-            if args == ('show', '-s', '--format=%P', driver):
-                return source
-            if args[0] == 'merge-base':
-                return baseline
-            if args[0] == 'diff':
-                return 'A\t.github/scripts/repeated-target-native-1971-next/stage.py'
-            raise AssertionError(args)
-        with patch('proposal_guard.git', side_effect=fake_git):
-            with self.assertRaises(AssertionError):
-                check(spec, Path('/unused'), 'pair-preflight', driver, None)
-            self.assertTrue(check(spec, Path('/unused'), 'pair-preflight', driver, driver))
-            spec['diagnostic_parent'] = merge
-            with self.assertRaises(AssertionError):
-                check(spec, Path('/unused'), 'pair-preflight', driver, driver)
-
-    def test_private_transfer_rejects_changed_bytes_and_extra_directory(self):
-        with tempfile.TemporaryDirectory() as name:
-            root = Path(name)
-            for file in ALLOWED:
-                (root / file).write_bytes(file.encode())
-            manifest = record(root, 'candidate', 'a' * 40, 'b' * 40, 'c' * 64,
-                              'rustc 1.99.1', ['default', 'mermaid-validation'],
-                              {'opt_level': 3, 'lto': True, 'codegen_units': 1}, 'alternatives_api')
-            expected = {key: manifest[key] for key in ('arm', 'revision', 'tree',
-                         'source_inventory_sha256', 'compiler', 'features', 'profile', 'graph_probe_cfg')}
-            self.assertTrue(verify(root, manifest, expected))
-            (root / 'cli').write_bytes(b'wrong')
-            with self.assertRaises(AssertionError):
-                verify(root, manifest, expected)
-            (root / 'cli').write_bytes(b'cli')
-            (root / 'source').mkdir()
-            (root / 'source/private.rs').write_text('private')
-            with self.assertRaises(AssertionError):
-                record(root, 'candidate', 'a' * 40, 'b' * 40, 'c' * 64,
-                       'rustc 1.99.1', ['default', 'mermaid-validation'], {'lto': True}, 'alternatives_api')
-
-    def test_full_graph_hash_rejects_target_and_callable_mutations(self):
-        graph = {'semantic': {'sites': [{'known': [{'name': 'transaction.write',
-                  'node': '["symbol","x","write","Some(CallableId(9))"]'}],
-                  'callee': 'query', 'file': 'entry.mts', 'offset': 42, 'unknown': True}],
-                  'nodes': ['["symbol","x","write","Some(CallableId(9))"]'],
-                  'edges': [], 'importer_view': []}}
-        baseline = sha(canonical_graph(json.loads(json.dumps(graph))))
-        changed = json.loads(json.dumps(graph))
-        changed['semantic']['sites'][0]['known'][0]['name'] = 'other.write'
-        self.assertNotEqual(sha(canonical_graph(changed)), baseline)
-        changed = json.loads(json.dumps(graph))
-        changed['semantic']['nodes'][0] = changed['semantic']['nodes'][0].replace('CallableId(9)', 'CallableId(10)')
-        self.assertNotEqual(sha(canonical_graph(changed)), baseline)
-
-    def test_compiler_artifact_requires_owned_fresh_default_build(self):
-        source = Path('/tmp/no-mistakes/src/main.rs')
-        artifact = {'reason': 'compiler-artifact', 'target': {'name': 'no-mistakes',
-                    'kind': ['bin'], 'src_path': str(source)}, 'fresh': False,
-                    'features': ['default', 'mermaid-validation'],
-                    'profile': {'opt_level': '3', 'debuginfo': 0, 'debug_assertions': False,
-                                'overflow_checks': False, 'test': False},
-                    'executable': '/tmp/no-mistakes/target/release/no-mistakes'}
-        self.assertEqual(extract_artifact((json.dumps(artifact) + '\n').encode(), 'bin', source), artifact)
-        artifact['fresh'] = True
-        with self.assertRaises(Exception):
-            extract_artifact((json.dumps(artifact) + '\n').encode(), 'bin', source)
-
-    def test_second_arm_startup_and_calibration_failure_retains_first_row(self):
-        for phase in ('startup', 'calibration'):
-            with self.subTest(phase=phase), tempfile.TemporaryDirectory() as name:
-                root = Path(name)
-                def fake_sample(_root, _workload, arm, _count, _affinity):
-                    if arm == 'candidate':
-                        raise RuntimeError('injected second-arm failure')
-                    return {'arm': arm, 'valid': True, 'cpu_s': .125, 'wall_s': .15, 'rss_kib': 100}
-                with patch('measure.sample', side_effect=fake_sample):
-                    with self.assertRaisesRegex(RuntimeError, 'injected second-arm failure'):
-                        capture_two_arms(root, {'name': 'physical'}, phase, 1, [0, 1, 2, 3])
-                self.assertEqual(json.loads((root / f'public/physical-{phase}.json').read_text()),
-                                 [{'arm': 'baseline', 'valid': True, 'cpu_s': .125, 'wall_s': .15, 'rss_kib': 100}])
-
-    def test_output_failure_keeps_wait4_resources(self):
-        usage = SimpleNamespace(ru_utime=.4, ru_stime=.1, ru_maxrss=321)
-        with patch('measure.inspect_sample', side_effect=OSError('injected unreadable output')):
-            row = complete_sample_row(Path('/tmp'), Path('/tmp/missing'), {'name': 'physical'},
-                                      'candidate', 4, 0, False, usage, .7, [0, 1, 2, 3])
-        self.assertFalse(row['valid'])
-        self.assertEqual(row['error_code'], 'sample_output_inspection_failed')
-        self.assertEqual((row['cpu_s'], row['wall_s'], row['rss_kib']), (.5, .7, 321))
-
-    def test_final_ledger_keeps_remote_and_upstream_failures(self):
-        with tempfile.TemporaryDirectory() as name:
-            root = Path(name)
-            remote = {'eligible': False, 'status': 'historical or unverified',
-                      'error_code': 'candidate_remote_head_changed'}
-            with patch('report.completion_pair', return_value=remote), \
-                 patch.dict('os.environ', {'PREFLIGHT_RESULT': 'success', 'BUILD_RESULT': 'failure',
-                                           'LAYOUT_RESULT': 'skipped'}):
-                self.assertEqual(report(root), 1)
-            outcome = json.loads((root / 'public/final-pair.json').read_text())
-            self.assertEqual(outcome['remote'], remote)
-            self.assertEqual(outcome['jobs'], {'preflight': 'success', 'build': 'failure', 'layout': 'skipped'})
-            self.assertEqual(outcome['gates'], {'semantic_preflight': False, 'napi_parity': False})
-            self.assertFalse(outcome['eligible'])
+def validate(rows, blocks):
+    assert len(rows) == 2 * blocks * 4
+    assert len({row['count'] for row in rows}) == 1
+    assert len({tuple(row['affinity']) for row in rows}) == 1
+    assert len(rows[0]['affinity']) == 4
+    for order in ('ABBA', 'BAAB'):
+        for block in range(blocks):
+            group = [r for r in rows if (r['order'], r['block']) == (order, block)]
+            assert [r['position'] for r in group] == list(range(4))
+            assert [r['arm'] for r in group] == ['baseline' if c == 'A' else 'candidate' for c in order]
+    for row in rows:
+        assert row['valid'] and row['count'] > 0 and row['rayon_workers'] == 4
+        assert abs(row['cpu_s'] - row['user_s'] - row['system_s']) < 1e-8
+        assert all(math.isfinite(row[key]) and row[key] > 0 for key in ('cpu_s', 'wall_s', 'rss_kib'))
 
 
-if __name__ == '__main__':
-    unittest.main()
+def metric_stable(rows, metric, minimum_cpu=1):
+    if metric == 'cpu_s' and min(row['cpu_s'] for row in rows) < minimum_cpu:
+        return False
+    changes = []
+    for arm in ('baseline', 'candidate'):
+        values = [r[metric] for r in rows if r['arm'] == arm]
+        if max(values) / min(values) > 1.10:
+            return False
+    for order in ('ABBA', 'BAAB'):
+        group = [r for r in rows if r['order'] == order]
+        a, b = [statistics.mean(r[metric] for r in group if r['arm'] == arm) for arm in ('baseline', 'candidate')]
+        changes.append(100 * (b / a - 1))
+    return abs(changes[0] - changes[1]) <= 5
+
+
+def stable(rows, minimum_cpu=1):
+    return metric_stable(rows, 'cpu_s', minimum_cpu)
+
+
+def describe_pilot(rows):
+    validate(rows, 1)
+    metrics = {}
+    for metric in ('cpu_s', 'wall_s', 'rss_kib'):
+        means = {arm: statistics.mean(r[metric] for r in rows if r['arm'] == arm) for arm in ('baseline', 'candidate')}
+        percent = 100 * (means['candidate'] / means['baseline'] - 1)
+        direction = 'higher' if percent > 0 else 'lower' if percent < 0 else 'flat'
+        metrics[metric] = {'status': f'pilot {direction} ({percent:+.2f}%); long withheld',
+            'descriptive_mean_percent':percent,
+            'range':{arm:[min(r[metric] for r in rows if r['arm'] == arm), max(r[metric] for r in rows if r['arm'] == arm)] for arm in ('baseline', 'candidate')}}
+    return {'phase':'pilot', 'samples':len(rows), 'metrics':metrics,
+            'inference':'Descriptive8rowpilot only; no long-run confirmation or bootstrap claim'}
+
+
+def assess(rows, blocks=4):
+    validate(rows, blocks)
+    result = {'status': 'inconclusive', 'metrics': {}}
+    for metric in ('cpu_s', 'wall_s', 'rss_kib'):
+        paired, orders = [], {}
+        for order in ('ABBA', 'BAAB'):
+            group = [r for r in rows if r['order'] == order]
+            means = {arm: statistics.mean(r[metric] for r in group if r['arm'] == arm) for arm in ('baseline', 'candidate')}
+            orders[order] = 100 * (means['candidate'] / means['baseline'] - 1)
+            for block in range(blocks):
+                group = [r for r in rows if (r['order'], r['block']) == (order, block)]
+                a, b = [statistics.mean(r[metric] for r in group if r['arm'] == arm) for arm in ('baseline', 'candidate')]
+                paired.append(math.log(b / a))
+        rng = random.Random(1971)
+        bootstrap = sorted(100 * math.expm1(statistics.mean(rng.choices(paired, k=len(paired)))) for _ in range(10000))
+        cv = {arm: statistics.stdev([r[metric] for r in rows if r['arm'] == arm]) /
+              statistics.mean(r[metric] for r in rows if r['arm'] == arm) for arm in ('baseline', 'candidate')}
+        interval = [bootstrap[249], bootstrap[9749]]
+        status = 'inconclusive'
+        if metric_stable(rows, metric, minimum_cpu=5) and max(cv.values()) <= .03:
+            if min(orders.values()) > 0 and interval[0] > 0:
+                status = 'higher cost observed; adjacent reverse confirmation required'
+            elif max(orders.values()) < 0 and interval[1] < 0:
+                status = 'lower cost observed'
+        result['metrics'][metric] = {'status': status, 'paired_percent': 100 * math.expm1(statistics.mean(paired)),
+            'orders_percent': orders, 'descriptive_bootstrap_95_percent': interval, 'arm_cv': cv,
+            'median_per_request_ms' if metric != 'rss_kib' else 'median_peak_rss_kib': {
+                arm: statistics.median(r[metric] * 1000 / r['count'] if metric != 'rss_kib' else r[metric]
+                    for r in rows if r['arm'] == arm) for arm in ('baseline', 'candidate')},
+            'range': {arm: [min(r[metric] for r in rows if r['arm'] == arm), max(r[metric] for r in rows if r['arm'] == arm)] for arm in ('baseline', 'candidate')}}
+    statuses = [metric['status'] for metric in result['metrics'].values()]
+    if any(status.startswith('higher cost observed') for status in statuses):
+        result['status'] = 'higher cost observed; adjacent reverse confirmation required'
+    elif any(status == 'lower cost observed' for status in statuses):
+        result['status'] = 'lower cost observed; other metrics require independent review'
+    return result

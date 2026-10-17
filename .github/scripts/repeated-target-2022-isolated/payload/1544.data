@@ -1,10 +1,15 @@
 import { query } from "@example/db";
 
-function run(sql: (strings: TemplateStringsArray, ...values: unknown[]) => string, id: number) {
-  const text = sql`SELECT * FROM topics WHERE id = ${id}`;
-  return query(text);
+function safe() {
+  return "TRUSTED SQL";
 }
 
+function wrap({ safe }: { safe: () => string }) {
+  return safe();
+}
+
+const sql = wrap({ safe: () => "untrusted" });
+
 export function load() {
-  return run((strings) => strings.join(""), 1);
+  return query(sql);
 }

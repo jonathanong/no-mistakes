@@ -1,43 +1,62 @@
-const assert = require("node:assert/strict");
-const { join } = require("node:path");
-const test = globalThis.test || require("node:test").test;
+export interface QueueReport {
+  producers: QueueProducer[];
+  workers: QueueWorker[];
+  jobs: QueueJobNode[];
+  edges: QueueEdge[];
+  diagnostics: QueueDiagnostic[];
+  check: QueueCheckFinding[];
+}
 
-const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-test(
-  "compiled async CJS and ESM agree on enclosing initialized captures",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture",
-    );
-    const options = { root, kind: "cache", entry: "src/enclosing-tdz.mts" };
-    const pending = cjs.effects(options);
-    assert.ok(pending instanceof Promise);
-    const report = await pending;
-    assert.deepEqual(await esm.effects(options), report);
+export interface QueueJobNode {
+  queueFile: string;
+  queueName: string;
+  job: string;
+}
 
-    const sites = new Map(report.callSites.map((site) => [site.caller, site.callee]));
-    for (const caller of [
-      "neverRun",
-      "adjacentRun",
-      "nestedRun",
-      "unreachableRun",
-      "branchNeverRun",
-    ]) {
-      assert.equal(sites.has(caller), false, caller);
-    }
-    for (const caller of [
-      "initializedRun",
-      "conditionalRun",
-      "branchRun",
-      "switchRun",
-      "hoistedRun",
-      "staticInvoke",
-    ]) {
-      assert.equal(sites.get(caller), "primary.get", caller);
-    }
-  },
-);
+export interface QueueProducer {
+  file: string;
+  line: number;
+  queueFile: string | null;
+  queueName: string | null;
+  job: string | null;
+  rawJob: string | null;
+  library: string | null;
+}
+
+export interface QueueWorker {
+  file: string;
+  line: number;
+  processorFile: string | null;
+  queueFile: string | null;
+  queueName: string | null;
+  jobs: string[];
+  wildcard: boolean;
+  library: string | null;
+}
+
+export type QueueEdgeKind = "queue-enqueue" | "queue-worker";
+
+export interface QueueEdge {
+  from: string;
+  to: string;
+  kind: QueueEdgeKind;
+}
+
+export type QueueDiagnosticSeverity = "warning" | "error";
+
+export interface QueueDiagnostic {
+  severity: QueueDiagnosticSeverity;
+  file: string;
+  line: number;
+  message: string;
+}
+
+export interface QueueCheckFinding {
+  kind: string;
+  file: string;
+  line: number;
+  queueFile: string | null;
+  queueName: string | null;
+  job: string | null;
+  message: string;
+}

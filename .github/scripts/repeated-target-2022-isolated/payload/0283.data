@@ -1,10 +1,6 @@
-import { query, sql } from "@example/db";
+import { sql, unused } from "sql-template-strings";
+import { query } from "@example/db";
 
-// An unconditional nested fragment is still spliced SQL, not a bind value.
-export function load(accountId: string) {
-  return query(sql`
-    SELECT id
-    FROM documents
-    WHERE account_id = ${accountId} ${sql`AND deleted_at IS NULL`}
-  `);
+export function load(id: number) {
+  return query(sql`SELECT * FROM topics WHERE id = ${id}`, unused);
 }

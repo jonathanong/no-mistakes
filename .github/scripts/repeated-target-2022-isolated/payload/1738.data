@@ -1,14 +1,16 @@
-import sql from 'sql-template-strings'
-import { read } from '@example/db'
-
-async function readAfterGate(query: typeof sql) {
-  await Promise.resolve()
-  return read(query)
+import { query, sql } from "@example/db";
+let statement = "SELECT id FROM users";
+switch (runtimeMode) {
+  case "first": statement += " OFFSET 1";
+  case query(statement): break;
 }
-
-export function startThenMutate() {
-  const query = sql`/* async/event */ SELECT id FROM posts`
-  const pending = readAfterGate(query)
-  query.append(' UPDATE posts SET title = title')
-  void pending
+query(statement);
+let live = "SELECT id FROM accounts";
+switch (runtimeMode) {
+  case "first": live += " LIMIT 1";
+  case (query(live), "second"):
+    live += " OFFSET 2";
+    query(live);
+    break;
 }
+query(live);

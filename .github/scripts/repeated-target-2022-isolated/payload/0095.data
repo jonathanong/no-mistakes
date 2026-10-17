@@ -1,3 +1,1 @@
-ci:
-  workflowDirs:
-    - .github/workflows
+export const leaf = true;

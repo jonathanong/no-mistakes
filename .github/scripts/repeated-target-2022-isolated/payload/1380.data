@@ -1,6 +1,2 @@
-tests:
-  playwright:
-    configs: playwright.config.ts
-    frontendRoot: app
-    testInclude:
-      - tests/**/*.ts
+import "./helper";
+import "inside-package";

@@ -1,7 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-function acquire(fn = primary.get) { return fn; }
-function forward() { return acquire(); }
-for (((fn) => fn('key'))(forward()); false;) {
-  primary.get = replacement;
-}
+// Setup inherits enclosing execution; per-item positions must remain repeatable.
+while (primary) { for (const value of [((client = primary) => { const get = client.get; primary.get = replacement; get(); return 1; })()]) {} }

@@ -1,129 +1,152 @@
-import { guardRegistration } from "./registration.mjs";
-export { guardRegistration } from "./registration.mjs";
-import { guardCollectionRunner } from "./public-runner.mjs";
-export { guardPublicRunner } from "./public-runner.mjs";
-import { assertTestTimeout, assertTimeoutConfig, protectTimeoutConfig } from "./config.mjs";
-export {
-  assertTestTimeout,
-  assertTimeoutConfig,
-  snapshotTimeoutOptions,
-  protectTimeoutConfig,
-} from "./config.mjs";
-const installedRunners = new WeakMap();
-const installedContexts = new WeakMap();
-function protectContextHooks(context, maximum) {
-  const installed = installedContexts.get(context) ?? { maximum, methods: new Set() };
-  if (installed.maximum !== maximum)
-    throw new Error("Context timeout policy maximum cannot change");
-  for (const name of ["onTestFailed", "onTestFinished"]) {
-    // Extensions may add a missing hook to the same context between scans.
-    if (installed.methods.has(name)) continue;
-    const original = Reflect.get(context, name);
-    if (typeof original === "function") {
-      let guarded = guardRegistration(original, "hook", maximum);
-      Object.defineProperty(context, name, {
-        // Vitest temporarily replaces/restores these methods while executing completion hooks.
-        get: () => guarded,
-        set(next) {
-          if (typeof next !== "function") throw new TypeError("Expected a completion hook method");
-          guarded = guardRegistration(next, "hook", maximum);
-        },
-        configurable: false,
-      });
-      installed.methods.add(name);
-    }
-  }
-  installedContexts.set(context, installed);
+const assert = require("node:assert/strict");
+const test = globalThis.test || require("node:test").test;
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
+
+const { createWorkflowTopologyIndex } = require("../workflow-topology-index");
+
+// Reuses the same golden `WorkflowTopology` JSON the Rust engine's
+// fixture-backed tests assert byte-for-byte parity against (see
+// `crates/no-mistakes/src/codebase/workflow_topology/tests.rs`), so this
+// index is exercised against a real, non-trivial graph rather than a
+// hand-rolled stub.
+function fixtureTopology(name) {
+  const path = join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "test-cases",
+    "workflow-topology",
+    name,
+    "expected.json",
+  );
+  return JSON.parse(readFileSync(path, "utf8"));
 }
-/** Aliased/destructured setters retain validation because the returned method is guarded. */
-export function guardRuntimeConfig(api, maximum = 30_000) {
-  const original = Reflect.get(api, "setConfig");
-  if (typeof original !== "function") throw new TypeError("Expected a Vitest setConfig method");
-  const setter = (config) => {
-    const snapshot = { ...config };
-    assertTimeoutConfig(snapshot, maximum);
-    return Reflect.apply(original, api, [snapshot]);
-  };
-  return new Proxy(api, {
-    get(target, key, receiver) {
-      return key === "setConfig" ? setter : Reflect.get(target, key, receiver);
-    },
-  });
+
+function metadataFixtureTopology() {
+  const path = join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "fixtures",
+    "workflow-topology",
+    "job-metadata",
+    "expected.json",
+  );
+  return JSON.parse(readFileSync(path, "utf8"));
 }
-/** A single current Vitest API facade. Adoption must route every test import through it. */
-export function guardVitestExports(api, maximum = 30_000) {
-  const cache = new Map();
-  const kinds = new Map([
-    ["test", "test"],
-    ["it", "test"],
-    ["describe", "suite"],
-    ["suite", "suite"],
-    ["beforeAll", "hook"],
-    ["beforeEach", "hook"],
-    ["afterAll", "hook"],
-    ["afterEach", "hook"],
-    ["aroundAll", "hook"],
-    ["aroundEach", "hook"],
-    ["onTestFailed", "hook"],
-    ["onTestFinished", "hook"],
+
+test("job upstream/downstream traversal is direct and transitive", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  const build = ".github/workflows/pipeline.yml#build";
+  const test_ = ".github/workflows/pipeline.yml#test";
+  const deploy = ".github/workflows/pipeline.yml#deploy";
+
+  assert.deepEqual(index.directDownstreamJobIds(build), [test_]);
+  assert.deepEqual(index.directUpstreamJobIds(deploy), [test_]);
+  assert.deepEqual(index.transitiveDownstreamJobIds(build), [deploy, test_].sort());
+  assert.deepEqual(index.transitiveUpstreamJobIds(deploy), [build, test_].sort());
+  // Transitive traversal excludes the source itself.
+  assert.equal(index.transitiveDownstreamJobIds(build).includes(build), false);
+});
+
+test("unknown job or workflow ids throw", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  assert.throws(() => index.directUpstreamJobIds("nope"), /unknown workflow job: nope/);
+  assert.throws(() => index.directCalleeWorkflowPaths("nope.yml"), /unknown workflow: nope\.yml/);
+});
+
+test("local reusable-workflow calls populate caller/callee traversals; remote calls do not", () => {
+  const topology = fixtureTopology("reusable-calls");
+  const index = createWorkflowTopologyIndex(topology);
+  const caller = ".github/workflows/caller.yml";
+  const callee = ".github/workflows/reusable-callee.yml";
+  const goodJob = ".github/workflows/caller.yml#good";
+
+  assert.deepEqual(index.directCallerWorkflowPaths(callee), [caller]);
+  assert.deepEqual(index.directCallerJobIds(callee), [goodJob]);
+  assert.deepEqual(index.directCalleeWorkflowPaths(caller).includes(callee), true);
+  // cycle-a calls cycle-b calls cycle-a: transitively reachable, but the
+  // source itself is excluded even though the cycle loops back to it.
+  assert.deepEqual(index.transitiveCalleeWorkflowPaths(".github/workflows/cycle-a.yml"), [
+    ".github/workflows/cycle-b.yml",
   ]);
-  return new Proxy(api, {
-    get(target, key, receiver) {
-      const value = Reflect.get(target, key, receiver);
-      const kind = kinds.get(String(key));
-      const role = kind ?? (key === "vitest" ? "vi" : key);
-      const values = cache.get(value) ?? new Map();
-      if (values.has(role)) return values.get(role);
-      const guarded =
-        key === "TestRunner" && typeof value === "function"
-          ? guardCollectionRunner(value, maximum, protectRunnerTimeouts)
-          : (key === "vi" || key === "vitest") && value !== null && typeof value === "object"
-            ? guardRuntimeConfig(value, maximum)
-            : kind && typeof value === "function"
-              ? guardRegistration(value, kind, maximum)
-              : value;
-      values.set(role, guarded);
-      cache.set(value, values);
-      return guarded;
-    },
-  });
-}
-/** Compose at runner construction, without replacing existing collection/database guards. */
-export function protectRunnerTimeouts(runner, maximum = 30_000) {
-  const existing = installedRunners.get(runner);
-  if (existing) {
-    if (existing.maximum !== maximum || existing.config !== runner.config)
-      throw new Error("Installed runner timeout policy cannot be replaced");
-    return;
+});
+
+test("workflow_run source/subscriber traversal and edge metadata", () => {
+  const topology = fixtureTopology("workflow-run");
+  const index = createWorkflowTopologyIndex(topology);
+  const source = ".github/workflows/source.yml";
+  const subscriberOk = ".github/workflows/subscriber-ok.yml";
+
+  assert.deepEqual(index.directWorkflowRunSubscriberPaths(source), [subscriberOk]);
+  assert.deepEqual(index.directWorkflowRunSourcePaths(subscriberOk), [source]);
+  const outgoing = index.outgoingWorkflowRunEdges(source);
+  assert.equal(outgoing.length, 1);
+  assert.deepEqual(outgoing[0].types, ["completed"]);
+  assert.deepEqual(outgoing[0].branches, ["main"]);
+});
+
+test("workflowsByPath/jobsById are frozen and read-only despite being backed by a real Map", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  assert.equal(index.jobsById.size, 3);
+  // `FrozenReadonlyMap` exposes no `.set`/`.delete` at all — not even a
+  // no-op one — so calling either isn't just silently ignored, it's a
+  // TypeError (not a function).
+  assert.equal(typeof index.jobsById.set, "undefined");
+  assert.equal(typeof index.jobsById.delete, "undefined");
+  // The cloned job values are deep-frozen. A strict-mode assignment (ESM,
+  // which vitest transforms into) throws TypeError; a sloppy-mode one
+  // (plain CommonJS under `node --test`) silently no-ops — either way the
+  // frozen value must not change, so tolerate both and assert on that.
+  const job = index.jobsById.get(".github/workflows/pipeline.yml#build");
+  const originalId = job.id;
+  try {
+    job.id = "mutated";
+  } catch {
+    // expected in strict-mode environments
   }
-  if (Reflect.get(runner.config, "globals") === true)
-    throw new Error("Timeout policy requires guarded public imports with globals disabled");
-  protectTimeoutConfig(runner.config, maximum);
-  const config = runner.config;
-  const extend = Reflect.get(runner, "extendTaskContext");
-  const extendTaskContext = (context) => {
-    if (runner.config !== config)
-      throw new Error("Runner timeout configuration identity changed after construction");
-    // Vitest 5 creates the context after resolving task.timeout, before withTimeout.
-    // withTimeout uses a pre-context local timeout; extensions must not mask invalid tasks.
-    const task = Reflect.get(context, "task");
-    if (task === null || typeof task !== "object")
-      throw new TypeError("Expected Vitest task context");
-    assertTestTimeout(Reflect.get(task, "timeout"), "Vitest resolved test timeout", maximum);
-    protectContextHooks(context, maximum);
-    const result =
-      typeof extend === "function" ? Reflect.apply(extend, runner, [context]) : context;
-    if (runner.config !== config)
-      throw new Error("Runner timeout configuration identity changed during context extension");
-    // Recheck the original task, even if the extension returns a replacement context.
-    assertTestTimeout(Reflect.get(task, "timeout"), "Vitest resolved test timeout", maximum);
-    protectContextHooks(result, maximum);
-    return result;
-  };
-  Object.defineProperty(runner, "extendTaskContext", {
-    value: extendTaskContext,
-    writable: false,
-    configurable: false,
+  assert.equal(job.id, originalId);
+});
+
+test("does not mutate or reference the source topology object", () => {
+  const topology = fixtureTopology("needs-basic");
+  const before = JSON.stringify(topology);
+  createWorkflowTopologyIndex(topology);
+  assert.equal(JSON.stringify(topology), before);
+});
+
+test("deep-freezes enriched job and step metadata", () => {
+  const index = createWorkflowTopologyIndex(metadataFixtureTopology());
+  const job = index.jobsById.get(".github/workflows/default.yml#default");
+
+  assert.equal(Object.isFrozen(job.permissions), true);
+  assert.equal(Object.isFrozen(job.permissions.scopes), true);
+  assert.equal(Object.isFrozen(job.env), true);
+  assert.equal(Object.isFrozen(job.secretReferences), true);
+  assert.equal(Object.isFrozen(job.steps[0].with), true);
+  assert.equal(Object.isFrozen(job.steps[0].secretReferences), true);
+
+  const groupJob = index.jobsById.get(".github/workflows/malformed-metadata.yml#malformed");
+  assert.deepEqual(groupJob.runsOn, {
+    group: "hosted",
+    labels: "ubuntu-latest",
   });
-  installedRunners.set(runner, { maximum, config: runner.config });
-}
+  assert.equal(Object.isFrozen(groupJob.runsOn), true);
+
+  const groupOnlyJob = index.jobsById.get(
+    ".github/workflows/malformed-metadata.yml#unsupported-environment",
+  );
+  assert.deepEqual(groupOnlyJob.runsOn, { group: "restricted" });
+  assert.equal(Object.isFrozen(groupOnlyJob.runsOn), true);
+});
+
+test("directCallerJobIdsForUses and stepOrderIndexes query steps", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  const build = ".github/workflows/pipeline.yml#build";
+  assert.deepEqual(index.directCallerJobIdsForUses("actions/checkout@v4"), []);
+  assert.deepEqual(index.stepOrderIndexes(build, [{ name: "missing" }]), [-1]);
+  assert.throws(() => index.stepOrderIndexes("nope", []), /unknown workflow job: nope/);
+});

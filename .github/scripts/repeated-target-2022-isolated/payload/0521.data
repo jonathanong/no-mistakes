@@ -1,16 +1,9 @@
 import { read } from '@example/db'
-import sql from 'sql-template-strings'
 
-const query = sql`/* getter/read */ SELECT id FROM posts`
-const object = {
-  get trigger() {
-    query.append(sql` UPDATE posts SET title = 'changed'`)
-    return true
-  },
+function run(sql: string) {
+  return read(sql)
 }
 
-export function list() {
-  const ignored = object.trigger
-  void ignored
-  return read(query)
-}
+const key = Math.random() ? 'run' : 'other'
+export const callback = { run }[key]
+run('/* exported/dynamic-key */ SELECT id FROM posts')

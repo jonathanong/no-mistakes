@@ -2,7 +2,8 @@ import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
 holder.box.client = {};
-class Decorated { @opaque static field = holder.box.client.get = replacement; }
+(class { @opaque method() {} });
+holder.box.client.get = replacement;
 function opaque() { holder.box = { client }; }
 function scan(value) { value.get('key'); }
 scan(client);

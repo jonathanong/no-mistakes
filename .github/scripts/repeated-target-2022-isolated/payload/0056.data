@@ -1,7 +1,45 @@
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    include: ['tests/**/*.test.ts'],
-  },
-})
+{
+  "sites": [
+    {
+      "file": "src/repeated-binding-acquisitions.mts",
+      "offset": 1849,
+      "line": 83,
+      "caller": null,
+      "caller_id": "None",
+      "invocation": "Call",
+      "callee": "deferred",
+      "known": [
+        {
+          "kind": "repository",
+          "module": "",
+          "name": "oneShot",
+          "repository": "<fixture>/src/repeated-binding-acquisitions.mts#oneShot",
+          "callable_id": "None",
+          "node": "[\"symbol\",\"src/repeated-binding-acquisitions.mts\",\"oneShot\",\"Some(CallableId(1684))\"]"
+        }
+      ],
+      "unknown": false,
+      "returned_from": "[]",
+      "typed_from": "[]",
+      "returned_members": "[]"
+    }
+  ],
+  "edges": [
+    [
+      "[\"file\",\"src/repeated-binding-acquisitions.mts\"]",
+      "[\"symbol\",\"src/repeated-binding-acquisitions.mts\",\"oneShot\",\"Some(CallableId(1684))\"]",
+      "Call"
+    ]
+  ],
+  "nodes": [
+    "[\"file\",\"src/repeated-binding-acquisitions.mts\"]",
+    "[\"symbol\",\"src/repeated-binding-acquisitions.mts\",\"oneShot\",\"Some(CallableId(1684))\"]"
+  ],
+  "importer_view": [
+    [
+      "[\"file\",\"src/repeated-binding-acquisitions.mts\"]",
+      "[\"symbol\",\"src/repeated-binding-acquisitions.mts\",\"oneShot\",\"Some(CallableId(1684))\"]",
+      "Call"
+    ]
+  ]
+}

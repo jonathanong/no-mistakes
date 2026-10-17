@@ -2,81 +2,70 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-const source = (name) => ({
-  fileName: name,
-  source: readFileSync(
-    join(__dirname, "../../../fixtures/postgres-facts/executed-source", name),
-    "utf8",
-  ),
-});
 
 test(
-  "compiled CJS and ESM recover private entrypoints returned from branch arms",
+  "compiled checks enforce expression arbiter dependencies without changing source facts",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    for (const [name, expected] of [
-      ["control-flow-branch-returned-functions.ts", 2],
-      ["control-flow-returned-entrypoint-wrappers.ts", 3],
+    const fixture = join(__dirname, "../../../test-cases/rules/postgres-idempotent-insert/fixture");
+    for (const scenario of [
+      "expression-arbiters",
+      "expression-arbiters-safe",
+      "expression-arbiter-recovered",
     ]) {
-      const options = {
-        sources: [source(name)],
-        importSpecifier: "@example/db",
-        trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-        resolveImports: true,
-      };
-      const pending = cjs.extractExecutedPostgresSql(options);
-      assert.ok(pending instanceof Promise);
-      const rows = await pending;
-      assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
-      assert.equal(rows.length, expected);
-      for (const row of rows) {
-        assert.equal(row.complete, true, JSON.stringify(row));
-        assert.equal(row.onlyValuePlaceholders, false);
-        assert.equal(row.incompleteReason, null);
-        assert.ok(row.sqlText.includes("; DELETE FROM records"), JSON.stringify(row));
+      const root = join(fixture, scenario);
+      const report = await cjs.check({ root });
+      assert.deepEqual(await esm.check({ root }), report);
+      assert.deepEqual(report.warnings, []);
+      const prepared = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      if (scenario === "expression-arbiters-safe") {
+        assert.deepEqual(report.rules, []);
+      } else if (scenario === "expression-arbiter-recovered") {
+        assert.deepEqual(
+          report.rules.map(({ file }) => file),
+          ["sql/malformed-neighbor.sql"],
+        );
+        assert.match(report.rules[0].message, /expression arbiter depends on email/);
+      } else {
+        assert.deepEqual(
+          report.rules.map(({ file }) => file),
+          [
+            "sql/coupled_partial.sql",
+            "sql/expression.sql",
+            "sql/mixed.sql",
+            "sql/parenthesized.sql",
+            "sql/plain_column_control.sql",
+            "sql/quoted.sql",
+            "sql/unsupported.sql",
+          ],
+        );
+        for (const finding of report.rules)
+          assert.equal(finding.rule, "postgres-idempotent-insert");
       }
     }
-    const selectedOptions = {
-      sources: [source("control-flow-returned-entrypoint-static-branches.ts")],
-      importSpecifier: "@example/db",
-      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-      resolveImports: true,
-    };
-    const selectedRows = await cjs.extractExecutedPostgresSql(selectedOptions);
-    assert.deepEqual(await esm.extractExecutedPostgresSql(selectedOptions), selectedRows);
-    assert.equal(selectedRows.length, 2);
-    assert.ok(selectedRows.every((row) => row.complete));
-    assert.deepEqual(
-      selectedRows.find((row) => row.line === 2),
-      {
-        fileName: "control-flow-returned-entrypoint-static-branches.ts",
-        line: 2,
-        annotation: "returns/contextual",
-        sqlText: "/* returns/contextual */ SELECT 8",
-        complete: true,
-        onlyValuePlaceholders: false,
-        kind: "composed",
-        incompleteReason: null,
-      },
-    );
-    assert.ok(selectedRows.find((row) => row.line === 9).sqlText.includes("DELETE FROM records"));
-    const options = {
-      sources: [source("control-flow-returned-entrypoint-unsupported.ts")],
-      importSpecifier: "@example/db",
-      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-      resolveImports: true,
-    };
-    const rows = await cjs.extractExecutedPostgresSql(options);
-    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
-    assert.equal(rows.length, 2);
-    for (const row of rows) {
-      assert.equal(row.complete, false, JSON.stringify(row));
-      assert.equal(row.onlyValuePlaceholders, false);
-      assert.ok(row.incompleteReason);
+    const root = join(fixture, "expression-arbiters");
+    for (const name of ["expression.sql", "mixed.sql", "parenthesized.sql", "quoted.sql"]) {
+      const sql = readFileSync(join(root, "sql", name), "utf8");
+      const parsed = await cjs.parsePostgresSql({ sql });
+      assert.deepEqual(await esm.parsePostgresSql({ sql }), parsed);
+      assert.deepEqual(parsed.diagnostics, []);
+      const insert = parsed.statements[0].insert;
+      assert.equal(insert.complete, true);
+      assert.equal(insert.onConflict.target.kind, "expressions");
+      assert.ok(insert.onConflict.target.expressions.length > 0);
+      for (const expression of insert.onConflict.target.expressions) {
+        assert.ok(expression.span);
+        assert.equal(
+          Buffer.from(sql)
+            .subarray(expression.span.start.offset, expression.span.end.offset)
+            .toString(),
+          expression.sql,
+        );
+      }
     }
   },
 );

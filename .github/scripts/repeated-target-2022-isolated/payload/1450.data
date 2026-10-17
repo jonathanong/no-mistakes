@@ -1,8 +1,8 @@
-import { query } from "@example/db";
+import { expect, it, vi } from "vitest";
 
-const sql = "SELECT id FROM topics";
-sql.append(clause);
+vi.mock("../src/feature", () => ({ feature: "mocked" }));
 
-export function load() {
-  return query(sql);
-}
+it("loads the feature", async () => {
+  const { loadFeature } = await import("../src/lazy");
+  await expect(loadFeature()).resolves.toEqual({ feature: "mocked" });
+});

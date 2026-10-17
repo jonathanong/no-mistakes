@@ -1,12 +1,9 @@
--- These statements parse; uncertainty belongs to lineage, not syntax errors.
-INSERT INTO items VALUES (1, 2);
-INSERT INTO items DEFAULT VALUES;
-INSERT INTO items (id, value) SELECT * FROM incoming;
-INSERT INTO items (id, value) SELECT incoming.* FROM incoming;
-INSERT INTO items (id, value) VALUES (1, 2), (3);
-INSERT INTO items (id, value) SELECT 1;
-INSERT INTO items (id, id) VALUES (1, 2);
-INSERT INTO items (id, value) SELECT 1, 2 UNION ALL SELECT 3;
-INSERT INTO items (id, value) VALUES (1, ARRAY[2, 3]);
-INSERT INTO items (id, value) SELECT 1, 2 UNION BY NAME SELECT 3, 4;
-INSERT INTO items (id, value) SELECT 1, 2 UNION ALL (VALUES (3));
+-- FETCH expressions retain typed quantity and source identity.
+SELECT 1 FROM accounts FETCH FIRST (COALESCE(NULL, 100)) ROWS ONLY;
+SELECT 1 FROM accounts FETCH NEXT (NULLIF(NULL::bigint, NULL::bigint)) ROWS ONLY;
+SELECT 1 FROM accounts FETCH FIRST ($1::bigint) ROWS ONLY;
+SELECT 1 FROM accounts FETCH FIRST ((SELECT count(*) FROM orders)) ROWS ONLY;
+SELECT * FROM (SELECT 1 FROM accounts FETCH FIRST (100) ROWS ONLY) limited FETCH NEXT (2) ROWS ONLY;
+SELECT id FROM accounts ORDER BY id FETCH FIRST (100) ROWS WITH TIES;
+SELECT 1 FROM accounts OFFSET 5 ROWS FETCH FIRST (COALESCE(NULL, 100)) ROWS ONLY;
+SELECT 1 FROM accounts FETCH FIRST ((SELECT count(*) FROM (SELECT id FROM orders LIMIT 1) limited)) ROWS ONLY;

@@ -1,8 +1,11 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
+const boxes = [{ client }, { client }, { client }];
+Object.defineProperty(holder, 'box', { get() { return boxes.shift(); } });
+let unused;
 holder.box.client = {};
-holder.box.other = { client };
-holder.box.client.get = replacement;
-function globalSiblingAfter(value) { value.get('key'); }
-globalSiblingAfter(client);
+// First getter read consumes another container before the actual target read.
+({ first: unused = holder.box, second: unused = (holder.box.client.get = replacement) } = {});
+function globalPhaseDescriptorCall(value) { value.get('key'); }
+globalPhaseDescriptorCall(client);

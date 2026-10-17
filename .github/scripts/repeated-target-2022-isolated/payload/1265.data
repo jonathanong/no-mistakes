@@ -1,8 +1,16 @@
-import { primary as client } from '@vendor/valkey';
+import { primary as client } from "@vendor/valkey";
+declare function opaque(value: unknown): PromiseLike<unknown>;
 function replacement() {}
-const holder = { box: { client } };
-holder.box.client = { [rebind()]: 1 };
-holder.box.client.get = replacement;
-function rebind() { holder.box = { client }; return 'x'; }
-function globalComputedRhsCall(value) { value.get('key'); }
-globalComputedRhsCall(client);
+function* run() {
+  const holder = { box: { client } };
+  const pending = opaque(holder);
+  holder.box.client = {};
+  // Resuming the generator may run after external restoration of holder.box.
+  yield pending;
+  holder.box.client.get = replacement;
+  function scan(value) {
+    value.get("key");
+  }
+  scan(client);
+}
+run().next();

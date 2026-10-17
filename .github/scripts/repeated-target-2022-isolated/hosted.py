@@ -131,7 +131,7 @@ for row in assets:
     from contracts import asset_role
     arm, name = asset_role(row)
     if arm == 'candidate':
-        destination = Path('/tmp/nm2022-combined-release-source-draft/candidate') / name
+        destination = (Path('/tmp/nm2022-final-cost-helper-links') if name.endswith('probe') else Path('/tmp/nm2022-final-cost-native-source-draft/candidate')) / name
     elif name in ['cli', 'addon.node']:
         destination = Path('/tmp/nm2076-cold-lifetime-release/candidate') / name
     else:

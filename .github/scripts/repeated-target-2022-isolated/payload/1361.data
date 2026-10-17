@@ -1,4 +1,9 @@
-export async function loadReachable() {
-  const module = await import('./lazy.ts')
-  return module.value
-}
+effects:
+  postgres:
+    targets:
+      - { module: './local-value.mjs', export: execute }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

@@ -1,213 +1,80 @@
 const assert = require("node:assert/strict");
-const { join } = require("node:path");
 const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-
-test(
-  "compiled callback findings keep each lexical binding and occurrence distinct",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/query-reached-per-item/callbacks-fixture",
-    );
-    const report = await cjs.check({ root });
-    assert.deepEqual(report.warnings, []);
-    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
-    assert.deepEqual(
-      findings.map((finding) => [finding.file, finding.line, finding.import]),
-      [
-        [6, "read"],
-        [13, "cache.get"],
-        [20, "lookup"],
-        [27, "read"],
-        [27, "read"],
-        [29, "read"],
-      ].map(([line, callee]) => ["src/entry.mts", line, callee]),
-      "a resolved import must never supply the sink for a same-caller shadowed callback",
-    );
-    const repeated = findings.filter((finding) => finding.line === 27);
-    assert.ok(repeated[0].message.endsWith("(occurrence 1)"));
-    assert.ok(repeated[1].message.endsWith("(occurrence 2)"));
-    assert.ok(findings.find((finding) => finding.line === 29).message.includes("map callback"));
-    assert.deepEqual(await esm.check({ root }), report);
-    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
-    assert.deepEqual(batch.reports[0].result, report);
-  },
+const fixture = readFileSync(
+  join(__dirname, "../../../fixtures/postgres-facts/source/procedural-utility-completeness.sql"),
+  "utf8",
 );
 
 test(
-  "compiled checks honor exact effect bindings through aliases and helper traces",
+  "compiled native CJS and ESM keep classified procedural utilities complete",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/query-reached-per-item/targets-fixture",
-    );
-    const report = await cjs.check({ root });
-    assert.deepEqual(report.warnings, []);
-    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
-    assert.deepEqual(
-      findings.map((finding) => finding.line).sort((a, b) => a - b),
-      [11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29],
-      "only configured module bindings should report; streams, shadows and local parameters stay quiet",
-    );
-    assert.ok(findings.every((finding) => finding.file === "src/entry.mts"));
-    assert.ok(findings.some((finding) => finding.message.includes("lookup → inner → load")));
-    assert.ok(
-      findings.some(
-        (finding) =>
-          finding.message.includes("cachedLookup → valkey.hget") &&
-          finding.message.includes("reaches `valkey`"),
-      ),
-    );
-    assert.deepEqual(await esm.check({ root }), report);
-    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
-    assert.deepEqual(batch.reports[0].result, report);
-  },
-);
-
-test(
-  "compiled CJS, ESM and batched checks share per-item effect diagnostics",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/fixture");
-    const report = await cjs.check({ root });
-    assert.deepEqual(report.warnings, []);
-    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
-    assert.ok(
-      findings.some(
-        (finding) => finding.line === 5 && finding.message.includes("lookup → inner → read"),
-      ),
-    );
-    assert.ok(
-      findings.some(
-        (finding) => finding.line === 21 && finding.message.includes("transaction client only"),
-      ),
-    );
-    assert.ok(
-      !findings.some(
-        (finding) => finding.file === "src/entry.mts" && [23, 26, 28, 29].includes(finding.line),
-      ),
-    );
-    assert.ok(
-      findings.some((finding) => finding.file === "src/entry.mts" && finding.line === 24),
-      "eager queries execute before a batch wrapper receives their results",
-    );
-    const aliasLines = readFileSync(join(root, "src/entry.mts"), "utf8")
-      .split("\n")
-      .flatMap((line, index) =>
-        /items\.(?:map|forEach)\(lookupAlias\)/.test(line) ? [index + 1] : [],
-      );
-    assert.equal(aliasLines.length, 2);
-    for (const line of aliasLines) {
-      assert.ok(
-        findings.some((finding) => finding.file === "src/entry.mts" && finding.line === line),
-        `named callback alias at line ${line} must reach its configured sink`,
-      );
-    }
-    assert.deepEqual(await esm.check({ root }), report);
-    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check", id: "per-item" }] });
-    assert.equal(batch.reports[0].id, "per-item");
-    assert.deepEqual(batch.reports[0].result, report);
-    const callOptions = { file: "src/helpers.mts", exportName: "lookup" };
-    const callSites = await cjs.callSites({ root, ...callOptions });
-    const combined = await cjs.analyzeProject({
-      root,
-      reports: [
-        { type: "check", id: "per-item" },
-        { type: "callSites", id: "ordinary-calls", ...callOptions },
-      ],
-    });
-    assert.deepEqual(
-      combined.reports.find((result) => result.id === "ordinary-calls").result,
-      callSites,
-      "adding the per-item check must preserve ordinary call-site fields",
-    );
-    const suppressed = await cjs.check({ root, includeSuppressed: true });
-    assert.deepEqual(suppressed.rules, report.rules);
-    assert.ok(suppressed.suppressed.length >= 2);
-  },
-);
-
-test(
-  "compiled repeated parameter annotations preserve indexed contextual and prepared reports",
-  { skip: !compiled },
-  async () => {
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/query-reached-per-item/executor-paths-fixture",
-    );
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const options = { root, kind: "postgres", entry: "entry.mts" };
-    const pending = cjs.effects(options);
+    const input = { sql: fixture, fileName: "procedural-utility-completeness.sql" };
+    const pending = cjs.parsePostgresSql(input);
     assert.equal(typeof pending.then, "function");
-    const effects = await pending;
-    assert.deepEqual(
-      effects.callSites.filter(({ file }) => file === "entry.mts").map(({ line }) => line),
-      [5, 8, 16, 21, 39, 42],
-    );
-    assert.deepEqual(
-      effects.callSites.filter(({ file }) => file === "coverage.mts").map(({ line }) => line),
-      [17, 25, 31, 35],
-    );
-    const check = await cjs.check({ root });
-    const calls = await cjs.callSites({ root, file: "entry.mts", exportName: "options" });
-    assert.ok(calls.callSites.length > 0);
-    const reports = [
-      { type: "effects", kind: "postgres", entry: "entry.mts" },
-      { type: "check" },
-      { type: "callSites", file: "entry.mts", exportName: "options" },
-    ];
-    const prepared = await cjs.analyzeProject({ root, reports });
-    assert.deepEqual(
-      prepared.reports.map(({ result }) => result),
-      [effects, check, calls],
-    );
-    assert.deepEqual(await esm.effects(options), effects);
-    assert.deepEqual(await esm.check({ root }), check);
-    assert.deepEqual(
-      await esm.callSites({ root, file: "entry.mts", exportName: "options" }),
-      calls,
-    );
-    assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
-    // A fresh request must neither reuse another request's catalog nor mutate
-    // any previously returned annotation/report objects.
-    assert.deepEqual(await cjs.effects(options), effects);
-  },
-);
+    const facts = await pending;
+    assert.deepEqual(await esm.parsePostgresSql(input), facts);
+    assert.deepEqual(facts.diagnostics, []);
 
-test(
-  "compiled annotation cache controls keep cold and repeated requests isolated",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    for (const [scenario, expected] of [
-      ["cold", 1],
-      ["scale", 128],
-    ]) {
-      const root = join(
-        __dirname,
-        "../../../fixtures/benchmarks/parameter-annotation-cache",
-        scenario,
-      );
-      const options = { root, kind: "postgres", entry: "entry.ts" };
-      const effects = await cjs.effects(options);
-      assert.equal(effects.callSites.length, expected);
-      assert.deepEqual(await esm.effects(options), effects);
-      const reports = [{ type: "effects", kind: "postgres", entry: "entry.ts" }];
-      const prepared = await cjs.analyzeProject({ root, reports });
-      assert.deepEqual(prepared.reports[0].result, effects);
-      assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
-    }
+    const blocks = facts.statements.map((statement) => statement.block);
+    assert.deepEqual(
+      blocks.map((block) => block.complete),
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    );
+    assert.deepEqual(
+      blocks.slice(0, 7).map((block) => block.diagnostics),
+      [[], [], [], [], [], [], []],
+    );
+    assert.equal(blocks[0].occurrences[0].kind, "controlFlow");
+    assert.equal(blocks[0].occurrences[0].occurrences[0].kind, "utility");
+    assert.equal(blocks[1].occurrences[0].kind, "utility");
+    assert.equal(blocks[2].occurrences[0].kind, "utility");
+    assert.equal(blocks[3].occurrences[0].kind, "utility");
+    assert.equal(blocks[4].occurrences[0].kind, "utility");
+    assert.equal(blocks[5].occurrences[0].occurrences[0].kind, "utility");
+    const bytes = Buffer.from(fixture);
+    const originalSlice = (span) => bytes.subarray(span.start.offset, span.end.offset).toString();
+    assert.equal(
+      originalSlice(blocks[0].occurrences[0].occurrences[0].span),
+      "CREATE TYPE x AS ENUM ('a');",
+    );
+    assert.equal(
+      originalSlice(blocks[1].occurrences[0].span),
+      "LOCK TABLE t IN SHARE ROW EXCLUSIVE MODE;",
+    );
+    assert.equal(
+      originalSlice(blocks[2].occurrences[0].span),
+      "LOCK TABLE ONLY db.public.t, q IN SHARE UPDATE EXCLUSIVE MODE NOWAIT;",
+    );
+    assert.equal(blocks[6].occurrences[0].occurrences[0].kind, "dml");
+    assert.equal(blocks[7].occurrences[0].kind, "dynamicExecute");
+    assert.ok(blocks.slice(8).every((block) => block.occurrences[0].kind === "unknown"));
   },
 );

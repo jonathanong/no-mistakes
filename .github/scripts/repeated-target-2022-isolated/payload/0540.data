@@ -1,9 +1,10 @@
 import sql from 'sql-template-strings'
-import { appendSearchCte } from './search-append.ts'
+import { read } from '@example/db'
+import { appendUnknown } from './opaque-append.ts'
 
-export function buildSearch() {
-  const query = sql`/* search/list */ `
-  appendSearchCte(query)
+export function opaqueRead(runtimeSql: string) {
+  const query = sql`/* opaque */ WITH eligible AS (SELECT id FROM posts) `
+  appendUnknown(query, runtimeSql)
   query.append(sql`SELECT id FROM eligible`)
-  return query
+  return read(query)
 }

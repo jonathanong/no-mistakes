@@ -1,6 +1,6 @@
 import { read } from '@example/db'
-import { query } from './priority-helper.js'
+import { buildImportedRead } from './imported-builder.ts'
 
-export function preferredSource() {
-  return read(query)
+export async function listPosts() {
+  return read(buildImportedRead())
 }

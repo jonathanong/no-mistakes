@@ -1,3 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-((client = primary) => { const get = client.get; primary.get = replacement; get(); })();
+// Suspension prevents an immediate invocation proof.
+export default (async (client = primary) => { await Promise.resolve(); const get = client.get; primary.get = replacement; get(); })();

@@ -1,21 +1,9 @@
-import { read, beginTransaction } from '@example/db'
-import { buildSearch } from './search-builder.ts'
-import { buildCount } from './search-count.ts'
+import sql from 'sql-template-strings'
+import { read } from '@example/db'
 
-export async function listSearch() {
-  const query = buildSearch()
+export function list() {
+  const query = sql`/* opaque initializer */ SELECT 1`
+  const ignored = eval("query.append(' UPDATE posts SET title = title')")
+  void ignored
   return read(query)
-}
-
-export async function countSearch() {
-  const query = buildSearch()
-  return read(buildCount(query))
-}
-
-export async function semanticSearch() {
-  const query = buildSearch()
-  await using transaction = await beginTransaction()
-  const result = await transaction(query)
-  await transaction.commit()
-  return result
 }

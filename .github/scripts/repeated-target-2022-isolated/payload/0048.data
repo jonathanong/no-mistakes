@@ -1,367 +1,91 @@
-{
-  "adapter_lock_notice_counts": {
-    "cold": {
-      "baseline": 2,
-      "candidate": 2
-    },
-    "plain": {
-      "baseline": 2,
-      "candidate": 2
-    },
-    "receiver": {
-      "baseline": 3,
-      "candidate": 3
-    }
-  },
-  "failures": [],
-  "final_native_provenance_status": "complete",
-  "pair": {
-    "baseline": "63760fa2a58b931498b9609afdc749dde12063aa",
-    "candidate": {
-      "base": "fff61408f96fcb8fc5b213bf63beefe2b47b7e61",
-      "published_revision": null,
-      "source_proof": "/tmp/nm2022-stage2-final-source-proof-v2/source-proof.json"
-    }
-  },
-  "purpose": "LOCAL x86 untimed semantic reports only; no ARM timing carry",
-  "raw_files": {
-    "private/cli-raw/configured-check-baseline/0.exit": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-    "private/cli-raw/configured-check-baseline/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/configured-check-baseline/0.stdout": "94f42c1c337aa73eb45154019964d0deaa3c5707838bac538f50adb1eb56e8b5",
-    "private/cli-raw/configured-check-candidate/0.exit": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-    "private/cli-raw/configured-check-candidate/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/configured-check-candidate/0.stdout": "94f42c1c337aa73eb45154019964d0deaa3c5707838bac538f50adb1eb56e8b5",
-    "private/cli-raw/effects-plain-cold-diagnostics-baseline/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-cold-diagnostics-baseline/0.stderr": "6d63469995cc91faaffb44d52f1d1f5098743dfd0412f04355a6b46edb745150",
-    "private/cli-raw/effects-plain-cold-diagnostics-baseline/0.stdout": "704fcc3c28bf126daeb85cbc439f54ef18ce2a42445cadc4b6f11af6804514ce",
-    "private/cli-raw/effects-plain-cold-diagnostics-candidate/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-cold-diagnostics-candidate/0.stderr": "540d76386a227a67bd1fdf214476e9c020c0c03c723c41c16ca5a27ad14a4c18",
-    "private/cli-raw/effects-plain-cold-diagnostics-candidate/0.stdout": "704fcc3c28bf126daeb85cbc439f54ef18ce2a42445cadc4b6f11af6804514ce",
-    "private/cli-raw/effects-plain-cold-off-baseline/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-cold-off-baseline/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/effects-plain-cold-off-baseline/0.stdout": "704fcc3c28bf126daeb85cbc439f54ef18ce2a42445cadc4b6f11af6804514ce",
-    "private/cli-raw/effects-plain-cold-off-candidate/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-cold-off-candidate/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/effects-plain-cold-off-candidate/0.stdout": "704fcc3c28bf126daeb85cbc439f54ef18ce2a42445cadc4b6f11af6804514ce",
-    "private/cli-raw/effects-plain-hot-diagnostics-baseline/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-hot-diagnostics-baseline/0.stderr": "184b73665671d2d57e8fcdd4233e07ead2fd2c56ae64e7ffdc746dbb701d83b4",
-    "private/cli-raw/effects-plain-hot-diagnostics-baseline/0.stdout": "a91ef304b396e69d5298a1915a3c900cedfb895cc0eaa80b79cc854f132e5479",
-    "private/cli-raw/effects-plain-hot-diagnostics-candidate/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-hot-diagnostics-candidate/0.stderr": "ff990a9c795780383aea754ab4799f57d1c193a9ce6ff84300e7fd4aaffdc3d9",
-    "private/cli-raw/effects-plain-hot-diagnostics-candidate/0.stdout": "5d5af0f4661d962665d4fa6a2de03c132dd16c39eeda0f6ccb7e8009609f6102",
-    "private/cli-raw/effects-plain-hot-off-baseline/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-hot-off-baseline/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/effects-plain-hot-off-baseline/0.stdout": "a91ef304b396e69d5298a1915a3c900cedfb895cc0eaa80b79cc854f132e5479",
-    "private/cli-raw/effects-plain-hot-off-candidate/0.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-    "private/cli-raw/effects-plain-hot-off-candidate/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/effects-plain-hot-off-candidate/0.stdout": "5d5af0f4661d962665d4fa6a2de03c132dd16c39eeda0f6ccb7e8009609f6102",
-    "private/cli-raw/hot-rule-check-baseline/0.exit": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-    "private/cli-raw/hot-rule-check-baseline/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/hot-rule-check-baseline/0.stdout": "9d624cad83acc1f9387a9e55866ffc73ef3a56462c84173ea616ddcccef69d27",
-    "private/cli-raw/hot-rule-check-candidate/0.exit": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-    "private/cli-raw/hot-rule-check-candidate/0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/cli-raw/hot-rule-check-candidate/0.stdout": "db9464d435e1b7c2b5c1dc972d27670085579ba85e7189f6db27d9e12a23aecb",
-    "private/graphs/cold-graph:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/cold-graph:calls-baseline.stdout": "6a32ebdb666182a78925d282b905d5a1014c38fedbbe6342a75de02737c18dbc",
-    "private/graphs/cold-graph:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/cold-graph:calls-candidate.stdout": "6a32ebdb666182a78925d282b905d5a1014c38fedbbe6342a75de02737c18dbc",
-    "private/graphs/cold-graph:no-calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/cold-graph:no-calls-baseline.stdout": "c77e0ff1b03fbc35ed2dd4dbe31ab64daa44fd0d159f9ff7a2909fd59af40bc8",
-    "private/graphs/cold-graph:no-calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/cold-graph:no-calls-candidate.stdout": "c77e0ff1b03fbc35ed2dd4dbe31ab64daa44fd0d159f9ff7a2909fd59af40bc8",
-    "private/graphs/default-cold:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/default-cold:calls-baseline.stdout": "137dac844886a30fc9501ad641debce044b0ff39e97a71b5a49b77389d4e09b6",
-    "private/graphs/default-cold:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/default-cold:calls-candidate.stdout": "137dac844886a30fc9501ad641debce044b0ff39e97a71b5a49b77389d4e09b6",
-    "private/graphs/hot-16:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/hot-16:calls-baseline.stdout": "1263905995bbf2b0eba50649bfcdd17378399ae3996ac7a54d01f32ae0e9287f",
-    "private/graphs/hot-16:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/hot-16:calls-candidate.stdout": "a49bbdc9dea4528b1cd1853c2e240d0a92352dc0e219260133b7c9a30f8b6108",
-    "private/graphs/hot-256:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/hot-256:calls-baseline.stdout": "f25de063346406635402fc98ee3805fe5defcb88cf7cbff6115edd884a66174f",
-    "private/graphs/hot-256:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/hot-256:calls-candidate.stdout": "6031415232aaf92e0ebeebc6b2e80c6513608206efce9b542ab03bc263316c5d",
-    "private/graphs/inherited:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/inherited:calls-baseline.stdout": "ed180efa9744df512f263791d62058396d8fdbc046978bc96f805e36e0fd9f04",
-    "private/graphs/inherited:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/inherited:calls-candidate.stdout": "314dc396e5380239f5ad596fde4a93f68b9b076de00f60bdf880143a96082c61",
-    "private/graphs/receiver-order:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/receiver-order:calls-baseline.stdout": "d3db006163f4005f104ccaa83d7ac192181b50378b47bdf6cb45ea30a86f9d73",
-    "private/graphs/receiver-order:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/receiver-order:calls-candidate.stdout": "dcf96c14f402fedc654738ddab9c9ee6a8d427520d9c534ce68ef509897b2947",
-    "private/graphs/repository-incoming:calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/repository-incoming:calls-baseline.stdout": "e67d946c290a1c61b6f1ec1b82e6c5271c1c3ba422c6eedb0f0988d836da0585",
-    "private/graphs/repository-incoming:calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/graphs/repository-incoming:calls-candidate.stdout": "812fbfe0dc8d2f4387bdf80098ce142380cc73900b60cdf3f0dd7de1669ce3ab",
-    "private/napi/cold-baseline-0.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/cold-baseline-0.cli.stdout": "704fcc3c28bf126daeb85cbc439f54ef18ce2a42445cadc4b6f11af6804514ce",
-    "private/napi/cold-baseline-check.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/cold-baseline-check.cli.stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "private/napi/cold-baseline.stderr": "b2593e9a0350ed31ceccd6ecbee58fd60e0153d4cbf818eda9839357623fa785",
-    "private/napi/cold-baseline.stdout": "147defa6ba5e14a62689ce122e2098c2c61fe08290b6c56797cac4435d421d34",
-    "private/napi/cold-candidate-0.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/cold-candidate-0.cli.stdout": "704fcc3c28bf126daeb85cbc439f54ef18ce2a42445cadc4b6f11af6804514ce",
-    "private/napi/cold-candidate-check.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/cold-candidate-check.cli.stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "private/napi/cold-candidate.stderr": "a74789fb3153e9b41dddb58c62e20f085526c9f57662377c301f26ad5466aa97",
-    "private/napi/cold-candidate.stdout": "147defa6ba5e14a62689ce122e2098c2c61fe08290b6c56797cac4435d421d34",
-    "private/napi/plain-baseline-0.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/plain-baseline-0.cli.stdout": "4f280f41ab96b4827a465c135be6c2bba40eb765fc7909a47941af08b38e2899",
-    "private/napi/plain-baseline-check.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/plain-baseline-check.cli.stdout": "42dd90d3129889afc48b8ab58d37a2d83c687039835d3b8348766ae1d0f915ab",
-    "private/napi/plain-baseline.stderr": "0eced9ccbd441ebda3a16b246fe7a2ae22fbcca96d5f8c80b8e30997961f15c5",
-    "private/napi/plain-baseline.stdout": "948a6b5d79f04c46bb6e17257d19ef7ae3f8342674de854602a3e94b7905b3fa",
-    "private/napi/plain-candidate-0.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/plain-candidate-0.cli.stdout": "14bd4c7ed6d2d300b3e655e7f7e6f9899493dee3253c95f9a9f5b9f5ebe1abc8",
-    "private/napi/plain-candidate-check.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/plain-candidate-check.cli.stdout": "8749462c0d115544abbc5f39502d9fb3cc26673f23e72b962c9a5499d1ad0d34",
-    "private/napi/plain-candidate.stderr": "3cec9274069042e1b4aa3921cdc33c4280a157edabcf767c1d049fbe34d28dbd",
-    "private/napi/plain-candidate.stdout": "c9976de4502eddbdf13b7c6402683dcbf308e21b4319c8e45a20ed711c3776e3",
-    "private/napi/receiver-baseline-0.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/receiver-baseline-0.cli.stdout": "c0a259a9949565be550267a8978e4e3dfcf4423c9b5bf4581bca33f2e89553ab",
-    "private/napi/receiver-baseline-1.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/receiver-baseline-1.cli.stdout": "3d95609ca475aaf092b80e1de7b3c022c766c4dc6e29eca9871ec641a69f9750",
-    "private/napi/receiver-baseline-check.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/receiver-baseline-check.cli.stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "private/napi/receiver-baseline.stderr": "22b3e4260909ce5b470e75b3da12c63aa4e0b0116029ea1835b5114f246c6dff",
-    "private/napi/receiver-baseline.stdout": "400265a1373c0e0e6334602cce612dcd2c42b459065c4e730a48ef8d498c8b7f",
-    "private/napi/receiver-candidate-0.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/receiver-candidate-0.cli.stdout": "c0a259a9949565be550267a8978e4e3dfcf4423c9b5bf4581bca33f2e89553ab",
-    "private/napi/receiver-candidate-1.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/receiver-candidate-1.cli.stdout": "3d95609ca475aaf092b80e1de7b3c022c766c4dc6e29eca9871ec641a69f9750",
-    "private/napi/receiver-candidate-check.cli.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/napi/receiver-candidate-check.cli.stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "private/napi/receiver-candidate.stderr": "4a9f105f8b3dff2f312eea3896da04ccebfde83c7cbcc7a5a8003781c646470a",
-    "private/napi/receiver-candidate.stdout": "400265a1373c0e0e6334602cce612dcd2c42b459065c4e730a48ef8d498c8b7f",
-    "private/probes/cold-calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/cold-calls-baseline.stdout": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
-    "private/probes/cold-calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/cold-calls-candidate.stdout": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
-    "private/probes/cold-no-calls-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/cold-no-calls-baseline.stdout": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-    "private/probes/cold-no-calls-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/cold-no-calls-candidate.stdout": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-    "private/probes/default-cold-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/default-cold-baseline.stdout": "38a407cd7d38b41132709485046d7817571b73c32433877751399e229ce11ce2",
-    "private/probes/default-cold-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/default-cold-candidate.stdout": "38a407cd7d38b41132709485046d7817571b73c32433877751399e229ce11ce2",
-    "private/probes/hot-16-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/hot-16-baseline.stdout": "e6c21e8d260fe71882debdb339d2402a2ca7648529bc2303f48649bce0380017",
-    "private/probes/hot-16-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/hot-16-candidate.stdout": "e6c21e8d260fe71882debdb339d2402a2ca7648529bc2303f48649bce0380017",
-    "private/probes/hot-256-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/hot-256-baseline.stdout": "f16c302d5d30e1d3fbe955cf4f637f58a871adeba597922e3baad0aeeb13f656",
-    "private/probes/hot-256-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/hot-256-candidate.stdout": "f16c302d5d30e1d3fbe955cf4f637f58a871adeba597922e3baad0aeeb13f656",
-    "private/probes/inherited-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/inherited-baseline.stdout": "64aeb9975f234becd55bb4635e6e2f2da7a6b7bf0a896f0c07763bdfbfb31420",
-    "private/probes/inherited-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/inherited-candidate.stdout": "64aeb9975f234becd55bb4635e6e2f2da7a6b7bf0a896f0c07763bdfbfb31420",
-    "private/probes/jsx-imports-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/jsx-imports-baseline.stdout": "932ab0a0e4191d32c0af7b3f565b7b180dbe9869378abc5816f9add54b806e7f",
-    "private/probes/jsx-imports-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/jsx-imports-candidate.stdout": "932ab0a0e4191d32c0af7b3f565b7b180dbe9869378abc5816f9add54b806e7f",
-    "private/probes/jsx-values-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/jsx-values-baseline.stdout": "2115cdb6bfcfb008eb2bab2bb79347cb064a48e4e7c4115ccbe4469c787bb6c4",
-    "private/probes/jsx-values-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/jsx-values-candidate.stdout": "2115cdb6bfcfb008eb2bab2bb79347cb064a48e4e7c4115ccbe4469c787bb6c4",
-    "private/probes/shared-imports-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/shared-imports-baseline.stdout": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-    "private/probes/shared-imports-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/shared-imports-candidate.stdout": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-    "private/probes/shared-values-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/shared-values-baseline.stdout": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
-    "private/probes/shared-values-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "private/probes/shared-values-candidate.stdout": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff",
-    "private/reports/cli/configured-check-baseline.json": "20b3ee51fee08172328a5827608dbc9fe517e4354f199ca41fbe6c15afd5e79b",
-    "private/reports/cli/configured-check-candidate.json": "20b3ee51fee08172328a5827608dbc9fe517e4354f199ca41fbe6c15afd5e79b",
-    "private/reports/cli/effects-plain-cold-diagnostics-baseline.json": "817a110a28e99b0b14215bb360da2ebe04fef5a9a6379838ea2317005615208f",
-    "private/reports/cli/effects-plain-cold-diagnostics-candidate.json": "817a110a28e99b0b14215bb360da2ebe04fef5a9a6379838ea2317005615208f",
-    "private/reports/cli/effects-plain-cold-off-baseline.json": "817a110a28e99b0b14215bb360da2ebe04fef5a9a6379838ea2317005615208f",
-    "private/reports/cli/effects-plain-cold-off-candidate.json": "817a110a28e99b0b14215bb360da2ebe04fef5a9a6379838ea2317005615208f",
-    "private/reports/cli/effects-plain-hot-diagnostics-baseline.json": "89dadab39b0f364c3bb32982c08854c973f12c9d6f9f66637e46a3fe0a960299",
-    "private/reports/cli/effects-plain-hot-diagnostics-candidate.json": "55f9af9a5920ce96e8ed505d790a7b56280160b2331a5a04aa6ae39b97ce620a",
-    "private/reports/cli/effects-plain-hot-off-baseline.json": "89dadab39b0f364c3bb32982c08854c973f12c9d6f9f66637e46a3fe0a960299",
-    "private/reports/cli/effects-plain-hot-off-candidate.json": "55f9af9a5920ce96e8ed505d790a7b56280160b2331a5a04aa6ae39b97ce620a",
-    "private/reports/cli/hot-rule-check-baseline.json": "69d14ebdbc632322dd5151d9499039dea333c74eab7671b5a617d5823dbbcbac",
-    "private/reports/cli/hot-rule-check-candidate.json": "55801281d52f215aeba0f0cd90f7c4d8456a25101a56250c4bc1b551f87311d2",
-    "private/reports/graph/cold-graph:calls-baseline.json": "3ff9ae3d4ed86dab6d3e18ff32bb49be269aba7bffcd5d271fe0eac4f2e1bef4",
-    "private/reports/graph/cold-graph:calls-candidate.json": "3ff9ae3d4ed86dab6d3e18ff32bb49be269aba7bffcd5d271fe0eac4f2e1bef4",
-    "private/reports/graph/cold-graph:no-calls-baseline.json": "63c6e8730cdc94e2b652fd9ad7823258a9713663629096eefea7c56314f464ae",
-    "private/reports/graph/cold-graph:no-calls-candidate.json": "63c6e8730cdc94e2b652fd9ad7823258a9713663629096eefea7c56314f464ae",
-    "private/reports/graph/default-cold:calls-baseline.json": "0d28cff0940b6d58332a761a3d54858c452b57ce9c82f9ce09c561846546cdb7",
-    "private/reports/graph/default-cold:calls-candidate.json": "0d28cff0940b6d58332a761a3d54858c452b57ce9c82f9ce09c561846546cdb7",
-    "private/reports/graph/hot-16:calls-baseline.json": "96c5f3ac73c84bb7a5c46007d3bd6359d28c4602bea0d6b51750450a8344bd93",
-    "private/reports/graph/hot-16:calls-candidate.json": "5d4a8cf0f6dee66ac932c802a5201e97a2e8407ad76d915fb6bdd207bcbdc1f1",
-    "private/reports/graph/hot-256:calls-baseline.json": "2506535f6c2805dea3e4193a5c9668770f35a19f00ce748915420f8c3bf65ed4",
-    "private/reports/graph/hot-256:calls-candidate.json": "490852840eaffde8457e54e9735065a5509125c834ba73f07afd00e384c9d2a2",
-    "private/reports/graph/inherited:calls-baseline.json": "1c51c03c43b2091d632baac813837a27f9cf7dc83ca401819a8394e324f092e3",
-    "private/reports/graph/inherited:calls-candidate.json": "0fb8c40570d2f50a21ea26f14b49af62352aead6eed20f6641303ff0ead9b001",
-    "private/reports/graph/receiver-order:calls-baseline.json": "f6fe89ca3cb400978c8b550d249fc223e992bc8a9edb9488e59febb4efbe93fe",
-    "private/reports/graph/receiver-order:calls-candidate.json": "5f1e6663890dda7e5ff160a105deb22d212e8a6c913776362ded0d387ae1962b",
-    "private/reports/graph/repository-incoming:calls-baseline.json": "6533b578cd2777191c5b6427fbabaf7091e5955280b0e6946f07e06ed9d80a32",
-    "private/reports/graph/repository-incoming:calls-candidate.json": "0a3d79d83fe7d7d9c02d701f4361a2700b58bcab66a7ed497edf3f8a77180281",
-    "private/reports/napi/cold-baseline.json": "bd91dc79da40a232f99f89fd278ef9be16868a6a3a958b1d0a028ffe4ab8af21",
-    "private/reports/napi/cold-candidate.json": "bd91dc79da40a232f99f89fd278ef9be16868a6a3a958b1d0a028ffe4ab8af21",
-    "private/reports/napi/plain-baseline.json": "b8815373ee7d969efb33a35631897d9c1f876a3198cec2cc1871521632c041a6",
-    "private/reports/napi/plain-candidate.json": "06b511bbad60f44639373faa8d39dd83f1604adcabc8cdd5debbf7086c21d3dc",
-    "private/reports/napi/receiver-baseline.json": "2f01c1b8f7f89befae120bb79527e21fa0dc5599c7aad2bc9af0dbc5fcdb5b46",
-    "private/reports/napi/receiver-candidate.json": "2f01c1b8f7f89befae120bb79527e21fa0dc5599c7aad2bc9af0dbc5fcdb5b46"
-  },
-  "report_hashes": {
-    "cli": {
-      "configured-check": {
-        "baseline": {
-          "exit": 1,
-          "sha256": "5ef614dc752d91a5cec1256bfa1b808bdf2fda450c251cc20fa759e19a5feac1"
-        },
-        "candidate": {
-          "exit": 1,
-          "sha256": "5ef614dc752d91a5cec1256bfa1b808bdf2fda450c251cc20fa759e19a5feac1"
-        }
-      },
-      "effects-plain-cold-diagnostics": {
-        "baseline": {
-          "exit": 0,
-          "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
-        },
-        "candidate": {
-          "exit": 0,
-          "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
-        }
-      },
-      "effects-plain-cold-off": {
-        "baseline": {
-          "exit": 0,
-          "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
-        },
-        "candidate": {
-          "exit": 0,
-          "sha256": "b2f3bb3b6ab63e3f29b9dd853797a998980cefdb58168a400eb3a5186f06c3a8"
-        }
-      },
-      "effects-plain-hot-diagnostics": {
-        "baseline": {
-          "exit": 0,
-          "sha256": "ac66da8ebd783dff4cf15ab54e57aa29c0c0eeb327e973368c68404a58c735f7"
-        },
-        "candidate": {
-          "exit": 0,
-          "sha256": "fda2bec189d3bf8bd8f3e7bc217d72a1e626c37cb87a454766af3cac3bc8721b"
-        }
-      },
-      "effects-plain-hot-off": {
-        "baseline": {
-          "exit": 0,
-          "sha256": "ac66da8ebd783dff4cf15ab54e57aa29c0c0eeb327e973368c68404a58c735f7"
-        },
-        "candidate": {
-          "exit": 0,
-          "sha256": "fda2bec189d3bf8bd8f3e7bc217d72a1e626c37cb87a454766af3cac3bc8721b"
-        }
-      },
-      "hot-rule-check": {
-        "baseline": {
-          "exit": 1,
-          "sha256": "f4f9cfd3e1262f0488372635f52093e29bbce41d476a248b9d28a8269a475ca8"
-        },
-        "candidate": {
-          "exit": 1,
-          "sha256": "024e937a14dcb045c73ea340de69d2bdeb47df2cc69057c4857b0dc8cf9b4984"
-        }
-      }
-    },
-    "graph": {
-      "cold-graph:calls": {
-        "baseline": "feebae20f851757e31d351060ad0d4526c61b96d2ec6ddb101f46db62aa79e76",
-        "candidate": "feebae20f851757e31d351060ad0d4526c61b96d2ec6ddb101f46db62aa79e76"
-      },
-      "cold-graph:no-calls": {
-        "baseline": "7ccfe1cc3151224de3db5ac6cf16d09531d7dfcee755ac785d1238125d55f744",
-        "candidate": "7ccfe1cc3151224de3db5ac6cf16d09531d7dfcee755ac785d1238125d55f744"
-      },
-      "default-cold:calls": {
-        "baseline": "3ca4a3c3c8fb830b03848b0ec16849afd526acec0ab92db0ea9472f133006eea",
-        "candidate": "3ca4a3c3c8fb830b03848b0ec16849afd526acec0ab92db0ea9472f133006eea"
-      },
-      "hot-16:calls": {
-        "baseline": "bc75e194bf56e02971c9c30c6b91afdc221bf754db16f3575f3ac0b3691203bc",
-        "candidate": "ca6930aef20cd05a5811cb669ef30cdbe36e70463062a2fe31b765cb02ae0112"
-      },
-      "hot-256:calls": {
-        "baseline": "0cabe4f3e202dfb2e555767de41bdcea879951d87f594161f4071dea5695135f",
-        "candidate": "afdd496f09f8debc3ff1216071586435d4c300bce20a1548e1f125350ffe36b2"
-      },
-      "inherited:calls": {
-        "baseline": "aa9ce4f77df2d5f61645a1c4f7f39b2ae202c55a9a818fdf421dc4a10b0415f6",
-        "candidate": "f01092027b0af17f83446fde7d468942dd9d71fbe9bc0fc62a167131105f558f"
-      },
-      "receiver-order:calls": {
-        "baseline": "1d0ee31ebd3a8e300c22ed79ec7fa038c64a2ed78aba8cf963ad1b068cc93d1c",
-        "candidate": "51e2085cf006220aa599aacfe7ba5dad187e90b8af63bc8de6e54b5bde95d5a1"
-      },
-      "repository-incoming:calls": {
-        "baseline": "d4226abcfe20e33b3d2950faa15c47e134debdf6dc0205cd1a4484de7ef42591",
-        "candidate": "e8869f0ec7295b18064177b765c404ba5a585f6a832bc1af386847780a074ae2"
-      }
-    },
-    "napi": {
-      "cold": {
-        "baseline": "f61a787f72aaded846883ae9d9a08a16af667982901fccbf2f71c4e9aed8cdfc",
-        "candidate": "f61a787f72aaded846883ae9d9a08a16af667982901fccbf2f71c4e9aed8cdfc"
-      },
-      "plain": {
-        "baseline": "0941ea9b462dbfde9445afe81d811c0f68da85ba716598b06f2ec857dc660700",
-        "candidate": "cee36e4fea0384154769eed15da80d1332e0b556ea5948ea0426d3f730ce5a8f"
-      },
-      "receiver": {
-        "baseline": "dd6d7dd3641cca1cab7c66cdebf8d132a8fbd916714a2f76a2acde54fb609adf",
-        "candidate": "dd6d7dd3641cca1cab7c66cdebf8d132a8fbd916714a2f76a2acde54fb609adf"
-      }
-    },
-    "probe": {
-      "cold-calls": {
-        "baseline": "2",
-        "candidate": "2"
-      },
-      "cold-no-calls": {
-        "baseline": "0",
-        "candidate": "0"
-      },
-      "default-cold": {
-        "baseline": "129",
-        "candidate": "129"
-      },
-      "hot-16": {
-        "baseline": "16",
-        "candidate": "16"
-      },
-      "hot-256": {
-        "baseline": "256",
-        "candidate": "256"
-      },
-      "inherited": {
-        "baseline": "25",
-        "candidate": "25"
-      },
-      "jsx-imports": {
-        "baseline": "27",
-        "candidate": "27"
-      },
-      "jsx-values": {
-        "baseline": "32",
-        "candidate": "32"
-      },
-      "shared-imports": {
-        "baseline": "0",
-        "candidate": "0"
-      },
-      "shared-values": {
-        "baseline": "128",
-        "candidate": "128"
-      }
-    }
-  },
-  "status": "complete",
-  "xdg_runtime_dir": "/tmp/nm2022-stage2-native-semantics/collection-v2/runtime"
-}
+"""Curated completion ledger. Incomplete/noisy outcomes are retained explicitly."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+
+def completion_pair(checkout):
+    from pair import current_pair
+    from common import ExperimentFailure
+    try:
+        _, baseline = current_pair(checkout)
+        return {'eligible': True, 'status': 'exact main and PR source pair still current',
+                'baseline_revision': baseline}
+    except Exception as error:
+        # Preserve every sample and layout even when the source pair has drifted
+        # or the final remote check is unavailable. Never publish raw errors.
+        return {'eligible': False, 'status': 'historical or unverified; ineligible for merge gate',
+                'error_code': error.code if isinstance(error, ExperimentFailure)
+                else 'final_pair_check_failed'}
+
+
+def summary(spec, assessments, counts, currentness=None):
+    outcomes = {row.get('workload'): row for row in assessments}
+    lines = ['# Frozen pair: actual retained native results', '',
+        'A: `' + str(spec['baseline']['revision'] or 'UNRESOLVED') + '` (baseline frozen at preflight).',
+        'B: `' + str(spec['candidate']['revision'] or 'UNRESOLVED') + '`; PR head `' + spec['diagnostic_parent'] + '`.', '',
+        'Default-feature release opt3/full-LTO/codegen1. CodSpeed instrumented observations are separate.',
+        'Direct prepared lookup timing is unmeasured. Actual incoming/counter proof comes from exact CI internal assertions.', '',
+        '| Workload | Outcome | CPU | Wall | Peak RSS | Evidence phase / rows | Retained long rows |', '|---|---|---|---|---|---|---|']
+    incomplete = currentness is not None and not currentness['eligible']
+    if currentness is not None:
+        lines[5:5] = ['Final source-pair check: ' + currentness['status'] + '.', '']
+    for workload in spec['workloads']:
+        row = outcomes.get(workload['name'], {'status':'incomplete'})
+        count = counts.get(workload['name'], 0)
+        status = row.get('status', 'incomplete')
+        incomplete |= status == 'incomplete' or count != 32
+        metrics = row.get('metrics', {})
+        columns = [metrics.get(key, {}).get('status', 'unmeasured') for key in ('cpu_s', 'wall_s', 'rss_kib')]
+        phase = row.get('phase', 'unmeasured')
+        samples = row.get('samples', count)
+        lines.append(f"| {workload['name']} | {status} | {' | '.join(columns)} | {phase} / {samples} | {count} |")
+    lines += ['', 'All pilot/startup/partial/adverse numeric rows are retained. No outlier removal, clock subtraction, or favorable retry.',
+        'CPU, wall and peak RSS have separate paired intervals and order diagnostics in assessments.json.',
+        'Higher-cost observations require adjacent reversed confirmation before attribution. No automatic READY decision.',
+        'Missing/noisy work remains incomplete/inconclusive. Flat CPU with higher RSS requires a design decision.']
+    return '\n'.join(lines) + '\n', incomplete
+
+
+def report(root):
+    from pair import SPEC, HERE
+    from common import write, require, digest
+    public = root / 'public'
+    public.mkdir(parents=True, exist_ok=True)
+    assessments = json.loads((public / 'assessments.json').read_text()) if (public / 'assessments.json').exists() else []
+    counts = {}
+    for workload in SPEC['workloads']:
+        rows = public / (workload['name'] + '-long-rows.json')
+        counts[workload['name']] = len(json.loads(rows.read_text())) if rows.exists() else 0
+    remote = completion_pair(HERE.parents[2] if len(HERE.parents)>2 else HERE)
+    jobs = {key: os.environ.get(key.upper()+'_RESULT', 'missing')
+            for key in ('preflight','build','layout')}
+    gates = {'semantic_preflight': (public/'semantic-preflight.json').is_file(),
+             'napi_parity': (public/'napi-parity.json').is_file()}
+    eligible = remote['eligible'] and all(v == 'success' for v in jobs.values()) and all(gates.values())
+    currentness = {'eligible': eligible,
+                   'status': 'all prerequisite stages completed; numeric review still required' if eligible
+                             else 'one or more prerequisites failed, skipped, or drifted; retained evidence ineligible',
+                   'remote': remote, 'jobs': jobs, 'gates': gates}
+    write(public / 'final-pair.json', currentness)
+    markdown, incomplete = summary(SPEC, assessments, counts, currentness)
+    (public / 'summary.md').write_text(markdown)
+    inventory = []
+    for path in sorted(public.iterdir()):
+        require(path.is_file() and not path.is_symlink() and path.suffix in ('.json', '.md'), 'unexpected_public_payload_type')
+        require(path.stat().st_size <= 2 * 1024**2, 'public_payload_too_large')
+        data = path.read_text()
+        require(str(root) not in data and '/home/runner/' not in data, 'private_absolute_path_in_public_payload')
+        inventory.append({'file':path.name, 'bytes':path.stat().st_size, 'sha256':digest(path)})
+    write(public / 'artifact-manifest.json', {'status':'incomplete' if incomplete else 'retained results require review',
+        'final_source_pair': currentness,
+        'payload':inventory, 'excluded':'No executables/libraries/raw cargo/LCOV/source dumps/private request reports/profiles'})
+    return int(incomplete)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root', type=Path, required=True)
+    sys.exit(report(parser.parse_args().root.resolve()))

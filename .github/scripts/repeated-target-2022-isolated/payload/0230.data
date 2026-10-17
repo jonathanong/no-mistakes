@@ -1,10 +1,13 @@
 import { query } from "@example/db";
 
-export function load() {
-  class String {
-    static raw() {
-      return "DELETE FROM users";
-    }
+function build() {
+  return "SELECT * FROM topics";
+}
+
+export function run(load: () => string) {
+  try {
+    load();
+  } catch (build) {
+    return query(build());
   }
-  return query(String.raw`SELECT 1`);
 }

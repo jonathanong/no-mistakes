@@ -1,81 +1,57 @@
-// CI, impacted-checks, data-flow, infra, and Swift API declarations, split
-// out of `index.d.ts` to stay under the 200-line file limit.
-
-import type {
-  CiEnvOptions,
-  CiEnvReport,
-  CiImpactOptions,
-  CiImpactReport,
-  CiTopologyOptions,
-  CiTopologyImpactOptions,
-  CiTopologyImpactReport,
-  DataPwOptions,
-  DataPwReport,
-  EffectsOptions,
-  EffectsReport,
-  ImpactedChecksOptions,
-  ImpactedChecksReport,
-  InfraOptions,
-  LockfileDiffEntry,
-  LockfileDiffOptions,
-  ModuleOutputsResult,
-  RegistryExtensionOptions,
-  RegistryExtensionReport,
-  ResourceRefRow,
-  RscCallersOptions,
-  RscCallersReport,
-  SwiftImporterRow,
-  SwiftOptions,
-  SwiftTestTargetRow,
-  TestForRow,
-  TestAuditReport,
-  TestsAuditOptions,
-  WithInvocationOptions,
-  WorkflowTopology,
-  WorkflowTopologyIndex,
-} from "./types";
-
-export function lockfileDiff(
-  options: WithInvocationOptions<LockfileDiffOptions>,
-): Promise<LockfileDiffEntry[]>;
-export function ciImpact(options: WithInvocationOptions<CiImpactOptions>): Promise<CiImpactReport>;
-export function ciEnv(options: WithInvocationOptions<CiEnvOptions>): Promise<CiEnvReport>;
-export function ciTopology(
-  options?: WithInvocationOptions<CiTopologyOptions>,
-): Promise<WorkflowTopology>;
-export function ciTopologyImpact(
-  options: WithInvocationOptions<CiTopologyImpactOptions>,
-): Promise<CiTopologyImpactReport>;
-/** Builds a query index over a `ciTopology()` result. Pure JS — never crosses the N-API boundary. */
-export function createWorkflowTopologyIndex(topology: WorkflowTopology): WorkflowTopologyIndex;
-export function impactedChecks(
-  options: WithInvocationOptions<ImpactedChecksOptions>,
-): Promise<ImpactedChecksReport>;
-export function dataPw(options: WithInvocationOptions<DataPwOptions>): Promise<DataPwReport>;
-export function effects(options: WithInvocationOptions<EffectsOptions>): Promise<EffectsReport>;
-export function rscCallers(
-  options: WithInvocationOptions<RscCallersOptions>,
-): Promise<RscCallersReport>;
-export function registryExtension(
-  options: WithInvocationOptions<RegistryExtensionOptions>,
-): Promise<RegistryExtensionReport>;
-export function infraResourceRefs(
-  options: WithInvocationOptions<InfraOptions & { address: string }>,
-): Promise<ResourceRefRow[]>;
-export function infraOutputs(
-  options: WithInvocationOptions<InfraOptions & { moduleDir: string }>,
-): Promise<ModuleOutputsResult>;
-export function infraTestFor(
-  options: WithInvocationOptions<InfraOptions & { tfFile: string }>,
-): Promise<TestForRow[]>;
-export function swiftImporters(
-  options: WithInvocationOptions<SwiftOptions & { file: string }>,
-): Promise<SwiftImporterRow[]>;
-export function swiftTestTargets(
-  options: WithInvocationOptions<SwiftOptions & { file: string }>,
-): Promise<SwiftTestTargetRow[]>;
-export function version(): Promise<string>;
-
-export function testsAudit(
-  options: WithInvocationOptions<TestsAuditOptions>,
-): Promise<TestAuditReport>;
+{
+  "name": "no-mistakes-monorepo",
+  "version": "0.91.2",
+  "private": true,
+  "description": "Deterministic AST-based codebase intelligence for humans and AI agents",
+  "homepage": "https://github.com/jonathanong/no-mistakes#readme",
+  "bugs": {
+    "url": "https://github.com/jonathanong/no-mistakes/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanong/no-mistakes.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:js": "pnpm --recursive --if-present run build",
+    "build:native": "node packages/no-mistakes/scripts/local-stage-native.js",
+    "evals": "bash scripts/run-evals.sh",
+    "test": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --reporter=dot --reporter=github-actions",
+    "fmt:js": "oxfmt --write packages/ vitest.config.js",
+    "fmt:js:check": "oxfmt --check packages/ vitest.config.js",
+    "lint:js": "oxlint packages/ vitest.config.js",
+    "lint:duplicates": "jscpd",
+    "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/*/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
+    "pack:check": "pnpm --filter './packages/*' pack --dry-run",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
+    "@storybook/addon-vitest": "10.6.1",
+    "@storybook/react": "10.6.1",
+    "@storybook/react-vite": "10.6.1",
+    "@vitest/browser-playwright": "5.0.3",
+    "@vitest/coverage-v8": "^5.0.3",
+    "cspell": "^10.3.6",
+    "eslint": "^10.12.0",
+    "husky": "^9.1.7",
+    "jscpd": "5.4.1",
+    "oxfmt": "^0.72.0",
+    "oxlint": "^1.87.0",
+    "playwright": "1.64.0",
+    "pr-shepherd": "^0.56.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "storybook": "10.6.1",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "packageManager": "pnpm@11.24.0"
+}

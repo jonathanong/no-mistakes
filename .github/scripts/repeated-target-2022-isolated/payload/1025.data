@@ -1,4 +1,5 @@
-import { primary } from '@vendor/valkey';
+import { primary } from './alias-provider.mjs';
 function replacement() {}
-function f(client) { const alias = client; const get = alias.get; primary.get = replacement; get(); }
-f(primary);
+primary.set = replacement;
+function f(client = primary) { const alias = client; alias.get(); }
+f();

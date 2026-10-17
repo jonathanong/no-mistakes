@@ -1,8 +1,12 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
-holder.box.client = { x: rebind() };
+holder.box.client = {};
+// A copied callable keeps the target acquired before decorator application.
+const saved = client.get;
+@opaque
+class Decorated {}
 holder.box.client.get = replacement;
-function rebind() { holder.box = { client }; return 0; }
-function globalImmediateCall(value) { value.get('key'); }
-globalImmediateCall(client);
+function opaque() { holder.box = { client }; }
+function scan(value) { saved('key'); }
+scan(client);

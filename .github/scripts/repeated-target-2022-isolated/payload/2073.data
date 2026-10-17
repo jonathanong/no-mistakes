@@ -1,3 +1,2 @@
-SELECT explain analyse FROM target;
-SELECT "explain" analyse FROM target;
-INSERT INTO target VALUES (1) RETURNING explain analyse;
+-- Different schemas and table names must not collide during lexical recovery.
+CREATE VIEW app.candidates AS TABLE other.orders UNION ALL TABLE app.customers UNION ALL TABLE app.orders;

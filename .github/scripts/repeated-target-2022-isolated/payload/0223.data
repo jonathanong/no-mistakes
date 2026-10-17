@@ -1,14 +1,6 @@
 import { query } from "@example/db";
 
-function safe() {
-  return "TRUSTED SQL";
-}
-
-function wrap({ safe }: { safe: () => string }) {
-  return safe();
-}
-
-const sql = wrap({ safe: () => "untrusted" });
+const sql = "SELECT id FROM topics".append(" WHERE id = 1").append(" AND active");
 
 export function load() {
   return query(sql);

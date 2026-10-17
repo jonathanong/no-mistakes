@@ -1,6 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-// The next iteration can acquire the replacement, so a single original target is unsafe.
-for (let index = 0; index < 2; index++) {
-  ((client = primary) => { const get = client.get; primary.get = replacement; get(); })();
-}
+// An anonymous class field runs for every constructed instance.
+export default { Client: class { value = ((client = primary) => { const get = client.get; primary.get = replacement; get(); })(); } };

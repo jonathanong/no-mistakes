@@ -1,2 +1,6 @@
-// OXC reports this parser panic through the recovered-program fatal marker.
-export const = ;
+tests:
+  playwright:
+    configs: playwright.config.ts
+    frontendRoot: app
+    testInclude:
+      - tests/**/*.ts

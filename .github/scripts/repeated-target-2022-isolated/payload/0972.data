@@ -1,3 +1,1 @@
-import { factory } from './provider-unknown.mjs';
-declare const client: unknown;
-factory()({ client });
+export function factory() { return ({ client }) => client.get(); }

@@ -1,1 +1,1 @@
-DO $$ <<"BEGIN">> BEGIN RAISE NOTICE 'x'; END "BEGIN"; $$;
+SELECT '>>--literal', $tag$>>--dollar$tag$, "x--identifier";

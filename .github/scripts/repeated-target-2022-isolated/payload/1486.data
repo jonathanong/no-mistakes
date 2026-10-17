@@ -1,12 +1,8 @@
-import { query } from "@example/db";
+import sql from "sql-template-strings";
+import { read } from "@example/db";
 
-const suffix = "1";
-const sql = "SELECT id FROM topics".append(raw` AND id = ${suffix}`);
-
-export function load() {
-  return query(sql);
-}
-
-function raw(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return strings.join("");
+export async function listTopics(clause: string) {
+  const query = sql`SELECT id FROM topics WHERE published = true`;
+  query.append(clause);
+  return read(query);
 }

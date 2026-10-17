@@ -1,57 +1,100 @@
-/** Controls shared by every analysis invocation. timeout/lockTimeout use seconds; invocationTimeoutMs uses milliseconds. */
-export interface InvocationOptions {
-  /** Command execution timeout in whole non-negative seconds. Omit, `0`, or `null` disables it. CLI default remains 30. */
-  timeout?: number | null;
-  /** Positive safe-integer native invocation budget in milliseconds, shared by lock acquisition and execution. Never extends timeout or lockTimeout; profile ci disables it. Omit to preserve existing timeout semantics; null is invalid. */
-  invocationTimeoutMs?: number;
-  /** Maximum time to wait for the current user's invocation lock (shared across project roots), in whole non-negative seconds. Omit, `0`, or `null` waits indefinitely. CLI default remains 30. */
-  lockTimeout?: number | null;
-  /** Fail immediately instead of waiting when another invocation holds the lock. */
-  failOnLock?: boolean;
-  /**
-   * Rayon worker count. A positive integer takes precedence over `RAYON_NUM_THREADS`.
-   * Omit, `0`, or `null` uses `RAYON_NUM_THREADS`, falling back to CPU count when
-   * unset or invalid, matching CLI `--jobs 0`.
-   * The first analysis request with valid UTF-8 JSON and invocation controls that
-   * acquires the invocation lock initializes the process-wide pool before
-   * command-specific options are validated. A later command-validation failure
-   * can therefore still select the pool; JSON/control or lock failures cannot.
-   * Later calls cannot resize an already initialized pool.
-   */
-  jobs?: number | null;
-  /** `ci` sets unbounded command and lock timeouts. CLI `--profile ci` does the same. */
-  profile?: "ci";
-  /** Register live, stderr-free phase progress under a unique ID. Use diagnosticsSnapshot({ id }) while the request runs; completion or failure removes the ID. */
-  diagnosticsId?: string;
+#!/usr/bin/env node
+"use strict";
+
+const { spawn } = require("node:child_process");
+const { boundedDiagnostic } = require("../planning-impact-cli");
+const { resolveNativePackage } = require("../scripts/native-package");
+
+const VALUE_OPTIONS = new Set([
+  "--timeout",
+  "--invocation-timeout-ms",
+  "--lock-timeout",
+  "--jobs",
+  "--profile",
+  "-j",
+]);
+const FLAG_OPTIONS = new Set(["--fail-on-lock"]);
+const INLINE_VALUE_OPTION =
+  /^(?:--(?:timeout|invocation-timeout-ms|lock-timeout|jobs|profile)=|-j)/u;
+
+function firstSubcommand(argv) {
+  const index = firstSubcommandIndex(argv);
+  return index === undefined ? undefined : argv[index];
 }
 
-export type WithInvocationOptions<T> = T & InvocationOptions;
-
-/** One live span; siblings may overlap and labels form the enclosing phase path. */
-export interface ActiveTimingSpan {
-  id: number;
-  phase: string[];
-  startedMs: number;
-  elapsedMs: number;
-  parallel: boolean;
+function firstSubcommandIndex(argv) {
+  for (let index = 0; index < argv.length; index += 1) {
+    const value = argv[index];
+    if (value === "--") return undefined;
+    if (VALUE_OPTIONS.has(value)) {
+      index += 1;
+      continue;
+    }
+    if (FLAG_OPTIONS.has(value) || INLINE_VALUE_OPTION.test(value)) {
+      continue;
+    }
+    return index;
+  }
+  return undefined;
 }
 
-/** Completed durations grouped by label and parallel status within the live request. */
-export interface CompletedTimingSpan {
-  label: string;
-  durationMs: number;
-  parallel: boolean;
+function planningImpactArgs(argv) {
+  const index = firstSubcommandIndex(argv);
+  return [...argv.slice(0, index), ...argv.slice(index + 1)];
 }
 
-export interface DiagnosticsProgressSnapshot {
-  elapsedMs: number;
-  startedSpans: number;
-  completedSpans: number;
-  active: ActiveTimingSpan[];
-  completed: CompletedTimingSpan[];
+function launchNative(
+  argv,
+  spawnFn = spawn,
+  io = process,
+  kill = process.kill,
+  resolve = resolveNativePackage,
+) {
+  let cliPath;
+  try {
+    cliPath = resolve().cliPath;
+  } catch (error) {
+    io.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    io.exitCode = 1;
+    return undefined;
+  }
+  const child = spawnFn(cliPath, argv, { stdio: "inherit" });
+  child.on("error", (error) => {
+    io.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    io.exitCode = 1;
+  });
+  child.on("exit", (code, signal) => {
+    if (signal) kill(process.pid, signal);
+    else io.exitCode = code === null ? 1 : code;
+  });
+  return child;
 }
 
-/** Poll a live diagnosticsId without waiting for the filesystem invocation lock. Returns null before registration and after completion or failure. */
-export function diagnosticsSnapshot(options: {
-  id: string;
-}): Promise<DiagnosticsProgressSnapshot | null>;
+async function main(
+  argv = process.argv.slice(2),
+  {
+    io = process,
+    launchNativeFn = launchNative,
+    runPlanning = (args, planningIo) =>
+      require("../planning-impact-cli").main(args, process.cwd(), planningIo),
+  } = {},
+) {
+  if (firstSubcommand(argv) === "planning-impact") {
+    try {
+      await runPlanning(planningImpactArgs(argv), io);
+    } catch (error) {
+      io.stderr.write(boundedDiagnostic(error));
+      io.exitCode = 1;
+    }
+  } else {
+    launchNativeFn(argv);
+  }
+}
+
+function runIfMain(mainModule, current, start) {
+  if (mainModule === current) return start();
+}
+
+runIfMain(require.main, module, main);
+
+module.exports = { firstSubcommand, launchNative, main, planningImpactArgs, runIfMain };

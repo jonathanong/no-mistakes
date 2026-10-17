@@ -3,148 +3,157 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const fixture = (name) =>
+  readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
 
 test(
-  "compiled wrapper options preserve PostgreSQL boolean and identifier grammar",
+  "compiled comment facts accept dollar, Unicode and escape string literals",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const sql = readFileSync(
-      join(__dirname, "../../../fixtures/postgres-facts/source/wrapper-boolean-identity.sql"),
-      "utf8",
-    );
-    const result = await cjs.parsePostgresSql({ sql });
-    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
-    assert.deepEqual(result.diagnostics, []);
+    const source = { sql: fixture("comment-literals.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
     assert.deepEqual(
-      result.statements.slice(0, 13).map((item) => item.wrapper.execution),
-      [
-        "executesForAnalysis",
-        "unknown",
-        "unknown",
-        "nonExecuting",
-        "unknown",
-        "unknown",
-        "executesForAnalysis",
-        "nonExecuting",
-        "executesForAnalysis",
-        "unknown",
-        "executesForAnalysis",
-        "executesForAnalysis",
-        "unknown",
-      ],
+      facts.statements.slice(0, 7).map((statement) => statement.comment.comment),
+      ["dollar text", "tagged text", "doc", "escaped\nline", "table dollar", "view", null],
     );
-    assert.equal(result.statements[15].query.columns[0].name.parts[0].value, "explain");
-    assert.equal(result.statements[16].query.columns[0].name.parts[0].value, "explain");
-    assert.equal(result.statements[13].block.complete, true);
-    assert.equal(result.statements[14].function.wrapper.complete, true);
-    const bytes = Buffer.from(sql);
-    for (const parent of result.statements) {
+    assert.equal(facts.statements[7].block.statements[0].branches[0].statements[0].kind, "comment");
+  },
+);
+
+test(
+  "compiled CJS and ESM accept typed PostgreSQL metadata and newline strings",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = fixture("valid-metadata.sql");
+    const pending = cjs.parsePostgresSql({ sql });
+    assert.equal(typeof pending.then, "function");
+    const facts = await pending;
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements.length, 12);
+    assert.equal(facts.statements[0].kind, "comment");
+    assert.deepEqual(facts.statements[0].comment.arguments, []);
+    assert.equal(facts.statements[0].comment.name.parts[0].identity, "example_function");
+    assert.equal(facts.statements[1].kind, "alterIndex");
+    assert.equal(facts.statements[1].index.operation.kind, "attachPartition");
+    assert.equal(facts.statements[1].index.operation.partition.sql, "example_child");
+    assert.equal(facts.statements[2].comment.comment, "First. Second.");
+    assert.equal(facts.statements[3].comment.arguments[0].name.identity, "Name");
+    assert.equal(facts.statements[3].comment.arguments[1].mode, "VARIADIC");
+    assert.equal(facts.statements[3].comment.comment, "雪's documentation");
+    assert.equal(facts.statements[4].comment.comment, null);
+    assert.equal(facts.statements[5].comment.arguments, null);
+    assert.equal(facts.statements[6].index.ifExists, false);
+    assert.equal(facts.statements[7].index.ifExists, true);
+    assert.equal(facts.statements[7].index.operation.kind, "rename");
+    assert.equal(facts.statements[9].comment.comment, "abc");
+    for (const statement of facts.statements) {
       assert.equal(
-        bytes.subarray(parent.span.start.offset, parent.span.end.offset).toString(),
-        parent.sql,
+        Buffer.from(sql)
+          .subarray(statement.span.start.offset, statement.span.end.offset)
+          .toString(),
+        statement.sql,
       );
-      for (const child of (parent.wrapper || parent.function?.wrapper)?.statements || []) {
-        assert.equal(
-          bytes.subarray(child.span.start.offset, child.span.end.offset).toString(),
-          child.sql,
-        );
-      }
     }
   },
 );
 
 test(
-  "compiled atomic bodies distinguish BEGIN aliases from nested declarations",
+  "compiled metadata parser keeps malformed controls diagnostic and recovers neighbors",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const sql = readFileSync(
-      join(__dirname, "../../../fixtures/postgres-facts/source/wrapper-atomic-identifiers.sql"),
-      "utf8",
-    );
-    const result = await cjs.parsePostgresSql({ sql });
-    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
-    assert.deepEqual(result.diagnostics, []);
-    assert.equal(result.statements.length, 8);
+    const source = { sql: fixture("invalid-metadata.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.equal(facts.diagnostics.length, 23);
+    assert.match(facts.diagnostics[0].message, /column name or constraint/);
     assert.deepEqual(
-      [1, 3, 5].map((index) => result.statements[index].sql),
-      ["SELECT 93;", "SELECT 94;", "SELECT 95;"],
+      facts.statements.map((statement) => statement.kind),
+      ["createIndex"],
     );
-    assert.equal(result.statements[0].function.wrapper.complete, false);
-    assert.equal(result.statements[0].function.wrapper.statements.length, 15);
-    assert.deepEqual(
-      result.statements[0].function.wrapper.statements.map((child) => child.query.complete),
-      Array.from({ length: 15 }, (_, index) => index !== 11),
-    );
-    assert.equal(result.statements[2].function.wrapper.complete, true);
-    assert.equal(result.statements[4].function.wrapper.complete, false);
-    assert.equal(result.statements[6].function.wrapper.complete, false);
-    assert.equal(result.statements[7].sql, "SELECT 96;");
+    assert.equal(facts.statements[0].ordinal, 23);
   },
 );
 
 test(
-  "compiled wrappers reuse decoded literals and bound transaction BEGIN",
+  "compiled metadata supports escape continuation quote state",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    for (const [fixture, expected] of [
-      [
-        "wrapper-string-options.sql",
-        [
-          ...Array(3).fill("nonExecuting"),
-          ...Array(6).fill("executesForAnalysis"),
-          ...Array(9).fill("unknown"),
-          "nonExecuting",
-        ],
-      ],
-      [
-        "wrapper-signed-options.sql",
-        ["executesForAnalysis", "nonExecuting", "nonExecuting", ...Array(6).fill("unknown")],
-      ],
-    ]) {
-      const sql = readFileSync(
-        join(__dirname, "../../../fixtures/postgres-facts/source", fixture),
-        "utf8",
-      );
-      const result = await cjs.parsePostgresSql({ sql });
-      assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
-      assert.deepEqual(result.diagnostics, []);
-      assert.deepEqual(
-        result.statements.slice(0, expected.length).map((item) => item.wrapper.execution),
-        expected,
-      );
-      for (const parent of result.statements) {
-        assert.equal(sql.slice(parent.span.start.offset, parent.span.end.offset), parent.sql);
-        for (const child of (parent.wrapper || parent.function?.wrapper)?.statements || []) {
-          assert.equal(sql.slice(child.span.start.offset, child.span.end.offset), child.sql);
-        }
-      }
-      if (fixture === "wrapper-signed-options.sql") {
-        assert.equal(result.statements.length, 22);
-        assert.equal(result.statements[9].function.wrapper.complete, false);
-        assert.equal(result.statements[10].sql, "SELECT 81;");
-        assert.equal(result.statements[11].function.wrapper.complete, true);
-        assert.equal(result.statements[12].sql, "SELECT 82;");
-        assert.deepEqual(
-          result.statements.slice(13).map((item) => item.wrapper.execution),
-          [
-            "executesForAnalysis",
-            "nonExecuting",
-            "executesForAnalysis",
-            "nonExecuting",
-            "unknown",
-            "unknown",
-            "unknown",
-            "executesForAnalysis",
-            "nonExecuting",
-          ],
-        );
-      }
-    }
+    const source = { sql: fixture("escaped-continuations.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.equal(facts.diagnostics.length, 5);
+    assert.deepEqual(
+      facts.statements.slice(0, 4).map((statement) => statement.comment.comment),
+      ["foobar", "first\nsecond\tend\r\b\f\\z", "ABCDxZ", "é雪"],
+    );
+    assert.deepEqual(
+      facts.statements.slice(4).map((statement) => statement.kind),
+      ["createTable", "insert"],
+    );
+  },
+);
+
+test("compiled routine comments retain nested signatures", { skip: !compiled }, async () => {
+  const cjs = require("../index.js");
+  const esm = await import("../index.mjs");
+  const source = { sql: fixture("conditional-routine-comment.sql") };
+  const facts = await cjs.parsePostgresSql(source);
+  assert.deepEqual(await esm.parsePostgresSql(source), facts);
+  assert.deepEqual(facts.diagnostics, []);
+  assert.equal(facts.statements[0].block.complete, true);
+  const comment = facts.statements[0].block.statements[0].branches[0].statements[0].comment;
+  assert.equal(comment.name.parts[0].identity, "Schéma");
+  assert.equal(comment.arguments[1].mode, "VARIADIC");
+  assert.equal(comment.comment, "雪");
+});
+
+test("compiled Unicode comments consume and decode UESCAPE", { skip: !compiled }, async () => {
+  const cjs = require("../index.js");
+  const esm = await import("../index.mjs");
+  const source = { sql: fixture("unicode-comment-escapes.sql") };
+  const facts = await cjs.parsePostgresSql(source);
+  assert.deepEqual(await esm.parsePostgresSql(source), facts);
+  assert.equal(facts.diagnostics.length, 13);
+  assert.equal(facts.statements.length, 21);
+  assert.equal(facts.statements[0].comment.comment, "data! it''s \\path");
+  assert.equal(facts.statements[1].comment.comment, "snow 雪");
+  assert.equal(facts.statements[3].comment.comment, "😀 😀 😀 😀");
+  assert.equal(facts.statements[7].block.complete, true);
+});
+
+test(
+  "compiled E continuations preserve escaped quotes and neighboring statements",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const source = { sql: fixture("escaped-quote-continuations.sql") };
+    const facts = await cjs.parsePostgresSql(source);
+    assert.deepEqual(await esm.parsePostgresSql(source), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements[0].comment.comment, "ab'c");
+    assert.equal(facts.statements[1].comment.comment, "雪'quoted'");
+    assert.equal(facts.statements[9].kind, "createIndex");
+    const malformed = { sql: fixture("escaped-quote-continuations-invalid.sql") };
+    const invalid = await cjs.parsePostgresSql(malformed);
+    assert.deepEqual(await esm.parsePostgresSql(malformed), invalid);
+    assert.deepEqual(
+      invalid.statements.map((statement) => statement.kind),
+      ["createIndex", "createIndex"],
+    );
+    assert.ok(
+      invalid.diagnostics.some((diagnostic) => diagnostic.message.includes("Unterminated")),
+    );
   },
 );

@@ -1,72 +1,111 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
-for (const [fixture, selected] of [
-  ["superseded-2065-projections-fixture", 10],
-  ["superseded-2065-import-order-fixture", 3],
-]) {
-  test(`compiled preserved provenance reports: ${fixture}`, { skip: !compiled }, async () => {
-    const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item", fixture);
-    const expected = JSON.parse(readFileSync(join(root, "expected-lines.json"), "utf8"));
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const reports = [];
-    const results = [];
-    for (const [entry, lines] of Object.entries(expected)) {
-      const options = { root, kind: "postgres", entry };
-      const pending = cjs.effects(options);
-      assert.equal(typeof pending.then, "function");
-      const result = await pending;
-      assert.deepEqual(
-        result.callSites.map(({ file, line }) => [file, line]),
-        lines.map((line) => [entry, line]),
-      );
-      assert.deepEqual(await esm.effects(options), result);
-      reports.push({ type: "effects", kind: "postgres", entry });
-      results.push(result);
-    }
-    const wanted = Object.entries(expected).flatMap(([file, lines]) =>
-      lines.map((line) => [file, line]),
-    );
-    assert.equal(wanted.length, selected);
-    const check = await cjs.check({ root });
-    assert.deepEqual(
-      check.rules.map(({ file, line }) => [file, line]),
-      wanted,
-    );
-    assert.deepEqual(await esm.check({ root }), check);
-    reports.push({ type: "check" });
-    results.push(check);
-    // Union demand must preserve every standalone report, including negative modules.
-    const prepared = await cjs.analyzeProject({ root, reports });
-    assert.deepEqual(
-      prepared.reports.map(({ result }) => result),
-      results,
-    );
-    assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
+function shape(occurrences) {
+  return occurrences.map((occurrence) => {
+    const nested = shape(occurrence.occurrences);
+    return nested.length === 0 ? occurrence.kind : `${occurrence.kind}(${nested.join(",")})`;
   });
 }
 
+const CASES = [
+  {
+    name: "utility",
+    sql: "DO $$ BEGIN CREATE TYPE x AS ENUM ('a'); END $$;",
+    complete: true,
+    shape: ["utility"],
+  },
+  {
+    name: "raise between creates",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); RAISE NOTICE 'x'; CREATE TABLE b(id int); END $$;",
+    complete: true,
+    shape: ["utility", "controlFlow", "utility"],
+    statements: 2,
+  },
+  {
+    name: "control flow",
+    sql: "DO $$ BEGIN IF (SELECT COUNT(*) FROM t) > 0 THEN RAISE EXCEPTION 'bad'; END IF; END $$;",
+    complete: true,
+    shape: ["controlFlow(controlFlow)"],
+    statements: 0,
+  },
+  {
+    name: "create beside unknown loop",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); LOOP SELECT 1; END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(unknown)"],
+    statements: 1,
+    diagnostic: /Unsupported procedural occurrence/,
+  },
+  {
+    name: "create beside dynamic loop",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); LOOP EXECUTE format('SELECT 1'); END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(dynamicExecute)"],
+    statements: 1,
+    diagnostic: /Dynamic EXECUTE is unknown/,
+  },
+  {
+    name: "create beside loop dml",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(dml)"],
+    statements: 1,
+    diagnostic: /not an executed statement/,
+  },
+  {
+    name: "loop dml",
+    sql: "DO $$ BEGIN FOR i IN 1..2 LOOP INSERT INTO t(id) VALUES (i); END LOOP; END $$;",
+    complete: false,
+    shape: ["controlFlow(dml)"],
+    statements: 0,
+    diagnostic: /not an executed statement/,
+  },
+  {
+    name: "dynamic execute",
+    sql: "DO $$ BEGIN EXECUTE format('INSERT INTO t(id) VALUES (%s)', 1); END $$;",
+    complete: false,
+    shape: ["dynamicExecute"],
+  },
+  {
+    name: "labeled loop",
+    sql: "DO $$ BEGIN <<retry>> LOOP NULL; END LOOP retry; END $$;",
+    complete: false,
+    shape: ["controlFlow(unknown)"],
+    statements: 0,
+    diagnostic: /Unsupported procedural occurrence/,
+  },
+];
+
 test(
-  "compiled plain non-nullish control preserves the complete report",
+  "compiled native CJS and ESM distinguish procedural occurrence kinds",
   { skip: !compiled },
   async () => {
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/query-reached-per-item/superseded-2065-plain-fixture",
-    );
-    const expected = JSON.parse(readFileSync(join(root, "expected.json"), "utf8"));
-    const options = { root, kind: "database", entry: "src/defaults.mts" };
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    assert.deepEqual(await cjs.effects(options), expected);
-    assert.deepEqual(await esm.effects(options), expected);
-    const reports = [{ type: "effects", kind: "database", entry: options.entry }];
-    const prepared = await cjs.analyzeProject({ root, reports });
-    assert.deepEqual(prepared.reports[0].result, expected);
-    assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
+    for (const entry of CASES) {
+      const input = { sql: entry.sql, fileName: `${entry.name}.sql` };
+      const pending = cjs.parsePostgresSql(input);
+      assert.equal(typeof pending.then, "function");
+      const facts = await pending;
+      assert.deepEqual(await esm.parsePostgresSql(input), facts);
+      assert.deepEqual(facts.diagnostics, []);
+      const block = facts.statements[0].block;
+      assert.equal(facts.statements[0].kind, "doBlock");
+      assert.equal(block.complete, entry.complete, entry.name);
+      assert.deepEqual(shape(block.occurrences), entry.shape, entry.name);
+      if (entry.statements !== undefined) {
+        assert.equal(block.statements.length, entry.statements, entry.name);
+      }
+      if (entry.diagnostic) {
+        assert.match(block.diagnostics.map((item) => item.message).join("\n"), entry.diagnostic);
+      }
+      for (const occurrence of block.occurrences) {
+        const text = entry.sql.slice(occurrence.span.start.offset, occurrence.span.end.offset);
+        assert.ok(text.length > 0, entry.name);
+        assert.ok(occurrence.span.start.offset < occurrence.span.end.offset);
+      }
+    }
   },
 );

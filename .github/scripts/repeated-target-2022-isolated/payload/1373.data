@@ -1,3 +1,1 @@
-export default function Page() {
-  return <main>Home</main>;
-}
+export const value = 'lazy'

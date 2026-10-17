@@ -1,14 +1,8 @@
-import sql from "sql-template-strings";
-import { read } from "@example/db";
+import { query } from "@example/db";
+import { getFragment } from "./frag";
 
-function buildScopeCondition(scope: string) {
-  return sql` AND tenant_id = ${scope}`;
-}
+const sql = "SELECT id FROM topics".append(getFragment());
 
-export async function listTopics(scope: string) {
-  const scopeCondition = buildScopeCondition(scope);
-  const query = sql`SELECT id FROM topics WHERE published = true`;
-  query.append(scopeCondition);
-  query.append(sql` ORDER BY id`);
-  return read(query);
+export function load() {
+  return query(sql);
 }

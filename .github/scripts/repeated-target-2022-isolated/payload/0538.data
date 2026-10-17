@@ -1,14 +1,16 @@
-import sql from 'sql-template-strings'
-
-export function makeQuery() {
-  return sql`/* shadowed helper */ SELECT 1`
+// Earlier evaluated collection operands must survive a later conditional operand.
+export function build(flag?: string): string[] {
+  return [outer(flag)];
 }
-
-export function appendKnown(query: { append: (sql: string) => void }, _unused?: unknown): void {
-  query.append(' /* known suffix */')
+function outer(flag?: string): string {
+  return inner(
+    "IF",
+    [...(flag ? [`LOCK TABLE ${flag};`] : []), "LOCK TABLE t;"],
+    ["SELECT 1"],
+    ["UPDATE t SET n=1"],
+  );
 }
-
-export async function appendLater(query: { append: (sql: string) => void }): Promise<void> {
-  await Promise.resolve()
-  query.append(' UPDATE posts SET title = title')
+function inner(header: string, a: string[], b: string[], c: string[]): string {
+  if (a.length) return ["SELECT 1", ...b.map(x => `  ${x}`)].join("\n");
+  return ["SELECT 2", ...c].join("\n");
 }

@@ -1,35 +1,22 @@
-import type { SQLStatement } from "sql-template-strings";
-import { sql, query } from "@example/db";
+import { query, sql } from "@example/db";
+const yes = true;
+query(yes ? "SELECT 1" : unknownSql);
+const no = false;
+query(no ? unknownSql : "SELECT 2");
+const nothing = null;
+query(nothing ? unknownSql : "SELECT 3");
+const nonempty = "ready";
+query(nonempty ? "SELECT 4" : unknownSql);
+const empty = "";
+query(empty ? unknownSql : "SELECT 5");
 const gate = runtimeFlag;
-function addOffset(q: SQLStatement): SQLStatement {
-  q.append(sql` OFFSET 3`);
-  return q;
-}
-
-/* Assignment returns the old builder reference to the enclosing consumer. */
-const direct = gate ? sql`id FROM direct_users` : sql`id FROM direct_users WHERE active`;
-let other = 0;
-query(sql`SELECT ${direct} LIMIT ${((other = direct).append(sql` OFFSET 1`), 0)}`);
-const computed = sql`id FROM computed_users`;
-query(sql`SELECT ${computed} LIMIT ${((other = computed)["append"](sql` OFFSET 2`), 0)}`);
-const summarized = gate ? sql`id FROM helper_users` : sql`id FROM helper_users WHERE active`;
-query(sql`SELECT ${summarized} LIMIT ${(addOffset(other = summarized), 0)}`);
-const wrapped = gate ? sql`id FROM wrapped_users` : sql`id FROM wrapped_users WHERE active`;
-query(sql`SELECT ${wrapped} LIMIT ${(((other as unknown) = wrapped).append(sql` OFFSET 4`), 0)}`);
-const nested = gate ? sql`id FROM nested_users` : sql`id FROM nested_users WHERE active`;
-let nestedAlias = 0;
-query(sql`SELECT ${nested} LIMIT ${((other = (nestedAlias = nested))["append"](sql` OFFSET 5`), 0)}`);
-const escaped = gate ? sql`id FROM escaped_users` : sql`id FROM escaped_users WHERE active`;
-query(sql`SELECT ${escaped} LIMIT ${(unknownHelper(other = escaped), 0)}`);
-
-/* A pure assignment result used only as a discarded value is harmless. */
-const unchanged = gate
-  ? sql`id FROM unchanged_users WHERE id = ${firstOwner} OFFSET ${skip}`
-  : sql`id FROM unchanged_users WHERE id = ${secondOwner}`;
-query(sql`SELECT ${unchanged} LIMIT ${(other = unchanged, limit)}`);
-query(sql`SELECT ${other}`);
-
-/* Compound string assignment keeps its result as a primitive bind. */
-let primitive = "copied";
-const primitiveCopy = (primitive += " value");
-query(sql`SELECT ${primitiveCopy} LIMIT ${0}`);
+query(gate ? (gate ? "SELECT 6" : unknownSql) : "SELECT 7");
+const derived = gate ? true : false;
+query(sql`SELECT ${gate ? sql`1` : sql`2`}${derived ? sql`0` : sql`9`}`);
+const inverse = gate ? false : true;
+query(sql`SELECT ${gate ? sql`1` : sql`2`}${inverse ? sql`0` : sql`9`}`);
+let condition = "ready";
+let q = "SELECT ";
+if (condition) { condition = ""; q += "8"; }
+else q += "9";
+query(q); // The test observes the value before its taken branch changes it.

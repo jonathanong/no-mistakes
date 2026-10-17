@@ -1,7 +1,9 @@
-export function readWith() {
-  return '/* with/read */ WITH source AS (SELECT id FROM posts) SELECT id FROM source'
-}
+import { query as execute, read } from "@example/db";
 
-export function writeWith() {
-  return '/* with/write */ WITH changed AS (DELETE FROM posts RETURNING id) SELECT id FROM changed'
-}
+const byId = `/* posts/by-id */ SELECT id FROM posts WHERE id = ${id}`;
+execute(byId);
+read(`/* posts/list */ WITH selected AS (SELECT id FROM posts) SELECT * FROM selected`);
+
+// This named local is not an imported executor.
+const query = (value: string) => value;
+query("/* not-executed */ SELECT 1");

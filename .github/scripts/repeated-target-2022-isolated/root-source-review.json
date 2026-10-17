@@ -1,0 +1,15 @@
+{
+  "utc": "2026-10-17T02:40:09.840234+00:00",
+  "status": "APPROVED exact source correction and normal hooked fast-forward diagnostic publication; root-only workflow dispatch remains separate",
+  "reviewed_manifest_sha256": "d0bfedb22a64bcec5ba561bf82385763c331d4e87d3c00d5745393a83d43e6ae",
+  "all_source_pins_verified": 3960,
+  "source": "/tmp/nm2022-newlower-hosted-source/package",
+  "candidate_native": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "candidate_public_test_only_carry": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "scientific_review": "16 protocol scientific files byte-identical; pair.json only baseline/candidate identities changed. All2330 oldpayloadpaths preserved byteexact except reviewed collectoradapter;13 genuine receipts added. Full182 semantic expectations and numerical gates/pilot/workload schedule unchanged. Actual newnativeall4assets rootstaged and producer metadata corrected. Honest24layoutsourcecarry reviewed. NewheadCI/all4Codecov/global98pass.",
+  "allowed_finalization": "Only bind this approval, set execution approval/frozen status, copy approval proof and refresh affected manifest/payload hashes; no workload/gate/kernel/frozenexpectation/asset mutation. Record exact final manifest before normal hooked push.",
+  "destination": "jonathanong/no-mistakes branch diagnostic/2022-next-eight-cohorts",
+  "previous_remote": "3c0009aa258dc1dba5ef1dd7e0d762850ca9fc0e",
+  "release": "415271391 must remainDRAFT; no publishing",
+  "performance": "NOT PASSED; new matched samples required, keepall3PRsdraft/singlewhole-stackmergeonlyafterallgates"
+}

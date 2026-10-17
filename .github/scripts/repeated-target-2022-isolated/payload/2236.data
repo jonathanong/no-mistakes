@@ -1,210 +1,288 @@
-export type Relationship =
-  | "call"
-  | "import"
-  | "import-static"
-  | "import-dynamic"
-  | "import-type"
-  | "import-require"
-  | "route-import"
-  | "workspace"
-  | "package"
-  | "test"
-  | "route"
-  | "queue"
-  | "md"
-  | "ci"
-  | "workflow"
-  | "workflow-job"
-  | "workflow-step"
-  | "workflow-needs"
-  | "workflow-uses"
-  | "workflow-run"
-  | "workflow-artifact"
-  | "http"
-  | "process"
-  | "asset"
-  | "react"
-  | "dotnet"
-  | "swift"
-  | "terraform"
-  | "python"
-  | "go"
-  | "rust"
-  | "ruby"
-  | "php"
-  | "java"
-  | "kotlin"
-  | "elixir"
-  | "dart"
-  | "resource"
-  | "trpc"
-  | "all";
-
-export interface TraverseOptions {
-  files: Array<string | SymbolEntrypoint>;
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  depth?: number;
-  filters?: string[];
-  targetModules?: string[];
-  tests?: string[];
-  relationships?: Relationship[];
-  includeSymbols?: boolean;
-}
-
-export type {
-  ImportClosureResult,
-  TraverseGraphOptions,
-  TraversePathsOptions,
-  TraverseProjection,
-} from "./import-closure-types";
-
-export interface DependencyFile {
-  path?: string;
-  file?: string;
-  symbol?: string;
-  queueFile?: string;
-  /** Workflow file for a virtual GitHub Actions job or step node. */
-  workflowFile?: string;
-  /** GitHub Actions job identifier for a virtual workflow job or step node. */
-  job?: string;
-  /** Zero-based step index for a virtual GitHub Actions workflow step node. */
-  step?: number;
-  /** Router file for a virtual tRPC procedure node. */
-  routerFile?: string;
-  /** Dotted procedure path for a virtual tRPC procedure node (`user.get`). */
-  procedure?: string;
-  module?: string;
-  depth: number;
-  via?: string[];
-}
-
-export interface SymbolEntrypoint {
-  file: string;
-  symbol?: string;
-}
-
-export interface TsConfigDiagnostic {
-  kind: "ambiguous-ownership" | "invalid-config" | "invalid-extends" | "invalid-reference";
-  config: string | null;
-  file: string | null;
-  detail: string;
-  candidates: string[];
-}
-
-export interface TsConfigProvenance {
-  importer: string;
-  config: string | null;
-  forced: boolean;
-}
-
-export interface DependencyResult {
-  roots: string[];
-  files: DependencyFile[];
-  diagnostics: TsConfigDiagnostic[];
-  tsconfig_provenance: TsConfigProvenance[];
-}
-
-export type ExportKind =
-  | "function"
-  | "class"
-  | "const"
-  | "let"
-  | "var"
-  | "type"
-  | "interface"
-  | "enum"
-  | "default"
-  | "re-export";
-
-export interface SymbolsOptions {
-  files: string[];
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  mode?: "list" | "signature-impact";
-  symbol?: string;
-  kinds?: ExportKind[];
-  include?: "exports" | "imports" | "both";
-}
-
-export type SymbolsListOptions = Omit<SymbolsOptions, "mode" | "symbol"> & {
-  mode?: "list";
-  symbol?: string;
-};
-
-export type SymbolsSignatureImpactOptions = SymbolsOptions & {
-  mode: "signature-impact";
-  symbol: string;
-};
-
-export interface SymbolExport {
-  name: string;
-  kind: string;
-  line: number;
-  reExport?: {
-    source: string;
-    imported: string;
-    resolved?: string;
-  };
-}
-
-export interface SymbolImport {
-  source: string;
-  imported: string;
-  local: string;
-  line: number;
-  typeOnly: boolean;
-  resolved?: string;
-}
-
-export interface SymbolFile {
-  path: string;
-  exports?: SymbolExport[];
-  imports?: SymbolImport[];
-}
-
-export interface SymbolsResult {
-  roots: string[];
-  files: SymbolFile[];
-}
-
-export type {
-  SignatureImpactCaller,
-  SignatureImpactLocation,
-  SignatureImpactResult,
-  SignatureImpactTest,
-  SignatureImpactWarning,
-} from "./signature-impact-types";
-
-export interface ProjectOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  filters?: string[];
-  targets?: string[];
-  files?: string[];
-  roots?: string[];
-  depth?: number;
-  assertNoFetch?: boolean;
-  direction?: "deps" | "dependents" | "both";
-  /** `reactUsages` target component (`path` or `path#Symbol`). */
-  target?: string;
-  /** `reactUsages` `--include` spec: comma-separated `stories,tests,props`. */
-  include?: string;
-}
-
-export interface CheckOptions extends ProjectOptions {
-  /** Add deterministic accounting for findings hidden by no-mistakes directives. */
-  includeSuppressed?: boolean;
-  /** Add declared config evidence; absent slots never imply SDK defaults. */
-  includeRunnerConfigDeadlines?: boolean;
-}
+import { describe, expect, it, vi } from "vitest";
+import { guardPublicRunner } from "./public-runner.mjs";
+import { protectRunnerTimeouts } from "./index.mjs";
+describe("public constructor adapter contracts (parent worker)", () => {
+  it("preserves private-field receivers and prototype delegation after derived initialization", () => {
+    const calls = vi.fn();
+    class Base {
+      config;
+      #identity = "base";
+      constructor(config) {
+        this.config = config;
+      }
+      baseIdentity() {
+        return this.#identity;
+      }
+      extendTaskContext(context) {
+        return context;
+      }
+      static label = "public static";
+    }
+    const Guarded = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    class Derived extends Guarded {
+      #identity = "derived";
+      constructor(config) {
+        super(config);
+        // SDK5 browser lifecycle: a temporary field reset, then the original object.
+        Object.defineProperty(this, "config", {
+          value: undefined,
+          configurable: true,
+          writable: true,
+          enumerable: true,
+        });
+        this.config = config;
+      }
+      extendTaskContext(context) {
+        calls(this.#identity, this.baseIdentity());
+        return super.extendTaskContext(context);
+      }
+    }
+    const config = { testTimeout: 25, hookTimeout: 25 };
+    const runner = new (guardPublicRunner(Derived, 30000, protectRunnerTimeouts))(config);
+    expect(runner).toBeInstanceOf(Derived);
+    expect(runner).toBeInstanceOf(Base);
+    expect(runner.config).toBe(config);
+    expect(Derived.label).toBe("public static");
+    expect(Object.getPrototypeOf(Derived)).toBe(Guarded);
+    expect(Object.getPrototypeOf(runner)).toBe(Derived.prototype);
+    expect(() => runner.extendTaskContext({ task: { timeout: 0 } })).toThrow(RangeError);
+    expect(calls).not.toHaveBeenCalled();
+    const context = { task: { timeout: 25 } };
+    expect(runner.extendTaskContext(context)).toBe(context);
+    expect(calls).toHaveBeenCalledWith("derived", "base");
+    expect(() => {
+      config.hookTimeout = 30001;
+    }).toThrow(RangeError);
+  });
+  it("preserves direct and genuinely derived constructor new.target values", () => {
+    class Base {
+      config;
+      target;
+      #marker = "base brand";
+      constructor(config) {
+        this.config = config;
+        this.target = new.target;
+      }
+      marker() {
+        return this.#marker;
+      }
+    }
+    const Guarded = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    const direct = new Guarded({ testTimeout: 25, hookTimeout: 25 });
+    expect(direct.target).toBe(Base);
+    expect(direct.marker()).toBe("base brand");
+    class Derived extends Guarded {
+      #derived = "derived brand";
+      derived() {
+        return this.#derived;
+      }
+    }
+    const derived = new Derived({ testTimeout: 25, hookTimeout: 25 });
+    expect(derived.target).toBe(Derived);
+    expect(derived.marker()).toBe("base brand");
+    expect(derived.derived()).toBe("derived brand");
+    expect(derived).toBeInstanceOf(Derived);
+  });
+  it("retains direct static private brands, getters, method identity and derived receivers", () => {
+    class Base {
+      config;
+      static #marker = "base static brand";
+      static get marker() {
+        return this.#marker;
+      }
+      static read() {
+        return this.#marker;
+      }
+      static owner() {
+        return this;
+      }
+      static callableField = () => "public callable field";
+      static get ownerMarker() {
+        return this;
+      }
+      constructor(config) {
+        this.config = config;
+      }
+    }
+    const Guarded = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    expect(Reflect.get(Guarded, "callableField")).toBe(Reflect.get(Base, "callableField"));
+    expect(Guarded.callableField()).toBe("public callable field");
+    expect(Guarded.marker).toBe(Base.marker);
+    expect(Guarded.read()).toBe(Base.read());
+    expect(Reflect.get(Guarded, "read")).toBe(Reflect.get(Guarded, "read"));
+    const read = Reflect.get(Guarded, "read");
+    if (typeof read !== "function") throw new Error("Static method missing");
+    expect(() => read()).toThrow(TypeError);
+    expect(() => read.call({})).toThrow(TypeError);
+    class Derived extends Guarded {
+      static #marker = "derived static brand";
+      static get marker() {
+        return this.#marker;
+      }
+      static read() {
+        return this.#marker;
+      }
+    }
+    expect(Derived.marker).toBe("derived static brand");
+    expect(Derived.read()).toBe("derived static brand");
+    expect(Derived.owner()).toBe(Derived);
+    expect(Derived.ownerMarker).toBe(Derived);
+    expect(Guarded.ownerMarker).toBe(Base);
+    expect(Reflect.get(Derived, "callableField")).toBe(Reflect.get(Base, "callableField"));
+    class Inherited extends Base {}
+    const FinalInherited = guardPublicRunner(Inherited, 30000, protectRunnerTimeouts);
+    expect(Reflect.get(FinalInherited, "callableField")).toBe(Reflect.get(Base, "callableField"));
+    expect(FinalInherited.owner()).toBe(Inherited);
+    const Bound = Guarded.bind(null);
+    expect(() => new Bound({ testTimeout: 30001, hookTimeout: 25 })).toThrow(RangeError);
+    expect(Guarded.owner()).toBe(Base);
+    const Frozen = class {
+      config;
+      constructor(config) {
+        this.config = config;
+      }
+      static fixed() {
+        return "immutable";
+      }
+    };
+    Object.defineProperty(Frozen, "fixed", { writable: false, configurable: false });
+    const guardedFrozen = guardPublicRunner(Frozen, 30000, protectRunnerTimeouts);
+    expect(guardedFrozen.fixed).toBe(Frozen.fixed);
+    expect(guardedFrozen.fixed()).toBe("immutable");
+    class FrozenDerived extends guardedFrozen {}
+    expect(Reflect.get(FrozenDerived, "fixed")).toBe(Reflect.get(Frozen, "fixed"));
+    expect(FrozenDerived.fixed()).toBe("immutable");
+  });
+  it("shares adapters per constructor and protector but isolates configured maxima", () => {
+    class Base {
+      config;
+      constructor(config) {
+        this.config = config;
+      }
+    }
+    const protect = vi.fn(protectRunnerTimeouts);
+    const first = guardPublicRunner(Base, 30000, protect);
+    expect(guardPublicRunner(Base, 30000, protect)).toBe(first);
+    const lower = guardPublicRunner(Base, 100, protect);
+    expect(lower).not.toBe(first);
+    expect(guardPublicRunner(Base, 100, protect)).toBe(lower);
+    const other = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    expect(other).not.toBe(first);
+    const config = { testTimeout: 25, hookTimeout: 25 };
+    const instance = new lower(config);
+    expect(instance.config).toBe(config);
+    config.testTimeout = 100;
+    expect(() => {
+      config.testTimeout = 101;
+    }).toThrow(RangeError);
+    expect(config.testTimeout).toBe(100);
+    expect(protect).toHaveBeenCalledWith(instance, 100);
+  });
+  it("rejects changed config identity before delegated context/body work", () => {
+    const calls = vi.fn((context) => context);
+    class Base {
+      config;
+      constructor(config) {
+        this.config = config;
+      }
+      extendTaskContext(context) {
+        return calls(context);
+      }
+    }
+    const Guarded = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    class Derived extends Guarded {
+      config = { testTimeout: 25, hookTimeout: 25 };
+    }
+    const runner = new (guardPublicRunner(Derived, 30000, protectRunnerTimeouts))({
+      testTimeout: 25,
+      hookTimeout: 25,
+    });
+    runner.config = { testTimeout: 25, hookTimeout: 25 };
+    expect(() => runner.extendTaskContext({ task: { timeout: 25 } })).toThrow(
+      "configuration identity changed",
+    );
+    expect(calls).not.toHaveBeenCalled();
+    // This does not prove collection hooks captured before this call were protected.
+  });
+  it("rejects a delegated config replacement before exposing the returned context", () => {
+    const replacement = { task: { timeout: 25 } };
+    class Base {
+      config;
+      constructor(config) {
+        this.config = config;
+      }
+      extendTaskContext(context) {
+        return context;
+      }
+    }
+    const Guarded = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    class Derived extends Guarded {
+      extendTaskContext(context) {
+        expect(context).not.toBe(replacement);
+        this.config = { testTimeout: 25, hookTimeout: 25 };
+        return replacement;
+      }
+    }
+    const runner = new (guardPublicRunner(Derived, 30000, protectRunnerTimeouts))({
+      testTimeout: 25,
+      hookTimeout: 25,
+    });
+    expect(() => runner.extendTaskContext({ task: { timeout: 25 } })).toThrow(
+      "identity changed during context extension",
+    );
+  });
+  it("validates the original task after delegation even when a different context is returned", () => {
+    const replacement = { task: { timeout: 25 } };
+    class Base {
+      config;
+      constructor(config) {
+        this.config = config;
+      }
+      extendTaskContext(context) {
+        return context;
+      }
+    }
+    const Guarded = guardPublicRunner(Base, 30000, protectRunnerTimeouts);
+    class Derived extends Guarded {
+      extendTaskContext(context) {
+        context.task.timeout = 30001;
+        return replacement;
+      }
+    }
+    const runner = new (guardPublicRunner(Derived, 30000, protectRunnerTimeouts))({
+      testTimeout: 25,
+      hookTimeout: 25,
+    });
+    expect(() => runner.extendTaskContext({ task: { timeout: 25 } })).toThrow(RangeError);
+  });
+  it("finalizes an actual custom constructor after own fields without changing private receivers", () => {
+    class Base {
+      config;
+      constructor(config) {
+        this.config = config;
+      }
+      extendTaskContext(context) {
+        return context;
+      }
+    }
+    class Derived extends Base {
+      #marker = "initialized";
+      config = { testTimeout: 25, hookTimeout: 25 };
+      extendTaskContext = (context) => {
+        context.marker = this.#marker;
+        return context;
+      };
+    }
+    // Compose the actual final constructor, not its base: all own fields exist here.
+    const Final = guardPublicRunner(Derived, 30000, protectRunnerTimeouts);
+    const runner = new Final({ testTimeout: 25, hookTimeout: 25 });
+    const context = { task: { timeout: 25 } };
+    expect(runner.extendTaskContext(context)).toBe(context);
+    expect(context.marker).toBe("initialized");
+    expect(runner).toBeInstanceOf(Derived);
+    expect(() => runner.extendTaskContext({ task: { timeout: 30001 } })).toThrow(RangeError);
+    expect(() => {
+      runner.config.hookTimeout = 30001;
+    }).toThrow(RangeError);
+  });
+});

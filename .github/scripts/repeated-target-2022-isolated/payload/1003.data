@@ -1,5 +1,6 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-primary.set = replacement;
-function f(client = primary) { const alias = client; alias.get(); }
-f();
+function f(client = primary) { const alias = client; return () => alias.get(); }
+const run = f();
+primary.get = replacement;
+run();

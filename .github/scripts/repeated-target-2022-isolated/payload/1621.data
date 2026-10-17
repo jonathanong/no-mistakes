@@ -1,24 +1,9 @@
-import type { TxExecutor } from '@example/db'
+import { openTransaction } from '@other/db'
+import type { TxExecutor } from '@third/db'
 
-export function plain(run: TxExecutor) {
-  return run('SELECT id FROM plain_param')
-}
-
-export function optional(run?: TxExecutor) {
-  return run?.('SELECT id FROM optional_param')
-}
-
-export const arrow = (run: TxExecutor) => run('SELECT id FROM arrow_param')
-
-export function nullable(run: TxExecutor | undefined) {
-  return run?.('SELECT id FROM union_param')
-}
-
-export function destructured({ run }: { run: TxExecutor }) {
-  return run('SELECT id FROM destructured_param')
-}
-
-// Not an executor: `run` is typed as a string; only `note` has the type.
-export function otherProperty({ run, note }: { run: string; note: TxExecutor }) {
-  return run('SELECT id FROM wrong_property')
+// Without `importSpecifier`, factory and type imports match from any module.
+export async function anyModule(run: TxExecutor) {
+  const tx = await openTransaction()
+  tx('SELECT id FROM any_module_factory')
+  return run('SELECT id FROM any_module_type')
 }

@@ -1,62 +1,138 @@
 const assert = require("node:assert/strict");
-const { createRequire } = require("node:module");
-const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
-const { runInNewContext } = require("node:vm");
+const { readFileSync } = require("node:fs");
 const test = globalThis.test || require("node:test").test;
-const root = join(__dirname, "..", "..", "..");
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
-test("audit types require exclusive plan and observations inputs", () => {
-  const parser = require.resolve("@typescript-eslint/parser", {
-    paths: [join(root, "packages", "eslint-plugin-no-mistakes")],
-  });
-  const ts = createRequire(parser)("typescript");
-  const program = ts.createProgram(
-    [join(root, "test-cases", "tests-audit", "options-consumer.ts")],
-    {
-      noEmit: true,
-      strict: true,
-      skipLibCheck: true,
-      module: ts.ModuleKind.Node16,
-      moduleResolution: ts.ModuleResolutionKind.Node16,
-      target: ts.ScriptTarget.ES2022,
-    },
-  );
-  const errors = ts.getPreEmitDiagnostics(program);
-  assert.deepEqual(
-    errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, "\n")),
-    [],
-  );
-});
+test(
+  "compiled callback findings keep each lexical binding and occurrence distinct",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/callbacks-fixture",
+    );
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.warnings, []);
+    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
+    assert.deepEqual(
+      findings.map((finding) => [finding.file, finding.line, finding.import]),
+      [
+        [6, "read"],
+        [13, "cache.get"],
+        [20, "lookup"],
+        [27, "read"],
+        [27, "read"],
+        [29, "read"],
+      ].map(([line, callee]) => ["src/entry.mts", line, callee]),
+      "a resolved import must never supply the sink for a same-caller shadowed callback",
+    );
+    const repeated = findings.filter((finding) => finding.line === 27);
+    assert.ok(repeated[0].message.endsWith("(occurrence 1)"));
+    assert.ok(repeated[1].message.endsWith("(occurrence 2)"));
+    assert.ok(findings.find((finding) => finding.line === 29).message.includes("map callback"));
+    assert.deepEqual(await esm.check({ root }), report);
+    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+    assert.deepEqual(batch.reports[0].result, report);
+  },
+);
 
-test("documented Istanbul adapter counts statement, function and branch execution", () => {
-  const docs = readFileSync(join(root, "docs", "cli", "tests-audit.md"), "utf8");
-  const match = docs.match(/\.filter\(file => ([\s\S]+?)\)\n\s+\.map/);
-  assert.ok(match, "producer execution filter must remain executable");
-  // Execute the actual recipe expression, including function-only and branch-only traces.
-  const executed = runInNewContext(`file => ${match[1]}`);
-  const cases = JSON.parse(
-    readFileSync(join(root, "test-cases", "tests-audit", "istanbul-counter-cases.json"), "utf8"),
-  );
-  for (const row of cases) assert.equal(executed(row), row.executed);
-});
+test(
+  "compiled checks honor exact effect bindings through aliases and helper traces",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/query-reached-per-item/targets-fixture",
+    );
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.warnings, []);
+    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
+    assert.deepEqual(
+      findings.map((finding) => finding.line).sort((a, b) => a - b),
+      [11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29],
+      "only configured module bindings should report; streams, shadows and local parameters stay quiet",
+    );
+    assert.ok(findings.every((finding) => finding.file === "src/entry.mts"));
+    assert.ok(findings.some((finding) => finding.message.includes("lookup → inner → load")));
+    assert.ok(
+      findings.some(
+        (finding) =>
+          finding.message.includes("cachedLookup → valkey.hget") &&
+          finding.message.includes("reaches `valkey`"),
+      ),
+    );
+    assert.deepEqual(await esm.check({ root }), report);
+    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+    assert.deepEqual(batch.reports[0].result, report);
+  },
+);
 
-test("documented adapter uses runner evidence for test-file execution", () => {
-  const docs = readFileSync(join(root, "docs", "cli", "tests-audit.md"), "utf8");
-  const match = docs.match(
-    /if \(row\.testFileExecuted === true\) executedFiles\.push\(row\.testFile\);/,
-  );
-  assert.ok(match, "producer must use explicit test-source execution evidence");
-  const cases = JSON.parse(
-    readFileSync(
-      join(root, "test-cases", "tests-audit", "adapter-self-execution-cases.json"),
-      "utf8",
-    ),
-  );
-  for (const row of cases) {
-    const executedFiles = [];
-    // Run the actual recipe statement; inventory and unknown tracing are not execution proof.
-    runInNewContext(match[0], { row, executedFiles });
-    assert.deepEqual(executedFiles, row.testFileExecuted ? [row.testFile] : []);
-  }
-});
+test(
+  "compiled CJS, ESM and batched checks share per-item effect diagnostics",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/fixture");
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.warnings, []);
+    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
+    assert.ok(
+      findings.some(
+        (finding) => finding.line === 5 && finding.message.includes("lookup → inner → read"),
+      ),
+    );
+    assert.ok(
+      findings.some(
+        (finding) => finding.line === 21 && finding.message.includes("transaction client only"),
+      ),
+    );
+    assert.ok(
+      !findings.some(
+        (finding) => finding.file === "src/entry.mts" && [23, 26, 28, 29].includes(finding.line),
+      ),
+    );
+    assert.ok(
+      findings.some((finding) => finding.file === "src/entry.mts" && finding.line === 24),
+      "eager queries execute before a batch wrapper receives their results",
+    );
+    const aliasLines = readFileSync(join(root, "src/entry.mts"), "utf8")
+      .split("\n")
+      .flatMap((line, index) =>
+        /items\.(?:map|forEach)\(lookupAlias\)/.test(line) ? [index + 1] : [],
+      );
+    assert.equal(aliasLines.length, 2);
+    for (const line of aliasLines) {
+      assert.ok(
+        findings.some((finding) => finding.file === "src/entry.mts" && finding.line === line),
+        `named callback alias at line ${line} must reach its configured sink`,
+      );
+    }
+    assert.deepEqual(await esm.check({ root }), report);
+    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check", id: "per-item" }] });
+    assert.equal(batch.reports[0].id, "per-item");
+    assert.deepEqual(batch.reports[0].result, report);
+    const callOptions = { file: "src/helpers.mts", exportName: "lookup" };
+    const callSites = await cjs.callSites({ root, ...callOptions });
+    const combined = await cjs.analyzeProject({
+      root,
+      reports: [
+        { type: "check", id: "per-item" },
+        { type: "callSites", id: "ordinary-calls", ...callOptions },
+      ],
+    });
+    assert.deepEqual(
+      combined.reports.find((result) => result.id === "ordinary-calls").result,
+      callSites,
+      "adding the per-item check must preserve ordinary call-site fields",
+    );
+    const suppressed = await cjs.check({ root, includeSuppressed: true });
+    assert.deepEqual(suppressed.rules, report.rules);
+    assert.ok(suppressed.suppressed.length >= 2);
+  },
+);

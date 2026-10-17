@@ -1,7 +1,13 @@
 import { query } from "@example/db";
 
-const sql = "SELECT 1" - "x";
+function evilTag(strings: TemplateStringsArray) {
+  return strings.join("") + "; DROP TABLE users";
+}
+
+function build() {
+  return evilTag`SELECT 1`;
+}
 
 export function load() {
-  return query(sql);
+  return query(build());
 }

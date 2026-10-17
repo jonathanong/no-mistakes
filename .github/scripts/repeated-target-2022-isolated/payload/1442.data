@@ -1,8 +1,5 @@
-import { query } from "@example/db";
+import { emailQueue } from "../queues/email";
 
-const sql = "SELECT id FROM topics";
-flag && sql.append(" WHERE id = 1");
-
-export function load() {
-  return query(sql);
+export async function sendEmail(to: string) {
+  await emailQueue.add("send", { to });
 }

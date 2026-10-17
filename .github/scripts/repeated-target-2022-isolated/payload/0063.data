@@ -1,9 +1,90 @@
-import { moduleValue } from "./types.mjs";
-
-export interface JavaScriptShape {
-  value: string;
+{
+  "head": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+  "overlay_proof_sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4",
+  "source_inventory_sha256": "c9e580871ee81c2ed4525e39c3ad5566072a32b1547f8aedb76a0b837abe6d2c",
+  "root": "/tmp/no-mistakes-2076-cold-lifetime",
+  "artifacts": {
+    "cli": {
+      "sha256": "6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2076-cold-lifetime/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2076-cold-lifetime/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2076-cold-lifetime/target/release/no-mistakes"
+    },
+    "addon": {
+      "sha256": "2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes#0.91.2",
+          "manifest_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2076-cold-lifetime/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2076-cold-lifetime/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2076-cold-lifetime/target/release/libno_mistakes.so"
+    }
+  }
 }
-
-export const javascriptValue: JavaScriptShape = { value: "js" };
-
-export const importedModuleValue = moduleValue;

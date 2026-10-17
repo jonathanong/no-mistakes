@@ -1,32 +1,18 @@
-import { query, sql } from "@example/db";
-const unrelated = sql`SELECT 99`;
-const statement = sql`SELECT id FROM accounts`;
-// The second matching label runs both appends, making the combined lock unsafe.
-switch (runtimeMode) {
-  case (statement.append(sql` WHERE id IN ($1, $2)`), "first"): break;
-  case (statement.append(sql` FOR UPDATE`), "second"): query(statement); break; // findings: unanalyzable
+import sql from "sql-template-strings";
+import { query } from "@example/db";
+import { openTransaction, type TxExecutor } from "./variants-executor-support";
+
+export function factoryArguments(gate: boolean) {
+  const statement = sql`SELECT id FROM factory_users`;
+  if (gate) statement.append(sql` WHERE id = 1`);
+  const execute = openTransaction();
+  execute(statement, statement.append(sql` OFFSET 1`));
+  query(gate ? statement : sql`SELECT 1`);
 }
-query(flag ? statement : sql`SELECT 1`); // findings: unanalyzable
-const failedLabel = sql`SELECT id FROM users`;
-switch (runtimeMode) {
-  case (failedLabel.append(sql` OFFSET 1`), "first"): break;
-  case "second": query(failedLabel); break;
+
+export function typedArguments(execute: TxExecutor, gate: boolean) {
+  const statement = sql`SELECT id FROM typed_users`;
+  if (gate) statement.append(sql` WHERE id = 2`);
+  execute(statement, statement.append(sql` OFFSET 2`));
+  query(gate ? statement : sql`SELECT 2`);
 }
-const discriminant = sql`SELECT id FROM users`;
-switch ((discriminant.append(sql` WHERE id IN ($1, $2)`), runtimeMode)) {
-  case "lock": discriminant.append(sql` FOR UPDATE`); query(flag ? discriminant : sql`SELECT 2`); break;
-  default: break;
-}
-query(flag ? discriminant : sql`SELECT 3`);
-let staticLabels = "SELECT 4";
-switch (runtimeMode) {
-  case "first": staticLabels += "0"; break;
-  default: staticLabels += "1";
-}
-query(staticLabels);
-let assigned = "SELECT id FROM users";
-switch (runtimeMode) {
-  case (assigned += " OFFSET 2", "first"): break;
-  case "second": query(assigned); break;
-}
-query(unrelated);

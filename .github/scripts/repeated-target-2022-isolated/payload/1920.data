@@ -1,5 +1,6 @@
--- Quoted access methods are distinct names; unquoted names fold case.
-CREATE INDEX quoted_first ON accounts USING "CustomAM" (id);
-CREATE INDEX quoted_second ON accounts USING "CUSTOMAM" (id);
-CREATE INDEX unquoted_first ON accounts USING CustomAM (id);
-CREATE INDEX unquoted_second ON accounts USING customam (id);
+DO $$ BEGIN EXECUTE 'SELECT $1' USING now(); END $$;
+INSERT INTO t(v) VALUES (coalesce(now(), now()));
+INSERT INTO t(v) VALUES ('雪');
+INSERT INTO t(v) VALUES (schema.col);
+INSERT INTO t(v) SELECT coalesce(now(), 1);
+INSERT INTO t(v) VALUES (1), (coalesce(now(), '雪'));

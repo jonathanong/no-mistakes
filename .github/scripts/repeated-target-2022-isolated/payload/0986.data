@@ -1,131 +1,23 @@
-import { primary } from '@vendor/valkey';
-// Matched no-write/default-dense control for later CPU/RSS comparisons.
-function consume({ client = primary } = {}) { client.get(); }
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
-consume();
+effects:
+  database:
+    targets:
+      - { module: '@vendor/database', export: primary.read, category: read }
+      - { module: '@vendor/database', export: replica.write, category: write }
+      - { module: '@vendor/database', export: replica.read, category: read }
+      - { module: '@vendor/database', export: begin, category: transaction }
+      - { module: '@vendor/database-reverse', export: replica.write, category: write }
+      - { module: '@vendor/database-reverse', export: primary.read, category: read }
+      - { module: '@vendor/database-same-category', export: primary.read, category: read }
+      - { module: '@vendor/database-same-category', export: replica.read, category: read }
+      - { module: '@vendor/database-unknown', export: primary.read, category: read }
+    typedExecutors:
+      - { module: '@vendor/database', export: TransactionQuery, category: transaction }
+    returnedExecutors:
+      - { module: '@vendor/database', export: beginFactory, category: transaction }
+  mixed:
+    functions: [receiver.read]
+    categories:
+      read: [primary.read]
+    targets:
+      - { module: '@vendor/database', export: primary.read, category: read }
+      - { module: '@vendor/database', export: replica.write, category: write }

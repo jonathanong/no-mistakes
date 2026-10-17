@@ -1,6 +1,10 @@
-import { read } from '@example/db';
-// Even local namespace properties named Array conservatively count as exposure.
-const otherGlobal = { Array: { prototype: 'local' } };
-otherGlobal.Array.prototype;
-otherGlobal['Array']['prototype'];
-export function run() { read(['SELECT 1'].join('')); }
+import { read, sql } from '@example/db';
+
+// An opaque consumer may execute callbacks held in live array slots.
+export function arrayCallbacks(consume: unknown) {
+  const query = sql`SELECT 1`;
+  consume([() => {
+    query.append(sql`; DELETE FROM records`);
+    read(query);
+  }]);
+}

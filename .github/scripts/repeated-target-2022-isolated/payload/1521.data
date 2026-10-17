@@ -1,16 +1,18 @@
 import { query } from "@example/db";
 
 function build() {
-  return "SELECT 1";
+  return "SELECT id FROM topics";
 }
 
-function touch(build) {
-  // JS: `var` + param share a binding. TypeScript reports a duplicate name.
-  var build = () => "DELETE FROM users";
-  void build;
+function externalBuilder() {
+  return "UNTRUSTED";
 }
+
+const providers = { helper: externalBuilder };
+({ ...build } = providers);
+
+const sql = build();
 
 export function load() {
-  touch(() => "ignored");
-  return query(build());
+  return query(sql);
 }

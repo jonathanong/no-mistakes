@@ -1,3 +1,4 @@
--- Unicode spans count characters, while offsets count UTF-8 bytes.
-CREATE TABLE "café" ("名" text DEFAULT '🦀');
-SELECT "名" FROM "café";
+DO $$ BEGIN
+  EXECUTE 'INSERT INTO t ' || 'VALUES(1) ON CONFLICT DO NOTHING';
+  EXECUTE 'INSERT INTO t VALUES($1) ON CONFLICT DO NOTHING' USING 1;
+END $$;

@@ -1,12 +1,15 @@
--- Original branch storage metadata must survive typed nested IF projection.
+-- Mixed migration: sqlparser rejects DO $$ and PostgreSQL 18 VIRTUAL
+-- generated columns. Schema extraction must skip the DO block and still
+-- collect the CREATE TABLE generated column.
 DO $$ BEGIN
-IF true THEN
-  IF false THEN
-    CREATE TABLE conditional_virtual (base integer, derived integer GENERATED ALWAYS AS (base + 1) VIRTUAL);
-  ELSE
-    CREATE TABLE conditional_stored (base integer, derived integer GENERATED ALWAYS AS (base + 2) STORED);
-  END IF;
-ELSE
-  CREATE TABLE conditional_default (base integer, derived integer GENERATED ALWAYS AS (base + 3));
-END IF;
+  CREATE TYPE item_kinds AS ENUM ('note');
+EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+SELECT REPLACE('a_b', '_', chr(92) || '_');
+
+CREATE TABLE items (
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) VIRTUAL,
+  note text
+);

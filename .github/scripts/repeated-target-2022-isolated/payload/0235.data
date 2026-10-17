@@ -1,15 +1,13 @@
 import { query } from "@example/db";
 
-function safe() {
-  return "SELECT 1";
+function sql() {
+  return "DELETE FROM users";
 }
 
-function wrap(...[safe]: [() => string]) {
-  return safe();
+function build() {
+  return sql`SELECT 1`;
 }
-
-const sql = wrap(() => "DELETE FROM users");
 
 export function load() {
-  return query(sql);
+  return query(build());
 }

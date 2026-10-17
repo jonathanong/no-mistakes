@@ -1,8 +1,7 @@
 import { read } from '@example/db'
+import { query } from './eager-builder'
+import './eager-mutator'
 
-function run(sql: string) {
-  return read(sql)
+export function eagerRead() {
+  return read(query)
 }
-
-export const callback = { run }['run']
-run('/* exported/computed */ SELECT id FROM posts')

@@ -1,184 +1,208 @@
-"use strict";
+# no-mistakes
 
-const { resolveNativePackage } = require("./scripts/native-package");
-const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath;
-const native = require(addonPath);
-const planning = require("./planning");
-const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
-const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
-const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
-const path = require("node:path");
+Local AST graph for coding agents: impact, focused test plans, Playwright
+coverage, and repository checks. Use it when grep would miss callers behind
+aliases, when a change should not run every suite, or when a new page needs a
+coverage gate. See [why it exists](../../docs/why.md).
 
-async function callJson(fn, options) {
-  const input = Buffer.from(JSON.stringify(options || {}));
-  return JSON.parse(await fn(input));
-}
+The async N-API facade avoids subprocess parsing and reuses one prepared
+analysis for related reports.
 
-function createJsonApis(descriptors) {
-  return Object.fromEntries(
-    Object.entries(descriptors).map(([apiName, nativeName]) => [
-      apiName,
-      async (options) => callJson(native[nativeName], options),
-    ]),
-  );
-}
+Published installs select a platform-specific optional package containing both
+the CLI and N-API addon. Prebuilt packages support macOS ARM64, Linux ARM64 and
+x64 with glibc, and Windows x64; Intel Macs are not supported. Repository
+contributors build and stage the local native package explicitly with
+`pnpm run build:native` before running the CLI.
 
-const jsonApis = createJsonApis({
-  analyzeTypeScriptModules: "analyzeTypeScriptModulesJson",
-  parsePostgresSql: "parsePostgresSqlJson",
-  extractExecutedPostgresSql: "extractExecutedPostgresSqlJson",
-  generatePostgresCatalog: "generatePostgresCatalogJson",
-  analyzeProject: "analyzeProjectJson",
-  callSites: "callSitesJson",
-  check: "checkJson",
-  resolveConfig: "resolveConfigJson",
-  ciEnv: "ciEnvJson",
-  ciImpact: "ciImpactJson",
-  ciTopology: "ciTopologyJson",
-  ciTopologyImpact: "ciTopologyImpactJson",
-  dataPw: "dataPwJson",
-  deadExports: "deadExportsJson",
-  dependencies: "dependenciesJson",
-  dependents: "dependentsJson",
-  diagnosticsSnapshot: "diagnosticsSnapshotJson",
-  effects: "effectsJson",
-  exportsOf: "exportsOfJson",
-  fetches: "fetchesJson",
-  impactedChecks: "impactedChecksJson",
-  importUsages: "importUsagesJson",
-  importers: "importersJson",
-  infraOutputs: "infraOutputsJson",
-  infraResourceRefs: "infraResourceRefsJson",
-  infraTestFor: "infraTestForJson",
-  lockfileDiff: "lockfileDiffJson",
-  validateMermaidMarkdown: "validateMermaidMarkdownJson",
-  playwrightCheck: "playwrightCheckJson",
-  playwrightEdges: "playwrightEdgesJson",
-  playwrightRelated: "playwrightRelatedJson",
-  playwrightTests: "playwrightTestsJson",
-  reactAnalyze: "reactAnalyzeJson",
-  reactCheck: "reactCheckJson",
-  reactUsages: "reactUsagesJson",
-  registryExtension: "registryExtensionJson",
-  related: "relatedJson",
-  resolveCheck: "resolveCheckJson",
-  rscCallers: "rscCallersJson",
-  swiftImporters: "swiftImportersJson",
-  swiftTestTargets: "swiftTestTargetsJson",
-  symbols: "symbolsJson",
-});
+```bash
+npm install --save-dev no-mistakes
+npx no-mistakes dependencies src/main.mts --json
+npx no-mistakes dependents src/utils.mts --json
+npx no-mistakes symbols src/utils.mts --json
+npx no-mistakes import-usages --root . --filter 'src/**' --json
+npx no-mistakes check --json
+npx no-mistakes planning-impact --changed-files /private/run/changed-files.txt --output-dir /private/run
+```
 
-const CAMELIZE_REPORTS = new Set([
-  "testsAudit",
-  "testsPlan",
-  "testsImpact",
-  "testsTargets",
-  "testsGraph",
-]);
-const acquirePlanningArtifactLock = createPlanningArtifactLock(native);
+`planning-impact` is supplied by the npm package, not the Cargo-installed
+binary. It writes the private four-report artifact contract from one prepared
+analysis. See the [CLI reference](../../docs/cli/planning-impact.md).
 
-async function analyzeProject(options = {}) {
-  const request = { ...options };
-  const generatedDirs = [];
-  try {
-    if (Array.isArray(request.reports)) {
-      request.reports = await planning.prepareAnalyzeProjectReports(request.reports, generatedDirs);
-    }
-    const result = await jsonApis.analyzeProject(request);
-    for (const report of result.reports || []) {
-      if (report.type === "testsWhy") {
-        report.result = planning.camelizeWhy(report.result);
-      } else if (CAMELIZE_REPORTS.has(report.type)) {
-        report.result = planning.camelizeValue(report.result);
-      }
-    }
-    return result;
-  } finally {
-    await Promise.all(generatedDirs.map((dir) => planning.removeGeneratedDir(dir)));
-  }
-}
+Programmatic Node usage loads the same Rust analysis through N-API:
 
-async function writePlanningImpactArtifacts(options) {
-  return writeArtifacts(
-    options,
-    analyzeProject,
-    async (from, to) => {
-      if (await native.renameNoReplace(from, to)) return true;
-      const error = new Error("output directory path changed during planning artifact generation");
-      error.code = "EEXIST";
-      throw error;
+```js
+const { analyzeProject } = require("no-mistakes");
+
+const report = await analyzeProject({
+  root: process.cwd(),
+  reports: [
+    { type: "dependents", files: ["src/api.mts"] },
+    { type: "symbols", files: ["src/api.mts"], include: "both" },
+    {
+      type: "testsPlan",
+      framework: "vitest",
+      changedFiles: ["src/api.mts"],
     },
-    acquirePlanningArtifactLock,
-  );
-}
+  ],
+});
+```
 
-async function ciTopology(options = {}) {
-  return jsonApis.ciTopology({ ...options, root: path.resolve(options.root || process.cwd()) });
-}
+Use `analyzeProject()` when reports share a root and configuration. Dedicated
+functions remain convenient for a single query:
 
-const version = () => native.version();
+`testsWhy` reports that receive `planJson` are materialized in a private
+temporary directory and cleaned up after success, native rejection, or
+preparation failure, including when they are batched through `analyzeProject()`.
 
-module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
-module.exports.version = version;
-module.exports.analyzeProject = analyzeProject;
-module.exports.analyzeTypeScriptModules = jsonApis.analyzeTypeScriptModules;
-module.exports.extractExecutedPostgresSql = jsonApis.extractExecutedPostgresSql;
-module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
-module.exports.callSites = jsonApis.callSites;
-module.exports.check = jsonApis.check;
-module.exports.resolveConfig = jsonApis.resolveConfig;
-module.exports.ciEnv = jsonApis.ciEnv;
-module.exports.ciImpact = jsonApis.ciImpact;
-module.exports.ciTopology = ciTopology;
-module.exports.ciTopologyImpact = jsonApis.ciTopologyImpact;
-module.exports.dataPw = jsonApis.dataPw;
-module.exports.deadExports = jsonApis.deadExports;
-module.exports.dependencies = jsonApis.dependencies;
-module.exports.dependents = jsonApis.dependents;
-module.exports.diagnosticsSnapshot = jsonApis.diagnosticsSnapshot;
-module.exports.effects = jsonApis.effects;
-module.exports.exportsOf = jsonApis.exportsOf;
-module.exports.fetches = jsonApis.fetches;
-module.exports.impactedChecks = jsonApis.impactedChecks;
-module.exports.importUsages = jsonApis.importUsages;
-module.exports.importers = jsonApis.importers;
-module.exports.infraOutputs = jsonApis.infraOutputs;
-module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
-module.exports.infraTestFor = jsonApis.infraTestFor;
-module.exports.lockfileDiff = jsonApis.lockfileDiff;
-module.exports.validateMermaidMarkdown = jsonApis.validateMermaidMarkdown;
-module.exports.playwrightCheck = jsonApis.playwrightCheck;
-module.exports.playwrightEdges = jsonApis.playwrightEdges;
-module.exports.playwrightRelated = jsonApis.playwrightRelated;
-module.exports.playwrightTests = jsonApis.playwrightTests;
-module.exports.reactAnalyze = jsonApis.reactAnalyze;
-module.exports.reactCheck = jsonApis.reactCheck;
-module.exports.reactUsages = jsonApis.reactUsages;
-module.exports.registryExtension = jsonApis.registryExtension;
-module.exports.related = jsonApis.related;
-module.exports.resolveCheck = jsonApis.resolveCheck;
-module.exports.rscCallers = jsonApis.rscCallers;
-module.exports.swiftImporters = jsonApis.swiftImporters;
-module.exports.swiftTestTargets = jsonApis.swiftTestTargets;
-module.exports.symbols = jsonApis.symbols;
-module.exports.testsComment = planning.testsComment;
-module.exports.testsGraphMermaid = planning.testsGraphMermaid;
-module.exports.flow = planning.flow;
-module.exports.queueCheck = planning.queueCheck;
-module.exports.queueEdges = planning.queueEdges;
-module.exports.queueRelated = planning.queueRelated;
-module.exports.queues = planning.queues;
-module.exports.serverContracts = planning.serverContracts;
-module.exports.serverRouteEdges = planning.serverRouteEdges;
-module.exports.serverRouteList = planning.serverRouteList;
-module.exports.serverRouteRelated = planning.serverRouteRelated;
-module.exports.serverRoutes = planning.serverRoutes;
-module.exports.testsAudit = planning.testsAudit;
-module.exports.testsGraph = planning.testsGraph;
-module.exports.testsImpact = planning.testsImpact;
-module.exports.testsPlan = planning.testsPlan;
-module.exports.testsTargets = planning.testsTargets;
-module.exports.testsWhy = planning.testsWhy;
+````js
+const {
+  dependencies,
+  dependents,
+  check,
+  fetches,
+  importUsages,
+  flow,
+  playwrightRelated,
+  symbols,
+  testsPlan,
+  testsTargets,
+  queueEdges,
+  queueRelated,
+  queueCheck,
+  serverRouteList,
+  serverRouteEdges,
+  serverRouteRelated,
+  serverContracts,
+  reactAnalyze,
+  reactCheck,
+  validateMermaidMarkdown,
+} = require("no-mistakes");
 
-module.exports.generatePostgresCatalog = jsonApis.generatePostgresCatalog;
-module.exports.parsePostgresSql = jsonApis.parsePostgresSql;
+(async () => {
+  const deps = await dependencies({
+    root: process.cwd(),
+    files: ["src/main.mts"],
+    relationships: ["import"],
+  });
+  const tests = await dependents({
+    root: process.cwd(),
+    files: ["src/utils.mts"],
+    tests: ["vitest"],
+  });
+  const symbolFacts = await symbols({
+    root: process.cwd(),
+    files: ["src/utils.mts"],
+    include: "both",
+  });
+  const imports = await importUsages({
+    root: process.cwd(),
+    filters: ["src/**"],
+  });
+  const signatureImpact = await symbols({
+    root: process.cwd(),
+    files: ["src/utils.mts"],
+    mode: "signature-impact",
+    symbol: "parseDate",
+  });
+  const plan = await testsPlan({
+    root: process.cwd(),
+    framework: "vitest", // also jest, python, go, cargo, rails, php, java, kotlin, elixir, dart, playwright, dotnet, swift
+    changedFiles: ["src/utils.mts"],
+  });
+  // Complete changed-file inventory, including paths that selected no tests.
+  console.log(plan.changedFiles);
+  const targetCommands = await testsTargets({
+    root: process.cwd(),
+    framework: "vitest",
+    files: ["src/utils.test.mts"],
+  });
+  const projectCheck = await check({
+    root: process.cwd(),
+    // Path to tsconfig.json for alias resolution; searched upward if omitted.
+    // In monorepos, pass the workspace-scoped tsconfig (e.g. "web/tsconfig.json").
+    tsconfig: "tsconfig.json",
+  });
+  const mermaid = await validateMermaidMarkdown({
+    content: "```mermaid\nflowchart LR\n  A --> B\n```",
+    file: "docs/design.md",
+  });
+  const localFlow = await flow({
+    root: process.cwd(),
+    target: "src/utils.mts#parseDate",
+    direction: "dependents",
+    depth: 1,
+  });
+  const coveredByPlaywright = await playwrightRelated({
+    root: process.cwd(),
+    files: ["web/app/users/page.tsx"],
+  });
+
+  const queueHops = await queueRelated({
+    root: process.cwd(),
+    files: ["src/jobs/enqueue.ts"],
+    direction: "both",
+  });
+  const routeEdges = await serverRouteEdges({
+    root: process.cwd(),
+    roots: ["src/server.ts"],
+  });
+  const contracts = await serverContracts({
+    root: process.cwd(),
+    roots: ["src/server.ts"],
+  });
+  const components = await reactAnalyze({
+    root: process.cwd(),
+    targets: ["app/**/*.tsx"],
+  });
+})();
+````
+
+CLI and Node analyses share a per-user machine-wide lock. CLI flags
+`--timeout`, `--lock-timeout`, and `--fail-on-lock` have Node equivalents
+`timeout`, `lockTimeout`, and `failOnLock`. CLI timeouts default to 30 seconds;
+Node/N-API omits both deadlines unless you set them. `0` disables either CLI
+timeout, while `0` or `null` disables it in Node. While waiting, stderr reports
+the holder pid and elapsed seconds. Waiting does not alter successful output,
+and Node lock/timeout failures reject the returned Promise.
+
+Dependency graph, query, and test-planning resolution is per workspace by
+default: when `tsconfig` is omitted, each import uses the config that owns its
+importing file, including referenced projects. This keeps conflicting package
+aliases isolated while shared code can still select all importing tests. Pass
+`tsconfig` explicitly to force one config for a whole invocation when debugging
+or preserving a legacy single-config workflow.
+
+Graph queries also support `relationships: ["workflow"]` for canonical local
+GitHub Actions traversal: workflow file -> virtual job -> virtual step,
+`needs`, local reusable workflows/actions, supported literal `run:` targets and
+package scripts, and same-run artifact handoffs. Virtual IDs are
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<zero-based-index>`.
+Use the precise `workflow-job`, `workflow-step`, `workflow-needs`,
+`workflow-uses`, `workflow-run`, or `workflow-artifact` filters to select a
+semantic while retaining its required structural bridge edges. The legacy `ci`
+relationship stays separate: it covers only workflow-file-to-Rust-binary Cargo
+invocations. Remote actions/workflows, `workflow_run`, dynamic shell commands,
+and paths outside the tracked graph are intentionally excluded.
+
+External `no-mistakes-*` executables on `PATH` can be invoked as subcommands.
+For example, after installing `no-mistakes-scripts`:
+
+```bash
+npm install --save-dev no-mistakes-scripts
+npx no-mistakes rust-no-inline-tests crates/*/src
+npx no-mistakes rust-max-lines-per-file crates/*/src crates/*/tests
+```
+
+The optional [Vitest timeout policy](../../docs/test-timeout-policy.md) provides public configuration and registration guards.
+
+See the full documentation in [docs/](../../docs/README.md), the
+[CLI command index](../../docs/cli/README.md), and the
+[Node/N-API guide](../../docs/node-api.md). Agents can use the compact
+[packaged skill](../../skills/no-mistakes/SKILL.md).
+
+The async `effects()` report keeps one row per physical call occurrence. Multiple
+configured callable/category matches appear in optional `alternatives` using the
+exported `EffectCallAlternative` type; singleton rows omit it. Category filters
+project candidates before scalar selection and category counts. One occurrence
+counts once per matched category, so category totals can exceed row count. See
+[effect query details](../../docs/cli/effects.md).

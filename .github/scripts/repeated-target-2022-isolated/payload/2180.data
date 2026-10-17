@@ -2,170 +2,122 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-const fixture = (name) => ({
-  sql: readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8"),
-  fileName: name,
-});
-const parts = (name) => name.parts.map(({ value, quoted }) => [value, quoted]);
+const fixture = (name) =>
+  readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
+function occurrences(statement) {
+  const children =
+    statement.kind === "doBlock"
+      ? statement.block.statements
+      : statement.kind === "conditional"
+        ? statement.branches.flatMap((branch) => branch.statements)
+        : [];
+  return [statement, ...children.flatMap(occurrences)];
+}
 
 test(
-  "compiled CJS and ESM retain structured replay-safety syntax without interpreting values",
+  "compiled native CJS and ESM expose safely attributed nested constraint facts",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const inputs = [
-      "replay-structured-triggers.sql",
-      "replay-structured-execute.sql",
-      "replay-structured-casts.sql",
-      "replay-structured-execute-unsupported.sql",
-    ].map(fixture);
-    const pending = cjs.parsePostgresSql(inputs);
-    assert.ok(pending instanceof Promise);
-    const reports = await pending;
-    assert.deepEqual(await esm.parsePostgresSql(inputs), reports);
-    for (const [index, input] of inputs.entries()) {
-      assert.deepEqual(await cjs.parsePostgresSql(input), reports[index]);
-      assert.deepEqual(await esm.parsePostgresSql(input), reports[index]);
-    }
-
-    const [triggers, commands, casts, unsupported] = reports;
-    assert.deepEqual(triggers.diagnostics, []);
-    const [restricted, unrestricted, multiple] = triggers.statements.map(({ trigger }) => trigger);
-    assert.deepEqual(restricted.events, ['UPDATE OF "Mixed", a']);
-    assert.deepEqual(
-      restricted.eventFacts.map(({ kind, updateOf, updateColumns }) => ({
-        kind,
-        updateOf,
-        columns: updateColumns.map(({ value, quoted }) => [value, quoted]),
-      })),
-      [
-        {
-          kind: "update",
-          updateOf: true,
-          columns: [
-            ["Mixed", true],
-            ["a", false],
-          ],
-        },
-      ],
-    );
-    assert.deepEqual(unrestricted.eventFacts, [
-      { kind: "update", updateOf: false, updateColumns: [] },
-    ]);
-    assert.deepEqual(
-      multiple.eventFacts,
-      ["insert", "delete", "truncate"].map((kind) => ({
-        kind,
-        updateOf: false,
-        updateColumns: [],
-      })),
-    );
-
-    assert.deepEqual(commands.diagnostics, []);
-    const block = commands.statements[0].block;
-    assert.equal(block.complete, true);
-    assert.deepEqual(block.diagnostics, []);
-    const [concatenated, parameterized] = block.statements;
-    for (const statement of [concatenated, parameterized]) {
-      assert.equal(statement.kind, "literalExecute");
-      assert.equal(statement.execute.complete, true);
-      assert.deepEqual(statement.execute.diagnostics, []);
-      const insert = statement.execute.statements[0];
-      assert.equal(insert.kind, "insert");
-      assert.equal(insert.insert.onConflict.action.kind, "doNothing");
-      const span = insert.span;
-      assert.equal(
-        Buffer.from(statement.execute.decodedSql)
-          .subarray(span.start.offset, span.end.offset)
-          .toString(),
-        insert.sql,
-      );
-    }
-    assert.equal(concatenated.execute.bodyEncoding, "concatenated");
-    const commandSlice = ({ literalSpan }) =>
-      Buffer.from(inputs[1].sql)
-        .subarray(literalSpan.start.offset, literalSpan.end.offset)
-        .toString();
-    assert.equal(
-      commandSlice(concatenated.execute),
-      "'INSERT INTO t ' || 'VALUES(1) ON CONFLICT DO NOTHING'",
-    );
-    assert.equal(
-      commandSlice(parameterized.execute),
-      "'INSERT INTO t VALUES($1) ON CONFLICT DO NOTHING'",
-    );
-    assert.equal(concatenated.execute.decodedSql, "INSERT INTO t VALUES(1) ON CONFLICT DO NOTHING");
-    assert.deepEqual(concatenated.execute.using, []);
-    assert.equal(parameterized.execute.bodyEncoding, "singleQuoted");
-    assert.equal(parameterized.execute.using.length, 1);
-    assert.equal(parameterized.execute.using[0].sql, "1");
-    assert.deepEqual(parameterized.execute.using[0].root.value, { kind: "number", value: "1" });
-    const parameter = parameterized.execute.statements[0].insert.source.rows[0][0];
-    assert.deepEqual(parameter.root, { kind: "parameter", placeholder: "$1" });
-    const usingSpan = parameterized.execute.using[0].span;
-    assert.equal(
-      Buffer.from(inputs[1].sql).subarray(usingSpan.start.offset, usingSpan.end.offset).toString(),
-      "1",
-    );
-
-    assert.deepEqual(casts.diagnostics, []);
-    const action = casts.statements[0].insert.onConflict.action;
-    const assignments = Object.fromEntries(
-      action.assignments.map(({ columns, expression }) => [
-        columns[0].parts[0].identity,
-        expression,
-      ]),
-    );
-    for (const name of ["quoted_date", "qualified_date", "nested_date"]) {
-      assert.equal(assignments[name].root.kind, "cast");
-      assert.equal(assignments[name].childrenComplete, true);
-    }
-    assert.deepEqual(parts(assignments.quoted_date.root.dataTypeFacts.name), [["date", true]]);
-    assert.deepEqual(parts(assignments.qualified_date.root.dataTypeFacts.name), [
-      ["schema.with.dot", true],
-      ["date", false],
-    ]);
-    const nestedCast = assignments.nested_date.children[0].children[0];
-    assert.equal(nestedCast.root.kind, "cast");
-    assert.deepEqual(parts(nestedCast.root.dataTypeFacts.name), [
-      ["schema.with.dot", true],
-      ["date", false],
-    ]);
-    for (const [name, operator] of [
-      ["and_predicate", "AND"],
-      ["or_predicate", "OR"],
+    for (const name of [
+      "nested-constraint-plain.sql",
+      "nested-constraints.sql",
+      "nested-constraints-single.sql",
     ]) {
-      const expression = assignments[name];
-      assert.deepEqual(expression.root, { kind: "binary", operator });
-      assert.equal(expression.childrenComplete, true);
+      const sql = fixture(name);
+      const input = { sql, fileName: name };
+      const pending = cjs.parsePostgresSql(input);
+      assert.equal(typeof pending.then, "function");
+      const facts = await pending;
+      assert.deepEqual(await esm.parsePostgresSql(input), facts);
+      assert.deepEqual(facts.diagnostics, []);
+      const plain = name === "nested-constraint-plain.sql";
       assert.deepEqual(
-        expression.children.map(({ role, root, childrenComplete }) => [
-          role,
-          root.kind,
-          root.negated,
-          childrenComplete,
-        ]),
-        [
-          ["binaryLeft", "nullTest", false, true],
-          ["binaryRight", "nullTest", true, true],
-        ],
+        facts.statements.map((statement) => statement.kind),
+        plain ? ["doBlock"] : ["createIndex", "doBlock", "createIndex"],
       );
-      // Missing token boundaries must not erase fully represented syntax.
+      const owner = facts.statements.find((statement) => statement.kind === "doBlock");
+      assert.equal(owner.block.complete, true);
+      assert.deepEqual(owner.block.diagnostics, []);
+      const all = facts.statements.flatMap(occurrences);
+      const constraints = all.filter((statement) => statement.kind === "alterTable");
+      assert.equal(constraints.length, plain ? 1 : 3);
+      const fk = constraints[0].operations[0];
+      assert.equal(fk.kind, "addConstraint");
+      assert.equal(fk.notValid, true);
+      assert.equal(fk.constraint.kind, "foreignKey");
+      assert.deepEqual(fk.constraint.name, {
+        value: plain ? "sample_constraint" : "FK雪",
+        identity: plain ? "sample_constraint" : "FK雪",
+        quoted: !plain,
+      });
       assert.deepEqual(
-        expression.children.map(({ span }) => span),
-        [null, null],
+        constraints[0].table.parts.map((part) => part.value),
+        plain ? ["sample_child"] : ["Mý", "Chïld"],
       );
+      assert.deepEqual(
+        fk.constraint.referencedTable.parts.map((part) => part.value),
+        plain ? ["sample_parent"] : ["Mý", "Parent"],
+      );
+      assert.deepEqual(
+        fk.constraint.columns.map((column) => column.value),
+        [plain ? "parent_id" : "Parent Id"],
+      );
+      assert.deepEqual(
+        fk.constraint.referencedColumns.map((column) => column.value),
+        [plain ? "id" : "Id"],
+      );
+      for (const statement of all) {
+        assert.equal(
+          Buffer.from(sql)
+            .subarray(statement.span.start.offset, statement.span.end.offset)
+            .toString(),
+          statement.sql,
+        );
+        if (statement.kind === "insert") assert.deepEqual(statement.insert.span, statement.span);
+      }
+      for (const statement of constraints) {
+        assert.ok(statement.span.start.offset > owner.span.start.offset);
+        assert.ok(statement.span.end.offset < owner.span.end.offset);
+      }
+      for (const diagnostic of owner.block.diagnostics) {
+        assert.match(
+          Buffer.from(sql)
+            .subarray(diagnostic.span.start.offset, diagnostic.span.end.offset)
+            .toString(),
+          /^LOCK TABLE/,
+        );
+        assert.match(diagnostic.message, /Unsupported nested procedural statement/);
+      }
     }
-    assert.equal(assignments.cast_predicate.childrenComplete, true);
-    assert.equal(action.predicate.childrenComplete, true);
-    assert.equal(assignments.opaque_expression.childrenComplete, false);
+  },
+);
 
-    const opaque = unsupported.statements[0].block;
-    assert.equal(opaque.complete, false);
-    assert.ok(opaque.diagnostics.length > 0);
-    assert.equal(opaque.statements.filter(({ kind }) => kind === "literalExecute").length, 0);
+test(
+  "compiled nested unsupported SQL stays explicit beside supported constraints",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const input = { sql: fixture("nested-incomplete.sql") };
+    const facts = await cjs.parsePostgresSql(input);
+    assert.deepEqual(await esm.parsePostgresSql(input), facts);
+    assert.deepEqual(facts.diagnostics, []);
+    assert.equal(facts.statements[0].block.complete, false);
+    assert.equal(facts.statements[0].block.diagnostics.length, 4);
+    assert.ok(facts.statements[0].block.diagnostics.every((diagnostic) => diagnostic.span));
+    assert.ok(
+      occurrences(facts.statements[0]).some(
+        (statement) =>
+          statement.kind === "alterTable" &&
+          statement.operations.some(
+            (operation) =>
+              operation.kind === "addConstraint" &&
+              operation.constraint.name?.value === "supported",
+          ),
+      ),
+    );
   },
 );

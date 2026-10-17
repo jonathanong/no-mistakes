@@ -1,6 +1,25 @@
-fn main() {
-    for (name, size, align) in no_mistakes::codebase::dependencies::extract::receiver_layout_probe()
-    {
-        println!("{name}\t{size}\t{align}");
-    }
-}
+from pathlib import Path
+import datetime,hashlib,json,os,subprocess,time
+from process_owner import OwnedProcess
+D=Path(__file__).parent;R=Path('/tmp/no-mistakes-2022-assignment-target-opt');B=Path('/tmp/nm2022-combined-release-source-draft/candidate');sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest();request=json.loads((D/'api-stage-request.json').read_text());assert request['status']=='REVIEWED UNTIMED NATIVE STAGES ONLY';assert not(D/'actual-api-stage-result.json').exists();deadline=time.monotonic()+300;owners=[];result={'status':'RUNNING API only; missing helper independent'}
+def verify():
+ for path,digest in request['pins'].items():assert sha(path)==digest,path
+ for row in json.loads((D/'consumed-source-inputs.json').read_text())['files']:
+  path=Path(row['path']);assert path.stat().st_size==row['bytes'] and sha(path)==row['sha256'],str(path)
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()==request['head'];assert not subprocess.check_output(['git','status','--porcelain'],cwd=R).strip()
+ for path,digest in json.loads(Path(request['source_inventory']).read_text()).items():assert sha(R/path)==digest,path
+ stage=json.loads((D/'native-stage-closure.json').read_text());assert stage['status']=='PASS actual completed native stages0 only; whole78126FAIL-at-timing preserved'
+ for path,digest in stage['raw_pins'].items():assert sha(path)==digest
+ for name,row in stage['artifacts'].items():assert sha(B/('addon.node' if name=='addon' else name))==row['sha256']
+ assert json.loads((B/'cleanup.json').read_text())=={'target_absent':True,'source_after_exact':True}
+try:
+ verify();argv=['python3',str(D/'validate-native-api.py')];result['argv']=argv
+ with (D/'api-stage.stdout').open('wb') as out,(D/'api-stage.stderr').open('wb') as err:
+  p=subprocess.Popen(argv,cwd=R,env={**os.environ,'RAYON_NUM_THREADS':'4'},stdout=out,stderr=err,start_new_session=True);owner=OwnedProcess(p);owners.append(owner)
+  try:result['actual_child_exit']=p.wait(timeout=max(.1,deadline-time.monotonic()));assert result['actual_child_exit']==0
+  finally:result['cleanup']=owner.finish();assert not owner.members()
+ actual=json.loads((D/'functional-api/PASS.json').read_text());assert actual['shim']==43 and actual['native']==48;result.update(status='PASS actual43shim+48real; only completed native stages used, original wholebuild FAIL retained',shim=43,native=48)
+except BaseException as error:result.update(status='FAIL actual API stage preserved',error=repr(error));raise
+finally:
+ for owner in owners:owner.finish();assert not owner.members()
+ verify();result.update(source_after_exact=True,all_owners_reaped=True,ended_utc=datetime.datetime.now(datetime.timezone.utc).isoformat());(D/'actual-api-stage-result.json').write_text(json.dumps(result,indent=2)+'\n')

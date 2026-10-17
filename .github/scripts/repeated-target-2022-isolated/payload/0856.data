@@ -1,45 +1,55 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+
+const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
+const root = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "fixtures",
+  "playwright",
+  "integration-route-coverage",
+);
 
 test(
-  "compiled CJS and ESM recover booleans without changing bind or opaque proofs",
-  { skip: !compiled },
+  "compiled async APIs preserve integration route ownership and scoped configuration",
+  {
+    skip: !addonPath?.endsWith(".node"),
+    timeout: 20_000,
+  },
   async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const fileName = "boolean-stringification.ts";
-    const source = readFileSync(
-      join(__dirname, "../../../fixtures/postgres-facts/executed-source", fileName),
-      "utf8",
-    );
-    const options = {
-      sources: [{ fileName, source }],
-      importSpecifier: "@example/db",
-      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-      resolveImports: true,
-    };
-    const pending = cjs.extractExecutedPostgresSql(options);
+    const api = require("../index.js");
+    const pending = api.resolveConfig({ root });
     assert.equal(typeof pending.then, "function");
-    const rows = await pending;
-    assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
-    const whole = rows.filter((row) => row.line <= 9);
-    assert.equal(whole.length, 9);
-    assert.ok(whole.every((row) => row.complete && !row.onlyValuePlaceholders));
-    assert.equal(rows.find((row) => row.line === 2).sqlText, "/* booleans/true */ SELECT true");
-    assert.equal(rows.find((row) => row.line === 3).sqlText, "/* booleans/false */ SELECT false");
-    for (const line of [13, 16]) {
-      const row = rows.find((row) => row.line === line);
-      assert.ok(!row.complete && row.onlyValuePlaceholders);
-      assert.ok(row.sqlText.includes("sql_placeholder_1"));
-    }
-    for (const line of [17, 19, 21]) {
-      const row = rows.find((row) => row.line === line);
-      assert.ok(!row.complete && !row.onlyValuePlaceholders);
-    }
-    const legacy = await cjs.extractExecutedPostgresSql({ ...options, resolveImports: false });
-    assert.ok(legacy.filter((row) => row.line <= 9).every((row) => !row.complete));
+    const config = await pending;
+    assert.equal(config.playwright.routeCoverageSources[0].project, "integration");
+    assert.deepEqual(config.playwright.routeCoverageSources[0].helpers[1], {
+      module: "integration/client.ts",
+      export: "loadPage",
+      urlArgument: 1,
+    });
+    const report = await api.playwrightCheck({ root });
+    const health = report.routes.find((route) => route.route === "/healthz");
+    assert.equal(health.covered, true);
+    assert.deepEqual(health.tests, ["integration/web.test.ts"]);
+    assert.deepEqual(health.testsDetail[0].attribution, {
+      framework: "vitest",
+      project: "integration",
+      declarationFile: "integration/cases.ts",
+    });
+    assert.equal(report.routes.find((route) => route.route === "/unregistered").covered, false);
+    const edges = await api.playwrightEdges({ root });
+    assert(
+      edges.edges.some(
+        (edge) =>
+          edge.kind === "route" &&
+          edge.route === "/healthz" &&
+          edge.testFile === "integration/web.test.ts" &&
+          edge.attribution?.framework === "vitest",
+      ),
+    );
+    assert(!edges.edges.some((edge) => edge.kind !== "route" && edge.attribution));
   },
 );

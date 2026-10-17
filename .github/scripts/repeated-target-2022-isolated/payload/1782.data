@@ -1,34 +1,24 @@
-import { read, sql } from '@example/db';
-
-function mutateInSelectedArm(query: unknown) {
-  if (true) {
-    for (const unused of [1]) query.append(sql`; DELETE FROM records`);
-  }
+import { read } from '@example/db';
+function fill(parts: string[], flag: boolean) {
+  if (flag) parts.push('a');
+  else parts.push('a', 'b');
 }
-function mutateInReturnedArm(query: unknown) {
-  if (true) {
-    for (const unused of [1]) query.append(sql`; DELETE FROM records`);
-    return 'known final value';
-  }
+function build(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  // The helper's joined storage sentinel is not a one-element runtime array.
+  if (parts.length === 1) return '/* shapes/divergent */ SELECT 1';
+  return '/* shapes/divergent */ DELETE FROM records';
 }
-function skippedUnsupportedArm(query: unknown) {
-  // An unreachable unsupported arm must not poison the selected safe path.
-  if (false) {
-    for (const unused of [1]) query.append(sql`; DELETE FROM records`);
-  }
+export function divergentShape(flag: boolean) {
+  // Both runtime statements reach this single executor site.
+  read(build(flag));
 }
-export function selectedUnsupportedArm() {
-  const query = sql`/* nested/selected */ SELECT 1`;
-  mutateInSelectedArm(query);
-  read(query);
+function denseBuild() {
+  const parts = ['a', 'b'];
+  if (parts.length === 2) return '/* shapes/dense */ SELECT 2';
+  return '/* shapes/dense */ DELETE FROM records';
 }
-export function returnedUnsupportedArm() {
-  const query = sql`/* nested/returned */ SELECT 1`;
-  mutateInReturnedArm(query);
-  read(query);
-}
-export function unreachableUnsupportedArm() {
-  const query = sql`/* nested/unreachable */ SELECT 1`;
-  skippedUnsupportedArm(query);
-  read(query);
+export function denseShape() {
+  read(denseBuild());
 }

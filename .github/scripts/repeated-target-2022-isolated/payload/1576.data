@@ -1,10 +1,7 @@
-import sql from "sql-template-strings";
 import { query } from "@example/db";
 
-function build(id: number) {
-  return sql`SELECT * FROM topics WHERE id = ${id}`;
-}
+const sql = "INSERT INTO items (id) VALUES (1)" + " ON CONFLICT (id) DO NOTHING";
 
-export function run() {
-  return query(build(1));
+export function insertItem() {
+  return query(sql);
 }

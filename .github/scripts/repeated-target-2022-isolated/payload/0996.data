@@ -1,4 +1,1 @@
-import { primary } from '@vendor/valkey';
-function replacement() {}
-function f(client = primary) { primary.get = replacement; const alias = client; alias.get(); }
-f();
+{"kind":"database","entry":"src/defaults.mts","callSites":[{"file":"src/defaults.mts","line":3,"callee":"get","category":"read","caller":"consume","depth":0}],"byCategory":{"read":1}}

@@ -1,8 +1,5 @@
-import { primary as client } from '@vendor/valkey';
-function replacement() {}
-const holder = { box: { client } };
-holder.box.client = {};
-holder.box.client &&= { x: (holder.box = { client }) };
-holder.box.client.get = replacement;
-function globalAncestorLogical(value) { value.get('key'); }
-globalAncestorLogical(client);
+import { session } from './clients.mjs';
+import { readLocalLatch, localDiagnostics } from './local-client-helpers.mjs';
+const items = ['one'];
+for (const item of items) { readLocalLatch(); }
+for (const item of items) { localDiagnostics(session); }

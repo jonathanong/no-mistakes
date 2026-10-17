@@ -1,3 +1,10 @@
-EXPLAIN (ANALYZE false) CREATE FUNCTION wrapped_comment() RETURNS integer LANGUAGE SQL BEGIN ATOMIC COMMENT ON FUNCTION f(integer) IS 'nested explain'; END;
-PREPARE wrapped AS CREATE OR REPLACE FUNCTION wrapped_comment() RETURNS integer LANGUAGE SQL BEGIN ATOMIC COMMENT ON FUNCTION f(integer) IS 'nested prepare'; END;
-EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN EXPLAIN COMMENT ON FUNCTION f(integer) IS 'beyond bounded wrapper scope';
+import { read } from '@example/db'
+import { readWith, writeWith } from './with-builder.ts'
+
+export function readCandidate() {
+  return read(readWith())
+}
+
+export function writeCandidate() {
+  return read(writeWith())
+}

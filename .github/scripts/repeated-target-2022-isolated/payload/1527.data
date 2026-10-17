@@ -1,12 +1,19 @@
 import { query } from "@example/db";
 
 function build() {
-  return "SELECT 1";
+  return "SELECT id FROM topics";
 }
 
-export function load(active: boolean) {
-  for (const build = () => "DELETE FROM users"; active; ) {
-    return query(build());
-  }
-  return query(build());
+function externalBuilder() {
+  return "UNTRUSTED";
+}
+
+for (var build of [externalBuilder]) {
+  break;
+}
+
+const sql = build();
+
+export function load() {
+  return query(sql);
 }

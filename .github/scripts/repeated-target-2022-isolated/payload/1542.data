@@ -1,10 +1,13 @@
 import { query } from "@example/db";
 
-function safe() {
-  return "TRUSTED SQL";
+function sql() {
+  return process.env.SQL;
 }
 
-export function outer(safe: () => string) {
-  const sql = safe();
-  return query(sql);
+function build() {
+  return sql`SELECT 1`;
+}
+
+export function load() {
+  return query(build());
 }

@@ -1,12 +1,11 @@
-import sql from "sql-template-strings";
-import { read } from "@example/db";
+import { query } from "@example/db";
 
-export async function listTopics(flag: boolean) {
-  const query = sql`SELECT id FROM topics WHERE published = true`;
-  // Same as composed-append-if.ts: keep the recovered SELECT, do not compose
-  // the branch-only ORDER BY as always-on SQL.
-  if (flag) {
-    query.append(sql` ORDER BY id`);
-  }
-  return read(query);
+function withColumn(column: string) {
+  return "SELECT id FROM topics WHERE ".append(column);
+}
+
+const sql = withColumn("post_id");
+
+export function load() {
+  return query(sql);
 }

@@ -1,124 +1,201 @@
-import { assertTestTimeout, snapshotTimeoutOptions } from "./config.mjs";
-const registrations = new WeakMap();
-const curriedMethods = new Set(["each", "for", "extend", "override", "scoped", "skipIf", "runIf"]);
-const chainedMethods = new Set(["concurrent", "shuffle", "skip", "only", "todo", "fails"]);
-const suiteMethods = new Set(["describe", "suite"]);
-const hookMethods = new Set([
-  "beforeAll",
-  "beforeEach",
-  "afterAll",
-  "afterEach",
-  "aroundAll",
-  "aroundEach",
-]);
-/** Validate before Vitest's registration creates its captured timeout wrapper. */
-export function guardRegistration(original, kind, maximum = 30_000) {
-  return createRegistration(original, kind, maximum, true);
-}
-function createRegistration(original, kind, maximum, injectFactory) {
-  const deadlines = registrations.get(original) ?? new Map();
-  const roles = deadlines.get(maximum) ?? new Map();
-  const role = `${kind}:${injectFactory}`;
-  const existing = roles.get(role);
-  if (existing) return existing;
-  const cache = new Map();
-  const guarded = new Proxy(original, {
-    apply(target, receiver, args) {
-      if (kind === "hook") {
-        if (args[1] !== undefined) assertTestTimeout(args[1], "hook timeout", maximum);
-      } else {
-        for (let index = 1; index < Math.min(args.length, 3); index++) {
-          const value = args[index];
-          if (kind === "suite" && injectFactory && typeof value === "function") {
-            args[index] = protectSuiteFactory(value, maximum);
-          } else if (typeof value === "number")
-            assertTestTimeout(value, `${kind} timeout`, maximum);
-          else if (value !== null && typeof value === "object") {
-            args[index] = snapshotTimeoutOptions(value, `${kind} timeout`, maximum, true);
-          }
-        }
-      }
-      const result = Reflect.apply(target, receiver, args);
-      return kind === "suite" &&
-        result !== null &&
-        typeof result === "object" &&
-        Reflect.get(result, "type") === "collector"
-        ? protectSuiteCollector(result, maximum)
-        : result;
-    },
-    get(target, key, receiver) {
-      if (cache.has(key)) return cache.get(key);
-      const value = Reflect.get(target, key, receiver);
-      if (typeof value !== "function") return value;
-      const name = String(key);
-      if (
-        !curriedMethods.has(name) &&
-        !chainedMethods.has(name) &&
-        !hookMethods.has(name) &&
-        !suiteMethods.has(name)
-      )
-        return value;
-      const guarded = curriedMethods.has(name)
-        ? new Proxy(value, {
-            apply(method, owner, args) {
-              const result = Reflect.apply(method, owner, args);
-              return typeof result === "function"
-                ? createRegistration(
-                    result,
-                    kind,
-                    maximum,
-                    injectFactory && name !== "each" && name !== "for",
-                  )
-                : result;
-            },
-          })
-        : guardRegistration(
-            value,
-            hookMethods.has(name) ? "hook" : suiteMethods.has(name) ? "suite" : kind,
-            maximum,
-          );
-      cache.set(key, guarded);
-      return guarded;
-    },
+import { browserChildContainment } from "../../../fixtures/test-timeout-policy/browser-child-containment.mjs";
+import { containmentChildProbe } from "../../../fixtures/test-timeout-policy/containment-child-probe.mjs";
+import { observeSdkChild } from "../../../fixtures/test-timeout-policy/owned-sdk-child.mjs";
+import { describe, expect, it, vi } from "vitest";
+import { configDefaults, mergeConfig } from "vitest/config";
+import { browserTestTimeoutPolicyPlugin, testTimeoutPolicyPlugin } from "./plugin.mjs";
+import { replaceStorybookAnnotationSetup } from "../../../fixtures/test-timeout-policy/storybook-timeout-fixture.mjs";
+describe("browser routing policy contracts", () => {
+  it("preserves inline-all sentinels in both public plugin configuration routes", () => {
+    for (const plugin of [
+      testTimeoutPolicyPlugin(30000, ["registrar"]),
+      browserTestTimeoutPolicyPlugin(30000, ["registrar"]),
+    ]) {
+      const config = { test: { server: { deps: { inline: true } } } };
+      expect(plugin.config(config).test.server.deps.inline).toBe(true);
+      const patterns = [/owned/, "existing"];
+      expect(
+        plugin.config({ test: { server: { deps: { inline: patterns } } } }).test.server.deps.inline,
+      ).toEqual(["registrar"]);
+      expect(patterns).toEqual([/owned/, "existing"]);
+    }
   });
-  roles.set(role, guarded);
-  deadlines.set(maximum, roles);
-  registrations.set(original, deadlines);
-  // Native completion-hook execution saves and restores a method that is already guarded.
-  registrations.set(guarded, new Map([[maximum, new Map([[role, guarded]])]]));
-  return guarded;
-}
-function protectSuiteFactory(factory, maximum) {
-  return new Proxy(factory, {
-    apply(target, owner, values) {
-      // The known direct suite-factory route always receives Vitest's public TestAPI.
-      values[0] = guardRegistration(values[0], "test", maximum);
-      return Reflect.apply(target, owner, values);
-    },
+  it("composes client optimizers without modifying server configuration or caller arrays", () => {
+    const plugin = browserTestTimeoutPolicyPlugin(30000, ["registrar"]);
+    const include = ["dependency > registrar/subpath", "registrar-extra", "ordinary"];
+    const config = { optimizeDeps: { include, exclude: ["ordinary-exclusion", "vitest"] } };
+    expect(plugin.configEnvironment.handler("ssr", config)).toBeUndefined();
+    for (const name of ["client", "custom"]) {
+      const result = plugin.configEnvironment.handler(name, { ...config, consumer: "client" });
+      expect(result?.optimizeDeps.include).toEqual(["registrar-extra", "ordinary"]);
+      expect(result?.optimizeDeps.exclude).toEqual([
+        "ordinary-exclusion",
+        "vitest",
+        "@vitest/browser",
+        "registrar",
+      ]);
+    }
+    expect(plugin.configEnvironment.handler("client", {})?.optimizeDeps.include).toEqual([]);
+    expect(include).toEqual(["dependency > registrar/subpath", "registrar-extra", "ordinary"]);
   });
-}
-const collectors = new WeakMap();
-/** Native collector.on stores raw callbacks, bypassing Vitest's public hook timeout capture. */
-export function protectSuiteCollector(original, maximum) {
-  const deadlines = collectors.get(original) ?? new Map();
-  const existing = deadlines.get(maximum);
-  if (existing) return existing;
-  const tests = new Map();
-  const rejectRawHook = () => {
-    throw new Error(
-      "SuiteCollector.on bypasses native hook deadlines; register guarded public hooks inside the suite factory",
+  it("preserves default, single and custom reporter registrations before the browser lifecycle guard", () => {
+    const plugin = browserTestTimeoutPolicyPlugin();
+    const custom = { onInit() {} };
+    expect(plugin.config().test.reporters.slice(0, -1)).toEqual(configDefaults.reporters);
+    const single = { test: { reporters: "verbose" } };
+    expect(mergeConfig(single, plugin.config(single)).test.reporters[0]).toBe("verbose");
+    const reporters = ["json", custom];
+    const merged = mergeConfig({ test: { reporters } }, plugin.config({ test: { reporters } }));
+    expect(merged.test.reporters.slice(0, 2)).toEqual(reporters);
+    expect(merged.test.reporters).toHaveLength(3);
+    expect(reporters).toEqual(["json", custom]);
+  });
+  it("removes late aggregated registrar bundles from every public client configuration before browser startup", () => {
+    const plugin = browserTestTimeoutPolicyPlugin(30000, ["registrar"]);
+    const reporter = plugin.config().test.reporters.at(-1);
+    if (
+      !reporter ||
+      typeof reporter === "string" ||
+      !("onBrowserInit" in reporter) ||
+      typeof reporter.onBrowserInit !== "function"
+    )
+      throw new Error("Browser initialization guard missing");
+    const optimizer = () => ({
+      include: [
+        "dependency > registrar/subpath",
+        "vitest > expect-type",
+        "registrar-extra",
+        "ordinary",
+      ],
+    });
+    const root = optimizer();
+    const declared = optimizer();
+    const server = optimizer();
+    const active = optimizer();
+    const project = {
+      viteConfig: { optimizeDeps: root, environments: { client: { optimizeDeps: declared } } },
+      vite: {
+        config: { optimizeDeps: server },
+        environments: { client: { config: { optimizeDeps: active } } },
+      },
+    };
+    Reflect.apply(reporter.onBrowserInit, reporter, [project]);
+    for (const config of [root, declared, server, active])
+      expect(config.include).toEqual(["registrar-extra", "ordinary"]);
+    Reflect.apply(reporter.onBrowserInit, reporter, [
+      { viteConfig: {}, vite: { config: {}, environments: {} } },
+    ]);
+    Reflect.apply(reporter.onBrowserInit, reporter, [
+      {
+        viteConfig: {},
+        vite: { config: {}, environments: { client: { config: { optimizeDeps: {} } } } },
+      },
+    ]);
+  });
+  it("rejects disabled or incorrectly excluded browser projects before filtering their bundles", () => {
+    const plugin = browserTestTimeoutPolicyPlugin();
+    expect(() => plugin.configResolved({})).toThrow("enabled browser project");
+    expect(() => plugin.configResolved({ test: { browser: { enabled: true } } })).toThrow(
+      "Missing browser timeout routing exclusion",
     );
-  };
-  const guarded = new Proxy(original, {
-    get(target, key, receiver) {
-      if (key === "on") return rejectRawHook;
-      const value = Reflect.get(target, key, receiver);
-      if (key !== "test" || typeof value !== "function") return value;
-      if (!tests.has(value)) tests.set(value, guardRegistration(value, "test", maximum));
-      return tests.get(value);
-    },
+    const config = {
+      test: { browser: { enabled: true } },
+      optimizeDeps: { exclude: plugin.config().optimizeDeps.exclude },
+    };
+    expect(() => plugin.configResolved(config)).not.toThrow();
   });
-  deadlines.set(maximum, guarded);
-  collectors.set(original, deadlines);
-  return guarded;
-}
+  it("removes exact, subpath and any nested owner token while preserving near-prefix and unrelated order", () => {
+    const plugin = browserTestTimeoutPolicyPlugin(30000, ["@storybook/addon-vitest"]);
+    const include = [
+      "@storybook/addon-vitest",
+      "@storybook/addon-vitest/internal/setup-file",
+      "dependency > @storybook/addon-vitest/internal/setup-file",
+      "@storybook/addon-vitest/internal/setup-file > dependency",
+      "dependency > middle > @storybook/addon-vitest",
+      " dependency>@storybook/addon-vitest/internal/setup-file > leaf ",
+      "vitest/browser",
+      "unrelated-first",
+      "@storybook/addon-vitest-extra",
+      "dependency > @storybook/addon-vitest-extra/internal/setup-file",
+      "vitest-extra",
+      "unrelated-last",
+    ];
+    const config = {
+      test: { browser: { enabled: true } },
+      optimizeDeps: {
+        include,
+        exclude: plugin.config().optimizeDeps.exclude,
+      },
+    };
+    plugin.configResolved(config);
+    expect(config.optimizeDeps.include).toEqual([
+      "unrelated-first",
+      "@storybook/addon-vitest-extra",
+      "dependency > @storybook/addon-vitest-extra/internal/setup-file",
+      "vitest-extra",
+      "unrelated-last",
+    ]);
+    expect(include).toHaveLength(12);
+    expect(config.optimizeDeps.exclude).toEqual(plugin.config().optimizeDeps.exclude);
+  });
+  it.each([
+    {},
+    { test: {} },
+    { test: { setupFiles: [] } },
+    { test: { setupFiles: ["unrelated.mts"] } },
+  ])("rejects absent or nonmatching addon annotations setup", (config) => {
+    expect(() => replaceStorybookAnnotationSetup(config, "/stable.mts")).toThrow(
+      "annotations setup missing",
+    );
+  });
+  it("replaces string and array addon setup without dropping other setup files", () => {
+    const config = {
+      test: {
+        setupFiles: [
+          "before.mts",
+          "@storybook/addon-vitest/internal/setup-file-with-project-annotations",
+          "after.mts",
+        ],
+      },
+    };
+    replaceStorybookAnnotationSetup(config, "/stable.mts");
+    expect(config.test.setupFiles).toEqual(["before.mts", "/stable.mts", "after.mts"]);
+    const single = {
+      test: { setupFiles: "/addon/setup-file-with-project-annotations.js" },
+    };
+    replaceStorybookAnnotationSetup(single, "/stable.mts");
+    expect(single.test.setupFiles).toEqual(["/stable.mts"]);
+  });
+  it.each([false, true])(
+    "bounds SDK startup independently of native deadlines; storybook=%s",
+    async (storybook) => {
+      vi.useFakeTimers();
+      try {
+        const child = containmentChildProbe();
+        const terminate = vi.fn(() => {
+          child.emit("close", null, "SIGKILL");
+          return true;
+        });
+        const containment = browserChildContainment(storybook);
+        const observed = observeSdkChild(child, { ...containment, capture: () => terminate });
+        await vi.advanceTimersByTimeAsync(4999);
+        expect(terminate).not.toHaveBeenCalled();
+        if (storybook) {
+          await vi.advanceTimersByTimeAsync(15000);
+          expect(terminate).not.toHaveBeenCalled();
+        }
+        await vi.advanceTimersByTimeAsync(1);
+        const outcome = await observed;
+        expect(terminate).toHaveBeenCalledOnce();
+        expect(outcome.result).toEqual({ code: null, signal: "SIGKILL" });
+        expect(outcome.forcedCleanup).toBe(true);
+        expect(outcome.drained).toBe(true);
+        expect(outcome.errors).toEqual([]);
+        // Leave room for both close and group-drain barriers under the parent suite.
+        expect(containment.watchdogMs + 2000).toBeLessThan(30000);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+});

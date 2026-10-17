@@ -1,13 +1,18 @@
 import { query } from "@example/db";
 
-function build() {
-  return "SELECT 1";
+function safe() {
+  return "TRUSTED SQL";
 }
 
-const wrapper = function build() {
-  return build();
-};
+function wrap(
+  { ...rest }: Record<string, unknown>,
+  [safe = () => "fallback", ...tail]: Array<() => string>,
+) {
+  return safe();
+}
 
-export function run() {
-  return query(wrapper());
+const sql = wrap({}, [() => "untrusted"]);
+
+export function load() {
+  return query(sql);
 }

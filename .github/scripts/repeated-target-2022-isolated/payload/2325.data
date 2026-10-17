@@ -1,2 +1,4 @@
-import type * as Imported from 'database-client';
-export type { Imported };
+import { read } from "@vendor/database";
+export function queryHelper(item: string) {
+  read(item);
+}

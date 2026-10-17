@@ -1,6 +1,15 @@
-import { helper as sql } from "sql-template-strings";
 import { query } from "@example/db";
 
-export function load(id: number) {
-  return query(sql`SELECT * FROM topics WHERE id = ${id}`);
+const helpers = {
+  templates: {
+    raw(strings: TemplateStringsArray) {
+      return strings.join("");
+    },
+  },
+};
+
+const text = helpers.templates.raw`SELECT id FROM topics`;
+
+export function load() {
+  return query(text);
 }

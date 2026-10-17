@@ -1,20 +1,18 @@
-import { primary, session } from '@vendor/valkey';
-const items = ['one'];
-// Late declarations must see writes already visited by the extractor.
-primary.get = unrelated;
-function lateIdentifier(client = primary) { client.get('key'); }
-for (const item of items) { lateIdentifier(); }
-const lateOpts = { client: session };
-lateOpts.client.info = unrelated;
-function latePattern({ client } = lateOpts) { client.info('key'); }
-for (const item of items) { latePattern(); }
-function suppliedLate(client = primary) { client.scan('key'); }
-for (const item of items) { suppliedLate(session); }
-const lateAlias = primary;
-function lateAliased(client = lateAlias) { client.get('key'); }
-for (const item of items) { lateAliased(); }
-const earlierAlias = primary;
-earlierAlias.get = unrelated;
-const laterAlias = primary;
-function lateComponent(client = laterAlias) { client.get('key'); }
-for (const item of items) { lateComponent(); }
+effects:
+  postgres:
+    targets:
+      - { module: './psql.mjs', export: read }
+    returnedExecutors:
+      - { module: '@vendor/opaque-database', export: begin }
+      - { module: './review-wrappers.mjs', export: wrappedBegin }
+  valkey:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey-imported-receiver-mutations', export: primary.get }
+      - { module: '@vendor/valkey-default-origin-mutations', export: primary.get }
+      - { module: '@vendor/valkey-destructured-parameters', export: primary.get }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres, valkey]

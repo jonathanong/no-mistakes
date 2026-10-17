@@ -1,6 +1,8 @@
 import { read } from '@example/db'
-import { buildImportedRead } from './imported-builder'
 
-export function extensionlessRead() {
-  return read(buildImportedRead())
+function run(sql: string) {
+  return read(sql)
 }
+
+export const callbacks = [run]
+run('/* exported/array */ SELECT id FROM posts')

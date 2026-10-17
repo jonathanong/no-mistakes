@@ -1,83 +1,68 @@
-const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-const test = globalThis.test || require("node:test").test;
-const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+#!/usr/bin/env node
+"use strict";
 
-test(
-  "compiled CJS, ESM and prepared checks preserve scoped and legacy SQL policies",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/postgres-sql-shape-policy/fixture/clause-api",
-    );
-    const source = readFileSync(join(root, "sql/queries.sql"), "utf8");
-    const expected = source.split("\n").flatMap((line, index) => {
-      const kind = /-- finding: (scoped|legacy|quoted|boundary)/.exec(line)?.[1];
-      return kind ? [{ line: index + 1, kind }] : [];
-    });
-    const pending = cjs.check({ root });
-    assert.ok(pending instanceof Promise);
-    const report = await pending;
-    assert.deepEqual(report.warnings, []);
-    assert.deepEqual(await esm.check({ root }), report);
-    assert.deepEqual(await cjs.check({ root }), report);
-    assert.deepEqual(
-      report.rules.map((finding) => [finding.rule, finding.file, finding.line]),
-      expected.map(({ line }) => ["postgres-sql-shape-policy", "sql/queries.sql", line]),
-    );
-    for (const { line, kind } of expected) {
-      const finding = report.rules.find((entry) => entry.line === line);
-      assert.equal(finding.target, "banned-function-call");
-      if (kind === "scoped") {
-        assert.match(finding.message, /uuidv7\(\) is banned in/);
-        assert.ok(finding.message.endsWith("; compute a stable bound once per statement"));
-      } else if (kind === "quoted") {
-        assert.equal(
-          finding.message,
-          `sql/queries.sql:${line}: "custom.schema"."odd.function"() is banned in WHERE`,
-        );
-      } else if (kind === "boundary") {
-        assert.equal(
-          finding.message,
-          `sql/queries.sql:${line}: probe_boundary() is banned in SELECT list`,
-        );
-      } else {
-        assert.equal(
-          finding.message,
-          `sql/queries.sql:${line}: function call "pg_sleep" is banned by this SQL shape policy; remove the call or replace it with an allowed operation`,
-        );
-      }
-    }
-    const batch = await cjs.analyzeProject({
-      root,
-      reports: [{ type: "check", id: "clauses" }],
-    });
-    assert.deepEqual(batch.reports[0].result, report);
-    const included = await cjs.check({ root, includeSuppressed: true });
-    assert.deepEqual(included.rules, report.rules);
-    assert.equal(included.suppressed.length, 3);
-    const recoveredRoot = join(root, "../clause-api-recovered");
-    const recovered = await cjs.check({ root: recoveredRoot });
-    assert.deepEqual(await esm.check({ root: recoveredRoot }), recovered);
-    const recoveredBatch = await cjs.analyzeProject({
-      root: recoveredRoot,
-      reports: [{ type: "check" }],
-    });
-    assert.deepEqual(recoveredBatch.reports[0].result, recovered);
-    assert.deepEqual(recovered.warnings, []);
-    assert.deepEqual(
-      recovered.rules.map(({ file, line, message }) => ({ file, line, message })),
-      [
-        {
-          file: "sql/queries.sql",
-          line: 3,
-          message: "sql/queries.sql:3: probe_boundary() is banned in SELECT list",
-        },
-      ],
-    );
-  },
-);
+const { spawnSync } = require("node:child_process");
+const { existsSync } = require("node:fs");
+const { join, resolve } = require("node:path");
+
+const { cargoReleaseDirectory } = require("./native-artifact-paths");
+const { nativePackageName } = require("./native-package");
+const { stageNative } = require("./stage-native");
+
+const root = resolve(__dirname, "..", "..", "..");
+
+function runCargo(args, env = {}) {
+  const result = spawnSync("cargo", args, {
+    cwd: root,
+    env: { ...process.env, ...env },
+    stdio: "inherit",
+  });
+  if (result.status !== 0) process.exit(result.status || 1);
+}
+
+function localNativeArtifacts({
+  root,
+  env = process.env,
+  platform = process.platform,
+  addonExists = existsSync,
+  resolveReleaseDirectory = cargoReleaseDirectory,
+}) {
+  const releaseDirectory = resolveReleaseDirectory({ root, env });
+  const names =
+    platform === "darwin"
+      ? ["libno_mistakes.dylib"]
+      : platform === "win32"
+        ? ["no_mistakes.dll"]
+        : ["libno_mistakes.so"];
+  const paths = names.map((name) => join(releaseDirectory, name));
+  return {
+    addon: paths.find(addonExists) || paths[0],
+    binary: join(releaseDirectory, platform === "win32" ? "no-mistakes.exe" : "no-mistakes"),
+  };
+}
+
+async function main() {
+  const packageName = nativePackageName();
+  if (!packageName) throw new Error(`Unsupported platform ${process.platform}/${process.arch}`);
+  runCargo(["build", "--release", "--locked", "-p", "no-mistakes"]);
+  runCargo(
+    ["rustc", "--release", "--locked", "-p", "no-mistakes", "--lib", "--crate-type", "cdylib"],
+    {
+      NO_MISTAKES_BUILD_NAPI: "1",
+    },
+  );
+  const artifacts = localNativeArtifacts({ root });
+  await stageNative({
+    packageName,
+    ...artifacts,
+  });
+}
+
+module.exports = { localNativeArtifacts };
+
+if (require.main === module) {
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  });
+}

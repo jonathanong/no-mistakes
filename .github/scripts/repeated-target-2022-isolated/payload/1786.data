@@ -1,128 +1,91 @@
 import { read, sql } from '@example/db';
-export const sharedQuery = sql`SELECT 1`;
 
-export function callOperands(object: unknown, opaque: unknown) {
-  opaque(object.mutate, read(sharedQuery));
+function fill(parts: string[], flag: boolean) {
+  if (flag) parts.push('a');
+  else parts.push('a', 'b');
 }
 
-export function branchArray(object: unknown, flag: boolean) {
-  if (flag) {
-    [object.mutate, read(sharedQuery)];
-  }
+export function conditionalForEach(flag: boolean) {
+  const query = sql`SELECT 1`;
+  const parts: string[] = [];
+  fill(parts, flag);
+  // Joined shape metadata must not hide the possible second callback.
+  parts.forEach((_, index) => {
+    if (index === 1) query.append(sql`; DELETE FROM records`);
+  });
+  read(query);
 }
 
-export function branchObject(object: unknown, flag: boolean) {
-  if (flag) {
-    ({ first: object.mutate, second: read(sharedQuery) });
-  }
+export function conditionalMap(flag: boolean) {
+  const query = sql`SELECT 1`;
+  const parts: string[] = [];
+  fill(parts, flag);
+  parts.map((_, index) => {
+    if (index === 1) query.append(sql`; DELETE FROM records`);
+    return 'part';
+  });
+  read(query);
 }
 
-export function binaryOperands(object: unknown) {
-  const ignored = object.mutate + read(sharedQuery);
+export function denseForEach() {
+  const query = sql`SELECT 1`;
+  ['a', 'b'].forEach((_, index) => {
+    if (index === 1) query.append(sql`; DELETE FROM records`);
+  });
+  read(query);
 }
 
-export function pureArray() {
-  [0, read(sharedQuery)];
+export function denseMap() {
+  const query = sql`SELECT 1`;
+  ['a', 'b'].map((_, index) => {
+    if (index === 1) query.append(sql`; DELETE FROM records`);
+    return 'part';
+  });
+  read(query);
 }
 
-export function pureObject() {
-  ({ first: 0, second: read(sharedQuery) });
+export function conditionalPush(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  const length = parts.push('c');
+  read(length === 2 ? 'SELECT 1' : 'DELETE FROM records');
 }
 
-export function sequenceOperands(object: unknown) {
-  (object.mutate, read(sharedQuery));
+export function conditionalMapResult(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  read(parts.map((_, index) => index === 0 ? 'SELECT 1' : '; DELETE FROM records').join(''));
 }
 
-export function appendOperands(object: unknown) {
-  (object.mutate, sharedQuery).append(read(sharedQuery));
+export function conditionalOverwrite(flag: boolean) {
+  const query = sql`SELECT 1`;
+  const parts: string[] = [];
+  fill(parts, flag);
+  // Assigning one slot cannot establish the array's divergent runtime length.
+  parts[0] = 'c';
+  parts.forEach((_, index) => {
+    if (index === 1) query.append(sql`; DELETE FROM records`);
+  });
+  read(query);
 }
 
-export function taggedOperands(object: unknown) {
-  sql`${object.mutate}${read(sharedQuery)}`;
+function pushBranch(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  if (parts.push('c') === 2) return 'SELECT 1';
+  return 'DELETE FROM records';
+}
+export function conditionalPushBranch(flag: boolean) {
+  read(pushBranch(flag));
 }
 
-export function opaqueOperands(object: unknown, Constructor: unknown) {
-  new Constructor(object.mutate, read(sharedQuery));
+function overwriteLength(flag: boolean) {
+  const parts: string[] = [];
+  fill(parts, flag);
+  parts[0] = 'c';
+  if (parts.length === 1) return 'SELECT 1';
+  return 'DELETE FROM records';
 }
-
-export function templateOperands(object: unknown) {
-  `${object.mutate}${read(sharedQuery)}`;
-}
-
-export function calleeOperands(object: unknown, opaque: unknown) {
-  (object.mutate, opaque)(read(sharedQuery));
-}
-
-export function earlierValidRead(object: unknown) {
-  [read(sharedQuery), object.mutate];
-}
-
-export function branchTestAfterEffect(object: unknown) {
-  if ((object.mutate, read(sharedQuery), true)) {}
-}
-
-export function branchTestEarlierRead(object: unknown) {
-  if ((read(sharedQuery), object.mutate, true)) {}
-}
-
-export function computedReceiver(object: unknown, flag: boolean) {
-  if (flag) object.mutate[read(sharedQuery)];
-}
-
-export function deleteReceiver(object: unknown) {
-  delete object.mutate[read(sharedQuery)];
-}
-
-export function computedEarlierRead(object: unknown) {
-  read(sharedQuery)[object.mutate];
-}
-
-export function computedPure() {
-  const object = { first: 0 };
-  object['first' + read(sharedQuery)];
-}
-
-export function methodGetter(object: unknown) {
-  object.method(read(sharedQuery));
-}
-
-export function computedMethodGetter(object: unknown) {
-  object['method'](read(sharedQuery));
-}
-
-export function indexedMethodGetter(object: unknown) {
-  object[0](read(sharedQuery));
-}
-
-export function compoundGetter(object: unknown) {
-  const ignored = (object.counter += read(sharedQuery));
-}
-
-export function simpleAssignment(object: unknown) {
-  const ignored = (object.counter = read(sharedQuery));
-}
-
-export function computedCompound(object: unknown) {
-  const ignored = (object[read(sharedQuery)] +=
-    read(sharedQuery));
-}
-
-export function recordMethod() {
-  const object = { method: (value: unknown) => value };
-  object.method(read(sharedQuery));
-}
-
-export function arrayMethod() {
-  [function (value: unknown) { return value; }][0](read(sharedQuery));
-}
-
-export function unsupportedMethodShorthand() {
-  // Method shorthand is still outside the supported record-data projection.
-  const object = { method(value: unknown) { return value; } };
-  object.method(read(sharedQuery));
-}
-
-export function bindingCompound() {
-  let counter = 0;
-  const ignored = (counter += read(sharedQuery));
+export function conditionalOverwriteLength(flag: boolean) {
+  read(overwriteLength(flag));
 }

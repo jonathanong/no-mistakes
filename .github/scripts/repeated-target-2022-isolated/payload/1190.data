@@ -1,6 +1,5 @@
-rules:
-  - rule: postgres-idempotent-insert
-    scope: repository
-    options:
-      importSpecifier: "@example/db"
-      sqlInclude: ["sql/**/*.sql"]
+import { query } from "@example/db";
+
+export function insertItem() {
+  return query(`INSERT INTO items (id) VALUES (1)`);
+}

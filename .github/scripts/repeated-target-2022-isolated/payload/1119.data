@@ -1,15 +1,16 @@
-import { objectEscapeSnapshot, returnedEscapeSnapshot } from '@vendor/valkey';
-function replacement() {}
-function writeObjectEscape() { objectEscapeSnapshot.get = replacement; }
-// The opaque supplier can invoke the writer before the method is copied.
-external({ write: writeObjectEscape });
-const objectSaved = objectEscapeSnapshot.get;
-(function savedObjectEscape(fn) { fn('key'); })(objectSaved);
-writeObjectEscape();
+import { doubleDeferredCopy } from "@vendor/valkey";
 
-function writeReturnedEscape() { returnedEscapeSnapshot.get = replacement; }
-function returnEscapedWriter() { return writeReturnedEscape; }
-external(returnEscapedWriter());
-const returnedSaved = returnedEscapeSnapshot.get;
-(function savedReturnedEscape(fn) { fn('key'); })(returnedSaved);
-writeReturnedEscape();
+function replacement() {}
+let deferred;
+for (const value of [0, 1]) {
+  deferred = function calledTwice() {
+    // The first call writes the receiver; the next acquisition sees that write.
+    const saved = doubleDeferredCopy.get;
+    (function takeTwice(fn) {
+      fn(value);
+    })(saved);
+    doubleDeferredCopy.get = replacement;
+  };
+}
+deferred();
+deferred();

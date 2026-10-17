@@ -1,8 +1,9 @@
 import { read } from '@example/db'
+import { query } from './eager-builder'
 
-function run(sql: string) {
-  return read(sql)
+const specifier = './missing-mutator'
+require(specifier)
+
+export function readAfterDynamicRequire() {
+  return read(query)
 }
-
-export const callback = (0, run)
-run('/* exported/sequence */ SELECT id FROM posts')

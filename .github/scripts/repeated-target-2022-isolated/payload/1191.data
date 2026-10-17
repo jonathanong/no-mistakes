@@ -1,3 +1,6 @@
-INSERT INTO items (id)
-SELECT 1
-WHERE NOT EXISTS (SELECT 1 FROM items WHERE id = 1);
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/**/*.sql"]

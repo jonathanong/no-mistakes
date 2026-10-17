@@ -1,6 +1,9 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
-const box = { wrapper: { client } };
-if (flag) { box.wrapper = { client }; box.wrapper.client.get = replacement; }
-function guardedDescendant(value) { value.get('key'); }
-guardedDescendant(client);
+const holder = { box: { client } };
+holder.box.client = {};
+const saved = holder.box.client;
+holder.box = { client };
+saved.get = replacement;
+function globalSavedClient(value) { value.get('key'); }
+globalSavedClient(client);

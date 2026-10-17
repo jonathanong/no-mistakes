@@ -1,25 +1,6 @@
-CREATE TABLE variants (
- id int NULL,
- name text UNIQUE,
- parent uuid REFERENCES parents(id),
- positive numeric CHECK (positive > 0),
- collated text COLLATE "C",
- generated text GENERATED ALWAYS AS (lower(name)) STORED,
- precise numeric(8),
- exact numeric(12,3),
- broad numeric,
- decimal_value decimal(9,2),
- dec_value dec(7),
- short varchar(20),
- chars character varying(10),
- fixed char(2),
- long_fixed character(4),
- instant timestamp(3),
- clock time(4),
- array_values integer ARRAY[4],
- custom app.money(12,2)
-);
-ALTER TABLE variants RENAME COLUMN name TO title;
-ALTER TABLE variants ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY;
-CREATE FUNCTION table_result() RETURNS TABLE (id int, name text) LANGUAGE sql AS $$ SELECT 1, 'x' $$;
-ALTER TABLE variants VALIDATE CONSTRAINT positive_check;
+SELECT d.id FROM generate_series(1, 5) d;
+SELECT * FROM t TABLESAMPLE SYSTEM (1);
+SELECT count(*) OVER named FROM t WINDOW named AS (ORDER BY id);
+SELECT array_agg(id ORDER BY id) FROM t;
+SELECT sum(id) OVER (ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM t;
+SELECT id COLLATE "C" FROM t;

@@ -2,8 +2,8 @@
   "status": "REVIEWED_ISOLATED_EIGHT_COHORTS",
   "baseline_actual_compiler": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
   "baseline_equivalent_main": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
-  "candidate_actual_compiler": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
-  "candidate_current_source": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "candidate_actual_compiler": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "candidate_current_source": "4a322424894b3d5f965d2e04fad808baa13da392",
   "rounds": [
     {
       "id": 0,
@@ -143,7 +143,7 @@
         "sha256": "b4d29544c5a54654be191dc19881d626b78b0405358f021f0470f0e1f48f9c25"
       }
     },
-    "reason": "New cfg-only ValueFlowFacts counter changes instrumented candidate representation. Prior24outputs are historical.",
+    "reason": "Prior actual24 values carried with exact six-type source proof; cfg(test)-only collector field excluded in both original metadata modes; root reviewed. No numeric remeasurement or producer relabel.",
     "proof": {
       "path": "/tmp/nm2022-current-layouts/actual-complete24-layouts.json",
       "sha256": "f5f8cc2b69f7e62f3c6db2c95d0a76d21b10e9118f403ceb7e29109ed40e1a8f"
@@ -151,11 +151,22 @@
     "root_review": {
       "path": "/tmp/nm2022-current-layouts/root-independent-layout-readback.json",
       "sha256": "f6f748c548f6817c2af919dca4b9507274c388625298891ad842bb96099cf9df"
+    },
+    "source_carry": {
+      "proof": {
+        "path": "/tmp/nm2022-final-cost-layout-carry/type-source-carry.json",
+        "sha256": "72780b9bf56b635717ea9e90c123724a0cf41a2f28bc7dcd45df7b069c8e2e1d"
+      },
+      "root_review": {
+        "path": "/tmp/nm2022-final-cost-layout-carry/root-type-source-review.json",
+        "sha256": "1f01469ab17702b7344d77ffbd32ebbca864e3382f93cdd3aa8d2c2993135cb3"
+      },
+      "note": "All original24 actual records retain4e producer labels; six types identical with cfg(test)=false in both original modes. No numeric remeasurement."
     }
   },
   "execution_approval": {
-    "scope": "Normal diagnostic publication only; root exactpublishedSHA review required before dispatch",
-    "root_review_sha256": "4ae8dc4f25a3058d0b0b544767978ed4286acb68c4035b4a80332f59f5a56b3b"
+    "root_review_sha256": "3b0c66ec1569ecdbc833127bae30e96d3c211144a4d9c2ee200d87bef4bba11b",
+    "scope": "Exact reviewed isolated current source; normal publication then root sole dispatch"
   },
   "transport_source": "32e9f76ed570ddbafba132a0201e9ecd9d13bee0",
   "cross_runner_pooling": false,
@@ -178,20 +189,20 @@
   "baseline_overlay_proof_sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4",
   "baseline_provenance_note": "Authentic099+sealed lifetime overlay; original native manifest83dedf unchanged. Whole281treeequals2ee8;2751defaultinputcarry independently proven. No clean099 relabel.",
   "pending_before_activation": [],
-  "candidate_successful_ci_run": 38966513625,
+  "candidate_successful_ci_run": 38994120381,
   "historical_proper_LTO_helpers": {
     "baseline": "/tmp/nm2022-matched-LTO-probes/baseline/PASS.json",
     "candidate": "/tmp/nm2022-matched-LTO-probes/candidate/PASS.json"
   },
   "proper_LTO_helpers": {
-    "status": "PASS actual baseline and candidate closed helpers",
+    "status": "PASS actual new candidate helpers; original baseline unchanged",
     "baseline_actual_manifest": {
       "path": "/tmp/nm-main281-shared-baseline/actual.json",
       "sha256": "26d9753acb058587caaa5ddc43b10d30e9c989bd7a7176a37b0fc114b68fbaff"
     },
     "candidate": {
-      "path": "/tmp/nm2022-combined-release-source-draft/candidate/composite-native-closure.json",
-      "sha256": "eaaf2dc005ab6524380fd1b917ddcb37a2de2951a1db66cc6543d53ac44ba75e"
+      "path": "/tmp/nm2022-final-cost-helper-links/receipt.json",
+      "sha256": "b55a8002019da785fd256373450ca21d18a8a270e63d227f33683ab4d03f1552"
     }
   },
   "historical_metadata_ineligible_for_current_activation": {
@@ -268,32 +279,32 @@
     "sha256": "498d1354216cafdaa3f26b09caa62558720dd9ae49859a3d74ff957694c2cc53"
   },
   "root_review": {
-    "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/activation-root-review.json",
-    "sha256": "4ae8dc4f25a3058d0b0b544767978ed4286acb68c4035b4a80332f59f5a56b3b"
+    "path": "root-source-review.json",
+    "sha256": "3b0c66ec1569ecdbc833127bae30e96d3c211144a4d9c2ee200d87bef4bba11b"
   },
   "artifact_input_freeze": {
-    "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/immutable-input-freeze.json",
-    "sha256": "f639a93ba9758035f919c9201bac5fd7be7fa8c17c154cc8d687870dd2aada8c"
+    "path": "current-input-freeze.json",
+    "sha256": "6602cad2f89f9be93d7c99a542fa36cb07de89563cf1b9a8f81720bad25e032a"
   },
   "full_semantic_preflight": {
-    "path": "/tmp/nm2022-main281-current-pair-functional/actual-public-input-lookup-closure.json",
-    "sha256": "fa1abbc6f50c31ae804235ee20f6ba5fd22d2854b0badb6d2a18d762a20490cb"
+    "path": "/tmp/nm2022-final-cost-functional/actual-functional-result.json",
+    "sha256": "d0037799dc906d8b9f9cb0bf510c4acf6a919ca1f67d966b1a3df90e1143c9ba"
   },
   "artifact_input_inventory": {
-    "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/payload-index.json",
-    "sha256": "2b45db2ec2437a7e0979b94c64db04014b3dedf0a506e7aae23942aa6b681bf0"
+    "path": "payload-index.json",
+    "sha256": "b4ee5ede37b7be43dc601f7e4b00b25416c40b06bc8e0381db6565dcdb409d9f"
   },
   "current_head_ci": {
-    "path": "/tmp/nm2022-4e-cli-closed-ci-phase/exact-head-global98-receipt.json",
-    "sha256": "2560ab28caa7442e2ad73a6bd7606e3b95a32dd5f6e4f12df9cd3baeaa8ce672"
+    "path": "/tmp/nm2022-4a-completed-ci/exact-head-ci-receipt.json",
+    "status": "PASS actual4a TestCI/global98/fourCodecov; binary producer remains e193 with cfg-only public carry"
   },
   "preflight_output_root": "/tmp/nm2022-main281-current-pair-functional/current-pair-semantics",
   "machine_identity": {
     "scope": "Each isolated VM records actual CPU/memory/cgroup/affinity before sampling; no host machine identity or cross-runner pooling claim."
   },
   "completed_api": {
-    "path": "/tmp/nm2022-main281-current-pair-functional/actual-api-stage-result.json",
-    "sha256": "f77af1adfbdb4afb6c79a59622a90377c9eb29de968c69b20b3ddca7e4301eb1"
+    "path": "/tmp/nm2022-final-cost-functional/functional-api/PASS.json",
+    "sha256": "08b8d6cf13d84932006fbbc9edde90b0e6b821544e4ae3bd48ea1f0b4c623c48"
   },
   "baseline_compiled_equivalent_main": "281673146341e6915c051aedfde6fd05ae6dd055",
   "baseline_main_version_carry": {
@@ -373,5 +384,46 @@
     "source_tree_old": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
     "source_tree_new": "7d76899b483fc2eeb4b5ac6467e455cb05f9053d",
     "at_utc": "2026-10-17T01:06:48.496112+00:00"
+  },
+  "previous_round_result": {
+    "run": 38989735904,
+    "diagnostic_head": "3c0009aa258dc1dba5ef1dd7e0d762850ca9fc0e",
+    "status": "INELIGIBLE",
+    "actual_rows": 672,
+    "required_rows": 704,
+    "withheld_long_rows": 32,
+    "cause": "frozen effects-plain-hot-off pilot spread; no retry or policy change",
+    "preserved_evidence": "/tmp/nm2022-run38989735904-evidence"
+  },
+  "api_controls_complete": true,
+  "new_native_closure": {
+    "path": "/tmp/nm2022-final-cost-native-source-draft/actual-owner-terminal.json",
+    "sha256": "79d933e97b420067675cb02e264cf5786c1f7179192a2d705827872ec188df6c"
+  },
+  "new_functional_closure": {
+    "path": "/tmp/nm2022-final-cost-functional/actual-functional-result.json",
+    "sha256": "d0037799dc906d8b9f9cb0bf510c4acf6a919ca1f67d966b1a3df90e1143c9ba"
+  },
+  "historical_previous_frozen_bindings": {
+    "root_review": {
+      "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/activation-root-review.json",
+      "sha256": "4ae8dc4f25a3058d0b0b544767978ed4286acb68c4035b4a80332f59f5a56b3b"
+    },
+    "artifact_input_freeze": {
+      "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/immutable-input-freeze.json",
+      "sha256": "f639a93ba9758035f919c9201bac5fd7be7fa8c17c154cc8d687870dd2aada8c"
+    },
+    "artifact_input_inventory": {
+      "path": "/tmp/nm2022-eight-capacity-protocol-draft/package/.github/scripts/repeated-target-2022-isolated/payload-index.json",
+      "sha256": "2b45db2ec2437a7e0979b94c64db04014b3dedf0a506e7aae23942aa6b681bf0"
+    },
+    "full_semantic_preflight": {
+      "path": "/tmp/nm2022-main281-current-pair-functional/actual-public-input-lookup-closure.json",
+      "sha256": "fa1abbc6f50c31ae804235ee20f6ba5fd22d2854b0badb6d2a18d762a20490cb"
+    },
+    "completed_api": {
+      "path": "/tmp/nm2022-main281-current-pair-functional/actual-api-stage-result.json",
+      "sha256": "f77af1adfbdb4afb6c79a59622a90377c9eb29de968c69b20b3ddca7e4301eb1"
+    }
   }
 }

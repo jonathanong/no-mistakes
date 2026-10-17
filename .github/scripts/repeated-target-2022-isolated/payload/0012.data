@@ -1,43 +1,209 @@
-from pathlib import Path
-import datetime, hashlib, json, os, subprocess, time
-from process_owner import OwnedProcess
-D=Path(__file__).parent
-B=Path('/tmp/nm2022-combined-release-source-draft/candidate')
-R=Path('/tmp/no-mistakes-2022-assignment-target-opt')
-sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
-request=json.loads((D/'request.json').read_text())
-assert request['status']=='REVIEWED UNTIMED CLOSED NATIVE ONLY'
-api_pin=request['completed_api_receipt'];assert sha(api_pin['path'])==api_pin['sha256'];api=json.loads(Path(api_pin['path']).read_text());assert api['actual_child_exit']==0 and api['shim']==43 and api['native']==48 and api['source_after_exact'] and api['all_owners_reaped']
-completion_pin=request['build_completion'];assert sha(completion_pin['path'])==completion_pin['sha256']
-completion=json.loads(Path(completion_pin['path']).read_text());assert completion['status']=='PASS explicit composite native/helper closure; original whole-run FAIL retained'
-assert all(completion[k] for k in ['all_source_exact','target_absent','no_analyzer_rebuild'])
-for key,session,code in [('original_owner_terminal',78126,1),('continuation_owner_terminal',66569,0)]:
- row=completion[key];assert sha(row['path'])==row['sha256'];actual=json.loads(Path(row['path']).read_text());assert actual['actual_session']==session and actual['actual_tool_terminal_exit']==code
-row=completion['continuation_receipt'];assert sha(row['path'])==row['sha256'];assert json.loads(Path(row['path']).read_text())['status'].startswith('PASS only missing original timing helper')
-assert json.loads((B/'cleanup.json').read_text())=={'target_absent':True,'source_after_exact':True}
-assert not (D/'actual-result.json').exists()
-deadline=time.monotonic()+900;owners=[];ledger=[];result={'status':'RUNNING'}
-def verify():
- for path,digest in request['pins'].items():assert sha(path)==digest,path
- for row in json.loads((D/'consumed-source-inputs.json').read_text())['files']:
-  path=Path(row['path']);assert path.stat().st_size==row['bytes'] and sha(path)==row['sha256'],str(path)
- assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()==request['candidate']
- assert not subprocess.check_output(['git','status','--porcelain'],cwd=R).strip()
- for path,digest in json.loads(Path(request['source_inventory']).read_text()).items():assert sha(R/path)==digest,path
- provenance=json.loads((B/'closed-artifacts.json').read_text());assert provenance['head']==request['candidate']
- for name,row in provenance['artifacts'].items():assert sha(B/({'addon':'addon.node','rlib':'library.rlib'}.get(name,name)))==row['sha256']
-try:
- verify()
- for label,script in [('full182','collect-current-pair-semantics.py')]:
-  row={'label':label,'argv':['python3',str(D/script)],'started_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()};ledger.append(row)
-  with (D/(label+'.stdout')).open('wb') as out,(D/(label+'.stderr')).open('wb') as err:
-   p=subprocess.Popen(row['argv'],cwd=R,env={**os.environ,'RAYON_NUM_THREADS':'4'},stdout=out,stderr=err,start_new_session=True);owner=OwnedProcess(p);owners.append(owner)
-   try:row['actual_exit']=p.wait(timeout=max(.1,deadline-time.monotonic()));assert row['actual_exit']==0
-   finally:row['cleanup']=owner.finish();assert not owner.members()
-  row['ended_utc']=datetime.datetime.now(datetime.timezone.utc).isoformat();verify()
- manifest=json.loads((D/'current-pair-semantics/semantic-manifest.json').read_text());assert manifest['status']=='complete' and len(manifest['raw_files'])==182
- result.update(status='PASS actual full182/27 functional groups plus separately completed43shim/48real API proof; no performance claim',raw_files=182)
-except BaseException as error:result.update(status='FAIL preserved actual outcome',error=repr(error));raise
-finally:
- for owner in owners:owner.finish();assert not owner.members()
- verify();result.update(source_after_exact=True,commands=ledger,ended_utc=datetime.datetime.now(datetime.timezone.utc).isoformat());(D/'actual-result.json').write_text(json.dumps(result,indent=2)+'\n')
+{
+  "status": "SOURCE CARRY PROOF ONLY; prior actual24 layouts retain original producer labels",
+  "old_layout_actual_candidate": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "new_native_candidate": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "public_cfg_only_carry": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "six_type_files": [
+    {
+      "type": "ImportCollector",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_collector.rs",
+      "old_sha256": "83d0f2672c32f2d9e82dedfe8fb0370d0355f12557920f794eb51f790b3d1c94",
+      "new_sha256": "14b6697d4a6eb8f38bd56257c3d930bfbcf5855fee1aa2a8dc489eb654b1f028",
+      "whole_file_exact": false,
+      "only_new_field_if_any": "statement_mode under cfg(all(test, feature=test-instrumentation)); excluded when test=false"
+    },
+    {
+      "type": "ValueFlowFacts",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/value_flow_facts.rs",
+      "old_sha256": "92f1aa51e8f66b1f1a024f0b099bc06992f4480f8b67943adb304af8a481dcb2",
+      "new_sha256": "92f1aa51e8f66b1f1a024f0b099bc06992f4480f8b67943adb304af8a481dcb2",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "ImportFacts",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_import_facts.rs",
+      "old_sha256": "649a8e2cd1f7cd2b4617260ee027471088adcf626888c8ec6b6a29a7b950cd3d",
+      "new_sha256": "649a8e2cd1f7cd2b4617260ee027471088adcf626888c8ec6b6a29a7b950cd3d",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "TsFileFacts",
+      "path": "crates/no-mistakes/src/codebase/ts_source/facts.rs",
+      "old_sha256": "b33a444964807285e3de3dffbc1ccb33464c25b90dfd55592151e744281ddbcf",
+      "new_sha256": "b33a444964807285e3de3dffbc1ccb33464c25b90dfd55592151e744281ddbcf",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "ValueCall",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/value_descriptors.rs",
+      "old_sha256": "e368e8fa970fe95278e22236da0ea45c8e776312ae40b35d7ded31544057040d",
+      "new_sha256": "e368e8fa970fe95278e22236da0ea45c8e776312ae40b35d7ded31544057040d",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "ResolvedCallSite",
+      "path": "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/types.rs",
+      "old_sha256": "3e10e289794a8107f44021cc7496bfe815b0f531a302a4ef92ad1f78aa731feb",
+      "new_sha256": "3e10e289794a8107f44021cc7496bfe815b0f531a302a4ef92ad1f78aa731feb",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    }
+  ],
+  "original_metadata_modes": [
+    {
+      "mode": "default",
+      "path": "/tmp/nm2022-4e-layout-source-draft/candidate-default-request/request-DRAFT.json",
+      "sha256": "b572db562a5857ef449549200fbf74f2563361bb8993a2977383b2eea0b0eb8a",
+      "cfg_test_false": true,
+      "instrumentation_enabled": false
+    },
+    {
+      "mode": "instrumented",
+      "path": "/tmp/nm2022-4e-layout-source-draft/candidate-instrumented-request/request-DRAFT.json",
+      "sha256": "0951579b2099c387f6ac072bf8cf824a78841a31324612cd423d20388c51d036",
+      "cfg_test_false": true,
+      "instrumentation_enabled": true
+    }
+  ],
+  "prior_actual24": {
+    "path": "/tmp/nm2022-current-layouts/actual-complete24-layouts.json",
+    "sha256": "f5f8cc2b69f7e62f3c6db2c95d0a76d21b10e9118f403ceb7e29109ed40e1a8f"
+  },
+  "unchanged_numerical_values": {
+    "candidate-default": [
+      {
+        "type": "ImportCollector",
+        "size": 2672,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 248,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1048,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 1936,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ],
+    "baseline-default": [
+      {
+        "type": "ImportCollector",
+        "size": 2592,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 232,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1032,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 1920,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ],
+    "candidate-instrumented": [
+      {
+        "type": "ImportCollector",
+        "size": 2976,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 520,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1320,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 2208,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ],
+    "baseline-instrumented": [
+      {
+        "type": "ImportCollector",
+        "size": 2840,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 448,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1248,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 2136,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ]
+  },
+  "transitive_field_type_argument": "Five full declaring files are exact. ImportCollector differs only excluded cfg(test) field. All remaining new production changes are function bodies/local borrows. Added ReplacementProbeSnapshot counters are not fields or transitive field types of these six (fact/AST paths do not refer to Snapshot or ParameterCache). Original ValueFlowFacts/ValueCall/ResolvedCallTarget and fact definitions remain exact.",
+  "compiler_profile": "Same rustc1.99.1; both original layout metadata modes and newrelease have cfg(test)=false; no numeric remeasurement or relabeling claimed",
+  "frozen_gate": "All24 required records retained. Activation requires root accepting exact type-source carry, not dropping any record."
+}

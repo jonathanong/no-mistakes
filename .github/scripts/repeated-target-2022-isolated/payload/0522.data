@@ -1,6 +1,7 @@
 import { read } from '@example/db'
-import { buildImportedRead } from './imported-builder'
 
-export function namedMemberRead() {
-  return read(buildImportedRead.value)
+export function run(sql: string) {
+  return read(sql)
 }
+
+run('/* generic/local */ SELECT id FROM posts')

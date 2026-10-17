@@ -1,9 +1,10 @@
 import { query } from "@example/db";
+import { sql } from "untrusted-tag-library";
 
-function build(sql: (strings: TemplateStringsArray, ...values: unknown[]) => string, id: number) {
+function build(id: number) {
   return sql`SELECT * FROM topics WHERE id = ${id}`;
 }
 
-export function load() {
-  return query(build((strings) => strings.join(""), 1));
+export function run() {
+  return query(build(1));
 }

@@ -1,6 +1,16 @@
 import { query } from "@example/db";
 
-const sql = "SELECT id FROM topics".append(" WHERE id = 1").append(" AND active");
+function build() {
+  return "SELECT id FROM topics";
+}
+
+function externalBuilder() {
+  return "UNTRUSTED";
+}
+
+[build = externalBuilder] = [];
+
+const sql = build();
 
 export function load() {
   return query(sql);

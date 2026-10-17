@@ -1,7 +1,7 @@
 import { read } from '@example/db'
 import { query } from './eager-builder'
-require('./missing-mutator')
 
-export function readAfterUnknownRequire() {
+export async function list() {
+  await import('./eager-mutator')
   return read(query)
 }

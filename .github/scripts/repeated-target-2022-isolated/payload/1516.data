@@ -8,7 +8,8 @@ function externalBuilder() {
   return "UNTRUSTED";
 }
 
-build = externalBuilder;
+const providers = [externalBuilder];
+[build] = providers;
 
 const sql = build();
 

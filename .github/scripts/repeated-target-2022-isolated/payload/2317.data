@@ -1,7 +1,16 @@
-export namespace Local {
-  class Executor<T> {}
-  export async function run(query: Executor<string>) { for (const value of ['sql']) await (query as unknown as (sql: string) => Promise<unknown>)('local'); }
+import { nodeReceiver, rhs } from '@vendor/producer';
+import { objectReceiver } from './repository-object.mts';
+function replacement(key: string) { return key; }
+for (const item of ['a', 'b']) {
+  nodeReceiver.get(item);
+  nodeReceiver.get = replacement;
 }
-// Type imports are file bindings even when written after the annotation.
-export async function imported(query: Executor<string>) { for (const value of ['sql']) await query('imported'); } // selected
-import type { Executor } from './executor.mts';
+// These identical canonical Call edges are separate physical occurrences.
+replacement('one'); replacement('two');
+const savedObject = objectReceiver.get;
+for (const item of ['a', 'b']) {
+  objectReceiver.get(item);
+  objectReceiver.get = replacement;
+  objectReceiver.set(item, 'value');
+  savedObject(item);
+}

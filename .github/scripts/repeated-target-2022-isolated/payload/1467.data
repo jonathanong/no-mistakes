@@ -1,8 +1,8 @@
-import { query } from "@example/db";
+import sql from "sql-template-strings";
+import { write } from "@example/db";
 
-const sql = `SELECT id FROM topics WHERE id = ${id}`;
-sql.append(" AND true");
-
-export function load() {
-  return query(sql);
+export async function updateTopic(id: string, title: string) {
+  const query = sql`UPDATE topics SET title = ${title} WHERE id = ${id}`;
+  query.append(sql` AND published = true`);
+  return write(query);
 }

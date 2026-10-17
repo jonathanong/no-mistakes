@@ -1,68 +1,53 @@
-"use strict";
-
-const fs = require("node:fs/promises");
-
-function camelizeKey(key) {
-  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+export interface ExecutedPostgresSource {
+  fileName: string;
+  source: string;
 }
 
-function decamelizeKey(key) {
-  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+export interface ExecutedPostgresTrustedSqlTag {
+  module: string;
+  name: string;
 }
 
-function mapKeys(value, mapKey) {
-  if (Array.isArray(value)) return value.map((item) => mapKeys(item, mapKey));
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, nested]) => [mapKey(key), mapKeys(nested, mapKey)]),
-    );
-  }
-  return value;
+export interface ExecutedPostgresResolvedImport {
+  fromFileName: string;
+  specifier: string;
+  toFileName: string;
 }
 
-function camelizeValue(value) {
-  return mapKeys(value, camelizeKey);
+export interface ExecutedPostgresSqlOptions {
+  sources: ExecutedPostgresSource[];
+  /** Module whose named imports provide the configured executors. */
+  importSpecifier: string;
+  /** Defaults to query, read, write when importSpecifier is nonempty. */
+  executorNames?: string[];
+  executorFactoryNames?: string[];
+  executorTypeNames?: string[];
+  trustedSqlTags?: ExecutedPostgresTrustedSqlTag[];
+  /** Opt in to import-aware SQL value/effect projection among supplied sources. */
+  resolveImports?: boolean;
+  /** Explicit edges for aliases or package imports; relative supplied paths resolve automatically. */
+  resolvedImports?: ExecutedPostgresResolvedImport[];
 }
 
-function decamelizeValue(value) {
-  return mapKeys(value, decamelizeKey);
+export type ExecutedPostgresSqlKind = "inline" | "immutableLocal" | "composed" | "dynamic";
+
+export interface ExecutedPostgresSql {
+  fileName: string;
+  /** One-based line of the executor call. */
+  line: number;
+  annotation: string | null;
+  /** Interpolations are represented by sql_placeholder_N markers. */
+  sqlText: string | null;
+  /** False when full SQL could not be proven, including generated binds. */
+  complete: boolean;
+  /** True only when all incompleteness is from generated value binds. Parse before classifying reads. */
+  onlyValuePlaceholders: boolean;
+  kind: ExecutedPostgresSqlKind;
+  /** Evaluator blocker; null for complete SQL or proven generated value binds. */
+  incompleteReason: string | null;
 }
 
-function loadPlanJson(planJson) {
-  let parsed = planJson;
-  if (typeof parsed === "string") {
-    try {
-      parsed = JSON.parse(parsed);
-    } catch {
-      return planJson;
-    }
-  }
-  if (parsed && typeof parsed === "object") {
-    return decamelizeValue(parsed);
-  }
-  return planJson;
-}
-
-async function readPlanFile(planPath) {
-  try {
-    return JSON.parse(await fs.readFile(planPath, "utf8"));
-  } catch {
-    return undefined;
-  }
-}
-
-async function decamelizePlanOptions(options = {}) {
-  const next = { ...options };
-  if (next.planJson != null) {
-    next.planJson = loadPlanJson(next.planJson);
-  } else if (typeof next.plan === "string") {
-    const document = await readPlanFile(next.plan);
-    if (document !== undefined) {
-      next.planJson = loadPlanJson(document);
-      delete next.plan;
-    }
-  }
-  return next;
-}
-
-module.exports = { camelizeValue, decamelizePlanOptions, loadPlanJson, readPlanFile };
+/** Extract configured PostgreSQL executor calls from supplied TS/JS source. */
+export function extractExecutedPostgresSql(
+  options: ExecutedPostgresSqlOptions,
+): Promise<ExecutedPostgresSql[]>;

@@ -1,7 +1,1 @@
-name: Initial
-on: push
-jobs:
-  initial:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo initial
+export const dynamic = true;

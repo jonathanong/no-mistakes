@@ -1,48 +1,63 @@
-import { fixtureTemplate } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
-import { fixtureSource } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
-import { describe, expect, it } from "vitest";
-import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-child.mjs";
-describe.skipIf(process.platform !== "linux")(
-  "public collector and data factory SDK contracts",
-  () => {
-    it.each(["beforeAll", "afterAll"])(
-      fixtureTemplate("review-public-surfaces.test-template-4.txt"),
-      async (hook) => {
-        const result = await fixture(
-          fixtureTemplate("review-public-surfaces.test-template-3.txt", [hook]),
-        );
-        expect(result.code, result.output).toBe(1);
-        expect(result.output).toContain("hook timeout must be positive, finite");
-        expect(result.marker).toBeUndefined();
-        expect(result.forcedCleanup).toBe(false);
-      },
+import { describe, expect, it, vi } from "vitest";
+import { contextExtensionRunner } from "../../../fixtures/test-timeout-policy/context-added-hooks/runner.mjs";
+import { protectRunnerTimeouts } from "./index.mjs";
+
+describe("completion hooks added by custom context extensions", () => {
+  it.each(["onTestFinished", "onTestFailed"])(
+    "guards a newly added %s on the original context",
+    (name) => {
+      const original = vi.fn();
+      const runner = contextExtensionRunner({ [name]: original });
+      protectRunnerTimeouts(runner, 25);
+      const context = { task: { timeout: 25 } };
+      expect(runner.extendTaskContext(context)).toBe(context);
+      expect(() => context[name](() => {}, 26)).toThrow(RangeError);
+      expect(() => context[name](() => {}, 0)).toThrow(RangeError);
+      expect(original).not.toHaveBeenCalled();
+      const callback = () => {};
+      context[name](callback, 25);
+      expect(original).toHaveBeenCalledWith(callback, 25);
+    },
+  );
+
+  it("rescans late second hooks while preserving installed methods and native restoration identity", () => {
+    const hooks = { onTestFinished: vi.fn() };
+    const runner = contextExtensionRunner(hooks);
+    protectRunnerTimeouts(runner, 25);
+    const context = { task: { timeout: 25 } };
+    runner.extendTaskContext(context);
+    const saved = context.onTestFinished;
+    runner.extendTaskContext(context);
+    expect(context.onTestFinished).toBe(saved);
+    const temporary = vi.fn();
+    context.onTestFinished = temporary;
+    expect(() => context.onTestFinished(() => {}, 26)).toThrow(RangeError);
+    expect(temporary).not.toHaveBeenCalled();
+    context.onTestFinished = saved;
+    expect(context.onTestFinished).toBe(saved);
+    hooks.onTestFailed = vi.fn();
+    runner.extendTaskContext(context);
+    expect(context.onTestFinished).toBe(saved);
+    expect(() => context.onTestFailed(() => {}, Infinity)).toThrow(RangeError);
+    expect(hooks.onTestFailed).not.toHaveBeenCalled();
+    expect(() => {
+      context.onTestFailed = null;
+    }).toThrow(TypeError);
+    expect(Reflect.deleteProperty(context, "onTestFailed")).toBe(false);
+    context.onTestFailed(() => {}, 25);
+    expect(hooks.onTestFailed).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a different maximum even when the first extension installs no methods", () => {
+    const first = contextExtensionRunner({});
+    const second = contextExtensionRunner({ onTestFailed: vi.fn() }, 20);
+    protectRunnerTimeouts(first, 25);
+    protectRunnerTimeouts(second, 20);
+    const context = { task: { timeout: 20 } };
+    first.extendTaskContext(context);
+    expect(() => second.extendTaskContext(context)).toThrow(
+      "Context timeout policy maximum cannot change",
     );
-    it.each(["describe.each", "suite.for"])(
-      "retains hook-shaped callable table rows through %s",
-      async (registration) => {
-        const result = await fixture(
-          fixtureTemplate("review-public-surfaces.test-template-2.txt", [registration]),
-        );
-        expect(result.code, result.output).toBe(0);
-        expect(result.marker).toBe("continued");
-        expect(result.forcedCleanup).toBe(false);
-      },
-    );
-    it("preserves private static APIs on actual public SDK runner subclasses", async () => {
-      const result = await fixture(
-        fixtureSource("review-public-surfaces.test-18.txt"),
-        undefined,
-        fixtureTemplate("review-public-surfaces.test-template-1.txt"),
-      );
-      expect(result.code, result.output).toBe(0);
-      expect(result.marker).toBe("continued");
-      expect(result.forcedCleanup).toBe(false);
-    });
-    it("retains valid returned-test hooks and rejects overcap test registration", async () => {
-      const result = await fixture(fixtureSource("review-public-surfaces.test-19.txt"));
-      expect(result.code, result.output).toBe(0);
-      expect(result.marker).toBe("continued");
-      expect(result.forcedCleanup).toBe(false);
-    });
-  },
-);
+    expect(context.onTestFailed).toBeUndefined();
+  });
+});

@@ -1,1 +1,1 @@
-DO $$ <<foo>> BEGIN RAISE NOTICE 'x'; END "foo"; $$;
+SELECT 8 >>--gap'unterminated

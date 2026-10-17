@@ -1,10 +1,12 @@
 import { query, sql } from "@example/db";
-const q = sql`SELECT id FROM users`;
-if (flag) q.append(" LIMIT 1");
-query(q);
-let text = "SELECT id FROM users";
-if (flag) text += " LIMIT 2"; else text += " LIMIT 3";
-query(text);
-let optional = "SELECT id FROM users";
-flag && (optional += " LIMIT 4");
-query(optional);
+query(sql`SELECT ${flag ? false : sql`1`}`); // A scalar Boolean arm is a bind, not absence.
+query(sql`SELECT ${flag ? true : sql`2`}`);
+query(sql`SELECT ${flag ? null : sql`3`}`);
+query(sql`SELECT 4 ${null && sql`LIMIT 1`}`);
+query(sql`SELECT 5 ${"" && sql`LIMIT 1`}`);
+query(sql`SELECT 6 ${false && sql`LIMIT 1`}`);
+query(sql`SELECT 7 ${(flag ? "" : sql`ignored`) && sql`LIMIT 1`}`);
+query(flag ? false : "SELECT 8");
+query(true);
+query(false);
+query((flag ? false : null) ?? "SELECT 9");

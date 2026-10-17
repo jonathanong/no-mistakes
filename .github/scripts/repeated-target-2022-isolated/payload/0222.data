@@ -1,13 +1,11 @@
 import { query } from "@example/db";
 
-function sql() {
-  return "DELETE FROM users";
+function cyclic() {
+  return cyclic();
 }
 
-function build() {
-  return sql`SELECT 1`;
-}
+const sql = cyclic();
 
 export function load() {
-  return query(build());
+  return query(sql);
 }

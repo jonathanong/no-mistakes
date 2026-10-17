@@ -1,7 +1,6 @@
 import { read } from '@example/db'
+import { afterComputedGate } from './effect-boundary-nested-await'
 
-export const api = {
-  run: (sql: string) => read(sql),
+export async function readAfterComputedGate() {
+  return read(await afterComputedGate())
 }
-
-api.run('/* exported/inline */ SELECT 1')

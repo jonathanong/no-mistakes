@@ -1,5 +1,3 @@
-export { leaf } from "./leaf";
+import { defineConfig } from "@playwright/test";
 
-export async function loadC() {
-  return import("./c-dynamic-target");
-}
+export default defineConfig({ testDir: "./tests" });

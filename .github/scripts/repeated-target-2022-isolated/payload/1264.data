@@ -1,7 +1,9 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
+function opaque(strings, value) { value.box = { client }; }
 const holder = { box: { client } };
-holder.box.client = { klass: class { [opaque()]() {} } };
+holder.box.client = {};
+opaque`${holder}`;
 holder.box.client.get = replacement;
-function globalComputedCall(value) { value.get('key'); }
-globalComputedCall(client);
+function globalAfterCaptureTagged(value) { value.get('key'); }
+globalAfterCaptureTagged(client);

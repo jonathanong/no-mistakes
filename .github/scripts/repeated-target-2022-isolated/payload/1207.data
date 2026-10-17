@@ -1,2 +1,9 @@
-import type { Public as Imported } from './named.mjs';
-export type { Imported as Local };
+effects:
+  database:
+    functions: [read]
+    transactionFunctions: [primary.transaction]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [database]

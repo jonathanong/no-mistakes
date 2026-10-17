@@ -1,49 +1,86 @@
-"use strict";
+export type FetchSourceType =
+  | "page"
+  | "layout"
+  | "loading"
+  | "error"
+  | "template"
+  | "route"
+  | "module";
 
-const RESTORATION_FAILURE = Symbol("planning artifact output restoration failure");
+export type CacheKind =
+  | "none"
+  | "fetch-cache"
+  | "fetch-next-revalidate"
+  | "fetch-next-tags"
+  | "react-cache"
+  | "cache"
+  | "unstable-cache";
 
-function outputRestorationFailure(restoreError, parked, outputPath, updateError, restored = false) {
-  const recoveryPath = restored ? outputPath : parked;
-  const error = new AggregateError(
-    updateError ? [restoreError, updateError] : [restoreError],
-    restored
-      ? `planning artifact output directory failed validation after restoration at ${recoveryPath}`
-      : `planning artifact output restoration failed; recover the parked directory at ${recoveryPath}`,
-    { cause: restoreError },
-  );
-  error.code = restoreError.code;
-  error[RESTORATION_FAILURE] = true;
-  return error;
+export interface FetchOccurrence {
+  path: string;
+  rawPath: string;
+  method: string;
+  file: string;
+  line: number;
+  side: "server" | "client";
+  rsc: boolean;
+  cached: boolean;
+  cacheKind: CacheKind;
+  cachedFunction?: string;
+  dynamic: boolean;
+  unsupported: boolean;
+  functionName?: string;
+  conditional: boolean;
+  inPromiseAll: boolean;
+  errorHandled: boolean;
+  sourceType: FetchSourceType;
 }
 
-function isOutputRestorationFailure(error) {
-  return error?.[RESTORATION_FAILURE] === true;
+export interface FetchRouteReport {
+  route: string;
+  file: string;
+  apiCalls: FetchOccurrence[];
 }
 
-function preserveFailureReportingError(originalError, failureReportingError) {
-  if (
-    (typeof originalError === "object" && originalError !== null) ||
-    typeof originalError === "function"
-  ) {
-    try {
-      Object.defineProperty(originalError, "failureReportingError", {
-        configurable: true,
-        value: failureReportingError,
-      });
-      return originalError;
-    } catch {
-      // Fall through when a caller throws a frozen or otherwise non-extensible value.
-    }
-  }
-  return new AggregateError(
-    [originalError, failureReportingError],
-    `planning artifact generation failed and failure reporting could not restore the output directory: ${failureReportingError.message}`,
-    { cause: originalError },
-  );
+export interface FetchSummary {
+  totalRoutes: number;
+  routesWithApiCalls: number;
+  totalApiCalls: number;
+  uniqueApiCalls: number;
+  duplicateApiCalls: number;
+  dynamicApiCalls: number;
+  cachedApiCalls: number;
+  clientApiCalls: number;
+  serverApiCalls: number;
+  rscApiCalls: number;
+  conditionalApiCalls: number;
+  parallelApiCalls: number;
+  errorHandledApiCalls: number;
 }
 
-module.exports = {
-  isOutputRestorationFailure,
-  outputRestorationFailure,
-  preserveFailureReportingError,
-};
+export interface FetchReport {
+  summary: FetchSummary;
+  routes: FetchRouteReport[];
+  duplicates: DuplicateApiCall[];
+  unsupported: UnsupportedApiCall[];
+}
+
+export interface DuplicateApiCall {
+  key: string;
+  count: number;
+  occurrences: ApiCallOccurrence[];
+}
+
+export interface ApiCallOccurrence {
+  route: string;
+  file: string;
+  line: number;
+}
+
+export interface UnsupportedApiCall {
+  route: string;
+  file: string;
+  line: number;
+  reason: string;
+  rawPath: string;
+}

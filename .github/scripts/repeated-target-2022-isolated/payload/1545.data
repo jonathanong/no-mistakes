@@ -1,9 +1,15 @@
 import { query } from "@example/db";
 
-function build(sql: (strings: TemplateStringsArray, ...values: unknown[]) => string) {
-  return sql`SELECT 1`;
+function safe() {
+  return "TRUSTED SQL";
 }
 
+function wrap(safe: () => string) {
+  return safe();
+}
+
+const sql = wrap(() => "untrusted");
+
 export function load() {
-  return query(build((strings) => strings.join("") + "; DROP TABLE users"));
+  return query(sql);
 }

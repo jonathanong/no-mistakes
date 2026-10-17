@@ -1,138 +1,191 @@
-const assert = require("node:assert/strict");
-const test = globalThis.test || require("node:test").test;
-const { resolve } = require("node:path");
-const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-const root = resolve(
-  __dirname,
-  "../../../test-cases/codebase-analysis/conditional-workspace-imports/fixture",
-);
-const targets = [
-  "packages/app/internal/target.mts",
-  "packages/app/relative.mts",
-  "packages/lib/target-a.mts",
-  "packages/lib/target-b.mts",
-];
-const paths = (report) =>
-  report.files
-    .map((file) => (typeof file === "string" ? file : file.path).replaceAll("\\", "/"))
-    .sort();
-
-test(
-  "compiled CJS and ESM preserve conditional workspace imports across graph projections",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    for (const file of [
-      "conditional.mts",
-      "conditional.test.mts",
-      "sequential.mts",
-      "top-level.mts",
-    ]) {
-      for (const relationships of [
-        ["import"],
-        ["import-dynamic"],
-        ["import", "workspace"],
-        ["import-dynamic", "workspace"],
-      ]) {
-        const options = { root, files: [`packages/app/${file}`], relationships };
-        const promise = cjs.dependencies(options);
-        assert.ok(promise instanceof Promise);
-        const report = await promise;
-        assert.deepEqual(paths(report), targets);
-        const library = report.files.find(
-          (entry) => entry.path.replaceAll("\\", "/") === "packages/lib/target-a.mts",
-        );
-        assert.ok(
-          library.via.includes(
-            file === "top-level.mts" ? "dynamic-import" : "conditional-dynamic-import",
-          ),
-        );
-        assert.deepEqual(await esm.dependencies(options), report);
-      }
+import type { PostgresSqlTrigger } from "./postgres-trigger-types";
+export * from "./executed-postgres-sql-types";
+export type * from "./postgres-trigger-types";
+import type { PostgresSqlWrapper } from "./postgres-wrapper-types";
+export type * from "./postgres-wrapper-types";
+import type { PostgresSqlFunction } from "./postgres-function-types";
+import type { PostgresSqlComment, PostgresSqlAlterIndex } from "./postgres-metadata-types";
+export type * from "./postgres-metadata-types";
+export type * from "./postgres-function-types";
+import type { PostgresSqlInsert } from "./postgres-insert-types";
+export type * from "./postgres-insert-types";
+import type {
+  PostgresSqlExpressionChild,
+  PostgresSqlExpressionRoot,
+} from "./postgres-expression-types";
+export type * from "./postgres-expression-types";
+import type { PostgresSqlQuery } from "./postgres-query-types";
+export type * from "./postgres-query-types";
+import type { PostgresSqlDrop } from "./postgres-drop-types";
+export type * from "./postgres-drop-types";
+import type {
+  PostgresSqlConditionalBranch,
+  PostgresSqlProceduralBlock,
+  PostgresSqlLiteralExecute,
+} from "./postgres-procedural-types";
+export type * from "./postgres-procedural-types";
+/** Pure SQL source input. No repository, database, or filesystem options are needed. */
+export interface PostgresSqlSource {
+  sql: string;
+  fileName?: string | null;
+}
+/** UTF-8 byte offset, with one-based Unicode scalar line and column. */
+export interface PostgresSqlPosition {
+  offset: number;
+  line: number;
+  column: number;
+}
+/** End-exclusive source span. */
+export interface PostgresSqlSpan {
+  start: PostgresSqlPosition;
+  end: PostgresSqlPosition;
+}
+export interface PostgresSqlDiagnostic {
+  message: string;
+  span: PostgresSqlSpan | null;
+}
+export interface PostgresSqlIdentifier {
+  value: string;
+  quoted: boolean;
+  identity: string;
+}
+export interface PostgresSqlName {
+  parts: PostgresSqlIdentifier[];
+  sql: string;
+}
+export interface PostgresSqlFunctionReference {
+  name: PostgresSqlName;
+  span: PostgresSqlSpan | null;
+}
+export interface PostgresSqlExpression {
+  /** Rendered SQL. A present `span` covers these exact source bytes when they occur verbatim. */
+  sql: string;
+  identity: string;
+  /** End-exclusive span in this fact's source coordinates. */
+  span: PostgresSqlSpan | null;
+  columns: PostgresSqlName[];
+  functions: PostgresSqlFunctionReference[];
+  root: PostgresSqlExpressionRoot;
+  children: PostgresSqlExpressionChild[];
+  /** True only when the entire represented expression structure is complete, independently of spans. */
+  childrenComplete: boolean;
+}
+export interface PostgresSqlType {
+  sql: string;
+  name: PostgresSqlName | null;
+  builtin: string | null;
+  modifiers: string[];
+  arrayDimensions: (number | null)[];
+  fields: PostgresSqlColumn[];
+}
+export interface PostgresSqlGeneratedColumn {
+  expression: PostgresSqlExpression;
+  storage: string | null;
+}
+export interface PostgresSqlIdentityColumn {
+  mode: string;
+  options: string[];
+}
+export interface PostgresSqlColumn {
+  name: PostgresSqlIdentifier;
+  dataType: PostgresSqlType;
+  nullable: boolean;
+  default: PostgresSqlExpression | null;
+  generated: PostgresSqlGeneratedColumn | null;
+  identity: PostgresSqlIdentityColumn | null;
+  constraints: PostgresSqlConstraint[];
+  span: PostgresSqlSpan | null;
+}
+export type PostgresSqlConstraintKind = "primaryKey" | "unique" | "foreignKey" | "check" | "other";
+export interface PostgresSqlConstraint {
+  kind: PostgresSqlConstraintKind;
+  name: PostgresSqlIdentifier | null;
+  columns: PostgresSqlIdentifier[];
+  expression: PostgresSqlExpression | null;
+  referencedTable: PostgresSqlName | null;
+  referencedColumns: PostgresSqlIdentifier[];
+  onDelete: string | null;
+  onUpdate: string | null;
+  characteristics: string | null;
+  sql: string;
+  /** UTF-8 source range; null when no proven token boundary is available. */
+  span: PostgresSqlSpan | null;
+}
+export type PostgresSqlAlterOperation =
+  | { kind: "addColumn"; column: PostgresSqlColumn }
+  | {
+      kind: "alterColumnType";
+      column: PostgresSqlIdentifier;
+      dataType: PostgresSqlType;
+      using: PostgresSqlExpression | null;
     }
-    for (const api of [cjs, esm]) {
-      assert.deepEqual(
-        paths(
-          await api.dependencies({
-            root,
-            files: ["packages/app/static.mts"],
-            relationships: ["import", "workspace"],
-          }),
-        ),
-        targets,
-      );
-      const exactOptions = {
-        root,
-        files: ["packages/app/conditional.test.mts"],
-        relationships: ["import-dynamic", "workspace"],
-        tsconfig: "tsconfig.json",
-        depth: 10,
-        projection: "paths",
-      };
-      assert.deepEqual(paths(await api.dependencies(exactOptions)), targets);
-      const aggregate = await api.analyzeProject({
-        root,
-        tsconfig: "tsconfig.json",
-        reports: [
-          {
-            type: "dependencies",
-            files: exactOptions.files,
-            relationships: exactOptions.relationships,
-            depth: 10,
-            projection: "paths",
-          },
-        ],
-      });
-      assert.deepEqual(paths(aggregate.reports[0].result), targets);
-
-      for (const command of ["dependents", "related"]) {
-        const report = await api[command]({
-          root,
-          files: ["packages/lib/target-a.mts"],
-          relationships: ["import-dynamic"],
-        });
-        assert.deepEqual(paths(report), [
-          "packages/app/conditional.mts",
-          "packages/app/conditional.test.mts",
-          "packages/app/sequential.mts",
-          "packages/app/top-level.mts",
-        ]);
-      }
-      assert.deepEqual(
-        paths(
-          await api.dependencies({
-            root,
-            files: ["packages/app/type-only.mts"],
-            relationships: ["import-dynamic"],
-          }),
-        ),
-        [],
-      );
-      assert.deepEqual(
-        paths(
-          await api.dependencies({
-            root,
-            files: ["packages/app/type-only.mts"],
-            relationships: ["workspace"],
-          }),
-        ),
-        ["packages/lib/type-target.mts"],
-      );
-      const computed = await api.resolveCheck({ root, file: "packages/app/computed.mts" });
-      assert.equal(computed.allResolve, false);
-      assert.equal(computed.imports.length, 2);
-      assert.ok(computed.imports.every((entry) => entry.computed && entry.status === "unresolved"));
-      assert.deepEqual(
-        paths(
-          await api.dependencies({
-            root,
-            files: ["packages/app/computed.mts"],
-            relationships: ["import-dynamic", "workspace"],
-          }),
-        ),
-        [],
-      );
+  | { kind: "setDefault"; column: PostgresSqlIdentifier; expression: PostgresSqlExpression }
+  | { kind: "dropDefault" | "setNotNull" | "dropNotNull"; column: PostgresSqlIdentifier }
+  | { kind: "addConstraint"; constraint: PostgresSqlConstraint; notValid: boolean }
+  | { kind: "validateConstraint"; name: PostgresSqlIdentifier }
+  | { kind: "other"; sql: string };
+export interface PostgresSqlIndexKey {
+  expression: PostgresSqlExpression;
+  ascending: boolean;
+  nullsFirst: boolean;
+  operatorClass: PostgresSqlName | null;
+}
+export interface PostgresSqlIndex {
+  name: PostgresSqlName | null;
+  table: PostgresSqlName;
+  only: boolean;
+  method: string;
+  unique: boolean;
+  nullsDistinct: boolean;
+  keys: PostgresSqlIndexKey[];
+  include: PostgresSqlIdentifier[];
+  predicate: PostgresSqlExpression | null;
+  options: string[];
+  structuralIdentity: string;
+}
+export interface PostgresSqlView {
+  name: PostgresSqlName;
+  columns: PostgresSqlIdentifier[];
+  materialized: boolean;
+  temporary: boolean;
+  orReplace: boolean;
+  query: string;
+  dependencies: PostgresSqlName[];
+  dependenciesComplete: boolean;
+  functions: PostgresSqlFunctionReference[];
+}
+export type PostgresSqlStatementKind =
+  | { kind: "comment"; comment: PostgresSqlComment }
+  | { kind: "alterIndex"; index: PostgresSqlAlterIndex }
+  | { kind: "wrapper"; wrapper: PostgresSqlWrapper }
+  | { kind: "insert"; insert: PostgresSqlInsert }
+  | { kind: "select"; query: PostgresSqlQuery }
+  | {
+      kind: "createTable";
+      table: PostgresSqlName;
+      columns: PostgresSqlColumn[];
+      constraints: PostgresSqlConstraint[];
+      temporary: boolean;
     }
-  },
-);
+  | { kind: "alterTable"; table: PostgresSqlName; operations: PostgresSqlAlterOperation[] }
+  | { kind: "createIndex"; index: PostgresSqlIndex }
+  | { kind: "createView"; view: PostgresSqlView }
+  | { kind: "createTrigger"; trigger: PostgresSqlTrigger }
+  | { kind: "createFunction"; function: PostgresSqlFunction }
+  | { kind: "drop"; drop: PostgresSqlDrop }
+  | { kind: "literalExecute"; execute: PostgresSqlLiteralExecute }
+  | { kind: "doBlock"; block: PostgresSqlProceduralBlock }
+  | { kind: "conditional"; branches: PostgresSqlConditionalBranch[] }
+  | { kind: "other" };
+export type PostgresSqlStatement = PostgresSqlStatementKind & {
+  ordinal: number;
+  span: PostgresSqlSpan;
+  sql: string;
+};
+/** Versioned facts retain valid neighbors when a statement cannot be parsed. */
+export interface PostgresSqlFacts {
+  schemaVersion: 1;
+  fileName: string | null;
+  statements: PostgresSqlStatement[];
+  diagnostics: PostgresSqlDiagnostic[];
+}

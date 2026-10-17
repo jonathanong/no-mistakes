@@ -1,8 +1,10 @@
+import sql from 'sql-template-strings'
 import { read } from '@example/db'
+import { appendConcatenated, appendLiteral } from './effect-boundary-helper'
 
-function run(sql: string) {
-  return read(sql)
+export function readAfterKnownAppend() {
+  const query = sql`/* effects/known */ SELECT id FROM posts`
+  appendLiteral(query)
+  appendConcatenated(query)
+  return read(query)
 }
-
-export const callback = [run][0]
-run('/* exported/indexed */ SELECT id FROM posts')

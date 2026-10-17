@@ -1,1 +1,2 @@
-INSERT INTO items (id) VALUES (1);
+INSERT INTO users (email) VALUES ('a')
+ON CONFLICT (email) DO UPDATE SET email = 'b';

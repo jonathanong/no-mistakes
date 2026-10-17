@@ -1,6 +1,8 @@
-DO $body$
-BEGIN
-  EXECUTE $sql$INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO NOTHING RETURNING id;$sql$;
-  EXECUTE $sql$WITH added AS (INSERT INTO t(id) VALUES (2) ON CONFLICT (id) DO NOTHING RETURNING id) SELECT id FROM added;$sql$;
-END
-$body$;
+WITH changed AS (
+  INSERT INTO t(id) VALUES (1) RETURNING id + 1
+)
+SELECT * FROM changed;
+WITH changed AS (
+  INSERT INTO t(id) VALUES (1) RETURNING id BETWEEN 1 AND 2
+)
+SELECT * FROM changed;

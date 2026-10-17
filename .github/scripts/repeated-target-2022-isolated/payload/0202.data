@@ -1,19 +1,15 @@
 import { query } from "@example/db";
 
-function build() {
-  return "SELECT id FROM topics";
+function buildSql() {
+  return sql`SELECT * FROM topics WHERE id = ${1}` + sql` AND status = ${2}`;
 }
 
-function externalBuilder() {
-  return "UNTRUSTED";
-}
-
-for (const build of [externalBuilder]) {
-  break;
-}
-
-const sql = build();
+const text = buildSql();
 
 export function load() {
-  return query(sql);
+  return query(text);
+}
+
+function sql(strings: TemplateStringsArray, ..._values: unknown[]) {
+  return strings.join("");
 }

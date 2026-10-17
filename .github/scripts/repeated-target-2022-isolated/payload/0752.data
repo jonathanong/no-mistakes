@@ -1,2 +1,6 @@
--- Different schemas and table names must not collide during lexical recovery.
-CREATE VIEW app.candidates AS TABLE other.orders UNION ALL TABLE app.customers UNION ALL TABLE app.orders;
+SELECT id, payload
+FROM events
+WHERE tenant_id = $1
+  AND payload ->> 'fetch' = 'FETCH FIRST (ignored) ROWS ONLY'
+ORDER BY created_at DESC, id DESC
+LIMIT 50;

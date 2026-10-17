@@ -1,6 +1,5 @@
 import { primary } from '@vendor/valkey';
-import { factory } from './provider-sibling.mjs';
-// Sibling writes do not erase an earlier imported helper's get effect.
-primary.ping = function replacement() {};
+import { factory } from './provider-prior.mjs';
+function replacement() {}
+primary.get = replacement;
 factory()({ client: primary });
-primary.get = function replacement() {};

@@ -1,3 +1,5 @@
 import { primary } from '@vendor/valkey';
+declare function tick(): Promise<void>;
 function replacement() {}
-export default { value: ((client = primary) => { const get = client.get; primary.get = replacement; get(); })() };
+(async ({ client }) => { await tick(); client.get(); })({ client: primary });
+primary.get = replacement;

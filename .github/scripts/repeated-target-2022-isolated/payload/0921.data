@@ -1,19 +1,29 @@
-import type { Plugin } from "vitest/config";
-
-export interface NodeRunnerPolicy {
-  /** Absolute final custom runner module, or null for Vitest's native runner. */
-  runner: string | null;
+export interface ServerContractsReport {
+  routes: ServerRouteContract[];
+  clientRefs: ServerContractClientRef[];
+  mismatches: ServerContractMismatch[];
 }
 
-/** Route Node registration imports and protect the final native or custom runner. */
-export declare function testTimeoutPolicyPlugin(
-  maximum?: number,
-  registrationPackages?: readonly string[],
-  nodeRunner?: NodeRunnerPolicy,
-): Plugin;
+export interface ServerRouteContract {
+  file: string;
+  line: number;
+  method: string;
+  route: string;
+  queryParams: string[];
+}
 
-/** Route the native Vitest Browser Mode runner and registrar dependency closure. */
-export declare function browserTestTimeoutPolicyPlugin(
-  maximum?: number,
-  registrationPackages?: readonly string[],
-): Plugin;
+export interface ServerContractClientRef {
+  file: string;
+  line: number;
+  route: string;
+  queryParams: string[];
+  matchedRoute?: string | null;
+}
+
+export interface ServerContractMismatch {
+  file: string;
+  line: number;
+  route: string;
+  matchedRoute: string;
+  missingParams: string[];
+}

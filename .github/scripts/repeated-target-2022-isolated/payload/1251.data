@@ -1,9 +1,4 @@
-import { primary as client } from '@vendor/valkey';
-function replacement() {}
-function opaque(strings, value) { value.box = { client }; }
-const holder = { box: { client } };
-holder.box.client = {};
-opaque`${holder}`;
-holder.box.client.get = replacement;
-function globalAfterCaptureTagged(value) { value.get('key'); }
-globalAfterCaptureTagged(client);
+import { primary } from '@vendor/valkey';
+export function readLatch(client = primary) { return client.get('key'); }
+export function diagnostics(client: any) { client.info(); while (true) { client.scan('0'); break; } }
+export function wrapper(client: any) { return diagnostics(client); }

@@ -1,7 +1,10 @@
 import { query } from "@example/db";
 
-const sql = "SELECT " + ("id FROM " + "topics");
+function safe() {
+  return "TRUSTED SQL";
+}
 
-export function load() {
+export function outer({ safe }: { safe: () => string }) {
+  const sql = safe();
   return query(sql);
 }

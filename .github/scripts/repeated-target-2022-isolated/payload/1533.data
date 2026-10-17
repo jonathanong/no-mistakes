@@ -1,10 +1,15 @@
 import { query } from "@example/db";
-import { sql } from "untrusted-tag-library";
 
-function build(id: number) {
-  return sql`SELECT * FROM topics WHERE id = ${id}`;
+function build() {
+  return "SELECT 1";
 }
 
-export function run() {
-  return query(build(1));
+function touch(build: () => string) {
+  build = () => "DELETE FROM users";
+  void build;
+}
+
+export function load() {
+  touch(() => "ignored");
+  return query(build());
 }

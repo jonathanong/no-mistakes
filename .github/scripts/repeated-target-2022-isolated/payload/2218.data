@@ -1,337 +1,219 @@
-import { withGeneratedFacade } from "../../../fixtures/test-timeout-policy/generated-facade.mjs";
-import { describe, expect, it, vi, TestRunner } from "vitest";
-import {
-  assertTestTimeout,
-  assertTimeoutConfig,
-  snapshotTimeoutOptions,
-  protectTimeoutConfig,
-  guardRegistration,
-  guardRuntimeConfig,
-  guardVitestExports,
-  protectRunnerTimeouts,
-} from "./index.mjs";
-import { browserTestTimeoutPolicyPlugin, testTimeoutPolicyPlugin } from "./plugin.mjs";
-describe("public deadline policy contract boundaries", () => {
-  it.each([0, -1, NaN, Infinity, "30000", 30001])(
-    "rejects invalid configured value %s",
-    (value) => {
-      expect(() => assertTestTimeout(value, "test timeout")).toThrow(RangeError);
-    },
-  );
-  it("accepts the inclusive deadline and rejects invalid policy maxima", () => {
-    expect(assertTestTimeout(30000, "test timeout")).toBe(30000);
-    for (const maximum of [0, NaN, Infinity])
-      expect(() => assertTestTimeout(1, "test timeout", maximum)).toThrow(RangeError);
-    expect(() => assertTimeoutConfig({})).not.toThrow();
-    expect(() => assertTimeoutConfig({ hookTimeout: 0 })).toThrow(RangeError);
-  });
-  it("captures timeout getters once while retaining other getter receivers", () => {
-    class Options {
-      #label = "owned";
-      reads = 0;
-      get timeout() {
-        return ++this.reads === 1 ? 25 : 30001;
+const assert = require("node:assert/strict");
+const test = globalThis.test || require("node:test").test;
+const { readFileSync } = require("node:fs");
+const { resolve } = require("node:path");
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const root = resolve(__dirname, "../../../fixtures/typescript-module-facts");
+
+test(
+  "compiled CJS and ESM expose source-local binding/import facts",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const api of [cjs, esm]) {
+      const promise = api.analyzeTypeScriptModules({ root, files: ["bindings.ts", "bindings.ts"] });
+      assert.ok(promise instanceof Promise);
+      const { modules } = await promise;
+      assert.equal(modules.length, 1);
+      const module = modules[0];
+      assert.equal(module.fileName, resolve(root, "bindings.ts"));
+      assert.equal(module.complete, true, JSON.stringify(module.diagnostics));
+      assert.equal(module.imports.length, 4);
+      assert.deepEqual(
+        module.imports[0].bindings.map((binding) => [binding.kind, binding.typeOnly]),
+        [
+          ["default", false],
+          ["named", false],
+          ["named", true],
+          ["named", false],
+        ],
+      );
+      assert.equal(module.imports[1].typeOnly, true);
+      assert.equal(module.imports[2].bindings[0].kind, "namespace");
+      assert.equal(module.imports[3].bindings.length, 0);
+      assert.ok(
+        module.exports.some(
+          (entry) => entry.local === "*" && entry.exported === "*" && !entry.typeOnly,
+        ),
+      );
+      assert.ok(module.exports.some((entry) => entry.exported === "forwardedNamespace"));
+      assert.ok(
+        module.exports.some((entry) => entry.exported === "ForwardedShape" && entry.typeOnly),
+      );
+      assert.ok(
+        module.exports.some((entry) => entry.local === "local" && entry.exported === "default"),
+      );
+      assert.deepEqual(
+        module.loads.map((load) => [load.kind, load.specifier]),
+        [
+          ["dynamicImport", "./literal"],
+          ["require", "./required"],
+        ],
+      );
+      const alias = module.bindings.find((binding) => binding.imported && binding.name === "alias");
+      assert.equal(alias.runtime, true);
+      assert.ok(alias.references.some((reference) => reference.runtime));
+      assert.equal(module.bindings.filter((binding) => binding.shadows === alias.id).length, 2);
+      const onlyType = module.bindings.find((binding) => binding.name === "onlyType");
+      assert.ok(onlyType.references.length > 0);
+      assert.ok(onlyType.references.every((reference) => reference.typeOnly && !reference.runtime));
+      const source = readFileSync(resolve(root, "bindings.ts"));
+      for (const binding of module.bindings) {
+        assert.equal(
+          source.subarray(binding.span.start, binding.span.end).toString(),
+          binding.name,
+        );
+        assert.ok(module.scopes.some((scope) => scope.id === binding.scopeId));
       }
-      get label() {
-        return this.#label;
+      for (const imported of module.imports.flatMap((entry) => entry.bindings)) {
+        assert.ok(module.bindings.some((binding) => binding.id === imported.bindingId));
       }
-    }
-    const options = new Options();
-    Object.defineProperty(options, "timeout", {
-      enumerable: true,
-      get: () => Reflect.get(Options.prototype, "timeout", options),
-    });
-    const captured = snapshotTimeoutOptions(options, "test timeout");
-    expect(Reflect.get(captured, "timeout")).toBe(25);
-    expect(Reflect.get(captured, "timeout")).toBe(25);
-    expect(Reflect.get(captured, "label")).toBe("owned");
-    expect(options.reads).toBe(1);
-    expect(() => snapshotTimeoutOptions({ timeout: null }, "test")).toThrow(RangeError);
-    expect(
-      Reflect.get(snapshotTimeoutOptions({ timeout: null }, "test", 30000, true), "timeout"),
-    ).toBeNull();
-    expect(Reflect.get(snapshotTimeoutOptions({}, "test"), "timeout")).toBeUndefined();
-  });
-  it("protects one config object across repeated installation and invalid writes", () => {
-    const config = { testTimeout: 25, hookTimeout: 30 };
-    protectTimeoutConfig(config);
-    protectTimeoutConfig(config);
-    expect(() => protectTimeoutConfig(config, 100)).toThrow("maximum cannot change");
-    config.testTimeout = 30000;
-    config.hookTimeout = 50;
-    expect(() => {
-      config.testTimeout = 0;
-    }).toThrow(RangeError);
-    expect(config.testTimeout).toBe(30000);
-    expect(config.hookTimeout).toBe(50);
-    expect(() => Object.defineProperty(config, "hookTimeout", { value: 0 })).toThrow(TypeError);
-  });
-  it("retains registration receiver, return value, optional args and unknown callable identity", () => {
-    const receiver = { owned: true };
-    const original = vi.fn(function (...args) {
-      return { receiver: this, args };
-    });
-    const fn = () => "SDK callable metadata";
-    const register = Object.assign(original, { fn, label: "preserved" });
-    Object.defineProperty(register, "fn", { value: fn, writable: false, configurable: false });
-    const guarded = guardRegistration(register, "test");
-    const options = { timeout: 25 };
-    const result = guarded.call(receiver, "name", options, () => {});
-    expect(result.receiver).toBe(receiver);
-    expect(result.args[0]).toBe("name");
-    expect(Reflect.get(result.args[1], "timeout")).toBe(25);
-    expect(guarded.fn).toBe(fn);
-    expect(guarded.label).toBe("preserved");
-    expect(() => guarded("name", 30001)).toThrow(RangeError);
-    expect(() => guarded("name", null)).not.toThrow();
-    const hook = guardRegistration(original, "hook");
-    expect(() => hook(() => {}, 0)).toThrow(RangeError);
-    expect(() => hook(() => {})).not.toThrow();
-  });
-  it("guards chained, curried and hook properties while retaining cache identity", () => {
-    const target = (...args) => args;
-    const methods = Object.assign(target, {
-      shuffle: target,
-      describe: target,
-      beforeAll: target,
-      each: () => target,
-      runIf: () => target,
-      extend: () => ({ opaque: true }),
-    });
-    const guarded = guardRegistration(methods, "suite");
-    expect(guarded.shuffle).toBe(guarded.shuffle);
-    expect(() => guarded.shuffle("name", 30001)).toThrow(RangeError);
-    expect(() => guarded.describe("name", { timeout: 30001 })).toThrow(RangeError);
-    expect(() => guarded.beforeAll(() => {}, 0)).toThrow(RangeError);
-    expect(() => guarded.each()("name", 30001)).toThrow(RangeError);
-    expect(() => guarded.runIf()("name", 30001)).toThrow(RangeError);
-    expect(guarded.extend()).toEqual({ opaque: true });
-  });
-  it("preserves asynchronous suite-factory receivers and return values while protecting injected APIs", async () => {
-    const receiver = { owner: "native factory" };
-    const injected = Object.assign(vi.fn(), { beforeAll: vi.fn() });
-    const original = (...args) => {
-      const factory = args.find((value) => typeof value === "function");
-      if (typeof factory !== "function") throw new Error("factory absent");
-      return Reflect.apply(factory, receiver, [injected]);
-    };
-    const suite = guardRegistration(original, "suite");
-    const result = suite("owned", { timeout: 25 }, async function (test) {
-      expect(this).toBe(receiver);
-      await Promise.resolve();
-      expect(() => test.beforeAll(() => {}, 30001)).toThrow(RangeError);
-      test.beforeAll(() => {}, 25);
-      test("body", () => {}, 25);
-      return "factory completed";
-    });
-    await expect(result).resolves.toBe("factory completed");
-    expect(injected.beforeAll).toHaveBeenCalledOnce();
-    expect(injected).toHaveBeenCalledOnce();
-    const row = Object.assign(() => "data", { beforeAll() {} });
-    const registration = Object.assign(() => {}, {
-      each: () => (_name, factory) => factory(row),
-    });
-    const table = guardRegistration(registration, "suite").each();
-    expect(
-      table("row", (value) => {
-        expect(value).toBe(row);
-        return value();
-      }),
-    ).toBe("data");
-  });
-  it("rejects returned collector hooks while preserving native collection methods and cache identity", () => {
-    const collector = {
-      type: "collector",
-      name: "owned",
-      on: vi.fn(),
-      test: vi.fn(),
-      task: vi.fn(),
-      collect: vi.fn(),
-      clear: vi.fn(),
-      tasks: [],
-    };
-    const register = guardRegistration(() => collector, "suite");
-    const guarded = register();
-    expect(register()).toBe(guarded);
-    expect(guarded.on).toBe(guarded.on);
-    expect(() => guarded.on("beforeAll", () => {})).toThrow("register guarded public hooks");
-    expect(collector.on).not.toHaveBeenCalled();
-    expect(guarded.test).toBe(guarded.test);
-    expect(guarded.test).not.toBe(collector.test);
-    expect(() => guarded.test("invalid", 30001)).toThrow(RangeError);
-    for (const key of ["name", "task", "collect", "clear", "tasks"])
-      expect(Reflect.get(guarded, key)).toBe(Reflect.get(collector, key));
-    guarded.clear();
-    expect(collector.clear).toHaveBeenCalledOnce();
-  });
-  it("snapshots aliased setter options and preserves configuration API receiver", () => {
-    const api = {
-      value: 25,
-      setConfig(config) {
-        this.value = Reflect.get(config, "testTimeout");
-        return "applied";
-      },
-    };
-    const wrapped = guardRuntimeConfig(api);
-    // Runtime alias extraction deliberately carries no receiver; the guard must preserve it.
-    const setConfig = Reflect.get(wrapped, "setConfig");
-    if (typeof setConfig !== "function") throw new Error("Configuration setter missing");
-    let reads = 0;
-    expect(
-      setConfig({
-        get testTimeout() {
-          return ++reads === 1 ? 30 : 30001;
-        },
-      }),
-    ).toBe("applied");
-    expect(api.value).toBe(30);
-    expect(reads).toBe(1);
-    expect(() => setConfig({ testTimeout: 0 })).toThrow(RangeError);
-    expect(wrapped.value).toBe(30);
-    expect(() => guardRuntimeConfig({})).toThrow(TypeError);
-  });
-  it("caches guarded public exports and preserves unrelated values", () => {
-    const register = vi.fn();
-    const api = { test: register, beforeAll: register, vi: { setConfig: vi.fn() }, value: null };
-    const guarded = guardVitestExports(api);
-    expect(guarded.test).toBe(guarded.test);
-    expect(guarded.vi).toBe(guarded.vi);
-    expect(guarded.value).toBeNull();
-    expect(() => guarded.test("name", 30001)).toThrow(RangeError);
-    expect(() => guarded.beforeAll(() => {}, 0)).toThrow(RangeError);
-    expect(() => guarded.vi.setConfig({ hookTimeout: Infinity })).toThrow(RangeError);
-  });
-  it("guards constructor exports in the parent while preserving constructor and instance identity", () => {
-    class Runner {
-      config;
-      #marker = "owned";
-      constructor(config) {
-        this.config = config;
-      }
-      marker() {
-        return this.#marker;
-      }
-    }
-    const facade = guardVitestExports({ TestRunner: Runner });
-    expect(facade.TestRunner).toBe(facade.TestRunner);
-    const runner = new facade.TestRunner({ testTimeout: 25, hookTimeout: 25 });
-    expect(runner).toBeInstanceOf(Runner);
-    expect(runner.marker()).toBe("owned");
-    expect(() => {
-      runner.config.testTimeout = 30001;
-    }).toThrow(RangeError);
-    expect(() => new facade.TestRunner({ testTimeout: 0, hookTimeout: 25 })).toThrow(RangeError);
-    expect(guardVitestExports({ TestRunner: null }).TestRunner).toBeNull();
-  });
-  it.each([false, true])(
-    "worker-loads the public facade with the owning constructor policy; browser=%s",
-    async (browser) => {
-      const plugin = browser
-        ? browserTestTimeoutPolicyPlugin()
-        : testTimeoutPolicyPlugin(30000, [], { runner: null });
-      const id = plugin.resolveId("vitest", "/owned/case.mts");
-      await withGeneratedFacade(plugin.load(id), async (facade) => {
-        expect(facade.TestRunner).not.toBe(TestRunner);
-        expect(facade.TestRunner.prototype).toBe(TestRunner.prototype);
-        class Custom extends facade.TestRunner {}
-        expect(Object.getPrototypeOf(Custom.prototype)).toBe(TestRunner.prototype);
+      const literalLoads = await api.analyzeTypeScriptModules({
+        root,
+        files: ["literal-loads.ts"],
       });
-    },
-  );
-  it("composes runner context and completion callbacks without masking raw invalid tasks", () => {
-    const extension = vi.fn((context) => context);
-    const runner = { config: { testTimeout: 25, hookTimeout: 25 }, extendTaskContext: extension };
-    protectRunnerTimeouts(runner);
-    protectRunnerTimeouts(runner);
-    expect(() => protectRunnerTimeouts(runner, 100)).toThrow("cannot be replaced");
-    expect(() => runner.extendTaskContext({ task: { timeout: 0 } })).toThrow(RangeError);
-    expect(extension).not.toHaveBeenCalled();
-    const callback = vi.fn();
-    const context = { task: { timeout: 25 }, onTestFinished: callback };
-    expect(runner.extendTaskContext(context)).toBe(context);
-    expect(extension).toHaveBeenCalledWith(context);
-    expect(() => context.onTestFinished(() => {}, 0)).toThrow(RangeError);
-    context.onTestFinished(() => {}, 25);
-    expect(callback).toHaveBeenCalledOnce();
-    const replacement = vi.fn();
-    expect(() => Reflect.set(context, "onTestFinished", null)).toThrow(TypeError);
-    Reflect.set(context, "onTestFinished", replacement);
-    expect(() => context.onTestFinished(() => {}, 30001)).toThrow(RangeError);
-    expect(replacement).not.toHaveBeenCalled();
-    context.onTestFinished(() => {}, 25);
-    expect(replacement).toHaveBeenCalledOnce();
-    expect(() => runner.extendTaskContext({ task: null })).toThrow(TypeError);
-  });
-  it("rejects post-extension mutation of the original task and supports context-only adapters", () => {
-    const runner = {
-      config: { testTimeout: 25, hookTimeout: 25 },
-      extendTaskContext(context) {
-        context.task.timeout = 30001;
-        return { task: { timeout: 25 } };
-      },
-    };
-    protectRunnerTimeouts(runner);
-    expect(() => runner.extendTaskContext({ task: { timeout: 25 } })).toThrow(RangeError);
-    const simple = { config: { testTimeout: 25, hookTimeout: 25 } };
-    protectRunnerTimeouts(simple);
-    const context = { task: { timeout: 25 } };
-    expect(Reflect.apply(Reflect.get(simple, "extendTaskContext"), simple, [context])).toBe(
-      context,
-    );
-    expect(() => protectRunnerTimeouts({ config: { globals: true } })).toThrow("globals disabled");
-    simple.config = { testTimeout: 25, hookTimeout: 25 };
-    expect(() => protectRunnerTimeouts(simple)).toThrow("cannot be replaced");
-  });
-  it("rejects reusing a context across runners with incompatible deadline policies", () => {
-    const context = { task: { timeout: 10 }, onTestFinished: vi.fn() };
-    const runner = { config: { testTimeout: 25, hookTimeout: 25 } };
-    protectRunnerTimeouts(runner, 25);
-    expect(Reflect.apply(Reflect.get(runner, "extendTaskContext"), runner, [context])).toBe(
-      context,
-    );
-    const other = { config: { testTimeout: 20, hookTimeout: 20 } };
-    protectRunnerTimeouts(other, 20);
-    expect(() => Reflect.apply(Reflect.get(other, "extendTaskContext"), other, [context])).toThrow(
-      "Context timeout policy maximum cannot change",
-    );
-  });
-  it("routes only public Vitest imports and explicitly declares registrar inlining", () => {
-    const plugin = testTimeoutPolicyPlugin(30000, ["owned-registrar"]);
-    expect(plugin.config().test.server.deps.inline).toEqual(["owned-registrar"]);
-    expect(() => testTimeoutPolicyPlugin(0)).toThrow(RangeError);
-    expect(plugin.resolveId("other", "/case.mts")).toBeNull();
-    expect(plugin.resolveId("vitest")).toBeNull();
-    const id = plugin.resolveId("vitest", "/node_modules/owned-registrar/index.mjs");
-    expect(plugin.resolveId("vitest", id)).toBeNull();
-    expect(plugin.load("other")).toBeNull();
-    // Vite load must supply module code for the owned route; SDK children prove its behavior.
-    expect(plugin.load(id)).toBeTypeOf("string");
-    // Default Node usage installs the native final runner and rejects unsupplied custom runners.
-    const runner = plugin.config().test.runner;
-    expect(() => plugin.configResolved({ test: { runner } })).not.toThrow();
-    expect(() => plugin.config({ test: { runner: "/owned/existing-runner.mjs" } })).toThrow(
-      "differs",
-    );
-  });
-  it("keeps final Node runner provenance and rejects conflicting merged or browser slots", () => {
-    const plugin = testTimeoutPolicyPlugin(30000, [], { runner: "/owned/final-runner.mjs" });
-    const configured = plugin.config({ test: { runner: "/owned/final-runner.mjs" } });
-    const runner = configured.test.runner;
-    expect(plugin.resolveId(runner)).toBe(runner);
-    expect(plugin.load(runner)).toBeTypeOf("string");
-    expect(plugin.resolveId("vitest", runner)).toBeNull();
-    expect(() => plugin.config({ test: { runner: "/other/runner.mjs" } })).toThrow("differs");
-    expect(() => plugin.configResolved({ test: { runner } })).not.toThrow();
-    expect(() => plugin.configResolved({ test: { runner: "/overridden.mjs" } })).toThrow(
-      "replaced",
-    );
-    expect(() => plugin.configResolved({ test: { runner, browser: { enabled: true } } })).toThrow(
-      "browser",
-    );
-    expect(() => testTimeoutPolicyPlugin(30000, [], { runner: "./relative.mjs" })).toThrow(
-      "absolute",
-    );
-    const native = testTimeoutPolicyPlugin(30000, [], { runner: null });
-    expect(native.load(native.config().test.runner)).toBeTypeOf("string");
-  });
-});
+      assert.equal(literalLoads.modules[0].complete, true);
+      assert.deepEqual(
+        literalLoads.modules[0].loads.map((load) => load.specifier),
+        ["./template-import", "./template-require", "./wrapped-import", "./wrapped-require"],
+      );
+      const extra = await api.analyzeTypeScriptModules({
+        root,
+        files: ["all-type-imports.ts", "default-wrapped-as.ts"],
+      });
+      assert.equal(extra.modules[0].imports[0].typeOnly, true);
+      assert.equal(extra.modules[0].imports[1].typeOnly, false);
+      assert.equal(extra.modules[1].exports[0].local, "value");
+      const loaders = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "wrapped-require.ts",
+          "shadowed-eval.cjs",
+          "commonjs-exports.cjs",
+          "local-type-exports.ts",
+        ],
+      });
+      assert.equal(
+        loaders.modules.find((entry) => entry.fileName.endsWith("wrapped-require.ts")).loads.length,
+        6,
+      );
+      assert.equal(
+        loaders.modules.find((entry) => entry.fileName.endsWith("shadowed-eval.cjs")).complete,
+        true,
+      );
+      assert.equal(
+        loaders.modules.find((entry) => entry.fileName.endsWith("commonjs-exports.cjs")).complete,
+        false,
+      );
+      assert.ok(
+        loaders.modules
+          .find((entry) => entry.fileName.endsWith("local-type-exports.ts"))
+          .exports.slice(0, 3)
+          .every((entry) => entry.typeOnly),
+      );
+      const ambient = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "empty-source-exports.ts",
+          "optional-eval.cjs",
+          "ambient-require.cts",
+          "ambient-modules.d.ts",
+        ],
+      });
+      assert.equal(
+        ambient.modules.find((entry) => entry.fileName.endsWith("empty-source-exports.ts")).exports
+          .length,
+        2,
+      );
+      assert.equal(
+        ambient.modules.find((entry) => entry.fileName.endsWith("optional-eval.cjs")).complete,
+        true,
+      );
+      assert.equal(
+        ambient.modules.find((entry) => entry.fileName.endsWith("ambient-require.cts")).loads
+          .length,
+        2,
+      );
+      assert.deepEqual(
+        ambient.modules
+          .find((entry) => entry.fileName.endsWith("ambient-modules.d.ts"))
+          .exports.map((entry) => entry.exported),
+        ["rootValue"],
+      );
+      const commonjs = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "commonjs-property-exports.cjs",
+          "commonjs-update-exports.cjs",
+          "ambient-commonjs-exports.cts",
+          "default-global.ts",
+          "default-wrapped-global.ts",
+        ],
+      });
+      assert.ok(
+        commonjs.modules
+          .filter((entry) => entry.fileName.includes("commonjs-"))
+          .every((entry) => !entry.complete),
+      );
+      assert.ok(
+        commonjs.modules
+          .filter((entry) => entry.fileName.includes("default-"))
+          .every((entry) => entry.exports[0].local === ""),
+      );
+      assert.equal("ast" in module, false);
+      assert.equal("source" in module, false);
+    }
+  },
+);
+
+test(
+  "compiled module API fails closed on unsupported and invalid sources",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const api of [cjs, esm]) {
+      const { modules } = await api.analyzeTypeScriptModules({
+        root,
+        files: [
+          "dynamic.ts",
+          "invalid.ts",
+          "missing.ts",
+          "unsupported.txt",
+          "empty.ts",
+          "wrapped-eval.ts",
+        ],
+      });
+      for (const module of modules) {
+        assert.equal(module.complete, module.fileName.endsWith("empty.ts"));
+        if (!module.complete) {
+          assert.ok(module.diagnostics.length > 0);
+          for (const diagnostic of module.diagnostics) {
+            assert.ok(
+              ["sourceError", "parseError", "semanticError", "unsupported"].includes(
+                diagnostic.kind,
+              ),
+            );
+          }
+        }
+      }
+      const dynamic = modules.find((module) => module.fileName.endsWith("dynamic.ts"));
+      assert.equal(dynamic.loads.length, 0);
+      assert.ok(
+        dynamic.diagnostics.some((diagnostic) => diagnostic.message.includes("Shadowed require")),
+      );
+      assert.ok(
+        dynamic.diagnostics.some((diagnostic) =>
+          diagnostic.message.includes("Non-literal dynamic import"),
+        ),
+      );
+      assert.deepEqual(await api.analyzeTypeScriptModules({ files: [] }), { modules: [] });
+      await assert.rejects(api.analyzeTypeScriptModules({ root }), /files/);
+      await assert.rejects(
+        api.analyzeTypeScriptModules({ root: resolve(root, "bindings.ts"), files: [] }),
+        /existing directory/,
+      );
+    }
+  },
+);

@@ -1,86 +1,21 @@
-export type FetchSourceType =
-  | "page"
-  | "layout"
-  | "loading"
-  | "error"
-  | "template"
-  | "route"
-  | "module";
-
-export type CacheKind =
-  | "none"
-  | "fetch-cache"
-  | "fetch-next-revalidate"
-  | "fetch-next-tags"
-  | "react-cache"
-  | "cache"
-  | "unstable-cache";
-
-export interface FetchOccurrence {
-  path: string;
-  rawPath: string;
-  method: string;
-  file: string;
-  line: number;
-  side: "server" | "client";
-  rsc: boolean;
-  cached: boolean;
-  cacheKind: CacheKind;
-  cachedFunction?: string;
-  dynamic: boolean;
-  unsupported: boolean;
-  functionName?: string;
-  conditional: boolean;
-  inPromiseAll: boolean;
-  errorHandled: boolean;
-  sourceType: FetchSourceType;
-}
-
-export interface FetchRouteReport {
-  route: string;
-  file: string;
-  apiCalls: FetchOccurrence[];
-}
-
-export interface FetchSummary {
-  totalRoutes: number;
-  routesWithApiCalls: number;
-  totalApiCalls: number;
-  uniqueApiCalls: number;
-  duplicateApiCalls: number;
-  dynamicApiCalls: number;
-  cachedApiCalls: number;
-  clientApiCalls: number;
-  serverApiCalls: number;
-  rscApiCalls: number;
-  conditionalApiCalls: number;
-  parallelApiCalls: number;
-  errorHandledApiCalls: number;
-}
-
-export interface FetchReport {
-  summary: FetchSummary;
-  routes: FetchRouteReport[];
-  duplicates: DuplicateApiCall[];
-  unsupported: UnsupportedApiCall[];
-}
-
-export interface DuplicateApiCall {
-  key: string;
-  count: number;
-  occurrences: ApiCallOccurrence[];
-}
-
-export interface ApiCallOccurrence {
-  route: string;
-  file: string;
-  line: number;
-}
-
-export interface UnsupportedApiCall {
-  route: string;
-  file: string;
-  line: number;
-  reason: string;
-  rawPath: string;
-}
+-- WITH INSERT normalization must reach the same AST child beneath each wrapper.
+WITH src AS (SELECT 1 AS id)
+INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+EXPLAIN ANALYZE WITH src AS (SELECT 1 AS id)
+INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+PREPARE with_insert AS WITH src AS (SELECT 1 AS id)
+INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+CREATE FUNCTION with_insert_body() RETURNS void BEGIN ATOMIC
+  WITH src AS (SELECT 1 AS id)
+  INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+END;
+-- VALUES has no query-fact slot for the outer WITH: retain an explicit incomplete child.
+EXPLAIN WITH src AS (SELECT 1 AS id)
+INSERT INTO target VALUES (1) ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+-- A malformed target predicate must preserve the following independent query.
+EXPLAIN WITH src AS (SELECT 1 AS id)
+INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE DO NOTHING;
+SELECT 71;
+PREPARE bad_with AS WITH src AS (SELECT 1 AS id)
+INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO UPDATE SET id = ;
+SELECT 72;

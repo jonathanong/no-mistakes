@@ -1,10 +1,17 @@
 import { query } from "@example/db";
 
-function cyclic() {
-  return cyclic();
+function build() {
+  return "SELECT id FROM topics";
 }
 
-const sql = cyclic();
+function externalBuilder() {
+  return "UNTRUSTED";
+}
+
+const providers = ["placeholder", externalBuilder];
+[, ...build] = providers;
+
+const sql = build();
 
 export function load() {
   return query(sql);

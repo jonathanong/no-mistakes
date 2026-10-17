@@ -1,15 +1,19 @@
 import { query } from "@example/db";
 
-function externalTag(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return "DROP TABLE users";
+function build() {
+  return "SELECT id FROM topics";
 }
 
-const sql = externalTag;
-
-function build(id: number) {
-  return sql`SELECT * FROM topics WHERE id = ${id}`;
+function externalBuilder() {
+  return "UNTRUSTED";
 }
 
-export function run() {
-  return query(build(1));
+for (build of [externalBuilder]) {
+  break;
+}
+
+const sql = build();
+
+export function load() {
+  return query(sql);
 }

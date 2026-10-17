@@ -1,8 +1,8 @@
-import { query } from "@example/db";
+import sql from "sql-template-strings";
+import { write } from "@example/db";
 
-const sql = "SELECT 1";
-other.append(" FROM items");
-
-export function load() {
-  return query(sql);
+export async function expire(clause: string) {
+  const query = sql`WITH stale AS (SELECT id FROM items WHERE expired) `;
+  query.append(clause);
+  await write(query);
 }

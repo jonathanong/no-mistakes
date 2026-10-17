@@ -1,208 +1,77 @@
-// Types for `ciTopology()` / `no-mistakes ci topology` and the JS-only
-// `createWorkflowTopologyIndex()` query index built from its output.
-//
-// This mirrors the schema-v1 JSON contract exactly (field names, casing) —
-// see `docs/node-api.md` for the stability guarantees (field order and
-// array/diagnostic sort order are part of the contract).
-
-import type { ArtifactDeclaration, ArtifactEdge } from "./workflow-topology-artifact-types";
-import type { ResolvedPermissions } from "./ci-types";
-export * from "./workflow-topology-impact-types";
-
-export * from "./workflow-topology-artifact-types";
-export * from "./workflow-topology-index-types";
-
-export interface CiTopologyOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  /**
-   * Restrict output to these workflow(s) (basename or a path inside
-   * `.github/workflows`) plus their transitive local reusable-workflow
-   * callees. Omit or pass `[]` for every workflow.
-   */
-  workflows?: string[];
-}
-
-export type JsonScalar = boolean | number | string;
-export type JsonValue =
-  | null
-  | boolean
-  | number
-  | string
-  | JsonValue[]
-  | { [key: string]: JsonValue };
-
-export type ConcurrencyValue = boolean | string;
-export type WorkflowRunsOn = string | string[] | { group: string; labels?: string | string[] };
-
-export interface WorkflowConcurrency {
-  raw: { group: string; cancelInProgress?: ConcurrencyValue; queue?: string };
-  effective: { group: string; cancelInProgress: ConcurrencyValue; queue: string };
-}
-
-export interface WorkflowTrigger {
-  event: string;
-  config?: JsonValue;
-}
-
-export interface WorkflowCallInput {
-  type?: "boolean" | "number" | "string";
-  required: boolean;
-  default?: JsonScalar;
-  description?: string;
-}
-
-export interface WorkflowCallSecret {
-  required: boolean;
-  description?: string;
-}
-
-export interface WorkflowCallOutput {
-  value?: string;
-  description?: string;
-}
-
-export interface WorkflowCallContract {
-  inputs: Record<string, WorkflowCallInput>;
-  secrets: Record<string, WorkflowCallSecret>;
-  outputs: Record<string, WorkflowCallOutput>;
-}
-
-export type WorkflowNode = {
-  id: string;
-  path: string;
-  name: string;
-  triggers: WorkflowTrigger[];
-  jobIds: string[];
-  concurrency?: WorkflowConcurrency;
-  /** Workflow-scoped environment declarations, without expression evaluation. */
-  env?: Record<string, string>;
-  /** Static `secrets.*` names referenced directly at workflow scope. */
-  secretReferences?: string[];
-} & (
-  | { callable: true; workflowCall: WorkflowCallContract }
-  | { callable: false; workflowCall?: undefined }
-);
-
-export interface WorkflowStep {
-  index: number;
-  kind: "action" | "run" | "other";
-  id?: string;
-  name?: string;
-  condition?: string;
-  uses?: string;
-  /** Present when this step is an `actions/{upload,download}-artifact` action. */
-  artifact?: ArtifactDeclaration;
-  /** Raw authored shell command; expressions are not evaluated. */
-  run?: string;
-  /** Raw scalar action inputs; expressions are not evaluated. */
-  with?: Record<string, JsonScalar>;
-  /** Step-scoped environment declarations, without expression evaluation. */
-  env?: Record<string, string>;
-  /** Static `secrets.*` names referenced directly by this step. */
-  secretReferences?: string[];
-}
-
-export interface WorkflowJobNode {
-  id: string;
-  workflowId: string;
-  key: string;
-  kind: "job" | "matrix-template";
-  name?: string;
-  condition?: string;
-  matrix?: JsonValue;
-  concurrency?: WorkflowConcurrency;
-  steps: WorkflowStep[];
-  /** Environment name from scalar or `{ name }` job syntax. */
-  environment?: string;
-  /** Declared timeout; absent jobs use GitHub's effective 360-minute default. */
-  timeoutMinutes?: number;
-  /** Declared runner label, ordered label list, or runner-group selection. */
-  runsOn?: WorkflowRunsOn;
-  /** Effective permissions, identical to the `ciImpact()` job shape. */
-  permissions: ResolvedPermissions;
-  /** Job output declarations, without expression evaluation. */
-  outputs?: Record<string, string>;
-  /** Job-scoped environment declarations, without expression evaluation. */
-  env?: Record<string, string>;
-  /** Static `secrets.*` names referenced directly by this job. */
-  secretReferences?: string[];
-}
-
-export interface NeedsEdge {
-  kind: "needs";
-  from: string;
-  to: string;
-}
-
-export interface WorkflowCallEdge {
-  kind: "calls";
-  from: string;
-  target: string;
-  local: boolean;
-  bindings: {
-    inputs: Record<string, JsonScalar>;
-    secrets: { mode: "inherit" } | { mode: "explicit"; values: Record<string, JsonScalar> };
-  };
-  /** Present only for local (`./`) calls. */
-  to?: string;
-}
-
-export interface WorkflowRunEdge {
-  kind: "workflow-run";
-  from: string;
-  to: string;
-  types?: string[];
-  branches?: string[];
-  branchesIgnore?: string[];
-}
-
-export type WorkflowTopologyEdge = NeedsEdge | WorkflowCallEdge | WorkflowRunEdge | ArtifactEdge;
-
-export type WorkflowTopologyDiagnosticCode =
-  | "malformed-workflow"
-  | "missing-needs-dependency"
-  | "job-dependency-cycle"
-  | "duplicate-step-id"
-  | "unknown-step-reference"
-  | "non-prior-step-reference"
-  | "duplicate-workflow-name"
-  | "missing-local-workflow"
-  | "non-callable-workflow"
-  | "workflow-call-cycle"
-  | "missing-workflow-run-source"
-  | "ambiguous-workflow-run-source"
-  | "workflow-run-cycle"
-  | "workflow-run-chain-limit"
-  | "unknown-workflow-filter"
-  | "invalid-workflow-filter"
-  | "missing-workflow-call-input"
-  | "unknown-workflow-call-input"
-  | "workflow-call-input-type-mismatch"
-  | "missing-workflow-call-secret"
-  | "unknown-workflow-call-secret"
-  | "unknown-workflow-call-output"
-  | "missing-artifact-producer"
-  | "ambiguous-artifact-producer"
-  | "artifact-resolution-limit";
-
-export interface WorkflowTopologyDiagnostic {
-  severity: "error";
-  code: WorkflowTopologyDiagnosticCode;
-  message: string;
-  workflowPath: string;
-  jobId?: string;
-  stepIndex?: number;
-  callJobId?: string;
-  calleeWorkflowPath?: string;
-}
-
-export interface WorkflowTopology {
-  schemaVersion: 1;
-  workflows: WorkflowNode[];
-  jobs: WorkflowJobNode[];
-  edges: WorkflowTopologyEdge[];
-  diagnostics: WorkflowTopologyDiagnostic[];
-}
+import { fixtureTemplate } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
+import { fixtureSource } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
+import { describe, expect, it } from "vitest";
+import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-child.mjs";
+const inlineAll = fixtureTemplate("review-regressions.test-template-6.txt");
+describe.skipIf(process.platform !== "linux")("public SDK review regressions", () => {
+  it("preserves inline-all dependency configuration through actual SDK collection", async () => {
+    const result = await fixture(fixtureSource("review-regressions.test-38.txt"), inlineAll);
+    expect(result.code, result.output).toBe(0);
+    expect(result.marker).toBe("continued");
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it("still guards an inlined package registrar with the inline-all sentinel", async () => {
+    const result = await fixture(fixtureSource("review-regressions.test-39.txt"), inlineAll, "", {
+      preserveSymlinks: false,
+      source: fixtureTemplate("review-regressions.test-extra-template-1.txt"),
+    });
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("hook timeout must be positive, finite");
+    expect(result.marker).toBeUndefined();
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it("preserves direct new.target in the actual worker-loaded final constructor", async () => {
+    const result = await fixture(
+      fixtureSource("review-regressions.test-40.txt"),
+      undefined,
+      "",
+      undefined,
+      {},
+      { assertDirectNewTarget: true },
+    );
+    expect(result.code, result.output).toBe(0);
+    expect(result.lifecycle).toBe("final constructor initialized");
+    expect(result.marker).toBe("continued");
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it.each(["beforeAll", "afterAll"])(
+    fixtureTemplate("review-regressions.test-template-5.txt"),
+    async (hook) => {
+      const result = await fixture(
+        fixtureTemplate("review-regressions.test-template-4.txt", [hook]),
+        fixtureTemplate("review-regressions.test-template-3.txt"),
+      );
+      expect(result.code).toBe(1);
+      expect(result.output).toContain("SuiteCollector.on bypasses native hook deadlines");
+      expect(result.output).not.toContain("RAW_HOOK_EXECUTED");
+      expect(result.marker).toBeUndefined();
+      expect(result.forcedCleanup).toBe(false);
+    },
+  );
+  it("preserves returned collector test, task and clear APIs during native collection", async () => {
+    const result = await fixture(fixtureSource("review-regressions.test-41.txt"));
+    expect(result.code, result.output).toBe(0);
+    expect(result.marker).toBe("continued");
+    expect(result.output).not.toContain("CLEARED_TEST_EXECUTED");
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it("uses the configured native deadline for guarded public hooks inside the suite factory", async () => {
+    const result = await fixture(
+      fixtureSource("review-regressions.test-42.txt"),
+      fixtureTemplate("review-regressions.test-template-2.txt"),
+    );
+    expect(result.code).toBe(1);
+    expect(result.output).toContain("Hook timed out in 20ms");
+    expect(result.marker).toBeUndefined();
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it("preserves guarded suite-factory hooks with the configured native deadline", async () => {
+    const result = await fixture(
+      fixtureSource("review-regressions.test-43.txt"),
+      fixtureTemplate("review-regressions.test-template-1.txt"),
+    );
+    expect(result.code, result.output).toBe(0);
+    expect(result.marker).toBe("continued");
+    expect(result.forcedCleanup).toBe(false);
+  });
+});

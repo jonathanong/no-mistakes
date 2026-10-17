@@ -1,11 +1,11 @@
 import { query } from "@example/db";
 
-const sql = () => "DROP TABLE users";
-
-function build(id: number) {
-  return sql`SELECT * FROM topics WHERE id = ${id}`;
+function build() {
+  return "SELECT 1";
 }
 
-export function run() {
-  return query(build(1));
-}
+const wrapper = function build() {
+  return query(build());
+};
+
+export { wrapper };

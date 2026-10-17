@@ -1,8 +1,10 @@
-import { query } from "@example/db";
-
-const sql = "SELECT id FROM topics";
-sql.append();
-
-export function load() {
-  return query(sql);
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "paths": {
+      "@core/*": ["packages/core/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "packages/**/*.ts", "tests/**/*.ts"]
 }

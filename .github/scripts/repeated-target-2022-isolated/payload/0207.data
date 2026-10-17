@@ -4,11 +4,8 @@ function build() {
   return "SELECT id FROM topics";
 }
 
-function externalBuilder() {
-  return "UNTRUSTED";
-}
-
-var build = externalBuilder;
+const holder = {};
+holder.build = "unrelated";
 
 const sql = build();
 

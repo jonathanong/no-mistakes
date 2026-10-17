@@ -1,7 +1,6 @@
-export function runOrdered(spec: {
-  statement: (ctes: string) => string
-  readRows: (statement: string) => unknown
-}) {
-  const ctes = 'input_data AS (SELECT id FROM posts)'
-  return spec.readRows(spec.statement(ctes))
+import { read } from '@example/db'
+import { buildImportedRead } from './imported-builder'
+
+export function extensionlessRead() {
+  return read(buildImportedRead())
 }

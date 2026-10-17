@@ -1,7 +1,15 @@
 import { query } from "@example/db";
 
-const trap = function sql(strings: TemplateStringsArray, ...values: unknown[]) {
-  return query(sql`SELECT * FROM topics WHERE id = ${values[0]}`);
-};
+function externalTag(strings: TemplateStringsArray, ..._values: unknown[]) {
+  return "DROP TABLE users";
+}
 
-export { trap };
+const sql = externalTag;
+
+function build(id: number) {
+  return sql`SELECT * FROM topics WHERE id = ${id}`;
+}
+
+export function run() {
+  return query(build(1));
+}

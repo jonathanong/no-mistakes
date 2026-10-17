@@ -1,5 +1,28 @@
-effects:
-  cache:
-    targets:
-      - module: '@vendor/valkey'
-        export: primary.get
+{
+  "kind": "database",
+  "entry": "src/entry.mts",
+  "callSites": [
+    {
+      "file": "src/entry.mts",
+      "line": 4,
+      "callee": "primary.read",
+      "category": "read",
+      "caller": "invoke",
+      "depth": 0,
+      "alternatives": [
+        {
+          "callee": "primary.read",
+          "category": "read"
+        },
+        {
+          "callee": "replica.write",
+          "category": "write"
+        }
+      ]
+    }
+  ],
+  "byCategory": {
+    "read": 1,
+    "write": 1
+  }
+}

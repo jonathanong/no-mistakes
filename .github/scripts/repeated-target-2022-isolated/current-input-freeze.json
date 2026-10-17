@@ -1,0 +1,107 @@
+{
+  "status": "DRAFT complete new source/artifact/input identity; no measurement data",
+  "native_candidate": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "public_candidate": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "baseline_actual_producer": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+  "baseline_equivalent_main": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
+  "assets": [
+    {
+      "arm": "baseline",
+      "file": "graph-probe",
+      "name": "2022-main281-baseline-graph-probe",
+      "id": 648621742,
+      "size": 82358976,
+      "sha256": "3a40d1eb6eb838770872131625a918aa5866544a817c4821b7354faad9111675"
+    },
+    {
+      "arm": "baseline",
+      "file": "timing-probe",
+      "name": "2022-main281-baseline-timing-probe",
+      "id": 648621906,
+      "size": 82348344,
+      "sha256": "3f8003993e8b78b3437d72fef5c7201b62242e932cab9a4561a28a7701bb5bf9"
+    },
+    {
+      "arm": "baseline",
+      "file": "cli",
+      "name": "2076-lifetime-prototype-cli",
+      "id": 648454710,
+      "size": 82354464,
+      "sha256": "6e97d8624bfc480c492215841def92d10fab0ed77fb317fffa3f8ea3f2a54380"
+    },
+    {
+      "arm": "baseline",
+      "file": "addon.node",
+      "name": "2076-lifetime-prototype-addon.node",
+      "id": 648454948,
+      "size": 78789784,
+      "sha256": "2f85b165c705d3e35ed59dd8093245fad243f7bb834b9f9a735a54a743d8d647"
+    },
+    {
+      "arm": "candidate",
+      "file": "graph-probe",
+      "name": "2022-e193-candidate-graph-probe",
+      "id": 649305526,
+      "size": 82692536,
+      "sha256": "3ee309098b2196799781e70653b15dd44fa7ed8bb3b1d37d4598ae5a76204559",
+      "actual_producer": "e193aeca201a346115ebe0ee552d6cb1ec995447"
+    },
+    {
+      "arm": "candidate",
+      "file": "timing-probe",
+      "name": "2022-e193-candidate-timing-probe",
+      "id": 649305733,
+      "size": 82681448,
+      "sha256": "cb85534003e7fd0614f80117f998d2ac57857f25cae00e10c759ef0edb2c898d",
+      "actual_producer": "e193aeca201a346115ebe0ee552d6cb1ec995447"
+    },
+    {
+      "arm": "candidate",
+      "file": "cli",
+      "name": "2022-e193-candidate-cli",
+      "id": 649293969,
+      "size": 82693208,
+      "sha256": "2027f7ca081721db6aabd3fb5433e930bc248530f0e325ac9cd5daa704142c18",
+      "actual_producer": "e193aeca201a346115ebe0ee552d6cb1ec995447"
+    },
+    {
+      "arm": "candidate",
+      "file": "addon.node",
+      "name": "2022-e193-candidate-addon",
+      "id": 649305355,
+      "size": 79119760,
+      "sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "actual_producer": "e193aeca201a346115ebe0ee552d6cb1ec995447"
+    }
+  ],
+  "payload_index_sha256": "b4ee5ede37b7be43dc601f7e4b00b25416c40b06bc8e0381db6565dcdb409d9f",
+  "native_closure": {
+    "path": "/tmp/nm2022-final-cost-native-source-draft/actual-owner-terminal.json",
+    "sha256": "79d933e97b420067675cb02e264cf5786c1f7179192a2d705827872ec188df6c"
+  },
+  "functional_closure": {
+    "path": "/tmp/nm2022-final-cost-functional/actual-functional-result.json",
+    "sha256": "d0037799dc906d8b9f9cb0bf510c4acf6a919ca1f67d966b1a3df90e1143c9ba"
+  },
+  "layout_source_carry": {
+    "proof": {
+      "path": "/tmp/nm2022-final-cost-layout-carry/type-source-carry.json",
+      "sha256": "72780b9bf56b635717ea9e90c123724a0cf41a2f28bc7dcd45df7b069c8e2e1d"
+    },
+    "root_review": {
+      "path": "/tmp/nm2022-final-cost-layout-carry/root-type-source-review.json",
+      "sha256": "1f01469ab17702b7344d77ffbd32ebbca864e3382f93cdd3aa8d2c2993135cb3"
+    },
+    "note": "All original24 actual records retain4e producer labels; six types identical with cfg(test)=false in both original modes. No numeric remeasurement."
+  },
+  "prior_ineligible_retained": {
+    "run": 38989735904,
+    "diagnostic_head": "3c0009aa258dc1dba5ef1dd7e0d762850ca9fc0e",
+    "status": "INELIGIBLE",
+    "actual_rows": 672,
+    "required_rows": 704,
+    "withheld_long_rows": 32,
+    "cause": "frozen effects-plain-hot-off pilot spread; no retry or policy change",
+    "preserved_evidence": "/tmp/nm2022-run38989735904-evidence"
+  }
+}

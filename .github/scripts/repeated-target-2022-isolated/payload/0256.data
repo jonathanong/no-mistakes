@@ -1,15 +1,7 @@
 import { query } from "@example/db";
 
-const helpers = {
-  templates: {
-    raw(strings: TemplateStringsArray) {
-      return strings.join("");
-    },
-  },
-};
-
-const text = helpers.templates.raw`SELECT id FROM topics`;
+const sql = "SELECT id FROM " + table;
 
 export function load() {
-  return query(text);
+  return query(sql);
 }

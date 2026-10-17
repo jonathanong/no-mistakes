@@ -1,7 +1,7 @@
-{
-  "selectedTests": [
-    {
-      "testFile": "tests/example.test.mts"
-    }
-  ]
-}
+name: First inherited config
+on: push
+jobs:
+  first:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo first

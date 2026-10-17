@@ -1,1 +1,1 @@
-{"span":{"discard":true},"first":[{"before":1,"span":null,"after":2},{"span":0},{"value":"quoted\"text","quote_style":"\"","span":{}}],"middle":{"a":true,"span":{},"z":null},"numbers":[1.234567890123456789,1e+100,-0.0],"last":{"b":false,"a":"keep","quoted\"key":[]}}
+CREATE UNIQUE

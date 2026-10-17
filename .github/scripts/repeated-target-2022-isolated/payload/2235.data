@@ -1,260 +1,146 @@
-import type { SymbolEntrypoint } from "./traversal-types";
-
-/** A named project under `.no-mistakes.yml` `tests.vitest.projects`. */
-export interface VitestProjectPolicy {
-  include?: string[];
-  exclude?: string[];
-  /** Repository-root-relative setup modules for this project's matched tests. */
-  setup_files?: string[];
-  integration_suites?: Record<string, string[]>;
+import { configDefaults } from "vitest/config";
+import { isAbsolute } from "node:path";
+import { fileURLToPath } from "node:url";
+const virtualId = "\0test-timeout-policy:vitest";
+/** Vite resolves the public imports; no source parser or SDK-private patch is involved. */
+export function testTimeoutPolicyPlugin(
+  maximum = 30_000,
+  registrationPackages = [],
+  nodeRunner = { runner: null },
+) {
+  return createPolicyPlugin(maximum, registrationPackages, nodeRunner);
 }
-
-/** Runner accepted by `testsPlan`, `testsTargets`, and `TestExecutionTarget`. */
-export type TestPlanFramework =
-  | "vitest"
-  | "playwright"
-  | "dotnet"
-  | "swift"
-  | "python"
-  | "go"
-  | "cargo"
-  | "rails"
-  | "php"
-  | "java"
-  | "kotlin"
-  | "elixir"
-  | "dart"
-  | "jest";
-
-interface TestsPlanOptionsBase {
-  framework?: TestPlanFramework;
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  base?: string;
-  head?: string;
-  /** Git diff refspec, e.g. "origin/main...HEAD". Sugar for base/head. */
-  fromGitDiff?: string;
-  changedFiles?: string[];
-  changedFilesFile?: string;
-  /** Inline unified diff content to extract changed files from. */
-  diff?: string;
-  /** Entrypoints to trace impact from: strings may use file#export, or pass { file, symbol }. */
-  entrypoints?: Array<string | SymbolEntrypoint>;
-  /** Enables symbol fields in entrypoints and symbol-node traversal. */
-  includeSymbols?: boolean;
-  environment?: string;
-  limitPercent?: number;
-  limitFiles?: number;
-  globalConfigFallback?: boolean;
-  /** Include the markdown PR comment as `comment` on the returned plan. */
-  includeComment?: boolean;
-  /** Keep only selected tests whose relative path matches one of these globs. */
-  includeGlob?: string[];
+function createPolicyPlugin(maximum, registrationPackages, nodeRunner) {
+  if (!Number.isFinite(maximum) || maximum <= 0)
+    throw new RangeError("Timeout maximum must be positive and finite");
+  const policy = fileURLToPath(new URL("./index.mjs", import.meta.url));
+  const runnerId = fileURLToPath(new URL("./timeout-policy-virtual-runner.mjs", import.meta.url));
+  const originalRunner = nodeRunner?.runner;
+  if (originalRunner && !isAbsolute(originalRunner))
+    throw new TypeError("Supply the absolute resolved final runner module");
+  return {
+    name: "test-timeout-policy",
+    enforce: "pre",
+    // Externalized modules bypass Vite resolution entirely; registration helpers must be inlined.
+    config(config = {}) {
+      if (nodeRunner && config.test?.runner && config.test.runner !== originalRunner)
+        throw new Error("Configured runner differs from the supplied final runner");
+      return {
+        test: {
+          ...(nodeRunner ? { runner: runnerId } : {}),
+          server: {
+            deps: {
+              inline: config.test?.server?.deps?.inline === true ? true : [...registrationPackages],
+            },
+          },
+        },
+      };
+    },
+    configResolved(config) {
+      if (config.test?.browser?.enabled)
+        throw new Error("Node final-runner composition cannot be used for browser projects");
+      if (config.test?.runner !== runnerId)
+        throw new Error("Final runner policy was replaced during configuration merge");
+    },
+    resolveId(source, importer) {
+      if (nodeRunner && source === runnerId) return runnerId;
+      if (source === "vitest" && importer === runnerId) return null;
+      if (source !== "vitest" || !importer || importer === virtualId) return null;
+      return virtualId;
+    },
+    load(id) {
+      if (nodeRunner && id === runnerId)
+        return `
+        ${
+          originalRunner
+            ? `import FinalRunner from ${JSON.stringify(originalRunner)}`
+            : "import { TestRunner as FinalRunner } from 'vitest'"
+        }
+        import { guardPublicRunner, protectRunnerTimeouts } from ${JSON.stringify(policy)}
+        export default guardPublicRunner(FinalRunner, ${JSON.stringify(maximum)}, protectRunnerTimeouts)
+      `;
+      if (id !== virtualId) return null;
+      return `
+        import * as native from 'vitest'
+        import { guardVitestExports } from ${JSON.stringify(policy)}
+        ${
+          nodeRunner
+            ? `import { guardRunnerStatics } from ${JSON.stringify(fileURLToPath(new URL("./public-runner.mjs", import.meta.url)))}
+        import { protectRunnerTimeouts } from ${JSON.stringify(policy)}`
+            : ""
+        }
+        export * from 'vitest'
+        const guarded = guardVitestExports(native, ${JSON.stringify(maximum)})
+        ${nodeRunner ? `export const TestRunner = guardRunnerStatics(native.TestRunner, ${JSON.stringify(maximum)}, protectRunnerTimeouts)` : "export const TestRunner = guarded.TestRunner"}
+        export const { test, it, describe, suite, beforeAll, beforeEach, afterAll, afterEach,
+          aroundAll, aroundEach, onTestFailed, onTestFinished, vi, vitest } = guarded
+      `;
+    },
+  };
 }
-
-/**
- * Options for `testsPlan()`. Direct-owner plans intentionally bypass normal
- * test-plan policy, so their incompatible options are rejected at compile time.
- */
-export type TestsPlanOptions =
-  | (Omit<
-      TestsPlanOptionsBase,
-      "framework" | "limitPercent" | "limitFiles" | "globalConfigFallback"
-    > & {
-      /** Select changed framework-owned tests plus tests one reverse graph edge away. */
-      directTestOwner: true;
-      framework: TestPlanFramework;
-      /** Direct-owner selection is bounded to changed files; use testsImpact for explicit entrypoints. */
-      entrypoints?: never;
-      limitPercent?: never;
-      limitFiles?: never;
-      globalConfigFallback?: never;
-    })
-  | (TestsPlanOptionsBase & {
-      /** Set to true only with an explicit framework and without policy overrides. */
-      directTestOwner?: false;
-    });
-
-export interface TestsImpactOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  /** Entrypoints to trace impact from: strings may use file#export, or pass { file, symbol }. */
-  entrypoints: Array<string | SymbolEntrypoint>;
-  /** Enables symbol fields in entrypoints and symbol-node traversal. */
-  includeSymbols?: boolean;
-}
-
-export interface TestsTargetsOptions {
-  framework: TestPlanFramework;
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  files: string[];
-}
-
-export interface TestPlan {
-  /** Complete deterministic changed-file inventory, relative to the request root. */
-  changedFiles: string[];
-  selectedTests: SelectedTest[];
-  groups?: TestPlanGroup[];
-  warnings: TestPlanWarning[];
-  fallbackTriggered: boolean;
-  fallbackReason?: string | null;
-  executionTargets?: GroupedExecutionTarget[];
-  comment?: string | null;
-}
-
-export interface GroupedExecutionTarget {
-  runner: TestPlanFramework;
-  config?: string | null;
-  project?: string | null;
-  /** Path-prefix display name, such as a Swift package root. */
-  name?: string;
-  baseCommand: string[];
-  runnerArgs: string[];
-  testFiles: string[];
-}
-
-export interface SelectedTest {
-  testFile: string;
-  confidence: "low" | "medium" | "high";
-  reasons: ImpactReason[];
-  targets?: TestExecutionTarget[];
-}
-
-export interface TestExecutionTarget {
-  runner: TestPlanFramework;
-  config?: string | null;
-  /** True when config is a Vitest workspace/project-array source rendered with --workspace. */
-  workspace?: boolean;
-  project?: string | null;
-  /** Path-prefix display name, such as a Swift package root. */
-  name?: string;
-  baseCommand: string[];
-  runnerArgs: string[];
-}
-
-export interface ImpactReason {
-  changedFile: string;
-  path: string[];
-  via: string[];
-  /** When present, aligns index-for-index with `via`. */
-  viaDetails?: Array<ImpactEdgeDetail | null>;
-}
-
-export type ImpactEdgeDetail = ResourceImpactEdgeDetail | VitestSetupImpactEdgeDetail;
-
-export interface ResourceImpactEdgeDetail {
-  type: "resource";
-  consumerFile: string;
-  callSites: ResourceCallSite[];
-}
-
-export interface VitestSetupImpactEdgeDetail {
-  type: "vitest-setup";
-  field: "setupFiles" | "globalSetup";
-}
-
-export interface ResourceCallSite {
-  callKind: ResourceCallKind;
-  line: number;
-}
-
-/** Static runtime filesystem API that created a resource dependency edge. */
-export type ResourceCallKind =
-  | "read-file"
-  | "read-file-sync"
-  | "read-directory"
-  | "read-directory-sync"
-  | "glob"
-  | "glob-sync";
-
-export interface TestPlanGroup {
-  type: string;
-  selected: string[];
-  remaining: number;
-  limit?: number | null;
-}
-
-export interface TestPlanWarning {
-  /** Includes cargo-target-unresolved when a Rust test has no unambiguous enabled Cargo target. */
-  type: string;
-  message: string;
-  file: string;
-  line?: number;
-}
-
-export interface TestsTargetsReport {
-  framework: TestPlanFramework;
-  tests: TestTargetRow[];
-  warnings: TestTargetWarning[];
-}
-
-export interface TestTargetRow {
-  testFile: string;
-  targets: TestExecutionTarget[];
-}
-
-export interface TestTargetWarning {
-  /** Includes cargo-target-unresolved; such files retain an empty targets array. */
-  type: string;
-  message: string;
-  file: string;
-}
-
-export interface TestsWhyOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  test: string;
-  changed?: string;
-  plan?: string;
-  planJson?: SavedTestPlan | string;
-}
-
-export interface WhyStep {
-  node: string;
-  via?: string | null;
-  detail?: ImpactEdgeDetail | null;
-}
-
-/** A current or pre-`changedFiles` plan accepted by saved-plan document APIs. */
-export type SavedTestPlan = TestPlan;
-
-export interface TestsPlanDocumentOptions {
-  plan?: string;
-  planJson?: SavedTestPlan | string;
-}
-
-export interface TestGraph {
-  nodes: Array<{ name: string; type: "changed" | "test" | "intermediate" }>;
-  edges: Array<{ from: string; to: string; via: string; detail?: ImpactEdgeDetail }>;
-}
-
-export interface LockfileDiffOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  base: string;
-  head?: string;
-  lockfile?: string;
-}
-
-export interface LockfileDiffEntry {
-  lockfile: string;
-  manager: "npm" | "pnpm" | "yarn" | "bun";
-  added: string[];
-  removed: string[];
-  changed: string[];
+/** Browser-only candidate: keep public constructor/registrars out of dependency bundles. */
+export function browserTestTimeoutPolicyPlugin(maximum = 30_000, registrationPackages = []) {
+  const base = createPolicyPlugin(maximum, registrationPackages);
+  const excluded = ["vitest", "@vitest/browser", ...registrationPackages];
+  const filterIncludes = (include) =>
+    include.filter(
+      (entry) =>
+        !entry.split(">").some((part) => {
+          const token = part.trim();
+          return excluded.some((id) => token === id || token.startsWith(`${id}/`));
+        }),
+    );
+  return {
+    ...base,
+    name: "browser-test-timeout-policy",
+    configEnvironment: {
+      order: "post",
+      handler(name, config) {
+        if (name !== "client" && config.consumer !== "client") return;
+        return {
+          optimizeDeps: {
+            ...config.optimizeDeps,
+            include: filterIncludes(config.optimizeDeps?.include ?? []),
+            exclude: [...new Set([...(config.optimizeDeps?.exclude ?? []), ...excluded])],
+          },
+        };
+      },
+    },
+    config(config = {}) {
+      const existing = config.test?.reporters;
+      const reporters = existing === undefined ? [...configDefaults.reporters] : [];
+      const lifecycle = {
+        onBrowserInit(project) {
+          // Public reporter lifecycle runs before the provider starts browser pages.
+          const configs = [project.viteConfig, project.vite.config];
+          for (const resolved of configs) {
+            for (const optimizer of [
+              resolved.optimizeDeps,
+              resolved.environments?.client?.optimizeDeps,
+            ]) {
+              if (optimizer?.include) optimizer.include = filterIncludes(optimizer.include);
+            }
+          }
+          const optimizer = project.vite.environments.client?.config.optimizeDeps;
+          if (optimizer?.include) optimizer.include = filterIncludes(optimizer.include);
+        },
+      };
+      return {
+        ...base.config(config),
+        test: { ...base.config(config).test, reporters: [...reporters, lifecycle] },
+        optimizeDeps: { exclude: excluded },
+      };
+    },
+    configResolved(config) {
+      if (!config.test?.browser?.enabled)
+        throw new Error("Browser timeout policy requires an enabled browser project");
+      for (const id of excluded) {
+        if (!config.optimizeDeps?.exclude?.includes(id))
+          throw new Error(`Missing browser timeout routing exclusion: ${id}`);
+      }
+      for (const optimizer of [config.optimizeDeps, config.environments?.client?.optimizeDeps]) {
+        if (optimizer?.include) optimizer.include = filterIncludes(optimizer.include);
+      }
+    },
+  };
 }

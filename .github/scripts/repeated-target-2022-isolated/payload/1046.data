@@ -1,4 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-// A parenthesized exported function remains deferred.
-export default (function run() { ((client = primary) => { const get = client.get; primary.get = replacement; get(); })(); });
+declare const member: string;
+export default { [member]: function () { ((client = primary) => { const get = client.get; primary.get = replacement; get(); })(); } };

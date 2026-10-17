@@ -1,9 +1,7 @@
-EXPLAIN CREATE TABLE wrapper_children (
-  id integer,
-  CONSTRAINT wrapper_check CHECK (id > 0)
-);
-DO $body$
-BEGIN
-  EXECUTE 'CREATE TABLE decoded_children (id integer, CONSTRAINT decoded_check CHECK (id > 0));';
-END
-$body$;
+DO $$ BEGIN
+IF true THEN BEGIN
+  ALTER TABLE children ADD COLUMN parent_note text;
+END; ELSIF false THEN BEGIN
+END; ELSE BEGIN
+END; END IF;
+END $$;

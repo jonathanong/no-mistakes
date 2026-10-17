@@ -1,6 +1,12 @@
-export async function afterComputedGate() {
-  const query = '/* effects/computed */ SELECT id FROM posts'
-  const gate = { [await Promise.resolve('ready')]: true }
-  void gate
-  return query
+import { read, sql } from '@example/db';
+
+// Rest parameters intentionally keep this helper unsupported. Its append must
+// prevent a legacy return prefix from reviving a potentially modified builder.
+function unsupportedAppend(query: unknown, ...unused: unknown[]) {
+  query.append(sql` DELETE FROM records`);
+  return query;
+}
+export function unsupportedAppendIsNotAReadProof() {
+  const query = sql`SELECT 1`;
+  read(unsupportedAppend(query));
 }

@@ -1,8 +1,4 @@
-import { primary as receiver, replica } from '@vendor/database';
-// Repeated calls revisit one physical imported-receiver occurrence.
-function invoke() {
-  receiver.read();
-  receiver.read = replica.write;
-}
-invoke();
-invoke();
+import { primary } from '@vendor/valkey';
+export function factory() { return ({ client = primary } = {}) => client.get(); }
+// This module write precedes every importing module's invocation.
+primary.get = function replacement() {};

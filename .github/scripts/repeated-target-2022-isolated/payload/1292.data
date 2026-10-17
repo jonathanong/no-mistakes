@@ -1,7 +1,13 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
-holder.box.client = { x: (holder.box = { client: (holder.box = { client }, client) }) };
-holder.box.client.get = replacement;
-function globalNestedFresh(value) { value.get('key'); }
-globalNestedFresh(client);
+holder.box.client = {};
+class Decorated {
+  @opaque method() {}
+  static first = 0;
+  // This key runs before decorator application, despite its source position.
+  [(holder.box.client.get = replacement, 'key')]() {}
+}
+function opaque() { holder.box = { client }; }
+function scan(value) { value.get('key'); }
+scan(client);

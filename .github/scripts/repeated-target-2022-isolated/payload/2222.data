@@ -1,146 +1,152 @@
-import { configDefaults } from "vitest/config";
-import { isAbsolute } from "node:path";
-import { fileURLToPath } from "node:url";
-const virtualId = "\0test-timeout-policy:vitest";
-/** Vite resolves the public imports; no source parser or SDK-private patch is involved. */
-export function testTimeoutPolicyPlugin(
-  maximum = 30_000,
-  registrationPackages = [],
-  nodeRunner = { runner: null },
-) {
-  return createPolicyPlugin(maximum, registrationPackages, nodeRunner);
+const assert = require("node:assert/strict");
+const test = globalThis.test || require("node:test").test;
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
+
+const { createWorkflowTopologyIndex } = require("../workflow-topology-index");
+
+// Reuses the same golden `WorkflowTopology` JSON the Rust engine's
+// fixture-backed tests assert byte-for-byte parity against (see
+// `crates/no-mistakes/src/codebase/workflow_topology/tests.rs`), so this
+// index is exercised against a real, non-trivial graph rather than a
+// hand-rolled stub.
+function fixtureTopology(name) {
+  const path = join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "test-cases",
+    "workflow-topology",
+    name,
+    "expected.json",
+  );
+  return JSON.parse(readFileSync(path, "utf8"));
 }
-function createPolicyPlugin(maximum, registrationPackages, nodeRunner) {
-  if (!Number.isFinite(maximum) || maximum <= 0)
-    throw new RangeError("Timeout maximum must be positive and finite");
-  const policy = fileURLToPath(new URL("./index.mjs", import.meta.url));
-  const runnerId = fileURLToPath(new URL("./timeout-policy-virtual-runner.mjs", import.meta.url));
-  const originalRunner = nodeRunner?.runner;
-  if (originalRunner && !isAbsolute(originalRunner))
-    throw new TypeError("Supply the absolute resolved final runner module");
-  return {
-    name: "test-timeout-policy",
-    enforce: "pre",
-    // Externalized modules bypass Vite resolution entirely; registration helpers must be inlined.
-    config(config = {}) {
-      if (nodeRunner && config.test?.runner && config.test.runner !== originalRunner)
-        throw new Error("Configured runner differs from the supplied final runner");
-      return {
-        test: {
-          ...(nodeRunner ? { runner: runnerId } : {}),
-          server: {
-            deps: {
-              inline: config.test?.server?.deps?.inline === true ? true : [...registrationPackages],
-            },
-          },
-        },
-      };
-    },
-    configResolved(config) {
-      if (config.test?.browser?.enabled)
-        throw new Error("Node final-runner composition cannot be used for browser projects");
-      if (config.test?.runner !== runnerId)
-        throw new Error("Final runner policy was replaced during configuration merge");
-    },
-    resolveId(source, importer) {
-      if (nodeRunner && source === runnerId) return runnerId;
-      if (source === "vitest" && importer === runnerId) return null;
-      if (source !== "vitest" || !importer || importer === virtualId) return null;
-      return virtualId;
-    },
-    load(id) {
-      if (nodeRunner && id === runnerId)
-        return `
-        ${
-          originalRunner
-            ? `import FinalRunner from ${JSON.stringify(originalRunner)}`
-            : "import { TestRunner as FinalRunner } from 'vitest'"
-        }
-        import { guardPublicRunner, protectRunnerTimeouts } from ${JSON.stringify(policy)}
-        export default guardPublicRunner(FinalRunner, ${JSON.stringify(maximum)}, protectRunnerTimeouts)
-      `;
-      if (id !== virtualId) return null;
-      return `
-        import * as native from 'vitest'
-        import { guardVitestExports } from ${JSON.stringify(policy)}
-        ${
-          nodeRunner
-            ? `import { guardRunnerStatics } from ${JSON.stringify(fileURLToPath(new URL("./public-runner.mjs", import.meta.url)))}
-        import { protectRunnerTimeouts } from ${JSON.stringify(policy)}`
-            : ""
-        }
-        export * from 'vitest'
-        const guarded = guardVitestExports(native, ${JSON.stringify(maximum)})
-        ${nodeRunner ? `export const TestRunner = guardRunnerStatics(native.TestRunner, ${JSON.stringify(maximum)}, protectRunnerTimeouts)` : "export const TestRunner = guarded.TestRunner"}
-        export const { test, it, describe, suite, beforeAll, beforeEach, afterAll, afterEach,
-          aroundAll, aroundEach, onTestFailed, onTestFinished, vi, vitest } = guarded
-      `;
-    },
-  };
+
+function metadataFixtureTopology() {
+  const path = join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "fixtures",
+    "workflow-topology",
+    "job-metadata",
+    "expected.json",
+  );
+  return JSON.parse(readFileSync(path, "utf8"));
 }
-/** Browser-only candidate: keep public constructor/registrars out of dependency bundles. */
-export function browserTestTimeoutPolicyPlugin(maximum = 30_000, registrationPackages = []) {
-  const base = createPolicyPlugin(maximum, registrationPackages);
-  const excluded = ["vitest", "@vitest/browser", ...registrationPackages];
-  const filterIncludes = (include) =>
-    include.filter(
-      (entry) =>
-        !entry.split(">").some((part) => {
-          const token = part.trim();
-          return excluded.some((id) => token === id || token.startsWith(`${id}/`));
-        }),
-    );
-  return {
-    ...base,
-    name: "browser-test-timeout-policy",
-    configEnvironment: {
-      order: "post",
-      handler(name, config) {
-        if (name !== "client" && config.consumer !== "client") return;
-        return {
-          optimizeDeps: {
-            ...config.optimizeDeps,
-            include: filterIncludes(config.optimizeDeps?.include ?? []),
-            exclude: [...new Set([...(config.optimizeDeps?.exclude ?? []), ...excluded])],
-          },
-        };
-      },
-    },
-    config(config = {}) {
-      const existing = config.test?.reporters;
-      const reporters = existing === undefined ? [...configDefaults.reporters] : [];
-      const lifecycle = {
-        onBrowserInit(project) {
-          // Public reporter lifecycle runs before the provider starts browser pages.
-          const configs = [project.viteConfig, project.vite.config];
-          for (const resolved of configs) {
-            for (const optimizer of [
-              resolved.optimizeDeps,
-              resolved.environments?.client?.optimizeDeps,
-            ]) {
-              if (optimizer?.include) optimizer.include = filterIncludes(optimizer.include);
-            }
-          }
-          const optimizer = project.vite.environments.client?.config.optimizeDeps;
-          if (optimizer?.include) optimizer.include = filterIncludes(optimizer.include);
-        },
-      };
-      return {
-        ...base.config(config),
-        test: { ...base.config(config).test, reporters: [...reporters, lifecycle] },
-        optimizeDeps: { exclude: excluded },
-      };
-    },
-    configResolved(config) {
-      if (!config.test?.browser?.enabled)
-        throw new Error("Browser timeout policy requires an enabled browser project");
-      for (const id of excluded) {
-        if (!config.optimizeDeps?.exclude?.includes(id))
-          throw new Error(`Missing browser timeout routing exclusion: ${id}`);
-      }
-      for (const optimizer of [config.optimizeDeps, config.environments?.client?.optimizeDeps]) {
-        if (optimizer?.include) optimizer.include = filterIncludes(optimizer.include);
-      }
-    },
-  };
-}
+
+test("job upstream/downstream traversal is direct and transitive", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  const build = ".github/workflows/pipeline.yml#build";
+  const test_ = ".github/workflows/pipeline.yml#test";
+  const deploy = ".github/workflows/pipeline.yml#deploy";
+
+  assert.deepEqual(index.directDownstreamJobIds(build), [test_]);
+  assert.deepEqual(index.directUpstreamJobIds(deploy), [test_]);
+  assert.deepEqual(index.transitiveDownstreamJobIds(build), [deploy, test_].sort());
+  assert.deepEqual(index.transitiveUpstreamJobIds(deploy), [build, test_].sort());
+  // Transitive traversal excludes the source itself.
+  assert.equal(index.transitiveDownstreamJobIds(build).includes(build), false);
+});
+
+test("unknown job or workflow ids throw", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  assert.throws(() => index.directUpstreamJobIds("nope"), /unknown workflow job: nope/);
+  assert.throws(() => index.directCalleeWorkflowPaths("nope.yml"), /unknown workflow: nope\.yml/);
+});
+
+test("local reusable-workflow calls populate caller/callee traversals; remote calls do not", () => {
+  const topology = fixtureTopology("reusable-calls");
+  const index = createWorkflowTopologyIndex(topology);
+  const caller = ".github/workflows/caller.yml";
+  const callee = ".github/workflows/reusable-callee.yml";
+  const goodJob = ".github/workflows/caller.yml#good";
+
+  assert.deepEqual(index.directCallerWorkflowPaths(callee), [caller]);
+  assert.deepEqual(index.directCallerJobIds(callee), [goodJob]);
+  assert.deepEqual(index.directCalleeWorkflowPaths(caller).includes(callee), true);
+  // cycle-a calls cycle-b calls cycle-a: transitively reachable, but the
+  // source itself is excluded even though the cycle loops back to it.
+  assert.deepEqual(index.transitiveCalleeWorkflowPaths(".github/workflows/cycle-a.yml"), [
+    ".github/workflows/cycle-b.yml",
+  ]);
+});
+
+test("workflow_run source/subscriber traversal and edge metadata", () => {
+  const topology = fixtureTopology("workflow-run");
+  const index = createWorkflowTopologyIndex(topology);
+  const source = ".github/workflows/source.yml";
+  const subscriberOk = ".github/workflows/subscriber-ok.yml";
+
+  assert.deepEqual(index.directWorkflowRunSubscriberPaths(source), [subscriberOk]);
+  assert.deepEqual(index.directWorkflowRunSourcePaths(subscriberOk), [source]);
+  const outgoing = index.outgoingWorkflowRunEdges(source);
+  assert.equal(outgoing.length, 1);
+  assert.deepEqual(outgoing[0].types, ["completed"]);
+  assert.deepEqual(outgoing[0].branches, ["main"]);
+});
+
+test("workflowsByPath/jobsById are frozen and read-only despite being backed by a real Map", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  assert.equal(index.jobsById.size, 3);
+  // `FrozenReadonlyMap` exposes no `.set`/`.delete` at all — not even a
+  // no-op one — so calling either isn't just silently ignored, it's a
+  // TypeError (not a function).
+  assert.equal(typeof index.jobsById.set, "undefined");
+  assert.equal(typeof index.jobsById.delete, "undefined");
+  // The cloned job values are deep-frozen. A strict-mode assignment (ESM,
+  // which vitest transforms into) throws TypeError; a sloppy-mode one
+  // (plain CommonJS under `node --test`) silently no-ops — either way the
+  // frozen value must not change, so tolerate both and assert on that.
+  const job = index.jobsById.get(".github/workflows/pipeline.yml#build");
+  const originalId = job.id;
+  try {
+    job.id = "mutated";
+  } catch {
+    // expected in strict-mode environments
+  }
+  assert.equal(job.id, originalId);
+});
+
+test("does not mutate or reference the source topology object", () => {
+  const topology = fixtureTopology("needs-basic");
+  const before = JSON.stringify(topology);
+  createWorkflowTopologyIndex(topology);
+  assert.equal(JSON.stringify(topology), before);
+});
+
+test("deep-freezes enriched job and step metadata", () => {
+  const index = createWorkflowTopologyIndex(metadataFixtureTopology());
+  const job = index.jobsById.get(".github/workflows/default.yml#default");
+
+  assert.equal(Object.isFrozen(job.permissions), true);
+  assert.equal(Object.isFrozen(job.permissions.scopes), true);
+  assert.equal(Object.isFrozen(job.env), true);
+  assert.equal(Object.isFrozen(job.secretReferences), true);
+  assert.equal(Object.isFrozen(job.steps[0].with), true);
+  assert.equal(Object.isFrozen(job.steps[0].secretReferences), true);
+
+  const groupJob = index.jobsById.get(".github/workflows/malformed-metadata.yml#malformed");
+  assert.deepEqual(groupJob.runsOn, {
+    group: "hosted",
+    labels: "ubuntu-latest",
+  });
+  assert.equal(Object.isFrozen(groupJob.runsOn), true);
+
+  const groupOnlyJob = index.jobsById.get(
+    ".github/workflows/malformed-metadata.yml#unsupported-environment",
+  );
+  assert.deepEqual(groupOnlyJob.runsOn, { group: "restricted" });
+  assert.equal(Object.isFrozen(groupOnlyJob.runsOn), true);
+});
+
+test("directCallerJobIdsForUses and stepOrderIndexes query steps", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  const build = ".github/workflows/pipeline.yml#build";
+  assert.deepEqual(index.directCallerJobIdsForUses("actions/checkout@v4"), []);
+  assert.deepEqual(index.stepOrderIndexes(build, [{ name: "missing" }]), [-1]);
+  assert.throws(() => index.stepOrderIndexes("nope", []), /unknown workflow job: nope/);
+});

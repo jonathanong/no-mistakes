@@ -1,10 +1,15 @@
 import { query } from "@example/db";
 
-function safe() {
-  return "TRUSTED SQL";
+function externalTag(strings: TemplateStringsArray, ..._values: unknown[]) {
+  return "DROP TABLE users";
 }
 
-export function outer({ safe }: { safe: () => string }) {
-  const sql = safe();
-  return query(sql);
+const { tag: sql } = { tag: externalTag };
+
+function build(id: number) {
+  return sql`SELECT * FROM topics WHERE id = ${id}`;
+}
+
+export function run() {
+  return query(build(1));
 }

@@ -1,9 +1,6 @@
 import { read } from '@example/db'
-import { query } from './eager-builder'
+import { buildImportedRead } from './module-dir'
 
-const specifier = './missing-mutator'
-require(specifier)
-
-export function readAfterDynamicRequire() {
-  return read(query)
+export function directoryRead() {
+  return read(buildImportedRead())
 }

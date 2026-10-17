@@ -1,80 +1,44 @@
-"""Use visible cgroup ancestors, not host RAM alone, as the resource budget."""
-from pathlib import Path, PurePosixPath
-
-
-def groups(controller):
-    memberships = Path('/proc/self/cgroup').read_text().splitlines()
-    mounts = Path('/proc/self/mountinfo').read_text().splitlines()
-    for line in mounts:
-        fields = line.split()
-        separator = fields.index('-')
-        kind = fields[separator + 1]
-        version = 2 if kind == 'cgroup2' else 1
-        if kind not in ('cgroup', 'cgroup2'):
-            continue
-        if version == 1 and controller not in fields[separator + 3].split(','):
-            continue
-        membership = next((m.split(':', 2)[2] for m in memberships
-                           if (version == 2 and m.startswith('0::')) or
-                           (version == 1 and controller in m.split(':', 2)[1].split(','))), None)
-        if membership is None:
-            continue
-        mount = Path(fields[4])
-        try:
-            relative = PurePosixPath(membership).relative_to(PurePosixPath(fields[3]))
-        except ValueError:
-            relative = PurePosixPath('.')  # A cgroup namespace may expose its own root as '/'.
-        directory = mount / str(relative)
-        distance = 0
-        while directory == mount or mount in directory.parents:
-            yield version, distance, directory
-            if directory == mount:
-                break
-            directory = directory.parent
-            distance += 1
-
-
-def memory_limits():
-    limits = []
-    for version, distance, directory in groups('memory'):
-        maximum = directory / ('memory.max' if version == 2 else 'memory.limit_in_bytes')
-        current = directory / ('memory.current' if version == 2 else 'memory.usage_in_bytes')
-        if not maximum.exists():
-            continue  # This hierarchy may not expose the memory controller.
-        raw = maximum.read_text().strip()
-        if raw == 'max':
-            continue
-        amount = int(raw)
-        if amount >= 1 << 60:  # v1 represents unlimited with a very large sentinel.
-            continue
-        used = int(current.read_text().strip())
-        limits.append({'version': version, 'ancestor_distance': distance,
-                       'limit_bytes': amount, 'current_bytes': used,
-                       'headroom_bytes': max(0, amount - used)})
-    return limits
-
-
-def effective_memory(proc_available_bytes, limits):
-    return min([proc_available_bytes] + [limit['headroom_bytes'] for limit in limits])
-
-
-def cpu_quota():
-    limits = []
-    for version, _distance, directory in groups('cpu'):
-        if version == 2:
-            path = directory / 'cpu.max'
-            if not path.exists():
-                continue
-            amount, period = path.read_text().split()
-            if amount == 'max':
-                continue
-        else:
-            path = directory / 'cpu.cfs_quota_us'
-            if not path.exists():
-                continue
-            amount = path.read_text().strip()
-            if int(amount) < 0:
-                continue
-            period = (directory / 'cpu.cfs_period_us').read_text().strip()
-        limits.append(int(amount) / int(period))
-    return min(limits) if limits else None
+{
+  "status": "REVIEWED FRESH CANDIDATE BUILD ONLY",
+  "head": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "root": "/tmp/no-mistakes-2022-final-cost-native",
+  "driver_sha256": "6cf6e00c6e7142abaf83f3a20210bca4bd779c8821fee4fcff13e8ffc09074dc",
+  "source_inventory": {
+    "path": "/tmp/nm2022-final-cost-native-source-draft/source-inventory.json",
+    "sha256": "313fbf765756cd50121cd314ee6c863f63c3e362d80b3c64b92ecee091f8c06d"
+  },
+  "focused_receipt": {
+    "path": "/tmp/nm2022-combined-cost-opt/scaffold-clippy-actual01/receipt.json",
+    "sha256": "401ca18ccd783630264c7f9447b9119e610c1b883cb57517c3ee67bc0e2e2a4a"
+  },
+  "baseline_manifest": {
+    "path": "/tmp/nm2076-cold-lifetime-release/candidate/closed-artifacts.json",
+    "sha256": "83dedf521176f1b1fc3fca36040e4913335d40fb640b0e302b271bec1263e2ba"
+  },
+  "baseline_rustc_Vv": {
+    "path": "/tmp/nm2076-cold-lifetime-release/candidate/rustc.stdout",
+    "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+  },
+  "probe_pins": {
+    "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs": "d8b4d7e5d1652eed15fe3d0394d1c18c29f708b7c713ee0afe1673c2c00bb451",
+    "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs": "e24e4cc8c7f401c1ead603333bb14b3d4a844a43da3f3146f9f79458bf78ee44"
+  },
+  "note": "New e193 lower production source; actual 310 extraction/684 graph plus independent full legacy oracles and both Clippy modes passed. Historical baseline producer remains authentic099 lifetime overlay, main281 then version-only main29 carry. No performance claim.",
+  "baseline_helper_provenance": {
+    "path": "/tmp/nm-main281-shared-baseline/request.json",
+    "sha256": "217f4ca624880d2be29241ce4248caf66ab8631425ee116daa7ff97b72344a40"
+  },
+  "baseline_main_carry": {
+    "path": "/tmp/nm2076-cold-lifetime-publication/actual-main-merge-tree-equivalence.json",
+    "sha256": "498d1354216cafdaa3f26b09caa62558720dd9ae49859a3d74ff957694c2cc53"
+  },
+  "candidate_source_carry": {
+    "path": "/tmp/nm2022-final-lower-publication/source-carry.json",
+    "sha256": "a53262feae8d415e05e43da9b4c89c774f0d9f3c95f58f5ae8aaa683ffe67ea8"
+  },
+  "stable_update_receipt": {
+    "path": "/tmp/nm2022-final-cost-native-source-draft/stable-update.json",
+    "sha256": "c276ca7e58a393296846ef7389f01562bca980f469b2943c452ecb579ad1c382"
+  },
+  "scope": "Fresh final lower default release CLI/core+completed dependencies then addon, whole1800s/9GB/jobs1. Independent proper-LTO graph/timing/SQL link phases from completed same-arm core can overlap addon, each owned/bounded; no sampling."
+}

@@ -1,11 +1,7 @@
 import { query } from "@example/db";
 
-function externalTag(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return "DROP TABLE users";
-}
+const trap = function sql(strings: TemplateStringsArray, ...values: unknown[]) {
+  return query(sql`SELECT * FROM topics WHERE id = ${values[0]}`);
+};
 
-const sql = externalTag;
-
-export function run(id: number) {
-  return query(sql`SELECT * FROM topics WHERE id = ${id}`.append(" AND active"));
-}
+export { trap };

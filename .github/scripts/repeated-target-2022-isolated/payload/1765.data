@@ -1,4 +1,3 @@
-const prototype = Reflect.getPrototypeOf([]);
-prototype.join = () => '; DELETE FROM records';
-const computedPrototype = Reflect['getPrototypeOf']([]);
-computedPrototype.join = prototype.join;
+import { read } from '@example/db';
+Array['prototype']['join'] = () => 'DELETE FROM records';
+export function run() { read(['/* intrinsics/computed */ SELECT 1'].join('')); }

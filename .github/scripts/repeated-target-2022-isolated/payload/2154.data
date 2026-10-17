@@ -1,128 +1,152 @@
-"use strict";
-
-const { constants, existsSync, accessSync, statSync } = require("node:fs");
+const assert = require("node:assert/strict");
 const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const root = join(__dirname, "../../../fixtures/test-plan/cargo-target-ownership");
 
-const MIN_GLIBC = [2, 35];
-
-const PACKAGE_NAMES = new Map([
-  ["darwin/arm64", "no-mistakes-darwin-arm64"],
-  ["linux/arm64", "no-mistakes-linux-arm64-gnu"],
-  ["linux/x64", "no-mistakes-linux-x64-gnu"],
-  ["win32/x64", "no-mistakes-win32-x64-msvc"],
-]);
-
-function nativePackageName(platform = process.platform, arch = process.arch) {
-  return PACKAGE_NAMES.get(`${platform}/${arch}`);
-}
-
-function unsupportedPlatformMessage(platform = process.platform, arch = process.arch) {
-  return `Unsupported platform ${platform}/${arch}. Install with \`cargo install no-mistakes\` instead.`;
-}
-
-function glibcVersion(report = process.report) {
-  try {
-    const header = report?.getReport?.().header;
-    return header?.glibcVersionRuntime || header?.glibcVersionCompiler || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function supportedGlibc(report = process.report) {
-  const version = glibcVersion(report);
-  if (!version) return false;
-  const [major, minor] = version.split(".").map((part) => Number.parseInt(part, 10));
-  return (
-    Number.isInteger(major) &&
-    Number.isInteger(minor) &&
-    (major > MIN_GLIBC[0] || (major === MIN_GLIBC[0] && minor >= MIN_GLIBC[1]))
-  );
-}
-
-function unsupportedGlibcMessage(report = process.report) {
-  const version = glibcVersion(report);
-  const detected = version
-    ? `Detected glibc ${version}.`
-    : "Could not detect a supported glibc runtime.";
-  return `Linux native packages require glibc 2.35 or newer. ${detected} Install with \`cargo install no-mistakes\` instead.`;
-}
-
-function missingPackageMessage(name, { staged, unusableCli = false }) {
-  if (staged) {
-    return `The native package ${name} has ${unusableCli ? "an unusable CLI artifact" : "no staged artifacts"}. From the no-mistakes repository run \`pnpm run build:native\`.`;
-  }
-  return `The optional native package ${name} is ${unusableCli ? "not executable" : "unavailable"}. Run \`npm install no-mistakes\` or \`pnpm install\` to repair optional dependencies.`;
-}
-
-function localPackagePath(name) {
-  const path = join(__dirname, "..", "..", name);
-  return existsSync(join(path, "package.json")) ? path : undefined;
-}
-
-function usableCli(path, platform = process.platform) {
-  try {
-    if (!statSync(path).isFile()) return false;
-    if (platform === "win32") return true;
-    accessSync(path, constants.X_OK);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resolveNativePackage({
-  platform = process.platform,
-  arch = process.arch,
-  resolve = require.resolve,
-  resolveLocalPackage = localPackagePath,
-  localArtifactExists = existsSync,
-  isUsableCli = usableCli,
-  report = process.report,
-} = {}) {
-  const name = nativePackageName(platform, arch);
-  if (!name) throw new Error(unsupportedPlatformMessage(platform, arch));
-  if (platform === "linux" && !supportedGlibc(report)) {
-    throw new Error(unsupportedGlibcMessage(report));
-  }
-  let unusableCli = false;
-  try {
-    const cliPath = resolve(`${name}/bin/no-mistakes${platform === "win32" ? ".exe" : ""}`);
-    const addonPath = resolve(name);
-    if (isUsableCli(cliPath, platform)) return { name, cliPath, addonPath };
-    unusableCli = true;
-  } catch {
-    // The package may still be available as the repository's sibling staging package.
-  }
-  const local = resolveLocalPackage(name);
-  if (local) {
-    const cliPath = join(local, "bin", `no-mistakes${platform === "win32" ? ".exe" : ""}`);
-    const addonPath = join(local, "bin", "no-mistakes.node");
-    if (!localArtifactExists(cliPath) || !localArtifactExists(addonPath)) {
-      throw new Error(missingPackageMessage(name, { staged: true }));
+test(
+  "compiled async Cargo targets use manifest ownership and reject ambiguous helpers",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const files = [
+      "crates/custom/library/tests.rs",
+      "tools/console/src/tests.rs",
+      "crates/engine/src/bin/worker/tests.rs",
+      "crates/engine/tests/smoke.rs",
+      "crates/custom/harness/suite/entry.rs",
+      "crates/engine/src/tests.rs",
+      "crates/engine/tests/helpers/common.rs",
+      "crates/custom/harness/disabled.rs",
+      "crates/custom/harness/feature.rs",
+      "orphan/tests/example.rs",
+    ];
+    const options = { root, framework: "cargo", files };
+    const pending = cjs.testsTargets(options);
+    assert.ok(pending instanceof Promise);
+    const report = await pending;
+    assert.deepEqual(await esm.testsTargets(options), report);
+    const targets = new Map(report.tests.map((row) => [row.testFile, row.targets]));
+    for (const [file, manifest, name, selector] of [
+      [files[0], "crates/custom/Cargo.toml", "renamed-package", ["--lib"]],
+      [files[1], "tools/console/Cargo.toml", "real-console", ["--bin", "real-console"]],
+      [files[2], "crates/engine/Cargo.toml", "real-engine", ["--bin", "worker"]],
+      [files[3], "crates/engine/Cargo.toml", "real-engine", ["--test", "smoke"]],
+      [files[4], "crates/custom/Cargo.toml", "renamed-package", ["--test", "declared-suite"]],
+    ]) {
+      assert.deepEqual(
+        targets.get(file).map((target) => target.runnerArgs),
+        [["--manifest-path", manifest, "-p", name, ...selector]],
+      );
     }
-    if (!isUsableCli(cliPath, platform)) {
-      throw new Error(missingPackageMessage(name, { staged: true, unusableCli: true }));
+    for (const file of files.slice(5)) {
+      assert.deepEqual(targets.get(file), []);
+      assert.ok(
+        report.warnings.some(
+          (warning) => warning.type === "cargo-target-unresolved" && warning.file === file,
+        ),
+      );
     }
-    return { name, cliPath, addonPath };
-  }
-  let installed = false;
-  try {
-    resolve(`${name}/package.json`);
-    installed = true;
-  } catch {}
-  throw new Error(
-    missingPackageMessage(name, { staged: false, unusableCli: installed && unusableCli }),
-  );
-}
+    const planOptions = { root, framework: "cargo", changedFiles: files };
+    const plan = await cjs.testsPlan(planOptions);
+    assert.deepEqual(await esm.testsPlan(planOptions), plan);
+    const batch = await cjs.analyzeProject({
+      root,
+      reports: [{ type: "testsPlan", framework: "cargo", changedFiles: files }],
+    });
+    assert.deepEqual(batch.reports[0].result, plan);
+    assert.ok(plan.warnings.some((warning) => warning.type === "cargo-target-unresolved"));
+    assert.ok(
+      plan.executionTargets.every((target) => target.runnerArgs.includes("--manifest-path")),
+    );
+  },
+);
 
-module.exports = {
-  glibcVersion,
-  nativePackageName,
-  localPackagePath,
-  resolveNativePackage,
-  supportedGlibc,
-  unsupportedGlibcMessage,
-  unsupportedPlatformMessage,
-  usableCli,
-};
+test(
+  "compiled async Cargo external entries preserve declaring scopes and multiple owners",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const externalRoot = join(__dirname, "../../../fixtures/test-plan/cargo-external-targets");
+    const files = [
+      "shared/tests/smoke.rs",
+      "shared/entry.rs",
+      "b/tests/physical.rs",
+      "shared/tests/disabled.rs",
+      "shared/tests/feature.rs",
+      "shared/tests/unrelated.rs",
+    ];
+    for (const [config, expected] of [
+      [undefined, ["declaring-a", "declaring-b"]],
+      ["a.yml", ["declaring-a"]],
+      ["b.yml", ["declaring-b"]],
+      ["none.yml", []],
+    ]) {
+      const options = {
+        root: externalRoot,
+        framework: "cargo",
+        files,
+        ...(config ? { config: join(externalRoot, config) } : {}),
+      };
+      const pending = cjs.testsTargets(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.testsTargets(options), report);
+      const shared = report.tests.find((row) => row.testFile === files[0]);
+      assert.deepEqual(shared?.targets.map((target) => target.project) || [], expected);
+      if (expected.length) {
+        assert.deepEqual(
+          shared.targets.map((target) => target.runnerArgs),
+          expected.map((name) => {
+            const owner = name.endsWith("a") ? "a" : "b";
+            return [
+              "--manifest-path",
+              `${owner}/Cargo.toml`,
+              "-p",
+              name,
+              "--test",
+              `${owner}-shared`,
+            ];
+          }),
+        );
+      }
+      const planOptions = { ...options, changedFiles: files };
+      delete planOptions.files;
+      const plan = await cjs.testsPlan(planOptions);
+      assert.deepEqual(await esm.testsPlan(planOptions), plan);
+      const batch = await cjs.analyzeProject({
+        root: externalRoot,
+        ...(config ? { config: join(externalRoot, config) } : {}),
+        reports: [{ type: "testsPlan", framework: "cargo", changedFiles: files }],
+      });
+      assert.deepEqual(batch.reports[0].result, plan);
+      assert.equal(plan.fallbackTriggered, false);
+      if (config === "a.yml") {
+        const sourcePlan = await cjs.testsPlan({
+          root: externalRoot,
+          framework: "cargo",
+          config: join(externalRoot, config),
+          changedFiles: ["a/src/lib.rs"],
+        });
+        assert.equal(sourcePlan.fallbackTriggered, true);
+        assert.ok(sourcePlan.selectedTests.some((test) => test.testFile === "shared/entry.rs"));
+        assert.ok(
+          sourcePlan.selectedTests.some((test) => test.testFile === "shared/tests/smoke.rs"),
+        );
+        assert.ok(sourcePlan.executionTargets.every((target) => target.project === "declaring-a"));
+      }
+      if (!config || config === "a.yml") {
+        for (const file of files.slice(3, 5)) {
+          assert.deepEqual(report.tests.find((row) => row.testFile === file).targets, []);
+          assert.ok(
+            report.warnings.some(
+              (warning) => warning.type === "cargo-target-unresolved" && warning.file === file,
+            ),
+          );
+        }
+      }
+    }
+  },
+);

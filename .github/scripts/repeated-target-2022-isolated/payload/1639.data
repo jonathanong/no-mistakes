@@ -1,10 +1,4 @@
 import { query } from "@example/db";
-import { type sql as dbSql } from "@example/db";
-
-export function load(accountId: string) {
-  return query(dbSql`
-    SELECT id
-    FROM documents
-    WHERE account_id = ${accountId}
-  `);
-}
+query(sql`SELECT id FROM orders WHERE ${
+  identifier // no-mistakes-disable-line postgres-sql-shape-policy
+} NOT IN (SELECT id FROM archived) OFFSET 1`);

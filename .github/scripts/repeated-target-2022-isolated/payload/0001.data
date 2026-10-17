@@ -1,1 +1,44 @@
-{"target_absent": true, "source_after_exact": true}
+{
+  "utc": "2026-10-17T02:27:14.605972+00:00",
+  "head": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "run": 38994120381,
+  "conclusion": "success",
+  "codecov": [
+    {
+      "name": "codecov/patch/rust",
+      "conclusion": "success"
+    },
+    {
+      "name": "codecov/project/rust",
+      "conclusion": "success"
+    },
+    {
+      "name": "codecov/patch/javascript",
+      "conclusion": "success"
+    },
+    {
+      "name": "codecov/project/javascript",
+      "conclusion": "success"
+    }
+  ],
+  "raw_coverage_log_sha256": "87ba8bf51e7361883831fe88253ece42d352f5efcb437c911e9a164a6014ba9f",
+  "performance": "Separate new numerical comparisons pending, not implied by CI success",
+  "global_coverage": {
+    "regions": {
+      "total": 336924,
+      "missed": 5095,
+      "display_percent": 98.49
+    },
+    "functions": {
+      "total": 24369,
+      "missed": 158,
+      "display_percent": 99.35
+    },
+    "lines": {
+      "total": 228270,
+      "missed": 1520,
+      "display_percent": 99.33
+    }
+  },
+  "floor": "98 lines/functions/regions actual job args and environment verified"
+}

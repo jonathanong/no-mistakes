@@ -1,4 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-// Setup inherits enclosing execution; per-item positions must remain repeatable.
-for (((client = primary) => { const get = client.get; primary.get = replacement; get(); return 1; })(); false;) {}
+// The matching write happens before the method is copied.
+((client = primary) => { primary.get = replacement; const get = client.get; get(); })();

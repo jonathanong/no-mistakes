@@ -1,0 +1,209 @@
+{
+  "status": "SOURCE CARRY PROOF ONLY; prior actual24 layouts retain original producer labels",
+  "old_layout_actual_candidate": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "new_native_candidate": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "public_cfg_only_carry": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "six_type_files": [
+    {
+      "type": "ImportCollector",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_collector.rs",
+      "old_sha256": "83d0f2672c32f2d9e82dedfe8fb0370d0355f12557920f794eb51f790b3d1c94",
+      "new_sha256": "14b6697d4a6eb8f38bd56257c3d930bfbcf5855fee1aa2a8dc489eb654b1f028",
+      "whole_file_exact": false,
+      "only_new_field_if_any": "statement_mode under cfg(all(test, feature=test-instrumentation)); excluded when test=false"
+    },
+    {
+      "type": "ValueFlowFacts",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/value_flow_facts.rs",
+      "old_sha256": "92f1aa51e8f66b1f1a024f0b099bc06992f4480f8b67943adb304af8a481dcb2",
+      "new_sha256": "92f1aa51e8f66b1f1a024f0b099bc06992f4480f8b67943adb304af8a481dcb2",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "ImportFacts",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_import_facts.rs",
+      "old_sha256": "649a8e2cd1f7cd2b4617260ee027471088adcf626888c8ec6b6a29a7b950cd3d",
+      "new_sha256": "649a8e2cd1f7cd2b4617260ee027471088adcf626888c8ec6b6a29a7b950cd3d",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "TsFileFacts",
+      "path": "crates/no-mistakes/src/codebase/ts_source/facts.rs",
+      "old_sha256": "b33a444964807285e3de3dffbc1ccb33464c25b90dfd55592151e744281ddbcf",
+      "new_sha256": "b33a444964807285e3de3dffbc1ccb33464c25b90dfd55592151e744281ddbcf",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "ValueCall",
+      "path": "crates/no-mistakes/src/codebase/dependencies/extract_value_flow/value_descriptors.rs",
+      "old_sha256": "e368e8fa970fe95278e22236da0ea45c8e776312ae40b35d7ded31544057040d",
+      "new_sha256": "e368e8fa970fe95278e22236da0ea45c8e776312ae40b35d7ded31544057040d",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    },
+    {
+      "type": "ResolvedCallSite",
+      "path": "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/types.rs",
+      "old_sha256": "3e10e289794a8107f44021cc7496bfe815b0f531a302a4ef92ad1f78aa731feb",
+      "new_sha256": "3e10e289794a8107f44021cc7496bfe815b0f531a302a4ef92ad1f78aa731feb",
+      "whole_file_exact": true,
+      "only_new_field_if_any": null
+    }
+  ],
+  "original_metadata_modes": [
+    {
+      "mode": "default",
+      "path": "/tmp/nm2022-4e-layout-source-draft/candidate-default-request/request-DRAFT.json",
+      "sha256": "b572db562a5857ef449549200fbf74f2563361bb8993a2977383b2eea0b0eb8a",
+      "cfg_test_false": true,
+      "instrumentation_enabled": false
+    },
+    {
+      "mode": "instrumented",
+      "path": "/tmp/nm2022-4e-layout-source-draft/candidate-instrumented-request/request-DRAFT.json",
+      "sha256": "0951579b2099c387f6ac072bf8cf824a78841a31324612cd423d20388c51d036",
+      "cfg_test_false": true,
+      "instrumentation_enabled": true
+    }
+  ],
+  "prior_actual24": {
+    "path": "/tmp/nm2022-current-layouts/actual-complete24-layouts.json",
+    "sha256": "f5f8cc2b69f7e62f3c6db2c95d0a76d21b10e9118f403ceb7e29109ed40e1a8f"
+  },
+  "unchanged_numerical_values": {
+    "candidate-default": [
+      {
+        "type": "ImportCollector",
+        "size": 2672,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 248,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1048,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 1936,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ],
+    "baseline-default": [
+      {
+        "type": "ImportCollector",
+        "size": 2592,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 232,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1032,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 1920,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ],
+    "candidate-instrumented": [
+      {
+        "type": "ImportCollector",
+        "size": 2976,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 520,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1320,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 2208,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ],
+    "baseline-instrumented": [
+      {
+        "type": "ImportCollector",
+        "size": 2840,
+        "align": 8
+      },
+      {
+        "type": "ValueFlowFacts",
+        "size": 448,
+        "align": 8
+      },
+      {
+        "type": "ImportFacts",
+        "size": 1248,
+        "align": 8
+      },
+      {
+        "type": "TsFileFacts",
+        "size": 2136,
+        "align": 8
+      },
+      {
+        "type": "ValueCall",
+        "size": 128,
+        "align": 8
+      },
+      {
+        "type": "ResolvedCallSite",
+        "size": 360,
+        "align": 8
+      }
+    ]
+  },
+  "transitive_field_type_argument": "Five full declaring files are exact. ImportCollector differs only excluded cfg(test) field. All remaining new production changes are function bodies/local borrows. Added ReplacementProbeSnapshot counters are not fields or transitive field types of these six (fact/AST paths do not refer to Snapshot or ParameterCache). Original ValueFlowFacts/ValueCall/ResolvedCallTarget and fact definitions remain exact.",
+  "compiler_profile": "Same rustc1.99.1; both original layout metadata modes and newrelease have cfg(test)=false; no numeric remeasurement or relabeling claimed",
+  "frozen_gate": "All24 required records retained. Activation requires root accepting exact type-source carry, not dropping any record."
+}

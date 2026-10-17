@@ -1,68 +1,80 @@
-#!/usr/bin/env node
-"use strict";
+import type { TestPlanFramework } from "./test-types";
 
-const { spawnSync } = require("node:child_process");
-const { existsSync } = require("node:fs");
-const { join, resolve } = require("node:path");
-
-const { cargoReleaseDirectory } = require("./native-artifact-paths");
-const { nativePackageName } = require("./native-package");
-const { stageNative } = require("./stage-native");
-
-const root = resolve(__dirname, "..", "..", "..");
-
-function runCargo(args, env = {}) {
-  const result = spawnSync("cargo", args, {
-    cwd: root,
-    env: { ...process.env, ...env },
-    stdio: "inherit",
-  });
-  if (result.status !== 0) process.exit(result.status || 1);
+export interface ResolvedConfig {
+  configPath?: string | null;
+  frontendApps: ResolvedFrontendApp[];
+  playwright: ResolvedPlaywright;
+  vitestFullSuiteTriggers: ResolvedTrigger[];
+  fullSuiteTriggers: ResolvedFrameworkTriggers[];
 }
 
-function localNativeArtifacts({
-  root,
-  env = process.env,
-  platform = process.platform,
-  addonExists = existsSync,
-  resolveReleaseDirectory = cargoReleaseDirectory,
-}) {
-  const releaseDirectory = resolveReleaseDirectory({ root, env });
-  const names =
-    platform === "darwin"
-      ? ["libno_mistakes.dylib"]
-      : platform === "win32"
-        ? ["no_mistakes.dll"]
-        : ["libno_mistakes.so"];
-  const paths = names.map((name) => join(releaseDirectory, name));
-  return {
-    addon: paths.find(addonExists) || paths[0],
-    binary: join(releaseDirectory, platform === "win32" ? "no-mistakes.exe" : "no-mistakes"),
-  };
+export interface ResolvedFrontendApp {
+  project?: string | null;
+  root: string;
+  routeRoot: string;
+  selectorRoots: string[];
 }
 
-async function main() {
-  const packageName = nativePackageName();
-  if (!packageName) throw new Error(`Unsupported platform ${process.platform}/${process.arch}`);
-  runCargo(["build", "--release", "--locked", "-p", "no-mistakes"]);
-  runCargo(
-    ["rustc", "--release", "--locked", "-p", "no-mistakes", "--lib", "--crate-type", "cdylib"],
-    {
-      NO_MISTAKES_BUILD_NAPI: "1",
-    },
-  );
-  const artifacts = localNativeArtifacts({ root });
-  await stageNative({
-    packageName,
-    ...artifacts,
-  });
+export interface ResolvedPlaywright {
+  routeCoverageSources?: RouteCoverageSource[];
+  coverageRoutes: boolean;
+  coverageSelectors: boolean;
+  frontendRoot?: string | null;
+  selectorRoots: string[];
+  apps: ResolvedPlaywrightApp[];
 }
 
-module.exports = { localNativeArtifacts };
+export interface ResolvedPlaywrightApp {
+  routeCoverageSources?: RouteCoverageSource[];
+  playwrightProject: string;
+  project?: string | null;
+  frontendRoot?: string | null;
+  selectorRoots: string[];
+  rewrites: ResolvedRewrite[];
+  ignoreRoutes: string[];
+}
 
-if (require.main === module) {
-  main().catch((error) => {
-    process.stderr.write(`${error.message}\n`);
-    process.exitCode = 1;
-  });
+export interface ResolvedRewrite {
+  source: string;
+  destination: string;
+}
+
+export type RouteCoverageFramework = "vitest";
+
+export interface RouteCoverageHelper {
+  /** Exact repository-relative helper module or import-resolvable specifier. */
+  module: string;
+  export: string;
+  /** An imported class instance method; omit for an imported function. */
+  method?: string | null;
+  urlArgument: number;
+}
+
+export interface RouteCoverageSource {
+  framework: RouteCoverageFramework;
+  project: string;
+  include: string[];
+  /** Exact canonical page route identifiers, optionally with named parameters. */
+  routes: string[];
+  helpers: RouteCoverageHelper[];
+}
+
+export interface RouteCoverageAttribution {
+  framework: RouteCoverageFramework;
+  project: string;
+  declarationFile: string;
+}
+
+export interface ResolvedTrigger {
+  name: string;
+  paths: string[];
+  targets: string[];
+  /** Effective changed-test expansion policy; present only for structured triggers. */
+  includeChangedTests?: boolean;
+  source: "triggers" | "projects";
+}
+
+export interface ResolvedFrameworkTriggers {
+  framework: TestPlanFramework;
+  triggers: ResolvedTrigger[];
 }

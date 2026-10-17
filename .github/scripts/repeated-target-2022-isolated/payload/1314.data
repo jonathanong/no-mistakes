@@ -1,7 +1,9 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
-holder.box.client = { x: opaque() };
-holder.box.client.get = replacement;
-function globalUnknownCall(value) { value.get('key'); }
-globalUnknownCall(client);
+let unused;
+holder.box.client = {};
+// Conditional fresh replacement preserves the already established detachment.
+({ first: unused = (holder.box.client = {}), second: unused = (holder.box.client.get = replacement) } = {});
+function globalPhasePreservedFresh(value) { value.get('key'); }
+globalPhasePreservedFresh(client);

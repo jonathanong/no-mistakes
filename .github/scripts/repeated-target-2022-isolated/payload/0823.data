@@ -1,164 +1,25 @@
-import type { PostgresSqlQueryStatement } from "./postgres-query-statement-types";
-export type * from "./postgres-query-statement-types";
-import type {
-  PostgresSqlExpression,
-  PostgresSqlIdentifier,
-  PostgresSqlName,
-  PostgresSqlSpan,
-} from "./postgres-source-types";
-/** Syntactic SELECT facts; IDs are deterministic and local to this query report. */
-export interface PostgresSqlQuery {
-  scopes: PostgresSqlQueryScope[];
-  relations: PostgresSqlQueryRelation[];
-  joins: PostgresSqlQueryJoin[];
-  columns: PostgresSqlQueryColumn[];
-  equalities: PostgresSqlQueryEquality[];
-  exists: PostgresSqlQueryExists[];
-  quantifiedComparisons: PostgresSqlQueryQuantifiedComparison[];
-  ctes: PostgresSqlQueryCte[];
-  /** Data-modifying query bodies in original source order; SELECT CTEs are excluded. */
-  nestedStatements: PostgresSqlQueryStatement[];
-  unsupported: PostgresSqlQueryUnsupported[];
-  complete: boolean;
-}
-export type PostgresSqlQueryClause =
-  | "root"
-  | "setBranch"
-  | "cte"
-  | "from"
-  | "projection"
-  | "where"
-  | "joinOn"
-  | "having"
-  | "groupBy"
-  | "orderBy"
-  | "limit"
-  | "offset"
-  | "other";
-export interface PostgresSqlQueryScope {
-  id: number;
-  parentScopeId: number | null;
-  clause: PostgresSqlQueryClause;
-  cteDefinitionId: number | null;
-  setOperation: string | null;
-  setQuantifier: string | null;
-  span: PostgresSqlSpan | null;
-}
-export type PostgresSqlQueryRelationKind = "table" | "cte" | "derived" | "joined" | "unsupported";
-export interface PostgresSqlQueryRelation {
-  id: number;
-  scopeId: number;
-  kind: PostgresSqlQueryRelationKind;
-  name: PostgresSqlName | null;
-  alias: PostgresSqlIdentifier | null;
-  columnAliases: PostgresSqlIdentifier[];
-  cteId: number | null;
-  subqueryScopeId: number | null;
-  members: number[];
-  lateral: boolean;
-  span: PostgresSqlSpan | null;
-}
-export type PostgresSqlQueryJoinKind =
-  | "inner"
-  | "left"
-  | "right"
-  | "full"
-  | "cross"
-  | "semi"
-  | "anti"
-  | "other";
-export interface PostgresSqlQueryJoin {
-  id: number;
-  scopeId: number;
-  kind: PostgresSqlQueryJoinKind;
-  left: number[];
-  right: number[];
-  constraint: string;
-  usingColumns: PostgresSqlName[];
-  span: PostgresSqlSpan | null;
-}
-export type PostgresSqlQueryColumnResolution = "resolved" | "unqualified" | "unknown" | "ambiguous";
-export interface PostgresSqlQueryColumn {
-  scopeId: number;
-  clause: PostgresSqlQueryClause;
-  name: PostgresSqlName;
-  relationId: number | null;
-  relationScopeId: number | null;
-  resolution: PostgresSqlQueryColumnResolution;
-  span: PostgresSqlSpan | null;
-}
-export interface PostgresSqlPredicateContext {
-  mandatory: boolean;
-  /** Required conjunct after wrapping NOT inverts AND/OR; null through opaque wrappers. */
-  effectiveMandatory: boolean | null;
-  underOr: boolean;
-  underNot: boolean;
-  underCase: boolean;
-  underBooleanTest: boolean;
-  underOther: boolean;
-}
-export interface PostgresSqlQueryEquality {
-  scopeId: number;
-  clause: PostgresSqlQueryClause;
-  joinId: number | null;
-  left: PostgresSqlQueryColumn | null;
-  right: PostgresSqlQueryColumn | null;
-  context: PostgresSqlPredicateContext;
-  span: PostgresSqlSpan | null;
-}
-export interface PostgresSqlQueryExists {
-  scopeId: number;
-  subqueryScopeId: number;
-  /** The EXISTS node's own flag. Wrapping `NOT` is not folded into this value. */
-  negated: boolean;
+import type { DependencyResult, SymbolsResult, TestPlan } from "./types";
+
+/** Input for writing a private, CLI-compatible planning-impact artifact set. */
+export interface WritePlanningImpactArtifactsOptions {
+  /** Repository root passed to the prepared `analyzeProject()` request. */
+  root: string;
   /**
-   * NOT operators that apply to this EXISTS: each wrapping `NOT` (parentheses
-   * are transparent) plus one when `negated` is true.
+   * Path to a private regular manifest directly inside `outputDirectory`. Its newline-delimited
+   * contents are literal repository-relative changed-file paths; only empty records are ignored.
    */
-  notDepth: number;
-  /**
-   * `notDepth % 2 === 1` when this EXISTS is not under a boolean test, CASE,
-   * or other wrapper. `null` when `context.underBooleanTest`,
-   * `context.underCase`, or `context.underOther` is set: those wrappers can
-   * invert or hide polarity, and this field does not guess. Always present.
-   * Distinct from `negated` and from `context.underNot`.
-   */
-  effectiveNegated: boolean | null;
-  context: PostgresSqlPredicateContext;
-  correlated: boolean;
-  correlations: PostgresSqlQueryColumn[];
-  span: PostgresSqlSpan | null;
-}
-export interface PostgresSqlQueryCte {
-  id: number;
-  ownerScopeId: number;
-  queryScopeId: number;
-  name: PostgresSqlIdentifier;
-  columnAliases: PostgresSqlIdentifier[];
-  recursive: boolean;
-  referenced: boolean;
-  used: boolean;
-  cyclic: boolean;
-  span: PostgresSqlSpan | null;
-}
-export interface PostgresSqlQueryUnsupported {
-  scopeId: number;
-  clause: PostgresSqlQueryClause;
-  reason: string;
-  span: PostgresSqlSpan | null;
+  changedFilesManifest: string;
+  /** Existing private directory with exactly mode `0700` that receives artifacts; unavailable on Windows. */
+  outputDirectory: string;
+  /** Omit the import/workspace relationship filter for structural reports. */
+  broad?: boolean;
 }
 
-export type PostgresSqlQuantifier = "any" | "all";
-/** Scalar array comparisons in traversal order; unsupported operands remain incomplete. */
-export interface PostgresSqlQueryQuantifiedComparison {
-  scopeId: number;
-  clause: PostgresSqlQueryClause;
-  joinId: number | null;
-  operator: string;
-  quantifier: PostgresSqlQuantifier;
-  left: PostgresSqlExpression;
-  right: PostgresSqlExpression;
-  context: PostgresSqlPredicateContext;
-  span: PostgresSqlSpan | null;
-  complete: boolean;
+/** Structured result mirrored by `dependencies.json`, `dependents.json`, `symbols.json`, and `plan.json`. */
+export interface PlanningImpactArtifacts {
+  outputDirectory: string;
+  dependencies: DependencyResult;
+  dependents: DependencyResult;
+  symbols: SymbolsResult;
+  plan: TestPlan;
 }

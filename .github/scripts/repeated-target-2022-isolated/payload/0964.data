@@ -1,4 +1,4 @@
 import { primary } from '@vendor/valkey';
-export function factory() { return ({ client = primary } = {}) => client.get(); }
-// This module write precedes every importing module's invocation.
-primary.get = function replacement() {};
+import { factory } from './provider-conflicting.mjs';
+factory()({ client: primary });
+factory()({ client: { get() {} } });

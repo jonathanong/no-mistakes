@@ -1,65 +1,85 @@
 const assert = require("node:assert/strict");
-const { existsSync, readFileSync } = require("node:fs");
-const { resolve } = require("node:path");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
-const packageRoot = resolve(__dirname, "..");
-const packageJson = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-const policyExports = ["./test-timeout-policy", "./test-timeout-policy/plugin"];
-
-test("timeout policy public entrypoints are included in the npm package contract", async () => {
-  for (const subpath of policyExports) {
-    const entry = packageJson.exports[subpath];
-    assert.ok(entry, `${subpath} must be exported`);
-    assert.equal(typeof entry.import, "string");
-    assert.equal(typeof entry.types, "string");
-    for (const target of [entry.import, entry.types]) {
-      assert.ok(packageJson.files.some((pattern) => pattern.includes("test-timeout-policy/")));
-      assert.ok(existsSync(resolve(packageRoot, target)), `${target} must exist`);
+test(
+  "compiled EXPLAIN options validate all occurrences and use their final values",
+  {
+    skip: !compiled,
+  },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const sql = readFileSync(
+      join(__dirname, "../../../fixtures/postgres-facts/source/wrapper-repeated-options.sql"),
+      "utf8",
+    );
+    const result = await cjs.parsePostgresSql({ sql });
+    assert.deepEqual(await esm.parsePostgresSql({ sql }), result);
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.statements.length, 28);
+    const plan = "nonExecuting";
+    const runs = "executesForAnalysis";
+    const unknown = "unknown";
+    const expected = [
+      plan,
+      runs,
+      plan,
+      runs,
+      runs,
+      unknown,
+      plan,
+      unknown,
+      plan,
+      unknown,
+      plan,
+      unknown,
+      plan,
+      runs,
+      plan,
+      plan,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      plan,
+      plan,
+    ];
+    assert.deepEqual(
+      result.statements.slice(0, 25).map((item) => item.wrapper.execution),
+      expected,
+    );
+    for (const [index, execution] of expected.entries()) {
+      const wrapper = result.statements[index].wrapper;
+      assert.equal(wrapper.complete, execution !== unknown);
+      assert.equal(wrapper.diagnostics.length === 0, execution !== unknown);
+      assert.equal(wrapper.statements.length, 1);
+      assert.equal(wrapper.statements[0].kind, "select");
     }
-  }
-  assert.equal(packageJson.peerDependenciesMeta.vitest.optional, true);
-});
-
-test("timeout policy imports expose their declared runtime API", async () => {
-  const policy = await import("no-mistakes/test-timeout-policy");
-  const plugin = await import("no-mistakes/test-timeout-policy/plugin");
-  const coreNames = [
-    "assertTestTimeout",
-    "assertTimeoutConfig",
-    "snapshotTimeoutOptions",
-    "protectTimeoutConfig",
-    "guardRegistration",
-    "guardPublicRunner",
-    "guardRuntimeConfig",
-    "guardVitestExports",
-    "protectRunnerTimeouts",
-  ];
-  assert.deepEqual(Object.keys(policy).sort(), coreNames.toSorted());
-  assert.deepEqual(Object.keys(plugin).sort(), [
-    "browserTestTimeoutPolicyPlugin",
-    "testTimeoutPolicyPlugin",
-  ]);
-  for (const name of coreNames) {
-    assert.equal(typeof policy[name], "function", `${name} runtime export`);
-    assert.match(
-      readFileSync(
-        resolve(packageRoot, packageJson.exports["./test-timeout-policy"].types),
-        "utf8",
-      ),
-      new RegExp(`\\b${name}\\b`),
-      `${name} declaration`,
-    );
-  }
-  for (const name of ["testTimeoutPolicyPlugin", "browserTestTimeoutPolicyPlugin"]) {
-    assert.equal(typeof plugin[name], "function", `${name} runtime export`);
-    assert.match(
-      readFileSync(
-        resolve(packageRoot, packageJson.exports["./test-timeout-policy/plugin"].types),
-        "utf8",
-      ),
-      new RegExp(`\\b${name}\\b`),
-      `${name} declaration`,
-    );
-  }
-});
+    const block = result.statements[25].block;
+    assert.equal(block.complete, true);
+    assert.equal(block.statements[0].branches[0].statements[0].wrapper.execution, plan);
+    const atomic = result.statements[26].function.wrapper;
+    assert.equal(atomic.complete, true);
+    assert.equal(atomic.statements[0].wrapper.execution, runs);
+    assert.equal(result.statements[27].sql, "SELECT 98;");
+    const bytes = Buffer.from(sql);
+    for (const parent of result.statements) {
+      assert.equal(
+        bytes.subarray(parent.span.start.offset, parent.span.end.offset).toString(),
+        parent.sql,
+      );
+      for (const child of (parent.wrapper || parent.function?.wrapper)?.statements || []) {
+        assert.equal(
+          bytes.subarray(child.span.start.offset, child.span.end.offset).toString(),
+          child.sql,
+        );
+      }
+    }
+  },
+);

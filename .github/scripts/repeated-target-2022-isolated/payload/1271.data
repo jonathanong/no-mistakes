@@ -1,12 +1,11 @@
-import { primary as client } from '@vendor/valkey';
+import { primary as client } from "@vendor/valkey";
+declare function opaque(value: unknown): PromiseLike<unknown>;
 function replacement() {}
+await opaque({});
 const holder = { box: { client } };
 holder.box.client = {};
-@opaque
-class Decorated {}
 holder.box.client.get = replacement;
-// Keep this hoisted definition after the descendant write: its placement
-// otherwise activates an unrelated early global-definition history path.
-function opaque() { holder.box = { client }; }
-function scan(value) { value.get('key'); }
+function scan(value) {
+  value.get("key");
+}
 scan(client);

@@ -1,13 +1,5 @@
-import { read } from '@example/db'
+import { query } from './eager-builder'
 
-function run(sql: string) {
-  return read(sql)
-}
+query.append(' UPDATE posts SET title = title')
 
-function noop(_sql: string) {}
-
-export function api(flag: boolean) {
-  return flag ? run : noop
-}
-
-run('/* exported/conditional */ SELECT id FROM posts')
+export const unused = 1

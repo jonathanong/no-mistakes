@@ -1,90 +1,80 @@
-"""Exact stacked source pair and one-shot remote check for the ARM diagnostic."""
-import hashlib
-import json
-import os
-import subprocess
-from pathlib import Path
-
-from common import require
-from proposal_guard import check, git
-
-HERE = Path(__file__).resolve().parent
-SPEC = json.loads((HERE / 'pair.json').read_text())
-ROOT = HERE.parents[2] if len(HERE.parents) > 2 else Path('/tmp/no-mistakes-pr2022')
+"""Use visible cgroup ancestors, not host RAM alone, as the resource budget."""
+from pathlib import Path, PurePosixPath
 
 
-def fetch_reviewed_pair_objects():
-    """Make the live main and PR merge objects available before exact Git checks."""
-    require(SPEC['status'] == 'REVIEWED AND FROZEN', 'draft_experiment_cannot_execute')
-    for ref, expected in [('main', SPEC['baseline']['revision']),
-                          ('refs/pull/2022/merge', SPEC['candidate']['revision'])]:
-        result = subprocess.run(['git', 'fetch', '--no-tags', 'origin', ref],
-                                cwd=ROOT, capture_output=True, text=True)
-        require(result.returncode == 0, 'pair_revision_fetch_failed', ref=ref)
-        require(git(ROOT, 'rev-parse', 'FETCH_HEAD') == expected,
-                'live_pair_ref_changed', ref=ref)
+def groups(controller):
+    memberships = Path('/proc/self/cgroup').read_text().splitlines()
+    mounts = Path('/proc/self/mountinfo').read_text().splitlines()
+    for line in mounts:
+        fields = line.split()
+        separator = fields.index('-')
+        kind = fields[separator + 1]
+        version = 2 if kind == 'cgroup2' else 1
+        if kind not in ('cgroup', 'cgroup2'):
+            continue
+        if version == 1 and controller not in fields[separator + 3].split(','):
+            continue
+        membership = next((m.split(':', 2)[2] for m in memberships
+                           if (version == 2 and m.startswith('0::')) or
+                           (version == 1 and controller in m.split(':', 2)[1].split(','))), None)
+        if membership is None:
+            continue
+        mount = Path(fields[4])
+        try:
+            relative = PurePosixPath(membership).relative_to(PurePosixPath(fields[3]))
+        except ValueError:
+            relative = PurePosixPath('.')  # A cgroup namespace may expose its own root as '/'.
+        directory = mount / str(relative)
+        distance = 0
+        while directory == mount or mount in directory.parents:
+            yield version, distance, directory
+            if directory == mount:
+                break
+            directory = directory.parent
+            distance += 1
 
 
-def remote_snapshot():
-    """One remote snapshot per stage; no CI polling or waiting."""
-    def api(path):
-        return json.loads(subprocess.check_output(['gh', 'api', path], cwd=ROOT, text=True))
-    main = api('repos/jonathanong/no-mistakes/git/ref/heads/main')
-    pr = api('repos/jonathanong/no-mistakes/pulls/' + str(SPEC['pr']['number']))
-    require(main['object']['sha'] == SPEC['baseline']['required_remote_head'], 'main_head_changed')
-    require(pr['head']['sha'] == SPEC['pr']['head_sha'] and pr['head']['sha'] == SPEC['candidate']['pr_head'], 'candidate_remote_head_changed')
-    require(pr['base']['ref'] == SPEC['pr']['base_branch'] and pr['draft'] is True, 'candidate_base_or_draft_changed')
-    run = api('repos/jonathanong/no-mistakes/actions/runs/' + str(SPEC['pr']['required_successful_ci_run']))
-    require(run['head_sha'] == SPEC['pr']['head_sha'] and run['conclusion'] == 'success', 'exact_head_ci_not_successful')
-    pinned = SPEC['pr']['four_codecov_check_runs']
-    names = ['codecov/' + kind + '/' + language for kind in ('patch', 'project') for language in ('rust', 'javascript')]
-    require(set(pinned) == set(names), 'four_codecov_pin_set_changed')
-    for name, check_id in pinned.items():
-        row = api('repos/jonathanong/no-mistakes/check-runs/' + str(check_id))
-        require(row['id'] == check_id and row['name'] == name
-                and row['head_sha'] == SPEC['pr']['head_sha']
-                and row['status'] == 'completed' and row['conclusion'] == 'success',
-                'pinned_codecov_check_not_successful', check=name)
-    return {'main_head': main['object']['sha'], 'candidate_head': pr['head']['sha'], 'candidate_base':pr['base']['ref'], 'draft':pr['draft'], 'ci_run':run['id'], 'codecov':pinned}
+def memory_limits():
+    limits = []
+    for version, distance, directory in groups('memory'):
+        maximum = directory / ('memory.max' if version == 2 else 'memory.limit_in_bytes')
+        current = directory / ('memory.current' if version == 2 else 'memory.usage_in_bytes')
+        if not maximum.exists():
+            continue  # This hierarchy may not expose the memory controller.
+        raw = maximum.read_text().strip()
+        if raw == 'max':
+            continue
+        amount = int(raw)
+        if amount >= 1 << 60:  # v1 represents unlimited with a very large sentinel.
+            continue
+        used = int(current.read_text().strip())
+        limits.append({'version': version, 'ancestor_distance': distance,
+                       'limit_bytes': amount, 'current_bytes': used,
+                       'headroom_bytes': max(0, amount - used)})
+    return limits
 
 
-def current_pair(_checkout=None):
-    snap = remote_snapshot()
-    return snap, SPEC['baseline']['revision']
+def effective_memory(proc_available_bytes, limits):
+    return min([proc_available_bytes] + [limit['headroom_bytes'] for limit in limits])
 
 
-def source_inventory(source):
-    """Compare every Rust/Cargo source working byte with its Git blob, not only HEAD."""
-    source = Path(source)
-    files = git(source, 'ls-files').splitlines()
-    selected = sorted(p for p in files if p in ('Cargo.toml', 'Cargo.lock', 'crates/no-mistakes/Cargo.toml')
-                      or p.startswith('crates/no-mistakes/') and p.endswith('.rs'))
-    rows = []
-    for name in selected:
-        work = (source / name).read_bytes()
-        blob = subprocess.check_output(['git', 'show', 'HEAD:' + name], cwd=source)
-        require(work == blob, 'source_file_differs_from_git', path=name)
-        rows.append({'path':name,'sha256':hashlib.sha256(work).hexdigest(),'bytes':len(work)})
-    proof = hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(',',':')).encode()).hexdigest()
-    return rows, proof
-
-
-def reviewed_stage(stage, diagnostic=True):
-    head = git(ROOT, 'rev-parse', 'HEAD') if diagnostic else None
-    approved_commit = os.environ.get('APPROVED_DIAGNOSTIC_COMMIT')
-    fetch_reviewed_pair_objects()
-    check(SPEC, ROOT, stage, head, approved_commit)
-    require(not git(ROOT, 'status', '--porcelain'), 'dirty_diagnostic_checkout')
-    manifest=json.loads((HERE/'proposal-file-hashes.json').read_text())
-    for name, expected in manifest['files'].items():
-        path=HERE/name
-        require(path.is_file() and not path.is_symlink()
-                and hashlib.sha256(path.read_bytes()).hexdigest()==expected,
-                'reviewed_driver_file_changed',file=name)
-    tracked=set(git(ROOT,'ls-files','--','.github/scripts/repeated-target-native-1971-next').splitlines())
-    expected_tracked={'.github/scripts/repeated-target-native-1971-next/'+name for name in manifest['files']}
-    expected_tracked.add('.github/scripts/repeated-target-native-1971-next/proposal-file-hashes.json')
-    require(tracked==expected_tracked,'reviewed_driver_file_set_changed')
-    require(os.environ.get('GITHUB_REF') == 'refs/heads/' + SPEC['diagnostic_branch'], 'wrong_branch')
-    require(os.environ.get('GITHUB_SHA') == approved_commit, 'wrong_workflow_commit')
-    return remote_snapshot()
+def cpu_quota():
+    limits = []
+    for version, _distance, directory in groups('cpu'):
+        if version == 2:
+            path = directory / 'cpu.max'
+            if not path.exists():
+                continue
+            amount, period = path.read_text().split()
+            if amount == 'max':
+                continue
+        else:
+            path = directory / 'cpu.cfs_quota_us'
+            if not path.exists():
+                continue
+            amount = path.read_text().strip()
+            if int(amount) < 0:
+                continue
+            period = (directory / 'cpu.cfs_period_us').read_text().strip()
+        limits.append(int(amount) / int(period))
+    return min(limits) if limits else None

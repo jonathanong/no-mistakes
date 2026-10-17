@@ -1,8 +1,9 @@
-import { primary, session } from '@vendor/valkey';
+import { primary } from '@vendor/valkey';
 function replacement() {}
-function inner(client) { client.get('key'); }
-function outer(client) { inner(client); primary.get = replacement; }
-outer(primary);
-function innerAfter(client) { client.get('key'); }
-function outerBefore(client) { session.get = replacement; innerAfter(client); }
-outerBefore(session);
+
+function copiedMethod(client) {
+  const get = client.get;
+  primary.get = replacement;
+  get('key');
+}
+copiedMethod(primary);

@@ -1,21 +1,13 @@
--- WITH INSERT normalization must reach the same AST child beneath each wrapper.
-WITH src AS (SELECT 1 AS id)
-INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
-EXPLAIN ANALYZE WITH src AS (SELECT 1 AS id)
-INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
-PREPARE with_insert AS WITH src AS (SELECT 1 AS id)
-INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
-CREATE FUNCTION with_insert_body() RETURNS void BEGIN ATOMIC
-  WITH src AS (SELECT 1 AS id)
-  INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+-- BEGIN/ATOMIC are expression/alias identifiers, not another atomic body.
+CREATE FUNCTION conflict_alias() RETURNS void LANGUAGE SQL BEGIN ATOMIC
+  INSERT INTO target SELECT begin atomic FROM data ON CONFLICT (id) WHERE id > 0 DO NOTHING;
 END;
--- VALUES has no query-fact slot for the outer WITH: retain an explicit incomplete child.
-EXPLAIN WITH src AS (SELECT 1 AS id)
-INSERT INTO target VALUES (1) ON CONFLICT (id) WHERE id > 0 DO NOTHING;
--- A malformed target predicate must preserve the following independent query.
-EXPLAIN WITH src AS (SELECT 1 AS id)
-INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE DO NOTHING;
-SELECT 71;
-PREPARE bad_with AS WITH src AS (SELECT 1 AS id)
-INSERT INTO target SELECT id FROM src ON CONFLICT (id) WHERE id > 0 DO UPDATE SET id = ;
-SELECT 72;
+SELECT 111;
+CREATE FUNCTION into_alias() RETURNS void LANGUAGE SQL BEGIN ATOMIC
+  SELECT 1 case INTO tmp;
+END;
+SELECT 112;
+EXPLAIN INSERT INTO target SELECT begin atomic FROM data ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+PREPARE alias_insert AS INSERT INTO target SELECT begin atomic FROM data ON CONFLICT (id) WHERE id > 0 DO NOTHING;
+EXPLAIN (ANALYZE TRUE) SELECT 1 case INTO tmp;
+PREPARE into_plan AS SELECT 1 case INTO tmp;

@@ -1,11 +1,9 @@
-import { primary, session, replica, scoped } from '@vendor/valkey';
+import { namedLoop } from '@vendor/valkey';
 function replacement() {}
-function rhs(client) { client.get('key'); return replacement; }
-primary.get = rhs(primary);
-session.get = replacement;
-function afterWrite(client) { client.get('key'); }
-afterWrite(session);
-function iterable(client) { client.get('key'); return [replacement]; }
-for (replica.get of iterable(replica)) {}
-function keys(client) { client.get('key'); return { key: replacement }; }
-for (scoped.get in keys(scoped)) {}
+function acquire(fn = namedLoop.get) { return fn; }
+function forward() { return acquire(); }
+function consume(fn) { fn('key'); }
+for (const value of [0, 1]) {
+  consume(forward());
+  namedLoop.get = replacement;
+}

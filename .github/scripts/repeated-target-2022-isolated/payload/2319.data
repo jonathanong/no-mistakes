@@ -1,9 +1,4 @@
-effects:
-  postgres:
-    typedExecutors:
-      - { module: database-client, export: Namespace.Query }
-rules:
-  - rule: query-reached-per-item
-    scope: repository
-    options:
-      effects: [postgres]
+import { receiver } from "@vendor/scaling";
+import { local } from "./local.mjs";
+receiver.get("key");
+local();

@@ -1,8 +1,6 @@
-import { read } from '@example/db'
-
-function run(sql: string) {
-  return read(sql)
+export async function afterComputedGate() {
+  const query = '/* effects/computed */ SELECT id FROM posts'
+  const gate = { [await Promise.resolve('ready')]: true }
+  void gate
+  return query
 }
-
-export const callback = run && run
-run('/* exported/logical */ SELECT id FROM posts')

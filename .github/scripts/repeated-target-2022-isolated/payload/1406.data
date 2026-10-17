@@ -1,7 +1,2 @@
-name: Second inherited config
-on: push
-jobs:
-  second:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo second
+// OXC reports this parser panic through the recovered-program fatal marker.
+export const = ;

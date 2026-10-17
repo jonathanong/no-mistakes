@@ -1,21 +1,33 @@
 import { read, sql } from '@example/db';
-function runOpaque() {
-  const query = sql`/* returns/opaque */ SELECT 6`;
-  query.append(['; DELETE FROM records'].join(''));
+function appendDelete(target: unknown) {
+  target.append(sql`; DELETE FROM records`);
+  return 1;
+}
+function noOp() { return 0; }
+export function conditionalMutation(flag: boolean) {
+  const query = sql`SELECT 1`;
+  read(query, flag ? appendDelete(query) : noOp());
+}
+export function pureAlternatives(flag: boolean) {
+  const query = sql`SELECT 1`;
+  read(query, flag ? noOp() : noOp());
+}
+export function earlierRead(flag: boolean) {
+  const query = sql`SELECT 1`;
   read(query);
+  flag ? appendDelete(query) : noOp();
 }
-function runUnsupported(input: unknown[]) {
-  const query = sql`/* returns/unsupported */ SELECT 7`;
-  for (const value of input) query.append('; DELETE FROM records');
-  read(query);
+function appendEmpty(target: unknown) { target.append(sql``); return 1; }
+export function unchangedMutation(flag: boolean) {
+  const query = sql`SELECT 1`;
+  read(query, flag ? appendEmpty(query) : noOp());
 }
-// An opaque factory call is not a proven reference to its callback argument.
-export function opaque(flag: boolean) {
-  if (flag) return unknownFactory(runOpaque);
-  else return null;
+export function bindingReplaced(flag: boolean) {
+  let query = sql`SELECT 1`;
+  // The first argument retains the original object when the binding is replaced.
+  read(query, flag ? (query = sql`; DELETE FROM records`) : noOp());
 }
-// Escaping a function does not make its unmodeled loop safe to execute precisely.
-export function unsupported(flag: boolean) {
-  if (flag) return runUnsupported;
-  else return null;
+export function annotatedMutation(flag: boolean) {
+  const query = sql`/* branch/read */ SELECT 1`;
+  read(query, flag ? appendDelete(query) : noOp());
 }

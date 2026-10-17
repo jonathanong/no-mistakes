@@ -1,16 +1,9 @@
 effects:
   postgres:
-    targets:
-      - { module: './async-binding-exports.mjs', export: unawaited }
-      - { module: './async-binding-exports.mjs', export: awaited }
-  valkey:
-    targets:
-      - { module: '@vendor/valkey', export: primary.get }
-      - { module: '@vendor/valkey-imported-receiver-mutations', export: primary.get }
-      - { module: '@vendor/valkey-default-origin-mutations', export: primary.get }
-      - { module: '@vendor/valkey-destructured-parameters', export: primary.get }
+    typedExecutors:
+      - { module: database-client, export: Namespace.Query }
 rules:
   - rule: query-reached-per-item
     scope: repository
     options:
-      effects: [postgres, valkey]
+      effects: [postgres]

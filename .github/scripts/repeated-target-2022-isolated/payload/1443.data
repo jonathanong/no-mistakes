@@ -1,11 +1,3 @@
-import { query } from "@example/db";
+import { Worker } from "bullmq";
 
-const text = sql`SELECT * FROM topics WHERE id = ${1}` + sql` AND status = ${2}`;
-
-export function load() {
-  return query(text);
-}
-
-function sql(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return strings.join("");
-}
+new Worker("email", async (job) => job.data);

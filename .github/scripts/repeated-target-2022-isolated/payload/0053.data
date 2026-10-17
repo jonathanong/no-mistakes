@@ -1,4 +1,18 @@
-export async function loadReachable() {
-  const module = await import('./lazy.ts')
-  return module.value
+{
+  "advisories": [],
+  "codebase": [],
+  "integration": [],
+  "queues": [],
+  "react": [],
+  "rules": [
+    {
+      "file": "src/entry.mts",
+      "import": "receiver.transaction",
+      "line": 5,
+      "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `receiver.transaction` reaches `database` via receiver.transaction (transaction client only; merge statements instead of parallelizing)",
+      "rule": "query-reached-per-item",
+      "target": "database: receiver.transaction"
+    }
+  ],
+  "warnings": []
 }

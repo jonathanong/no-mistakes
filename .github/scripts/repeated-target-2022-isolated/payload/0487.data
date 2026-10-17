@@ -1,19 +1,34 @@
 import { read, sql } from '@example/db';
-function appendDelete(target: unknown) { target.append(sql`; DELETE FROM records`); return 1; }
-function noOp() { return 0; }
-export function wrappedBuilderAlternatives(flag: boolean) {
-  const query = sql`SELECT 1`;
-  // Existing wrapper aliases must preserve both canonical update alternatives.
-  const promise = (async () => query)();
-  const object = { ['builder']: query };
-  const aggregate = flag && query;
-  read(query, flag ? appendDelete(query) : noOp());
+
+function mutateInSelectedArm(query: unknown) {
+  if (true) {
+    for (const unused of [1]) query.append(sql`; DELETE FROM records`);
+  }
 }
-export function exposedWrapperStaysUncertain(flag: boolean) {
-  const query = sql`SELECT 1`;
-  const values = [query];
-  opaqueConsumer(values);
-  const possible = values[0];
-  // Baseline traversal must not turn uncertain exposed aliases into SQL proof.
-  read(query, flag ? noOp() : noOp());
+function mutateInReturnedArm(query: unknown) {
+  if (true) {
+    for (const unused of [1]) query.append(sql`; DELETE FROM records`);
+    return 'known final value';
+  }
+}
+function skippedUnsupportedArm(query: unknown) {
+  // An unreachable unsupported arm must not poison the selected safe path.
+  if (false) {
+    for (const unused of [1]) query.append(sql`; DELETE FROM records`);
+  }
+}
+export function selectedUnsupportedArm() {
+  const query = sql`/* nested/selected */ SELECT 1`;
+  mutateInSelectedArm(query);
+  read(query);
+}
+export function returnedUnsupportedArm() {
+  const query = sql`/* nested/returned */ SELECT 1`;
+  mutateInReturnedArm(query);
+  read(query);
+}
+export function unreachableUnsupportedArm() {
+  const query = sql`/* nested/unreachable */ SELECT 1`;
+  skippedUnsupportedArm(query);
+  read(query);
 }

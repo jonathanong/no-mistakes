@@ -1,18 +1,15 @@
 import { query } from "@example/db";
 
-function safe() {
-  return "TRUSTED SQL";
+function build() {
+  return "SELECT id FROM topics";
 }
 
-function wrap(
-  { ...rest }: Record<string, unknown>,
-  [safe = () => "fallback", ...tail]: Array<() => string>,
-) {
-  return safe();
+function externalBuilder() {
+  return "UNTRUSTED";
 }
-
-const sql = wrap({}, [() => "untrusted"]);
 
 export function load() {
-  return query(sql);
+  for (const build of [externalBuilder]) {
+    return query(build());
+  }
 }

@@ -1,5 +1,4 @@
-import "external-package";
-
-// Duplicates report-root/src/helper.ts so unique-exports catches this file if
-// supplemental import-usage facts ever leak into the check file universe.
-export const helper = false;
+export type TransactionQuery = (sql: string) => Promise<unknown>;
+export type QueryOptions = { query?: TransactionQuery };
+export declare function beginTransaction(): Promise<TransactionQuery>;
+export declare function write(sql: string): Promise<unknown>;

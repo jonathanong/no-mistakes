@@ -1,6 +1,7 @@
 import { query } from "@example/db";
 
-const text = sql`SELECT * FROM topics WHERE id = ${1}`.append(sql` AND status = ${2}`);
+const text = sql`SELECT * FROM topics WHERE id = ${1}`;
+text.append(sql` AND status = ${2}`);
 
 export function load() {
   return query(text);

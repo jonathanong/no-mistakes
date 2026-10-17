@@ -1,88 +1,44 @@
-/** Explicit files only; no package resolution or whole-project traversal. */
-export interface TypeScriptModulesOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  files: string[];
-}
-/** Half-open UTF-8 byte offsets into the original source, not JS UTF-16 indexes. */
-export interface TypeScriptModuleSpan {
-  start: number;
-  end: number;
-}
-export interface TypeScriptBindingReference {
-  span: TypeScriptModuleSpan;
-  runtime: boolean;
-  typeOnly: boolean;
-}
-export interface TypeScriptModuleBinding {
-  /** Module-local stable identifier; do not compare IDs across modules or runs. */
-  id: number;
-  name: string;
-  scopeId: number;
-  span: TypeScriptModuleSpan;
-  imported: boolean;
-  /** A syntactically declared runtime value, without resolving imported modules. */
-  runtime: boolean;
-  typeOnly: boolean;
-  shadows: number | null;
-  references: TypeScriptBindingReference[];
-}
-export interface TypeScriptModuleScope {
-  id: number;
-  parentId: number | null;
-}
-export type TypeScriptImportBindingKind = "default" | "named" | "namespace";
-export interface TypeScriptModuleImportBinding {
-  imported: string;
-  local: string;
-  kind: TypeScriptImportBindingKind;
-  typeOnly: boolean;
-  bindingId: number;
-  span: TypeScriptModuleSpan;
-}
-export interface TypeScriptModuleImport {
-  specifier: string;
-  typeOnly: boolean;
-  span: TypeScriptModuleSpan;
-  /** Empty for side-effect imports. */
-  bindings: TypeScriptModuleImportBinding[];
-}
-export interface TypeScriptModuleExport {
-  specifier: string | null;
-  /** "*" for star or namespace re-exports; empty for defaults without a local binding or source-only exports. */
-  local: string;
-  /** Empty for source-only exports such as `export {} from "./dep"`. */
-  exported: string;
-  typeOnly: boolean;
-  span: TypeScriptModuleSpan;
-}
-export type TypeScriptModuleLoadKind = "dynamicImport" | "require";
-export interface TypeScriptModuleLoad {
-  kind: TypeScriptModuleLoadKind;
-  specifier: string;
-  span: TypeScriptModuleSpan;
-}
-export type TypeScriptModuleDiagnosticKind =
-  | "sourceError"
-  | "parseError"
-  | "semanticError"
-  | "unsupported";
-export interface TypeScriptModuleDiagnostic {
-  kind: TypeScriptModuleDiagnosticKind;
-  message: string;
-  span: TypeScriptModuleSpan | null;
-}
-export interface TypeScriptModuleFacts {
-  fileName: string;
-  /** False for source/read/parser errors and explicitly unsupported dynamic forms. */
-  complete: boolean;
-  imports: TypeScriptModuleImport[];
-  exports: TypeScriptModuleExport[];
-  bindings: TypeScriptModuleBinding[];
-  scopes: TypeScriptModuleScope[];
-  loads: TypeScriptModuleLoad[];
-  diagnostics: TypeScriptModuleDiagnostic[];
-}
-export interface TypeScriptModulesReport {
-  modules: TypeScriptModuleFacts[];
-}
+import { fixtureTemplate } from "../../../fixtures/test-timeout-policy/fixture-source.mjs";
+import { describe, expect, it } from "vitest";
+import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-child.mjs";
+describe.skipIf(process.platform !== "linux")(
+  "candidate public TestRunner constructor composition (Node probes)",
+  () => {
+    it("preserves cached identity, most-derived prototype and custom context lifecycle", async () => {
+      const result = await fixture(
+        fixtureTemplate("public-runner.test-template-6.txt"),
+        undefined,
+        fixtureTemplate("public-runner.test-template-5.txt"),
+      );
+      expect(result.code, result.output).toBe(0);
+      expect(result.marker).toBe("continued");
+      expect(result.forcedCleanup).toBe(false);
+    });
+    it("guards the final public SDK subclass with an own-field extension and private receiver", async () => {
+      const result = await fixture(
+        fixtureTemplate("public-runner.test-template-4.txt"),
+        undefined,
+        fixtureTemplate("public-runner.test-template-3.txt"),
+      );
+      expect(result.code, result.output).toBe(0);
+      expect(result.marker).toBe("continued");
+      expect(result.forcedCleanup).toBe(false);
+    });
+    it.each(["30001", "0", "NaN", "Infinity"])(
+      "rejects raw configured deadline %s during public construction",
+      async (timeout) => {
+        const result = await fixture(
+          fixtureTemplate("public-runner.test-template-2.txt"),
+          undefined,
+          fixtureTemplate("public-runner.test-template-1.txt", [timeout]),
+        );
+        expect(result.code).toBe(1);
+        expect(result.output).toContain(
+          "testTimeout must be positive, finite and at most 30000 ms",
+        );
+        expect(result.marker).toBeUndefined();
+        expect(result.forcedCleanup).toBe(false);
+      },
+    );
+  },
+);

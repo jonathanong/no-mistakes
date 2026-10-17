@@ -1,8 +1,14 @@
-import sql, { type SQLStatement } from 'sql-template-strings'
+import { read } from '@example/db'
+import { runOrdered } from './ordered-helper.ts'
 
-export function buildCount(query: SQLStatement) {
-  const count = sql`/* search/count */ SELECT COUNT(*) FROM (`
-  count.append(query)
-  count.append(sql`) AS matches`)
-  return count
+function statement(ctes: string) {
+  return `/* ordered/list */ WITH ${ctes} SELECT id FROM input_data`
+}
+
+function readRows(statement: string) {
+  return read(statement)
+}
+
+export function listOrdered() {
+  return runOrdered({ statement, readRows })
 }

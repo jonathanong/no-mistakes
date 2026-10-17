@@ -1,203 +1,184 @@
 "use strict";
 
-const {
-  publishArtifact,
-  removeArtifact,
-  updateOutputDirectory,
-  validateManifest,
-  validateOutputDirectory,
-} = require("./planning-impact-artifacts-files");
-const artifactErrors = require("./planning-impact-artifacts-errors");
-const { canonicalOutputKey, serializeOutputUpdate } = require("./planning-impact-artifacts-lock");
-const { realpath } = require("node:fs/promises");
-const {
-  buildRequest,
-  completeResult,
-  isReservedArtifactPath,
-  invocationOptions,
-} = require("./planning-impact-artifacts-inputs");
-const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
-const { TextDecoder } = require("node:util");
+const { resolveNativePackage } = require("./scripts/native-package");
+const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath;
+const native = require(addonPath);
+const planning = require("./planning");
+const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
+const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
+const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
+const path = require("node:path");
 
-const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
-const REPORT_TYPES = {
-  dependencies: "dependencies",
-  dependents: "dependents",
-  symbols: "symbols",
-  plan: "testsPlan",
-};
-const RESERVED_ARTIFACT_NAME =
-  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
-const RESERVED_MANIFEST_ERROR =
-  "changed-files manifest must not use a reserved artifact destination";
-// Node keeps U+FEFF when ignoreBOM is true; the default strips a UTF-8 BOM.
-const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true });
-
-async function writePlanningImpactArtifacts(
-  options,
-  analyzeProject,
-  renameNoReplace,
-  acquireOutputLock = async () => async () => {},
-) {
-  const outputKey = await canonicalOutputKey(resolve(options.outputDirectory));
-  return serializeOutputUpdate(outputKey, async () => {
-    const releaseOutputLock = await acquireOutputLock(outputKey);
-    try {
-      const outputPath = await realpath(outputKey);
-      return await writePlanningImpactArtifactsUnlocked(
-        { ...options, outputDirectory: outputPath },
-        analyzeProject,
-        renameNoReplace,
-      );
-    } finally {
-      await releaseOutputLock();
-    }
-  });
+async function callJson(fn, options) {
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return JSON.parse(await fn(input));
 }
 
-async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, renameNoReplace) {
-  const output = await validateOutputDirectory(options.outputDirectory);
-  let manifestHandle;
-  let mayWriteFailureArtifacts = false;
-  try {
-    const requestedManifestPath = resolve(options.changedFilesManifest);
-    mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(requestedManifestPath));
-    if (!mayWriteFailureArtifacts) throw new Error(RESERVED_MANIFEST_ERROR);
-    const manifestPath = await realpath(requestedManifestPath);
-    mayWriteFailureArtifacts = false;
-    if (await isReservedArtifactPath(manifestPath)) throw new Error(RESERVED_MANIFEST_ERROR);
-    mayWriteFailureArtifacts = true;
-    const manifest = await validateManifest(output, manifestPath);
-    manifestHandle = manifest.handle;
-    mayWriteFailureArtifacts = false;
-    if (await isReservedArtifactPath(manifest.path)) throw new Error(RESERVED_MANIFEST_ERROR);
-    mayWriteFailureArtifacts = true;
-    const changedFiles = parseChangedFiles(decodeManifest(await manifestHandle.readFile()));
-    await manifestHandle.close();
-    manifestHandle = undefined;
-    await updateOutputDirectory(output, invalidateStatuses, renameNoReplace);
-    const request = {
-      ...(await buildRequest(options.root, changedFiles, options.broad === true)),
-      ...invocationOptions(options),
-    };
-    const result = await analyzeProject(request);
-    const completed = completeResult(result, request.reports);
-    const artifacts = reportArtifacts(completed);
-    await updateOutputDirectory(
-      output,
-      (privateOutput) => writeSuccess(privateOutput, artifacts),
-      renameNoReplace,
-    );
-    return { outputDirectory: output.path, ...artifacts };
-  } catch (error) {
-    if (mayWriteFailureArtifacts && !artifactErrors.isOutputRestorationFailure(error)) {
-      try {
-        await updateOutputDirectory(
-          output,
-          (privateOutput) => writeFailure(privateOutput, error),
-          renameNoReplace,
-        );
-      } catch (failureReportingError) {
-        if (artifactErrors.isOutputRestorationFailure(failureReportingError)) {
-          throw artifactErrors.preserveFailureReportingError(error, failureReportingError);
-        }
-      }
-    }
-    throw error;
-  } finally {
-    if (manifestHandle) await manifestHandle.close().catch(() => {});
-    if (output.handle) await output.handle.close().catch(() => {});
-  }
-}
-function decodeManifest(contents) {
-  try {
-    return UTF8_DECODER.decode(contents);
-  } catch {
-    throw new Error("changed-files manifest must be valid UTF-8");
-  }
-}
-function parseChangedFiles(source) {
-  const files = [...new Set(source.split(/\r\n|[\r\n]/u).filter((line) => line.length > 0))];
-  if (!files.length) throw new Error("changed-files manifest is empty");
-  for (const file of files) {
-    if (
-      isAbsolute(file) ||
-      posix.isAbsolute(file) ||
-      win32.isAbsolute(file) ||
-      /^[A-Za-z]:/u.test(file) ||
-      file.split(/[\\/]/u).includes("..")
-    ) {
-      throw new Error(`changed file must be repository-relative: ${file}`);
-    }
-  }
-  return files;
-}
-function reportArtifacts(result) {
-  const reports = new Map(result.reports.map((report) => [report.id, report]));
+function createJsonApis(descriptors) {
   return Object.fromEntries(
-    REPORTS.map((name) => {
-      const report = reports.get(name);
-      if (!report) throw new Error(`no-mistakes omitted the ${name} report`);
-      if (report.type !== REPORT_TYPES[name]) {
-        throw new Error(`${name} type ${report.type}; expected ${REPORT_TYPES[name]}`);
-      }
-      return [name, report.result];
-    }),
-  );
-}
-
-async function writeSuccess(output, artifacts) {
-  for (const name of REPORTS) {
-    await publishArtifact(
-      output,
-      `${name}.json`,
-      `${JSON.stringify(toCliValue(artifacts[name]))}\n`,
-    );
-    await publishArtifact(output, `${name}.stderr`, "");
-  }
-  for (const name of REPORTS) await publishArtifact(output, `${name}.status`, "0\n");
-}
-
-async function writeFailure(output, error) {
-  const diagnostic = boundedDiagnostic(error);
-  for (const name of REPORTS) {
-    await attempt(() => removeArtifact(output, `${name}.json`));
-    await attempt(() => publishArtifact(output, `${name}.stderr`, diagnostic));
-    await attempt(() => publishArtifact(output, `${name}.status`, "1\n"));
-  }
-}
-
-async function invalidateStatuses(output) {
-  for (const name of REPORTS) {
-    await publishArtifact(output, `${name}.status`, "1\n");
-  }
-}
-
-async function attempt(operation) {
-  try {
-    await operation();
-  } catch {
-    // Failure reporting must preserve the original analysis/publication error.
-  }
-}
-
-function toCliValue(value) {
-  if (Array.isArray(value)) return value.map(toCliValue);
-  if (value === null || typeof value !== "object") return value;
-  return Object.fromEntries(
-    Object.entries(value).map(([key, child]) => [
-      key.replace(/[A-Z]/gu, (letter) => `_${letter.toLowerCase()}`),
-      toCliValue(child),
+    Object.entries(descriptors).map(([apiName, nativeName]) => [
+      apiName,
+      async (options) => callJson(native[nativeName], options),
     ]),
   );
 }
 
-function boundedDiagnostic(error) {
-  const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-  return Buffer.from(`${detail}\n`)
-    .subarray(0, 4096)
-    .toString("utf8")
-    .replace(/\ufffd+$/u, "");
+const jsonApis = createJsonApis({
+  analyzeTypeScriptModules: "analyzeTypeScriptModulesJson",
+  parsePostgresSql: "parsePostgresSqlJson",
+  extractExecutedPostgresSql: "extractExecutedPostgresSqlJson",
+  generatePostgresCatalog: "generatePostgresCatalogJson",
+  analyzeProject: "analyzeProjectJson",
+  callSites: "callSitesJson",
+  check: "checkJson",
+  resolveConfig: "resolveConfigJson",
+  ciEnv: "ciEnvJson",
+  ciImpact: "ciImpactJson",
+  ciTopology: "ciTopologyJson",
+  ciTopologyImpact: "ciTopologyImpactJson",
+  dataPw: "dataPwJson",
+  deadExports: "deadExportsJson",
+  dependencies: "dependenciesJson",
+  dependents: "dependentsJson",
+  diagnosticsSnapshot: "diagnosticsSnapshotJson",
+  effects: "effectsJson",
+  exportsOf: "exportsOfJson",
+  fetches: "fetchesJson",
+  impactedChecks: "impactedChecksJson",
+  importUsages: "importUsagesJson",
+  importers: "importersJson",
+  infraOutputs: "infraOutputsJson",
+  infraResourceRefs: "infraResourceRefsJson",
+  infraTestFor: "infraTestForJson",
+  lockfileDiff: "lockfileDiffJson",
+  validateMermaidMarkdown: "validateMermaidMarkdownJson",
+  playwrightCheck: "playwrightCheckJson",
+  playwrightEdges: "playwrightEdgesJson",
+  playwrightRelated: "playwrightRelatedJson",
+  playwrightTests: "playwrightTestsJson",
+  reactAnalyze: "reactAnalyzeJson",
+  reactCheck: "reactCheckJson",
+  reactUsages: "reactUsagesJson",
+  registryExtension: "registryExtensionJson",
+  related: "relatedJson",
+  resolveCheck: "resolveCheckJson",
+  rscCallers: "rscCallersJson",
+  swiftImporters: "swiftImportersJson",
+  swiftTestTargets: "swiftTestTargetsJson",
+  symbols: "symbolsJson",
+});
+
+const CAMELIZE_REPORTS = new Set([
+  "testsAudit",
+  "testsPlan",
+  "testsImpact",
+  "testsTargets",
+  "testsGraph",
+]);
+const acquirePlanningArtifactLock = createPlanningArtifactLock(native);
+
+async function analyzeProject(options = {}) {
+  const request = { ...options };
+  const generatedDirs = [];
+  try {
+    if (Array.isArray(request.reports)) {
+      request.reports = await planning.prepareAnalyzeProjectReports(request.reports, generatedDirs);
+    }
+    const result = await jsonApis.analyzeProject(request);
+    for (const report of result.reports || []) {
+      if (report.type === "testsWhy") {
+        report.result = planning.camelizeWhy(report.result);
+      } else if (CAMELIZE_REPORTS.has(report.type)) {
+        report.result = planning.camelizeValue(report.result);
+      }
+    }
+    return result;
+  } finally {
+    await Promise.all(generatedDirs.map((dir) => planning.removeGeneratedDir(dir)));
+  }
 }
 
-module.exports = { writePlanningImpactArtifacts };
+async function writePlanningImpactArtifacts(options) {
+  return writeArtifacts(
+    options,
+    analyzeProject,
+    async (from, to) => {
+      if (await native.renameNoReplace(from, to)) return true;
+      const error = new Error("output directory path changed during planning artifact generation");
+      error.code = "EEXIST";
+      throw error;
+    },
+    acquirePlanningArtifactLock,
+  );
+}
+
+async function ciTopology(options = {}) {
+  return jsonApis.ciTopology({ ...options, root: path.resolve(options.root || process.cwd()) });
+}
+
+const version = () => native.version();
+
+module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
+module.exports.version = version;
+module.exports.analyzeProject = analyzeProject;
+module.exports.analyzeTypeScriptModules = jsonApis.analyzeTypeScriptModules;
+module.exports.extractExecutedPostgresSql = jsonApis.extractExecutedPostgresSql;
+module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
+module.exports.callSites = jsonApis.callSites;
+module.exports.check = jsonApis.check;
+module.exports.resolveConfig = jsonApis.resolveConfig;
+module.exports.ciEnv = jsonApis.ciEnv;
+module.exports.ciImpact = jsonApis.ciImpact;
+module.exports.ciTopology = ciTopology;
+module.exports.ciTopologyImpact = jsonApis.ciTopologyImpact;
+module.exports.dataPw = jsonApis.dataPw;
+module.exports.deadExports = jsonApis.deadExports;
+module.exports.dependencies = jsonApis.dependencies;
+module.exports.dependents = jsonApis.dependents;
+module.exports.diagnosticsSnapshot = jsonApis.diagnosticsSnapshot;
+module.exports.effects = jsonApis.effects;
+module.exports.exportsOf = jsonApis.exportsOf;
+module.exports.fetches = jsonApis.fetches;
+module.exports.impactedChecks = jsonApis.impactedChecks;
+module.exports.importUsages = jsonApis.importUsages;
+module.exports.importers = jsonApis.importers;
+module.exports.infraOutputs = jsonApis.infraOutputs;
+module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
+module.exports.infraTestFor = jsonApis.infraTestFor;
+module.exports.lockfileDiff = jsonApis.lockfileDiff;
+module.exports.validateMermaidMarkdown = jsonApis.validateMermaidMarkdown;
+module.exports.playwrightCheck = jsonApis.playwrightCheck;
+module.exports.playwrightEdges = jsonApis.playwrightEdges;
+module.exports.playwrightRelated = jsonApis.playwrightRelated;
+module.exports.playwrightTests = jsonApis.playwrightTests;
+module.exports.reactAnalyze = jsonApis.reactAnalyze;
+module.exports.reactCheck = jsonApis.reactCheck;
+module.exports.reactUsages = jsonApis.reactUsages;
+module.exports.registryExtension = jsonApis.registryExtension;
+module.exports.related = jsonApis.related;
+module.exports.resolveCheck = jsonApis.resolveCheck;
+module.exports.rscCallers = jsonApis.rscCallers;
+module.exports.swiftImporters = jsonApis.swiftImporters;
+module.exports.swiftTestTargets = jsonApis.swiftTestTargets;
+module.exports.symbols = jsonApis.symbols;
+module.exports.testsComment = planning.testsComment;
+module.exports.testsGraphMermaid = planning.testsGraphMermaid;
+module.exports.flow = planning.flow;
+module.exports.queueCheck = planning.queueCheck;
+module.exports.queueEdges = planning.queueEdges;
+module.exports.queueRelated = planning.queueRelated;
+module.exports.queues = planning.queues;
+module.exports.serverContracts = planning.serverContracts;
+module.exports.serverRouteEdges = planning.serverRouteEdges;
+module.exports.serverRouteList = planning.serverRouteList;
+module.exports.serverRouteRelated = planning.serverRouteRelated;
+module.exports.serverRoutes = planning.serverRoutes;
+module.exports.testsAudit = planning.testsAudit;
+module.exports.testsGraph = planning.testsGraph;
+module.exports.testsImpact = planning.testsImpact;
+module.exports.testsPlan = planning.testsPlan;
+module.exports.testsTargets = planning.testsTargets;
+module.exports.testsWhy = planning.testsWhy;
+
+module.exports.generatePostgresCatalog = jsonApis.generatePostgresCatalog;
+module.exports.parsePostgresSql = jsonApis.parsePostgresSql;

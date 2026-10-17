@@ -39,6 +39,18 @@ def layouts(plan):
     for key in ['proof', 'root_review']:
         pin = gate[key]
         assert hashlib.sha256(Path(pin['path']).read_bytes()).hexdigest() == pin['sha256']
+    if 'source_carry' in gate:
+        carry = gate['source_carry']
+        for key in ['proof', 'root_review']:
+            pin = carry[key]
+            assert hashlib.sha256(Path(pin['path']).read_bytes()).hexdigest() == pin['sha256']
+        source = json.loads(Path(carry['proof']['path']).read_text())
+        assert source['new_native_candidate'] == plan['candidate_actual_compiler']
+        assert source['public_cfg_only_carry'] == plan['candidate_current_source']
+        assert source['prior_actual24']['sha256'] == gate['proof']['sha256']
+        assert all(row['cfg_test_false'] for row in source['original_metadata_modes'])
+        reviewed = json.loads(Path(carry['root_review']['path']).read_text())
+        assert reviewed['six_files_hash_verified'] and reviewed['mode_and_actual24_receipt_hashes_verified'] and reviewed['no_new_measurement']
     proof = json.loads(Path(gate['proof']['path']).read_text())
     assert proof['status'] == 'PASS'
     assert set(proof['variants']) == set(gate['required'])

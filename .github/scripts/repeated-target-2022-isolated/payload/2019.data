@@ -1,16 +1,10 @@
--- Source facts preserve unsupported pieces rather than dropping the typed child.
-WITH unsupported_insert AS (
- INSERT INTO target (id) SELECT id FROM generate_series(1, 2) g RETURNING id
-), unsupported_merge AS (
- MERGE INTO target t USING generate_series(1, 2) s ON t.id = s.id
- WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id)
- WHEN MATCHED THEN UPDATE SET id = s.id
-)
-SELECT 1;
-
-WITH limited AS (INSERT INTO target (id) VALUES (1), (2) LIMIT 1 RETURNING id)
-SELECT 1;
-WITH ordered AS (INSERT INTO target (id) VALUES (1), (2) ORDER BY 1 RETURNING id)
-SELECT 1;
-WITH fetched AS (INSERT INTO target (id) VALUES (1), (2) FETCH FIRST 1 ROW ONLY RETURNING id)
-SELECT 1;
+-- Unicode preceding a same-line body must retain original byte and scalar positions.
+/* 雪 */ DO $body$ BEGIN ALTER TABLE "Café" ADD COLUMN "雪" integer; END $body$ LANGUAGE plpgsql;
+DO LANGUAGE PLPGSQL $$ BEGIN CREATE TABLE nested_table (id integer); END $$;
+DO $$ BEGIN IF true THEN ALTER TABLE hidden_table ADD COLUMN hidden integer; END IF; END $$;
+DO $$ BEGIN DECLARE x integer; ALTER TABLE hidden_table ADD COLUMN hidden integer; END $$;
+DO $$ SELECT 1; $$;
+DO $$ BEGIN ALTER TABLE broken (bad syntax); CREATE TABLE after_error (id integer); END $$;
+DO LANGUAGE sql $$ BEGIN CREATE TABLE unknown_language (id integer); END $$;
+DO 'BEGIN CREATE TABLE escaped_body (id integer); END';
+CREATE TABLE after_procedural (id integer);

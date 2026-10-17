@@ -1,7 +1,5 @@
-name: Added
-on: push
-jobs:
-  added:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo added
+export { leaf } from "./leaf";
+
+export async function loadC() {
+  return import("./c-dynamic-target");
+}

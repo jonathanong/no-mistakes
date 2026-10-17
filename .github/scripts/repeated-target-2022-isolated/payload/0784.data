@@ -1,21 +1,25 @@
-MIT License
-
-Copyright (c) 2026 Jonathan Ong
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+-- Quoted SQL names preserve identifier case; only lower-case sql is built in.
+CREATE FUNCTION quoted_sql() RETURNS int LANGUAGE "sql" BEGIN ATOMIC SELECT 1; END;
+CREATE FUNCTION quoted_upper() RETURNS int LANGUAGE "SQL" BEGIN ATOMIC SELECT 2; END;
+CREATE FUNCTION conflicting() RETURNS int LANGUAGE SQL AS 'SELECT 1' BEGIN ATOMIC SELECT 3; END;
+SELECT 61;
+CREATE FUNCTION nested_conflicting() RETURNS int BEGIN ATOMIC CREATE FUNCTION bad_child() RETURNS int LANGUAGE SQL AS 'SELECT 1' BEGIN ATOMIC SELECT 4; END; SELECT 5; END;
+EXPLAIN (FORMAT TEXT) SELECT 1;
+EXPLAIN (FORMAT JSON) SELECT 1;
+EXPLAIN FORMAT TEXT SELECT 1;
+EXPLAIN VERBOSE FORMAT JSON SELECT 1;
+DO $$ BEGIN
+  IF true THEN
+    EXPLAIN SELECT 'é ANALYZE';
+    IF false THEN
+      PREPARE branch_plan AS INSERT INTO target VALUES (1);
+    ELSE
+      EXPLAIN (ANALYZE FALSE) SELECT 2;
+    END IF;
+  ELSE
+    EXPLAIN ANALYZE INSERT INTO target VALUES (2);
+  END IF;
+END $$;
+DO $$ BEGIN IF true THEN EXPLAIN (ANALYZE NULL) SELECT 1; ELSE PREPARE good AS SELECT 2; END IF; END $$;
+-- Recovery retains an incomplete declaration even when conflicting END is absent.
+CREATE FUNCTION unfinished_conflict() RETURNS int LANGUAGE SQL AS 'SELECT 1' BEGIN ATOMIC SELECT 6;

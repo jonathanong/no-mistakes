@@ -1,9 +1,8 @@
-import { primary, replica } from '@vendor/valkey';
+import { primary, session } from '@vendor/valkey';
 function replacement() {}
-
-function unrelated(client) {
-  const alias = client;
-  primary.get = replacement;
-  alias.set('key', 'value');
-}
-unrelated(replica);
+function inner(client) { client.get('key'); }
+function outer(client = primary) { inner(client); primary.get = replacement; }
+outer();
+function innerAfter(client) { client.get('key'); }
+function outerBefore(client = session) { session.get = replacement; innerAfter(client); }
+outerBefore();

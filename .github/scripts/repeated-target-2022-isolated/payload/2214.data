@@ -1,201 +1,113 @@
-import { browserChildContainment } from "../../../fixtures/test-timeout-policy/browser-child-containment.mjs";
-import { containmentChildProbe } from "../../../fixtures/test-timeout-policy/containment-child-probe.mjs";
-import { observeSdkChild } from "../../../fixtures/test-timeout-policy/owned-sdk-child.mjs";
-import { describe, expect, it, vi } from "vitest";
-import { configDefaults, mergeConfig } from "vitest/config";
-import { browserTestTimeoutPolicyPlugin, testTimeoutPolicyPlugin } from "./plugin.mjs";
-import { replaceStorybookAnnotationSetup } from "../../../fixtures/test-timeout-policy/storybook-timeout-fixture.mjs";
-describe("browser routing policy contracts", () => {
-  it("preserves inline-all sentinels in both public plugin configuration routes", () => {
-    for (const plugin of [
-      testTimeoutPolicyPlugin(30000, ["registrar"]),
-      browserTestTimeoutPolicyPlugin(30000, ["registrar"]),
-    ]) {
-      const config = { test: { server: { deps: { inline: true } } } };
-      expect(plugin.config(config).test.server.deps.inline).toBe(true);
-      const patterns = [/owned/, "existing"];
-      expect(
-        plugin.config({ test: { server: { deps: { inline: patterns } } } }).test.server.deps.inline,
-      ).toEqual(["registrar"]);
-      expect(patterns).toEqual([/owned/, "existing"]);
-    }
-  });
-  it("composes client optimizers without modifying server configuration or caller arrays", () => {
-    const plugin = browserTestTimeoutPolicyPlugin(30000, ["registrar"]);
-    const include = ["dependency > registrar/subpath", "registrar-extra", "ordinary"];
-    const config = { optimizeDeps: { include, exclude: ["ordinary-exclusion", "vitest"] } };
-    expect(plugin.configEnvironment.handler("ssr", config)).toBeUndefined();
-    for (const name of ["client", "custom"]) {
-      const result = plugin.configEnvironment.handler(name, { ...config, consumer: "client" });
-      expect(result?.optimizeDeps.include).toEqual(["registrar-extra", "ordinary"]);
-      expect(result?.optimizeDeps.exclude).toEqual([
-        "ordinary-exclusion",
-        "vitest",
-        "@vitest/browser",
-        "registrar",
-      ]);
-    }
-    expect(plugin.configEnvironment.handler("client", {})?.optimizeDeps.include).toEqual([]);
-    expect(include).toEqual(["dependency > registrar/subpath", "registrar-extra", "ordinary"]);
-  });
-  it("preserves default, single and custom reporter registrations before the browser lifecycle guard", () => {
-    const plugin = browserTestTimeoutPolicyPlugin();
-    const custom = { onInit() {} };
-    expect(plugin.config().test.reporters.slice(0, -1)).toEqual(configDefaults.reporters);
-    const single = { test: { reporters: "verbose" } };
-    expect(mergeConfig(single, plugin.config(single)).test.reporters[0]).toBe("verbose");
-    const reporters = ["json", custom];
-    const merged = mergeConfig({ test: { reporters } }, plugin.config({ test: { reporters } }));
-    expect(merged.test.reporters.slice(0, 2)).toEqual(reporters);
-    expect(merged.test.reporters).toHaveLength(3);
-    expect(reporters).toEqual(["json", custom]);
-  });
-  it("removes late aggregated registrar bundles from every public client configuration before browser startup", () => {
-    const plugin = browserTestTimeoutPolicyPlugin(30000, ["registrar"]);
-    const reporter = plugin.config().test.reporters.at(-1);
-    if (
-      !reporter ||
-      typeof reporter === "string" ||
-      !("onBrowserInit" in reporter) ||
-      typeof reporter.onBrowserInit !== "function"
-    )
-      throw new Error("Browser initialization guard missing");
-    const optimizer = () => ({
-      include: [
-        "dependency > registrar/subpath",
-        "vitest > expect-type",
-        "registrar-extra",
-        "ordinary",
-      ],
-    });
-    const root = optimizer();
-    const declared = optimizer();
-    const server = optimizer();
-    const active = optimizer();
-    const project = {
-      viteConfig: { optimizeDeps: root, environments: { client: { optimizeDeps: declared } } },
-      vite: {
-        config: { optimizeDeps: server },
-        environments: { client: { config: { optimizeDeps: active } } },
-      },
-    };
-    Reflect.apply(reporter.onBrowserInit, reporter, [project]);
-    for (const config of [root, declared, server, active])
-      expect(config.include).toEqual(["registrar-extra", "ordinary"]);
-    Reflect.apply(reporter.onBrowserInit, reporter, [
-      { viteConfig: {}, vite: { config: {}, environments: {} } },
-    ]);
-    Reflect.apply(reporter.onBrowserInit, reporter, [
-      {
-        viteConfig: {},
-        vite: { config: {}, environments: { client: { config: { optimizeDeps: {} } } } },
-      },
-    ]);
-  });
-  it("rejects disabled or incorrectly excluded browser projects before filtering their bundles", () => {
-    const plugin = browserTestTimeoutPolicyPlugin();
-    expect(() => plugin.configResolved({})).toThrow("enabled browser project");
-    expect(() => plugin.configResolved({ test: { browser: { enabled: true } } })).toThrow(
-      "Missing browser timeout routing exclusion",
-    );
-    const config = {
-      test: { browser: { enabled: true } },
-      optimizeDeps: { exclude: plugin.config().optimizeDeps.exclude },
-    };
-    expect(() => plugin.configResolved(config)).not.toThrow();
-  });
-  it("removes exact, subpath and any nested owner token while preserving near-prefix and unrelated order", () => {
-    const plugin = browserTestTimeoutPolicyPlugin(30000, ["@storybook/addon-vitest"]);
-    const include = [
-      "@storybook/addon-vitest",
-      "@storybook/addon-vitest/internal/setup-file",
-      "dependency > @storybook/addon-vitest/internal/setup-file",
-      "@storybook/addon-vitest/internal/setup-file > dependency",
-      "dependency > middle > @storybook/addon-vitest",
-      " dependency>@storybook/addon-vitest/internal/setup-file > leaf ",
-      "vitest/browser",
-      "unrelated-first",
-      "@storybook/addon-vitest-extra",
-      "dependency > @storybook/addon-vitest-extra/internal/setup-file",
-      "vitest-extra",
-      "unrelated-last",
-    ];
-    const config = {
-      test: { browser: { enabled: true } },
-      optimizeDeps: {
-        include,
-        exclude: plugin.config().optimizeDeps.exclude,
-      },
-    };
-    plugin.configResolved(config);
-    expect(config.optimizeDeps.include).toEqual([
-      "unrelated-first",
-      "@storybook/addon-vitest-extra",
-      "dependency > @storybook/addon-vitest-extra/internal/setup-file",
-      "vitest-extra",
-      "unrelated-last",
-    ]);
-    expect(include).toHaveLength(12);
-    expect(config.optimizeDeps.exclude).toEqual(plugin.config().optimizeDeps.exclude);
-  });
-  it.each([
-    {},
-    { test: {} },
-    { test: { setupFiles: [] } },
-    { test: { setupFiles: ["unrelated.mts"] } },
-  ])("rejects absent or nonmatching addon annotations setup", (config) => {
-    expect(() => replaceStorybookAnnotationSetup(config, "/stable.mts")).toThrow(
-      "annotations setup missing",
-    );
-  });
-  it("replaces string and array addon setup without dropping other setup files", () => {
-    const config = {
-      test: {
-        setupFiles: [
-          "before.mts",
-          "@storybook/addon-vitest/internal/setup-file-with-project-annotations",
-          "after.mts",
-        ],
-      },
-    };
-    replaceStorybookAnnotationSetup(config, "/stable.mts");
-    expect(config.test.setupFiles).toEqual(["before.mts", "/stable.mts", "after.mts"]);
-    const single = {
-      test: { setupFiles: "/addon/setup-file-with-project-annotations.js" },
-    };
-    replaceStorybookAnnotationSetup(single, "/stable.mts");
-    expect(single.test.setupFiles).toEqual(["/stable.mts"]);
-  });
-  it.each([false, true])(
-    "bounds SDK startup independently of native deadlines; storybook=%s",
-    async (storybook) => {
-      vi.useFakeTimers();
-      try {
-        const child = containmentChildProbe();
-        const terminate = vi.fn(() => {
-          child.emit("close", null, "SIGKILL");
-          return true;
-        });
-        const containment = browserChildContainment(storybook);
-        const observed = observeSdkChild(child, { ...containment, capture: () => terminate });
-        await vi.advanceTimersByTimeAsync(4999);
-        expect(terminate).not.toHaveBeenCalled();
-        if (storybook) {
-          await vi.advanceTimersByTimeAsync(15000);
-          expect(terminate).not.toHaveBeenCalled();
-        }
-        await vi.advanceTimersByTimeAsync(1);
-        const outcome = await observed;
-        expect(terminate).toHaveBeenCalledOnce();
-        expect(outcome.result).toEqual({ code: null, signal: "SIGKILL" });
-        expect(outcome.forcedCleanup).toBe(true);
-        expect(outcome.drained).toBe(true);
-        expect(outcome.errors).toEqual([]);
-        // Leave room for both close and group-drain barriers under the parent suite.
-        expect(containment.watchdogMs + 2000).toBeLessThan(30000);
-      } finally {
-        vi.useRealTimers();
-      }
+const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
+const { pathToFileURL } = require("node:url");
+const test = globalThis.test || require("node:test").test;
+
+const packageRoot = join(__dirname, "..");
+const repositoryRoot = join(packageRoot, "..", "..");
+const fixture = (name) => join(repositoryRoot, "test-cases", "tests-audit", name);
+const addonPath = join(repositoryRoot, "fixtures", "napi", "test-addon.js");
+const indexPath = join(packageRoot, "index.js");
+const planningPath = join(packageRoot, "planning.js");
+
+async function withApi(callback) {
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
+  const calls = [];
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    testsAuditJson: async (input) => {
+      const request = JSON.parse(input);
+      calls.push(request);
+      return JSON.stringify({ missed_observed_tests: [{ test_file: "missed.test.mts" }] });
     },
-  );
+    analyzeProjectJson: async (input) => {
+      const request = JSON.parse(input);
+      calls.push(request);
+      return JSON.stringify({
+        reports: [
+          {
+            type: "testsAudit",
+            result: {
+              selected_without_observed_execution: [{ test_file: "excess.test.mts" }],
+            },
+          },
+        ],
+      });
+    },
+  };
+  for (const file of [indexPath, planningPath, addonPath])
+    delete require.cache[require.resolve(file)];
+  try {
+    await callback(require(indexPath), calls);
+  } finally {
+    globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    for (const file of [indexPath, planningPath, addonPath])
+      delete require.cache[require.resolve(file)];
+  }
+}
+
+test("testsAudit accepts saved artifacts, returns a promise and camelizes execution evidence", async () => {
+  await withApi(async (api, calls) => {
+    const promise = api.testsAudit({
+      plan: fixture("plan.json"),
+      observations: fixture("observations.json"),
+    });
+    assert.equal(typeof promise.then, "function");
+    assert.deepEqual(await promise, { missedObservedTests: [{ testFile: "missed.test.mts" }] });
+    // Saved traces must reach the worker as paths, without JS file decoding or cloning.
+    assert.equal(calls[0].plan, fixture("plan.json"));
+    assert.equal(calls[0].observations, fixture("observations.json"));
+    assert.equal(calls[0].planJson, undefined);
+    assert.equal(calls[0].observationsJson, undefined);
+    const esm = await import(`${pathToFileURL(join(packageRoot, "index.mjs"))}?audit-export`);
+    assert.equal(typeof esm.testsAudit, "function");
+  });
+});
+
+test("testsAudit leaves artifact objects and JSON text for the native worker and converts results", async () => {
+  await withApi(async (api, calls) => {
+    const camel = (value) => require(planningPath).camelizeValue(value);
+    const plan = camel(JSON.parse(readFileSync(fixture("plan.json"), "utf8")));
+    const observations = camel(JSON.parse(readFileSync(fixture("observations.json"), "utf8")));
+    const text = JSON.stringify(observations, null, 2);
+    await api.testsAudit({ planJson: plan, observationsJson: text });
+    assert.deepEqual(calls[0].planJson, plan);
+    // Preserving whitespace/text proves the facade did not parse and normalize the trace.
+    assert.equal(calls[0].observationsJson, text);
+    const aggregate = await api.analyzeProject({
+      reports: [{ type: "testsAudit", planJson: plan, observations: fixture("observations.json") }],
+    });
+    assert.equal(
+      calls[1].reports[0].planJson.plan.selectedTests[0].testFile,
+      "tests/selected.test.mts",
+    );
+    assert.equal(calls[1].reports[0].observations, fixture("observations.json"));
+    assert.equal(
+      aggregate.reports[0].result.selectedWithoutObservedExecution[0].testFile,
+      "excess.test.mts",
+    );
+  });
+});
+
+test("testsAudit preserves native validation for unreadable malformed and conflicting inputs", async () => {
+  await withApi(async (api, calls) => {
+    await api.testsAudit({ plan: fixture("invalid.json"), observations: fixture("missing.json") });
+    assert.equal(calls[0].plan, fixture("invalid.json"));
+    assert.equal(calls[0].observations, fixture("missing.json"));
+    await api.testsAudit({ planJson: "invalid", observationsJson: "invalid" });
+    assert.equal(calls[1].planJson, "invalid");
+    assert.equal(calls[1].observationsJson, "invalid");
+    await api.testsAudit({
+      plan: "conflict.json",
+      planJson: {},
+      observations: "conflict.json",
+      observationsJson: {},
+    });
+    assert.equal(calls[2].plan, "conflict.json");
+    assert.deepEqual(calls[2].planJson, {});
+    assert.equal(calls[2].observations, "conflict.json");
+    assert.deepEqual(calls[2].observationsJson, {});
+    await api.testsAudit();
+    assert.deepEqual(calls[3], {});
+  });
 });

@@ -1,1 +1,3 @@
-export const shared = true;
+export function configure<T>(config: T): T {
+  return config;
+}

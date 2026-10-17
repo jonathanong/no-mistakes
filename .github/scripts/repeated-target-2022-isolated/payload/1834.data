@@ -1,5 +1,8 @@
-import type { SQLStatement } from 'sql-template-strings'
+import { read } from '@example/db'
 
-export function appendUnknown(query: SQLStatement, runtimeSql: string): void {
-  query.append(runtimeSql)
+function run(sql: string) {
+  return read(sql)
 }
+
+export const api = { run }
+run('/* exported/record */ SELECT id FROM posts')

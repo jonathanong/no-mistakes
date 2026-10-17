@@ -1,21 +1,45 @@
-# PR #2022 next ARM diagnostic overlay — reviewed and frozen
-
-This is a **local proposal only**. No branch push, registration, dispatch, ARM build, or sample has occurred from these files. The existing matched `073148c2`/`edb31fdf` run `38770868763` failed its performance gate and remains immutable. The separate #2065 ARM run pins old PR parent `edb31fdf`; it cannot supply a main baseline or validate the new PR #2022 head.
-
-The immutable first draft remains in `/tmp/nm2022-next-arm-proposal-draft`. Independent review found its copied #2065 workflow timeouts inconsistent with this 16-workload budget and its graph probe incorrectly enabling the PR-only `alternatives_api` on the main baseline. The second draft fixed those setup issues: measurement 120 minutes, sample 60 minutes, semantic preflight 15 minutes, N-API parity 20 minutes and summary 10 minutes match the spec; the baseline compiles the old probe branch and only the candidate enables `alternatives_api`. The private transfer manifest records that per-arm flag and rejects a mismatch. The controlled v1 failure comparison is `/tmp/nm2022-cold-workcount/next-arm-v1-v2-fail-before.json`; 12 bounded tests and an independent peer review passed on immutable v2. This third draft pins the refreshed current source pair and keeps all native stages fail closed. These are setup checks, not native build or performance evidence.
-
-PR #2022 now has draft source head `fff61408f96fcb8fc5b213bf63beefe2b47b7e61`, integrating actual main `63760fa2a58b931498b9609afdc749dde12063aa` after #2069. The refreshed GitHub merge `f6eafbf01485e66c99aa8d6ef7bb594d9d27e2b1` has exact parents main/head and a tree byte-identical to the published head. All 90 physical input Git blobs, Rust/Cargo Git source inventories, lock bytes and N-API facade Git bytes are pinned from that pair. Fresh exact-head Test CI `38809097005` and four Codecov checks are successful and pinned. Complete local untimed 1.99.1/default-release graph, CLI, probe, and CJS/ESM N-API report hashes are pinned from separate exact-source builds; their full delta and driver still require independent final review. `proposal_guard.check` rejects every stage while status is `UNREVIEWED DRAFT`.
-
-The proposed workflow transplants the exercised #2065 v7 event-driven shape: a push to a reviewed diagnostic branch runs only a tiny registration job; a required external exact-SHA `workflow_dispatch` launches pair preflight, two isolated ARM production builds and two ARM layout builds concurrently, then one measurement VM downloads both digest-pinned private artifacts. Full-history checkouts and exact source/main/PR/merge/diagnostic-parent guards are mandatory. Private same-run binaries expire after one day; the public 30-day artifact contains numeric records and hashes, including build/layout/preflight failures and every valid or adverse sample. No cache or profile substitution is used.
-
-The first **16 physical workloads** in #2065 v7 match the old #2022 protocol byte-for-byte and are the only consuming workloads here. Its four-Rayon-worker ABBA/BAAB pilot, eight fixed long blocks, startup/calibration, CPU/user/system/wall/RSS metrics, stability rules and no-selective-rerun policy are retained. Exact historical input catalogs are copied as a draft; changed `.no-mistakes.yml` bytes in the new source must be refreshed from final Git, not carried from `edb31fdf`. The same `timing-probe.rs`, `cli-worker.py`, `paired_summary.py`, and both overlays match the old #2022 script hashes; all source/profile/binary/artifact and sampling policy deltas still need independent review before final freeze.
-
-Untimed preflight pins complete per-arm structured graph sites/nodes/edges/importer views, all 16 CLI/probe reports and signatures, the 41-file receiver-order fixture, old once-call/escape controls, plain-name replacement alternatives, cross-file writes, and cold effects full-report equality. A separate generic N-API adapter checks async CJS/ESM standalone and prepared `analyzeProject` reports against exact CLI output for physical cold, plain-alternative, and repeated-binding cases. Its JS facade bytes equal both frozen source arms. The local collection retained all 182 private raw files and counted the adapter's exact benign lock notices; direct CLI stderr remains strict. Attempt 1 and 2 collector setup failures are retained, and attempt 3 completed without report failures. The full physical graph delta and local classification are recorded under `/tmp/nm2022-cold-workcount`; independent review remains required. No old `073`/`edb` report hash is relabeled.
-
-The single overlay commit, if later approved, must be an addition-only child of the exact PR head. Its SHA is supplied externally at dispatch to avoid a self-referential tracked commit hash. Before any push, root and peer review the final driver and manifest bytes, source pair, full semantic reports, failure tests, compiler/profile flags, live CI/four Codecov, and exact native budget. After registration, the same reviewed SHA alone can be dispatched. PR #2022 remains draft with its manual native status PENDING until real matched ARM evidence passes; the old adverse rows and any source-drift outcome are preserved.
-
-## Final review and execution boundary
-
-Root and independent peer reviews approved the exact source-bound semantic collection (182 private raw files), complete normalized graph delta classifications, CLI/N-API parity, and final driver protocol. The source pair and live exact-head CI/four Codecov pins were rechecked. This metadata is now REVIEWED AND FROZEN with REVIEWED FULL REPORTS. Earlier paragraphs describe the retained draft history; their pending-review statements are historical. The 13 bounded tests passed before promotion against DRAFT metadata; they are not claimed as tests of frozen status. Frozen structural checks and actionlint/ShellCheck are reviewed separately.
-
-The authorized next action is one addition-only diagnostic commit directly atop the exact PR head and a registration-only push. The exact committed SHA requires root review before a separate workflow_dispatch. No ARM samples or passing native performance gate exist yet. PR #2022 remains draft; historical adverse results stay retained. No release is published.
+{
+  "head": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "root": "/tmp/no-mistakes-2022-final-cost-native",
+  "actual_cargo_exit": 0,
+  "artifact": {
+    "path": "/tmp/nm2022-final-cost-native-source-draft/candidate/cli",
+    "bytes": 82693208,
+    "sha256": "2027f7ca081721db6aabd3fb5433e930bc248530f0e325ac9cd5daa704142c18"
+  },
+  "producer": {
+    "reason": "compiler-artifact",
+    "package_id": "path+file:///tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes#0.91.3",
+    "manifest_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/Cargo.toml",
+    "target": {
+      "kind": [
+        "bin"
+      ],
+      "crate_types": [
+        "bin"
+      ],
+      "name": "no-mistakes",
+      "src_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/src/main.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": false,
+      "test": true
+    },
+    "profile": {
+      "opt_level": "3",
+      "debuginfo": 0,
+      "debug_assertions": false,
+      "overflow_checks": false,
+      "test": false
+    },
+    "features": [
+      "default",
+      "mermaid-validation"
+    ],
+    "filenames": [
+      "/tmp/no-mistakes-2022-final-cost-native/target/release/no-mistakes"
+    ],
+    "executable": "/tmp/no-mistakes-2022-final-cost-native/target/release/no-mistakes",
+    "fresh": false
+  }
+}

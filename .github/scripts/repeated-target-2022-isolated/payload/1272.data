@@ -1,10 +1,9 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
-@opaque
-class Decorated {}
+function opaque(value) { value.box = { client }; }
+opaque({});
 const holder = { box: { client } };
 holder.box.client = {};
 holder.box.client.get = replacement;
-function opaque() { holder.box = { client }; }
-function scan(value) { value.get('key'); }
-scan(client);
+function globalBeforeCaptureCall(value) { value.get('key'); }
+globalBeforeCaptureCall(client);

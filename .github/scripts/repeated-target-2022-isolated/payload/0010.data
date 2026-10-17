@@ -1,369 +1,88 @@
 {
-  "status": "PASS exact frozen input blobs at published4e; source lookup only, no producer relabel",
-  "head": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
-  "tree": "213a7967bc49c6b93bd89c3bf2fc0acfd0f39679",
-  "historical_spec_candidate": "f6eafbf01485e66c99aa8d6ef7bb594d9d27e2b1",
-  "files": {
-    "fixtures/performance/core-analysis/.no-mistakes.yml": {
-      "bytes": 774,
-      "sha256": "8626562981218868b3bb4924900cd51b1559052f755ab86023dbb753f7db64a6"
-    },
-    "fixtures/performance/core-analysis/package.json": {
-      "bytes": 144,
-      "sha256": "260a747db3c91aa568be7ab8149ef49e411a6bafb692b5e7e87e9376f8eb65ec"
-    },
-    "fixtures/performance/core-analysis/packages/core/package.json": {
-      "bytes": 83,
-      "sha256": "47db8a2d7b9aad904c46e58b7d45ddad0e8c2ed7f2fc346bc91a89a66e35d08e"
-    },
-    "fixtures/performance/core-analysis/packages/core/src/index.ts": {
-      "bytes": 136,
-      "sha256": "db6d8b570a4de4b1ddb7497dbbed10a3d24a18aff055d8ec6fef87aee084ad18"
-    },
-    "fixtures/performance/core-analysis/src/app.tsx": {
-      "bytes": 198,
-      "sha256": "cd4ddf001fafdda0ab4877c73d5a4a4906b52896f3b74c7111e5f55408c40a19"
-    },
-    "fixtures/performance/core-analysis/src/button.tsx": {
-      "bytes": 117,
-      "sha256": "5c9dd5b2b4a37d6f9873889a2b1ffadf279aa3385ae134ba762e24ebe6098be9"
-    },
-    "fixtures/performance/core-analysis/src/feature.ts": {
-      "bytes": 33,
-      "sha256": "55a60a7cfff3acfb9b202dee77b75ae375751b1f2b567b66d8a40a374feef4aa"
-    },
-    "fixtures/performance/core-analysis/src/forbidden.ts": {
-      "bytes": 41,
-      "sha256": "2140b7834e836b5c8cf390c1e01f49687f125c6a19c618d49178225eff70f607"
-    },
-    "fixtures/performance/core-analysis/src/jobs/send.ts": {
-      "bytes": 135,
-      "sha256": "b82069b550b6881cc5368ae2f37e28110fe18639f509926fbb73f684349803f9"
-    },
-    "fixtures/performance/core-analysis/src/jobs/worker.ts": {
-      "bytes": 80,
-      "sha256": "4e498aab7916ca1449d7680d57c22ace51f3a5bfb4ad28d3c124531876a6c0c5"
-    },
-    "fixtures/performance/core-analysis/src/lazy.ts": {
-      "bytes": 70,
-      "sha256": "2d9e3866d73ab0441bffa2744a71eb82f8fb501c04bdbb019cacef1a329d5fc5"
-    },
-    "fixtures/performance/core-analysis/src/lib.rs": {
-      "bytes": 43,
-      "sha256": "6e00da67d9207f76108ea901dda239ec3d7c9e8489de968e54a48d73ea792d76"
-    },
-    "fixtures/performance/core-analysis/src/queues/create.ts": {
-      "bytes": 136,
-      "sha256": "2271832f419c3198a6233be90174b34f4df88010c003153e4bb20d43a233ac86"
-    },
-    "fixtures/performance/core-analysis/src/queues/email.ts": {
-      "bytes": 89,
-      "sha256": "be46c4c4877b85f1acdbac1f241752f6a855e44be7ee9ab120f75d2a78fa9a5a"
-    },
-    "fixtures/performance/core-analysis/src/util.mts": {
-      "bytes": 82,
-      "sha256": "780da513a6edb68ce5be405e5ef5912e5732ffdd160d42472de396e77edca2ae"
-    },
-    "fixtures/performance/core-analysis/tests/app.test.ts": {
-      "bytes": 218,
-      "sha256": "102271ea2d9f92cb2be8045a2ca9083394f2b1f895349ee0c10d711aa9b7000a"
-    },
-    "fixtures/performance/core-analysis/tests/lazy.test.ts": {
-      "bytes": 269,
-      "sha256": "1da1ebc6490bac5f112c1461131a47b75a7ecda5fc0ecd95c4b8a577d02fefba"
-    },
-    "fixtures/performance/core-analysis/tsconfig.json": {
-      "bytes": 220,
-      "sha256": "abbf8aee96b598cfcb24310b000cb3f8b656152bd6b2d946a042681305702f3f"
-    },
-    "fixtures/performance/core-analysis/vitest.config.ts": {
-      "bytes": 90,
-      "sha256": "b80b2e8f79a775c1693f2d004c419b618a1fb821a5ce974fad7cd9b57477bd93"
-    },
-    "fixtures/performance/react-traits/many-components.tsx": {
-      "bytes": 3293,
-      "sha256": "5076d2b9386e7920897e81a85ec9743e32c45fb1f12fbf6f58c51509ec5659e8"
-    },
-    "test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts": {
-      "bytes": 2454,
-      "sha256": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff"
-    },
-    "test-cases/codebase-analysis/inline-member-precision-no-writes/fixture/src/defaults.mts": {
-      "bytes": 1585,
-      "sha256": "51dba1ee00b475ce463f6e974c80385ffb4bae5b8a57c331ae656ad5931cefee"
-    },
-    "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/entry.mts": {
-      "bytes": 1322,
-      "sha256": "662f5b975cc29daf867688543b18801cc08d232284ab0212d0d175e116e3a46c"
-    },
-    "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/helper.mts": {
-      "bytes": 175,
-      "sha256": "fb48c71d831747c468081787bc226beb6d5183519299b3a008db550eef0e7910"
-    },
-    "test-cases/codebase-analysis/value-flow-foreign-parameter-timing/fixture/src/writer.mts": {
-      "bytes": 176,
-      "sha256": "ef62867d06c2035d8bb910da351cfbe0684ca26e1111d52c6221c48c04e9c1de"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/.no-mistakes.yml": {
-      "bytes": 1487,
-      "sha256": "af4674d94ff6a16c6738efbe01e48775c5be39bcf6b51ef6816c35db673fc277"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/alias-after-write.mts": {
-      "bytes": 205,
-      "sha256": "f46691c5065f3409f4aea1f39988ef1964639876b6ae5d0ed946a70e6fc7873a"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/alias-before-write.mts": {
-      "bytes": 207,
-      "sha256": "a87903f888e9d976059d3fcf05916a0f50109826123314b4b295439640f4f2bf"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/argument-order.mts": {
-      "bytes": 2094,
-      "sha256": "d6d62f189536f9256d8f8002b8fdc1bc29690f244e004f27a1cdbc9e83b32168"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/chained-after-write.mts": {
-      "bytes": 236,
-      "sha256": "4625c60d0b5f5f0df5209af359dec91b1e12e063b11de161899d8e158baa2d84"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/copied-method.mts": {
-      "bytes": 195,
-      "sha256": "c352eed8714c5dc7446d0f39c4fd230baafea49f3526f5abce96346a1ba09cb3"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-facts.mts": {
-      "bytes": 2090,
-      "sha256": "dbceb1e5a4aadd33d42e5bb90ade2af94d0c3bf4af05607e389351304e01a631"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/created-callable-phase.mts": {
-      "bytes": 1830,
-      "sha256": "568019afcb8d5237077122a5dfa8fbb90a0354b03183287652f657501e620db5"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/default-forwarded.mts": {
-      "bytes": 367,
-      "sha256": "0ce038e743c010a1f6f12ff832ebc0d955333126ec7f023f27442d9a879b7334"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-call-proof-controls.mts": {
-      "bytes": 6055,
-      "sha256": "1084385fc369fdb59701e7d7784d504d81114f978162abb6ec572c9851f08a39"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/deferred-double-call.mts": {
-      "bytes": 420,
-      "sha256": "ba1d16a3a9bcd86e76fc942b749b0c3ee35bcd3fa571df7f32d5f1fc98b7f518"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring-nested.mts": {
-      "bytes": 1605,
-      "sha256": "f7b50ed83215b2fed177eb4e614b783b2345e7fa3ad9aa30a8e57ac3787c83f9"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring-scopes.mts": {
-      "bytes": 1401,
-      "sha256": "f85bd4fb0c39e8358df227aff9d8168124a725bed6459d7a4ceade3363e93fdf"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/destructuring.mts": {
-      "bytes": 2534,
-      "sha256": "8ce1f6c659665e27937cc16d0e1fdb5ebc7a5c16dc2219370291fc82fc73dcba"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/direct-inline-arguments.mts": {
-      "bytes": 2949,
-      "sha256": "a11ede40271517cc937e7aeffca721cb5dfa8464684262b7bcb8594378a08edf"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/enclosing-tdz.mts": {
-      "bytes": 3162,
-      "sha256": "03e710f91a9e49f4781315c4de0d7380869e910b9e394215eed54ce823d862ac"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/foreign-repeated-helper.mts": {
-      "bytes": 457,
-      "sha256": "443dbfb36c7f85cdc1ddd828e167656de1436aa33102606343ebb493763b595e"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/foreign-repeated-phase.mts": {
-      "bytes": 681,
-      "sha256": "8bd1fee52de1a4ecaea28ecc3cee53f8dfac5860507b8dc558706386e893269e"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/forwarded.mts": {
-      "bytes": 361,
-      "sha256": "8ae06a18fd7e4a4ab027a59136cf70dd22d2f83c08cdfd93f9bf23f10e674013"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/hoisted-after-write.mts": {
-      "bytes": 205,
-      "sha256": "69d9507bd61aa13d1a90e43d454d0ed5b6862ec2d4a51a0503c402f48fc04fee"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/iife-after-write.mts": {
-      "bytes": 189,
-      "sha256": "2934c52b34a26e93a4dec4b8410994d66a738ac4805be1e754e42f8d456dab1d"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/live-parameter-alias.mts": {
-      "bytes": 211,
-      "sha256": "ef1dd94f2889cfe715388c4ab306421a6c744b1d725b50c1de04de80d9700314"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/method-defaults.mts": {
-      "bytes": 718,
-      "sha256": "8d3d86ce7b775f8d7955e9d3e41f5008c7997fd9cc2ecfd01fd95b357308c3af"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/module-snapshot-escape.mts": {
-      "bytes": 734,
-      "sha256": "375f664bc08e6805e949bed8746fbb8146c5964d848d6d2ccf48cd6d265b5905"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/module-snapshot-phase.mts": {
-      "bytes": 3962,
-      "sha256": "f8c3db6c69fda1dd5199b311db2e73c147e32780b06ba8811d9cd9ac128fdb2f"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/named-repeated-phase.mts": {
-      "bytes": 284,
-      "sha256": "0753272e3a59ce3df755897316d541adbb4660919ccdf0438cc38fd5f1637002"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-argument-order.mts": {
-      "bytes": 2706,
-      "sha256": "cb501938821d3a4dcedeb44a98017ccf1fdfae3a16196872b23cd2299d10edd7"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-copied-fields.mts": {
-      "bytes": 654,
-      "sha256": "28e157dc88b4d76d9e104ebf187037380447ad967867ef1e39922bfafc2218c3"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/nested-parameter-order.mts": {
-      "bytes": 1178,
-      "sha256": "9280f2256d412a46c4e73615d504eee34cba0fd98d846a0efd587be48e2a5b9e"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/object-after-write.mts": {
-      "bytes": 228,
-      "sha256": "20bb24e5242e84110aa84d406378f5165759a9ccd3b1d6d5732493ff8871f3fc"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/object-forwarded.mts": {
-      "bytes": 569,
-      "sha256": "9bb256de8b2a92f231de433ee5ad4baffa13d8e3f136b93145219da9eb08aa4e"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/owned-fields.mts": {
-      "bytes": 1323,
-      "sha256": "79b82a828a24106ee41612906b827d249e4301671d694b02ccf5c9a29d035c6f"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/owned-live.mts": {
-      "bytes": 526,
-      "sha256": "eb2f3a4ce3a9fda10b25eb05349166c40df08b3e71c0c4d5be61ceb5326aa7aa"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/provenance-factories.mts": {
-      "bytes": 346,
-      "sha256": "5fdd0f4d067806ad88bf3f5427f6d0438cb8c713eec33c78be78e8ed072c5fe4"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/provenance-receivers.mts": {
-      "bytes": 763,
-      "sha256": "c1cad2b3a28e2d5c826b7a3d9bde8e7722442c429fa21413a0464bfc5ee1fbbc"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/repeated-binding-acquisitions.mts": {
-      "bytes": 2669,
-      "sha256": "5d687b6330eff99e9265a164f08b3799929039e1b9d25fd5d07e0e7121d80ea5"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/repeated-parameter-phase.mts": {
-      "bytes": 5068,
-      "sha256": "37bbd3f899456e154b0cec2ddde447b6bd7545df440b863c9cae3013334f1894"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/returned.mts": {
-      "bytes": 1041,
-      "sha256": "065a89f77a6dea07067e6e6661ded9728436199c5273eeaa56a6084e0c349043"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/rhs.mts": {
-      "bytes": 508,
-      "sha256": "b938f8f84265911f96eb97920373fc0141170f2c0338e7b4b61fe9e1412b0edb"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/supplied-context.mts": {
-      "bytes": 550,
-      "sha256": "0807cf1b345caadbeb3cd3ff0cd27a47f5ebbdcb1bd4e1a0e9fb751d7886dcec"
-    },
-    "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture/src/unique-parameter-phase.mts": {
-      "bytes": 1326,
-      "sha256": "eeaa54389097b2414828b73ff78547aaccaf9736889173d55af598ccc9e833a2"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/barrel.mts": {
-      "bytes": 89,
-      "sha256": "1fc9747cc6d11d3d6f298406802119bb65cf80abe82038b64f6b2aa76a0a7d37"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/closed.mts": {
-      "bytes": 150,
-      "sha256": "5cd54e4f7a13be5b56cacd9fdbcca3e526a12ea2dfa2f251c6cfd053dcac9ecd"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/controls.mts": {
-      "bytes": 1238,
-      "sha256": "cfd3938b13d23dc662e0746247b606a2a55834d5b2fd9305d51402593ac24df1"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter-caller.mts": {
-      "bytes": 751,
-      "sha256": "b56557485237486b4298f4c460d2dffa493c6935520f1519fd3b1a35c3d03a63"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-getter.mts": {
-      "bytes": 568,
-      "sha256": "59488d4ac217391936e98d3e49093cefbeed9c71273792c96804fa9f46ae7015"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign-writer.mts": {
-      "bytes": 148,
-      "sha256": "0fd7f349aa1b7f59167a42fcd4f5b930da2a9d98b3a064d7a3f6288fcff7c9d6"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/foreign.mts": {
-      "bytes": 451,
-      "sha256": "bb779f3697e4cba2b0e4df7d09dffe7f1c2e7f45976ba64235bc1772d6ff792a"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/nested-once.mts": {
-      "bytes": 533,
-      "sha256": "53e83d0b130c00a7a70b2c65abd2806c749e24e41dae7d63a629934c2d368186"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque-owner.mts": {
-      "bytes": 1270,
-      "sha256": "6d608a33067b7f146ba299b6eb3e3acbe0381ed8e7753a6bf4240c6053a808a3"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/opaque.mts": {
-      "bytes": 2453,
-      "sha256": "6f7c2d150a411617023236369426073c3dd39d9224f59db151a27fbe0374195e"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/owners.mts": {
-      "bytes": 448,
-      "sha256": "4218725e1e3e9634e45e252103b012e6546a01800c5c8a1ddb8cff7af6731ca2"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/positive.mts": {
-      "bytes": 467,
-      "sha256": "f422615e81feb8b9de83e495f5db26dbb3e4617dc073d74ea6b4bc088d9e0d06"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository-object.mts": {
-      "bytes": 201,
-      "sha256": "6fb58875cc8e7a50970a7f202134bdc3c0a81a6717357e20ffcb23472fe567a3"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/repository.mts": {
-      "bytes": 569,
-      "sha256": "96f6bad83223905475f74841d987f0bd66012ad196181ee81846b2e097b47526"
-    },
-    "test-cases/codebase-analysis/value-flow-repeated-receiver-producer/fixture/src/snapshots.mts": {
-      "bytes": 620,
-      "sha256": "9b66bd63cf9d4e9fb18472767dabaf785899975e129a36119c6a978610a40d3c"
-    },
-    "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/entry.mts": {
-      "bytes": 111,
-      "sha256": "2d5684755ea047b4d46ea8c2fff46bd2d62b8ea8e67894dedd53aa5470a2d5ed"
-    },
-    "test-cases/codebase-analysis/value-flow-replacement-cold/fixture/src/local.mts": {
-      "bytes": 44,
-      "sha256": "6dae0f6762b93c3e7f4b227c0d409e4f709caad09aa9534eec5e788cab8f6e85"
-    },
-    "test-cases/codebase-analysis/value-flow-replacement-scale-16/fixture/src/entry.mts": {
-      "bytes": 822,
-      "sha256": "3dadf44eb1b094a2e2518ee15fc9f964e8afa1334e91cc7ef9a083ad06d88c63"
-    },
-    "test-cases/codebase-analysis/value-flow-replacement-scale-256/fixture/src/entry.mts": {
-      "bytes": 11059,
-      "sha256": "812632e137131078d364aac7fc0cbd9f686a77128837736e13d49f09ed810b99"
-    },
-    "test-cases/rules/query-reached-per-item/alternatives-fixture/.no-mistakes.yml": {
-      "bytes": 192,
-      "sha256": "eb892ec456cfab542f162f42ccb646c861839097c0992f658ba2b59f29b792ab"
-    },
-    "test-cases/rules/query-reached-per-item/alternatives-fixture/src/entry.mts": {
-      "bytes": 283,
-      "sha256": "2e44440c8111f2118934c5f05fe977cb5a3f31263414230e20cd069cd4077429"
-    },
-    "test-cases/rules/query-reached-per-item/alternatives-fixture/src/helpers.mts": {
-      "bytes": 101,
-      "sha256": "70391e500852c20abfc691f6e6bef9ee575058e5cbcf08d6762f5c8fcd72ba55"
-    },
-    "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/.no-mistakes.yml": {
-      "bytes": 310,
-      "sha256": "c3c3be13de4d613c2f5f9663e8fab200d33af05d0585eecc0c0153ee6f3241b1"
-    },
-    "test-cases/rules/query-reached-per-item/plain-alternatives-fixture/src/entry.mts": {
-      "bytes": 188,
-      "sha256": "80ec31586aba261129ff9900273da1703329a96283496a8cace7021975fa3666"
+  "status": "PASS proper-LTO helpers only; no execution or performance claim",
+  "head": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "commands": [
+    {
+      "label": "graph-probe",
+      "argv": [
+        "rustc",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2022-final-cost-native-source-draft/candidate/cli-completed-dependencies",
+        "--extern",
+        "no_mistakes=/tmp/nm2022-final-cost-native-source-draft/candidate/cli-completed-dependencies/libno_mistakes-3c767fbb87356a2b.rlib",
+        "/tmp/nm2022-next-arm-proposal-v4/graph-probe.rs",
+        "-o",
+        "/tmp/nm2022-final-cost-helper-links/graph-probe",
+        "--cfg",
+        "alternatives_api"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        },
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "artifact": {
+        "path": "/tmp/nm2022-final-cost-helper-links/graph-probe",
+        "sha256": "3ee309098b2196799781e70653b15dd44fa7ed8bb3b1d37d4598ae5a76204559",
+        "bytes": 82692536
+      }
+    },
+    {
+      "label": "timing-probe",
+      "argv": [
+        "rustc",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "lto=true",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debuginfo=0",
+        "-L",
+        "dependency=/tmp/nm2022-final-cost-native-source-draft/candidate/cli-completed-dependencies",
+        "--extern",
+        "no_mistakes=/tmp/nm2022-final-cost-native-source-draft/candidate/cli-completed-dependencies/libno_mistakes-3c767fbb87356a2b.rlib",
+        "/tmp/nm2022-next-arm-proposal-v4/timing-probe.rs",
+        "-o",
+        "/tmp/nm2022-final-cost-helper-links/timing-probe"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        },
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "artifact": {
+        "path": "/tmp/nm2022-final-cost-helper-links/timing-probe",
+        "sha256": "cb85534003e7fd0614f80117f998d2ac57857f25cae00e10c759ef0edb2c898d",
+        "bytes": 82681448
+      }
     }
-  },
-  "archive_sha256": "205748d760ea0d731e578764b19a4d16e15c6be30ea1d13f5602df197b95d192"
+  ]
 }

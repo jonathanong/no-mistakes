@@ -1,9 +1,8 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
+let unused;
 holder.box.client = {};
-const saved = holder.box;
-holder.box = { client };
-saved.client.get = replacement;
-function globalSavedAfterFresh(value) { value.get('key'); }
-globalSavedAfterFresh(client);
+({ first: holder.box, second: unused = (holder.box.client.get = replacement) } = { first: { client } });
+function globalPhaseAfter(value) { value.get('key'); }
+globalPhaseAfter(client);

@@ -1,55 +1,106 @@
-const assert = require("node:assert/strict");
-const { join } = require("node:path");
-const test = globalThis.test || require("node:test").test;
+export * from "./check-report-types";
+export * from "./fetch-report-types";
+export * from "./queue-report-types";
+export * from "./react-report-types";
 
-const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
-const root = join(
-  __dirname,
-  "..",
-  "..",
-  "..",
-  "fixtures",
-  "playwright",
-  "integration-route-coverage",
-);
+export interface PlaywrightOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
+  playwrightConfig?: string[];
+  project?: string;
+  /**
+   * The `.no-mistakes.yml` `projects:` key of the frontend app to analyze.
+   * Only needed when the repository configures more than one `type: nextjs`
+   * project and `tests.playwright.apps.<project>.project` is not set.
+   */
+  app?: string;
+  files?: string[];
+  assertConditionalTests?: boolean;
+  allowSkippedTests?: boolean;
+  assertUniqueTestIds?: boolean;
+  assertUniqueHtmlIds?: boolean;
+}
 
-test(
-  "compiled async APIs preserve integration route ownership and scoped configuration",
-  {
-    skip: !addonPath?.endsWith(".node"),
-    timeout: 20_000,
-  },
-  async () => {
-    const api = require("../index.js");
-    const pending = api.resolveConfig({ root });
-    assert.equal(typeof pending.then, "function");
-    const config = await pending;
-    assert.equal(config.playwright.routeCoverageSources[0].project, "integration");
-    assert.deepEqual(config.playwright.routeCoverageSources[0].helpers[1], {
-      module: "integration/client.ts",
-      export: "loadPage",
-      urlArgument: 1,
-    });
-    const report = await api.playwrightCheck({ root });
-    const health = report.routes.find((route) => route.route === "/healthz");
-    assert.equal(health.covered, true);
-    assert.deepEqual(health.tests, ["integration/web.test.ts"]);
-    assert.deepEqual(health.testsDetail[0].attribution, {
-      framework: "vitest",
-      project: "integration",
-      declarationFile: "integration/cases.ts",
-    });
-    assert.equal(report.routes.find((route) => route.route === "/unregistered").covered, false);
-    const edges = await api.playwrightEdges({ root });
-    assert(
-      edges.edges.some(
-        (edge) =>
-          edge.kind === "route" &&
-          edge.route === "/healthz" &&
-          edge.testFile === "integration/web.test.ts" &&
-          edge.attribution?.framework === "vitest",
-      ),
-    );
-    assert(!edges.edges.some((edge) => edge.kind !== "route" && edge.attribution));
-  },
-);
+export interface PlaywrightRelatedOptions extends PlaywrightOptions {
+  files: string[];
+}
+
+export interface GraphEdge {
+  from: string;
+  to: string;
+  kind: string;
+}
+
+export interface InfraOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
+  /** `infraResourceRefs` address (`<type>.<name>`). */
+  address?: string;
+  /** `infraOutputs` module directory (relative to root). */
+  moduleDir?: string;
+  /** `infraTestFor` `.tf` file (relative to root). */
+  tfFile?: string;
+}
+
+export interface ResourceRefRow {
+  /** The referencing block's address. */
+  address: string;
+  /** The referencing file, relative to the root. */
+  file: string;
+}
+
+export interface ModuleOutput {
+  name: string;
+  references: string[];
+}
+
+export interface OutputConsumer {
+  output: string;
+  from: string;
+  file: string;
+}
+
+export interface ModuleOutputsResult {
+  module: string;
+  exports: ModuleOutput[];
+  consumers: OutputConsumer[];
+}
+
+export interface TestForRow {
+  test_file: string;
+}
+
+export interface SwiftOptions {
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
+  /** The Swift source file to query (relative to root). */
+  file?: string;
+}
+
+export interface SwiftImporterRow {
+  file: string;
+  depth: number;
+}
+
+export interface SwiftTestTargetRow {
+  target: string;
+  package: string;
+  command: string;
+}
+
+export interface ServerRoutesReport {
+  summary: {
+    totalRoutes: number;
+    totalFiles: number;
+    dynamicRoutes: number;
+  };
+  routes: unknown[];
+  edges: unknown[];
+  diagnostics: unknown[];
+}

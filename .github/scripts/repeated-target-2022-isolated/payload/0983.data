@@ -1,1 +1,5 @@
-{"kind":"database","entry":"src/defaults.mts","callSites":[{"file":"src/defaults.mts","line":3,"callee":"get","category":"read","caller":"consume","depth":0}],"byCategory":{"read":1}}
+import { primary } from '@vendor/valkey';
+import { factory } from './barrel.mjs';
+function replacement() {}
+factory()({ client: primary });
+primary.get = replacement;

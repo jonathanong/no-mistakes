@@ -1,2 +1,6 @@
-export { read, beginTransaction, beginBoundedTransaction } from './setup.mjs';
-export { executeHandlerWithCursorInBatches, createAsyncGeneratorFromCursor } from './cursors.mjs';
+import { primary as client } from '@vendor/valkey';
+function replacement() {}
+const box = { client };
+if (flag) { box.client = {}; box.client = client; box.client.get = replacement; }
+function guardedRestore(value) { value.get('key'); }
+guardedRestore(client);

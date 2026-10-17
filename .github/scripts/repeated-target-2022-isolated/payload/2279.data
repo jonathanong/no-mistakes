@@ -1,9 +1,9 @@
-import { primary } from '@vendor/valkey';
+import { foreignSnapshot, foreignLive, foreignAfter } from '@vendor/valkey';
+const saved = foreignSnapshot.get;
+export function acquireCopied(fn = saved) { return fn; }
+export function acquireLive(fn = foreignLive.get) { return fn; }
 function replacement() {}
-
-function objectAfterWrite(options) {
-  const alias = options;
-  primary.get = replacement;
-  alias.client.get('key');
-}
-objectAfterWrite({ client: primary });
+export function mutateForeign() { foreignLive.get = replacement; }
+foreignAfter.get = replacement;
+const afterWrite = foreignAfter.get;
+export function acquireAfter(fn = afterWrite) { return fn; }

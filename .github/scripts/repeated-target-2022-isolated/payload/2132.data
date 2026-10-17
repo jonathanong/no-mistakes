@@ -1,167 +1,122 @@
-// Lightweight single-file query commands (issue #417).
-
-export interface QueryFileOptions {
-  /** The TS/JS file to query (relative to `root` or absolute). */
-  file: string;
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-}
-
-export interface ImportersOptions extends QueryFileOptions {
-  /** Also compute the transitive impacted-test set (builds the dependency graph). */
-  tests?: boolean;
-}
-
-export interface ImportersTestImpact {
-  tests: string[];
-  count: number;
-}
-
-/** A recorded gap in the prepared reverse-query source inventory. */
-export type QueryIncompleteReason =
-  | "operational-error"
-  | "parse-error"
-  | "missing-facts"
-  | "missing-symbols";
-
-export interface QueryIncompleteFile {
-  /** Root-relative candidate path; relevance can be unknown when imports are missing. */
-  file: string;
-  reason: QueryIncompleteReason;
-  message: string;
-}
-
-export interface QueryDiagnostics {
-  /** Recorded collection gaps exist. False does not guarantee exhaustive references. */
-  partial: boolean;
-  incompleteFiles: QueryIncompleteFile[];
-}
-
-export interface ImportersResult extends QueryDiagnostics {
-  file: string;
-  directImporters: string[];
-  dependentsCount: number;
-  testImpact?: ImportersTestImpact;
-}
-
-export interface ExportsOfOptions extends QueryFileOptions {
-  /** Skip the reverse import scan; only list exports. */
-  noImporters?: boolean;
-}
-
-export interface ExportRowResult {
-  name: string;
-  kind: string;
-  line: number;
-  /** Resolved re-export target, root-relative. Only present for re-exports. */
-  resolved?: string;
-  importers: string[];
-}
-
-export interface ExportsOfResult {
-  file: string;
-  exports: ExportRowResult[];
-  /** Omitted with noImporters because the reverse scan was not requested. */
-  partial?: boolean;
-  /** Omitted with noImporters. */
-  incompleteFiles?: QueryIncompleteFile[];
-}
-
-export interface DeadExportsOptions extends QueryFileOptions {
-  /** Specific export names to check. Defaults to every export of the file. */
-  names?: string[];
-}
-
-export interface DeadExportResult {
-  name: string;
-  referenced: boolean;
-  importerCount: number;
-}
-
-export interface DeadExportsResult extends QueryDiagnostics {
-  file: string;
-  results: DeadExportResult[];
-  anyDead: boolean;
-}
-
-export interface CallSitesOptions extends QueryFileOptions {
-  /** Exported callable to resolve through namespaces, static lexical aliases, and barrels. */
-  exportName: string;
-}
-
-export type ArgShape =
-  | "string"
-  | "number"
-  | "boolean"
-  | "null"
-  | "identifier"
-  | "object"
-  | "array"
-  | "arrow"
-  | "call"
-  | "spread"
-  | "other";
-
-export interface CallSite {
-  file: string;
-  line: number;
-  /** Enclosing named function, when determinable. */
-  caller?: string;
-  argCount: number;
-  hasSpread: boolean;
-  args: ArgShape[];
-}
-
-export interface CallSitesResult extends QueryDiagnostics {
-  file: string;
-  export: string;
-  callSites: CallSite[];
-}
-
-/** Single-file form of `resolveCheck`; cannot be combined with `files`. */
-export type ResolveCheckOptions = QueryFileOptions & {
-  files?: never;
-};
-
-/** Batch form of `resolveCheck`; `files` always returns the batch schema. */
-export interface ResolveCheckFilesOptions {
-  /** A nonempty list of TS/JS files to check. */
-  files: [string, ...string[]];
-  /** Mutually exclusive with `files`. */
-  file?: never;
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-}
-
-export type ImportResolutionStatus = "resolved" | "unresolved" | "external";
-
-export interface ResolveCheckImport {
-  specifier: string;
-  kind: "static" | "type" | "dynamic" | "require" | "require-resolve";
-  status: ImportResolutionStatus;
-  /** Root-relative resolved target, when the import resolves locally. */
-  resolved?: string;
+/** Which facts a generated catalog carries. It is stated in the catalog's `coverage` field. */
+export type PostgresCatalogCoverage = "complete" | "ordering";
+/** Explicit accessible relation names for requested schemas; an unrequested key is absent. */
+export type PostgresSearchPathEvidence = Partial<Record<string, string[] | null>>;
+export interface PostgresCatalogOptions {
+  /** Environment variable containing a PostgreSQL connection URL; never pass secrets as options. */
+  connectionEnv: string;
+  /** Exact PostgreSQL schema name. */
+  schema: string;
   /**
-   * `true` when the specifier is not a string literal or empty template
-   * (`import(\`./${name}\`)`, `import(moduleName)`, `require(name)`).
-   * Computed imports are always `unresolved`.
+   * `complete` (the default) carries every schema fact, and every catalog rule accepts it.
+   * `ordering` carries only what conflict and lock ordering need; other catalog rules reject it.
    */
-  computed: boolean;
+  coverage?: PostgresCatalogCoverage;
+  /** Opt in to evidence for these exact schemas; absent or inaccessible schemas become null. */
+  searchPathSchemas?: string[];
+  /**
+   * Non-empty name to record as `currentDatabase` instead of the connected database's name.
+   * Use the deployed database's name so regeneration does not depend on where it runs.
+   */
+  currentDatabase?: string;
 }
-
-export interface ResolveCheckResult {
-  file: string;
-  allResolve: boolean;
-  imports: ResolveCheckImport[];
-  unresolved: string[];
+export interface PostgresOrderingCatalog {
+  formatVersion: 2;
+  coverage: "ordering";
+  schema: string;
+  searchPathEvidence?: PostgresSearchPathEvidence;
+  /** Exact connected database name; absent in catalogs generated by older versions. */
+  currentDatabase?: string;
+  tables: Record<string, PostgresCatalogTable>;
 }
-
-export interface ResolveCheckBatchResult {
-  allResolve: boolean;
-  unresolvedFiles: string[];
-  results: ResolveCheckResult[];
+/** A catalog with every fact the catalog model holds. Every catalog rule accepts it. */
+export interface PostgresCompleteCatalog {
+  formatVersion: 2;
+  coverage: "complete";
+  schema: string;
+  searchPathEvidence?: PostgresSearchPathEvidence;
+  /** Exact connected database name; absent in catalogs generated by older versions. */
+  currentDatabase?: string;
+  tables: Record<string, PostgresCompleteCatalogTable>;
+  functions: Record<string, PostgresCatalogFunction>;
+  enums: Record<string, PostgresCatalogEnum>;
+  views: Record<string, PostgresCatalogView>;
+}
+export type PostgresCatalog = PostgresOrderingCatalog | PostgresCompleteCatalog;
+export interface PostgresCatalogColumn {
+  dataType: string;
+  nullable: boolean;
+  ordinalPosition: number;
+  defaultExpression: string | null;
+  generated: "stored" | "virtual" | null;
+  generatedExpression: string | null;
+  identity: "a" | "d" | null;
+}
+export interface PostgresCompleteCatalogColumn extends PostgresCatalogColumn {
+  comment: string | null;
+}
+export interface PostgresCatalogIndexKey {
+  column: string | null;
+  opclass: string;
+  collation: string | null;
+  orderingSupported: boolean;
+  expression: string;
+  descending: boolean;
+  nullsFirst: boolean;
+}
+export interface PostgresCatalogIndex {
+  accessMethod: string;
+  unique: boolean;
+  primary: boolean;
+  constraintBacked: boolean;
+  immediate: boolean;
+  live: boolean;
+  valid: boolean;
+  ready: boolean;
+  predicate: string | null;
+  definition: string;
+  keys: PostgresCatalogIndexKey[];
+}
+export interface PostgresCatalogTable {
+  relationKind: "table" | "partitioned table";
+  /** Optional parent table for hand-authored snapshots that include partition leaves. */
+  partitionOf?: string;
+  columns: Record<string, PostgresCatalogColumn>;
+  primaryKey: { columns: string[] } | null;
+  uniqueConstraints: Record<string, { columns: string[] }>;
+  indexes: Record<string, PostgresCatalogIndex>;
+}
+export interface PostgresCatalogForeignKey {
+  columns: string[];
+  referencedTable: string;
+  referencedColumns: string[];
+  onDelete: "NO ACTION" | "RESTRICT" | "CASCADE" | "SET NULL" | "SET DEFAULT";
+  onUpdate: "NO ACTION" | "RESTRICT" | "CASCADE" | "SET NULL" | "SET DEFAULT";
+  validated: boolean;
+}
+export interface PostgresCompleteCatalogTable extends Omit<PostgresCatalogTable, "columns"> {
+  columns: Record<string, PostgresCompleteCatalogColumn>;
+  comment: string | null;
+  /** `pg_get_partkeydef` text such as `RANGE (created_at)`; `null` unless partitioned. */
+  physicalPartition: { key: string } | null;
+  foreignKeys: Record<string, PostgresCatalogForeignKey>;
+  /** `definition` is `pg_get_constraintdef` text; NOT NULL constraints are not checks. */
+  checkConstraints: Record<string, { definition: string; validated: boolean }>;
+  /** `definition` is `pg_get_triggerdef` text; internal triggers are omitted. */
+  triggers: Record<string, { definition: string }>;
+}
+/** Keyed by name and identity arguments, such as `touch()` or `over(a integer)`. */
+export interface PostgresCatalogFunction {
+  /** `pg_get_functiondef` text. */
+  definition: string;
+}
+export interface PostgresCatalogEnum {
+  /** Labels in `enumsortorder`. */
+  values: string[];
+}
+export interface PostgresCatalogView {
+  materialized: boolean;
+  /** `pg_get_viewdef` text. */
+  definition: string;
+  comment: string | null;
 }

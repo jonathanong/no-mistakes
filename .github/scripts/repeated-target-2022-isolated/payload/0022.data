@@ -1,259 +1,86 @@
-//! Verification-only. Compile the same source with --cfg alternatives_api for
-//! the candidate bridge. Freeze each artifact against its exact matched source arm.
-#[cfg(not(alternatives_api))]
-use no_mistakes::codebase::dependencies::graph::ResolvedCallTarget;
-use no_mistakes::codebase::dependencies::{
-    graph::{DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite},
-    TsConfig,
-};
-use no_mistakes::diagnostics::{with_observer, InvocationObserver};
-use std::{hint::black_box, path::{Path, PathBuf}};
+"""Identity-aware owned process cleanup; no bare reused-PID/group signalling."""
+from pathlib import Path
+import os,signal,time,subprocess
 
-fn quote(value: &str) -> String {
-    let mut result = String::from("\"");
-    for character in value.chars() {
-        match character {
-            '"' => result.push_str("\\\""),
-            '\\' => result.push_str("\\\\"),
-            '\n' => result.push_str("\\n"),
-            '\r' => result.push_str("\\r"),
-            '\t' => result.push_str("\\t"),
-            character if character.is_control() => {
-                result.push_str(&format!("\\u{:04x}", character as u32))
-            }
-            character => result.push(character),
-        }
-    }
-    result.push('"');
-    result
-}
-fn optional(value: Option<String>) -> String {
-    value.map_or_else(|| "null".into(), |value| quote(&value))
-}
-fn path_key(path: &Path, root: &Path) -> String {
-    quote(&path.strip_prefix(root).unwrap_or(path).to_string_lossy())
-}
-fn node_key(node: &NodeId, root: &Path) -> String {
-    match node {
-        NodeId::File(file) => format!("[\"file\",{}]", path_key(file.as_ref(), root)),
-        NodeId::Symbol { file, symbol, callable_id } => format!(
-            "[\"symbol\",{},{},{}]",
-            path_key(file.as_ref(), root), quote(symbol.as_ref()), quote(&format!("{callable_id:?}"))
-        ),
-        NodeId::Module(module) => format!("[\"module\",{}]", quote(module.as_ref())),
-        NodeId::QueueJob { queue_file, job } => format!(
-            "[\"queue-job\",{},{}]", path_key(queue_file.as_ref(), root), quote(job.as_ref())
-        ),
-        NodeId::WorkflowJob { workflow_file, job } => format!(
-            "[\"workflow-job\",{},{}]", path_key(workflow_file.as_ref(), root), quote(job.as_ref())
-        ),
-        NodeId::WorkflowStep { workflow_file, job, step } => format!(
-            "[\"workflow-step\",{},{},{}]", path_key(workflow_file.as_ref(), root), quote(job.as_ref()), step
-        ),
-        NodeId::TrpcProcedure { router_file, procedure } => format!(
-            "[\"trpc-procedure\",{},{}]", path_key(router_file.as_ref(), root), quote(procedure.as_ref())
-        ),
-    }
-}
-fn leaf(
-    kind: &str,
-    module: &str,
-    name: &str,
-    repository: Option<(&std::path::Path, &str)>,
-    id: String,
-    node: Option<&NodeId>,
-    root: &Path,
-) -> String {
-    format!("{{\"kind\":{},\"module\":{},\"name\":{},\"repository\":{},\"callable_id\":{},\"node\":{}}}",
-        quote(kind), quote(module), quote(name), optional(repository.map(|(file, scope)| format!("{}#{scope}", file.display()))),
-        quote(&id), optional(node.map(|node| node_key(node, root))))
-}
-#[cfg(not(alternatives_api))]
-fn targets(site: &ResolvedCallSite, root: &Path) -> (Vec<String>, bool) {
-    let row = match &site.target {
-        ResolvedCallTarget::Global { name } => leaf(
-            "global",
-            "",
-            name,
-            None,
-            "None".into(),
-            site.target_node.as_ref(),
-            root,
-        ),
-        ResolvedCallTarget::ModuleExport {
-            specifier,
-            export_path,
-            repository_target,
-            callable_id,
-        } => leaf(
-            "export",
-            specifier,
-            export_path,
-            repository_target
-                .as_ref()
-                .map(|(file, scope)| (file.as_path(), scope.as_str())),
-            format!("{callable_id:?}"),
-            site.target_node.as_ref(),
-            root,
-        ),
-        ResolvedCallTarget::RepositoryFunction { file, scope } => leaf(
-            "repository",
-            "",
-            scope,
-            Some((file.as_path(), scope)),
-            "None".into(),
-            site.target_node.as_ref(),
-            root,
-        ),
-        ResolvedCallTarget::Unknown => return (Vec::new(), true),
-    };
-    (vec![row], false)
-}
-#[cfg(alternatives_api)]
-fn targets(site: &ResolvedCallSite, root: &Path) -> (Vec<String>, bool) {
-    use no_mistakes::codebase::dependencies::graph::KnownCallTargetRef;
-    let rows = site
-        .targets()
-        .map(|candidate| match candidate.target {
-            KnownCallTargetRef::Global { name } => {
-                leaf("global", "", name, None, "None".into(), candidate.node, root)
-            }
-            KnownCallTargetRef::ModuleExport {
-                specifier,
-                export_path,
-                repository_target,
-                callable_id,
-            } => leaf(
-                "export",
-                specifier,
-                export_path,
-                repository_target,
-                format!("{callable_id:?}"),
-                candidate.node,
-                root,
-            ),
-            KnownCallTargetRef::RepositoryFunction { file, scope } => leaf(
-                "repository",
-                "",
-                scope,
-                Some((file, scope)),
-                "None".into(),
-                candidate.node,
-                root,
-            ),
-        })
-        .collect();
-    (rows, site.has_unknown_target())
-}
-fn main() {
-    let args: Vec<_> = std::env::args().collect();
-    assert_eq!(args.len(), 5, "ROOT ITERATIONS off|work calls|no-calls");
-    let root = PathBuf::from(&args[1]).canonicalize().unwrap();
-    let iterations: usize = args[2].parse().unwrap();
-    let calls = match args[4].as_str() {
-        "calls" => true,
-        "no-calls" => false,
-        _ => panic!("calls mode"),
-    };
-    let work_enabled = match args[3].as_str() {
-        "off" => false,
-        "work" => true,
-        _ => panic!("mode"),
-    };
-    assert!(iterations > 0);
-    let config = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let mut prior = None;
-    let mut work_rows = Vec::new();
-    for _ in 0..iterations {
-        let observer = work_enabled.then(|| InvocationObserver::new(true));
-        let graph = with_observer(observer.clone(), || {
-            DepGraph::build_with_plan(
-                &root,
-                &config,
-                GraphBuildPlan {
-                    imports: true,
-                    calls,
-                    ..Default::default()
-                },
-            )
-            .unwrap()
-        });
-        let sites = graph.resolved_call_sites();
-        let nodes: Vec<_> = graph.all_files().cloned().collect();
-        let mut node_rows: Vec<_> = nodes
-            .iter()
-            .map(|node| quote(&node_key(node, &root)))
-            .collect();
-        node_rows.sort();
-        let mut edges = Vec::new();
-        let mut incoming = Vec::new();
-        for node in nodes {
-            for (target, kind) in graph.dependencies_of_node(&node).into_iter().flatten() {
-                edges.push(format!(
-                    "[{}, {}, {}]",
-                    quote(&node_key(&node, &root)),
-                    quote(&node_key(target, &root)),
-                    quote(&format!("{kind:?}"))
-                ));
-            }
-            for (source, kind) in graph.dependents_of_node(&node).into_iter().flatten() {
-                incoming.push(format!(
-                    "[{}, {}, {}]",
-                    quote(&node_key(source, &root)),
-                    quote(&node_key(&node, &root)),
-                    quote(&format!("{kind:?}"))
-                ));
-            }
-        }
-        edges.sort();
-        edges.dedup();
-        incoming.sort();
-        incoming.dedup();
-        let mut rows = Vec::new();
-        for site in sites {
-            let (mut known, unknown) = targets(site, &root);
-            known.sort();
-            known.dedup();
-            rows.push(format!("{{\"file\":{},\"offset\":{},\"line\":{},\"caller\":{},\"caller_id\":{},\"invocation\":{},\"callee\":{},\"known\":[{}],\"unknown\":{},\"returned_from\":{},\"typed_from\":{},\"returned_members\":{}}}",
-                quote(&site.file.strip_prefix(&root).unwrap_or(&site.file).to_string_lossy()), site.offset, site.line,
-                optional(site.caller.clone()), quote(&format!("{:?}", site.caller_id)), quote(&format!("{:?}", site.invocation)),
-                quote(&site.source_callee), known.join(","), unknown, quote(&format!("{:?}", site.returned_from)),
-                quote(&format!("{:?}", site.typed_from)), quote(&format!("{:?}", site.returned_member_from))));
-        }
-        rows.sort();
-        let semantic = format!(
-            "{{\"sites\":[{}],\"edges\":[{}],\"nodes\":[{}],\"importer_view\":[{}]}}",
-            rows.join(","),
-            edges.join(","),
-            node_rows.join(","),
-            incoming.join(",")
-        );
-        if let Some(previous) = &prior {
-            assert_eq!(previous, &semantic, "fresh requests must agree");
-        }
-        prior = Some(semantic);
-        if let Some(observer) = observer {
-            let work = observer
-                .snapshot()
-                .work
-                .into_iter()
-                .map(|(name, count)| format!("{}:{count}", quote(name)))
-                .collect::<Vec<_>>()
-                .join(",");
-            work_rows.push(format!("{{{work}}}"));
-        }
-        black_box(graph);
-    }
-    // Actual incoming ParameterInputs are private; do not infer their parity
-    // from this public edge view. The separate internal ledger is mandatory.
-    println!(
-        "{{\"semantic\":{},\"request_work\":[{}],\"actual_incoming\":null}}",
-        prior.unwrap(),
-        work_rows.join(",")
-    );
-}
+def identity(pid):
+ proc=Path('/proc')/str(pid);f=(proc/'stat').read_text().rsplit(')',1)[1].split()
+ return {'pid':pid,'starttime':int(f[19]),'sid':int(f[3]),'pgid':int(f[2]),'exe':os.readlink(proc/'exe'),'argv':[(v.decode(errors='surrogateescape')) for v in (proc/'cmdline').read_bytes().split(b'\0')[:-1]]}
+
+def current_same(expected):
+ try:return identity(expected['pid'])==expected
+ except FileNotFoundError:return False
+
+class OwnedProcess:
+    def __init__(self, process):
+        self.process=process
+        self.sid=process.pid
+        self.initial=None
+        self.records=[]
+        try:
+            self.initial=identity(process.pid)
+            assert self.initial['sid']==self.sid and self.initial['pgid']==self.sid
+        except FileNotFoundError:
+            # A command may naturally finish before its first /proc read.
+            assert process.poll() is not None
+    def members(self):
+        result=[]
+        for path in Path('/proc').iterdir():
+            if not path.name.isdigit():continue
+            try:
+                fields=(path/'stat').read_text().rsplit(')',1)[1].split()
+                if int(fields[3])!=self.sid:continue
+                if fields[0]=='Z':
+                    result.append({'pid':int(path.name),'starttime':int(fields[19]),
+                        'sid':int(fields[3]),'pgid':int(fields[2]),'state':'Z'})
+                else:
+                    value=identity(int(path.name));value['state']=fields[0];result.append(value)
+            except FileNotFoundError:
+                # Skip only actual disappearance; an extant unresolved owner fails.
+                try:remaining=(path/'stat').read_text()
+                except FileNotFoundError:continue
+                remaining=remaining.rsplit(')',1)[1].split()
+                if int(remaining[3])==self.sid:
+                    if remaining[0]=='Z':
+                        result.append({'pid':int(path.name),'starttime':int(remaining[19]),
+                            'sid':int(remaining[3]),'pgid':int(remaining[2]),'state':'Z'})
+                    else:raise AssertionError(('Owned /proc identity unavailable',path.name))
+        return result
+    def check(self):
+        if self.process.poll() is not None:return False
+        assert self.initial is not None
+        try:current=identity(self.process.pid)
+        except FileNotFoundError:
+            assert self.process.poll() is not None
+            return False
+        assert all(current[k]==self.initial[k]for k in ['pid','starttime','sid','pgid'])
+        return True
+    def finish(self):
+        self.check()
+        # Natural leader exit never triggers killpg on its now-reusable number.
+        if self.check():
+            os.killpg(self.sid,signal.SIGTERM)
+        try:self.process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            if self.check():os.killpg(self.sid,signal.SIGKILL)
+            self.process.wait(timeout=5)
+        deadline=time.monotonic()+10
+        while True:
+            members=self.members()
+            if not members:break
+            assert self.initial is not None,'Uncaptured leader with unresolved descendants'
+            for member in members:
+                assert member['starttime']>=self.initial['starttime']
+                assert member['sid']==self.initial['sid']
+                if member['state']=='Z':continue
+                expected={k:v for k,v in member.items()if k!='state'}
+                if current_same(expected):
+                    os.kill(member['pid'],signal.SIGKILL)
+                    self.records.append(member)
+                else:
+                    try:current=identity(member['pid'])
+                    except FileNotFoundError:continue
+                    raise AssertionError(('Owned process changed identity before signal',member,current))
+            assert time.monotonic()<deadline,'Owned descendants not fully reaped'
+            time.sleep(.1)
+        self.records.append({'leader_exit':self.process.returncode,'owned_sid_matches_after_cleanup':[],'proc_read_errors':[]})
+        return self.records

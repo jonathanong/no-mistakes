@@ -1,7 +1,10 @@
 import { read } from '@example/db'
 
-export const query = String.raw`/* raw/read */ SELECT id FROM posts`
-
-export function list() {
-  return read(query)
+function run(sql: string) {
+  return read(sql)
 }
+
+var first = second
+var second = first
+export const api = { first, run }
+run('/* exported/cyclic */ SELECT id FROM posts')

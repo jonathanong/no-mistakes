@@ -1,8 +1,9 @@
-import sql from "sql-template-strings";
 import { query } from "@example/db";
 
-declare const statementBody: string;
+const sql = "SELECT id FROM topics";
+do sql.append(" WHERE id = 1");
+while (flag);
 
-const statement = sql`-- statement supplied at runtime`;
-statement.append(statementBody);
-query(statement);
+export function load() {
+  return query(sql);
+}

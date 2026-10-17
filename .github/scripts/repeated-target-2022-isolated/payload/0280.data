@@ -1,9 +1,6 @@
-import { query, sql } from "@example/db";
+import sql from "sql-template-strings";
+import { write } from "@example/db";
 
-const archived = sql`AND archived_at IS NOT NULL`;
-
-export function load(accountId: string) {
-  return query(
-    sql`SELECT id FROM documents WHERE account_id = ${accountId}`.append(sql` ${archived}`),
-  );
+export async function scratchProbeInsert(mimeType: string): Promise<void> {
+  await write(sql`INSERT INTO url_content_types (mime_type) VALUES (${mimeType})`);
 }

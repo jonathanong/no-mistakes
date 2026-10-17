@@ -1,10 +1,7 @@
-import { query } from "@data-stores/psql";
+import { query } from "@example/db";
 
-// User-written marker-like identifiers stay columns; only generated positions mark binds.
-query(sql`SELECT sql_placeholder_1
-FROM orders
-WHERE fake_id > sql_placeholder_1 AND id > ${after}
-ORDER BY id
-LIMIT ${size}`);
+let sql;
 
-query(buildQuery());
+export function load() {
+  return query(sql);
+}

@@ -1,54 +1,37 @@
-import { primary, supplied, defaultLater, suppliedLater, forwarded, objectSource, snapshot, tdz, mutableBefore, mutableAfter, objectLater } from '@vendor/valkey';
+import { primary, replica, scoped, session, nested, local, standalone, reversed, arrayClient, computed, dynamic, ownDefault, overlap } from '@vendor/valkey';
 function replacement() {}
-
-function acquire() { return saved; }
-const saved = primary.get;
-(function nestedDefault(fn = acquire()) { fn('key'); })();
-
-function suppliedAcquire() { return suppliedSaved; }
-const suppliedSaved = supplied.get;
-(function nestedArgument(fn) { fn('key'); })(suppliedAcquire(), supplied.get = replacement);
-
-function defaultMethodAcquire() { return defaultLater.get; }
-(function nestedDefaultLater(fn = defaultMethodAcquire()) { fn('key'); })(undefined, defaultLater.get = replacement);
-function argumentMethodAcquire() { return suppliedLater.get; }
-(function nestedArgumentLater(fn) { fn('key'); })(argumentMethodAcquire(), suppliedLater.get = replacement);
-
-function forward(fn) { return fn; }
-function forwardAcquire() { return forward(forwardSaved); }
-const forwardSaved = forwarded.get;
-(function forwardedDefault(fn = forwardAcquire()) { fn('key'); })();
-
-function objectAcquire() { return { fn: objectSaved }; }
-const objectSaved = objectSource.get;
-(function objectDefault({ fn } = objectAcquire()) { fn('key'); })();
-
-function snapshotAcquire() { return snapshotSaved; }
-const snapshotSaved = snapshot.get;
-(function snapshotDefault(fn = snapshotAcquire()) { fn('key'); })(undefined, snapshot.get = replacement);
-
-function unavailableAcquire() { return unavailable; }
-(function declarationAfterCall(fn = unavailableAcquire()) { fn('key'); })();
-const unavailable = tdz.get;
-
-function localUnavailableAcquire() { return localUnavailable; const localUnavailable = primary.get; }
-(function localDeclarationAfterReturn(fn = localUnavailableAcquire()) { fn('key'); })();
-
-function mutableAcquire() { return mutableSaved; }
-function copyMutableBefore() { return mutableBefore.get; }
-let mutableSaved = copyMutableBefore();
-(function mutableArgument(fn) { fn('key'); })(mutableAcquire(), mutableSaved = replacement);
-function mutableDefaultAcquire() { return mutableDefaultSaved; }
-function copyMutableAfter() { return mutableAfter.get; }
-let mutableDefaultSaved = copyMutableAfter();
-(function mutableDefault(fn = mutableDefaultAcquire()) { fn('key'); })(undefined, mutableDefaultSaved = replacement);
-
-function laterObjectAcquire() { return { fn: objectLater.get }; }
-(function objectDefaultLater({ fn } = laterObjectAcquire()) { fn('key'); })(undefined, objectLater.get = replacement);
-
-function enclosingFactory() {
-  function enclosingAcquire() { return enclosingSaved; }
-  const enclosingSaved = primary.get;
-  return function enclosingDefault(fn = enclosingAcquire()) { fn('key'); };
-}
-enclosingFactory()();
+let unused;
+function after(client) { client.get('key'); }
+// The first target is written before the second target's default executes.
+({ first: primary.get, second: unused = after(primary) } = { first: replacement });
+function before(client) { client.get('key'); }
+({ first: unused = before(replica), second: replica.get } = { second: replacement });
+function rhs(client) { client.get('key'); return { first: replacement }; }
+function afterRhs(client) { client.get('key'); }
+// The RHS runs before either target, despite appearing last in source text.
+({ first: scoped.get, second: unused = afterRhs(scoped) } = rhs(scoped));
+function untouched(client) { client.info('key'); }
+({ first: session.get, second: unused = untouched(session) } = { first: replacement });
+const saved = nested.get;
+function copied(get) { get('key'); }
+({ first: nested.get, second: unused = copied(saved) } = { first: replacement });
+function copiedAfter(get) { get('key'); }
+({ first: local.get, second: unused = copiedAfter(local.get) } = { first: replacement });
+function nestedAfter(client) { client.get('key'); }
+function enclosingDefault(client) { client.get('key'); return {}; }
+// An enclosing default runs before its inner pattern; inner later defaults run after its first write.
+({ outer: { first: standalone.get, second: unused = nestedAfter(standalone) } = enclosingDefault(standalone) } = {});
+function outerAfter(client) { client.get('key'); }
+({ outer: { first: reversed.get } = {}, after: unused = outerAfter(reversed) } = {});
+function arrayAfter(client) { client.get('key'); }
+[arrayClient.get, unused = arrayAfter(arrayClient)] = [replacement];
+function computedAfter(client) { client.get('key'); return 'second'; }
+({ first: computed.get, [computedAfter(computed)]: unused } = { first: replacement });
+function dynamicAfter(client) { client.get('key'); }
+let key = 'get';
+({ first: dynamic[key], second: unused = dynamicAfter(dynamic) } = { first: replacement });
+function ownBefore(client) { client.get('key'); return replacement; }
+({ first: ownDefault.get = ownBefore(ownDefault) } = {});
+function overlappingAfter(client) { client.get('key'); }
+// Repeated targets overlap in the shared early-read interval union.
+({ first: overlap.get, second: overlap.get, third: unused = overlappingAfter(overlap) } = { first: replacement, second: replacement });

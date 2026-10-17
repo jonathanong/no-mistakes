@@ -1,138 +1,111 @@
 const assert = require("node:assert/strict");
-const { join } = require("node:path");
-const { readFileSync } = require("node:fs");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
-test(
-  "compiled callback findings keep each lexical binding and occurrence distinct",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/query-reached-per-item/callbacks-fixture",
-    );
-    const report = await cjs.check({ root });
-    assert.deepEqual(report.warnings, []);
-    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
-    assert.deepEqual(
-      findings.map((finding) => [finding.file, finding.line, finding.import]),
-      [
-        [6, "read"],
-        [13, "cache.get"],
-        [20, "lookup"],
-        [27, "read"],
-        [27, "read"],
-        [29, "read"],
-      ].map(([line, callee]) => ["src/entry.mts", line, callee]),
-      "a resolved import must never supply the sink for a same-caller shadowed callback",
-    );
-    const repeated = findings.filter((finding) => finding.line === 27);
-    assert.ok(repeated[0].message.endsWith("(occurrence 1)"));
-    assert.ok(repeated[1].message.endsWith("(occurrence 2)"));
-    assert.ok(findings.find((finding) => finding.line === 29).message.includes("map callback"));
-    assert.deepEqual(await esm.check({ root }), report);
-    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
-    assert.deepEqual(batch.reports[0].result, report);
+function shape(occurrences) {
+  return occurrences.map((occurrence) => {
+    const nested = shape(occurrence.occurrences);
+    return nested.length === 0 ? occurrence.kind : `${occurrence.kind}(${nested.join(",")})`;
+  });
+}
+
+const CASES = [
+  {
+    name: "utility",
+    sql: "DO $$ BEGIN CREATE TYPE x AS ENUM ('a'); END $$;",
+    complete: true,
+    shape: ["utility"],
   },
-);
+  {
+    name: "raise between creates",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); RAISE NOTICE 'x'; CREATE TABLE b(id int); END $$;",
+    complete: true,
+    shape: ["utility", "controlFlow", "utility"],
+    statements: 2,
+  },
+  {
+    name: "control flow",
+    sql: "DO $$ BEGIN IF (SELECT COUNT(*) FROM t) > 0 THEN RAISE EXCEPTION 'bad'; END IF; END $$;",
+    complete: true,
+    shape: ["controlFlow(controlFlow)"],
+    statements: 0,
+  },
+  {
+    name: "create beside unknown loop",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); LOOP SELECT 1; END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(unknown)"],
+    statements: 1,
+    diagnostic: /Unsupported procedural occurrence/,
+  },
+  {
+    name: "create beside dynamic loop",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); LOOP EXECUTE format('SELECT 1'); END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(dynamicExecute)"],
+    statements: 1,
+    diagnostic: /Dynamic EXECUTE is unknown/,
+  },
+  {
+    name: "create beside loop dml",
+    sql: "DO $$ BEGIN CREATE TABLE a(id int); FOR i IN 1..2 LOOP INSERT INTO a VALUES (i); END LOOP; END $$;",
+    complete: false,
+    shape: ["utility", "controlFlow(dml)"],
+    statements: 1,
+    diagnostic: /not an executed statement/,
+  },
+  {
+    name: "loop dml",
+    sql: "DO $$ BEGIN FOR i IN 1..2 LOOP INSERT INTO t(id) VALUES (i); END LOOP; END $$;",
+    complete: false,
+    shape: ["controlFlow(dml)"],
+    statements: 0,
+    diagnostic: /not an executed statement/,
+  },
+  {
+    name: "dynamic execute",
+    sql: "DO $$ BEGIN EXECUTE format('INSERT INTO t(id) VALUES (%s)', 1); END $$;",
+    complete: false,
+    shape: ["dynamicExecute"],
+  },
+  {
+    name: "labeled loop",
+    sql: "DO $$ BEGIN <<retry>> LOOP NULL; END LOOP retry; END $$;",
+    complete: false,
+    shape: ["controlFlow(unknown)"],
+    statements: 0,
+    diagnostic: /Unsupported procedural occurrence/,
+  },
+];
 
 test(
-  "compiled checks honor exact effect bindings through aliases and helper traces",
+  "compiled native CJS and ESM distinguish procedural occurrence kinds",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/query-reached-per-item/targets-fixture",
-    );
-    const report = await cjs.check({ root });
-    assert.deepEqual(report.warnings, []);
-    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
-    assert.deepEqual(
-      findings.map((finding) => finding.line).sort((a, b) => a - b),
-      [11, 12, 13, 14, 16, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29],
-      "only configured module bindings should report; streams, shadows and local parameters stay quiet",
-    );
-    assert.ok(findings.every((finding) => finding.file === "src/entry.mts"));
-    assert.ok(findings.some((finding) => finding.message.includes("lookup → inner → load")));
-    assert.ok(
-      findings.some(
-        (finding) =>
-          finding.message.includes("cachedLookup → valkey.hget") &&
-          finding.message.includes("reaches `valkey`"),
-      ),
-    );
-    assert.deepEqual(await esm.check({ root }), report);
-    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
-    assert.deepEqual(batch.reports[0].result, report);
-  },
-);
-
-test(
-  "compiled CJS, ESM and batched checks share per-item effect diagnostics",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/fixture");
-    const report = await cjs.check({ root });
-    assert.deepEqual(report.warnings, []);
-    const findings = report.rules.filter((finding) => finding.rule === "query-reached-per-item");
-    assert.ok(
-      findings.some(
-        (finding) => finding.line === 5 && finding.message.includes("lookup → inner → read"),
-      ),
-    );
-    assert.ok(
-      findings.some(
-        (finding) => finding.line === 21 && finding.message.includes("transaction client only"),
-      ),
-    );
-    assert.ok(
-      !findings.some(
-        (finding) => finding.file === "src/entry.mts" && [23, 26, 28, 29].includes(finding.line),
-      ),
-    );
-    assert.ok(
-      findings.some((finding) => finding.file === "src/entry.mts" && finding.line === 24),
-      "eager queries execute before a batch wrapper receives their results",
-    );
-    const aliasLines = readFileSync(join(root, "src/entry.mts"), "utf8")
-      .split("\n")
-      .flatMap((line, index) =>
-        /items\.(?:map|forEach)\(lookupAlias\)/.test(line) ? [index + 1] : [],
-      );
-    assert.equal(aliasLines.length, 2);
-    for (const line of aliasLines) {
-      assert.ok(
-        findings.some((finding) => finding.file === "src/entry.mts" && finding.line === line),
-        `named callback alias at line ${line} must reach its configured sink`,
-      );
+    for (const entry of CASES) {
+      const input = { sql: entry.sql, fileName: `${entry.name}.sql` };
+      const pending = cjs.parsePostgresSql(input);
+      assert.equal(typeof pending.then, "function");
+      const facts = await pending;
+      assert.deepEqual(await esm.parsePostgresSql(input), facts);
+      assert.deepEqual(facts.diagnostics, []);
+      const block = facts.statements[0].block;
+      assert.equal(facts.statements[0].kind, "doBlock");
+      assert.equal(block.complete, entry.complete, entry.name);
+      assert.deepEqual(shape(block.occurrences), entry.shape, entry.name);
+      if (entry.statements !== undefined) {
+        assert.equal(block.statements.length, entry.statements, entry.name);
+      }
+      if (entry.diagnostic) {
+        assert.match(block.diagnostics.map((item) => item.message).join("\n"), entry.diagnostic);
+      }
+      for (const occurrence of block.occurrences) {
+        const text = entry.sql.slice(occurrence.span.start.offset, occurrence.span.end.offset);
+        assert.ok(text.length > 0, entry.name);
+        assert.ok(occurrence.span.start.offset < occurrence.span.end.offset);
+      }
     }
-    assert.deepEqual(await esm.check({ root }), report);
-    const batch = await cjs.analyzeProject({ root, reports: [{ type: "check", id: "per-item" }] });
-    assert.equal(batch.reports[0].id, "per-item");
-    assert.deepEqual(batch.reports[0].result, report);
-    const callOptions = { file: "src/helpers.mts", exportName: "lookup" };
-    const callSites = await cjs.callSites({ root, ...callOptions });
-    const combined = await cjs.analyzeProject({
-      root,
-      reports: [
-        { type: "check", id: "per-item" },
-        { type: "callSites", id: "ordinary-calls", ...callOptions },
-      ],
-    });
-    assert.deepEqual(
-      combined.reports.find((result) => result.id === "ordinary-calls").result,
-      callSites,
-      "adding the per-item check must preserve ordinary call-site fields",
-    );
-    const suppressed = await cjs.check({ root, includeSuppressed: true });
-    assert.deepEqual(suppressed.rules, report.rules);
-    assert.ok(suppressed.suppressed.length >= 2);
   },
 );

@@ -1,9 +1,4 @@
-effects:
-  postgres:
-    returnedExecutors:
-      - { module: './review-wrappers.mjs', export: wrappedBegin }
-rules:
-  - rule: query-reached-per-item
-    scope: repository
-    options:
-      effects: [postgres]
+import { primary as client } from '@vendor/valkey';
+const box = { client };
+box.client = {};
+box.client.get = function replacement() {};

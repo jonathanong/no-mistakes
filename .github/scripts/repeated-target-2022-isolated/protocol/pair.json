@@ -2,10 +2,11 @@
   "baseline": {
     "revision": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
     "overlay_sha256": "68c36c8537b61d863ab9242c65bcb3c4c5af20eceb649b8e55a4b158d3f4bcd4",
-    "required_remote_head": "281673146341e6915c051aedfde6fd05ae6dd055",
+    "required_remote_head": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
     "equivalent_main": "281673146341e6915c051aedfde6fd05ae6dd055",
     "tree": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
-    "scope": "Authentic099 release with sealed five-file lifetime overlay, exact2ee8 source and whole-tree equivalent main281; freshly linked same-arm fullLTO helpers."
+    "scope": "Authentic099 release with sealed five-file lifetime overlay, exact2ee8 source and whole-tree equivalent main281; freshly linked same-arm fullLTO helpers.",
+    "current_main_version_carry": "Original099+sealed lifetime source remains whole281-equivalent; current29 differs only own version metadata, original producer unchanged."
   },
   "budgets_minutes": {
     "layout_build_per_arm": 150,
@@ -21,10 +22,11 @@
   },
   "build_jobs": 1,
   "candidate": {
-    "revision": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
-    "pr_head": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
-    "tree": "213a7967bc49c6b93bd89c3bf2fc0acfd0f39679",
-    "scope": "Fresh exact published2022 guard/scalar source, integrates main281 lifetime change; fullLTO CLI/addon and helpers."
+    "revision": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+    "pr_head": "4a322424894b3d5f965d2e04fad808baa13da392",
+    "tree": "47086f1cfc8fbaa91428846f9cb4f46597c6a03e",
+    "public_tree": "4e05b71db2b9047e3d55defe29cd7e9c43f95d3f",
+    "scope": "Fresh e193 release native/core and proper-LTO helpers; published4a differs only cfg(test) oracle filename, explicit source carry. No JSX outline gain claimed."
   },
   "diagnostic_branch": "diagnostic/2022-next-eight-cohorts",
   "diagnostic_commit": null,

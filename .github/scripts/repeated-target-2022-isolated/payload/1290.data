@@ -1,8 +1,9 @@
 import { primary as client } from '@vendor/valkey';
 function replacement() {}
 const holder = { box: { client } };
-const own = { client: {} };
-holder.box.client = { klass: class { field = (own.client = { x: opaque() }); } };
+holder.box.client = {};
+function later() { @opaque class Decorated {} }
 holder.box.client.get = replacement;
-function globalInstanceOwn(value) { value.get('key'); }
-globalInstanceOwn(client);
+function opaque() { holder.box = { client }; }
+function scan(value) { value.get('key'); }
+scan(client);

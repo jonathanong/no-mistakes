@@ -1,17 +1,1 @@
-{
-  "kind": "database",
-  "entry": "src/entry.mts",
-  "callSites": [
-    {
-      "file": "src/entry.mts",
-      "line": 4,
-      "callee": "primary.read",
-      "category": "read",
-      "caller": "invoke",
-      "depth": 0
-    }
-  ],
-  "byCategory": {
-    "read": 1
-  }
-}
+export function factory() { return ({ client }) => client.get(); }

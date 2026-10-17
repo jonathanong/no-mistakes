@@ -1,5 +1,5 @@
-import sql, { type SQLStatement } from 'sql-template-strings'
+import type { SQLStatement } from 'sql-template-strings'
 
-export function appendSearchCte(query: SQLStatement): void {
-  query.append(sql`WITH eligible AS (SELECT id FROM posts) `)
+export function appendUnknown(query: SQLStatement, runtimeSql: string): void {
+  query.append(runtimeSql)
 }

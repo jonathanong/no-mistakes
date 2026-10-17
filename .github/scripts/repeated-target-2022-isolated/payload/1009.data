@@ -1,5 +1,4 @@
 import { primary } from '@vendor/valkey';
 function replacement() {}
-primary.set = replacement;
-function f(client = primary) { const alias = client; alias.nested.get(); }
+function f(client = primary) { primary.get = replacement; const alias = client; alias.get(); }
 f();

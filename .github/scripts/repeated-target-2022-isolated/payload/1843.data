@@ -1,9 +1,6 @@
-import { query as execute, read } from "@example/db";
+import { read } from '@example/db'
+import { buildImportedRead } from './imported-builder'
 
-const byId = `/* posts/by-id */ SELECT id FROM posts WHERE id = ${id}`;
-execute(byId);
-read(`/* posts/list */ WITH selected AS (SELECT id FROM posts) SELECT * FROM selected`);
-
-// This named local is not an imported executor.
-const query = (value: string) => value;
-query("/* not-executed */ SELECT 1");
+export function namedMemberRead() {
+  return read(buildImportedRead.value)
+}

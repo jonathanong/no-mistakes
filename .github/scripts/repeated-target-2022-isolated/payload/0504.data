@@ -1,8 +1,3 @@
-import { read } from '@example/db'
+import sql from 'sql-template-strings'
 
-function run(sql: string) {
-  return read(sql)
-}
-
-export const callbacks = [run]
-run('/* exported/array */ SELECT id FROM posts')
+export const query = sql`/* eager import */ SELECT 1`

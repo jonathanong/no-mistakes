@@ -1,62 +1,94 @@
-export interface ReactComponentFacts {
-  name: string;
-  file: string;
-  environment: "server" | "client" | "shared" | "unknown";
-  hasState: boolean;
-  hasProps: boolean;
-  passesProps: boolean;
-  usesMemo: boolean;
-  usesContextProvider: boolean;
-  usesSuspense: boolean;
-  fetches: ReactFetchCall[];
-  dependencies: string[];
-  children: ReactComponentRef[];
-  inheritedFromChildren?: ReactAggregatedFacts;
+import type {
+  PostgresSqlIdentifier,
+  PostgresSqlName,
+  PostgresSqlSpan,
+  PostgresSqlType,
+} from "./postgres-source-types";
+/** Syntactic root; wrappers never promote a nested call through an unrelated operator. */
+export type PostgresSqlExpressionRoot =
+  | { kind: "columnReference"; name: PostgresSqlName }
+  | {
+      kind: "functionCall";
+      name: PostgresSqlName;
+      arguments: PostgresSqlCallArgument[];
+      argumentsComplete: boolean;
+      syntax: PostgresSqlFunctionSyntax;
+      modifiers: string[];
+    }
+  | { kind: "parenthesized"; expression: PostgresSqlExpressionRoot }
+  | {
+      kind: "cast";
+      dataType: string;
+      dataTypeFacts: PostgresSqlType;
+      expression: PostgresSqlExpressionRoot;
+    }
+  | { kind: "nullTest"; negated: boolean }
+  | { kind: "distinctness"; negated: boolean }
+  | { kind: "parameter"; placeholder: string }
+  | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
+  | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
+  | { kind: "binary"; operator: string }
+  | { kind: "unary"; operator: string; expression: PostgresSqlExpressionRoot }
+  | { kind: "array" | "case" | "subquery" | "other" };
+export type PostgresSqlExpressionChildRole =
+  | "argument"
+  | "arrayElement"
+  | "binaryLeft"
+  | "binaryRight"
+  | "caseOperand"
+  | "caseWhenCondition"
+  | "caseWhenResult"
+  | "caseElse"
+  | "castOperand"
+  | "filterPredicate"
+  | "parenthesizedExpression"
+  | "unaryOperand"
+  | "nullOperand"
+  | "distinctLeft"
+  | "distinctRight"
+  | "other";
+export type PostgresSqlExpressionChildRoot =
+  | { kind: "columnReference"; name: PostgresSqlName }
+  | {
+      kind: "functionCall";
+      name: PostgresSqlName;
+      argumentsComplete: boolean;
+      syntax: PostgresSqlFunctionSyntax;
+      modifiers: string[];
+    }
+  | { kind: "parenthesized" }
+  | { kind: "cast"; castKind: string; dataType: string; dataTypeFacts: PostgresSqlType }
+  | { kind: "nullTest"; negated: boolean }
+  | { kind: "distinctness"; negated: boolean }
+  | { kind: "parameter"; placeholder: string }
+  | { kind: "typedLiteral"; dataType: string; value: string; sql: string }
+  | { kind: "literal"; sql: string; value: PostgresSqlLiteralValue }
+  | { kind: "binary" | "unary"; operator: string }
+  | { kind: "array" | "case" | "subquery" | "other" };
+export interface PostgresSqlExpressionChild {
+  role: PostgresSqlExpressionChildRole;
+  index: number | null;
+  argumentName?: PostgresSqlIdentifier;
+  sql: string;
+  span: PostgresSqlSpan | null;
+  root: PostgresSqlExpressionChildRoot;
+  children: PostgresSqlExpressionChild[];
+  /** Complete represented syntax; a missing provenance span does not imply missing structure. */
+  childrenComplete: boolean;
+}
+/** Bare CURRENT_TIMESTAMP is a value function; CURRENT_TIMESTAMP(3) uses call syntax. */
+export type PostgresSqlFunctionSyntax = "call" | "value";
+export interface PostgresSqlCallArgument {
+  name: PostgresSqlIdentifier | null;
+  sql: string;
+  span: PostgresSqlSpan | null;
+  root: PostgresSqlExpressionRoot;
 }
 
-export interface ReactFetchCall {
-  file: string;
-  exportedName: string | null;
-  shape: string | null;
-}
-
-export interface ReactComponentRef {
-  name: string;
-  file: string;
-}
-
-export interface ReactAggregatedFacts {
-  hasState: boolean;
-  hasProps: boolean;
-  passesProps: boolean;
-  usesMemo: boolean;
-  usesContextProvider: boolean;
-  usesSuspense: boolean;
-  hasFetch: boolean;
-}
-
-export interface ReactViolation {
-  component: string;
-  file: string;
-  rule: string;
-  detail: string | null;
-}
-
-export interface ReactCallsite {
-  file: string;
-  line: number;
-  component: string;
-  props: string[];
-  hasSpread: boolean;
-}
-
-export interface ReactUsagesReport {
-  target: { file: string; symbol?: string };
-  callsites: ReactCallsite[];
-  /** Story files importing the target. Omitted when `props`/`tests`-only `include`. */
-  stories?: string[];
-  /** Test files importing the target. */
-  tests?: string[];
-  /** Exported prop type/interface names declared in the target file. */
-  propTypes?: string[];
-}
+/** Numbers preserve decimal spelling; string values are parser-decoded. */
+export type PostgresSqlLiteralValue =
+  | { kind: "null" }
+  | { kind: "string"; value: string }
+  | { kind: "number"; value: string }
+  | { kind: "boolean"; value: boolean }
+  | { kind: "other"; sql: string };

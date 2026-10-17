@@ -1,1 +1,6 @@
-export type { Cyclic } from './cycle-a.mjs';
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/**/*.sql"]

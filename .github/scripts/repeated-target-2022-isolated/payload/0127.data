@@ -1,3 +1,8 @@
-export function normalize(value: string) {
-  return value.trim().toLowerCase();
+{
+  "name": "performance-root",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "@fixture/core": "workspace:*"
+  }
 }

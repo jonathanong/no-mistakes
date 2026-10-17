@@ -1,2 +1,2 @@
--- no-mistakes-disable-next-line postgres-idempotent-insert: one-off seed
-INSERT INTO items (id) VALUES (1);
+INSERT INTO public."Users" ("Email") VALUES ('a')
+ON CONFLICT (lower(public."Users"."Email")) DO UPDATE SET "Email" = 'b';

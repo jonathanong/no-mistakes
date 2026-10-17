@@ -1,6 +1,12 @@
-import { primary as receiver, read, ignored } from "@vendor/plain-alternatives";
-for (const item of ["a", "b"]) {
-  receiver.transaction(item);
-  receiver.transaction = read;
+{
+  "entry.mts": [
+    9,
+    57,
+    61,
+    63,
+    64
+  ],
+  "import-after.mts": [
+    6
+  ]
 }
-ignored();

@@ -1,2 +1,1 @@
-// Identical spelling and shape, but a different unconfigured module identity.
-export type Executor<T> = (sql: string) => Promise<unknown>;
+INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;

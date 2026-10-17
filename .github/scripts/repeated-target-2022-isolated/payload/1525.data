@@ -1,13 +1,13 @@
 import { query } from "@example/db";
 
 function build() {
-  return "SELECT * FROM topics";
+  return "SELECT id FROM topics";
 }
 
-export function run(load: () => string) {
-  try {
-    load();
-  } catch (build) {
-    return query(build());
-  }
+build++;
+
+const sql = build();
+
+export function load() {
+  return query(sql);
 }

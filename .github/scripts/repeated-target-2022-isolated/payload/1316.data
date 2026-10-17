@@ -1,14 +1,9 @@
-import { primary as client } from "@vendor/valkey";
-declare function opaque(value: unknown): PromiseLike<unknown>;
+import { primary as client } from '@vendor/valkey';
 function replacement() {}
-function* run() {
-  const holder = { box: { client } };
-  const pending = opaque(holder);
-  yield (((holder.box.client = {}), pending));
-  holder.box.client.get = replacement;
-  function scan(value) {
-    value.get("key");
-  }
-  scan(client);
-}
-run().next();
+const holder = { box: { client } };
+let unused;
+holder.box.client = {};
+// Destructuring evaluates its RHS before the first default assignment.
+({ first: unused = (holder.box.client.get = replacement), second: holder.other } = (holder.box = { client }, {}));
+function globalPhaseRhsFirst(value) { value.get('key'); }
+globalPhaseRhsFirst(client);

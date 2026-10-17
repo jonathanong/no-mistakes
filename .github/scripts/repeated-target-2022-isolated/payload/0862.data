@@ -1,123 +1,128 @@
-const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+"use strict";
+
+const { constants, existsSync, accessSync, statSync } = require("node:fs");
 const { join } = require("node:path");
-const test = globalThis.test || require("node:test").test;
-const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
-const fixture = (name) =>
-  readFileSync(join(__dirname, "../../../fixtures/postgres-facts/source", name), "utf8");
-function occurrences(statement) {
-  const children =
-    statement.kind === "doBlock"
-      ? statement.block.statements
-      : statement.kind === "conditional"
-        ? statement.branches.flatMap((branch) => branch.statements)
-        : [];
-  return [statement, ...children.flatMap(occurrences)];
+
+const MIN_GLIBC = [2, 35];
+
+const PACKAGE_NAMES = new Map([
+  ["darwin/arm64", "no-mistakes-darwin-arm64"],
+  ["linux/arm64", "no-mistakes-linux-arm64-gnu"],
+  ["linux/x64", "no-mistakes-linux-x64-gnu"],
+  ["win32/x64", "no-mistakes-win32-x64-msvc"],
+]);
+
+function nativePackageName(platform = process.platform, arch = process.arch) {
+  return PACKAGE_NAMES.get(`${platform}/${arch}`);
 }
 
-test(
-  "compiled native CJS and ESM expose safely attributed nested constraint facts",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    for (const name of [
-      "nested-constraint-plain.sql",
-      "nested-constraints.sql",
-      "nested-constraints-single.sql",
-    ]) {
-      const sql = fixture(name);
-      const input = { sql, fileName: name };
-      const pending = cjs.parsePostgresSql(input);
-      assert.equal(typeof pending.then, "function");
-      const facts = await pending;
-      assert.deepEqual(await esm.parsePostgresSql(input), facts);
-      assert.deepEqual(facts.diagnostics, []);
-      const plain = name === "nested-constraint-plain.sql";
-      assert.deepEqual(
-        facts.statements.map((statement) => statement.kind),
-        plain ? ["doBlock"] : ["createIndex", "doBlock", "createIndex"],
-      );
-      const owner = facts.statements.find((statement) => statement.kind === "doBlock");
-      assert.equal(owner.block.complete, true);
-      assert.deepEqual(owner.block.diagnostics, []);
-      const all = facts.statements.flatMap(occurrences);
-      const constraints = all.filter((statement) => statement.kind === "alterTable");
-      assert.equal(constraints.length, plain ? 1 : 3);
-      const fk = constraints[0].operations[0];
-      assert.equal(fk.kind, "addConstraint");
-      assert.equal(fk.notValid, true);
-      assert.equal(fk.constraint.kind, "foreignKey");
-      assert.deepEqual(fk.constraint.name, {
-        value: plain ? "sample_constraint" : "FK雪",
-        identity: plain ? "sample_constraint" : "FK雪",
-        quoted: !plain,
-      });
-      assert.deepEqual(
-        constraints[0].table.parts.map((part) => part.value),
-        plain ? ["sample_child"] : ["Mý", "Chïld"],
-      );
-      assert.deepEqual(
-        fk.constraint.referencedTable.parts.map((part) => part.value),
-        plain ? ["sample_parent"] : ["Mý", "Parent"],
-      );
-      assert.deepEqual(
-        fk.constraint.columns.map((column) => column.value),
-        [plain ? "parent_id" : "Parent Id"],
-      );
-      assert.deepEqual(
-        fk.constraint.referencedColumns.map((column) => column.value),
-        [plain ? "id" : "Id"],
-      );
-      for (const statement of all) {
-        assert.equal(
-          Buffer.from(sql)
-            .subarray(statement.span.start.offset, statement.span.end.offset)
-            .toString(),
-          statement.sql,
-        );
-        if (statement.kind === "insert") assert.deepEqual(statement.insert.span, statement.span);
-      }
-      for (const statement of constraints) {
-        assert.ok(statement.span.start.offset > owner.span.start.offset);
-        assert.ok(statement.span.end.offset < owner.span.end.offset);
-      }
-      for (const diagnostic of owner.block.diagnostics) {
-        assert.match(
-          Buffer.from(sql)
-            .subarray(diagnostic.span.start.offset, diagnostic.span.end.offset)
-            .toString(),
-          /^LOCK TABLE/,
-        );
-        assert.match(diagnostic.message, /Unsupported nested procedural statement/);
-      }
-    }
-  },
-);
+function unsupportedPlatformMessage(platform = process.platform, arch = process.arch) {
+  return `Unsupported platform ${platform}/${arch}. Install with \`cargo install no-mistakes\` instead.`;
+}
 
-test(
-  "compiled nested unsupported SQL stays explicit beside supported constraints",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const input = { sql: fixture("nested-incomplete.sql") };
-    const facts = await cjs.parsePostgresSql(input);
-    assert.deepEqual(await esm.parsePostgresSql(input), facts);
-    assert.deepEqual(facts.diagnostics, []);
-    assert.equal(facts.statements[0].block.complete, false);
-    assert.equal(facts.statements[0].block.diagnostics.length, 4);
-    assert.ok(facts.statements[0].block.diagnostics.every((diagnostic) => diagnostic.span));
-    assert.ok(
-      occurrences(facts.statements[0]).some(
-        (statement) =>
-          statement.kind === "alterTable" &&
-          statement.operations.some(
-            (operation) =>
-              operation.kind === "addConstraint" &&
-              operation.constraint.name?.value === "supported",
-          ),
-      ),
-    );
-  },
-);
+function glibcVersion(report = process.report) {
+  try {
+    const header = report?.getReport?.().header;
+    return header?.glibcVersionRuntime || header?.glibcVersionCompiler || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function supportedGlibc(report = process.report) {
+  const version = glibcVersion(report);
+  if (!version) return false;
+  const [major, minor] = version.split(".").map((part) => Number.parseInt(part, 10));
+  return (
+    Number.isInteger(major) &&
+    Number.isInteger(minor) &&
+    (major > MIN_GLIBC[0] || (major === MIN_GLIBC[0] && minor >= MIN_GLIBC[1]))
+  );
+}
+
+function unsupportedGlibcMessage(report = process.report) {
+  const version = glibcVersion(report);
+  const detected = version
+    ? `Detected glibc ${version}.`
+    : "Could not detect a supported glibc runtime.";
+  return `Linux native packages require glibc 2.35 or newer. ${detected} Install with \`cargo install no-mistakes\` instead.`;
+}
+
+function missingPackageMessage(name, { staged, unusableCli = false }) {
+  if (staged) {
+    return `The native package ${name} has ${unusableCli ? "an unusable CLI artifact" : "no staged artifacts"}. From the no-mistakes repository run \`pnpm run build:native\`.`;
+  }
+  return `The optional native package ${name} is ${unusableCli ? "not executable" : "unavailable"}. Run \`npm install no-mistakes\` or \`pnpm install\` to repair optional dependencies.`;
+}
+
+function localPackagePath(name) {
+  const path = join(__dirname, "..", "..", name);
+  return existsSync(join(path, "package.json")) ? path : undefined;
+}
+
+function usableCli(path, platform = process.platform) {
+  try {
+    if (!statSync(path).isFile()) return false;
+    if (platform === "win32") return true;
+    accessSync(path, constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolveNativePackage({
+  platform = process.platform,
+  arch = process.arch,
+  resolve = require.resolve,
+  resolveLocalPackage = localPackagePath,
+  localArtifactExists = existsSync,
+  isUsableCli = usableCli,
+  report = process.report,
+} = {}) {
+  const name = nativePackageName(platform, arch);
+  if (!name) throw new Error(unsupportedPlatformMessage(platform, arch));
+  if (platform === "linux" && !supportedGlibc(report)) {
+    throw new Error(unsupportedGlibcMessage(report));
+  }
+  let unusableCli = false;
+  try {
+    const cliPath = resolve(`${name}/bin/no-mistakes${platform === "win32" ? ".exe" : ""}`);
+    const addonPath = resolve(name);
+    if (isUsableCli(cliPath, platform)) return { name, cliPath, addonPath };
+    unusableCli = true;
+  } catch {
+    // The package may still be available as the repository's sibling staging package.
+  }
+  const local = resolveLocalPackage(name);
+  if (local) {
+    const cliPath = join(local, "bin", `no-mistakes${platform === "win32" ? ".exe" : ""}`);
+    const addonPath = join(local, "bin", "no-mistakes.node");
+    if (!localArtifactExists(cliPath) || !localArtifactExists(addonPath)) {
+      throw new Error(missingPackageMessage(name, { staged: true }));
+    }
+    if (!isUsableCli(cliPath, platform)) {
+      throw new Error(missingPackageMessage(name, { staged: true, unusableCli: true }));
+    }
+    return { name, cliPath, addonPath };
+  }
+  let installed = false;
+  try {
+    resolve(`${name}/package.json`);
+    installed = true;
+  } catch {}
+  throw new Error(
+    missingPackageMessage(name, { staged: false, unusableCli: installed && unusableCli }),
+  );
+}
+
+module.exports = {
+  glibcVersion,
+  nativePackageName,
+  localPackagePath,
+  resolveNativePackage,
+  supportedGlibc,
+  unsupportedGlibcMessage,
+  unsupportedPlatformMessage,
+  usableCli,
+};

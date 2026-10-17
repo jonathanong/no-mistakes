@@ -1,8 +1,7 @@
 import { read } from '@example/db'
+import { query } from './eager-builder'
+require('./missing-mutator')
 
-function run(sql: string) {
-  return read(sql)
+export function readAfterUnknownRequire() {
+  return read(query)
 }
-
-export const callbacks = [...[run]]
-run('/* exported/spread */ SELECT id FROM posts')

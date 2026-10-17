@@ -1,15 +1,6 @@
 import { query } from "@example/db";
 
-function safe() {
-  return "TRUSTED SQL";
-}
+declare const suffix: string;
 
-function wrap(safe: () => string) {
-  return safe();
-}
-
-const sql = wrap(() => "untrusted");
-
-export function load() {
-  return query(sql);
-}
+const statement = "SELECT id FROM topics".concat(suffix);
+query(statement);

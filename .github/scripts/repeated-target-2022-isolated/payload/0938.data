@@ -1,210 +1,118 @@
-export type Relationship =
-  | "call"
-  | "import"
-  | "import-static"
-  | "import-dynamic"
-  | "import-type"
-  | "import-require"
-  | "route-import"
-  | "workspace"
-  | "package"
-  | "test"
-  | "route"
-  | "queue"
-  | "md"
-  | "ci"
-  | "workflow"
-  | "workflow-job"
-  | "workflow-step"
-  | "workflow-needs"
-  | "workflow-uses"
-  | "workflow-run"
-  | "workflow-artifact"
-  | "http"
-  | "process"
-  | "asset"
-  | "react"
-  | "dotnet"
-  | "swift"
-  | "terraform"
-  | "python"
-  | "go"
-  | "rust"
-  | "ruby"
-  | "php"
-  | "java"
-  | "kotlin"
-  | "elixir"
-  | "dart"
-  | "resource"
-  | "trpc"
-  | "all";
-
-export interface TraverseOptions {
-  files: Array<string | SymbolEntrypoint>;
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  depth?: number;
-  filters?: string[];
-  targetModules?: string[];
-  tests?: string[];
-  relationships?: Relationship[];
-  includeSymbols?: boolean;
+import { guardRegistration, protectSuiteCollector } from "./registration.mjs";
+const constructors = new WeakMap();
+/** Compose a final public constructor while retaining direct and derived new.target contracts. */
+export function guardPublicRunner(original, maximum, protect) {
+  return guardRunner(original, maximum, protect, false);
 }
 
-export type {
-  ImportClosureResult,
-  TraverseGraphOptions,
-  TraversePathsOptions,
-  TraverseProjection,
-} from "./import-closure-types";
-
-export interface DependencyFile {
-  path?: string;
-  file?: string;
-  symbol?: string;
-  queueFile?: string;
-  /** Workflow file for a virtual GitHub Actions job or step node. */
-  workflowFile?: string;
-  /** GitHub Actions job identifier for a virtual workflow job or step node. */
-  job?: string;
-  /** Zero-based step index for a virtual GitHub Actions workflow step node. */
-  step?: number;
-  /** Router file for a virtual tRPC procedure node. */
-  routerFile?: string;
-  /** Dotted procedure path for a virtual tRPC procedure node (`user.get`). */
-  procedure?: string;
-  module?: string;
-  depth: number;
-  via?: string[];
+/** Internal adapter for the native SDK browser subclass, whose collection lifecycle is public. */
+export function guardCollectionRunner(original, maximum, protect) {
+  return guardRunner(original, maximum, protect, true);
 }
 
-export interface SymbolEntrypoint {
-  file: string;
-  symbol?: string;
+/** Node final-runner composition owns instance protection; public statics still need guards. */
+export function guardRunnerStatics(original, maximum, protect) {
+  return guardRunner(original, maximum, protect, null);
 }
 
-export interface TsConfigDiagnostic {
-  kind: "ambiguous-ownership" | "invalid-config" | "invalid-extends" | "invalid-reference";
-  config: string | null;
-  file: string | null;
-  detail: string;
-  candidates: string[];
+function guardRunner(original, maximum, protect, defer) {
+  let policies = constructors.get(original);
+  if (!policies) {
+    policies = new WeakMap();
+    constructors.set(original, policies);
+  }
+  let deadlines = policies.get(protect);
+  if (!deadlines) {
+    deadlines = new Map();
+    policies.set(protect, deadlines);
+  }
+  let adapters = deadlines.get(maximum);
+  if (!adapters) {
+    adapters = new Map();
+    deadlines.set(maximum, adapters);
+  }
+  const existing = adapters.get(defer);
+  if (existing) return existing;
+  const methods = new WeakMap();
+  const statics = new Map();
+  const guarded = new Proxy(original, {
+    get(target, key, receiver) {
+      const direct = receiver === guarded;
+      const value = Reflect.get(target, key, direct ? target : receiver);
+      if (
+        typeof value === "function" &&
+        ["getCurrentSuite", "createTaskCollector", "getSuiteHooks", "setSuiteHooks"].includes(key)
+      ) {
+        if (!statics.has(value)) {
+          statics.set(
+            value,
+            new Proxy(value, {
+              apply(callable, owner, args) {
+                if (key === "getSuiteHooks" || key === "setSuiteHooks")
+                  throw new Error(
+                    "TestRunner raw suite hooks bypass native hook deadlines; register guarded public hooks instead",
+                  );
+                const result = Reflect.apply(callable, owner === guarded ? target : owner, args);
+                return key === "getCurrentSuite"
+                  ? protectSuiteCollector(result, maximum)
+                  : guardRegistration(result, "test", maximum);
+              },
+            }),
+          );
+        }
+        return statics.get(value);
+      }
+      if (!direct || typeof value !== "function") return value;
+      const descriptor = staticDescriptor(target, key);
+      // Callable-valued fields are public values, including Vitest's exported static aliases.
+      if (
+        !descriptor ||
+        typeof descriptor.value !== "function" ||
+        descriptor.enumerable === true ||
+        (descriptor?.configurable === false && descriptor.writable === false)
+      )
+        return value;
+      const existing = methods.get(value);
+      if (existing) return existing;
+      const method = new Proxy(value, {
+        apply(callable, owner, args) {
+          return Reflect.apply(callable, owner === guarded ? target : owner, args);
+        },
+      });
+      methods.set(value, method);
+      return method;
+    },
+    construct(target, args, newTarget) {
+      const runner = Reflect.construct(target, args, newTarget === guarded ? target : newTarget);
+      if (newTarget === guarded && defer !== null) protect(runner, maximum);
+      else if (defer) {
+        // super() returns before derived fields initialize. Vitest's public
+        // collection lifecycle runs after construction, before registration.
+        const beforeCollect = Reflect.get(runner, "onBeforeCollect");
+        Object.defineProperty(runner, "onBeforeCollect", {
+          configurable: false,
+          writable: false,
+          value(...paths) {
+            protect(runner, maximum);
+            return typeof beforeCollect === "function"
+              ? Reflect.apply(beforeCollect, runner, paths)
+              : undefined;
+          },
+        });
+      }
+      return runner;
+    },
+  });
+  adapters.set(defer, guarded);
+  return guarded;
 }
-
-export interface TsConfigProvenance {
-  importer: string;
-  config: string | null;
-  forced: boolean;
-}
-
-export interface DependencyResult {
-  roots: string[];
-  files: DependencyFile[];
-  diagnostics: TsConfigDiagnostic[];
-  tsconfig_provenance: TsConfigProvenance[];
-}
-
-export type ExportKind =
-  | "function"
-  | "class"
-  | "const"
-  | "let"
-  | "var"
-  | "type"
-  | "interface"
-  | "enum"
-  | "default"
-  | "re-export";
-
-export interface SymbolsOptions {
-  files: string[];
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  mode?: "list" | "signature-impact";
-  symbol?: string;
-  kinds?: ExportKind[];
-  include?: "exports" | "imports" | "both";
-}
-
-export type SymbolsListOptions = Omit<SymbolsOptions, "mode" | "symbol"> & {
-  mode?: "list";
-  symbol?: string;
-};
-
-export type SymbolsSignatureImpactOptions = SymbolsOptions & {
-  mode: "signature-impact";
-  symbol: string;
-};
-
-export interface SymbolExport {
-  name: string;
-  kind: string;
-  line: number;
-  reExport?: {
-    source: string;
-    imported: string;
-    resolved?: string;
-  };
-}
-
-export interface SymbolImport {
-  source: string;
-  imported: string;
-  local: string;
-  line: number;
-  typeOnly: boolean;
-  resolved?: string;
-}
-
-export interface SymbolFile {
-  path: string;
-  exports?: SymbolExport[];
-  imports?: SymbolImport[];
-}
-
-export interface SymbolsResult {
-  roots: string[];
-  files: SymbolFile[];
-}
-
-export type {
-  SignatureImpactCaller,
-  SignatureImpactLocation,
-  SignatureImpactResult,
-  SignatureImpactTest,
-  SignatureImpactWarning,
-} from "./signature-impact-types";
-
-export interface ProjectOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
-  tsconfig?: string;
-  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
-  config?: string;
-  filters?: string[];
-  targets?: string[];
-  files?: string[];
-  roots?: string[];
-  depth?: number;
-  assertNoFetch?: boolean;
-  direction?: "deps" | "dependents" | "both";
-  /** `reactUsages` target component (`path` or `path#Symbol`). */
-  target?: string;
-  /** `reactUsages` `--include` spec: comma-separated `stories,tests,props`. */
-  include?: string;
-}
-
-export interface CheckOptions extends ProjectOptions {
-  /** Add deterministic accounting for findings hidden by no-mistakes directives. */
-  includeSuppressed?: boolean;
-  /** Add declared config evidence; absent slots never imply SDK defaults. */
-  includeRunnerConfigDeadlines?: boolean;
+/** Class-owned descriptors distinguish methods from fields without changing Function APIs. */
+function staticDescriptor(target, key) {
+  let owner = target;
+  while (owner && owner !== Function.prototype) {
+    const descriptor = Reflect.getOwnPropertyDescriptor(owner, key);
+    if (descriptor) return descriptor;
+    owner = Reflect.getPrototypeOf(owner);
+  }
+  return undefined;
 }

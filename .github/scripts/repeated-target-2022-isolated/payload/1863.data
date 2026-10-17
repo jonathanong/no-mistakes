@@ -1,5 +1,8 @@
-CREATE TABLE public.table_level_pk (
-  id uuid NOT NULL DEFAULT uuidv7(),
-  name text,
-  PRIMARY KEY (id)
-);
+import sql, { type SQLStatement } from 'sql-template-strings'
+
+export function buildCount(query: SQLStatement) {
+  const count = sql`/* search/count */ SELECT COUNT(*) FROM (`
+  count.append(query)
+  count.append(sql`) AS matches`)
+  return count
+}

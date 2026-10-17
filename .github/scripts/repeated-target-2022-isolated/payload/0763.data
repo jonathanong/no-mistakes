@@ -1,13 +1,20 @@
--- BEGIN/ATOMIC are expression/alias identifiers, not another atomic body.
-CREATE FUNCTION conflict_alias() RETURNS void LANGUAGE SQL BEGIN ATOMIC
-  INSERT INTO target SELECT begin atomic FROM data ON CONFLICT (id) WHERE id > 0 DO NOTHING;
-END;
-SELECT 111;
-CREATE FUNCTION into_alias() RETURNS void LANGUAGE SQL BEGIN ATOMIC
-  SELECT 1 case INTO tmp;
-END;
-SELECT 112;
-EXPLAIN INSERT INTO target SELECT begin atomic FROM data ON CONFLICT (id) WHERE id > 0 DO NOTHING;
-PREPARE alias_insert AS INSERT INTO target SELECT begin atomic FROM data ON CONFLICT (id) WHERE id > 0 DO NOTHING;
-EXPLAIN (ANALYZE TRUE) SELECT 1 case INTO tmp;
-PREPARE into_plan AS SELECT 1 case INTO tmp;
+COMMENT ON FUNCTION example_function() IS 'documentation';
+ALTER INDEX example_parent ATTACH PARTITION example_child;
+COMMENT ON TABLE example_table IS
+  'First. '
+  'Second.';
+-- Quotes, modes, array types, and original Unicode spans matter.
+COMMENT ON FUNCTION "Schéma"."Fun"(IN "Name" bigint, VARIADIC text[]) IS '雪''s '
+ 'documentation';
+COMMENT ON PROCEDURE "Schéma".proc(integer) IS NULL;
+COMMENT ON FUNCTION no_signature IS 'text';
+ALTER INDEX "Schéma"."Parent" ATTACH PARTITION "Schéma"."Child";
+ALTER INDEX IF EXISTS "Schéma"."Child" RENAME TO "Renamed";
+COMMENT ON INDEX "Schéma"."Parent" IS 'parent';
+COMMENT ON TABLE example_table IS 'a' -- continuation after a line comment
+ 'b'
+ 'c';
+CREATE TABLE neighbor (label TEXT DEFAULT 'one'
+ 'two');
+INSERT INTO neighbor (label) VALUES ('a'
+ 'b');

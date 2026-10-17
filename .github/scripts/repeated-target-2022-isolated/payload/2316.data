@@ -1,12 +1,3 @@
-{
-  "entry.mts": [
-    9,
-    57,
-    61,
-    63,
-    64
-  ],
-  "import-after.mts": [
-    6
-  ]
-}
+import { repositoryObjectFactory } from '@vendor/producer';
+// A factory-created repository value has no supported canonical receiver identity.
+export const objectReceiver = repositoryObjectFactory();

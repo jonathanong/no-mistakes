@@ -1,11 +1,14 @@
-import { primary as client } from '@vendor/valkey';
+import { primary as client } from "@vendor/valkey";
+declare function opaque(value: unknown): PromiseLike<unknown>;
 function replacement() {}
-const holder = { box: { client } };
-holder.box.client = {};
-@opaque
-class Decorated {
-  static mutation = holder.box.client.get = replacement;
+function* run() {
+  yield opaque({});
+  const holder = { box: { client } };
+  holder.box.client = {};
+  holder.box.client.get = replacement;
+  function scan(value) {
+    value.get("key");
+  }
+  scan(client);
 }
-function opaque() { holder.box = { client }; }
-function scan(value) { value.get('key'); }
-scan(client);
+run().next();

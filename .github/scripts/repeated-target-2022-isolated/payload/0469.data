@@ -1,33 +1,18 @@
-import { read, sql } from '@example/db';
-function appendDelete(target: unknown) {
-  target.append(sql`; DELETE FROM records`);
-  return 1;
+import { read } from '@example/db';
+// Non-Array prototype properties must not taint intrinsic projections.
+// Accessor effects belong to their own entrypoint, not an unrelated run.
+export function ordinaryPrototypeAccesses() {
+const local = { prototype: 'local' };
+local.prototype;
+const otherGlobal = { Other: { prototype: 'local' } };
+otherGlobal.Other.prototype;
+otherGlobal['Other']['prototype'];
+function ordinaryObject() { return { prototype: 'local' }; }
+ordinaryObject().prototype;
 }
-function noOp() { return 0; }
-export function conditionalMutation(flag: boolean) {
-  const query = sql`SELECT 1`;
-  read(query, flag ? appendDelete(query) : noOp());
-}
-export function pureAlternatives(flag: boolean) {
-  const query = sql`SELECT 1`;
-  read(query, flag ? noOp() : noOp());
-}
-export function earlierRead(flag: boolean) {
-  const query = sql`SELECT 1`;
-  read(query);
-  flag ? appendDelete(query) : noOp();
-}
-function appendEmpty(target: unknown) { target.append(sql``); return 1; }
-export function unchangedMutation(flag: boolean) {
-  const query = sql`SELECT 1`;
-  read(query, flag ? appendEmpty(query) : noOp());
-}
-export function bindingReplaced(flag: boolean) {
-  let query = sql`SELECT 1`;
-  // The first argument retains the original object when the binding is replaced.
-  read(query, flag ? (query = sql`; DELETE FROM records`) : noOp());
-}
-export function annotatedMutation(flag: boolean) {
-  const query = sql`/* branch/read */ SELECT 1`;
-  read(query, flag ? appendDelete(query) : noOp());
+export function run() {
+  const parts = ['/* intrinsics/pristine */ SELECT 1'];
+  parts.push('');
+  parts.forEach(() => 0);
+  read(parts.map(value => value).join(''));
 }
