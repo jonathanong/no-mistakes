@@ -7,14 +7,6 @@ use std::sync::atomic::{fence, AtomicU64, Ordering};
 use std::sync::{LockResult, OnceLock, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::Duration;
 
-#[cfg(not(test))]
-mod pauses {
-    pub(super) fn after_odd_publish() {}
-    pub(super) fn on_odd_generation() {}
-    pub(super) fn before_second_load() {}
-}
-
-#[cfg(test)]
 pub(super) mod pauses;
 
 pub(in crate::invocation) struct ActiveDeadline {
