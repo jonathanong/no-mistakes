@@ -36,6 +36,11 @@ fn json_raw_bytes(bytes: Vec<u8>) -> Result<Box<RawValue>> {
     Ok(RawValue::from_string(String::from_utf8(bytes)?)?)
 }
 
+/// One compact serde pass. `RawValue` embeds these bytes in the outer result.
+fn json_raw_report<T: serde::Serialize + ?Sized>(value: &T) -> Box<RawValue> {
+    serde_json::value::to_raw_value(value).expect("JSON serialization of Rust structs never fails")
+}
+
 #[cfg(test)]
 mod api_tests;
 #[cfg(test)]

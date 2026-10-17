@@ -18,7 +18,9 @@ fn prepared_scope_report_helpers_cover_success_and_duplicate_import_keys() {
     let symbols = context
         .symbols_report(&prepared.reports[0], &prepared)
         .unwrap();
-    assert!(symbols.is_object());
+    assert!(serde_json::from_str::<Value>(symbols.get())
+        .unwrap()
+        .is_object());
 
     let graph = context
         .graph_report(&prepared.reports[1], &prepared, Direction::Deps)
@@ -31,7 +33,7 @@ fn prepared_scope_report_helpers_cover_success_and_duplicate_import_keys() {
     let second = context
         .import_usages_report(&prepared.reports[3], &prepared)
         .unwrap();
-    assert_eq!(first, second);
+    assert_eq!(first.get(), second.get());
 }
 
 #[test]
@@ -51,5 +53,7 @@ fn prepared_symbols_signature_impact_uses_the_traversal_helper() {
     let report = context
         .symbols_report(&prepared.reports[0], &prepared)
         .unwrap();
-    assert!(report.is_object());
+    assert!(serde_json::from_str::<Value>(report.get())
+        .unwrap()
+        .is_object());
 }

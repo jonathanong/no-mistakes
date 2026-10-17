@@ -1,5 +1,8 @@
 impl PreparedScope {
-    fn resolve_check_dependencies_report(&self, request: &AnalyzeReportRequest) -> Result<Value> {
+    fn resolve_check_dependencies_report(
+        &self,
+        request: &AnalyzeReportRequest,
+    ) -> Result<Box<RawValue>> {
         for option in request.options.keys() {
             anyhow::ensure!(
                 matches!(
@@ -19,7 +22,8 @@ impl PreparedScope {
             !ids.is_empty(),
             "dependencyReportIds must contain at least one ID"
         );
-        let mut grouped = std::collections::BTreeMap::<DerivedClosureKey, DerivedClosureGroup>::new();
+        let mut grouped =
+            std::collections::BTreeMap::<DerivedClosureKey, DerivedClosureGroup>::new();
         let mut seen_ids = std::collections::HashSet::new();
         let cwd = std::env::current_dir().context("reading current directory")?;
         for id in ids {
@@ -102,12 +106,16 @@ impl PreparedScope {
             crate::codebase::queries::resolve_check::PreparedResolveCheckResolution {
                 visible: &visible,
                 source_store: &source_store,
-                explicit_tsconfig: self.options.tsconfig.as_deref().map(|_| self.traversal.tsconfig()),
+                explicit_tsconfig: self
+                    .options
+                    .tsconfig
+                    .as_deref()
+                    .map(|_| self.traversal.tsconfig()),
                 session: &session,
                 workspace: &self.traversal.workspace_arc(),
             },
         )?;
-        Ok(crate::cli::json_value(&report))
+        Ok(json_raw_report(&report))
     }
 }
 

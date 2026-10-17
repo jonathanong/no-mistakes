@@ -23,7 +23,7 @@ impl PreparedScope {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let value = super::import_usages_options(request, options)?;
         let root = self.traversal.root().to_path_buf();
         let prepared = self
@@ -36,20 +36,20 @@ impl PreparedScope {
             self.traversal.prepared_facts(),
         );
         let report = report?;
-        Ok(crate::cli::json_value(&report))
+        Ok(json_raw_report(&report))
     }
 
     pub(super) fn symbols_report(
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let raw = super::symbols_options(request, options)?;
         let parsed: crate::napi_api::options::SymbolOptions = serde_json::from_str(&raw)?;
         let args = crate::napi_api::codebase::build_symbols_args(parsed)?;
         if args.mode == crate::codebase::symbols::SymbolsMode::SignatureImpact {
             let output = self.traversal.signature_impact_json(&args)?;
-            return Ok(serde_json::from_str(&output)?);
+            return Ok(RawValue::from_string(output)?);
         }
         let session = self.traversal.session_arc();
         let collected = crate::codebase::symbols::collect_entries_with_prepared_facts(
@@ -64,27 +64,25 @@ impl PreparedScope {
         let (entries, roots) = collected?;
         let mut output = Vec::new();
         crate::codebase::symbols::output::write_json(&roots, &entries, &mut output)?;
-        Ok(serde_json::from_slice(&output)?)
+        Ok(RawValue::from_string(String::from_utf8(output)?)?)
     }
 
     pub(super) fn flow_report(
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let raw = super::flow_options(request, options)?;
         let parsed: crate::napi_api::options::FlowOptions = serde_json::from_str(&raw)?;
         let options = crate::napi_api::project::build_flow_options(parsed)?;
-        Ok(crate::cli::json_value(
-            &self.traversal.flow_report(&options)?,
-        ))
+        Ok(json_raw_report(&self.traversal.flow_report(&options)?))
     }
 
     pub(super) fn effects_report(
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let parsed = super::options::effects_options(request, options)?;
         let kind = parsed
             .kind
@@ -103,14 +101,14 @@ impl PreparedScope {
         let report = self
             .traversal
             .effects_report(&selection, Path::new(entry), parsed.depth)?;
-        Ok(crate::cli::json_value(&report))
+        Ok(json_raw_report(&report))
     }
 
     pub(super) fn rsc_callers_report(
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let parsed = super::options::rsc_callers_options(request, options)?;
         let component = parsed
             .component
@@ -119,7 +117,7 @@ impl PreparedScope {
         let report = self
             .traversal
             .rsc_callers_report(Path::new(component), parsed.depth)?;
-        Ok(crate::cli::json_value(&report))
+        Ok(json_raw_report(&report))
     }
 }
 
@@ -150,7 +148,11 @@ impl PreparedScope {
             file.display()
         );
         let symbols = if crate::ast::legacy_symbols_share_standard_parse(&file) {
-            stored.ts.symbols.as_ref().or(stored.legacy_symbols.as_ref())
+            stored
+                .ts
+                .symbols
+                .as_ref()
+                .or(stored.legacy_symbols.as_ref())
         } else {
             stored.legacy_symbols.as_ref()
         }
@@ -172,6 +174,6 @@ impl PreparedScope {
                 diagnostics: &projection.diagnostics,
             },
         )?;
-        Ok(RawValue::from_string(crate::cli::json_string(&report))?)
+        Ok(json_raw_report(&report))
     }
 }

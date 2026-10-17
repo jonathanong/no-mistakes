@@ -1,5 +1,5 @@
 impl PreparedScope {
-    fn queue_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
+    fn queue_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Box<RawValue>> {
         let key = canonical_filter_key(&options.filters)?;
         let traversal = matches!(report_type, "queueEdges" | "queueRelated")
             || self.queue_traversal_keys.contains(&key);
@@ -48,7 +48,7 @@ impl PreparedScope {
         }
     }
 
-    fn server_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
+    fn server_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Box<RawValue>> {
         let prepared = self
             .server
             .as_ref()
@@ -85,7 +85,7 @@ impl PreparedScope {
         }
     }
 
-    fn react_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
+    fn react_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Box<RawValue>> {
         if report_type == "reactUsages" {
             let target = options
                 .target
@@ -102,7 +102,7 @@ impl PreparedScope {
                     &self.facts,
                 );
             let usages = usages?;
-            return Ok(crate::cli::json_value(&usages));
+            return Ok(json_raw_report(&usages));
         }
         let key = canonical_filter_key(&options.targets)?;
         let analysis = cached_once(&self.react_analyses, &key, &|| {
@@ -114,7 +114,7 @@ impl PreparedScope {
             )
         })?;
         if report_type == "reactAnalyze" {
-            return Ok(crate::cli::json_value(&analysis));
+            return Ok(json_raw_report(&analysis));
         }
         let prepared = crate::react_traits::prepare_check_from_loaded_config(
             self.traversal.config(),
@@ -126,7 +126,7 @@ impl PreparedScope {
             &self.facts,
             &prepared,
         );
-        Ok(crate::cli::json_value(&findings?))
+        Ok(json_raw_report(&findings?))
     }
 }
 

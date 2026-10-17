@@ -3,7 +3,7 @@ impl PreparedScope {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let raw = project_options(request, options)?;
         let parsed: ProjectOptions = serde_json::from_str(&raw)?;
         match request.report_type.as_str() {
@@ -19,20 +19,22 @@ impl PreparedScope {
                     .check
                     .as_ref()
                     .context("check analysis was not prepared")?;
-                let dependency_graph = if check.graph_plan().is_some()
-                    && self.check_uses_traversal_graph
-                {
-                    Some(self.traversal.graph_shared()?)
-                } else {
-                    None
-                };
-                Ok(crate::check_runner::json_value(&check.run(
-                    &self.check_facts,
-                    dependency_graph.as_ref(),
-                    self.traversal.session_arc(),
-                    parsed.include_suppressed,
-                    parsed.include_runner_config_deadlines,
-                )?))
+                let dependency_graph =
+                    if check.graph_plan().is_some() && self.check_uses_traversal_graph {
+                        Some(self.traversal.graph_shared()?)
+                    } else {
+                        None
+                    };
+                // Check JSON sorts every object key. Embed that value once; do not rebuild it.
+                Ok(json_raw_report(&crate::check_runner::json_value(
+                    &check.run(
+                        &self.check_facts,
+                        dependency_graph.as_ref(),
+                        self.traversal.session_arc(),
+                        parsed.include_suppressed,
+                        parsed.include_runner_config_deadlines,
+                    )?,
+                )))
             }
             _ => unreachable!("project report types are checked before dispatch"),
         }
@@ -42,7 +44,7 @@ impl PreparedScope {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let raw = playwright_options(request, options)?;
         let parsed: PlaywrightOptions = serde_json::from_str(&raw)?;
         let analysis = self.playwright_analysis(&parsed)?;

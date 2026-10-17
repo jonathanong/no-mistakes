@@ -3,7 +3,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.resolve_check_dependencies_report(request)
     }
@@ -34,7 +34,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.import_usages_report(request, &scope.options)
     }
@@ -43,7 +43,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.symbols_report(request, &scope.options)
     }
@@ -52,7 +52,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.flow_report(request, &scope.options)
     }
@@ -61,7 +61,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.effects_report(request, &scope.options)
     }
@@ -70,7 +70,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.rsc_callers_report(request, &scope.options)
     }
@@ -79,7 +79,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.project_report(request, &scope.options)
     }
@@ -88,7 +88,7 @@ impl AnalyzeProjectContext {
         &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.playwright_report(request, &scope.options)
     }
