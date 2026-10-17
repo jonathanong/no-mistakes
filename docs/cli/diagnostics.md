@@ -90,7 +90,15 @@ Unresolved, computed, and dynamic imports conservatively retain their modules
 and importers, including cycles. Executor-free callers that supply SQL literals
 to imported helpers remain roots. `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
-from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
+from helper and callback evaluation.
+`postgres.annotation.reachability_binding_visits` counts bindings in those
+liveness scans. Boundaries that explicitly seed every module skip proven inert
+module bindings; selected-root and module-initial snapshot walks still follow
+their actual owners. Captured origins and mapped argument objects remain live
+side edges even when binding values are skipped. The counter excludes template
+construction and other evaluator traversals; it does not imply undo checkpoints
+or a complete generational collector.
+`postgres.annotation.captured_reader_rebuilds`
 counts reverse capture-index reconstruction; unchanged compaction retains the
 existing index. `postgres.annotation.incoming_dense_slots_copied` counts incoming
 argument slots cloned into a branch join, including every slot of a new object

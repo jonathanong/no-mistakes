@@ -97,9 +97,11 @@ pub(super) fn collect_from_roots(
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
-    if let Some(observer) = crate::diagnostics::current() {
+    let observer = crate::diagnostics::current();
+    if let Some(observer) = &observer {
         observer.increment("postgres.annotation.reachability_walks", 1);
     }
+    let mut binding_visits = 0;
     let mut found = Reachable::default();
     if matches!(roots.module_policy, ModulePolicy::AllModules) {
         found
@@ -127,8 +129,17 @@ pub(super) fn collect_from_roots(
                 if let Some(origins) = captured.get(&env) {
                     found.pending_env.extend(origins.values().copied());
                 }
-                for value in scopes[env].values() {
-                    found.value(value, roots.modules, roots.module_policy);
+                // All module owners are already seeded. Captured origins above
+                // and mapped argument objects below remain dynamic side edges.
+                if !(matches!(roots.module_policy, ModulePolicy::AllModules)
+                    && scopes[env].is_module_only())
+                {
+                    if observer.is_some() {
+                        binding_visits += scopes[env].len() as u64;
+                    }
+                    for value in scopes[env].values() {
+                        found.value(value, roots.modules, roots.module_policy);
+                    }
                 }
                 if let Some(bindings) = mapped.get(&env) {
                     found
@@ -152,5 +163,19 @@ pub(super) fn collect_from_roots(
             }
         }
     }
+    if let Some(observer) = observer {
+        observer.increment(
+            "postgres.annotation.reachability_binding_visits",
+            binding_visits,
+        );
+    }
     found
 }
+
+#[cfg(test)]
+#[path = "reachable/frontier_tests.rs"]
+mod frontier_tests;
+
+#[cfg(test)]
+#[path = "reachable/frontier_work_tests.rs"]
+mod frontier_work_tests;

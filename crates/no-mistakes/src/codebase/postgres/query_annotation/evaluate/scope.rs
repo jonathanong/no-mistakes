@@ -8,7 +8,12 @@ use std::{
 #[derive(Default)]
 struct Bindings {
     values: FxHashMap<String, Value>,
-    builders: OnceLock<FxHashSet<u64>>,
+    builders: OnceLock<BuilderIndex>,
+}
+// An empty builder set alone cannot prove the absence of lexical/heap roots.
+enum BuilderIndex {
+    ModuleOnly,
+    Builders(FxHashSet<u64>),
 }
 impl Clone for Bindings {
     fn clone(&self) -> Self {
@@ -31,6 +36,28 @@ impl Eq for Bindings {}
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 
 impl Scope {
+    /// Only completed inert templates may install this proof. Every mutable
+    /// Scope view clears the same cache before exposing its binding values.
+    pub(super) fn mark_module_only(&mut self) {
+        if self.values().all(|value| {
+            matches!(
+                value,
+                Value::Unknown
+                    | Value::Unsupported
+                    | Value::Number(_)
+                    | Value::Boolean(_)
+                    | Value::Prefix(_, _, None)
+                    | Value::Function(_, _, super::Capture::Module)
+            )
+        }) {
+            Arc::make_mut(&mut self.0).builders = OnceLock::from(BuilderIndex::ModuleOnly);
+        }
+    }
+
+    pub(super) fn is_module_only(&self) -> bool {
+        matches!(self.0.builders.get(), Some(BuilderIndex::ModuleOnly))
+    }
+
     pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
         let builders = self.0.builders.get_or_init(|| {
             fn collect(
@@ -65,9 +92,12 @@ impl Scope {
             for value in self.values() {
                 collect(value, &mut builders, &mut visited);
             }
-            builders
+            BuilderIndex::Builders(builders)
         });
-        !builders.is_disjoint(ids)
+        match builders {
+            BuilderIndex::ModuleOnly => false,
+            BuilderIndex::Builders(builders) => !builders.is_disjoint(ids),
+        }
     }
 }
 impl From<FxHashMap<String, Value>> for Scope {
@@ -108,3 +138,9 @@ impl<'a> IntoIterator for &'a mut Scope {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod frontier_tests;
+
+#[cfg(test)]
+pub(in crate::codebase::postgres::query_annotation::evaluate) mod frontier_fixture;

@@ -59,10 +59,11 @@ fn construct<'a, F: Fn(&str, &Path) -> Option<PathBuf>>(
     count(observer, "postgres.annotation.module_initializations");
     isolated.steps(&files[path].facts.roots, path, &mut env, 16, true);
     isolated.initialize_module_globals(path, env);
-    let scope = isolated.scopes.pop().expect("one independent module frame");
+    let mut scope = isolated.scopes.pop().expect("one independent module frame");
     // Eligibility admits only canonical scalar/function atoms and binding
     // reservations. Those steps cannot allocate a builder, argument object or
     // local frame; module functions therefore all use this registered owner.
+    scope.mark_module_only();
     if let Some(observer) = observer {
         observer.increment("postgres.annotation.initial_template.template_builds", 1);
         observer.increment(
