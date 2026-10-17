@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use std::time::Duration;
 
 /// One live per-file `check_timeout` on the installing thread. The deadline is
@@ -8,7 +8,7 @@ fn per_file_check_timeout(c: &mut Criterion) {
         .expect("install live deadline");
     c.bench_function("per_file_check_timeout", |b| {
         b.iter(|| {
-            black_box(no_mistakes::invocation::check_timeout().expect("deadline is still live"))
+            no_mistakes::invocation::check_timeout().expect("deadline is still live");
         });
     });
 }
