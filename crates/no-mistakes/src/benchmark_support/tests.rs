@@ -42,9 +42,11 @@ fn dense_branch_fixture_keeps_query_findings_and_tracks_copied_slots() {
         "twelve executor roots copy only incoming changed slots; the executor-free callback probe is no longer a speculative root"
     );
     assert_eq!(diagnostics.work["postgres.annotation.modules"], 14);
+    // Direct increments on ef62b0c5a record 84 walks for this fixture.
+    // The per-root batch must keep that total.
     assert_eq!(
         diagnostics.work["postgres.annotation.reachability_walks"],
-        92
+        84
     );
     assert_eq!(
         diagnostics.work["postgres.annotation.target_resolutions"],
