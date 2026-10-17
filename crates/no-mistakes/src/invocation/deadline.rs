@@ -186,3 +186,7 @@ pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
 #[cfg(test)]
 #[path = "deadline/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "deadline/large_timeout_tests.rs"]
+mod large_timeout;
