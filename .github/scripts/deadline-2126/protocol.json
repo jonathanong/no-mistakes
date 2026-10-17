@@ -1,7 +1,7 @@
 {
   "status": "REVIEWED_ACTIVE_DEADLINE_DIAGNOSTIC",
-  "baseline": "21b478d65e404174f32b01f2ac50f64f85db00e3",
-  "candidate": "ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7",
+  "baseline": "95c34f29bb3606ee712268ec6ec3f91564eb1990",
+  "candidate": "8f5468c9767c1399835d7e04a88292accd474fc9",
   "runner": "ubuntu-24.04-arm",
   "toolchain": "1.99.1 (58cf8f9c3)",
   "build": {
@@ -18,7 +18,7 @@
     "artifact_transport": "same-run upload-artifact/download-artifact; exact names,run,source,hash,size bound; never fallback"
   },
   "fixture": {
-    "source": "Exact current integration baseline 21b478d65e404174f32b01f2ac50f64f85db00e3",
+    "source": "Exact actual integration baseline95c34f29bb3606ee712268ec6ec3f91564eb1990; stop/refreeze ifintegrationbasechanges",
     "manifest": "sorted Git path/mode/SHA256/bytes plus symlink target; complete inventory pinned before publication",
     "config": "saved empty JSON config copied as own immutablepackage file; never alter fixture",
     "discovery": "actual candidate/discovered/classified counts retained; ~23k is expectation not acceptance equality substitute"
@@ -102,7 +102,7 @@
   "sample_inference": "Two blocks per cell are descriptive, not a guaranteed regression or tail gate.",
   "source_proofs": {
     "actual": "source-proofs.json pins complete current baseline fixture and exact pair parser/build profile/dependency source checks",
-    "native": "NOT EXECUTED: two fresh ARM same-run producers required; old ede artifacts not reused",
+    "native": "NOT EXECUTED: publicpairsourceverified; freshsame-run2ARMCLIproducersrequired, candidateactual2\u21921DMB/imagecodegenverification pendingartifact",
     "workflow": "Final local units and pinned actionlint must pass before reviewed publication; no dispatch performed"
   },
   "prior_run": {
@@ -110,5 +110,13 @@
     "source": "86f086abeadafe988bbbbacaee0e7526a5fded09",
     "result": "96timed+24preflight retained; CPUadverse and inheritedRSSfloor unchanged historical evidence"
   },
-  "rss_observer": "GNUtime thinintermediary child %M; bounded harmless localcapability proof, hosted samecommand rawreceipt mandatory"
+  "rss_observer": "GNUtime thinintermediary child %M; bounded harmless localcapability proof, hosted samecommand rawreceipt mandatory",
+  "history": {
+    "prior_gnu_time_run": 39042710945,
+    "prior_pair": [
+      "21b478d65e404174f32b01f2ac50f64f85db00e3",
+      "ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7"
+    ],
+    "prior_result": "Authenticated96+24; activejobs4CPUadverse remains retained; no unchangedrerun. Newpair requires genuinependingruntimefencecorrection."
+  }
 }

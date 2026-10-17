@@ -1,6 +1,6 @@
 {
-  "source": "21b478d65e404174f32b01f2ac50f64f85db00e3",
-  "tree": "3a35f0db32a19296a071d11efe997a9b245f40ed",
+  "source": "95c34f29bb3606ee712268ec6ec3f91564eb1990",
+  "tree": "2987d1b76f892e2f3181ed29272ca4025415ada2",
   "files": [
     {
       "path": ".ast-grep/rule-tests/no-aggregate-standalone-analysis-test.yml",
@@ -25811,8 +25811,14 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project.rs",
       "mode": "100644",
-      "sha256": "d314f6c560d118de521ede6ce94ddd33c55fba5895649cf671d1fa971480c979",
-      "bytes": 6632
+      "sha256": "67af40aad0965760ca7832a704a471da33710a32a53b5567802956c0b68ac924",
+      "bytes": 6528
+    },
+    {
+      "path": "crates/no-mistakes/src/napi_api/analyze_project/byte_oracle_tests.rs",
+      "mode": "100644",
+      "sha256": "afad953998e2b4264b2b2fbacf0d0da44a3bd1ea5dfca0224b16eaba9ed3a2a0",
+      "bytes": 4220
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/cli_parity_tests.rs",
@@ -25829,8 +25835,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context.rs",
       "mode": "100644",
-      "sha256": "71146494a6e44599d6474b842b427568b057b51f1e808406fbd48b784f6b5a3b",
-      "bytes": 1657
+      "sha256": "ba2493c06bc33c93c1a89b36dbc7a34be432bfa6afa60f9d19c5a466c77f2b98",
+      "bytes": 1702
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/api.rs",
@@ -25841,8 +25847,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/api_reports.rs",
       "mode": "100644",
-      "sha256": "6628ae3fe9490a4650f0241a8ed950bca402858f8a575d3986ba724287e872b3",
-      "bytes": 2943
+      "sha256": "f24c248af4ba3f53491b195d587116aa17691fad4c129ff0ef849dfa09176cdb",
+      "bytes": 3007
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/api_tests.rs",
@@ -25877,8 +25883,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/deadline_evidence_tests.rs",
       "mode": "100644",
-      "sha256": "977bdb2e74d1e6d9965e78fd5746e275b9bd99b54d613c1009ca9e3a6d3f0d13",
-      "bytes": 1648
+      "sha256": "a1ec251d271277186e702ae59c5fa63ed695deada11bdc2d95e15a1f8f325bf9",
+      "bytes": 1846
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/plan_helpers.rs",
@@ -25895,26 +25901,26 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/report_error_tests.rs",
       "mode": "100644",
-      "sha256": "3d38d950c925dd425819e8c29daa39e6d7a30cb00fc9a79ed2f8c94917f825b7",
-      "bytes": 5292
+      "sha256": "27c6ddc1e11675f6de98327ff84bb908346f81e1381843c4e7ae915fd80db688",
+      "bytes": 5342
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/report_success_tests.rs",
       "mode": "100644",
-      "sha256": "e52805b086764c1f9d9152c23d3d9418ac59ba0eb87606ef508a0ef04d98a3f5",
-      "bytes": 1845
+      "sha256": "e57733990ead7fa8b3c40b20886db6a0ddcb4106fbd0f01cd7350515416b3bc8",
+      "bytes": 1985
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_cached_reports.rs",
       "mode": "100644",
-      "sha256": "f54c2080f3d367289beb47c98c8a1287014f9410b6b8a2511eb6f7f719f4929d",
-      "bytes": 6473
+      "sha256": "330391bc13fd16d43eaf62c9946848ac80be16915643ab85d58c06a7fff58750",
+      "bytes": 6476
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_derived_resolve.rs",
       "mode": "100644",
-      "sha256": "6ea4d15ed6250bc6defe75203a0cb17261c3f3bd5576ede72ea5f4ba6f2cdc75",
-      "bytes": 8436
+      "sha256": "f19bf870ca5b33ea9cf578a887c3bae6eee29b8e1e683840d54cbedb00326876",
+      "bytes": 8556
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_derived_resolve_tests.rs",
@@ -25925,8 +25931,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_graph_reports.rs",
       "mode": "100644",
-      "sha256": "34a96cae04e7e6ea29203d3393e6773df96d0de3f85bdc9d91d38668cfc75d04",
-      "bytes": 6659
+      "sha256": "bee732264d1141eb9800dda14b8d8300dc291f0539652f010b85f7feb45c3f45",
+      "bytes": 6702
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_helpers.rs",
@@ -25955,8 +25961,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_project_reports.rs",
       "mode": "100644",
-      "sha256": "051a3dead0dd59e5039b94be98d3ed4a25d5841283a329c1e35c04f527d3bb28",
-      "bytes": 3312
+      "sha256": "8e2f96b180f8cc597e05dee4694439eb0723519a9b13b3715ba11d000d3177fe",
+      "bytes": 3505
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context/scope_seed_import.rs",
@@ -25997,8 +26003,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/context_render.rs",
       "mode": "100644",
-      "sha256": "3100c57e5c2795aef127808e116df200931df6c202530443dbb7a02c1b5063f9",
-      "bytes": 4419
+      "sha256": "92d5c380e8de2251932e93d8863315d6f1aca3bb1d079599bd3e05236717cd86",
+      "bytes": 4717
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/dispatch.rs",
@@ -26211,10 +26217,22 @@
       "bytes": 7101
     },
     {
+      "path": "crates/no-mistakes/src/napi_api/analyze_project/report_adapter.rs",
+      "mode": "100644",
+      "sha256": "2d0dba6238d107e71b809ab40ba12cdac220e4078ee3c1b43aa35638c655deea",
+      "bytes": 151
+    },
+    {
+      "path": "crates/no-mistakes/src/napi_api/analyze_project/report_serialization.rs",
+      "mode": "100644",
+      "sha256": "530a248cd7a7dd2cc8755da46c4a4da327c20841cb9b7e9d75b9aa6cf43143bb",
+      "bytes": 517
+    },
+    {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/tests.rs",
       "mode": "100644",
-      "sha256": "c804bfb5b138ebb08bf7e463ce272a66ed5ed032b2a04315c8c8da6dd4badbbe",
-      "bytes": 15786
+      "sha256": "71e01955dda8e52345fdf5b2115bf3df8a584e4bff0722c032954106faf98949",
+      "bytes": 15824
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/tests/architecture_override.rs",
@@ -26281,6 +26299,12 @@
       "mode": "100644",
       "sha256": "38e1b6c7dd4346e226fc60d8563c188bb28aab4263f2c2dae5bf8a69d1cf0a92",
       "bytes": 3411
+    },
+    {
+      "path": "crates/no-mistakes/src/napi_api/analyze_project/tests/serialize_once.rs",
+      "mode": "100644",
+      "sha256": "a566369e8ef304145ec9d7e3dbb42581bd5f06b8fe59fc28c4be13fa470a6234",
+      "bytes": 1734
     },
     {
       "path": "crates/no-mistakes/src/napi_api/analyze_project/tests/symbol_reports.rs",
@@ -82891,6 +82915,12 @@
       "mode": "100644",
       "sha256": "ddadb22209a4466c1f4c6075e56c0317cfe9a29fed48c6dacdb3241447368efc",
       "bytes": 76
+    },
+    {
+      "path": "test-cases/codebase-analysis/analyze-serialize-once/requests.json",
+      "mode": "100644",
+      "sha256": "f0127f7d564d7638e520142e071c8bf36ad4346f8fe47d796fc7af10c692d541",
+      "bytes": 3281
     },
     {
       "path": "test-cases/codebase-analysis/api-readme-perf/README.md",

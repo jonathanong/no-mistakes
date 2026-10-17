@@ -1,13 +1,13 @@
 {
-  "status": "ACTUAL_PUBLIC_GIT_SOURCE_CHECKS_ONLY_NO_NATIVE_EXECUTION",
-  "baseline": "21b478d65e404174f32b01f2ac50f64f85db00e3",
-  "candidate": "ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7",
+  "status": "ACTUAL_PUBLIC_PAIR_SOURCE_VERIFIED_EXECUTION_BLOCKED_PENDING_REVIEW",
+  "baseline": "95c34f29bb3606ee712268ec6ec3f91564eb1990",
+  "candidate": "8f5468c9767c1399835d7e04a88292accd474fc9",
   "fixture": {
-    "entries": 23396,
-    "unique_blobs": 18087,
-    "tree": "3a35f0db32a19296a071d11efe997a9b245f40ed",
-    "inventory_sha256": "80b8e4ad45c894d976c6c409a1019f6401002c68eba70f8776e92c76e0ba47df",
-    "method": "Complete git ls-tree -rz and single cat-file batch; hashes Git blob bytes, modes and Gitlink identities exactly, matching tracked checkout inventory semantics"
+    "entries": 23401,
+    "unique_blobs": 18092,
+    "tree": "2987d1b76f892e2f3181ed29272ca4025415ada2",
+    "inventory_sha256": "911162ae79df7a29915cc251d31432a2d04711fb95c14bcaf825c29b93d2c0fb",
+    "method": "Complete git ls-tree -rz plus alluniqueGitblob bytes via cat-file batch; Gitlink identities explicit"
   },
   "source": {
     "Cargo.toml": {
@@ -28,12 +28,11 @@
     "crates/no-mistakes/src/invocation.rs": {
       "baseline_sha256": "36047f1c09934f884732ff72436fac8b6895f1f6aff220eb429126b553567b2e",
       "candidate_sha256": "36047f1c09934f884732ff72436fac8b6895f1f6aff220eb429126b553567b2e",
-      "equal": true,
-      "parser_lines": [
-        "            timeout: nonzero_seconds(timeout),",
-        "            lock_timeout: nonzero_seconds(lock_timeout),",
-        "pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {"
-      ]
+      "equal": true
     }
-  }
+  },
+  "git_provider": "/tmp/no-mistakes-2131-raw-symbol-oracle",
+  "candidate_tree": "7970fbe77be015e8da3b487ea0b457a17ec70953",
+  "public_closure": "/tmp/nm2126-first-fence-normal-publication/public-source-closure.json",
+  "public_closure_sha256": "3e18040c85cd49e7fc1209861bafd7e6433adb71005849588cb2c720f99686cf"
 }

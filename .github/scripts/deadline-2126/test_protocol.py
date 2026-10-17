@@ -6,7 +6,7 @@ from measure import capacity
 class ProtocolTests(unittest.TestCase):
     def test_saved_pair_and_budget(self):
         p=json.loads((Path(__file__).parent/'protocol.json').read_text())
-        self.assertEqual(p['runner'],'ubuntu-24.04-arm');self.assertEqual(p['baseline'],'21b478d65e404174f32b01f2ac50f64f85db00e3');self.assertEqual(p['candidate'],'ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7')
+        self.assertEqual(p['runner'],'ubuntu-24.04-arm');self.assertEqual(p['baseline'],'95c34f29bb3606ee712268ec6ec3f91564eb1990');self.assertEqual(p['candidate'],'8f5468c9767c1399835d7e04a88292accd474fc9')
         self.assertEqual(capacity([1,2,1,2],2300),2200)
         with self.assertRaises(AssertionError):capacity([1,2,1,2],2199)
         with self.assertRaises(AssertionError):capacity([1,2,1,120],2500)
