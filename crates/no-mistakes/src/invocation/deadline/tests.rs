@@ -390,7 +390,10 @@ fn poisoned_deadline_write_still_publishes_the_guard() {
         let mut guard = active_deadline()
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        *guard = Some(sample_deadline(std::time::Instant::now()));
+        *guard = Some(Deadline {
+            owner: Some(std::thread::current().id()),
+            ..sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30))
+        });
         assert!(guard.is_some());
         panic!("poison the deadline lock");
     }));
