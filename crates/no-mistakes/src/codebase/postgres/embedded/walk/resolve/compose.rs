@@ -23,6 +23,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn helper_provenance(
             Expression::CallExpression(call) => match unwrap_ts_wrappers(&call.callee) {
                 Expression::Identifier(name) => {
                     visitor.functions.has_static_helper(name.name.as_str())
+                        || visitor.is_imported_helper(name.name.as_str())
                 }
                 Expression::StaticMemberExpression(member) if member.property.name == "append" => {
                     contains_helper(&member.object, visitor)

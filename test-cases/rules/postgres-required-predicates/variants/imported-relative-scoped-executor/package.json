@@ -1,0 +1,5 @@
+{
+  "name": "scoped-relative-imported-helpers",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

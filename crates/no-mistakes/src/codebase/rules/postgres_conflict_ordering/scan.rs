@@ -25,7 +25,7 @@ pub(super) fn scan_with_sources(
 ) -> Result<crate::codebase::rules::PostgresFindings> {
     let catalog = facts.postgres_ordering_catalog(&opts.schema_catalog_path)?;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root);
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))

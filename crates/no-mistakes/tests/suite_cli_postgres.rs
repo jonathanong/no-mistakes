@@ -28,6 +28,8 @@ mod cli_check_rules_postgres_fk_on_delete;
 mod cli_check_rules_postgres_generated;
 #[path = "cli_check_rules_postgres_identifier_length.rs"]
 mod cli_check_rules_postgres_identifier_length;
+#[path = "cli_check_rules_postgres_imported_helpers.rs"]
+mod cli_check_rules_postgres_imported_helpers;
 #[path = "cli_check_rules_postgres_key_column_types.rs"]
 mod cli_check_rules_postgres_key_column_types;
 #[path = "cli_check_rules_postgres_migrations.rs"]

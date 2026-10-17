@@ -1,9 +1,10 @@
 use super::super::bindings::sql_statement_type_bindings;
+use super::super::helpers;
 use super::super::options::TrustedSqlTag;
 use super::super::relative::{PendingRelativeCall, PendingRelativeSpan};
 use super::super::scoped_bindings::ScopedExecutors;
+use super::imported;
 use super::resolve;
-use crate::codebase::postgres::embedded::fragment_debug::PendingImportedSqlCall;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
@@ -23,7 +24,6 @@ pub(crate) struct BindingState {
     pub(crate) initialized: bool,
     pub(crate) sql_builder: bool,
     pub(crate) sql_source_positions: Vec<super::super::EmbeddedSqlSourcePosition>,
-    pub(crate) pending_imported_helper: Option<String>,
 }
 
 pub(crate) struct ScopeVisitor<'a> {
@@ -38,7 +38,9 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) argument_frames: usize,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
-    pub(crate) pending_imported_calls: Vec<PendingImportedSqlCall>,
+    /// Local names bound by value imports; a call to one is an imported helper.
+    pub(crate) imported_names: crate::fx::FxHashSet<String>,
+    pub(crate) imported_sites: std::cell::RefCell<helpers::Sites>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) confirmed_order: Vec<u32>,
@@ -59,9 +61,8 @@ pub(crate) struct ScopeVisitor<'a> {
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
-    pub(crate) local_helpers:
-        crate::fx::FxHashMap<String, resolve::functions::provenance::RecoveredSql>,
-    pub(crate) pending_imported_calls: Vec<PendingImportedSqlCall>,
+    pub(crate) exported_helpers: crate::fx::FxHashMap<String, helpers::HelperSummary>,
+    pub(crate) pending_imported: Vec<helpers::PendingImportedSql>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
     pub(crate) fragment_sites: Vec<Option<u32>>,
@@ -92,7 +93,8 @@ pub(crate) fn collect_calls<'a>(
         argument_frames: 0,
         calls: Vec::new(),
         call_spans: Vec::new(),
-        pending_imported_calls: Vec::new(),
+        imported_names: imported::value_import_names(program),
+        imported_sites: Default::default(),
         pending_spans: BTreeMap::new(),
         pending_calls: Vec::new(),
         confirmed_order: Vec::new(),
@@ -111,11 +113,23 @@ pub(crate) fn collect_calls<'a>(
         sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);
+    let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
+    let pending_imported = helpers::finalize::finalize(
+        helpers::finalize::Walked {
+            calls: &mut visitor.calls,
+            call_spans: &visitor.call_spans,
+            pending_calls: &mut visitor.pending_calls,
+            pending_spans: &visitor.pending_spans,
+            fragments: &mut visitor.fragments,
+            fragment_variants: &mut visitor.fragment_variants,
+        },
+        &sites,
+    );
     CollectedCalls {
         calls: visitor.calls,
         call_spans: visitor.call_spans,
-        local_helpers: visitor.functions.summaries(),
-        pending_imported_calls: visitor.pending_imported_calls,
+        exported_helpers: visitor.functions.exported_helpers(),
+        pending_imported,
         pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,
         fragment_variants: visitor.fragment_variants,

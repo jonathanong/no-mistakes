@@ -1,12 +1,6 @@
 use super::{EmbeddedSqlCall, EmbeddedSqlVariant, PendingRelativeScope};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct PendingImportedSqlCall {
-    pub span: (u32, u32),
-    pub local: String,
-}
-
 /// A SQL fragment returned from a builder or appended to a
 /// statement builder. These are deliberately separate from executed calls:
 /// structural policies can inspect them without treating builder code as an
@@ -29,11 +23,10 @@ pub struct EmbeddedSqlFileFacts {
     pub calls: Vec<EmbeddedSqlCall>,
     /// Private call identities, parallel to `calls`; public summaries stay unchanged.
     pub(crate) call_spans: Vec<(u32, u32)>,
-    /// Same-file summaries collected during this file's single AST pass.
-    pub(crate) local_helpers:
-        crate::fx::FxHashMap<String, super::walk::resolve::functions::provenance::RecoveredSql>,
-    /// Executor arguments whose imported builder can be projected after resolution.
-    pub(crate) pending_imported_calls: Vec<PendingImportedSqlCall>,
+    /// Summaries of this file's helpers, collected during its single AST pass.
+    pub(crate) exported_helpers: crate::fx::FxHashMap<String, super::helpers::HelperSummary>,
+    /// Executor SQL that is complete once imported helpers resolve.
+    pub(crate) pending_imported: Vec<super::helpers::PendingImportedSql>,
     /// Real TypeScript comments from the same parse, excluding SQL literal text.
     pub(crate) source_comment_spans: Vec<(u32, u32)>,
     pub fragments: Vec<EmbeddedSqlFragment>,
@@ -67,11 +60,9 @@ impl std::fmt::Debug for EmbeddedSqlFileFacts {
 }
 
 impl EmbeddedSqlFileFacts {
-    pub(crate) fn apply_imported_helper(
-        &mut self,
-        span: (u32, u32),
-        recovered: super::walk::resolve::functions::provenance::RecoveredSql,
-    ) {
+    /// Replace the unrecovered call at `span` with its completed form. Only a
+    /// call still left `Dynamic` by the walk is replaced.
+    pub(crate) fn apply_imported_sql(&mut self, span: (u32, u32), completed: EmbeddedSqlCall) {
         let Some(index) = self
             .call_spans
             .iter()
@@ -79,19 +70,8 @@ impl EmbeddedSqlFileFacts {
         else {
             return;
         };
-        let call = &mut self.calls[index];
-        if call.kind != super::EmbeddedSqlKind::Dynamic
-            || call.sql_text.is_some()
-            || !call.variants.is_empty()
-        {
-            return;
+        if self.calls[index].kind == super::EmbeddedSqlKind::Dynamic {
+            self.calls[index] = completed;
         }
-        let (sql, placeholders) =
-            super::placeholders::publish_placeholders_with_positions(recovered.sql);
-        call.sql_text = Some(sql);
-        call.kind = super::EmbeddedSqlKind::Composed;
-        call.declaration_line = Some(recovered.line);
-        call.sql_source_positions = recovered.positions;
-        call.recovered_placeholder_positions = placeholders;
     }
 }

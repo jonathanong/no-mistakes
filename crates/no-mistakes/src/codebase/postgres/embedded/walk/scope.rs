@@ -56,7 +56,6 @@ impl ScopeVisitor<'_> {
                         initialized: false,
                         sql_builder,
                         sql_source_positions: Vec::new(),
-                        pending_imported_helper: None,
                     },
                 );
             }
@@ -85,7 +84,6 @@ impl ScopeVisitor<'_> {
                     initialized: false,
                     sql_builder: false,
                     sql_source_positions: Vec::new(),
-                    pending_imported_helper: None,
                 },
             );
         }
@@ -103,7 +101,6 @@ impl ScopeVisitor<'_> {
                 binding.sql_builder = false;
                 binding.sql = None;
                 binding.sql_source_positions.clear();
-                binding.pending_imported_helper = None;
                 return;
             }
         }
@@ -189,7 +186,6 @@ fn param_is_sql_statement(
 pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingState) {
     binding.executor_alias = None;
     binding.kind = EmbeddedSqlKind::Dynamic;
-    binding.pending_imported_helper = None;
     binding.condition_key = None;
     binding.variants = None;
     if binding
@@ -201,7 +197,7 @@ pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingSta
     }
 }
 
-pub(super) fn has_known_leading_statement(mut sql: &str) -> bool {
+pub(crate) fn has_known_leading_statement(mut sql: &str) -> bool {
     loop {
         sql = sql.trim_start();
         if let Some(comment) = sql.strip_prefix("--") {

@@ -42,7 +42,7 @@ pub(super) fn scan(
     let tracked = catalog::tracked_columns(&live, opts);
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     findings.extend(catalog::stale_extras(&live, &opts.extras));
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root);
     if tracked.is_empty() {
         return Ok(findings);
     }

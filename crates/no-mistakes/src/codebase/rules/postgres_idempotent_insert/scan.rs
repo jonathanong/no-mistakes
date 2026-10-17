@@ -44,7 +44,7 @@ pub(super) fn scan(
         trigger_writes: &opts.trigger_writes,
     };
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root);
     if opts.scan_embedded {
         for file in &facts.embedded {
             let rel = relative_slash_path(root, &file.path);

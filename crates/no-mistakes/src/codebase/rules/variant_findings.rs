@@ -2,6 +2,7 @@ use super::{PostgresFindings, RuleFinding};
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::SqlStatementFileFacts;
 use crate::fx::{FxHashMap, FxHashSet};
+use std::path::{Path, PathBuf};
 
 type Identity = (String, usize, String, Option<String>);
 
@@ -9,9 +10,34 @@ type Identity = (String, usize, String, Option<String>);
 pub(crate) struct VariantFindingDedup {
     seen: FxHashSet<Identity>,
     merged: FxHashMap<Identity, (usize, FxHashSet<String>)>,
+    /// Lets a finding on SQL recovered from another module name that module.
+    root: Option<PathBuf>,
 }
 
 impl VariantFindingDedup {
+    pub(crate) fn for_root(root: &Path) -> Self {
+        Self {
+            root: Some(root.to_path_buf()),
+            ..Self::default()
+        }
+    }
+
+    /// The module whose physical lines `position` counts, when it is not the
+    /// executor's own file. Findings are attributed to that module so its
+    /// suppression directives apply.
+    fn foreign_file(
+        &self,
+        facts: &SqlStatementFileFacts,
+        position: &crate::codebase::postgres::statements::SqlFactPosition,
+    ) -> Option<String> {
+        let path = position
+            .source_path
+            .as_ref()
+            .filter(|path| **path != facts.path)?;
+        let root = self.root.as_deref()?;
+        Some(crate::codebase::ts_source::relative_slash_path(root, path))
+    }
+
     pub(crate) fn push(
         &mut self,
         output: &mut PostgresFindings,
@@ -22,27 +48,33 @@ impl VariantFindingDedup {
     ) {
         if let Some(locations) = &facts.variant_locations {
             if let Some(position) = locations.position(site) {
-                let disabled_call = source.is_some_and(|source| {
-                    crate::codebase::ts_source::matching_disable_directive(
-                        source,
-                        Some(
-                            position
-                                .source_path
-                                .as_ref()
-                                .map_or(locations.original_call_line, |_| {
-                                    position.source_line as u32
-                                }),
-                        ),
-                        &finding.rule,
-                    )
-                    .is_some()
-                });
+                // A rule that has not named the module itself still carries the
+                // executor's file, and `source` is then that file's text too.
+                let retarget = self
+                    .foreign_file(facts, position)
+                    .filter(|file| *file != finding.file);
+                let disabled_call = retarget.is_none()
+                    && source.is_some_and(|source| {
+                        crate::codebase::ts_source::matching_disable_directive(
+                            source,
+                            Some(
+                                position
+                                    .source_path
+                                    .as_ref()
+                                    .map_or(locations.original_call_line, |_| {
+                                        position.source_line as u32
+                                    }),
+                            ),
+                            &finding.rule,
+                        )
+                        .is_some()
+                    });
                 let line = if disabled_call && position.source_path.is_none() {
                     locations.original_call_line as usize
                 } else {
                     position.source_line
                 };
-                move_line(&mut finding, line);
+                move_line(&mut finding, retarget, line);
                 // Keep disabled executions for suppression accounting, without
                 // hiding another execution of the same SQL token.
                 if !disabled_call && !self.keep_at(&finding, position.source_offset) {
@@ -85,7 +117,7 @@ impl VariantFindingDedup {
             self.push(output, facts, site, source, finding);
             return;
         };
-        move_line(&mut finding, line);
+        move_line(&mut finding, None, line);
         let identity = identity(&finding, offset);
         if let Some((index, messages)) = self.merged.get_mut(&identity) {
             let original = output.get_mut(*index);
@@ -124,11 +156,13 @@ fn identity(finding: &RuleFinding, offset: usize) -> Identity {
     )
 }
 
-fn move_line(finding: &mut RuleFinding, line: usize) {
+fn move_line(finding: &mut RuleFinding, file: Option<String>, line: usize) {
     let prefix = format!("{}:{}:", finding.file, finding.line);
+    let file = file.unwrap_or_else(|| finding.file.clone());
     if let Some(message) = finding.message.strip_prefix(&prefix) {
-        finding.message = format!("{}:{line}:{message}", finding.file);
+        finding.message = format!("{file}:{line}:{message}");
     }
+    finding.file = file;
     finding.line = line;
 }
 

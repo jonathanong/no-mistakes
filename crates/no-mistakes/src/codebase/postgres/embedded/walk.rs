@@ -13,6 +13,7 @@ mod flow;
 mod imported;
 pub(crate) mod resolve;
 mod scope;
+pub(crate) use scope::has_known_leading_statement;
 mod state;
 mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};

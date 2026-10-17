@@ -10,7 +10,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn contains_parameter_helper(
     match unwrap_ts_wrappers(&call.callee) {
         Expression::Identifier(ident) => {
             !visitor.shadowed_locally(ident.name.as_str())
-                && visitor.functions.is_parameter_builder(ident.name.as_str())
+                && (visitor.functions.is_parameter_builder(ident.name.as_str())
+                    || visitor.is_imported_helper(ident.name.as_str())
+                        && crate::codebase::postgres::embedded::walk::imported::passes_builder(
+                            visitor, call,
+                        ))
         }
         Expression::StaticMemberExpression(member) if member.property.name == "append" => {
             contains_parameter_helper(&member.object, visitor)
