@@ -1,0 +1,7 @@
+{
+  "postgres.annotation.incoming_dense_slots_copied": 456,
+  "postgres.annotation.modules": 15,
+  "postgres.annotation.reachability_walks": 444,
+  "postgres.annotation.roots": 12,
+  "postgres.annotation.target_resolutions": 37
+}

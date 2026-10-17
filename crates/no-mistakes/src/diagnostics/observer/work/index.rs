@@ -81,6 +81,7 @@ fn longer(metric: &str) -> Option<usize> {
         "traversal.computations" => 42,
         "traversal.lazy_nodes" => 43,
         "ts_facts.collections" => 47,
+        "postgres.annotation.roots" => 56,
         _ => return None,
     })
 }
@@ -88,6 +89,12 @@ fn longer(metric: &str) -> Option<usize> {
 #[inline]
 fn longest(metric: &str) -> Option<usize> {
     Some(match metric {
+        "postgres.annotation.modules" => 50,
+        "postgres.annotation.target_resolutions" => 51,
+        "postgres.annotation.reachability_walks" => 52,
+        "postgres.annotation.incoming_dense_slots_copied" => 53,
+        "postgres.annotation.captured_reader_rebuilds" => 54,
+        "postgres.annotation.captured_reader_names_retained" => 55,
         "resolver.classification_requests" => 25,
         "resolver.scope_cache_requests" => 30,
         "test_filter.project_filters" => 41,

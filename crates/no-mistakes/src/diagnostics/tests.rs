@@ -358,3 +358,38 @@ fn concurrent_work_and_source_counts_preserve_exact_totals() {
     basic.record_source_read(std::path::Path::new("ignored.ts"));
     assert!(basic.source_read_snapshot().is_empty());
 }
+
+#[test]
+fn borrowed_observer_keeps_reference_count_and_disabled_scope() {
+    assert!(with_current(|observer| observer.is_none()));
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(Arc::clone(&observer)), || {
+        let installed_count = Arc::strong_count(&observer);
+        with_current(|borrowed| {
+            // An owned accessor adds a shared atomic reference on every call.
+            assert_eq!(Arc::strong_count(&observer), installed_count);
+            assert!(std::ptr::eq(borrowed.unwrap(), observer.as_ref()));
+            borrowed
+                .unwrap()
+                .increment("postgres.annotation.reachability_walks", 1);
+            assert_eq!(
+                observer.snapshot().work["postgres.annotation.reachability_walks"],
+                1
+            );
+        });
+        with_observer(None, || {
+            assert!(with_current(|observer| observer.is_none()))
+        });
+        assert!(with_current(|borrowed| borrowed.is_some()));
+        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            with_current::<()>(|_| panic!("borrow ends"))
+        }));
+        assert!(panic.is_err());
+        // Unwinding the callback must release the thread-local borrow.
+        with_observer(None, || {
+            assert!(with_current(|observer| observer.is_none()))
+        });
+    });
+    assert_eq!(Arc::strong_count(&observer), 1);
+    assert!(with_current(|observer| observer.is_none()));
+}
