@@ -15,6 +15,13 @@ Core check/evaluator optimizations must also follow [the crate rules](no-mistake
   rayon or concurrent maps, with deterministic sorting before output.
 - No hardcoded domain defaults: route roots, HTTP prefixes, queue factories, and
   worker locations must be configured instead of inferred from repo conventions.
+- Max workers: pools size `jobs` > `RAYON_NUM_THREADS` > all logical CPUs, and
+  secondary pools honor `jobs`. Peak RSS must not scale with workers: share
+  immutable per-root state (`Arc`/copy-on-write); measure `--jobs 1`/`4`/default.
+- Change the algorithm before trimming copies: when a hot path stays dominant
+  after copy/clone PRs, demand-prune inputs (recall-safe), compute shared
+  summaries once bottom-up, or make restores cost writes, not state size.
+  Open work: [Perf milestones](https://github.com/jonathanong/no-mistakes/milestones).
 
 ### Prepared analysis, source-session ownership, and relationship projection
 
@@ -136,7 +143,9 @@ repo-wide call records for `traversal: file`; filter selected files first.
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`.
 Use `DashMap` so `entry(...).or_insert_with(...)` does not serialize
-unrelated keys.
+unrelated keys. Per-item checks must not lock globals or clone shared `Arc`s
+(deadlines, observers): read atomics or borrow. Never call the default
+`normalized_visible` (canonicalizes every path) on a repo-sized set per domain.
 
 ### Verify a builder method doesn't silently disable an existing cache
 
