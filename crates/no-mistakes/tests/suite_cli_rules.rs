@@ -36,6 +36,8 @@ mod cli_check_rules_csharp;
 mod cli_check_rules_ephemeral;
 #[path = "cli_check_rules_forbidden_calls.rs"]
 mod cli_check_rules_forbidden_calls;
+#[path = "cli_check_rules_forbidden_calls_arguments.rs"]
+mod cli_check_rules_forbidden_calls_arguments;
 #[path = "cli_check_rules_forbidden_calls_contract.rs"]
 mod cli_check_rules_forbidden_calls_contract;
 #[path = "cli_check_rules_forbidden_calls_extends.rs"]

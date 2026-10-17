@@ -1676,3 +1676,24 @@ test("Cargo warning declarations retain exported structured warning contracts", 
   assert.match(declarations, /export interface TestTargetWarning \{/);
   assert.match(declarations, /cargo-target-unresolved/);
 });
+
+test("forbidden-call predicates export bounded literal and unknown-policy declarations", () => {
+  const declarations = readFileSync(join(packageRoot, "forbidden-call-types.d.ts"), "utf8");
+  for (const name of [
+    "ForbiddenCallArgumentLiteral",
+    "ForbiddenCallUnknownArguments",
+    "ForbiddenCallArgumentPredicate",
+  ]) {
+    assert.match(declarations, new RegExp(`export type ${name} =`));
+  }
+  assert.match(declarations, /export interface ForbiddenCallArgumentConditions/);
+  assert.match(declarations, /"finding" \| "ignore"/);
+  assert.match(declarations, /arrayIncludes: ForbiddenCallArgumentLiteral/);
+  assert.match(declarations, /arrayExcludes: ForbiddenCallArgumentLiteral/);
+  assert.match(declarations, /property\?: string/);
+  assert.match(readFileSync(join(packageRoot, "index.d.ts"), "utf8"), /export \* from "\.\/types"/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/forbidden-call-types"/,
+  );
+});

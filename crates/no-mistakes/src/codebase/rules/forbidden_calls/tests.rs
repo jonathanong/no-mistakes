@@ -8,7 +8,7 @@ use crate::config::v2::{
 use std::path::PathBuf;
 
 mod support;
-pub(super) use support::expand_roots;
+pub(super) use support::{expand_roots, finding_for_site};
 
 fn options(yaml: &str) -> Options {
     serde_yaml::from_str(yaml).unwrap()
@@ -121,7 +121,7 @@ fn applications_are_ordered_and_overlap_independently() {
         ..Default::default()
     };
     let files = vec![root.join("src/entry.mts")];
-    let findings = check_with_graph(&root, &config, &graph, None, None, &files).unwrap();
+    let findings = check_with_graph(&root, &config, &graph, None, None, &files, None).unwrap();
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert!(findings[0].message.contains("(exact, application #1)"));
     assert!(findings[1].message.contains("(terminal, application #2)"));
@@ -189,7 +189,7 @@ fn function_and_terminal_selectors_use_canonical_repository_targets() {
         },
     };
     assert_eq!(
-        findings::finding_for_site(
+        finding_for_site(
             &root,
             &app,
             "canonical, application #1",
@@ -205,7 +205,7 @@ fn function_and_terminal_selectors_use_canonical_repository_targets() {
     let terminal =
         options("roots: [{ file: src/selectors.mts }]\ntargets: [{ terminal: repositoryTarget }]");
     assert_eq!(
-        findings::finding_for_site(
+        finding_for_site(
             &root,
             &app,
             "canonical, application #1",

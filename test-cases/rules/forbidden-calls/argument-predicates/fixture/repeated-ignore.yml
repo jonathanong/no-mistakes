@@ -1,0 +1,12 @@
+rules:
+  - name: repeated-policy
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: repeated.mjs }]
+      traversal: file
+      unknownArguments: ignore
+      targets:
+        - exact: execute
+          whenArguments:
+            all: [{ position: 0, arrayIncludes: '--root' }]

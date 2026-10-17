@@ -1,0 +1,45 @@
+{
+  "sourceType": "module",
+  "calls": [
+    {
+      "offset": 110,
+      "line": 4,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 130,
+      "line": 5,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 192,
+      "line": 8,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    },
+    {
+      "offset": 229,
+      "line": 10,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": null
+    }
+  ]
+}

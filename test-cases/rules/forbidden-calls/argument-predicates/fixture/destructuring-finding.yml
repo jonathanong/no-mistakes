@@ -1,0 +1,12 @@
+rules:
+  - name: destructuring-policy
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: destructuring.mjs }]
+      traversal: file
+      unknownArguments: finding
+      targets:
+        - exact: execute
+          whenArguments:
+            all: [{ position: 0, arrayIncludes: '--root' }]

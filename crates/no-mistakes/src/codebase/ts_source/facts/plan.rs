@@ -3,6 +3,7 @@ use super::TsFactPlan;
 impl TsFactPlan {
     pub fn include(&mut self, other: Self) {
         self.module_bindings |= other.module_bindings;
+        self.call_arguments |= other.call_arguments;
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
         self.value_flow |= other.value_flow;
@@ -54,6 +55,7 @@ impl TsFactPlan {
 
     pub fn is_empty(self) -> bool {
         !self.module_bindings
+            && !self.call_arguments
             && !self.imports
             && !self.function_calls
             && !self.value_flow
@@ -98,7 +100,8 @@ impl TsFactPlan {
     }
 
     fn covers_syntax_facts(self, required: Self) -> bool {
-        (!required.module_bindings || self.module_bindings)
+        (!required.module_bindings || self.module_bindings || self.call_arguments)
+            && (!required.call_arguments || self.call_arguments)
             && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
             && (!required.value_flow || self.needs_value_flow())

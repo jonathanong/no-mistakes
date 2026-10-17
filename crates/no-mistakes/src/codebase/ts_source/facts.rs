@@ -51,6 +51,8 @@ pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactCon
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
     pub module_bindings: bool,
+    /// Opt-in finite literal argument summaries for call-policy predicates.
+    pub call_arguments: bool,
     pub imports: bool,
     pub function_calls: bool,
     /// Value provenance needed by canonical call and effect consumers.

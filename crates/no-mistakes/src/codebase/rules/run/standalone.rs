@@ -75,6 +75,8 @@ pub(super) fn run_check(
         fact_plan.graph_context = graph_context;
     }
     fact_plan.graph.per_item_calls |= config.rule_configured(super::QUERY_REACHED_PER_ITEM);
+    fact_plan.graph.call_arguments |=
+        crate::codebase::rules::forbidden_calls::argument_facts_required(&config);
     fact_plan.production_import_paths =
         super::super::production_dependency_declarations::required_import_fact_files(
             root,

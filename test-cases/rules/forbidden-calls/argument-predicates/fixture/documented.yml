@@ -1,0 +1,19 @@
+rules:
+  - name: documented-argument-policy
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: repro.mjs }]
+      traversal: file
+      unknownArguments: finding
+      targets:
+        - moduleExport: { module: 'node:child_process', export: execFile }
+          whenArguments:
+            all:
+              - position: 1
+                arrayIncludes: check
+              - position: 1
+                arrayExcludes: --root
+              - position: 2
+                property: cwd
+                equals: /workspace

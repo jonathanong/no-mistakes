@@ -2,6 +2,8 @@ use super::RULE_ID;
 use anyhow::{bail, Result};
 use serde::Deserialize;
 
+mod arguments;
+pub(super) use arguments::{ArgumentConditions, ArgumentPredicate, Literal, UnknownArguments};
 mod root;
 pub(super) use root::{catalog_names, PlaywrightRoot, Root};
 
@@ -12,6 +14,7 @@ pub(super) struct Options {
     pub(super) traversal: Traversal,
     pub(super) max_depth: Option<usize>,
     pub(super) unknown_calls: UnknownCalls,
+    pub(super) unknown_arguments: UnknownArguments,
     pub(super) targets: Vec<Target>,
     pub(super) invocations: Vec<Invocation>,
 }
@@ -49,26 +52,36 @@ pub(super) enum Target {
 #[serde(deny_unknown_fields)]
 pub(super) struct GlobalTarget {
     pub(super) global: String,
+    #[serde(default, rename = "whenArguments")]
+    pub(super) when_arguments: Option<ArgumentConditions>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct ExactTarget {
     pub(super) exact: String,
+    #[serde(default, rename = "whenArguments")]
+    pub(super) when_arguments: Option<ArgumentConditions>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct TerminalTarget {
     pub(super) terminal: String,
+    #[serde(default, rename = "whenArguments")]
+    pub(super) when_arguments: Option<ArgumentConditions>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct ModuleExportTarget {
     pub(super) module_export: ModuleExportSelector,
+    #[serde(default, rename = "whenArguments")]
+    pub(super) when_arguments: Option<ArgumentConditions>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct FunctionTarget {
     pub(super) function: FunctionSelector,
+    #[serde(default, rename = "whenArguments")]
+    pub(super) when_arguments: Option<ArgumentConditions>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -95,20 +108,23 @@ pub(super) fn validate(options: &Options) -> Result<()> {
     }
     root::validate_roots(&options.roots)?;
     for target in &options.targets {
+        if let Some(conditions) = target.arguments() {
+            arguments::validate(conditions)?;
+        }
         match target {
-            Target::Global(GlobalTarget { global })
-            | Target::Exact(ExactTarget { exact: global })
-            | Target::Terminal(TerminalTarget { terminal: global })
-                if global.is_empty() =>
-            {
+            Target::Global(GlobalTarget { global, .. })
+            | Target::Exact(ExactTarget { exact: global, .. })
+            | Target::Terminal(TerminalTarget {
+                terminal: global, ..
+            }) if global.is_empty() => {
                 bail!("{RULE_ID}: call target names must not be empty")
             }
-            Target::ModuleExport(ModuleExportTarget { module_export })
+            Target::ModuleExport(ModuleExportTarget { module_export, .. })
                 if module_export.module.is_empty() || module_export.export.is_empty() =>
             {
                 bail!("{RULE_ID}: moduleExport requires non-empty module and export values")
             }
-            Target::Function(FunctionTarget { function })
+            Target::Function(FunctionTarget { function, .. })
                 if function.file.is_empty() || function.symbol.is_empty() =>
             {
                 bail!("{RULE_ID}: function requires non-empty file and symbol values")
@@ -117,4 +133,16 @@ pub(super) fn validate(options: &Options) -> Result<()> {
         }
     }
     Ok(())
+}
+
+impl Target {
+    pub(super) fn arguments(&self) -> Option<&ArgumentConditions> {
+        match self {
+            Self::Global(target) => target.when_arguments.as_ref(),
+            Self::Exact(target) => target.when_arguments.as_ref(),
+            Self::Terminal(target) => target.when_arguments.as_ref(),
+            Self::ModuleExport(target) => target.when_arguments.as_ref(),
+            Self::Function(target) => target.when_arguments.as_ref(),
+        }
+    }
 }

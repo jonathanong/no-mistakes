@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: repro.mjs }]
+      traversal: file
+      targets: [{ moduleExport: { module: 'node:child_process', export: execFile }, whenArguments: null }]

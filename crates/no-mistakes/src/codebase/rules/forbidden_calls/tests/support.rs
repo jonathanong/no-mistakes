@@ -18,3 +18,20 @@ pub(crate) fn expand_roots(
         target_roots: &[],
     })
 }
+
+pub(in super::super) fn finding_for_site(
+    root: &Path,
+    application: &crate::config::v2::schema::RuleDef,
+    label: &str,
+    options: &Options,
+    site: &crate::codebase::dependencies::graph::ResolvedCallSite,
+) -> Option<crate::codebase::rules::RuleFinding> {
+    super::super::findings::finding_for_site_with_arguments(
+        root,
+        application,
+        label,
+        options,
+        site,
+        None,
+    )
+}

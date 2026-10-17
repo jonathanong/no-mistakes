@@ -1,0 +1,25 @@
+{
+  "sourceType": "script",
+  "calls": [
+    {
+      "offset": 59,
+      "line": 2,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": 0
+    },
+    {
+      "offset": 86,
+      "line": 3,
+      "values": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "spreadFrom": 0
+    }
+  ]
+}

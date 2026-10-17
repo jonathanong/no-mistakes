@@ -2,6 +2,7 @@ use super::super::{domain, TsFactContext, TsFactPlan, TsFileFacts};
 use crate::codebase::dependencies::extract::{
     extract_import_facts_from_program_with_source_and_demands, is_indexable,
 };
+use crate::codebase::ts_source::module_facts;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
 use std::sync::Arc;
@@ -146,9 +147,12 @@ pub(crate) fn collect_file_facts_from_program(
         Default::default()
     };
     TsFileFacts {
-        module_bindings: plan
-            .module_bindings
-            .then(|| Arc::new(crate::codebase::ts_source::module_facts::extract(program))),
+        module_bindings: (plan.module_bindings || plan.call_arguments).then(|| {
+            Arc::new(module_facts::extract_with_arguments(
+                program,
+                plan.call_arguments && parse_error.is_none(),
+            ))
+        }),
         operational_error: None,
         parse_error,
         fatal_parse_error: false,
