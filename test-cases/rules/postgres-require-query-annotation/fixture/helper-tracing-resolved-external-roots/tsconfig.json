@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"vendor/value":["vendor/value.json"],"@workspace/builders":["packages/builders/index.mts"],"@app/db":["vendor/db.json"],"@app/db/*":["vendor/db.json"],"@app/tags/*":["vendor/tag.json"]}}}

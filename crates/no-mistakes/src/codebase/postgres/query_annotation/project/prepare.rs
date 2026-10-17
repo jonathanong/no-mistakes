@@ -64,7 +64,7 @@ pub(super) fn profiles<'a>(
             let untrusted_array_intrinsics = collected
                 .values()
                 .any(|file| file.facts.array_prototype_exposed);
-            let roots = demand::roots(&collected, resolve);
+            let roots = demand::roots(&collected, &options, resolve);
             if let Some(observer) = crate::diagnostics::current() {
                 observer.increment("postgres.annotation.roots", roots.len() as u64);
             }

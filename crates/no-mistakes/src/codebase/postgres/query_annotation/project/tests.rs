@@ -288,10 +288,14 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
             )
         })
         .collect();
-    let selected = super::demand::roots(&collected, &resolve)
-        .into_iter()
-        .map(|path| path.file_stem().unwrap().to_str().unwrap())
-        .collect::<BTreeSet<_>>();
+    let selected = super::demand::roots(
+        &collected,
+        &EmbeddedSqlOptions::configured("@app/db", &[]),
+        &resolve,
+    )
+    .into_iter()
+    .map(|path| path.file_stem().unwrap().to_str().unwrap())
+    .collect::<BTreeSet<_>>();
     assert_eq!(
         selected,
         BTreeSet::from([
@@ -410,5 +414,7 @@ fn mixed_profile_scopes_match_separate_profile_projections() {
     assert_eq!(run(None), separate);
 }
 
+#[path = "tests/external_roots.rs"]
+mod external_roots;
 #[path = "tests/profile_lifetimes.rs"]
 mod profile_lifetimes;
