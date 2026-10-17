@@ -1,0 +1,80 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
+import { describe, it } from "vitest";
+import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
+const id = "no-argv-main-guard";
+const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
+function check(name, options = {}) {
+  return lint(
+    fixture(`${id}/${name}`),
+    { [`no-mistakes/${id}`]: ["error", options] },
+    resolve(fixtureRoot, name),
+  );
+}
+describe(id, () => {
+  it("matches equality, main identities, Node wrappers and optional argv forms", () => {
+    assert.deepEqual(
+      check("unsafe.mjs").map((m) => m.line),
+      [5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    );
+  });
+  it("follows direct const bindings while rejecting shadowing and unsupported flow", () => {
+    assert.deepEqual(
+      check("aliases.ts").map((m) => m.line),
+      [5, 6, 9, 11, 20],
+    );
+  });
+  it("does not diagnose ordinary argv reads, unrelated paths or shadowed wrappers", () => {
+    assert.deepEqual(check("safe.mjs"), []);
+    assert.deepEqual(
+      check("commonjs.cjs").map((m) => m.line),
+      [4],
+    );
+  });
+  it("supports custom messages and actual-comment suppression", () => {
+    assert.equal(check("unsafe.mjs", { message: "Inject isMain" })[0].message, "Inject isMain");
+    assert.deepEqual(
+      check("suppressions.mjs").map((m) => m.line),
+      [5],
+    );
+    assert.deepEqual(check("suppression-file.mjs"), []);
+  });
+  it("has genuine oxlint parity on the saved scope and suppression matrix", () => {
+    for (const [name, count] of [
+      ["unsafe.mjs", 10],
+      ["aliases.ts", 5],
+      ["safe.mjs", 0],
+      ["suppressions.mjs", 1],
+      ["suppression-file.mjs", 0],
+      ["commonjs.cjs", 1],
+    ]) {
+      const result = spawnSync(
+        process.execPath,
+        [
+          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          "--config",
+          resolve(fixtureRoot, ".oxlintrc.json"),
+          "--format",
+          "json",
+          resolve(fixtureRoot, name),
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(result.status, count ? 1 : 0, result.stderr);
+      const diagnostics = JSON.parse(result.stdout).diagnostics.filter((d) => d.code.includes(id));
+      assert.equal(diagnostics.length, count, name);
+    }
+  });
+  it("bounds alias expansion and rejects forward initialization", () => {
+    assert.deepEqual(
+      check("bounded-aliases.mjs").map((m) => m.line),
+      [3],
+    );
+  });
+  it("exports an opt-in rule without an unsafe fix", () => {
+    assert.ok(plugin.rules[id]);
+    assert.equal(plugin.configs.recommended.rules[`no-mistakes/${id}`], undefined);
+    assert.equal(plugin.rules[id].meta.fixable, undefined);
+  });
+});

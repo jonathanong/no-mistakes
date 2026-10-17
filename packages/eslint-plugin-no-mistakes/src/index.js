@@ -2,6 +2,7 @@
 
 const rules = {
   "gh-api-argument-safety": require("./rules/gh-api-argument-safety"),
+  "no-argv-main-guard": require("./rules/no-argv-main-guard"),
   "async-call-disposition": require("./rules/async-call-disposition"),
   "async-try-catch-return-await": require("./rules/async-try-catch-return-await"),
   "await-array-methods": require("./rules/await-array-methods"),

@@ -281,3 +281,8 @@ See [the rule reference](eslint-rules/vitest-timeout-cap.md) for limits and
 Opt-in literal GitHub CLI API argv checks. `wrappers` entries select `callee`,
 `argumentPosition`, and `includesApi`; `endpointMessage` and `methodMessage`
 customize diagnostics. See [the rule reference](eslint-rules/gh-api-argument-safety.md).
+
+### `no-argv-main-guard`
+
+Opt-in, scope-aware main-module guard lint. Its optional `message` customizes
+entrypoint guidance; see [the rule reference](eslint-rules/no-argv-main-guard.md).
