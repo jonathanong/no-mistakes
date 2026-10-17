@@ -19,12 +19,51 @@ function memberName(node) {
 function imported(node, context, namespace = false) {
   const variable = resolveVariable(node, context);
   for (const def of variable?.defs || []) {
-    if (def.type !== "ImportBinding" || !MODULES.has(def.parent.source.value)) continue;
+    let source = null;
+    let importedName = null;
+    if (def.type === "ImportBinding") {
+      source = def.parent.source.value;
+      if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
+      else importedName = importSpecifierName(def.node);
+    } else if (def.type === "Variable") {
+      const declaration = def.node;
+      if (declaration.parent.kind !== "const") continue;
+      let init = unwrapExpression(declaration.init || {});
+      const awaited = init.type === "AwaitExpression";
+      if (awaited) init = unwrapExpression(init.argument);
+      if (
+        init.type === "CallExpression" &&
+        init.callee.type === "Identifier" &&
+        init.callee.name === "require"
+      ) {
+        const requireVariable = resolveVariable(init.callee, context);
+        if (requireVariable?.defs.length) continue;
+        source = init.arguments[0]?.type === "Literal" ? init.arguments[0].value : null;
+      } else if (init.type === "ImportExpression" && awaited) {
+        source = init.source?.type === "Literal" ? init.source.value : null;
+      }
+      if (declaration.id.type === "ObjectPattern") {
+        const property = declaration.id.properties.find(
+          (item) =>
+            item.type === "Property" &&
+            item.value.type === "Identifier" &&
+            item.value.name === node.name,
+        );
+        importedName =
+          property?.key?.type === "Literal"
+            ? String(property.key.value)
+            : property?.key?.type === "Identifier" && !property.computed
+              ? property.key.name
+              : null;
+      } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
+        importedName = "*";
+      }
+    }
+    if (!MODULES.has(source)) continue;
     if (namespace) {
-      if (def.node.type === "ImportNamespaceSpecifier") return def.parent.source.value;
+      if (importedName === "*") return source;
     } else {
-      const name = importSpecifierName(def.node);
-      if (NAMES.has(name)) return { framework: def.parent.source.value, name };
+      if (NAMES.has(importedName)) return { framework: source, name: importedName };
     }
   }
   // Unbound runner globals are considered only in files selected by lint config.
