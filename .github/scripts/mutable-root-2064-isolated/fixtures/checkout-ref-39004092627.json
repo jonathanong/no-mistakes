@@ -1,0 +1,8 @@
+{
+  "scope": "Saved actual run39004092627 source-head guard failure, before native entrypoint; not a fabricated native result",
+  "run_id": 39004092627,
+  "diagnostic_head": "e3e03c5e093e7a53151d7fad6c2e2200d377f348",
+  "observed_source_head": "bea5a183c663410b61fed6e7619b6268103adbe6",
+  "required_candidate_head": "48046084edf5f658191bde97e4674a14e2187b71",
+  "workflow_step_excerpt": "      - name: Checkout exact published candidate API source\n        timeout-minutes: 1\n        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n        with:\n          ref: bea5a183c663410b61fed6e7619b6268103adbe6\n          path: candidate-source\n          persist-credentials: false\n"
+}

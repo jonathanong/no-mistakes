@@ -112,7 +112,7 @@ jobs:
         timeout-minutes: 1
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: bea5a183c663410b61fed6e7619b6268103adbe6
+          ref: 48046084edf5f658191bde97e4674a14e2187b71
           path: candidate-source
           persist-credentials: false
       - name: Install the repository-pinned pnpm tool
