@@ -174,7 +174,7 @@ function summarize(directory) {
       for (const variant of ["published", "current"]) {
         const values = groups.get(`${commit}/${jobs}/${variant}`) || [];
         if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6)
-          throw new Error(`Incomplete samples: ${commit}/${variant}`);
+          throw new Error(`Incomplete samples: ${commit}/${jobs}/${variant}`);
         if (variant === "current") {
           const key = `${commit}/${jobs}`;
           proposed[key] = calibratedBudget(values);

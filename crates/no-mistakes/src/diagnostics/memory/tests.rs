@@ -22,3 +22,31 @@ fn disabled_memory_diagnostics_never_sample_or_format() {
     );
     assert_eq!(super::diagnostic(true, || None), None);
 }
+
+#[test]
+#[cfg(unix)]
+fn failed_samples_and_platform_units_preserve_memory_semantics() {
+    assert_eq!(super::sampled_peak_rss(|_| -1, false), None);
+    assert_eq!(
+        super::sampled_peak_rss(
+            |usage| {
+                usage.ru_maxrss = -1;
+                0
+            },
+            false
+        ),
+        None
+    );
+    for (bytes, expected) in [(false, 4096), (true, 4)] {
+        assert_eq!(
+            super::sampled_peak_rss(
+                |usage| {
+                    usage.ru_maxrss = 4096;
+                    0
+                },
+                bytes
+            ),
+            Some(expected)
+        );
+    }
+}
