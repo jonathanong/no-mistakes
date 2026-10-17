@@ -97,32 +97,41 @@ fn prepared_branch_shadows_do_not_escape_global_callback() {
 }
 
 fn prepared_fixture(name: &str) -> query_annotation::QueryAnnotationFileFacts {
+    prepared_fixture_with_exports(name).0
+}
+
+fn prepared_fixture_with_exports(
+    name: &str,
+) -> (query_annotation::QueryAnnotationFileFacts, Vec<String>) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/executed-source")
         .join(name);
     let source = std::fs::read_to_string(&path).unwrap();
     crate::ast::with_program(&path, &source, |program, _| {
-        query_annotation::collect(
+        let facts = query_annotation::collect(
             program,
             &source,
             &EmbeddedSqlOptions::configured("@example/db", &[]),
-        )
+        );
+        let exports =
+            crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source(
+                program, &source,
+            )
+            .exported_bindings
+            .into_iter()
+            .filter(|binding| binding.specifier.is_none())
+            .map(|binding| binding.local)
+            .collect();
+        (facts, exports)
     })
     .unwrap()
 }
 
 #[test]
 fn shared_export_cycle_visits_each_global_once() {
-    let facts = prepared_fixture("export-reachability-shared-cycle.ts");
+    let (facts, exports) = prepared_fixture_with_exports("export-reachability-shared-cycle.ts");
     visits::reset();
-    let reachable = export_reachable_globals(
-        &facts.globals,
-        facts
-            .globals
-            .keys()
-            .filter(|name| name.starts_with("entry"))
-            .map(String::as_str),
-    );
+    let reachable = export_reachable_globals(&facts.globals, exports.iter().map(String::as_str));
     assert_eq!(
         facts
             .globals
@@ -145,7 +154,20 @@ fn union_matches_every_historical_export_target_pair() {
         "control-flow-returned-entrypoint-wrappers.ts",
         "control-flow-returned-entrypoint-static-branches.ts",
     ] {
-        let facts = prepared_fixture(fixture);
+        let (facts, exports) = prepared_fixture_with_exports(fixture);
+        let union = export_reachable_globals(&facts.globals, exports.iter().map(String::as_str));
+        for target in facts.globals.keys().map(String::as_str) {
+            assert_eq!(
+                union.contains(target),
+                exports.iter().any(|exported| exported_reaches(
+                    &facts.globals,
+                    exported,
+                    target,
+                    &mut BTreeSet::new(),
+                )),
+                "{fixture}: all local exports -> {target}"
+            );
+        }
         for exported in facts.globals.keys() {
             let reachable = export_reachable_globals(&facts.globals, [exported.as_str()]);
             for target in facts.globals.keys().map(String::as_str) {
