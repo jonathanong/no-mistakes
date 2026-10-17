@@ -1,5 +1,7 @@
 #[path = "support/docs_audit.rs"]
 mod docs_audit;
+#[path = "support/docs_include_fragment_regressions.rs"]
+mod docs_include_fragment_regressions;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 

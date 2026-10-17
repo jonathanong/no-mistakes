@@ -77,6 +77,10 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             fresh_mapped_argument_bindings: Default::default(),
         };
         let env = evaluator.module_environment(&path);
+        super::captured_readers::tests::assert_matches_forward(
+            &evaluator.captured_binding_readers,
+            &evaluator.captured_bindings,
+        );
         let result = &evaluator.scopes[env]["result"];
         if name == "scalar-disconnect.cjs" || name == "escaped-dynamic-disconnect.cjs" {
             assert!(

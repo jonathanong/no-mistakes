@@ -4,6 +4,7 @@ mod arena;
 mod bindings;
 mod callback_seen;
 mod extras;
+mod final_prune;
 pub(super) mod frames;
 mod freshness;
 mod merge;

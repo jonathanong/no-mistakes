@@ -69,6 +69,9 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
+    // Production registration maintains both relations together. This manually
+    // seeded evaluator must establish that invariant before measured compaction.
+    evaluator.rebuild_captured_readers();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     evaluator.prune_snapshot_state();
@@ -123,4 +126,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         observer.snapshot().work["postgres.annotation.reachability_walks"],
         1
     );
+    let remapped = evaluator.captured_binding_readers.clone();
+    evaluator.rebuild_captured_readers();
+    assert_eq!(remapped, evaluator.captured_binding_readers);
 }

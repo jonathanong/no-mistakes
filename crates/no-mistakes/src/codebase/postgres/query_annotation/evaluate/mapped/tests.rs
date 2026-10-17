@@ -53,6 +53,10 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
         disconnected_argument_slots: Default::default(),
     };
     let root = evaluator.module_environment(&path);
+    super::captured_readers::tests::assert_matches_forward(
+        &evaluator.captured_binding_readers,
+        &evaluator.captured_bindings,
+    );
     (
         (*evaluator.scopes[root]).clone(),
         evaluator.argument_objects.len(),

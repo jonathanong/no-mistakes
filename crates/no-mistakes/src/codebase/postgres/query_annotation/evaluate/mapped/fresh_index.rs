@@ -1,7 +1,37 @@
 use super::{Environment, Evaluator};
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn remap_compacted_binding_indexes(
+        &mut self,
+        preserved: Environment,
+        indices: &FxHashMap<Environment, Environment>,
+        captured_changed: bool,
+    ) {
+        if captured_changed {
+            if let Some(observer) = crate::diagnostics::current() {
+                let retained = super::captured_readers::remap::<true>(
+                    &mut self.captured_binding_readers,
+                    preserved,
+                    indices,
+                );
+                observer.increment(
+                    "postgres.annotation.captured_reader_names_retained",
+                    retained as u64,
+                );
+            } else {
+                // Counting compiles away when diagnostics are disabled.
+                super::captured_readers::remap::<false>(
+                    &mut self.captured_binding_readers,
+                    preserved,
+                    indices,
+                );
+            }
+        }
+        self.rebuild_compacted_binding_indexes(false);
+    }
+
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn index_mapped_freshness(
         &mut self,
         env: Environment,

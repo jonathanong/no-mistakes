@@ -1,0 +1,21 @@
+{
+  "runId": 39016861107,
+  "jobId": 117350683746,
+  "jobName": "Native tests (Windows x64)",
+  "step": {
+    "name": "Run real N-API API test",
+    "status": "completed",
+    "conclusion": "failure",
+    "number": 12,
+    "started_at": "2026-10-17T08:25:11Z",
+    "completed_at": "2026-10-17T08:27:12Z"
+  },
+  "observedLogLines": [
+    "2026-10-17T08:27:12.8349294Z       Tests  252 passed | 2 skipped (254)",
+    "2026-10-17T08:27:12.8351831Z    Duration  119.71s (tests 100%)",
+    "2026-10-17T08:27:12.8980197Z ##[error]The action 'Run real N-API API test' has timed out after 2 minutes."
+  ],
+  "rawLogSha256": "b17574d763a0fe24ec7d93bdbc9004a56744fb359ff96fdfbd0559b9e6ef9c8c",
+  "startupTeardownReserveSeconds": 30,
+  "reserveRationale": "Allow bounded launcher and teardown work outside the reported Vitest duration; this is CI capacity, not a performance threshold."
+}
