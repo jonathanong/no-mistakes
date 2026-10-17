@@ -56,6 +56,7 @@ fn member_writes_do_not_rebuild_reference_links() {
         true,
     );
     assert_eq!(facts.value_flow.reference_link_constructions, 515);
+    assert_no_mutable_root_work(&facts.value_flow);
     assert_eq!(facts.value_flow.reference_component_links, 3);
     assert_eq!(facts.value_flow.reference_link_visits, 2 * 2 * 256 + 2 * 3);
     assert!(facts.value_flow.reference_component_root_steps <= 2 * 257 + 3 * 3 + 4 * 2);
@@ -128,6 +129,15 @@ fn late_defaults_share_one_indexed_mutation_history() {
         true,
     );
     assert_eq!(facts.value_flow.parameters.len(), 512);
+    // Later writes retain the same earliest offset instead of rewriting every alias.
+    #[cfg(feature = "test-instrumentation")]
+    assert_eq!(facts.value_flow.reference_invalidation_stores, 512);
+    // Direct aliases have no projected value; eligibility must not cause a second scan.
+    #[cfg(feature = "test-instrumentation")]
+    assert_eq!(facts.value_flow.reference_binding_visits, 256 * 512);
+    #[cfg(feature = "test-instrumentation")]
+    assert_no_mutable_root_work(&facts.value_flow);
+
     let histories = facts
         .value_flow
         .parameters
@@ -239,7 +249,7 @@ fn nested_writes_retain_exact_assignments_in_shared_receiver_histories() {
         .propagated
         .as_ref()
         .unwrap()
-        .aggregate;
+        .aggregate();
     assert_eq!(assigned.members.len(), 2);
     assert!(assigned.members.contains_key("get"));
     assert!(assigned.members.contains_key("info"));
@@ -250,9 +260,10 @@ fn nested_writes_retain_exact_assignments_in_shared_receiver_histories() {
         .propagated
         .as_ref()
         .unwrap()
-        .contexts;
-    assert_eq!(contexts.len(), 1);
-    assert_eq!(contexts[&None].members.len(), 2);
+        .context(None)
+        .unwrap();
+    assert_eq!(contexts.members.len(), 2);
+    assert_eq!(contexts.members, assigned.members);
     assert!(primary.members["nested"]
         .assigned
         .as_ref()
@@ -260,7 +271,7 @@ fn nested_writes_retain_exact_assignments_in_shared_receiver_histories() {
         .propagated
         .as_ref()
         .unwrap()
-        .aggregate
+        .aggregate()
         .members
         .contains_key("get"));
     let defaults = facts.value_flow.parameters[0]
@@ -315,7 +326,7 @@ fn nested_writes_bound_existing_traversal_and_canonical_lookups() {
             .propagated
             .as_ref()
             .unwrap()
-            .aggregate
+            .aggregate()
             .members
             .len(),
         128
@@ -334,5 +345,19 @@ fn nested_writes_bound_existing_traversal_and_canonical_lookups() {
 }
 
 #[cfg(feature = "test-instrumentation")]
+fn assert_no_mutable_root_work(facts: &ValueFlowFacts) {
+    // Ordinary aliases retain receiver-read timing without mutable-root coordinates.
+    type Receiver = ((usize, String), Vec<Option<String>>);
+    type Read = Option<(u32, Option<CallableId>)>;
+    let entry_bytes = std::mem::size_of::<((Receiver, Vec<Read>, ()), bool, bool, bool)>();
+    assert!(facts.reference_pending_capacity > 0);
+    assert_eq!(facts.reference_version_dispatches, 0);
+    assert_eq!(facts.receiver_only_pending_spills, 0);
+    assert_eq!(
+        (facts.reference_root_probes, facts.reference_pending_bytes),
+        (0, facts.reference_pending_capacity * entry_bytes),
+    );
+}
+
 #[path = "replacement_demand.rs"]
 mod replacement_demand;

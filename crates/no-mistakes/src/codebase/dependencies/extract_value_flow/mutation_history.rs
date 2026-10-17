@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "mutation_child.rs"]
+mod child;
+
 /// One prefix summary per mutation receiver path, shared by every default that
 /// refers to that receiver. Neither finalization nor lookup replays all writes.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -22,11 +25,9 @@ pub struct ValueAssignedMutations {
     #[cfg(feature = "test-instrumentation")]
     pub merge_reinsertions: usize,
 }
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct ValuePropagatedMutations {
-    pub aggregate: ValueAssignedMutations,
-    pub contexts: FxHashMap<Option<CallableId>, ValueAssignedMutations>,
-}
+#[path = "propagated_mutations.rs"]
+mod propagated;
+pub use propagated::ValuePropagatedMutations;
 /// Exact writes need only one context, or the fact that writers differ.
 /// With two distinct writers, at least one differs from every reader.
 /// Copy keeps each property summary inline instead of allocating a context set.
@@ -63,18 +64,26 @@ impl ValueMutationHistory {
     ) {
         let mut node = self;
         for member in path.iter().map(Some).chain(std::iter::once(None)) {
-            let summary = node.summary.get_or_insert_with(|| ValueMutationInfo {
-                offset,
-                contexts: fx_set(),
-            });
-            summary.offset = summary.offset.min(offset);
-            summary.contexts.insert(context);
+            node.record_summary(offset, context);
             if let Some(member) = member {
-                node = match member {
-                    Some(member) => node.members.entry(member.clone()).or_default(),
-                    None => node.dynamic.get_or_insert_with(Default::default),
-                };
+                node = node.record_child(member);
             }
+        }
+    }
+    pub(super) fn record_summary(&mut self, offset: u32, context: Option<CallableId>) {
+        let summary = self.summary.get_or_insert_with(|| ValueMutationInfo {
+            offset,
+            contexts: fx_set(),
+        });
+        summary.offset = summary.offset.min(offset);
+        summary.contexts.insert(context);
+    }
+    pub(super) fn record_child(&mut self, member: &Option<String>) -> &mut Self {
+        #[cfg(feature = "test-instrumentation")]
+        metrics::PATH_DESCENTS.with(|count| count.set(count.get() + 1));
+        match member {
+            Some(member) => child::record(&mut self.members, member),
+            None => self.dynamic.get_or_insert_with(Default::default),
         }
     }
     pub(super) fn merge(&mut self, source: Self) {
@@ -174,3 +183,11 @@ impl ValueMutationHistory {
         }
     }
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "mutation_recording_metrics.rs"]
+pub(super) mod metrics;
+
+#[cfg(test)]
+#[path = "mutation_recording_tests.rs"]
+mod tests;

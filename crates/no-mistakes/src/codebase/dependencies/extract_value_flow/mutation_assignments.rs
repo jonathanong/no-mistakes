@@ -1,6 +1,12 @@
 use super::*;
 use mutation_history::{ValueAssignedMutation, ValueAssignedWriter, ValueMutationHistory};
 
+pub(super) struct AssignmentTiming {
+    pub(super) started_at: u32,
+    pub(super) context: Option<CallableId>,
+    pub(super) completed: ValueAssignedMutation,
+}
+
 impl ValueAssignedMutation {
     /// A single module/callable writer, or no unique writer for mixed writes.
     pub(in crate::codebase::dependencies) fn single_context(&self) -> Option<Option<CallableId>> {
@@ -38,15 +44,23 @@ impl ValueMutationHistory {
         &mut self,
         path: &[Option<String>],
         member: Option<String>,
-        initial: ValueAssignedMutation,
+        timing: AssignmentTiming,
         propagated: bool,
         replacement: Option<bool>,
         proof: (Option<u32>, Option<identity_metadata::FreshCapture>),
     ) {
+        let AssignmentTiming {
+            started_at,
+            context,
+            completed: initial,
+        } = timing;
         let (region, capture) = proof;
         self.has_assignments = true;
         let mut node = self;
+        // Coarse histories use the write start; exact leaves and replacement
+        // proofs use completion. Share only their path descent, not their clock.
         for segment in path {
+            node.record_summary(started_at, context);
             if segment.is_none() && replacement.is_some() {
                 node.assigned
                     .get_or_insert_with(Default::default)
@@ -57,11 +71,9 @@ impl ValueMutationHistory {
                     .unknown
                     .record(initial.offset, initial.writer);
             }
-            node = match segment {
-                Some(member) => node.members.entry(member.clone()).or_default(),
-                None => node.dynamic.get_or_insert_with(Default::default),
-            };
+            node = node.record_child(segment);
         }
+        node.record_summary(started_at, context);
         let assigned = node.assigned.get_or_insert_with(Default::default);
         if let Some(fresh) = replacement {
             assigned
@@ -160,6 +172,11 @@ impl ImportCollector {
         if path.is_empty() || self.fresh_receiver_effects.rebound(key.0, &key.1) {
             return false;
         }
+        let phases = self
+            .fresh_receiver_effects
+            .phases
+            .as_ref()
+            .map(|phases| phases.borrow());
         self.prior_member_mutations
             .history(key)
             .is_some_and(|(history, complete)| {
@@ -170,9 +187,8 @@ impl ImportCollector {
                         self.receiver_conditional_region
                             .map(|(token, _)| token.get()),
                         Some(&self.fresh_receiver_effects),
-                        self.fresh_receiver_effects
-                            .phases
-                            .as_ref()
+                        phases
+                            .as_deref()
                             .filter(|_| {
                                 self.destructuring_phase_owner == Some(self.current_function_id())
                             })

@@ -7,10 +7,14 @@ mod receiver_histories;
 pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
 #[path = "extract_value_flow/mutation_sources.rs"]
 mod mutation_sources;
+#[path = "extract_value_flow/reference_output.rs"]
+mod reference_output;
 pub use mutation_sources::{
     ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,
     ValueReceiverMutations,
 };
+pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
+
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
 include!("extract_value_flow/value_flow_facts.rs");
@@ -131,7 +135,7 @@ mod receiver_identity_tests;
 mod active_reference_phases;
 
 #[path = "extract_value_flow/inert_receiver_rhs.rs"]
-mod inert_receiver_rhs;
+pub(super) mod inert_receiver_rhs;
 
 #[cfg(test)]
 #[path = "extract_value_flow/suspension_tests.rs"]
@@ -139,3 +143,58 @@ mod suspension_tests;
 
 #[path = "extract_value_flow/callable_uses.rs"]
 mod callable_uses;
+#[path = "extract_value_flow/mutable_receivers.rs"]
+mod mutable_receivers;
+
+#[cfg(test)]
+#[path = "extract_value_flow/mutable_receiver_tests.rs"]
+mod mutable_receiver_tests;
+
+#[path = "extract_value_flow/mutable_origins.rs"]
+mod mutable_origins;
+
+#[path = "extract_value_flow/mutable_patterns.rs"]
+mod mutable_patterns;
+
+#[path = "extract_value_flow/root_phase_capture.rs"]
+pub(super) mod root_phase_capture;
+
+#[path = "extract_value_flow/mutable_deferred.rs"]
+pub(super) mod mutable_deferred;
+
+#[path = "extract_value_flow/mutation_metadata.rs"]
+mod mutation_metadata;
+
+#[path = "extract_value_flow/mutation_projection.rs"]
+mod mutation_projection;
+
+#[path = "extract_value_flow/mutation_invalidation.rs"]
+mod mutation_invalidation;
+
+#[path = "extract_value_flow/phase_class_fields.rs"]
+mod phase_class_fields;
+
+#[path = "extract_value_flow/mutation_proof.rs"]
+mod mutation_proof;
+
+#[path = "extract_value_flow/own_data_reads.rs"]
+mod own_data_reads;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "extract_value_flow/ordinary_demand_metrics.rs"]
+pub(super) mod ordinary_demand_metrics;
+
+#[path = "extract_value_flow/mutable_root_single.rs"]
+mod mutable_root_single;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "extract_value_flow/root_target_metrics.rs"]
+mod root_target_metrics;
+#[path = "extract_value_flow/root_targets.rs"]
+pub(super) mod root_targets;
+
+#[path = "extract_value_flow/phase_changed_roots.rs"]
+mod phase_changed_roots;
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract_value_flow/phase_changed_roots_tests.rs"]
+mod phase_changed_roots_tests;

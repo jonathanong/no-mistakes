@@ -590,6 +590,21 @@ it elsewhere can expose invocations outside the canonical caller chain. Repeated
 Earlier writes, exported or deferred writers, and live receiver aliases remain
 conservative.
 
+Mutable object and array bindings retain receiver origins separately from callable
+value provenance. Nested writes through non-reassigned `let` containers invalidate
+the matching imported methods. Root assignments preserve acquisition snapshots
+for saved aliases and exclude overwritten roots from later direct reads.
+Conditional root writes retain possible acquisitions. Copied methods and untouched
+members retain the precision covered by the saved controls.
+Assignment-pattern receiver reads use RHS-before-LHS execution order, including
+computed targets and conditional root writes. Eager class writes borrow the normal
+collector's scoped binding facts; deferred field values retain their own execution
+owners. These summaries do not infer receiver identity from a destructured RHS.
+Known boundaries include aliases introduced by replacement assignment RHS
+([#2015](https://github.com/jonathanong/no-mistakes/issues/2015)) and root writes
+across callable declaration and runtime execution order
+([#2052](https://github.com/jonathanong/no-mistakes/issues/2052)).
+
 Repeated imported-member replacement alternatives require a closed execution
 region: a guaranteed multi-item literal `for-of` body or the supported closed
 sequence of synchronous owner invocations. Calls within that proof must be to

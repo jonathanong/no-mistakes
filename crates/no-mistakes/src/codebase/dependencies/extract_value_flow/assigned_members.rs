@@ -1,5 +1,5 @@
 use super::*;
-use mutation_history::{ValueAssignedMutation, ValueAssignedMutations, ValuePropagatedMutations};
+use mutation_history::{ValueAssignedMutation, ValueAssignedMutations};
 
 impl ValueAssignedMutations {
     pub(super) fn merge(&mut self, mut source: Self) {
@@ -62,15 +62,14 @@ impl ValueAssignedMutations {
                 // Only unrelated callable writers are excluded for defaults.
                 if owner.is_some()
                     && propagated
-                        .contexts
-                        .get(&None)
+                        .context(None)
                         .is_some_and(|writes| writes.direct_invalidated(member, reader))
                 {
                     return true;
                 }
                 let selected = match owner {
-                    Some(owner) => propagated.contexts.get(&Some(owner)),
-                    None => Some(&propagated.aggregate),
+                    Some(owner) => propagated.context(Some(owner)),
+                    None => Some(propagated.aggregate()),
                 };
                 selected.is_some_and(|selected| selected.direct_invalidated(member, reader))
             })
@@ -104,7 +103,7 @@ impl ValueAssignedMutations {
         let propagated = self
             .propagated
             .as_ref()
-            .and_then(|writes| writes.aggregate.members.get(member));
+            .and_then(|writes| writes.aggregate().members.get(member));
         if [direct, propagated]
             .into_iter()
             .flatten()
@@ -125,7 +124,7 @@ impl ValueAssignedMutations {
             self.dynamic.as_ref(),
             self.propagated
                 .as_ref()
-                .and_then(|writes| writes.aggregate.dynamic.as_ref()),
+                .and_then(|writes| writes.aggregate().dynamic.as_ref()),
         ]
         .into_iter()
         .flatten()
@@ -134,22 +133,5 @@ impl ValueAssignedMutations {
             return None;
         }
         events.identity.as_ref()?.captures.get(&candidate)?.as_ref()
-    }
-}
-
-impl ValuePropagatedMutations {
-    fn merge(&mut self, source: Self) {
-        self.aggregate.merge(source.aggregate);
-        for (context, writes) in source.contexts {
-            self.contexts.entry(context).or_default().merge(writes);
-        }
-    }
-
-    pub(super) fn record(&mut self, member: Option<String>, write: ValueAssignedMutation) {
-        self.aggregate.record(member.clone(), write);
-        self.contexts
-            .entry(write.writer.context())
-            .or_default()
-            .record(member, write);
     }
 }

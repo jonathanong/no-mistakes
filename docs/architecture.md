@@ -739,6 +739,12 @@ Runner selection is `notRequested`, `prepared`, or `failed`. Requested empty lis
 
 Ordinary fields and integration errors remain unchanged. Missing inputs retain evidence failure records without satisfying the legacy integration coverage invariant. Suppression affects findings, not evidence. Batched requests prepare the union demand once and expose evidence only on check reports that requested it; JSON/YAML share the ordinary check renderer. This projection does not prove registration packages, browser/custom runner behavior, SDK defaults, runtime latches or transitive package closure.
 
+Propagated receiver mutation facts share the aggregate and context history while
+there is one writer context. A second context promotes the storage to separate
+aggregate and context projections. Rust consumers read these through
+`aggregate()` and `context(owner)` instead of writable storage fields; CLI,
+Node reports and the logical Rust fact debug shape remain unchanged.
+
 Receiver replacement and mutable callable-assignment evidence share a sparse
 `ValueReplacementFacts` capsule in each file's prepared `ValueFlowFacts`.
 `callable_assignments()` and `callable_assignment_is_used(scope, name)` borrow

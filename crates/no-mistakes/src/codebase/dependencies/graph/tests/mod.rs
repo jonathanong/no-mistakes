@@ -156,6 +156,9 @@ mod module_scope_receiver_reads;
 mod namespace_executor_shadows;
 mod unique_execution_phases;
 
+#[path = "mutable_receiver_bindings.rs"]
+mod mutable_receiver_bindings;
+
 #[cfg(feature = "test-instrumentation")]
 mod inherited_graph_snapshot;
 #[cfg(feature = "test-instrumentation")]

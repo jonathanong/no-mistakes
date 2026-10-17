@@ -117,7 +117,7 @@ impl ValueAssignedMutations {
         {
             return true;
         }
-        let propagated = self.propagated.as_ref().map(|writes| &writes.aggregate);
+        let propagated = self.propagated.as_ref().map(|writes| writes.aggregate());
         let writes = [
             self.members.get(member),
             self.dynamic.as_ref(),

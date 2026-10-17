@@ -72,18 +72,90 @@ fn record_assignment_target_writes(
     }
 }
 
+fn visit_assignment_expression_with_receiver_effects<'a>(
+    collector: &mut ImportCollector,
+    assignment: &AssignmentExpression<'a>,
+) {
+    #[cfg(feature = "test-instrumentation")]
+    extract_value_flow::ordinary_demand_metrics::site(5);
+    collector.prepare_mutable_pattern_roots(&assignment.left);
+    let receipts = collector.begin_phase_receipts(&assignment.left);
+    let mut phases =
+        collector.begin_reference_destructuring_phases(&assignment.left, &assignment.right);
+    let fresh = receiver_replacement_is_fresh(assignment);
+    let previous = std::mem::replace(&mut collector.receiver_replacement_is_fresh, fresh);
+    with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
+        record_assignment_target_writes(
+            collector,
+            &assignment.left,
+            assignment.span.start,
+            assignment.span.end,
+        );
+    });
+    collector.receiver_replacement_is_fresh = previous;
+    if phases.is_none() {
+        phases = collector.begin_destructuring_phases(&assignment.left, &assignment.right);
+    }
+    let receipts = if phases.is_some() {
+        receipts
+    } else {
+        collector.end_phase_receipts(receipts);
+        None
+    };
+    let previous_fresh_evaluation = collector.fresh_receiver_effects.active;
+    collector.fresh_receiver_effects.active |= fresh && collector.collect_value_flow;
+    walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+    collector.end_destructuring_lhs(&phases);
+    with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
+        collector.visit_expression(&assignment.right);
+    });
+    collector.fresh_receiver_effects.active = previous_fresh_evaluation;
+    collector.record_mutable_receiver_assignment(assignment);
+    if let Some(phases) = phases {
+        collector.finish_destructuring_phases(phases);
+    }
+    collector.end_phase_receipts(receipts);
+}
+
+fn with_conditional_receiver_write(
+    collector: &mut ImportCollector,
+    visit: impl FnOnce(&mut ImportCollector),
+) {
+    if !collector.collect_value_flow {
+        visit(collector);
+        return;
+    }
+    #[cfg(feature = "test-instrumentation")]
+    extract_value_flow::ordinary_demand_metrics::site(2);
+    // Keep this certainty local to receiver cutoffs; do not alter other fact demands.
+    collector.receiver_conditional_region = None;
+    let previous = std::mem::replace(&mut collector.receiver_write_is_conditional, true);
+    collector.receiver_write_conditional_depth += 1;
+    visit(collector);
+    collector.receiver_write_is_conditional = previous;
+    collector.receiver_write_conditional_depth -= 1;
+}
+
 fn with_callable_receiver_execution(
     collector: &mut ImportCollector,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
+    if !collector.collect_value_flow {
+        visit(collector);
+        return;
+    }
+    #[cfg(feature = "test-instrumentation")]
+    extract_value_flow::ordinary_demand_metrics::site(3);
     // A deferred body has its own execution conditions; surrounding guards only
     // decide whether the callable is created or invoked.
     collector.receiver_conditional_region = None;
     let fresh = std::mem::replace(&mut collector.fresh_receiver_effects.active, false);
     let descriptor_call = std::mem::take(&mut collector.fresh_receiver_effects.descriptor_call);
     let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
+    let conditional_depth = std::mem::take(&mut collector.receiver_write_conditional_depth);
     visit(collector);
     collector.receiver_write_is_conditional = conditional;
+    collector.receiver_write_conditional_depth = conditional_depth;
     collector.fresh_receiver_effects.active = fresh;
     collector.fresh_receiver_effects.descriptor_call = descriptor_call;
 }

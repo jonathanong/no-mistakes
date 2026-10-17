@@ -27,8 +27,14 @@ impl PhaseWalk<'_> {
                     match property {
                         AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(property) => {
                             if let Some(init) = &property.init {
-                                self.expression(init);
+                                self.conditional_expression(init);
                             }
+                            self.phase += 1;
+                            self.root_write(
+                                property.binding.name.as_str(),
+                                property.binding.span.start,
+                                true,
+                            );
                         }
                         AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) => {
                             if property.computed {
@@ -46,7 +52,7 @@ impl PhaseWalk<'_> {
             }
             _ => {
                 self.reference(target);
-                self.write(target);
+                self.write(target, None, true);
             }
         }
         if pattern {
@@ -62,12 +68,12 @@ impl PhaseWalk<'_> {
                 AssignmentTarget::ArrayAssignmentTarget(_)
                     | AssignmentTarget::ObjectAssignmentTarget(_)
             ) {
-                self.expression(&default.init);
+                self.conditional_expression(&default.init);
                 self.target(&default.binding);
             } else {
                 self.reference(&default.binding);
-                self.expression(&default.init);
-                self.write(&default.binding);
+                self.conditional_expression(&default.init);
+                self.write(&default.binding, None, true);
             }
         } else if let Some(target) = target.as_assignment_target() {
             self.target(target);
@@ -83,17 +89,66 @@ impl PhaseWalk<'_> {
             _ => {}
         }
     }
-    pub(super) fn write(&mut self, target: &AssignmentTarget<'_>) {
+    pub(super) fn write(
+        &mut self,
+        target: &AssignmentTarget<'_>,
+        _value: Option<&Expression<'_>>,
+        guaranteed: bool,
+    ) {
         self.phase += 1;
-        for (name, path, target) in write_targets::targets(target)
-            .into_iter()
-            .filter(|(_, path, _)| !path.is_empty())
-        {
+        if self.root_capture_rhs {
+            root_targets::for_each_root(target, |name, target| {
+                self.root_write(name, target, guaranteed);
+            });
+            return;
+        }
+        if let AssignmentTarget::AssignmentTargetIdentifier(identifier) = target {
+            #[cfg(all(test, feature = "test-instrumentation"))]
+            let legacy = mutable_receiver_tests::deferred_frames::LEGACY_IDENTIFIER
+                .with(std::cell::Cell::get);
+            #[cfg(not(all(test, feature = "test-instrumentation")))]
+            let legacy = false;
+            if !legacy {
+                self.root_write(identifier.name.as_str(), target.span().start, guaranteed);
+                return;
+            }
+        }
+        #[cfg(feature = "test-instrumentation")]
+        if matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {
+            root_target_metrics::PHASE_IDENTIFIERS.with(|count| count.set(count.get() + 1));
+        }
+        for (name, path, target) in write_targets::targets(target) {
+            if path.is_empty() {
+                self.root_write(&name, target, guaranteed);
+                continue;
+            }
             self.writes.push(PhaseWrite {
                 target,
                 name,
                 path,
                 phase: self.phase,
+            });
+        }
+    }
+    pub(super) fn root_write(&mut self, name: &str, target: u32, guaranteed: bool) {
+        if let Some(changed) = &mut self.changed_roots {
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::phase_key(0);
+            if !changed.contains(name) {
+                #[cfg(feature = "test-instrumentation")]
+                root_target_metrics::phase_key(1);
+                changed.insert(name.to_string());
+            }
+        }
+        if self.collect_root_origins {
+            self.root_writes.push(phase_walk::RootPhaseWrite {
+                target,
+                name: phase_changed_roots::shared_names::share_previous(
+                    self.root_writes.last().map(|point| &point.name),
+                    name,
+                ),
+                phase: self.phase,
+                guaranteed: guaranteed && !self.conditional,
             });
         }
     }

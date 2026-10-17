@@ -27,12 +27,17 @@ impl ImportCollector {
         {
             self.receiver_conditional_region = None;
         }
-        if !member && self.prior_member_mutations.requires_proof(scope, base) {
+        if !member
+            && (self.prior_member_mutations.requires_proof(scope, base)
+                || self.has_mutable_receiver_binding(scope, base))
+            && !self.prepared_mutable_root_write(scope, base)
+        {
             self.fresh_receiver_effects.rebind(scope, base);
         }
-        let mut affected: FxHashMap<usize, FxHashSet<String>> = fx_map();
-        affected.entry(scope).or_default().insert(base.to_string());
+        let mut affected = mutation_projection::Affected::default();
+        affected.insert(scope, base);
         if member && self.collect_value_flow {
+            let metadata = self.receiver_mutation_metadata(offset);
             self.record_phase_scope(scope);
             self.prepare_value_references();
             let mut parts = receiver.map_or_else(
@@ -50,145 +55,38 @@ impl ImportCollector {
                 Some(path) => path.last().and_then(Option::as_deref),
                 None => name.rsplit_once('.').map(|(_, member)| member),
             };
-            let mut assigned = parts.pop().map(|member| (member, completed_at));
+            let assigned = parts.pop().map(|member| (member, completed_at));
             let has_assignment = assigned.is_some();
             let acquired_at = self.receiver_acquisition_offset(offset);
             let reads = vec![Some((acquired_at, self.current_function_id())); parts.len()];
-            let mut pending = vec![(
-                (((scope, base.to_string()), parts), reads),
-                false,
-                true,
-                false,
-            )];
-            let mut active = fx_set();
-            let mut visited = fx_map();
-            while let Some((((key, path), reads), exiting, remember, propagated)) = pending.pop() {
-                if exiting {
-                    active.remove(&key);
-                    continue;
-                }
-                if remember {
-                    let exact = assigned.take().or_else(|| {
-                        has_assignment.then(|| (assigned_member.map(str::to_string), completed_at))
-                    });
-                    self.remember_member_mutation(&key, &path, &reads, exact, offset, propagated);
-                }
-                // A cycle must not mark an unpropagated weaker summary visited.
-                if active.contains(&key) {
-                    continue;
-                }
-                let Some(reads) = receiver_traversal::merge_reads(&mut visited, &key, &path, reads)
-                else {
-                    continue;
-                };
-                active.insert(key.clone());
-                #[cfg(feature = "test-instrumentation")]
-                {
-                    self.value_flow.reference_path_visits += 1;
-                }
-                pending.push((((key.clone(), Vec::new()), Vec::new()), true, false, false));
-                affected.entry(key.0).or_default().insert(key.1.clone());
-                for target in self
-                    .value_reference_links
-                    .as_ref()
-                    .and_then(|links| links.get(&key.0))
-                    .and_then(|names| names.get(key.1.as_str()))
-                    .into_iter()
-                    .flatten()
-                {
-                    #[cfg(feature = "test-instrumentation")]
-                    {
-                        self.value_flow.reference_link_visits += 1;
-                    }
-                    pending.push((
-                        ((target.clone(), path.clone()), reads.clone()),
-                        false,
-                        false,
-                        propagated,
-                    ));
-                }
-                for index in self
-                    .value_binding_indexes
-                    .get(&key.0)
-                    .and_then(|names| names.get(key.1.as_str()))
-                    .into_iter()
-                    .flatten()
-                {
-                    // Direct aliases are handled by the component links at finalization.
-                    if matches!(&self.value_flow.bindings[*index].value,
-                        ValueExpression::Named { name, .. } if !name.contains('.'))
-                    {
-                        continue;
-                    }
-                    if self.reference_path_may_be_replaced(&key, &path, &reads) {
-                        continue;
-                    }
-                    let mut references = Vec::new();
-                    nested::write_receiver_references(
-                        &self.value_flow.bindings[*index].value,
-                        &path,
-                        &reads,
-                        &mut references,
-                    );
-                    pending.extend(
-                        references
-                            .into_iter()
-                            .map(|reference| (reference, false, true, true)),
-                    );
-                }
+            let info = mutation_projection::MutationInfo {
+                metadata,
+                assigned_member,
+                completed_at,
+                has_assignment,
+                proof: None,
+            };
+            let root_read = (acquired_at, self.current_function_id());
+            let receiver = ((scope, base.to_string()), parts);
+            if self.receiver_only_bindings.is_none() {
+                debug_assert!(self.deferred_mutable_writes.is_none());
+                let pending = mutation_projection::PendingQueue::new((
+                    (receiver, reads, ()),
+                    false,
+                    true,
+                    false,
+                ));
+                self.project_member_mutation(pending, assigned, info, &mut affected);
+            } else {
+                let pending = mutation_projection::PendingQueue::new((
+                    (receiver, reads, root_read),
+                    false,
+                    true,
+                    false,
+                ));
+                self.project_member_mutation(pending, assigned, info, &mut affected);
             }
         }
-        let context = self.current_function_id();
-        for (scope, names) in &affected {
-            for name in names {
-                for index in self
-                    .value_binding_indexes
-                    .get(scope)
-                    .and_then(|names| names.get(name.as_str()))
-                    .into_iter()
-                    .flatten()
-                {
-                    self.value_flow.bindings[*index]
-                        .mutation_contexts
-                        .insert(context);
-                    self.value_flow.bindings[*index]
-                        .invalidated_at
-                        .get_or_insert(offset);
-                }
-                for index in self
-                    .value_parameter_indexes
-                    .get(scope)
-                    .and_then(|names| names.get(name.as_str()))
-                    .into_iter()
-                    .flatten()
-                {
-                    self.value_flow.parameters[*index]
-                        .mutation_contexts
-                        .insert(context);
-                    self.value_flow.parameters[*index]
-                        .invalidated_at
-                        .get_or_insert(offset);
-                }
-            }
-        }
-        let mut invalidated = Vec::new();
-        for binding in &mut self.callable_aliases {
-            let alias = &mut binding.alias;
-            let head = alias
-                .local
-                .split_once('.')
-                .map_or(alias.local.as_str(), |(head, _)| head);
-            if member
-                && affected
-                    .get(&alias.binding_scope)
-                    .is_some_and(|names| names.contains(head))
-            {
-                alias.invalidated_at.get_or_insert(offset);
-                invalidated.push((alias.binding_scope, alias.local.clone()));
-            }
-        }
-        for (scope, local) in invalidated {
-            self.insert_reassigned_callable_at(scope, local);
-        }
+        self.invalidate_mutation_bindings(&affected, self.current_function_id(), offset, member);
     }
 }

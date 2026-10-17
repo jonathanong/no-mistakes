@@ -42,8 +42,12 @@ fn populated_late_union_preserves_exact_restoration_and_phase_evidence() {
     let mut adopted = mutation_history::ValueAssignedMutations::default();
     adopted.merge(*extracted["primary"].assigned.clone().unwrap());
     let propagated = adopted.propagated.as_ref().unwrap();
-    assert!(propagated.aggregate.members.contains_key("get"));
-    assert!(propagated.contexts[&None].members.contains_key("get"));
+    assert!(propagated.aggregate().members.contains_key("get"));
+    assert!(propagated
+        .context(None)
+        .unwrap()
+        .members
+        .contains_key("get"));
     let mut histories = ReceiverHistories::default();
     for name in ["left", "right", "primary", "secondary"] {
         *histories.history_mut(&(0, name.to_string())).0 = (*extracted[name]).clone();
@@ -84,8 +88,12 @@ fn populated_late_union_preserves_exact_restoration_and_phase_evidence() {
             assert!(assigned.members.contains_key("info"));
             let propagated = assigned.propagated.as_ref().unwrap();
             for member in ["get", "set"] {
-                assert!(propagated.aggregate.members.contains_key(member));
-                assert!(propagated.contexts[&None].members.contains_key(member));
+                assert!(propagated.aggregate().members.contains_key(member));
+                assert!(propagated
+                    .context(None)
+                    .unwrap()
+                    .members
+                    .contains_key(member));
                 assert!(history.assignment_invalidated(
                     &[member],
                     source.len() as u32,

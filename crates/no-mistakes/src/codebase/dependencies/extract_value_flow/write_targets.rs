@@ -2,6 +2,10 @@ use super::*;
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
 type WriteTarget = (String, ValueMutationPath, u32);
 pub(in super::super) fn targets(target: &AssignmentTarget<'_>) -> Vec<WriteTarget> {
+    #[cfg(feature = "test-instrumentation")]
+    if matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {
+        root_target_metrics::record(0);
+    }
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(_) => assignment_target_names(target)
             .into_iter()
@@ -45,7 +49,28 @@ pub(in super::super) fn targets(target: &AssignmentTarget<'_>) -> Vec<WriteTarge
             })
             .chain(object.rest.iter().flat_map(|rest| targets(&rest.target)))
             .collect(),
+        AssignmentTarget::TSAsExpression(value) => {
+            wrapped_target(&value.expression, target.span().start)
+        }
+        AssignmentTarget::TSSatisfiesExpression(value) => {
+            wrapped_target(&value.expression, target.span().start)
+        }
+        AssignmentTarget::TSNonNullExpression(value) => {
+            wrapped_target(&value.expression, target.span().start)
+        }
+        AssignmentTarget::TSTypeAssertion(value) => {
+            wrapped_target(&value.expression, target.span().start)
+        }
         _ => Vec::new(),
+    }
+}
+fn wrapped_target(expression: &Expression<'_>, start: u32) -> Vec<WriteTarget> {
+    if let Expression::Identifier(identifier) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(expression)
+    {
+        vec![(identifier.name.to_string(), Vec::new(), start)]
+    } else {
+        Vec::new()
     }
 }
 fn maybe_default(target: &AssignmentTargetMaybeDefault<'_>) -> Vec<WriteTarget> {
@@ -59,6 +84,8 @@ fn member_target(
     property: Option<String>,
     start: u32,
 ) -> Option<WriteTarget> {
+    #[cfg(feature = "test-instrumentation")]
+    root_target_metrics::record(1);
     let (base, mut path) = expression_path(object)?;
     path.push(property);
     let name = std::iter::once(base)

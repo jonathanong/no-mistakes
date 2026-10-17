@@ -139,7 +139,7 @@ fn propagated_rhs_barrier(
         .and_then(|names| names.get(name))
         .and_then(|history| history.assigned.as_ref())
         .and_then(|assigned| assigned.propagated.as_ref())
-        .map(|propagated| &propagated.aggregate)
+        .map(|propagated| propagated.aggregate())
     else {
         return false;
     };

@@ -248,6 +248,10 @@ mod import_metadata_tests;
 mod tests;
 
 #[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "extract/ordinary_demand_tests.rs"]
+mod ordinary_demand_tests;
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "extract_statement_legacy_tests.rs"]
 mod statement_legacy;
 #[cfg(all(test, feature = "test-instrumentation"))]

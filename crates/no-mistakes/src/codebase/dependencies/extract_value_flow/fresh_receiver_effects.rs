@@ -3,12 +3,20 @@ use std::collections::BTreeSet;
 
 #[derive(Default)]
 pub(in super::super) struct FreshReceiverEffects {
+    #[cfg(feature = "test-instrumentation")]
+    pub(in super::super) rhs_probe:
+        Option<std::rc::Rc<std::cell::RefCell<inert_receiver_rhs::tests_support::Probe>>>,
     pub active: bool,
     pub epoch: u64,
     pub descriptor_call: Option<u32>,
-    pub(super) phases: Option<Box<active_reference_phases::ActiveReferencePhases>>,
+    pub(super) phases:
+        Option<std::rc::Rc<std::cell::RefCell<active_reference_phases::ActiveReferencePhases>>>,
     #[cfg(feature = "test-instrumentation")]
     identity_visits: std::cell::Cell<usize>,
+    #[cfg(feature = "test-instrumentation")]
+    rebind_calls: usize,
+    #[cfg(feature = "test-instrumentation")]
+    rebind_name_allocations: usize,
     #[cfg(feature = "test-instrumentation")]
     pub(super) rhs_visits: usize,
     captures: Option<Box<capture_reads::CaptureInterner>>,
@@ -21,6 +29,8 @@ impl FreshReceiverEffects {
     #[cfg(feature = "test-instrumentation")]
     pub(super) fn record_counts(&self, facts: &mut ValueFlowFacts) {
         facts.reference_rhs_visits = self.rhs_visits;
+        facts.reference_rebind_calls = self.rebind_calls;
+        facts.reference_rebind_name_allocations = self.rebind_name_allocations;
         facts.reference_identity_visits = self.identity_visits();
         (
             facts.reference_capture_nodes,
@@ -98,11 +108,22 @@ impl FreshReceiverEffects {
             .is_some_and(|names| names.contains(name))
     }
     pub(super) fn rebind(&mut self, scope: usize, name: &str) {
-        self.rebound
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.rebind_calls += 1;
+        }
+        let names = self
+            .rebound
             .get_or_insert_with(Default::default)
             .entry(scope)
-            .or_default()
-            .insert(name.to_string());
+            .or_default();
+        if !names.contains(name) {
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.rebind_name_allocations += 1;
+            }
+            names.insert(name.to_string());
+        }
     }
 }
 impl ImportCollector {
@@ -119,45 +140,6 @@ impl ImportCollector {
         self.visit_value_tagged(tagged);
         self.record_descriptor_call(tagged.span.end);
     }
-    pub(super) fn known_own_data_read(&self, expression: &Expression<'_>) -> bool {
-        let Expression::StaticMemberExpression(member) = expression else {
-            return false;
-        };
-        let Expression::Identifier(root) =
-            crate::codebase::ts_source::unwrap_ts_wrappers(&member.object)
-        else {
-            return false;
-        };
-        let name = root.name.as_str();
-        let Some(scope) = self.callee_binding_scope(name) else {
-            return false;
-        };
-        if self.fresh_receiver_effects.rebound(scope, name) {
-            return false;
-        }
-        let Some(indices) = self
-            .value_binding_indexes
-            .get(&scope)
-            .and_then(|names| names.get(name))
-        else {
-            return false;
-        };
-        let [index] = indices.as_slice() else {
-            return false;
-        };
-        let binding = &self.value_flow.bindings[*index];
-        if binding.owner != self.current_function_id()
-            || self.fresh_receiver_effects.epoch != 0
-            || self
-                .fresh_receiver_effects
-                .descriptor_call
-                .is_some_and(|offset| offset >= binding.declared_at)
-        {
-            return false;
-        }
-        matches!(&self.value_flow.bindings[*index].value, ValueExpression::Object(fields, _)
-            if fields.contains_key(member.property.name.as_str()))
-    }
     pub(super) fn receiver_acquisition_offset(&self, offset: u32) -> u32 {
         self.assignment_target_start
             .filter(|_| self.destructuring_phase_owner == Some(self.current_function_id()))
@@ -165,7 +147,7 @@ impl ImportCollector {
                 self.fresh_receiver_effects
                     .phases
                     .as_ref()
-                    .and_then(|phases| phases.capture_phase(Some(*target)))
+                    .and_then(|phases| phases.borrow().capture_phase(Some(*target)))
                     .is_some()
             })
             .unwrap_or(offset)

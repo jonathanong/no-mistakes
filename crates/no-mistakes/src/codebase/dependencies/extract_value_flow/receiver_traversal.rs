@@ -1,30 +1,163 @@
 use super::*;
 
-type Paths = FxHashMap<((usize, String), ValueMutationPath), Vec<nested::ReceiverRead>>;
+#[path = "receiver_traversal_state.rs"]
+mod state;
+use state::TraversalState;
 
-/// One monotone cutoff summary per receiver/path, rather than one state per
-/// acquisition route. An ambiguous context can never prove replacement.
-pub(super) fn merge_reads(
-    visited: &mut Paths,
-    key: &(usize, String),
-    path: &[Option<String>],
-    reads: Vec<nested::ReceiverRead>,
-) -> Option<Vec<nested::ReceiverRead>> {
-    let state = (key.clone(), path.to_vec());
-    let Some(previous) = visited.get_mut(&state) else {
-        visited.insert(state, reads.clone());
-        return Some(reads);
-    };
-    let mut changed = false;
-    for (previous, incoming) in previous.iter_mut().zip(&reads) {
-        let merged = match (*previous, *incoming) {
-            (Some((left, context)), Some((right, other))) if context == other => {
-                Some((left.min(right), context))
-            }
-            _ => None,
-        };
-        changed |= *previous != merged;
-        *previous = merged;
-    }
-    changed.then(|| previous.clone())
+#[path = "receiver_traversal_owned_entry.rs"]
+mod owned_entry;
+
+struct MutableTraversal {
+    first: (mutable_origins::RootVersion, TraversalState),
+    other: FxHashMap<mutable_origins::RootVersion, TraversalState>,
 }
+impl MutableTraversal {
+    fn state(&mut self, version: mutable_origins::RootVersion) -> &mut TraversalState {
+        if self.first.0 == version {
+            &mut self.first.1
+        } else {
+            self.other.entry(version).or_default()
+        }
+    }
+    fn existing(&mut self, version: mutable_origins::RootVersion) -> Option<&mut TraversalState> {
+        if self.first.0 == version {
+            Some(&mut self.first.1)
+        } else {
+            self.other.get_mut(&version)
+        }
+    }
+}
+#[derive(Default)]
+pub(super) struct ReceiverTraversal {
+    ordinary: TraversalState,
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) version_dispatches: usize,
+    mutable: Option<MutableTraversal>,
+}
+impl ReceiverTraversal {
+    pub(super) fn exit_ordinary(&mut self, key: &(usize, String)) {
+        self.ordinary.remove_active(key);
+    }
+
+    /// An exit belongs to its sole active version; ambiguous states still
+    /// resolve the original source coordinate before removing their key.
+    pub(super) fn exit_single_version(&mut self, key: &(usize, String)) -> bool {
+        let Some(states) = self.mutable.as_mut() else {
+            return false;
+        };
+        states.other.is_empty()
+            && !self.ordinary.contains_active(key)
+            && states.first.1.remove_active(key)
+    }
+
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) fn record_counts(&self, facts: &mut ValueFlowFacts) {
+        facts.reference_version_dispatches += self.version_dispatches;
+        facts.reference_version_table_capacity += self.version_table_capacity();
+        facts.reference_state_heap_buffers += self.ordinary.heap_buffers();
+        if let Some(states) = &self.mutable {
+            facts.reference_state_heap_buffers += states.first.1.heap_buffers()
+                + states
+                    .other
+                    .values()
+                    .map(TraversalState::heap_buffers)
+                    .sum::<usize>();
+        }
+    }
+
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) fn version_table_capacity(&self) -> usize {
+        self.mutable
+            .as_ref()
+            .map_or(0, |state| state.other.capacity())
+    }
+
+    pub(super) fn exit(
+        &mut self,
+        key: &(usize, String),
+        version: Option<mutable_origins::RootVersion>,
+    ) {
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.version_dispatches += 1;
+        }
+        let state = match version {
+            Some(version) => self
+                .mutable
+                .as_mut()
+                .and_then(|states| states.existing(version)),
+            None => Some(&mut self.ordinary),
+        };
+        if let Some(state) = state {
+            state.remove_active(key);
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "receiver_traversal_tests.rs"]
+mod tests;
+
+impl ImportCollector {
+    pub(super) fn classify_receiver_successor(
+        &mut self,
+        key: &(usize, String),
+        root_read: Option<nested::RootRead>,
+    ) -> (bool, Option<mutable_origins::RootVersion>) {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let old_lookup = mutable_origins::fusion_tests::OLD.with(std::cell::Cell::get);
+        #[cfg(not(all(test, feature = "test-instrumentation")))]
+        let old_lookup = false;
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let old_terminal =
+            old_lookup && root_read.is_some() && self.mutation_reference_is_terminal(key);
+        #[cfg(not(all(test, feature = "test-instrumentation")))]
+        let old_terminal = false;
+        let version = root_read.filter(|_| !old_terminal).and_then(|read| {
+            #[cfg(feature = "test-instrumentation")]
+            {
+                self.value_flow.reference_root_probes += 1;
+            }
+            self.mutable_receiver_version(key, read)
+        });
+        let terminal = if old_lookup {
+            old_terminal
+        } else {
+            root_read.is_some()
+                && version.is_none()
+                && self.mutation_reference_has_no_value_successor(key)
+        };
+        (terminal, version)
+    }
+    pub(super) fn mutation_reference_has_no_value_successor(&self, key: &(usize, String)) -> bool {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        mutable_origins::fusion_tests::DESCRIPTORS.with(|n| n.set(n.get() + 1));
+        self.value_binding_indexes
+            .get(&key.0)
+            .and_then(|names| names.get(key.1.as_str()))
+            .is_none_or(Vec::is_empty)
+            && self
+                .value_reference_links
+                .as_ref()
+                .and_then(|links| links.get(&key.0))
+                .and_then(|names| names.get(key.1.as_str()))
+                .is_none_or(|links| links.is_empty())
+    }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) fn mutation_reference_is_terminal(&self, key: &(usize, String)) -> bool {
+        self.mutation_reference_has_no_value_successor(key)
+            && !self.has_mutable_receiver_binding(key.0, &key.1)
+    }
+}
+
+#[cfg(test)]
+#[path = "receiver_traversal_inline_tests.rs"]
+mod inline_tests;
+
+#[cfg(test)]
+#[path = "receiver_traversal_differential_tests.rs"]
+mod differential_tests;
+
+#[cfg(test)]
+#[path = "receiver_traversal_oracle_tests.rs"]
+mod oracle;

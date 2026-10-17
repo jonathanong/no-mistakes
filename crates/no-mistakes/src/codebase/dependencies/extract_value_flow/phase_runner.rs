@@ -2,12 +2,24 @@ use super::*;
 use phase_catalog::PhaseCatalog;
 use phase_walk::{PhaseWalk, PhaseWrite};
 use std::sync::Arc;
+#[path = "root_phase_segments.rs"]
+mod root_segments;
 
+#[path = "phase_finish.rs"]
+mod finish;
 pub(in super::super) struct PreparedPhases {
     catalog: Arc<PhaseCatalog>,
+    previous_deferred: Option<Box<mutable_deferred::DeferredMutations>>,
+    defer_mutable: bool,
     writes: Vec<PhaseWrite>,
+    previous_root_capture: Option<Box<root_phase_capture::RootPhaseCapture>>,
+    root_capture: bool,
+    root_end: u32,
+    root_guaranteed: bool,
+    owner: Option<CallableId>,
     previous: Option<Option<CallableId>>,
-    previous_identity: Option<Box<active_reference_phases::ActiveReferencePhases>>,
+    previous_identity:
+        Option<std::rc::Rc<std::cell::RefCell<active_reference_phases::ActiveReferencePhases>>>,
 }
 impl ImportCollector {
     pub(in super::super) fn begin_reference_destructuring_phases(
@@ -33,12 +45,17 @@ impl ImportCollector {
                 AssignmentTarget::ArrayAssignmentTarget(_)
                     | AssignmentTarget::ObjectAssignmentTarget(_)
             )
-            || self.prior_member_mutations.is_empty()
+            || (self.prior_member_mutations.is_empty() && self.receiver_only_bindings.is_none())
             || (!self.has_early_assignment_target(target)
                 && !self.prior_member_mutations.has_reference_proof_demand())
         {
             return None;
         }
+        let collect_root_origins = self.receiver_only_bindings.is_some()
+            && !self
+                .receiver_root_phases
+                .as_ref()
+                .is_some_and(|capture| capture.owner == owner);
         let mut walk = PhaseWalk {
             collector: self
                 .prior_member_mutations
@@ -48,25 +65,83 @@ impl ImportCollector {
             cursor: 0,
             segments: Vec::new(),
             writes: Vec::new(),
+            root_writes: Vec::new(),
+            changed_roots: self
+                .receiver_only_bindings
+                .as_ref()
+                .map(|_| Default::default()),
+            collect_root_origins,
+            root_capture_rhs: false,
+            #[cfg(feature = "test-instrumentation")]
+            root_visits: 0,
+            conditional: false,
             nested_pattern: false,
             pattern_depth: 0,
             collect_reference_effects: self.prior_member_mutations.has_reference_proof_demand(),
             proof_events: Default::default(),
         };
+        if collect_root_origins {
+            // Reuse the same evaluation walk for root RHS history. Existing
+            // member-reference receipts still cover only the LHS catalog.
+            let reference_effects = walk.collect_reference_effects;
+            walk.collect_reference_effects = false;
+            walk.root_capture_rhs = true;
+            walk.expression(rhs);
+            walk.root_capture_rhs = false;
+            #[cfg(feature = "test-instrumentation")]
+            root_target_metrics::RHS_DISCARDED_WRITES
+                .with(|count| count.set(count.get() + walk.writes.len()));
+            walk.writes.clear();
+            walk.collect_reference_effects = reference_effects;
+        }
         walk.target(target);
         walk.segments.sort_unstable_by_key(|segment| segment.0);
         debug_assert!(walk.segments.windows(2).all(|pair| pair[0].1 <= pair[1].0));
+        #[cfg(feature = "test-instrumentation")]
+        let root_visits = walk.root_visits;
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        phase_changed_roots_tests::finish_walk(&walk);
         let PhaseWalk {
             segments,
             writes,
+            root_writes,
             nested_pattern,
             proof_events,
             ..
         } = walk;
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.value_flow.receiver_only_phase_visits += root_visits;
+        }
+        let root_catalog = collect_root_origins.then(|| {
+            Arc::new(PhaseCatalog {
+                start: target.span().start,
+                end: rhs.span().end.max(target.span().end),
+                segments: root_segments::capture(&segments, !root_writes.is_empty()),
+            })
+        });
         let catalog = Arc::new(PhaseCatalog {
             start: target.span().start,
             end: target.span().end,
-            segments,
+            segments: segments
+                .into_iter()
+                .filter(|segment| segment.0 < target.span().end)
+                .collect(),
+        });
+        let first_changes = root_phase_capture::RootPhaseCapture::first_changes(&root_writes);
+        let previous_root_capture = root_catalog.and_then(|catalog| {
+            self.receiver_root_phases
+                .replace(Box::new(root_phase_capture::RootPhaseCapture {
+                    catalog,
+                    first_changes,
+                    points: root_writes
+                        .into_iter()
+                        .map(|point| (point.target, point))
+                        .collect(),
+                    owner,
+                    conditional_depth: self.receiver_write_conditional_depth,
+                    events: Vec::new(),
+                }))
         });
         #[cfg(feature = "test-instrumentation")]
         {
@@ -79,16 +154,18 @@ impl ImportCollector {
             .then(|| {
                 let inert = !nested_pattern
                     && inert_receiver_rhs::inert_rhs(rhs, &mut self.fresh_receiver_effects);
-                Box::new(active_reference_phases::ActiveReferencePhases::new(
-                    (&catalog, rhs.span().end),
-                    &writes,
-                    self.destructuring_phase_receipts
-                        .as_ref()
-                        .map(|receipts| &receipts.scopes),
-                    &self.prior_member_mutations,
-                    owner,
-                    inert,
-                    proof_events,
+                std::rc::Rc::new(std::cell::RefCell::new(
+                    active_reference_phases::ActiveReferencePhases::new(
+                        (&catalog, rhs.span().end),
+                        &writes,
+                        self.destructuring_phase_receipts
+                            .as_ref()
+                            .map(|receipts| &receipts.scopes),
+                        &self.prior_member_mutations,
+                        owner,
+                        inert,
+                        proof_events,
+                    ),
                 ))
             });
         let previous_identity =
@@ -96,45 +173,30 @@ impl ImportCollector {
         let previous = self
             .destructuring_phase_owner
             .replace(self.current_function_id());
+        // Nested RHS patterns already append into the outer frame. Only its
+        // owner may replay after the complete root phase capture is committed.
+        let defer_mutable =
+            self.receiver_only_bindings.is_some() && self.deferred_mutable_writes.is_none();
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let defer_mutable = defer_mutable
+            || (self.receiver_only_bindings.is_some()
+                && mutable_receiver_tests::deferred_frames::LEGACY.with(std::cell::Cell::get));
+        let previous_deferred = defer_mutable
+            .then(|| self.begin_deferred_mutable_writes())
+            .flatten();
         Some(PreparedPhases {
             catalog,
+            previous_deferred,
+            defer_mutable,
             writes,
+            previous_root_capture,
+            root_capture: collect_root_origins,
+            root_end: rhs.span().end.max(target.span().end),
+            root_guaranteed: !self.receiver_write_is_conditional
+                && self.repeat_depth == self.call_repeat_base,
+            owner,
             previous,
             previous_identity,
         })
-    }
-    pub(in super::super) fn end_destructuring_lhs(&mut self, phases: &Option<PreparedPhases>) {
-        if let Some(phases) = phases {
-            self.destructuring_phase_owner = phases.previous;
-            if let Some(receipts) = &mut self.destructuring_phase_receipts {
-                receipts.active = false;
-            }
-        }
-    }
-    pub(in super::super) fn finish_destructuring_phases(&mut self, phases: Option<PreparedPhases>) {
-        if let Some(phases) = phases {
-            #[cfg(feature = "test-instrumentation")]
-            if let Some(identity) = &self.fresh_receiver_effects.phases {
-                identity.record_counts(&mut self.value_flow);
-            }
-            self.fresh_receiver_effects.phases = phases.previous_identity;
-            for write in phases.writes {
-                let Some(scope) = self
-                    .destructuring_phase_receipts
-                    .as_ref()
-                    .and_then(|receipts| receipts.scopes.get(&write.target))
-                    .copied()
-                else {
-                    continue;
-                };
-                self.record_early_assignment(
-                    scope,
-                    &write.name,
-                    &write.path,
-                    &phases.catalog,
-                    write.phase,
-                );
-            }
-        }
     }
 }

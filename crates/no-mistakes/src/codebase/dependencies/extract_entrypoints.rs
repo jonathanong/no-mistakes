@@ -24,6 +24,14 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
 pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
 ) -> ImportFacts {
+    extract_import_facts_with_rhs_probe(program, source, collect_resource_roots, collect_per_item_calls, collect_value_flow,
+        #[cfg(feature = "test-instrumentation")] None)
+}
+
+fn extract_import_facts_with_rhs_probe(
+    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
+    #[cfg(feature = "test-instrumentation")] probe: Option<std::rc::Rc<std::cell::RefCell<extract_value_flow::inert_receiver_rhs::tests_support::Probe>>>,
+) -> ImportFacts {
     let mut collector = ImportCollector {
         collect_per_item_calls,
         collect_value_flow,
@@ -34,6 +42,8 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
             && !program.has_use_strict_directive(),
         ..ImportCollector::default()
     };
+    #[cfg(feature = "test-instrumentation")]
+    { collector.fresh_receiver_effects.rhs_probe = probe; }
     // Establish the file lexical environment before visiting expressions so a
     // later declaration cannot make an earlier global-looking call resolve to
     // a built-in. This is collection from the already parsed Program, not a
@@ -170,33 +180,9 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     }
 }
 
-fn import_line_starts(source: &str) -> Vec<u32> {
-    if source.is_empty() {
-        return Vec::new();
-    }
-    let mut starts = vec![0u32];
-    for (index, byte) in source.bytes().enumerate() {
-        if byte == b'\n' {
-            starts.push((index + 1) as u32);
-        }
-    }
-    starts
-}
-
 #[cfg(test)]
 #[path = "extract_entrypoints_import_line_tests.rs"]
 mod import_line_tests;
-
-fn import_line_at(line_starts: &[u32], byte_offset: usize) -> u32 {
-    if line_starts.is_empty() {
-        return 1;
-    }
-    let offset = byte_offset as u32;
-    match line_starts.binary_search(&offset) {
-        Ok(index) => index as u32 + 1,
-        Err(index) => index as u32,
-    }
-}
 
 #[cfg(test)]
 #[path = "extract/tests/value_flow_sharing.rs"]
@@ -205,3 +191,5 @@ mod value_flow_sharing;
 #[cfg(test)]
 #[path = "extract/tests/value_flow_once.rs"]
 mod value_flow_once;
+
+include!("extract_import_lines.rs");
