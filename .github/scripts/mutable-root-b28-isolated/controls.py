@@ -5,12 +5,15 @@ from pathlib import Path
 from supervise import command
 from transport import sha
 from full_control import verify_raw
+from input_guard import declared_sql
 
 D = Path(__file__).resolve().parent
 
 
 def run(stage, output, deadline):
     spec = json.loads((D / 'controls.json').read_text())
+    declared_sql(json.loads((D / 'payload-files.json').read_text()),
+                 json.loads((D / 'required-inputs.json').read_text()), spec)
     env = dict(os.environ, RAYON_NUM_THREADS='4')
     env.pop('GH_TOKEN', None)
     records = []

@@ -779,14 +779,14 @@
   ],
   "A28-run": [
     "/tmp/nm2054-parent2022-baseline-probes-followup/sql-2054",
-    "/tmp/nm2064-b0b-sql-control/inputs/index-identity-feature-parity.sql",
-    "/tmp/nm2064-b0b-sql-control/inputs/index-identity-feature-parity.expected.json",
-    "/tmp/nm2064-b0b-sql-control/inputs/legacy-default-full-facts.json"
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json"
   ],
   "B28-run": [
     "/tmp/nm2054-final-stack-helper-links/sql-2054",
-    "/tmp/nm2064-b0b-sql-control/inputs/index-identity-feature-parity.sql",
-    "/tmp/nm2064-b0b-sql-control/inputs/index-identity-feature-parity.expected.json",
-    "/tmp/nm2064-b0b-sql-control/inputs/legacy-default-full-facts.json"
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json"
   ]
 }
