@@ -1,0 +1,101 @@
+{
+  "status": "REVIEWED_ACTIVE_DEADLINE_DIAGNOSTIC",
+  "baseline": "2bb75add206c81218052aa82ccb280237c7faae8",
+  "candidate": "ede951247af20aa434ac22ceec799fba2954c635",
+  "runner": "ubuntu-24.04-arm",
+  "toolchain": "1.99.1 (58cf8f9c3)",
+  "build": {
+    "parallel_producers": 2,
+    "command": "cargo build --release --locked --bin no-mistakes --message-format=json",
+    "features": "unchanged default including mermaid",
+    "profile": "opt3,lto=true,codegen-units=1,debug0,incremental0",
+    "cargo_jobs": 1,
+    "producer_cap_minutes": 45,
+    "target_disk_cap_bytes": 9000000000,
+    "source_and_completed_dependency_inventory": true,
+    "cargo_json_fresh_false_and_actual_cli_selection": true,
+    "elf_machine": "AArch64",
+    "artifact_transport": "same-run upload-artifact/download-artifact; exact names,run,source,hash,size bound; never fallback"
+  },
+  "fixture": {
+    "source": "git archive exact baseline2bb tracked tree, same physical readonly path both arms",
+    "manifest": "sorted Git path/mode/SHA256/bytes plus symlink target; complete inventory pinned before publication",
+    "config": "saved empty JSON config copied as own immutablepackage file; never alter fixture",
+    "discovery": "actual candidate/discovered/classified counts retained; ~23k is expectation not acceptance equality substitute"
+  },
+  "cells": {
+    "timeout_seconds": [
+      120,
+      0
+    ],
+    "diagnostics": [
+      "off",
+      "--timings"
+    ],
+    "jobs": [
+      "1",
+      "4",
+      "default omitted"
+    ],
+    "count": 12
+  },
+  "schedule": {
+    "per_cell": [
+      "ABBA",
+      "BAAB"
+    ],
+    "rows_per_cell": 8,
+    "total_timed_rows": 96,
+    "measurement_jobs": 6,
+    "job_matrix": "diagnostics x jobs; both timeout modes on same VM",
+    "per_job_rows": 16,
+    "mode_order": "timeout120 then0 fixed; no crossmode pooled inference",
+    "cold": "fresh CLIprocess+XDG runtime eachrow; OS cache warm, not filesystemcold",
+    "warmup": "one untimed invocation/arm/cell; preserve raw, excluded a priori"
+  },
+  "caps": {
+    "row_wall_seconds": 125,
+    "job_minutes": 45,
+    "maximum_timed_seconds_per_job": 2000,
+    "warmup_cap_seconds": 500,
+    "remaining_seconds_for_setup_upload": 200,
+    "capacity": "16*125 +4*125 +200 =2700s; stop BEFORE samples if genuine preflight demonstrates budget cannot fit; no sample reduction",
+    "actual_deadline": "min(firstjobstepEpoch+2700-150, PythonentryEpoch+2520-60), fixed child125; capacity2200 after4preflight; no reset"
+  },
+  "metrics": [
+    "elapsed monotonic wall",
+    "direct wait4 user+sys CPU",
+    "direct wait4 peakRSS",
+    "exit",
+    "fullstdoutSHA+bytes",
+    "rawstderr",
+    "diagnostic phase objects when enabled"
+  ],
+  "parity": "full stdout and exit strict equality for every arm/cell; no findings normalization; timings stderr naturally differs",
+  "science": "within-cell paired log ratios and block bootstrap interval; publish individual order estimates/allraw. descriptive current-head improvement/no-detected-regression/uncertain, never copy CI success into performance PASS; all adverse retained; no retuning/retry",
+  "activation": "existing registered workflow receiver-fact-native.yml temporarily delegates reviewed controller on diagnostic branch with exact package hash/expectedhead; root sole explicit dispatch once published and reverified; no new PR/no workflowregistration dependency",
+  "planned_files": [
+    "workflow-source.yml",
+    "protocol.json",
+    "empty-rules.json",
+    "build.py",
+    "measure.py",
+    "analyze.py",
+    "process_owner.py",
+    "subreaper.py",
+    "test_protocol.py",
+    "README.md"
+  ],
+  "file_count": 10,
+  "diagnostics_on_flags": [
+    "--timings",
+    "--verbose-timings"
+  ],
+  "sample_inference": "Two blocks per cell are descriptive, not a guaranteed regression or tail gate.",
+  "source_proofs": {
+    "parser": "Both exactpublicrefs invocation.rs nonzero_seconds(0)=>None; original parser-source-proof.json SHA61605d332250ef073c3c4b052f37961caa1363f7be112317055288004060d179",
+    "fixture": "Root independently rehashed23370 Gitentries from18062blobs, exact2bbtree/manifest matches",
+    "native": "NOT EXECUTED; future actual producers + full CLI preflight required before timed rows",
+    "workflow": "Pinnedactions checked, ARM explicit, same-run artifacts only, draftsourceunits/actionlint passed"
+  }
+}

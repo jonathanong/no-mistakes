@@ -1,0 +1,21 @@
+{
+  "producer": {
+    "source": "candidate-sha",
+    "machine": {
+      "run": "same-run",
+      "attempt": "1"
+    },
+    "cli_sha256": "abc",
+    "bytes": 123,
+    "cargo_selected": {
+      "fresh": false
+    }
+  },
+  "spec": {
+    "candidate": "candidate-sha"
+  },
+  "machine": {
+    "run": "same-run",
+    "attempt": "1"
+  }
+}

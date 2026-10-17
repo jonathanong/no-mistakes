@@ -1,87 +1,112 @@
-name: Historical receiver native experiment
-
+name: Active deadline CLI diagnostic
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/receiver-fact-native.yml'
-      - '.github/scripts/receiver-fact-native/**'
-      - 'docs/performance/receiver-native-hosted.md'
   workflow_dispatch:
-
+    inputs:
+      confirm:
+        description: Exact reviewed protocol fingerprint
+        required: true
+        type: string
+      approved_source_sha:
+        description: Exact reviewed published workflow source commit
+        required: true
+        type: string
+      package_manifest_sha256:
+        description: Exact reviewed complete package manifest
+        required: true
+        type: string
 permissions:
   contents: read
-
 concurrency:
-  group: receiver-native-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
+  group: deadline-2126-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  historical-x86:
-    name: Historical native x86 pair
-    runs-on: ubuntu-24.04
-    timeout-minutes: 180
+  build:
+    if: ${{ inputs.confirm != 'DRAFT_DISABLED' }} # Exact protocol hash and reviewed status independently required.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
     env:
-      # Exact historical compiler; source worktrees must not select their moving stable alias.
-      RUSTUP_TOOLCHAIN: '1.99.0'
-      DRIVER: .github/scripts/receiver-fact-native
+      PROTOCOL_SHA256: ${{ inputs.confirm }}
+      APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PACKAGE_MANIFEST_SHA256: ${{ inputs.package_manifest_sha256 }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arm: baseline
+            source: 2bb75add206c81218052aa82ccb280237c7faae8
+          - arm: candidate
+            source: ede951247af20aa434ac22ceec799fba2954c635
     steps:
-      - name: Checkout experiment and public probe
-        id: checkout
-        timeout-minutes: 5
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Anchor job budget before checkout and setup
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Set isolated runtime output path
-        timeout-minutes: 1
-        run: printf 'EXPERIMENT_ROOT=%s/receiver-native-2012\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - name: Test saved report fixtures
-        timeout-minutes: 2
-        run: python3 -m unittest discover -s "$DRIVER" -p 'test_*.py'
-      - name: Install historical compiler
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+          path: controller
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          toolchain: '1.99.0'
-      - name: Preflight and pin historical source pair
-        id: preflight
-        timeout-minutes: 3
-        run: python3 "$DRIVER/build.py" prepare --root "$EXPERIMENT_ROOT"
-      - name: Build exact release pair sequentially
-        timeout-minutes: 90
-        run: python3 "$DRIVER/build.py" opt3 --root "$EXPERIMENT_ROOT"
-      - name: Measure release pair after builds finish
-        id: release-samples
-        timeout-minutes: 15
-        run: python3 "$DRIVER/measure.py" opt3 --root "$EXPERIMENT_ROOT"
-      - name: Remove only owned release compilation target
-        if: ${{ always() && steps.preflight.outcome == 'success' }}
-        timeout-minutes: 2
-        run: python3 "$DRIVER/build.py" cleanup-opt3 --root "$EXPERIMENT_ROOT"
-      - name: Build separate original-profile opt0 pair
-        if: ${{ success() && steps.release-samples.outcome == 'success' }}
-        timeout-minutes: 25
-        run: python3 "$DRIVER/build.py" opt0 --root "$EXPERIMENT_ROOT"
-      - name: Measure separate opt0 control
-        timeout-minutes: 12
-        run: python3 "$DRIVER/measure.py" opt0 --root "$EXPERIMENT_ROOT"
-      - name: Remove only owned opt0 compilation target
-        if: ${{ always() && steps.preflight.outcome == 'success' }}
-        timeout-minutes: 2
-        run: python3 "$DRIVER/build.py" cleanup-opt0 --root "$EXPERIMENT_ROOT"
-      - name: Verify and summarize every retained row
-        if: ${{ always() && steps.checkout.outcome == 'success' }}
-        timeout-minutes: 2
-        run: |
-          status=0
-          python3 "$DRIVER/report.py" --root "$EXPERIMENT_ROOT" || status=$?
-          cat "$EXPERIMENT_ROOT/public/summary.md" >> "$GITHUB_STEP_SUMMARY"
-          exit "$status"
-      - name: Retain curated readable measurements only
-        if: ${{ always() && steps.checkout.outcome == 'success' }}
-        timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+          ref: ${{ matrix.source }}
+          persist-credentials: false
+          path: native
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         with:
-          name: receiver-native-2012-x86-readable
-          path: ${{ env.EXPERIMENT_ROOT }}/public/
+          toolchain: 1.99.1
+      - name: Fresh ARM release CLI
+        timeout-minutes: 42
+        run: python3 controller/.github/scripts/deadline-2126/build.py "$GITHUB_WORKSPACE/native" '${{ matrix.arm }}' "$GITHUB_WORKSPACE/result"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: deadline-native-${{ matrix.arm }}
+          path: result
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      PROTOCOL_SHA256: ${{ inputs.confirm }}
+      APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PACKAGE_MANIFEST_SHA256: ${{ inputs.package_manifest_sha256 }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        diagnostics: ['off', 'on']
+        jobs: ['1', '4', default]
+    steps:
+      - name: Anchor job budget before checkout and setup
+        run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: controller
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 2bb75add206c81218052aa82ccb280237c7faae8
+          persist-credentials: false
+          path: fixture
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: deadline-native-baseline
+          path: artifacts/baseline
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: deadline-native-candidate
+          path: artifacts/candidate
+      - name: Same-VM preflight and fixed schedule
+        timeout-minutes: 42
+        run: python3 controller/.github/scripts/deadline-2126/measure.py "$GITHUB_WORKSPACE/artifacts" "$GITHUB_WORKSPACE/fixture" "$GITHUB_WORKSPACE/evidence" '${{ matrix.diagnostics }}' '${{ matrix.jobs }}'
+      - name: Descriptive analysis
+        run: python3 controller/.github/scripts/deadline-2126/analyze.py evidence/rows.json > evidence/descriptive.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: deadline-evidence-${{ matrix.diagnostics }}-${{ matrix.jobs }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 14
