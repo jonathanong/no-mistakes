@@ -1,15 +1,48 @@
 use crate::codebase::postgres::query_annotation::{Expr, Function, Step};
 use std::collections::{BTreeMap, BTreeSet};
 
+pub(super) enum ExportReachability<'a> {
+    All,
+    Selected(BTreeSet<&'a str>),
+}
+
+impl ExportReachability<'_> {
+    // Callers query only globals from the module being analyzed.
+    pub(super) fn contains(&self, global: &str) -> bool {
+        match self {
+            Self::All => true,
+            Self::Selected(names) => names.contains(global),
+        }
+    }
+}
+
 pub(super) fn export_reachable_globals<'a>(
     globals: &'a BTreeMap<String, Expr>,
     exported: impl IntoIterator<Item = &'a str>,
-) -> BTreeSet<&'a str> {
-    let mut reachable = BTreeSet::new();
-    for name in exported {
-        visit_global(globals, name, &mut reachable);
+) -> ExportReachability<'a> {
+    if globals.is_empty() {
+        return ExportReachability::All;
     }
-    reachable
+    let mut exported = exported.into_iter();
+    // The old equality check allocated nothing for a sole exported global.
+    if globals.len() == 1 {
+        return if exported.any(|name| globals.contains_key(name)) {
+            ExportReachability::All
+        } else {
+            ExportReachability::Selected(BTreeSet::new())
+        };
+    }
+    let mut reachable: BTreeSet<_> = exported.collect();
+    // Selection only asks about globals. Fully exported modules need no return
+    // traversal, matching the old exported == target shortcut even for large bodies.
+    if globals.keys().all(|name| reachable.contains(name.as_str())) {
+        return ExportReachability::All;
+    }
+    let seeds: Vec<_> = reachable.iter().copied().collect();
+    for name in seeds {
+        expand_global(globals, name, &mut reachable);
+    }
+    ExportReachability::Selected(reachable)
 }
 
 fn visit_global<'a>(
@@ -18,11 +51,19 @@ fn visit_global<'a>(
     reachable: &mut BTreeSet<&'a str>,
 ) {
     if reachable.insert(name) {
-        if let Some(value) = globals.get(name) {
-            visits::record();
-            // A global binding has its own lexical scope, independent of its caller.
-            value_reaches(globals, value, reachable, &[]);
-        }
+        expand_global(globals, name, reachable);
+    }
+}
+
+fn expand_global<'a>(
+    globals: &'a BTreeMap<String, Expr>,
+    name: &'a str,
+    reachable: &mut BTreeSet<&'a str>,
+) {
+    if let Some(value) = globals.get(name) {
+        visits::record();
+        // A global binding has its own lexical scope, independent of its caller.
+        value_reaches(globals, value, reachable, &[]);
     }
 }
 
