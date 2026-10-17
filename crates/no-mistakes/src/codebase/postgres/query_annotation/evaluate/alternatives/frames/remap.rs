@@ -14,9 +14,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn r
 
 pub(super) fn remap_changed(value: &mut Value, indices: &FxHashMap<Environment, Environment>) {
     match value {
-        Value::Function(_, _, env) => {
-            if let Some(index) = indices.get(env) {
-                *env = *index;
+        Value::Function(_, _, super::super::super::Capture::Lexical(env)) => {
+            if let Some(index) = indices.get(&env.index()) {
+                *env = (*index).into();
             }
         }
         Value::Promise(value) | Value::Evaluated(value, _) => remap_changed(value, indices),
@@ -36,10 +36,30 @@ pub(super) fn remap_changed(value: &mut Value, indices: &FxHashMap<Environment, 
     }
 }
 
+pub(super) fn changes_value_environment(
+    value: &Value,
+    indices: &FxHashMap<Environment, Environment>,
+) -> bool {
+    match value {
+        Value::Function(_, _, super::super::super::Capture::Lexical(env)) => indices
+            .get(&env.index())
+            .is_some_and(|after| *after != env.index()),
+        Value::Promise(value) | Value::Evaluated(value, _) => {
+            changes_value_environment(value, indices)
+        }
+        Value::Aggregate(values)
+        | Value::References(values)
+        | Value::Object(values)
+        | Value::Record(values, _)
+        | Value::Joined(values)
+        | Value::Possible(values) => changes_environment(values, indices),
+        _ => false,
+    }
+}
+
 fn changes_environment(values: &Values, indices: &FxHashMap<Environment, Environment>) -> bool {
     values.contains_environment()
         && values
             .environment_indices()
-            .iter()
-            .any(|env| indices.get(env).is_some_and(|after| after != env))
+            .any(|env| indices.get(&env).is_some_and(|after| *after != env))
 }

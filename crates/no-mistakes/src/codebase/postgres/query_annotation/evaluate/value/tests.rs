@@ -84,15 +84,20 @@ fn environment_memo_follows_nested_functions_and_detached_writes() {
             self_name: None,
         }),
         "helper.ts".into(),
-        7,
+        7usize.into(),
     );
+    let mut module_function = function.clone();
+    let Value::Function(_, _, capture) = &mut module_function else {
+        unreachable!()
+    };
+    *capture = super::super::Capture::Module;
     let mut values = Values::from(vec![Value::Arguments(8), prefix("plain")]);
     let original = values.clone();
     assert!(!values.contains_environment());
     values.push(Value::Promise(Box::new(Value::Evaluated(
         Box::new(Value::Joined(
             vec![Value::Possible(
-                vec![Value::Aggregate(vec![function].into())].into(),
+                vec![Value::Aggregate(vec![function, module_function].into())].into(),
             )]
             .into(),
         )),
@@ -100,8 +105,10 @@ fn environment_memo_follows_nested_functions_and_detached_writes() {
     ))));
     assert!(values.contains_environment());
     assert_eq!(
-        values.environment_indices(),
-        &crate::fx::FxHashSet::from_iter([7])
+        values
+            .environment_indices()
+            .collect::<crate::fx::FxHashSet<_>>(),
+        crate::fx::FxHashSet::from_iter([7])
     );
     assert!(!original.contains_environment());
     values.pop();

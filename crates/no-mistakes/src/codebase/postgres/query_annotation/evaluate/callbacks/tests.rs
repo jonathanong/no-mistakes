@@ -25,12 +25,14 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

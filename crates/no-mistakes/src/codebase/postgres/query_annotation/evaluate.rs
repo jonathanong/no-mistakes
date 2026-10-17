@@ -1,6 +1,8 @@
 mod alternatives;
 mod atomic;
 mod callbacks;
+mod capture;
+use capture::Capture;
 mod calls;
 mod collections;
 mod composition;
@@ -11,8 +13,11 @@ use {concat::concat, scope::Scope};
 mod delete;
 mod effects;
 mod index;
+mod initial_template;
 mod mapped;
 mod modules;
+mod new;
+pub(super) use new::new;
 mod opaque;
 mod result;
 mod run;
@@ -37,8 +42,11 @@ pub(super) struct File<'a> {
     pub facts: &'a QueryAnnotationFileFacts,
     pub module: Arc<Module>,
     pub executors: FxHashSet<CallSpan>,
+    pub initial_template: std::sync::OnceLock<Option<Scope>>,
 }
 pub(super) struct Evaluator<'a, F> {
+    // Own one request observer; activation counters borrow it without TLS/Arc clones.
+    pub initial_template_observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
     // Immutable request-wide trust; branch snapshots cannot restore intrinsics.

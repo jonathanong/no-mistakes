@@ -20,12 +20,14 @@ fn lazy_module_argument_ids_use_shared_definite_intersections() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

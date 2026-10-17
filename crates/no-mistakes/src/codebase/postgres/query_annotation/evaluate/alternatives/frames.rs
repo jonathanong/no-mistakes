@@ -5,6 +5,8 @@ use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 struct Roots<'a> {
+    modules: &'a FxHashMap<std::path::PathBuf, Environment>,
+    module_policy: reachable::ModulePolicy,
     environments: &'a [Environment],
     arguments: &'a [u64],
     preserved: Environment,
@@ -28,6 +30,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
 
 mod captures;
 mod remap;
+#[cfg(test)]
+#[path = "frames/scope_tests.rs"]
+mod scope_tests;
 pub(super) use remap::remap;
 use remap::remap_changed;
 
@@ -51,7 +56,6 @@ pub(super) fn compact(
 ) -> Compaction {
     let original = cache.original;
     let mut roots = (0..original).collect::<Vec<_>>();
-    roots.extend(cache.modules.values().copied());
     let mut argument_roots = Vec::new();
     for initial in cache.initials.iter() {
         roots.extend(initial.roots());
@@ -60,6 +64,8 @@ pub(super) fn compact(
     let indices = compact_from_roots(
         scopes,
         Roots {
+            modules: cache.modules,
+            module_policy: reachable::ModulePolicy::AllModules,
             environments: &roots,
             arguments: &argument_roots,
             preserved: original,
@@ -94,6 +100,8 @@ fn compact_from_roots(
     let reachable = reachable::collect_from_roots(
         scopes,
         reachable::RootSeeds {
+            modules: roots.modules,
+            module_policy: roots.module_policy,
             environments: roots.environments,
             arguments: roots.arguments,
             transient: roots.transient,
@@ -123,8 +131,15 @@ fn compact_from_roots(
     // Prune unreachable state below even when retained environments keep IDs.
     if environments_changed {
         for frame in &mut frames {
-            for value in frame.values_mut() {
-                remap_changed(value, &indices);
+            // Merely taking a mutable view detaches a shared binding map.
+            // Module captures and unchanged lexical frames need no write.
+            if frame
+                .values()
+                .any(|value| remap::changes_value_environment(value, &indices))
+            {
+                for value in frame.values_mut() {
+                    remap_changed(value, &indices);
+                }
             }
         }
         for value in returned {
@@ -182,7 +197,7 @@ fn compact_from_roots(
 }
 
 mod state;
-pub(super) use state::{compact_modules, prune_mutations, prune_state};
+pub(super) use state::{compact_modules, prune_mutations, prune_state, FrameContext};
 
 #[cfg(test)]
 mod tests;

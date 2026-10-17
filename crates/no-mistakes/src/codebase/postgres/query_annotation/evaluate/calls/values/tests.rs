@@ -25,12 +25,14 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

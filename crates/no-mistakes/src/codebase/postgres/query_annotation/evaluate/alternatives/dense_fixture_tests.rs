@@ -5,12 +5,17 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
-fn references(value: &Value, callbacks: &mut Vec<Environment>, arguments: &mut Vec<u64>) {
+fn references(
+    value: &Value,
+    modules: &FxHashMap<PathBuf, Environment>,
+    callbacks: &mut Vec<Environment>,
+    arguments: &mut Vec<u64>,
+) {
     match value {
-        Value::Function(_, _, env) => callbacks.push(*env),
+        Value::Function(_, owner, capture) => callbacks.push(capture.environment(owner, modules)),
         Value::Arguments(id) => arguments.push(*id),
         Value::Promise(value) | Value::Evaluated(value, _) => {
-            references(value, callbacks, arguments)
+            references(value, modules, callbacks, arguments)
         }
         Value::Aggregate(values)
         | Value::References(values)
@@ -18,7 +23,7 @@ fn references(value: &Value, callbacks: &mut Vec<Environment>, arguments: &mut V
         | Value::Joined(values)
         | Value::Possible(values) => {
             for value in values {
-                references(value, callbacks, arguments);
+                references(value, modules, callbacks, arguments);
             }
         }
         _ => {}
@@ -39,12 +44,14 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -76,7 +83,7 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
     let retained = evaluator.scopes[root].get("retained").expect("saved state");
     let mut callbacks = Vec::new();
     let mut arguments = Vec::new();
-    references(retained, &mut callbacks, &mut arguments);
+    references(retained, &evaluator.modules, &mut callbacks, &mut arguments);
     assert!(
         !callbacks.is_empty(),
         "the selected callback remains reachable"
@@ -84,7 +91,12 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
     assert!(callbacks.iter().all(|env| *env < evaluator.scopes.len()));
     for env in &callbacks {
         if let Some(captured) = evaluator.scopes[*env].get("arguments") {
-            references(captured, &mut Vec::new(), &mut arguments);
+            references(
+                captured,
+                &evaluator.modules,
+                &mut Vec::new(),
+                &mut arguments,
+            );
         }
     }
     assert!(

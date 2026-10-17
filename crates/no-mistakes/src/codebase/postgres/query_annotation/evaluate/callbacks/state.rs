@@ -20,6 +20,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
 }
 
 pub(super) struct View<'a> {
+    modules: &'a FxHashMap<PathBuf, Environment>,
     untrusted_array_intrinsics: bool,
     scopes: &'a [Scope],
     objects: &'a FxHashMap<u64, Vec<Value>>,
@@ -37,6 +38,7 @@ pub(super) struct View<'a> {
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn callback_view(&self) -> View<'_> {
         View {
+            modules: &self.modules,
             untrusted_array_intrinsics: self.untrusted_array_intrinsics,
             scopes: &self.scopes,
             objects: &self.argument_objects,
@@ -120,9 +122,11 @@ impl View<'_> {
             }
             while let Some(value) = values.pop() {
                 match value {
-                    Value::Function(function, path, env) => {
-                        functions.push((path.as_path(), *env, function))
-                    }
+                    Value::Function(function, path, env) => functions.push((
+                        path.as_path(),
+                        env.environment(path, self.modules),
+                        function,
+                    )),
                     Value::Arguments(id) | Value::Array(id) => {
                         self.snapshot_argument(*id, &mut found, &mut values)
                     }

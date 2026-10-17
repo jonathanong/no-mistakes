@@ -18,12 +18,14 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: Default::default(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -102,7 +104,7 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         .extras
         .values()
         .flat_map(|slots| slots.values())
-        .any(|value| matches!(value, Value::Function(_,_,env) if *env >= offset)));
+        .any(|value| matches!(value, Value::Function(_,_,crate::codebase::postgres::query_annotation::evaluate::Capture::Lexical(env)) if env.index() >= offset)));
     evaluator
         .scopes
         .resize(evaluator.scopes.len() + offset, Default::default());

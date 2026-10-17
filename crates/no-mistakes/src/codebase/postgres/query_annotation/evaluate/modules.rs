@@ -46,7 +46,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         let facts = &files[path].facts;
-        self.steps(&facts.roots, path, &mut env, 16, true);
+        let template_applied = self.apply_initial_template(path, env);
+        if !template_applied {
+            if let Some(observer) = self.initial_template_observer.as_deref() {
+                observer.increment("postgres.annotation.module_initializations", 1);
+            }
+            self.steps(&facts.roots, path, &mut env, 16, true);
+        }
         // A dependency's top-level opaque effect may mutate a builder owned
         // by another already-initialized module. Its local frame cannot prove
         // that shared builder unchanged.
@@ -62,14 +68,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         {
             self.invalidate_live_builders();
         }
+        if !template_applied {
+            self.initialize_module_globals(path, env);
+        }
+        self.record_alternative_module_initial(path, env);
+        env
+    }
+    pub(super) fn initialize_module_globals(&mut self, path: &Path, env: Environment) {
+        let facts = &self.files[path].facts;
         // Unmodeled top-level statements must not discard independently
         // supported function bodies. Their captured values remain conservative.
+        let capture = self.capture(path, env);
         for (name, expr) in &facts.globals {
             match expr {
                 Expr::Function(function) => {
                     self.scopes[env].insert(
                         name.clone(),
-                        Value::Function(std::sync::Arc::clone(function), path.to_path_buf(), env),
+                        Value::Function(
+                            std::sync::Arc::clone(function),
+                            path.to_path_buf(),
+                            capture,
+                        ),
                     );
                 }
                 Expr::Unknown => {
@@ -78,7 +97,5 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 _ => {}
             }
         }
-        self.record_alternative_module_initial(path, env);
-        env
     }
 }

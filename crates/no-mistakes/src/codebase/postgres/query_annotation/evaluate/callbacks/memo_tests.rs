@@ -25,12 +25,14 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
     let files = FxHashMap::from_iter([(
         path.clone(),
         File {
+            initial_template: Default::default(),
             facts: &facts,
             module: std::sync::Arc::new(Module::new(ts.clone().into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
+        initial_template_observer: crate::diagnostics::current(),
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -78,8 +80,13 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
         let Value::Function(function, path, captured) = value else {
             panic!("saved callback");
         };
-        let current =
-            evaluator.memoized_callback_snapshot(path, *captured, function, *depth, &mut memo);
+        let current = evaluator.memoized_callback_snapshot(
+            path,
+            captured.environment(path, &evaluator.modules),
+            function,
+            *depth,
+            &mut memo,
+        );
         assert!(
             current == *before,
             "pure callbacks leave observed state unchanged"
@@ -90,4 +97,59 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
         "comparison shares the same callback table projection"
     );
     assert!(state.memo.constructions + memo.constructions <= 2);
+}
+
+#[test]
+fn module_capture_memo_reprojects_after_frame_compaction_and_binding_write() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/module-captures/pure.mts",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let facts = crate::ast::with_program(&path, &source, |program, _| {
+        query_annotation::collect(program, &source, &options)
+    })
+    .unwrap();
+    let files = FxHashMap::from_iter([(
+        path.clone(),
+        File {
+            facts: &facts,
+            module: std::sync::Arc::new(Module::new(TsFileFacts::default().into())),
+            executors: Default::default(),
+            initial_template: Default::default(),
+        },
+    )]);
+    let mut evaluator = super::super::new(&files, |_: &str, _: &std::path::Path| None, false);
+    // Allocate a dead local before the lazy module, so compaction really moves
+    // its frame while the symbolic Function value remains unchanged.
+    evaluator.environment(Default::default());
+    let original = evaluator.module_environment(&path);
+    assert_eq!(original, 1);
+    let callback = evaluator.scopes[original]["read"].clone();
+    let Value::Function(function, owner, capture) = &callback else {
+        panic!("saved module function")
+    };
+    assert_eq!(*capture, super::super::Capture::Module);
+    let mut memo = super::memo::Memo::default();
+    let before = evaluator.memoized_callback_snapshot(owner, original, function, 8, &mut memo);
+    evaluator.prune_snapshot_state();
+    let moved = capture.environment(owner, &evaluator.modules);
+    assert_eq!(moved, 0);
+    assert!(evaluator.scopes[moved]["read"] == callback);
+    let compacted = evaluator.memoized_callback_snapshot(owner, moved, function, 8, &mut memo);
+    assert_eq!(
+        memo.constructions, 2,
+        "numeric snapshot roots must be rebuilt after compaction"
+    );
+    assert!(before != compacted);
+    evaluator.scopes[moved].insert("statement".into(), Value::Unknown);
+    let changed = evaluator.memoized_callback_snapshot(owner, moved, function, 8, &mut memo);
+    assert_eq!(
+        memo.constructions, 3,
+        "a stable Module capture cannot hide binding changes"
+    );
+    assert!(changed != compacted);
+    let unchanged = evaluator.memoized_callback_snapshot(owner, moved, function, 8, &mut memo);
+    assert!(std::sync::Arc::ptr_eq(&changed, &unchanged));
+    assert_eq!(memo.constructions, 3);
 }

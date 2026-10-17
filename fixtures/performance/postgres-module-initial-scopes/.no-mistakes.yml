@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@bench/db"
+      include:
+        - "root-*.mts"
