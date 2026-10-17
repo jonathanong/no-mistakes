@@ -51,7 +51,7 @@ pub fn fact_plan_for_consumers(
                 &[],
                 selection.playwright_project,
                 selection.app,
-                &snapshot,
+                snapshot,
             );
             Ok((settings?, true, selection.unique_html_ids))
         })
@@ -60,7 +60,7 @@ pub fn fact_plan_for_consumers(
         prepared.push((
             {
                 let settings =
-                    config::settings_from_loaded_v2(root, config, &[], None, None, &snapshot);
+                    config::settings_from_loaded_v2(root, config, &[], None, None, snapshot);
                 settings?
             },
             consumers.graph_selectors,
@@ -91,7 +91,7 @@ pub fn fact_plan_for_consumers(
             &loaded_configs,
         );
         let playwright = playwright?;
-        let test_files = discover_test_files_from_visible(root, &settings, &playwright, &snapshot)?;
+        let test_files = discover_test_files_from_visible(root, &settings, &playwright, snapshot)?;
         for test_file in &test_files {
             let attributes = test_file.test_id_attributes();
             plan.add_file(PlaywrightFactSelection {
@@ -109,7 +109,7 @@ pub fn fact_plan_for_consumers(
                 demands_text_imports,
             });
         }
-        plan.add_source_settings(root, settings.clone(), scan_html_ids, &snapshot)?;
+        plan.add_source_settings(root, settings.clone(), scan_html_ids, snapshot)?;
         test_files_by_project.insert(settings.project.clone(), Arc::new(test_files));
     }
     plan.set_test_files_by_project(test_files_by_project.into_iter().collect());
