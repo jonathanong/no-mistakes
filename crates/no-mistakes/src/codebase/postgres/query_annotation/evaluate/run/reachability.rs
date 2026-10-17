@@ -19,8 +19,7 @@ fn visit_global<'a>(
 ) {
     if reachable.insert(name) {
         if let Some(value) = globals.get(name) {
-            #[cfg(test)]
-            tests::GLOBAL_VISITS.with(|visits| visits.set(visits.get() + 1));
+            visits::record();
             // A global binding has its own lexical scope, independent of its caller.
             value_reaches(globals, value, reachable, &[]);
         }
@@ -128,3 +127,10 @@ fn shadowed(function: &Function, name: &str) -> bool {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(not(test))]
+#[path = "reachability/runtime.rs"]
+mod visits;
+#[cfg(test)]
+#[path = "reachability/tests/visits.rs"]
+mod visits;

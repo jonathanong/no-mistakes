@@ -96,10 +96,6 @@ fn prepared_branch_shadows_do_not_escape_global_callback() {
     assert!(shadowed(hoisted, "contextual"));
 }
 
-thread_local! {
-    pub(super) static GLOBAL_VISITS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 fn prepared_fixture(name: &str) -> query_annotation::QueryAnnotationFileFacts {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/executed-source")
@@ -118,7 +114,7 @@ fn prepared_fixture(name: &str) -> query_annotation::QueryAnnotationFileFacts {
 #[test]
 fn shared_export_cycle_visits_each_global_once() {
     let facts = prepared_fixture("export-reachability-shared-cycle.ts");
-    GLOBAL_VISITS.with(|visits| visits.set(0));
+    visits::reset();
     let reachable = export_reachable_globals(
         &facts.globals,
         facts
@@ -128,7 +124,7 @@ fn shared_export_cycle_visits_each_global_once() {
             .map(String::as_str),
     );
     assert_eq!(reachable.len(), 68);
-    assert_eq!(GLOBAL_VISITS.with(std::cell::Cell::get), 68);
+    assert_eq!(visits::count(), 68);
     assert!(export_reachable_globals(&facts.globals, ["directShadow"]).contains("leaf"));
     assert!(export_reachable_globals(&facts.globals, ["globalScopeReset"]).contains("leaf"));
     assert!(!export_reachable_globals(&facts.globals, ["nestedScope"]).contains("leaf"));
