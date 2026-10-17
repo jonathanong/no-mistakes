@@ -21,18 +21,31 @@ pub(super) fn published_deadline() -> Option<snapshot::Observed> {
     snapshot::load()
 }
 
-/// Two snapshots that are both already expired. A commit or restore that
-/// publishes between the loads returns no deadline.
-pub(super) fn consecutive_expired(mut load: impl FnMut() -> Option<Deadline>) -> Option<Deadline> {
-    let deadline = load()?;
-    if super::super::clock::now() < deadline.expires_at {
+#[cfg(test)]
+#[path = "expiry_reference_tests.rs"]
+pub(super) mod expiry_reference;
+
+/// Keep both applicable, expired image reads before decoding error metadata.
+pub(super) fn expired_timeout() -> Option<Duration> {
+    expired_timeout_from(snapshot::load_encoded, super::super::clock::now, |image| {
+        image.timeout()
+    })
+}
+
+fn expired_timeout_from(
+    mut load: impl FnMut() -> Option<snapshot::Encoded>,
+    mut now: impl FnMut() -> std::time::Instant,
+    decode_timeout: impl FnOnce(snapshot::Encoded) -> Duration,
+) -> Option<Duration> {
+    let first = load()?;
+    if !first.applies_here() || !first.expired_at(now()) {
         return None;
     }
-    let deadline = load()?;
-    if super::super::clock::now() < deadline.expires_at {
+    let second = load()?;
+    if !second.applies_here() || !second.expired_at(now()) {
         return None;
     }
-    Some(deadline)
+    Some(decode_timeout(second))
 }
 
 /// Remaining time from two snapshots. The second load drops a deadline that

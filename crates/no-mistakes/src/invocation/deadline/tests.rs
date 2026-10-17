@@ -275,7 +275,7 @@ fn second_snapshot_drops_an_expired_deadline_that_was_replaced() {
     let expired = sample_deadline(std::time::Instant::now());
     let live = sample_deadline(std::time::Instant::now() + std::time::Duration::from_secs(30));
     let mut loads = 0;
-    let found = super::publish::consecutive_expired(|| {
+    let found = super::publish::expiry_reference::consecutive_expired(|| {
         loads += 1;
         if loads == 1 {
             Some(expired)

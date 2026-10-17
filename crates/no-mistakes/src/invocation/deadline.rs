@@ -141,23 +141,14 @@ fn applicable_deadline() -> Option<Deadline> {
     })
 }
 
-/// Deadline that has elapsed on two consecutive snapshots.
-///
-/// The second load covers a commit or restore that published after the first
-/// copy. A committed deadline must not fire, and a cleared snapshot must not
-/// report the previous deadline.
-fn observed_expiry() -> Option<Deadline> {
-    publish::consecutive_expired(applicable_deadline)
-}
-
 /// Return an error once the active invocation deadline has elapsed.
 pub fn check_timeout() -> Result<()> {
-    let Some(deadline) = observed_expiry() else {
+    let Some(timeout) = publish::expired_timeout() else {
         return Ok(());
     };
     Err(InvocationError::new(
         InvocationErrorKind::CommandTimeout,
-        timeout_diagnostic(deadline.timeout, current_phase()),
+        timeout_diagnostic(timeout, current_phase()),
     )
     .into())
 }

@@ -1,5 +1,7 @@
 use super::super::Deadline;
 use super::pauses;
+mod encoded;
+pub(in crate::invocation::deadline) use encoded::Encoded;
 use std::collections::HashMap;
 use std::sync::atomic::{fence, AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, OnceLock, PoisonError};
@@ -70,6 +72,10 @@ pub(super) fn publish(deadline: Option<Deadline>) {
 }
 
 pub(super) fn load() -> Option<Observed> {
+    load_encoded().map(Encoded::decode)
+}
+
+pub(in crate::invocation::deadline) fn load_encoded() -> Option<Encoded> {
     loop {
         let first = WORDS.generation.load(Ordering::Acquire);
         if first & 1 != 0 {
@@ -96,9 +102,9 @@ pub(super) fn load() -> Option<Observed> {
         if present == 0 {
             return None;
         }
-        return Some(Observed {
-            expires_at: decode_instant(expires_nanos),
-            timeout: Duration::from_nanos(timeout_nanos),
+        return Some(Encoded {
+            expires_nanos,
+            timeout_nanos,
             committed: committed != 0,
             owner_token,
         });
