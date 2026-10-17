@@ -391,6 +391,7 @@ fn poisoned_deadline_write_still_publishes_the_guard() {
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         *guard = Some(sample_deadline(std::time::Instant::now()));
+        assert!(guard.is_some());
         panic!("poison the deadline lock");
     }));
     assert!(panicked.is_err());
