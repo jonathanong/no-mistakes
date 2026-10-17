@@ -4,3 +4,4 @@ rules:
     options:
       requiredFiles: [CLAUDE.md]
       requiredHeading: "## Related issues"
+      bannedPatterns: []

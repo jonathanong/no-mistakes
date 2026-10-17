@@ -132,7 +132,7 @@ fn line_comment_directive_matches(
         let Some((comment_start, prefix_len)) = comment else {
             return false;
         };
-        let rest = line[comment_start + prefix_len..].trim();
+        let rest = comment_body(line, comment_start, prefix_len);
         let Some(after_directive) = rest.strip_prefix(directive) else {
             return false;
         };
@@ -149,7 +149,7 @@ fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
 }
 #[path = "disable_comments/directives.rs"]
 mod directives;
-pub use directives::{matching_disable_directive, DisableDirective};
+pub use directives::{DisableDirective, matching_disable_directive};
 
 /// Index line suppressions in one lexical pass. Next-line directives deliberately
 /// retain the leading-comment semantics of `has_disable_comment`.
@@ -177,7 +177,9 @@ fn disabled_statement_lines_with_scan_observer(
         line_count = index + 1;
         scanned_line();
         let inline_disabled = line_comment_start(line, &mut state)
-            .and_then(|(start, len)| line[start + len..].trim().strip_prefix("no-mistakes-disable-line "))
+            .and_then(|(start, len)| {
+                comment_body(line, start, len).strip_prefix("no-mistakes-disable-line ")
+            })
             .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
         if next_disabled || inline_disabled {
             disabled.push((index + 1) as u32);

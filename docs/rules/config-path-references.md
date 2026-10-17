@@ -88,7 +88,7 @@ rule-specific option fields:
 | --- | --- |
 | `agents-md-max-size`, `required-local-docs`, `require-test-per-subdir`, `rust-max-lines-per-file`, `rust-no-inline-allows` | `roots` |
 | `csharp-max-lines-per-file` | `roots`, `testRoots` |
-| `doc-consistency` | `requiredFiles`, `requiredSubstrings[].file` |
+| `doc-consistency` | `requiredFiles`, `requiredSubstrings[].file`, `bannedPatterns[].files` |
 | `file-extension-policy` | `allowlist`, `scopes[].path` |
 | `forbidden-dependencies` | `roots`, `forbiddenFiles` |
 | `forbidden-workspace-closure` | `lockfile` |

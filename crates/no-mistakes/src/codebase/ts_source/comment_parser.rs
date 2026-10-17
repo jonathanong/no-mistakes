@@ -1,11 +1,16 @@
 fn leading_comment_text(line: &str) -> Option<&str> {
-    line.strip_prefix("//")
-        .or_else(|| line.strip_prefix('#'))
-        .or_else(|| {
-            let rest = line.strip_prefix("--")?;
-            rest.chars().next().is_some_and(char::is_whitespace).then_some(rest)
-        })
-        .map(str::trim)
+    html_leading_comment_body(line).or_else(|| {
+        line.strip_prefix("//")
+            .or_else(|| line.strip_prefix('#'))
+            .or_else(|| {
+                let rest = line.strip_prefix("--")?;
+                rest.chars()
+                    .next()
+                    .is_some_and(char::is_whitespace)
+                    .then_some(rest)
+            })
+            .map(str::trim)
+    })
 }
 
 #[derive(Default)]
@@ -15,10 +20,7 @@ struct LineCommentScanState {
     template_braces: Vec<usize>,
 }
 
-fn line_comment_start(
-    line: &str,
-    state: &mut LineCommentScanState,
-) -> Option<(usize, usize)> {
+fn line_comment_start(line: &str, state: &mut LineCommentScanState) -> Option<(usize, usize)> {
     let mut escaped = false;
     let mut in_regex = false;
     let mut in_regex_char_class = false;
@@ -158,8 +160,17 @@ fn paren_open_follows_control_flow(line: &str, open_idx: usize) -> bool {
 fn regex_can_start_after_word(word: &str) -> bool {
     matches!(
         word,
-        "return" | "throw" | "case" | "delete" | "typeof" | "void" | "yield" | "await" | "in"
-            | "of" | "new"
+        "return"
+            | "throw"
+            | "case"
+            | "delete"
+            | "typeof"
+            | "void"
+            | "yield"
+            | "await"
+            | "in"
+            | "of"
+            | "new"
     )
 }
 
