@@ -107,10 +107,6 @@ impl ImportCollector {
             // Same-owner snapshots belong to the acquisition, while timing and
             // invalidation below still belong to the physical writing closure.
             let references = index.references(acquired, write.metadata.foreign_before);
-            if references.is_empty() {
-                continue;
-            }
-            let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
             // The declaration order cannot establish an exact replacement or
             // a fresh-object certificate. Preserve the writer, member and scope.
             write.metadata.fresh = false;
@@ -125,6 +121,21 @@ impl ImportCollector {
                 has_assignment,
                 proof: None,
             };
+            for (reference, provider) in &index.module_references {
+                self.active_module_provider = Some(std::sync::Arc::clone(provider));
+                let mut affected = mutation_projection::Affected::default();
+                self.project_member_mutation(
+                    mutation_projection::PendingQueue::new((reference.clone(), false, true, true)),
+                    None,
+                    info,
+                    &mut affected,
+                );
+            }
+            self.active_module_provider = None;
+            if references.is_empty() {
+                continue;
+            }
+            let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
             let mut affected = mutation_projection::Affected::default();
             self.project_member_mutation(
                 mutation_projection::PendingQueue::from_vec(

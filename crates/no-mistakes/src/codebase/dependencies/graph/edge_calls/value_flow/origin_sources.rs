@@ -65,9 +65,9 @@ impl ValueFlowResolution<'_, '_> {
                                 // Forwarded and captured bodies retain the lexical guard.
                                 let acquired = read.1 == Some(parameter.owner)
                                     && self.synchronous_callable(&origin.file, parameter.owner);
-                                source
-                                    .history
-                                    .assignment_invalidated_reads(&path, &|writer| {
+                                source.history.assignment_invalidated_guarded_reads(
+                                    &path,
+                                    &|writer| {
                                         if origin.file != file {
                                             None
                                         } else if acquired {
@@ -78,7 +78,10 @@ impl ValueFlowResolution<'_, '_> {
                                                 _ => (writer == read.1).then_some(read.0),
                                             }
                                         }
-                                    })
+                                    },
+                                    &|| None,
+                                    &|guards| self.module_provider_summary(&origin.file, guards),
+                                )
                             } else {
                                 source.history.invalidated_projected(
                                     &source.path,

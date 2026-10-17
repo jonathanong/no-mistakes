@@ -104,6 +104,7 @@ fn untracked_roots_cannot_invent_projected_receiver_writes() {
             selected: None,
             generation: 0,
         },
+        false,
     );
     assert!(writes.is_empty());
 }

@@ -78,8 +78,12 @@ fn collect_call_edges_for_core(
                 }
             }
             if plan.calls {
-                if let Some(replacements) = file.value_flow.replacements.as_ref()
-                    .filter(|facts| facts.requires_receiver_proof()) {
+                if let Some(replacements) = file
+                    .value_flow
+                    .replacements
+                    .as_ref()
+                    .filter(|facts| facts.requires_receiver_proof())
+                {
                     output
                         .replacement_files
                         .push((path.clone(), std::sync::Arc::clone(replacements)));
@@ -163,6 +167,10 @@ fn collect_call_edges_for_core(
     value_flow_metrics::record_origins(pass.parameter_cache.origin_nodes());
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_execution_steps(pass.parameter_cache.execution_steps());
+    #[cfg(feature = "test-instrumentation")]
+    value_flow_metrics::record_module_provider_checks(
+        pass.parameter_cache.module_provider_checks(),
+    );
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_dependency_links(pass.parameter_cache.dependency_links());
     if namespaces_in_repo {

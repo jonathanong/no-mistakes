@@ -6,6 +6,7 @@ impl ReceiverBindingOrigins {
         #[cfg(all(test, feature = "test-instrumentation"))]
         fusion_tests::observe_owners(&self.roots);
         facts.receiver_only_nodes = self.arena.len();
+        facts.module_provider_work = self.module_work.get();
         facts.receiver_only_lookups = self.lookups.get();
         facts.receiver_only_visits = self.visits.get();
         facts.receiver_only_pending_spills = self.spills.get();

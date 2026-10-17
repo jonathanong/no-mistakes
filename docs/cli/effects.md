@@ -104,6 +104,12 @@ regardless of declaration order. If execution order is uncertain, affected live
 member calls remain unresolved. Saved container identities, copied methods,
 sibling members, and unrelated receivers retain their supported precision.
 
+Deferred writers also use module receiver replacements at invocation: after
+`box = { client: replica }; write();`, a write through `box.client.get` makes
+`replica.get` unresolved. Reversing those two statements preserves the untouched
+`replica.get` target. Closed uncalled writers leave the original methods unchanged;
+uncertain invocation and reordered pattern execution remain conservative.
+
 Transparent aliases of default receiver parameters preserve the eventual member
 read. For example, `const alias = client; alias.get()` retains the original
 `get` target after only a sibling `set` write. Matching and dynamic writes still

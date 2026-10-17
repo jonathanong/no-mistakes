@@ -165,6 +165,7 @@ impl ImportCollector {
                         &mut references,
                         info.metadata.foreign_before,
                         version,
+                        info.metadata.context,
                     );
                 }
             }

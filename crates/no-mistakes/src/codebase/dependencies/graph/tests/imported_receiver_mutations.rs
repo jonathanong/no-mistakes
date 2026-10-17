@@ -221,9 +221,7 @@ fn deferred_module_writes_follow_root_replacement_execution_order() {
     )
     .unwrap();
 
-    let after_rebind = graph.call_sites_in_file(
-        &root.join("src/module-writer-rebind-before.mts"),
-    );
+    let after_rebind = graph.call_sites_in_file(&root.join("src/module-writer-rebind-before.mts"));
     for (callee, expected) in [
         ("primary.get", Some("primary.get")),
         ("replica.get", None),
@@ -245,9 +243,8 @@ fn deferred_module_writes_follow_root_replacement_execution_order() {
         );
     }
 
-    let before_rebind = graph.call_sites_in_file(
-        &root.join("src/module-writer-write-before-rebind.mts"),
-    );
+    let before_rebind =
+        graph.call_sites_in_file(&root.join("src/module-writer-write-before-rebind.mts"));
     let replica = before_rebind
         .iter()
         .find(|site| site.source_callee == "replica.get")
@@ -258,9 +255,8 @@ fn deferred_module_writes_follow_root_replacement_execution_order() {
         "write before root replacement must preserve the later receiver: {replica:?}"
     );
 
-    let declaration_after_rebind = graph.call_sites_in_file(
-        &root.join("src/module-writer-declaration-after-rebind.mts"),
-    );
+    let declaration_after_rebind =
+        graph.call_sites_in_file(&root.join("src/module-writer-declaration-after-rebind.mts"));
     let replica = declaration_after_rebind
         .iter()
         .find(|site| site.source_callee == "replica.get")

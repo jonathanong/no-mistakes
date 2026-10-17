@@ -30,6 +30,8 @@ impl Providers {
 #[derive(Default)]
 pub(super) struct ForeignProviderIndex {
     references: Vec<(nested::ReceiverWrite, Providers)>,
+    pub(super) module_references:
+        Vec<(nested::ReceiverWrite, std::sync::Arc<ModuleProviderTarget>)>,
 }
 impl ForeignProviderIndex {
     pub(super) fn references(
@@ -92,7 +94,10 @@ impl ReceiverBindingOrigins {
         references.sort_by(|(left, _), (right, _)| left.cmp(right));
         #[cfg(feature = "test-instrumentation")]
         foreign::count(3, references.len());
-        ForeignProviderIndex { references }
+        ForeignProviderIndex {
+            references,
+            module_references: self.module_provider_index(key, path),
+        }
     }
 }
 

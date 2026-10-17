@@ -16,6 +16,7 @@ impl PreparedReceiverMutations {
             if !visited.insert(std::sync::Arc::as_ptr(history) as usize) {
                 continue;
             }
+            history.module_writer_contexts(&mut writer_contexts);
             if let Some(summary) = &history.summary {
                 writer_contexts.extend(summary.contexts.iter().flatten().copied());
                 module_writer |= summary.contexts.contains(&None);
