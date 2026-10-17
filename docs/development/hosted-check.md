@@ -1,4 +1,4 @@
-<!-- cspell:ignore rlib cdylib codegen -->
+<!-- cspell:ignore rlib cdylib codegen getrusage RUSAGE syscall -->
 
 # Hosted full-check performance
 
