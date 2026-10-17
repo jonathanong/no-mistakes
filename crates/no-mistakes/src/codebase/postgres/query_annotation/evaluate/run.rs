@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 mod entrypoints;
 mod reachability;
 
-use reachability::exported_reaches;
+use reachability::export_reachable_globals;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
@@ -68,17 +68,26 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
+        let reachable = file.facts.precise_records.then(|| {
+            export_reachable_globals(
+                globals,
+                file.module
+                    .ts
+                    .exported_bindings
+                    .iter()
+                    .filter(|binding| binding.specifier.is_none())
+                    .map(|binding| binding.local.as_str()),
+            )
+        });
         let mut seen_functions = BTreeSet::new();
         for (name, expr) in globals {
             // Only exported functions are independently callable by a
             // supplied-source consumer. A private callback still contributes
             // its contextual invocations, but speculative calls to it must
             // not erase the exact argument supplied by its owner.
-            if file.facts.precise_records
-                && !file.module.ts.exported_bindings.iter().any(|binding| {
-                    binding.specifier.is_none()
-                        && exported_reaches(globals, &binding.local, name, &mut BTreeSet::new())
-                })
+            if reachable
+                .as_ref()
+                .is_some_and(|names| !names.contains(name.as_str()))
             {
                 continue;
             }
