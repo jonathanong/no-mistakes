@@ -49,7 +49,7 @@ impl PreparedScope {
         let args = crate::napi_api::codebase::build_symbols_args(parsed)?;
         if args.mode == crate::codebase::symbols::SymbolsMode::SignatureImpact {
             let output = self.traversal.signature_impact_json(&args)?;
-            return Ok(RawValue::from_string(output)?);
+            return json_raw_text(output);
         }
         let session = self.traversal.session_arc();
         let collected = crate::codebase::symbols::collect_entries_with_prepared_facts(
@@ -64,7 +64,7 @@ impl PreparedScope {
         let (entries, roots) = collected?;
         let mut output = Vec::new();
         crate::codebase::symbols::output::write_json(&roots, &entries, &mut output)?;
-        Ok(RawValue::from_string(String::from_utf8(output)?)?)
+        json_raw_text(String::from_utf8(output)?)
     }
 
     pub(super) fn flow_report(

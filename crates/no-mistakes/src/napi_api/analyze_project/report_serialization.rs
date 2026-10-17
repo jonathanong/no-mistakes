@@ -12,3 +12,8 @@ pub(super) fn run_report(
 pub(super) fn json_raw_report<T: serde::Serialize + ?Sized>(value: &T) -> Box<RawValue> {
     serde_json::value::to_raw_value(value).expect("JSON serialization of Rust structs never fails")
 }
+
+/// Writer JSON is already compact, plus a trailing newline that `RawValue` drops.
+pub(super) fn json_raw_text(output: String) -> AnyhowResult<Box<RawValue>> {
+    Ok(RawValue::from_string(output)?)
+}
