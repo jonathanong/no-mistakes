@@ -179,6 +179,12 @@ jobs:
         timeout-minutes: 10
         run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
+      # Every other lib-test build enables test-instrumentation, so this is the
+      # only check that instrumentation-only fields stay feature-gated (#2089).
+      - name: Run Clippy with default features
+        timeout-minutes: 10
+        run: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
+
       - name: Record Rust disk usage after Clippy
         timeout-minutes: 1
         run: bash .github/scripts/rust-disk-usage.sh "after Clippy"
