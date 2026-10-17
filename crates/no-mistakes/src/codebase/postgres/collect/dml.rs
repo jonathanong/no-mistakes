@@ -79,6 +79,12 @@ pub(crate) fn embedded_call_facts(
                 locations.original_call_line = call.line;
                 locations.call_index = call_index;
                 locations.variant_index = variant_index;
+                locations.caller_lines = file
+                    .call_spans
+                    .get(call_index)
+                    .and_then(|span| file.imported_call_lines.get(span))
+                    .cloned()
+                    .unwrap_or_default();
                 locations.append_sites = call
                     .variants
                     .first()

@@ -12,8 +12,43 @@ impl LocalFunctions {
     ) -> Option<(String, Vec<EmbeddedSqlSourcePosition>, u32)> {
         let builder = self.parameter_builders.get(name)?;
         let argument = builder.checked_argument(call)?;
+        let (mut sql, mut positions, origin) = self.argument_base(argument, call, visitor)?;
+        for fragment in &builder.fragments {
+            let offset =
+                crate::codebase::postgres::embedded::placeholders::count_placeholders(&sql);
+            let mut fragment_positions = fragment.positions.clone();
+            super::super::append::positions::renumber(
+                &mut fragment_positions,
+                &fragment.sql,
+                offset,
+            );
+            super::super::append::positions::append(
+                &mut positions,
+                &sql,
+                origin,
+                fragment.line,
+                &fragment_positions,
+            );
+            sql.push_str(
+                &crate::codebase::postgres::embedded::placeholders::renumber_placeholders(
+                    &fragment.sql,
+                    offset,
+                ),
+            );
+        }
+        Some((sql, positions, origin))
+    }
+
+    /// The text, positions and first physical line of the builder a helper
+    /// receives: a bound builder or a trusted tagged template.
+    pub(crate) fn argument_base(
+        &self,
+        argument: &Expression<'_>,
+        call: &CallExpression<'_>,
+        visitor: &ScopeVisitor<'_>,
+    ) -> Option<(String, Vec<EmbeddedSqlSourcePosition>, u32)> {
         let call_line = byte_offset_to_line(visitor.source, call.span.start as usize);
-        let (mut sql, mut positions, origin) = match unwrap_ts_wrappers(argument) {
+        let (sql, mut positions, origin) = match unwrap_ts_wrappers(argument) {
             Expression::Identifier(ident) => {
                 let binding = visitor.lookup(ident.name.as_str())?;
                 if !binding.sql_builder || binding.kind == EmbeddedSqlKind::Dynamic {
@@ -47,29 +82,6 @@ impl LocalFunctions {
                     source_line: origin,
                     source_path: None,
                 },
-            );
-        }
-        for fragment in &builder.fragments {
-            let offset =
-                crate::codebase::postgres::embedded::placeholders::count_placeholders(&sql);
-            let mut fragment_positions = fragment.positions.clone();
-            super::super::append::positions::renumber(
-                &mut fragment_positions,
-                &fragment.sql,
-                offset,
-            );
-            super::super::append::positions::append(
-                &mut positions,
-                &sql,
-                origin,
-                fragment.line,
-                &fragment_positions,
-            );
-            sql.push_str(
-                &crate::codebase::postgres::embedded::placeholders::renumber_placeholders(
-                    &fragment.sql,
-                    offset,
-                ),
             );
         }
         Some((sql, positions, origin))

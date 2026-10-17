@@ -27,7 +27,7 @@ pub(super) fn scan(
     let statements = inputs.statements;
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {

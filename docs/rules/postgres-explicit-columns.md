@@ -145,9 +145,11 @@ to a local variable and static `.append()` fragments retain the file and line
 of each original literal, including separate stars in a composed query. An
 imported SQL tag such as `sql-template-strings` is supported inside these
 helpers. The caller must be included in the check; an unused exported helper
-does not create a finding. Imported helper recovery supports direct named
-exports and zero-argument calls through relative imports. Dynamic arguments,
-re-exports, and computed helper calls remain unanalyzable.
+does not create a finding. Imported helper recovery follows the shared rules in
+[PostgreSQL fact sources](../postgres-facts.md#imported-and-literal-identifier-helpers):
+relative, `tsconfig` `paths` and barrel imports, and calls whose arguments are
+all string literals. Non-literal arguments, unresolved or ambiguous imports,
+and computed helper calls remain unanalyzable.
 
 ## Fix
 
@@ -168,6 +170,8 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`,
 embedded SQL parse failures point to their host call or declaration, so line
 suppression applies at the affected query. For a recovered imported helper,
 line suppression at the original SQL literal applies to that finding.
+
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
 ## Related rules
 

@@ -253,6 +253,8 @@ Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
 known external table exception or an `unanalyzable` executor call, or the file directive for a migration utility
 whose writes are validated elsewhere.
 
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 ## Related rules
 
 [`postgres-no-add-column`](postgres-no-add-column.md) controls schema widening;

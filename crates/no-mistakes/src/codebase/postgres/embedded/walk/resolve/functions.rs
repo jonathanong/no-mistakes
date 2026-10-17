@@ -1,6 +1,7 @@
 mod body;
 mod call;
 mod collect;
+mod exports;
 mod parameter;
 mod positions;
 pub(crate) mod provenance;
@@ -8,6 +9,7 @@ pub(crate) mod reassigned;
 mod shadows;
 pub(crate) use shadows::looks_like_tag_implementation;
 
+use super::super::super::helpers::template::TemplateHelper;
 use super::super::super::options::TrustedSqlTag;
 use super::super::super::tags::SqlTagNames;
 use super::ScopeVisitor;
@@ -17,6 +19,7 @@ use crate::codebase::postgres::embedded::{
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use collect::collect_named_functions;
+use exports::{template_helpers, Callables};
 use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
 use shadows::TagShadows;
@@ -36,6 +39,7 @@ pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 /// never narrows it.
 pub(crate) struct LocalFunctions {
     resolved: FxHashMap<String, provenance::RecoveredSql>,
+    templates: FxHashMap<String, TemplateHelper>,
     parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
 }
@@ -53,12 +57,8 @@ pub(super) struct Resolvable<'a> {
 }
 
 impl LocalFunctions {
-    pub(crate) fn summaries(&self) -> FxHashMap<String, provenance::RecoveredSql> {
-        self.resolved.clone()
-    }
-
     pub(crate) fn has_static_helper(&self, name: &str) -> bool {
-        self.resolved.contains_key(name)
+        self.resolved.contains_key(name) || self.templates.contains_key(name)
     }
 
     pub(crate) fn collect(
@@ -75,6 +75,7 @@ impl LocalFunctions {
         let sql_statement_types =
             super::super::super::bindings::sql_statement_type_bindings(program);
         let tag_shadows = TagShadows::collect(program, trusted_sql_tags, &sql_statement_types);
+        let templates = template_helpers(program, source, &reassigned);
         let mut resolved = FxHashMap::default();
         let mut parameter_builders = HashMap::new();
         for name in raw.keys().copied() {
@@ -83,7 +84,10 @@ impl LocalFunctions {
                 name,
                 source,
                 MAX_RESOLVE_DEPTH,
-                &raw,
+                &Callables {
+                    raw: &raw,
+                    templates: &templates,
+                },
                 &mut resolving,
                 &tag_shadows,
             ) {
@@ -101,6 +105,7 @@ impl LocalFunctions {
         }
         Self {
             resolved,
+            templates,
             parameter_builders,
             tag_shadows,
         }
@@ -158,20 +163,23 @@ fn resolve_named(
     name: &str,
     source: &str,
     depth: u8,
-    raw: &HashMap<&str, Resolvable<'_>>,
+    callables: &Callables<'_, '_>,
     resolving: &mut Vec<String>,
     tag_shadows: &TagShadows,
 ) -> Option<provenance::RecoveredSql> {
     if resolving.iter().any(|seen| seen == name) {
         return None;
     }
-    let resolvable = raw.get(name)?;
+    let resolvable = callables.raw.get(name)?;
     resolving.push(name.to_string());
-    let mut lookup = |_: &CallExpression<'_>, callee: &str, depth: u8| {
+    let mut lookup = |call: &CallExpression<'_>, callee: &str, depth: u8| {
         if shadows_param(resolvable, callee) {
             return None;
         }
-        resolve_named(callee, source, depth, raw, resolving, tag_shadows)
+        if let Some(template) = callables.templates.get(callee) {
+            return call::apply_template(template, call);
+        }
+        resolve_named(callee, source, depth, callables, resolving, tag_shadows)
     };
     let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag) || tag_shadows.contains(tag);
     let text = body::resolve(

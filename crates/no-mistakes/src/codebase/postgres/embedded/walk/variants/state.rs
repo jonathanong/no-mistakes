@@ -1,5 +1,6 @@
+use super::super::resolve::functions::provenance::RecoveredSql;
 use super::super::ScopeVisitor;
-use super::{combine, Recovered};
+use super::{combine, Recovered, ValueKind};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
     AssignmentExpression, AssignmentOperator, AssignmentTarget, CallExpression, Expression,
@@ -60,6 +61,39 @@ impl ScopeVisitor<'_> {
             _ => None,
         }
     }
+    /// The alternatives of `name` after an imported builder helper appends `hole`.
+    pub(in crate::codebase::postgres::embedded::walk) fn appended_hole_variants(
+        &self,
+        name: &str,
+        hole: &RecoveredSql,
+        site: u32,
+    ) -> Option<Vec<Recovered>> {
+        if self.append_crosses_function(name) {
+            return None;
+        }
+        let prefix = self.lookup(name)?.variants?;
+        if !prefix.iter().all(|value| value.fragment) {
+            return None;
+        }
+        let suffix = Recovered {
+            value: ValueKind::Sql,
+            sql: hole.sql.clone(),
+            line: hole.line,
+            origins: hole.origins.clone(),
+            positions: hole.positions.clone(),
+            fragment: false,
+            enumerated: false,
+            choices: Vec::new(),
+            append_sites: Vec::new(),
+        };
+        combine(prefix, vec![suffix]).map(|mut versions| {
+            for version in &mut versions {
+                version.append_sites.push(site);
+            }
+            versions
+        })
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn appended_variants(
         &self,
         call: &CallExpression<'_>,

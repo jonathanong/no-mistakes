@@ -397,6 +397,8 @@ Use `no-mistakes-disable-next-line postgres-sql-shape-policy` immediately
 before the finding, or `no-mistakes-disable-line` on that line; use the file
 directive only for an intentional exception.
 
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 ## Related rules
 
 [`postgres-required-predicates`](postgres-required-predicates.md) requires

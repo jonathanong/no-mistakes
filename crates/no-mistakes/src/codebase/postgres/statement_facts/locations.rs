@@ -56,6 +56,9 @@ pub struct SqlVariantLocations {
     pub conflicts: Vec<super::super::SqlConflictInsertFact>,
     pub conflict_error: Option<String>,
     pub(crate) append_sites: Vec<u32>,
+    /// Source lines, in the executor's file, of the imported-helper calls whose
+    /// text this statement contains.
+    pub(crate) caller_lines: Vec<u32>,
     pub(crate) bound_tables: Vec<(usize, String, SqlFactSite)>,
 }
 

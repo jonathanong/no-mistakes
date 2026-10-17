@@ -1,8 +1,8 @@
 use super::Resolvable;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrowFunctionBody, BindingPattern, Declaration, Expression, Function, Statement,
-    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+    ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression,
+    Function, Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use std::collections::HashMap;
 
@@ -13,6 +13,12 @@ pub(super) fn collect_named_functions<'a>(
     match statement {
         Statement::FunctionDeclaration(function) => insert_function(function, raw),
         Statement::VariableDeclaration(declaration) => insert_const_functions(declaration, raw),
+        Statement::ExportDefaultDeclaration(export) => {
+            if let ExportDefaultDeclarationKind::FunctionDeclaration(function) = &export.declaration
+            {
+                insert_function(function, raw);
+            }
+        }
         Statement::ExportDeclaration(export) => match &export.declaration {
             Declaration::FunctionDeclaration(function) => insert_function(function, raw),
             Declaration::VariableDeclaration(declaration) => {

@@ -15,7 +15,7 @@ mod helper_effects;
 mod limit;
 mod logical;
 use limit::bounded;
-pub(super) mod origins;
+pub(crate) mod origins;
 mod recovery;
 mod state;
 pub(super) mod switch;

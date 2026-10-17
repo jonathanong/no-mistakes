@@ -1,12 +1,7 @@
 use crate::codebase::postgres::embedded::placeholders;
 
 /// Rewrites generated markers while keeping authored SQL byte identities stable.
-pub(in crate::codebase::postgres::embedded::walk) fn rewrite(
-    sql: &str,
-    origins: &[u32],
-    offset: u32,
-    publish: bool,
-) -> Vec<u32> {
+pub(crate) fn rewrite(sql: &str, origins: &[u32], offset: u32, publish: bool) -> Vec<u32> {
     let mut out = Vec::new();
     let mut at = 0;
     let mut seen = 0;

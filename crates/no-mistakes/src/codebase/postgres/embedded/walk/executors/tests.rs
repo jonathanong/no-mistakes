@@ -14,7 +14,6 @@ struct LegacyBindingState {
     initialized: bool,
     sql_builder: bool,
     sql_source_positions: Vec<super::super::super::super::EmbeddedSqlSourcePosition>,
-    pending_imported_helper: Option<String>,
 }
 
 #[test]

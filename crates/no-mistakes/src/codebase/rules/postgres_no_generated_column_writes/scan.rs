@@ -41,7 +41,7 @@ pub(super) fn scan(
         &tables,
         &opts.trigger_maintained_columns,
     ));
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     let has_history = schema.iter().any(|file| !file.table_events.is_empty());
     if !finals.combined.is_empty() || has_history {
         for path in files {

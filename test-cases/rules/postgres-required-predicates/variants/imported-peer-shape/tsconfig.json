@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@modules/feed-query-builders": ["./src/modules/feed-query-builders/index.mts"],
+      "@services/links": ["./src/services/links/index.mts"]
+    }
+  }
+}

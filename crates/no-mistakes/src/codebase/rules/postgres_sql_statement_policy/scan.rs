@@ -14,7 +14,7 @@ pub(super) fn scan(
     let schema_facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for file in &schema_facts {
         let rel = sql_rel(root, &file.path);
         findings.extend(settings(&rel, &file.setting_uses, opts));

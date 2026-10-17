@@ -57,11 +57,13 @@ pub(super) fn project_relative_executor_scopes(
             });
         }
     }
-    imported_sql::project(files, |specifier, from| resolver.resolve(specifier, from));
-    if annotation {
+    let imported = imported_sql::has_candidates(files);
+    if imported || annotation {
         // Compatibility collectors lack a boundary catalog, but still reuse
         // their supplied inventory, sources and workspace. Prepared entrypoints
         // always pass their existing catalog, preserving forced-config semantics.
+        // Imported helpers resolve through the same per-importing-file
+        // selection, so a package's own `paths` win over the root's.
         let fallback;
         let catalog = match catalog {
             Some(catalog) => catalog,
@@ -77,12 +79,17 @@ pub(super) fn project_relative_executor_scopes(
             }
         };
         let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);
-        crate::perf_trace::trace("postgres.annotation.project", || {
-            crate::codebase::postgres::query_annotation::project::project(
-                files,
-                |specifier, from| resolver.resolve(specifier, from),
-            );
-        });
+        if imported {
+            imported_sql::project(files, |specifier, from| resolver.resolve(specifier, from));
+        }
+        if annotation {
+            crate::perf_trace::trace("postgres.annotation.project", || {
+                crate::codebase::postgres::query_annotation::project::project(
+                    files,
+                    |specifier, from| resolver.resolve(specifier, from),
+                );
+            });
+        }
     }
 }
 

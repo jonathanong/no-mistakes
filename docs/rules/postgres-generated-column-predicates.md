@@ -140,6 +140,8 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`,
 `-- no-mistakes-disable-next-line`, and `-- no-mistakes-disable-file` for
 `postgres-generated-column-predicates`.
 
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+
 ## Related rules
 
 `postgres-no-generated-column-writes` bans writing generated columns.

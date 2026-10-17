@@ -136,6 +136,34 @@ A configured module or explicit `query` enables `.query` members. A configured m
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
 
+### Executor SQL built by helpers
+
+Executor SQL assembled from helpers is checked, including helpers imported
+from another module and helpers that interpolate caller-supplied string
+literals. With `unanalyzableSql: ignore`, an unrecoverable call is skipped
+silently, so recovery is what makes such a read visible.
+
+```ts
+// visibility-sql.mts
+export function ownerVisibleSql(parentCol: string, ownerCol: string): string {
+  return `(${parentCol} IS NULL OR EXISTS (SELECT 1 FROM view_active_plans p WHERE p.account_id = ${ownerCol}))`;
+}
+// caller.mts
+const query = sql`SELECT l.id FROM links l WHERE l.account_id = ${id} AND `;
+query.append(ownerVisibleSql("l.parent_id", "l.account_id"));
+await read(query);
+```
+
+The literals are spliced into the helper's template, so the `view_active_plans`
+read above is reported (on the helper's line, in the helper's file). Imports
+resolve through relative specifiers with explicit extensions, `tsconfig`
+`paths` aliases, and barrel re-exports (up to 8 hops). A non-literal argument,
+a helper parameter used outside a `${...}` interpolation, control flow in the
+helper, an unresolved or ambiguous import, a re-export cycle, CommonJS and
+dynamic `import()` keep the call `Dynamic`; `unanalyzableSql: fail` then reports
+it. The full rules and caps are in
+[PostgreSQL fact sources](../postgres-facts.md#imported-and-literal-identifier-helpers).
+
 ## Valid example
 
 ```sql
@@ -169,7 +197,9 @@ add that exemption instead of a query predicate.
 SQL findings honor `no-mistakes-disable-next-line postgres-required-predicates`,
 `no-mistakes-disable-line`, and `no-mistakes-disable-file`. Catalog findings
 (expression partition keys) have no source line to comment, so suppress them
-with `allow: [{object, reason}]`, for example `object: table:events`. For a qualified catalog name use its full object ref, such as `table:public.events`. SQL findings use each relation occurrence’s host-file line.
+with `allow: [{object, reason}]`, for example `object: table:events`. For a qualified catalog name use its full object ref, such as `table:public.events`. SQL findings use each relation occurrence’s host-file line. For SQL recovered from a helper in another module, the finding is reported in that module at the helper's line, so a directive there suppresses it.
+
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
 ## Related rules
 

@@ -9,6 +9,7 @@ mod bindings;
 mod call;
 pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 mod dml_kind;
+pub(crate) mod helpers;
 mod options;
 mod placeholders;
 pub(crate) use placeholders::{
@@ -86,8 +87,9 @@ pub fn extract_embedded_sql_from_program(
         executor_bindings,
         calls: collected.calls,
         call_spans: collected.call_spans,
-        local_helpers: collected.local_helpers,
-        pending_imported_calls: collected.pending_imported_calls,
+        exported_helpers: collected.exported_helpers,
+        pending_imported: collected.pending_imported,
+        imported_call_lines: Default::default(),
         source_comment_spans: program
             .comments
             .iter()

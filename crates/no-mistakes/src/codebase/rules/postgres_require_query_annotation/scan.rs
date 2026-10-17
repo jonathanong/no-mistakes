@@ -13,7 +13,7 @@ pub(super) fn scan_with_sources(
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::default();
+    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))

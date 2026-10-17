@@ -1,6 +1,7 @@
 use super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::EmbeddedSqlKind;
 use super::compose::static_fragment;
+use super::functions::provenance::RecoveredSql;
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
@@ -58,6 +59,36 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
                 _ => {
                     super::super::scope::mark_binding_dynamic_keep_known_statement(binding);
                 }
+            }
+            return;
+        }
+    }
+}
+
+/// Appends an imported builder helper's text to `name`, as `name.append(text)`
+/// would: straight-line code composes, anything conditional keeps only the
+/// verified leading statement.
+pub(crate) fn apply_hole_append(visitor: &mut ScopeVisitor<'_>, name: &str, hole: &RecoveredSql) {
+    if visitor.loop_depth > 0 || visitor.append_crosses_function(name) || visitor.control_depth > 0
+    {
+        visitor.mark_dynamic_keep_known_statement(name);
+        return;
+    }
+    for scope in visitor.scopes.iter_mut().rev() {
+        if let Some(binding) = scope.get_mut(name) {
+            match (&binding.sql, binding.kind) {
+                (Some(sql), EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed) => {
+                    positions::append(
+                        &mut binding.sql_source_positions,
+                        sql,
+                        binding.line,
+                        hole.line,
+                        &hole.positions,
+                    );
+                    binding.sql = Some(format!("{sql}{}", hole.sql));
+                    binding.kind = EmbeddedSqlKind::Composed;
+                }
+                _ => super::super::scope::mark_binding_dynamic_keep_known_statement(binding),
             }
             return;
         }

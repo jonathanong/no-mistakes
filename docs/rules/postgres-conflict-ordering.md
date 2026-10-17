@@ -186,7 +186,9 @@ the final top-level `SELECT`/`INSERT`/`UPDATE`/`DELETE`/`MERGE` after
 balanced CTE definitions; catalog ordering runs only when that recovered
 statement is a full `INSERT`/`UPSERT`. An `INSERT` that appears only inside
 a CTE does not make a final `UPDATE` an insert. Incomplete `WITH` prefixes
-and opaque or imported helpers stay fail-closed. Kind-only recovery never
+and opaque helpers, or imported helpers the resolver cannot prove (see
+[PostgreSQL fact sources](../postgres-facts.md#imported-and-literal-identifier-helpers)),
+stay fail-closed. Kind-only recovery never
 fabricates SQL. Conditional static appends keep the legacy recovered base SQL
 and `Dynamic` kind, but publish complete versions when every path is static.
 If a path cannot be recovered, a recovered non-`INSERT` SELECT/UPDATE stays
@@ -204,6 +206,10 @@ not an `INSERT` is still ignored.
 Use `no-mistakes-disable-next-line postgres-conflict-ordering` or
 `no-mistakes-disable-line` for a one-off. Prefer repairing the writer or a
 specific `safeDirective` explanation over a file-level suppression.
+
+## Helper attribution
+
+SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
 ## Related rules
 

@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [openTransaction]
+      executorTypeNames: [TxExecutor]
+      unanalyzableSql: fail
+      relations: [{ table: view_active_plans, requireColumns: [id] }]

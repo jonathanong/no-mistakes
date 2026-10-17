@@ -46,6 +46,25 @@ impl ScopeVisitor<'_> {
             .collect()
     }
 
+    /// The alias effect of appending to the builder `name`, as `name.append(..)` has.
+    pub(in crate::codebase::postgres::embedded::walk) fn hole_append_effect(
+        &self,
+        name: &str,
+    ) -> Vec<Effect> {
+        let found = self
+            .scopes
+            .iter()
+            .enumerate()
+            .rev()
+            .find_map(|(index, scope)| scope.get(name).map(|binding| (index, binding)));
+        match found {
+            Some((index, binding)) if binding.initialized => {
+                vec![(name.to_string(), binding.builder_identity, Some(index))]
+            }
+            _ => Vec::new(),
+        }
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn apply_append_alias_effect(
         &mut self,
         effects: Vec<Effect>,

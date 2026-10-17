@@ -61,7 +61,9 @@ pub use dml::{
     extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,
     GeneratedTableColumns,
 };
-pub(crate) use embedded::walk::resolve::functions::provenance::RecoveredSql;
+pub(crate) use embedded::helpers::{
+    splice::splice as splice_imported_sql, HelperSummary, PendingImportedSql,
+};
 pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,

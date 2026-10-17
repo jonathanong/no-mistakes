@@ -94,9 +94,10 @@ frontends. They stay available to every language once files are tracked.
 
 PostgreSQL statement policy checks SQL files and opt-in JavaScript/TypeScript
 executor calls through shared prepared facts, with CLI and async Node parity.
-`postgres-explicit-columns` maps static SQL returned by directly imported
-zero-argument helpers to the literal's original file and line, including
-assigned results and appended fragments.
+Static SQL returned by imported helpers (relative, `tsconfig` `paths` and barrel
+imports, with string-literal arguments spliced into literal-identifier
+templates) is recovered for every embedded-SQL rule and mapped to the helper's
+original file and line, including assigned results and appended fragments.
 Named imports, factory handles, and typed executor parameters honor configured
 scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 23 documented statement kinds, including routines and database utility commands.
