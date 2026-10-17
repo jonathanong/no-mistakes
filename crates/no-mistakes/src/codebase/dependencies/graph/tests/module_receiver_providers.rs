@@ -22,6 +22,14 @@ fn module_provider_guards_preserve_identity_and_runtime_order_controls() {
     )
     .unwrap();
     for (file, callee, expected) in [
+        ("caller-chain", "primary.get", Some("primary.get")),
+        ("caller-chain", "replica.get", None),
+        ("supplied-default", "value.get", None),
+        ("supplied-default", "value.info", Some("replica.info")),
+        ("uninvoked-cycle", "primary.get", None),
+        ("uninvoked-cycle", "replica.get", None),
+        ("pattern-default", "client.get", None),
+        ("pattern-default", "client.info", None),
         ("controls", "primary.get", Some("primary.get")),
         ("controls", "replica.get", None),
         ("controls", "replica.info", Some("replica.info")),
