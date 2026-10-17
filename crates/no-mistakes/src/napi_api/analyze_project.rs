@@ -126,7 +126,7 @@ fn analyze_project_with_context(
     Ok(AnalyzeProjectResult { reports })
 }
 
-fn run_report(
+fn run_report_inner(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
     context: &context::AnalyzeProjectContext,
@@ -187,3 +187,10 @@ fn traverse_args(
 ) -> AnyhowResult<TraverseArgs> {
     build_traverse_args(options::traverse_options(request, options)?)
 }
+
+#[cfg(not(test))]
+use run_report_inner as run_report;
+#[cfg(test)]
+mod byte_oracle_tests;
+#[cfg(test)]
+use byte_oracle_tests::run_report;
