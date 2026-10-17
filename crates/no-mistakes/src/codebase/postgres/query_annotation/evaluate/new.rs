@@ -7,6 +7,18 @@ pub(in crate::codebase::postgres::query_annotation) fn new<'a, F>(
     resolve: F,
     untrusted_array_intrinsics: bool,
 ) -> Evaluator<'a, F> {
+    initialize(files, Some(resolve), untrusted_array_intrinsics)
+}
+
+pub(super) fn without_resolver<'a, F>(files: &'a FxHashMap<PathBuf, File<'a>>) -> Evaluator<'a, F> {
+    initialize(files, None, false)
+}
+
+fn initialize<'a, F>(
+    files: &'a FxHashMap<PathBuf, File<'a>>,
+    resolve: Option<F>,
+    untrusted_array_intrinsics: bool,
+) -> Evaluator<'a, F> {
     Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files,

@@ -110,7 +110,7 @@ impl<'a, F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'a, F> {
                     import.map(|binding| (binding.specifier.as_str(), binding.imported.as_str()))
                 });
             if let Some((specifier, name)) = forwarded {
-                return Some(match file.module.target(specifier, path, &self.resolve) {
+                return Some(match file.module.target(specifier, path, self.resolver()) {
                     Some(target) => self
                         .lookup_export_inner(target, name, depth, generic, visiting)
                         .unwrap_or_else(ResolvedExport::unknown),
@@ -128,7 +128,7 @@ impl<'a, F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'a, F> {
         }
         let mut provider: Option<ResolvedExport<'a>> = None;
         for specifier in stars {
-            let value = match file.module.target(specifier, path, &self.resolve) {
+            let value = match file.module.target(specifier, path, self.resolver()) {
                 Some(target) => self.lookup_export_inner(target, name, depth, generic, visiting),
                 None => Some(ResolvedExport::unknown()),
             };

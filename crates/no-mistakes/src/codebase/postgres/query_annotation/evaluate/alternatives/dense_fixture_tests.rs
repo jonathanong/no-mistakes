@@ -53,7 +53,7 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

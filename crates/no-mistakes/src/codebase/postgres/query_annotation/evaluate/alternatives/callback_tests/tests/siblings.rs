@@ -34,7 +34,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

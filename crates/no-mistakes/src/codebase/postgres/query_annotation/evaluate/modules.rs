@@ -29,7 +29,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     import.kind == ImportKind::Static && import.function_scope.is_none()
                 })
                 .filter_map(|import| {
-                    let target = module.target(&import.specifier, path, &self.resolve);
+                    let target = module.target(&import.specifier, path, self.resolver());
                     if target.is_none() && import.specifier.starts_with('.') {
                         unresolved_relative = true;
                     }

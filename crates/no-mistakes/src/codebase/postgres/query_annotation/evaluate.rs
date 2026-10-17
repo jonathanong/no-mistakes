@@ -48,7 +48,7 @@ pub(super) struct Evaluator<'a, F> {
     // Own one request observer; activation counters borrow it without TLS/Arc clones.
     pub initial_template_observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
-    pub resolve: F,
+    pub resolve: Option<F>,
     // Immutable request-wide trust; branch snapshots cannot restore intrinsics.
     pub untrusted_array_intrinsics: bool,
     pub events: ExecutionEvents,
@@ -77,6 +77,14 @@ pub(super) struct Evaluator<'a, F> {
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn resolver(&self) -> &F {
+        // Check before even a cached target lookup: pure template construction
+        // has no import-resolution capability while its OnceLock is held.
+        self.resolve
+            .as_ref()
+            .expect("pure template cannot resolve imports")
+    }
+
     pub(in crate::codebase::postgres::query_annotation) fn environment(
         &mut self,
         values: FxHashMap<String, Value>,

@@ -68,7 +68,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if import.kind != ImportedBindingKind::Namespace {
             return None;
         }
-        let target = file.module.target(&import.specifier, path, &self.resolve)?;
+        let target = file
+            .module
+            .target(&import.specifier, path, self.resolver())?;
         Some(
             self.lookup_export(target, name, depth, generic)
                 .unwrap_or(Value::Unknown),

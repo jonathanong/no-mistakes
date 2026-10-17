@@ -34,7 +34,7 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

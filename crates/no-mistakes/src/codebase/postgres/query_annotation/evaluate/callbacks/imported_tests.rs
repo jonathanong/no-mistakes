@@ -59,9 +59,9 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |specifier: &str, _: &std::path::Path| -> Option<PathBuf> {
+        resolve: Some(|specifier: &str, _: &std::path::Path| -> Option<PathBuf> {
             (specifier == "./helper.mjs").then(|| helper.clone())
-        },
+        }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

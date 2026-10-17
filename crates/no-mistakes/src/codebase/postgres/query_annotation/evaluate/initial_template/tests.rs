@@ -115,7 +115,10 @@ fn independent_steps_and_globals_leave_no_identity_or_effect_state() {
     canonical.modules.insert(path.clone(), env);
     canonical.steps(&facts.roots, &path, &mut env, 16, true);
     canonical.initialize_module_globals(&path, env);
-    assert!(construct(&files, &path, None).unwrap() == canonical.scopes[env]);
+    assert!(
+        construct::<fn(&str, &Path) -> Option<PathBuf>>(&files, &path, None).unwrap()
+            == canonical.scopes[env]
+    );
     assert_eq!(canonical.scopes.len(), 1);
     assert_eq!(canonical.modules.len(), 1);
     assert_eq!(canonical.next_builder, 0);

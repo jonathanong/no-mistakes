@@ -8,7 +8,7 @@ fn evaluator<'a>(
     Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files,
-        resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

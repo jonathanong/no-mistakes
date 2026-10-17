@@ -29,7 +29,7 @@ fn lazy_module_argument_ids_use_shared_definite_intersections() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

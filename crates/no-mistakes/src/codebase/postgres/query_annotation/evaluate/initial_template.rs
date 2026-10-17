@@ -36,7 +36,7 @@ fn eligibility(file: &File<'_>) -> Result<(), &'static str> {
     Ok(())
 }
 
-fn construct<'a>(
+fn construct<'a, F: Fn(&str, &Path) -> Option<PathBuf>>(
     files: &'a FxHashMap<PathBuf, File<'a>>,
     path: &Path,
     observer: Option<&crate::diagnostics::InvocationObserver>,
@@ -51,7 +51,9 @@ fn construct<'a>(
     }
     // Never recurse through module_environment or resolve imports while the
     // OnceLock is held. The admitted grammar evaluates only inert atoms.
-    let mut isolated = super::new(files, |_: &str, _: &Path| None, false);
+    // Retain the caller's resolver type without retaining its capability. A
+    // fresh closure type here specializes the entire evaluator a second time.
+    let mut isolated = super::new::without_resolver::<F>(files);
     let mut env = isolated.environment(fx_map());
     isolated.modules.insert(path.to_path_buf(), env);
     count(observer, "postgres.annotation.module_initializations");
@@ -99,7 +101,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let files = self.files;
         let Some(template) = files[path]
             .initial_template
-            .get_or_init(|| construct(files, path, observer))
+            .get_or_init(|| construct::<F>(files, path, observer))
         else {
             count(
                 observer,
@@ -131,5 +133,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 }
 
+#[cfg(test)]
+mod resolver_tests;
 #[cfg(test)]
 mod tests;

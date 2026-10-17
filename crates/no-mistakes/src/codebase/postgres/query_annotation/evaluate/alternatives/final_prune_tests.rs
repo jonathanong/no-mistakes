@@ -37,7 +37,7 @@ fn evaluator<'a>(files: &'a FxHashMap<PathBuf, File<'a>>) -> TestEvaluator<'a> {
     Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files,
-        resolve,
+        resolve: Some(resolve),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

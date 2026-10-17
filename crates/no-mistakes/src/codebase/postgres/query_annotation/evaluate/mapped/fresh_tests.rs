@@ -52,7 +52,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
         let mut evaluator = Evaluator {
             initial_template_observer: crate::diagnostics::current(),
             files: &files,
-            resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+            resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
             events: Default::default(),
             scopes: Vec::new(),
             modules: Default::default(),

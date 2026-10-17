@@ -34,7 +34,7 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

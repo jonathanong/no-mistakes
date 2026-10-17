@@ -10,7 +10,7 @@ fn evaluator<'a>(
     Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files,
-        resolve: |_name, _path| None,
+        resolve: Some(|_name, _path| None),
         events: Default::default(),
         scopes: vec![scope.into()],
         modules: Default::default(),

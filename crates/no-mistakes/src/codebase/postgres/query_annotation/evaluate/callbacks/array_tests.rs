@@ -41,8 +41,10 @@ fn with_arrays(
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None })
-            as fn(&str, &std::path::Path) -> Option<PathBuf>,
+        resolve: Some(
+            (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None })
+                as fn(&str, &std::path::Path) -> Option<PathBuf>,
+        ),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

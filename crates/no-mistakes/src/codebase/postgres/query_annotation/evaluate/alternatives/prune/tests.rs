@@ -9,7 +9,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         // The unrooted frame deliberately precedes the module, forcing a remap.
         scopes: vec![

@@ -29,7 +29,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Some(import) = import else {
             return Value::Unknown;
         };
-        let Some(target) = file.module.target(&import.specifier, path, &self.resolve) else {
+        let Some(target) = file.module.target(&import.specifier, path, self.resolver()) else {
             return Value::Unknown;
         };
         self.lookup_export(target, &import.imported, depth, generic)

@@ -29,7 +29,7 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: Some(|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
@@ -125,9 +125,9 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
     let mut evaluator = Evaluator {
         initial_template_observer: crate::diagnostics::current(),
         files: &files,
-        resolve: |specifier: &str, from: &Path| {
+        resolve: Some(|specifier: &str, from: &Path| {
             (specifier == "./later.mts" && from == root.as_path()).then(|| later.clone())
-        },
+        }),
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),

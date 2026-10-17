@@ -36,7 +36,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             {
                 self.files[path]
                     .module
-                    .target(specifier, path, &self.resolve)
+                    .target(specifier, path, self.resolver())
                     .map(Path::to_path_buf)
             }
             _ => None,
@@ -69,7 +69,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let target = self.files[path]
             .module
-            .target(specifier, path, &self.resolve)
+            .target(specifier, path, self.resolver())
             .map(Path::to_path_buf);
         self.initialize_runtime_module(target);
         Value::Unknown
