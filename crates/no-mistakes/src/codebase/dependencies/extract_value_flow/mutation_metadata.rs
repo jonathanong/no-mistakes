@@ -1,15 +1,6 @@
 use super::*;
 
 #[derive(Clone, Copy)]
-pub(super) struct MutationInfo<'a> {
-    pub(super) metadata: mutation_metadata::MutationMetadata,
-    pub(super) assigned_member: Option<&'a str>,
-    pub(super) completed_at: u32,
-    pub(super) has_assignment: bool,
-    pub(super) proof: Option<&'a mutable_deferred::DeferredProof>,
-}
-
-#[derive(Clone, Copy)]
 pub(super) struct MutationMetadata {
     pub(super) offset: u32,
     pub(super) context: Option<CallableId>,
@@ -47,4 +38,10 @@ impl ImportCollector {
             foreign_before: self.mutable_receiver_origin_watermark(),
         }
     }
+}
+
+pub(super) struct Tracking<'a> {
+    pub(super) metadata: &'a MutationMetadata,
+    pub(super) propagated: bool,
+    pub(super) root_read: Option<nested::RootRead>,
 }

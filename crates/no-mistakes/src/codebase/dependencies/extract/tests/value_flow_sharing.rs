@@ -59,6 +59,8 @@ fn member_writes_do_not_rebuild_reference_links() {
     assert_no_mutable_root_work(&facts.value_flow);
     assert_eq!(facts.value_flow.reference_component_links, 3);
     assert_eq!(facts.value_flow.reference_link_visits, 2 * 2 * 256 + 2 * 3);
+    assert_eq!(facts.value_flow.reference_rhs_barriers, 0);
+    assert_eq!(facts.value_flow.reference_rhs_destinations, 0);
     assert!(facts.value_flow.reference_component_root_steps <= 2 * 257 + 3 * 3 + 4 * 2);
     let assigned = facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["primary"]
         .assigned
@@ -137,6 +139,11 @@ fn late_defaults_share_one_indexed_mutation_history() {
     assert_eq!(facts.value_flow.reference_binding_visits, 256 * 512);
     #[cfg(feature = "test-instrumentation")]
     assert_no_mutable_root_work(&facts.value_flow);
+    #[cfg(feature = "test-instrumentation")]
+    {
+        assert_eq!(facts.value_flow.reference_rhs_barriers, 0);
+        assert_eq!(facts.value_flow.reference_rhs_destinations, 0);
+    }
 
     let histories = facts
         .value_flow

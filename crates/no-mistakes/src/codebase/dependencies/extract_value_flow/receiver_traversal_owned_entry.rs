@@ -34,3 +34,17 @@ impl ReceiverTraversal {
         state.enter_owned_path(key, path, reads)
     }
 }
+
+impl ReceiverTraversal {
+    pub(in super::super) fn enter_assigned_owned_path<'a>(
+        &'a mut self,
+        key: &(usize, String),
+        path: ValueMutationPath,
+        reads: Vec<nested::ReceiverRead>,
+        version: Option<mutable_origins::RootVersion>,
+        receipts: assigned_receiver_origins::Receipts,
+    ) -> Option<state::OwnedEntry<'a>> {
+        self.enter_assigned(key, &path, reads, version, receipts)
+            .map(|reads| (reads, std::borrow::Cow::Owned(path)))
+    }
+}

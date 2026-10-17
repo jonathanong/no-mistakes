@@ -27,18 +27,26 @@ impl ImportCollector {
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
         assigned: Option<(Option<String>, u32)>,
-        metadata: &mutation_metadata::MutationMetadata,
-        propagated: bool,
+        tracking: mutation_metadata::Tracking<'_>,
     ) {
+        let mutation_metadata::Tracking {
+            metadata,
+            propagated,
+            root_read,
+        } = tracking;
+        let rhs = self.retain_assignment_rhs_destination(
+            key,
+            (path, reads, root_read),
+            assigned.as_ref(),
+            metadata,
+        );
         let offset = metadata.offset;
         let context = metadata.context;
-        let unconditional = metadata.unconditional;
-        let region = metadata.region;
         let capture_allowed = !self.fresh_receiver_effects.rebound(key.0, &key.1);
         let captured = assigned.as_ref().and_then(|(_, completed_at)| {
             (capture_allowed
                 && metadata.fresh
-                && (unconditional || region.is_some())
+                && (metadata.unconditional || metadata.region.is_some())
                 && self.prior_member_mutations.requires_proof(key.0, &key.1))
             .then(|| identity_metadata::FreshCapture {
                 origin: Some((offset, context)),
@@ -52,24 +60,24 @@ impl ImportCollector {
         // Projected default reads retain guards for writes without an exact leaf.
         history.has_unassigned |= assigned.is_none();
         if let Some((assigned, completed_at)) = assigned {
-            let write = mutation_history::ValueAssignedMutation {
-                offset: completed_at,
-                writer: mutation_history::ValueAssignedWriter::single(context),
-                unconditional_offset: unconditional
-                    .then(|| std::num::NonZeroU32::new(completed_at))
-                    .flatten(),
-            };
             history.record_assignment(
                 path,
                 assigned,
                 mutation_assignments::AssignmentTiming {
                     started_at: offset,
                     context,
-                    completed: write,
+                    completed: mutation_history::ValueAssignedMutation {
+                        offset: completed_at,
+                        writer: mutation_history::ValueAssignedWriter::single(context),
+                        unconditional_offset: metadata
+                            .unconditional
+                            .then_some(completed_at)
+                            .and_then(std::num::NonZeroU32::new),
+                    },
                 },
                 propagated,
-                proof.then_some(metadata.fresh),
-                (region, captured),
+                (proof || rhs).then_some(metadata.fresh),
+                (metadata.region, captured),
             );
         } else {
             history.record(path, offset, context);
@@ -89,10 +97,7 @@ impl ImportCollector {
         let mut histories = std::mem::take(&mut self.prior_member_mutations);
         let components = histories.finish();
         #[cfg(feature = "test-instrumentation")]
-        {
-            self.value_flow.reference_component_links = histories.links;
-            self.value_flow.reference_component_root_steps = histories.root_steps.get();
-        }
+        histories.record_reference_counts(&mut self.value_flow);
         let mut retained = fx_map();
         for (component, mut history) in components {
             history.finish_early_assignments();
