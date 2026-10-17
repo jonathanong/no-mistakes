@@ -99,6 +99,36 @@ for (const [name, expected] of [
     },
   );
 }
+
+for (const [entry, expected] of [
+  ["module-writer-rebind-before.mts", ["primary.get", "primary.get"]],
+  ["module-writer-write-before-rebind.mts", ["replica.get"]],
+  ["module-writer-declaration-after-rebind.mts", []],
+]) {
+  test(
+    `compiled async CJS and ESM preserve module-owned deferred receiver writes: ${entry}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = {
+        root,
+        config,
+        kind: "valkey",
+        entry: `src/${entry}`,
+      };
+      const pending = cjs.effects(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.effects(options), report, entry);
+      assert.deepEqual(
+        report.callSites.map(({ callee }) => callee),
+        expected,
+        entry,
+      );
+    },
+  );
+}
 for (const name of [
   "mutable-let-pattern-static-capture",
   "mutable-let-pattern-static-comma-capture",

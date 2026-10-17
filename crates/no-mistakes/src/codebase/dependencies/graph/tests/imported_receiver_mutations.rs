@@ -199,6 +199,78 @@ fn nested_alias_writes_invalidate_original_receivers_with_member_precision() {
     }
 }
 
+#[test]
+fn deferred_module_writes_follow_root_replacement_execution_order() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/query-reached-per-item/provenance-fixture"),
+    );
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+
+    let after_rebind = graph.call_sites_in_file(
+        &root.join("src/module-writer-rebind-before.mts"),
+    );
+    for (callee, expected) in [
+        ("primary.get", Some("primary.get")),
+        ("replica.get", None),
+        ("primaryMethod", Some("primary.get")),
+    ] {
+        let site = after_rebind
+            .iter()
+            .find(|site| site.source_callee == callee)
+            .unwrap();
+        assert_eq!(
+            match &site.target {
+                ResolvedCallTarget::ModuleExport { export_path, .. } => {
+                    Some(export_path.as_str())
+                }
+                _ => None,
+            },
+            expected,
+            "{callee}: {site:?}"
+        );
+    }
+
+    let before_rebind = graph.call_sites_in_file(
+        &root.join("src/module-writer-write-before-rebind.mts"),
+    );
+    let replica = before_rebind
+        .iter()
+        .find(|site| site.source_callee == "replica.get")
+        .unwrap();
+    assert!(
+        matches!(&replica.target, ResolvedCallTarget::ModuleExport { export_path, .. }
+            if export_path == "replica.get"),
+        "write before root replacement must preserve the later receiver: {replica:?}"
+    );
+
+    let declaration_after_rebind = graph.call_sites_in_file(
+        &root.join("src/module-writer-declaration-after-rebind.mts"),
+    );
+    let replica = declaration_after_rebind
+        .iter()
+        .find(|site| site.source_callee == "replica.get")
+        .unwrap();
+    assert!(
+        matches!(replica.target, ResolvedCallTarget::Unknown),
+        "declaration placement must not change the runtime write phase: {replica:?}"
+    );
+}
+
 #[cfg(feature = "test-instrumentation")]
 #[test]
 fn lazy_imported_receiver_sites_share_one_agreement_and_context_dag() {
