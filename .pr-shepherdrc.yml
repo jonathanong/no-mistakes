@@ -17,3 +17,11 @@ ignoreChecks:
 merge:
   commandArgs:
     - '--squash'
+
+# Bundled rules for vendor bot noise. They hide Codecov reports and Codex
+# quota, activity, and no-findings notices, then minimize them on GitHub.
+# CodeRabbit notices are only hidden, because CodeRabbit later edits the same
+# comment into its walkthrough.
+classify:
+  standard:
+    all: true
