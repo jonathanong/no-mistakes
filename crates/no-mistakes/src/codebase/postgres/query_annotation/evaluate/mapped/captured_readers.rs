@@ -9,11 +9,12 @@ type Readers = FxHashMap<Environment, FxHashMap<String, FxHashSet<Environment>>>
 /// Names move without cloning. Temporary move lists and origin collisions can
 /// allocate. Substantially sparse tables shrink after pruning; ordinary
 /// compactions keep their storage instead of reallocating on every remap.
-pub(super) fn remap(
+pub(super) fn remap<const COUNT_NAMES: bool>(
     readers: &mut Readers,
     preserved: Environment,
     indices: &FxHashMap<Environment, Environment>,
-) {
+) -> usize {
+    let mut retained_names = 0;
     // No preserved prefix or surviving frame means no reader can remain.
     // Drop tables directly instead of visiting each reader in a discarded graph.
     if preserved == 0 && indices.is_empty() {
@@ -21,7 +22,7 @@ pub(super) fn remap(
         if substantially_sparse(0, readers.capacity()) {
             readers.shrink_to_fit();
         }
-        return;
+        return 0;
     }
     readers.retain(|_, names| {
         names.retain(|_, frames| {
@@ -48,6 +49,9 @@ pub(super) fn remap(
         if substantially_sparse(names.len(), names.capacity()) {
             names.shrink_to_fit();
         }
+        if COUNT_NAMES {
+            retained_names += names.len();
+        }
         !names.is_empty()
     });
     // Remove every moving key before insertion: a destination can still be an
@@ -73,6 +77,10 @@ pub(super) fn remap(
                             entry.insert(frames);
                         }
                         std::collections::hash_map::Entry::Occupied(mut entry) => {
+                            // Two counted name buckets become one after origin collision.
+                            if COUNT_NAMES {
+                                retained_names -= 1;
+                            }
                             entry.get_mut().extend(frames);
                         }
                     }
@@ -83,6 +91,7 @@ pub(super) fn remap(
     if substantially_sparse(readers.len(), readers.capacity()) {
         readers.shrink_to_fit();
     }
+    retained_names
 }
 
 // Keep small tables and up to four times the live entries. Beyond that bound,

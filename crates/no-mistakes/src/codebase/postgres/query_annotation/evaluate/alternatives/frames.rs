@@ -168,6 +168,7 @@ fn compact_from_roots(
         &indices,
         environments_changed,
         &mut std::mem::drop::<Environment>,
+        &mut std::mem::drop::<Environment>,
     );
     freshness::remap(fresh, roots.preserved, &indices);
     scopes.truncate(roots.preserved);

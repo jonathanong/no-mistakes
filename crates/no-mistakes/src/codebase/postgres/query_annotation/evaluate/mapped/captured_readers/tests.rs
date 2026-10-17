@@ -68,7 +68,17 @@ fn compare(captured: Captures, preserved: usize, indices: FxHashMap<usize, usize
         .collect::<Vec<_>>();
     let expected_captures = forward(captured, preserved, &indices);
     let (expected, copied_names) = rebuild(&expected_captures);
-    remap(&mut actual, preserved, &indices);
+    let mut uncounted = actual.clone();
+    let count = remap::<true>(&mut actual, preserved, &indices);
+    assert_eq!(remap::<false>(&mut uncounted, preserved, &indices), 0);
+    assert_eq!(
+        uncounted, actual,
+        "diagnostics cannot change the private index"
+    );
+    assert_eq!(
+        count,
+        expected.values().map(|names| names.len()).sum::<usize>()
+    );
     assert_eq!(
         actual, expected,
         "complete private reverse index, no field masking"
@@ -181,7 +191,7 @@ fn sparse_name_and_origin_tables_shrink_without_replacing_name_buffers() {
         assert_eq!(actual[&0].capacity(), 3);
         let mut discarded = actual;
         discarded.reserve(1024);
-        remap(&mut discarded, 0, &FxHashMap::default());
+        remap::<true>(&mut discarded, 0, &FxHashMap::default());
         assert!(discarded.is_empty());
         assert_eq!(discarded.capacity(), 0);
     }
@@ -198,7 +208,7 @@ fn ordinary_compactions_keep_table_capacity_and_sparse_boundary_is_explicit() {
         .collect::<Captures>();
     let (mut readers, _) = rebuild(&captured);
     let capacity = readers[&0]["shared"].capacity();
-    remap(&mut readers, 32, &FxHashMap::default());
+    remap::<true>(&mut readers, 32, &FxHashMap::default());
     assert_eq!(readers[&0]["shared"].capacity(), capacity);
     assert_matches_forward(&readers, &captured);
 }

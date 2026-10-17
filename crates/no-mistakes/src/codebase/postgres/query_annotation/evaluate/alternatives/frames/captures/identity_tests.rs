@@ -18,10 +18,15 @@ fn compare(
     let mut old_probes = 0;
     let mut new_probes = 0;
     let old_changed = remap(&mut expected, preserved, &indices, &mut |_| old_probes += 1);
-    let new_changed =
-        remap_after_compaction(&mut actual, count, preserved, &indices, moved, &mut |_| {
-            new_probes += 1
-        });
+    let new_changed = remap_after_compaction(
+        &mut actual,
+        count,
+        preserved,
+        &indices,
+        moved,
+        &mut |_| new_probes += 1,
+        &mut |_| {},
+    );
     assert_eq!(new_changed, old_changed);
     assert_eq!(actual, expected, "complete forward capture relation");
     (actual, old_probes, new_probes)
@@ -44,6 +49,7 @@ fn identity_domains_skip_actual_origin_probes_and_keep_name_buffers() {
         &FxHashMap::from_iter([(1, 1), (2, 2)]),
         false,
         &mut |_| probes += 1,
+        &mut |_| {},
     ));
     assert_eq!(
         actual[&0].get_key_value("name0").unwrap().0.as_ptr(),
@@ -124,7 +130,8 @@ fn sparse_forward_storage_keeps_original_identity_capacity_behavior() {
         0,
         &FxHashMap::from_iter([(0, 0)]),
         false,
-        &mut |_| probes += 1
+        &mut |_| probes += 1,
+        &mut |_| {},
     ));
     assert_eq!((input.capacity(), input[&0].capacity()), expected);
 }
@@ -139,4 +146,66 @@ fn conservative_true_movement_hint_uses_original_scan_for_identity_domain() {
         true,
     );
     assert_eq!((old, new), (1, 1));
+}
+
+// Exact c585 pre-fix guard, with only visit probes added for the regression.
+// Keep this reference independent of the corrected production entrypoint.
+fn previous_remap_after_compaction(
+    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+    old_scope_count: usize,
+    preserved: Environment,
+    indices: &FxHashMap<Environment, Environment>,
+    environments_changed: bool,
+    origin_probe: &mut impl FnMut(Environment),
+    identity_probe: &mut impl FnMut(Environment),
+) -> bool {
+    let unchanged = !environments_changed
+        && old_scope_count.checked_sub(preserved) == Some(indices.len())
+        && indices.iter().all(|(old, new)| {
+            identity_probe(*old);
+            *old >= preserved && *old < old_scope_count && old == new
+        })
+        && captured.keys().all(|reader| *reader < old_scope_count);
+    if unchanged {
+        return false;
+    }
+    remap(captured, preserved, indices, origin_probe)
+}
+
+#[test]
+fn saved_empty_capture_domain_avoids_identity_guard_visits() {
+    let fixture = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("capture-compaction-work.json");
+    let case: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(fixture).unwrap()).unwrap();
+    let preserved = case["preserved"].as_u64().unwrap() as usize;
+    let count = case["old_scope_count"].as_u64().unwrap() as usize;
+    let indices = (preserved..count).map(|id| (id, id)).collect();
+    let (mut old, mut new) = (Captures::default(), Captures::default());
+    let (mut old_visits, mut new_visits) = (0, 0);
+    let before = previous_remap_after_compaction(
+        &mut old,
+        count,
+        preserved,
+        &indices,
+        false,
+        &mut std::mem::drop::<Environment>,
+        &mut |_| old_visits += 1,
+    );
+    let after = remap_after_compaction(
+        &mut new,
+        count,
+        preserved,
+        &indices,
+        false,
+        &mut std::mem::drop::<Environment>,
+        &mut |_| new_visits += 1,
+    );
+    assert_eq!((before, &old), (after, &new));
+    assert!(!after);
+    assert_eq!((old_visits, new_visits), (count - preserved, 0));
+    assert!(
+        old_visits > 0,
+        "saved identity domain must exercise removed work"
+    );
 }
