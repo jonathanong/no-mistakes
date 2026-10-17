@@ -1,3 +1,4 @@
+mod all_exported;
 mod reference;
 use super::*;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
@@ -151,6 +152,7 @@ fn union_matches_every_historical_export_target_pair() {
     for fixture in [
         "export-reachability-shared-cycle.ts",
         "export-reachability-single-export.ts",
+        "export-reachability-all-exported-cycle.ts",
         "control-flow-returned-entrypoint-wrappers.ts",
         "control-flow-returned-entrypoint-static-branches.ts",
     ] {
