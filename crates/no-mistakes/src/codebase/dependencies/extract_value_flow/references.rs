@@ -41,8 +41,20 @@ impl ImportCollector {
         name: &str,
         value: &ValueExpression,
     ) {
-        self.record_rhs_acquisition(value);
-        let mutable = self.references_mutable_receiver(value);
+        // Without a mutable catalog, acquisition and its membership proof are empty.
+        #[cfg(not(all(test, feature = "test-instrumentation")))]
+        let use_new = true;
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let use_new = !assigned_acquisition_roots::tests::OLD.with(|old| old.get());
+        let mutable =
+            use_new && self.receiver_only_bindings.is_some() && self.record_rhs_acquisition(value);
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let mutable = if assigned_acquisition_roots::tests::OLD.with(|old| old.get()) {
+            self.record_rhs_acquisition_legacy(value);
+            self.references_mutable_receiver(value)
+        } else {
+            mutable
+        };
         if let Some(links) = &mut self.value_reference_links {
             if mutable {
                 self.prior_member_mutations

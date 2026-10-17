@@ -1,37 +1,6 @@
 use super::*;
 
 impl ImportCollector {
-    pub(super) fn record_rhs_acquisition(&mut self, value: &ValueExpression) {
-        if self.receiver_only_bindings.is_none() {
-            return;
-        }
-        match value {
-            ValueExpression::Named { name, scope, .. } if !name.contains('.') => {
-                if self.references_mutable_receiver(value) {
-                    self.prior_member_mutations
-                        .acquire_rhs_reference(scope.unwrap_or(0), name);
-                }
-            }
-            ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
-                for value in fields.values() {
-                    self.record_rhs_acquisition(value);
-                }
-            }
-            _ => {
-                // Reuse the canonical descriptor projection, including static
-                // member selectors, instead of scanning bindings or the AST.
-                let mut references = Vec::new();
-                nested::receiver_references(value, &[], &mut references);
-                for ((scope, name), _) in references {
-                    if self.has_mutable_receiver_binding(scope, &name) {
-                        self.prior_member_mutations
-                            .acquire_rhs_reference(scope, &name);
-                    }
-                }
-            }
-        }
-    }
-
     /// Reuse canonical fresh-identity receipts that predate RHS fact demand.
     /// Missing or opaque receipts retain the conservative initial possibility.
     pub(super) fn assignment_rhs_parent_identities(

@@ -1,3 +1,5 @@
+#[path = "extract_value_flow/assigned_acquisition_roots.rs"]
+mod assigned_acquisition_roots;
 #[path = "extract_value_flow/assigned_receiver_origins.rs"]
 mod assigned_receiver_origins;
 #[path = "extract_value_flow/assigned_receiver_proof.rs"]
