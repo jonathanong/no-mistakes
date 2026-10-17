@@ -30,6 +30,7 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
         "cycle",
         "root-cycle",
         "mixed-writes",
+        "multiple-origins",
         "scale-16",
         "scale-256",
     ] {

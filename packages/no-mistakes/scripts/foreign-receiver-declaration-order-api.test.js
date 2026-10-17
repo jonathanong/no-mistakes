@@ -23,6 +23,7 @@ test(
       "cycle",
       "root-cycle",
       "mixed-writes",
+      "multiple-origins",
       "scale-16",
       "scale-256",
     ]) {

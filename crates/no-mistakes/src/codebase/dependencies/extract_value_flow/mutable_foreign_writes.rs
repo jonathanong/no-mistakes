@@ -93,6 +93,7 @@ impl ImportCollector {
         #[cfg(feature = "test-instrumentation")]
         count(1, pending.len());
         let mut providers = fx_map();
+        let mut aliases = None;
         for ((key, path, owner, assigned, has_assignment), mut write) in pending {
             let index = providers
                 .entry((key.clone(), path.clone()))
@@ -107,6 +108,7 @@ impl ImportCollector {
             if references.is_empty() {
                 continue;
             }
+            let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
             // The declaration order cannot establish an exact replacement or
             // a fresh-object certificate. Preserve the writer, member and scope.
             write.metadata.fresh = false;
@@ -133,7 +135,13 @@ impl ImportCollector {
                 info,
                 &mut affected,
             );
-            self.invalidate_mutation_bindings(&affected, Some(owner), info.metadata.offset, true);
+            self.invalidate_mutation_bindings_indexed(
+                &affected,
+                Some(owner),
+                info.metadata.offset,
+                true,
+                Some(aliases),
+            );
         }
         self.foreign_receiver_writes = None;
     }

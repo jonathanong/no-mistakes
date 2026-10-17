@@ -181,6 +181,8 @@ mod mutation_metadata;
 #[path = "extract_value_flow/mutation_projection.rs"]
 mod mutation_projection;
 
+#[path = "extract_value_flow/mutation_alias_index.rs"]
+mod mutation_alias_index;
 #[path = "extract_value_flow/mutation_invalidation.rs"]
 mod mutation_invalidation;
 

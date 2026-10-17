@@ -613,7 +613,9 @@ heap transfers through function calls remain unresolved. Mutable roots read by
 a callable writer also include possible origins from later-declared foreign
 callable bodies. Declaration order does not prove execution order, so those
 members remain unresolved when a replacement could apply. Repeated writes share
-one root/member/owner projection from the same collected facts. A container
+one root/member/owner projection from the same collected facts. Deferred
+projections index callable aliases once by lexical scope and binding head, so
+unrelated aliases are not scanned again for every writer. A container
 captured before the root is rebound keeps its acquired identity.
 
 Repeated imported-member replacement alternatives require a closed execution
