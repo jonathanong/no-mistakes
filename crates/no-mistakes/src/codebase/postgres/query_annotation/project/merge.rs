@@ -1,17 +1,17 @@
+use super::super::evaluate::ExecutionEvents;
 use super::output::{prefix, projected_sql};
 use super::{output, ProjectedCalls, Value};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::postgres::{sql_requires_query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     originals: &FxHashMap<PathBuf, PathBuf>,
     options: &EmbeddedSqlOptions,
-    events: BTreeMap<(PathBuf, (u32, u32)), Vec<(bool, Value)>>,
+    events: ExecutionEvents,
     collect_executed: bool,
     projected: &mut ProjectedCalls,
 ) {

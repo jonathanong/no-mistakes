@@ -45,3 +45,19 @@ fn source_api_does_not_retain_sql_across_an_opaque_call_initializer() {
     assert_eq!(statements.len(), 1);
     assert!(!statements[0].complete, "{:?}", statements[0]);
 }
+
+#[test]
+fn source_api_limits_variants_merged_from_independent_entrypoints() {
+    let sources = [source("merged-entrypoint-variant-limit.ts")];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1);
+    assert_eq!(
+        statements[0].incomplete_reason.as_deref(),
+        Some("variant-limit"),
+        "{:?}",
+        statements[0]
+    );
+    assert!(!statements[0].complete);
+    assert!(statements[0].sql_text.is_none());
+}
