@@ -269,6 +269,7 @@ describe(id, () => {
       ["error", { patterns: [{ pattern: "x", flags: "z" }] }],
       ["error", { patterns: [{ pattern: "x", flags: "gimgi" }] }],
       ["error", { patterns: [{ pattern: "x", flags: "G" }] }],
+      ["error", { patterns: [{ pattern: "x", flags: "uv" }] }],
     ]) {
       assert.throws(() => check("strings.ts", ruleConfig), /Key "rules"/);
     }
@@ -290,11 +291,14 @@ describe(id, () => {
     assert.equal(schema.properties.patterns.maxItems, 64);
     assert.deepEqual(schema.properties.patterns.items.required, ["pattern"]);
     assert.equal(schema.properties.requireSuppressionReason.type, "boolean");
-    assert.equal(flagPattern.source, "^(?!.*(.).*\\1)[dgimsuvy]*$");
-    for (const flags of ["", "d", "g", "i", "m", "s", "u", "v", "y", "gi", "yu", "dgimsuvy"]) {
+    assert.equal(
+      flagPattern.source,
+      "^(?!.*(.).*\\1)(?!.*u.*v)(?!.*v.*u)[dgimsuvy]*$",
+    );
+    for (const flags of ["", "d", "g", "i", "m", "s", "u", "v", "y", "gi", "yu", "gv"]) {
       assert.equal(flagPattern.test(flags), true, flags);
     }
-    for (const flags of ["gg", "z", "G", "gimgi", "g ", "ii", "x"]) {
+    for (const flags of ["gg", "z", "G", "gimgi", "g ", "ii", "x", "uv", "vu", "dgimsuvy"]) {
       assert.equal(flagPattern.test(flags), false, flags);
     }
   });
