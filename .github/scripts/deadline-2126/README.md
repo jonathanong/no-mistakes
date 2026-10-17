@@ -7,7 +7,7 @@ It addresses the missing current-head active-timeout measurement, not the old un
 99e86587 timings. Existing CodSpeed ARM results cover the inactive deadline path and
 report 223 no-detected-regression comparisons; they do not prove an active-path gain.
 
-Two fresh same-run ARM release CLI producers bind exact 2bb75add versus ede95124.
+Two fresh same-run ARM release CLI producers bind exact integration baseline21b478d6 versus corrected candidateff4a5bd0.
 No addon is built. Each producer retains compiler/Cargo JSON (fresh:false), actual CLI
 hash/ELF AArch64, complete tracked source and dependency-file inventories, features,
 Cargo.lock, machine, and cleanup receipts. Default features include Mermaid; release
@@ -15,9 +15,9 @@ uses repository opt3/full LTO/cg1/debug0. No shared target/cache or older artifa
 
 Six ARM VMs each own one diagnostics × jobs case. They download BOTH artifacts from
 this run and check source/run/attempt/compiler/hash/size/ELF identities. Both timeouts
-120 and 0 run on that SAME VM with the SAME fixed Git checkout at baseline2bb and saved
+120 and 0 run on that SAME VM with the SAME fixed Git checkout at baseline21b and saved
 empty-rules.json. Git index discovery is preserved: fixture-inventory.json pins all
-23,370 Git entries, modes, byte hashes, and tree. The ~23k discovery count is separately
+23,396 Git entries, modes, byte hashes, and tree. The ~23k discovery count is separately
 required and equal across the verbose preflights. Git metadata and lock paths are not
 invented by a git-archive extraction. Source files become read-only; each process gets
 an owned XDG runtime outside the fixture. No dependency install touches this fixture.
@@ -34,8 +34,10 @@ Default jobs means omitted --jobs, not a claim of 28 workers: record available C
 affinity, raw diagnostics, and actual default policy. Explicit jobs1/4 are independent.
 Each cell stays within its VM; never pool raw rows across cases or compare VM levels.
 
-A direct wait4 captures elapsed monotonic wall, user/system CPU and peak RSS, including
-startup. It is not a phase-only metric. Raw stderr retains diagnostic phase timings.
+GNU time records native-child peak RSS (%M) in separate raw receipts. Direct wait4
+records wrapper+child CPU and inherited-floor RSS; monotonic wall includes wrapper
+startup and unchanged25ms observer granularity. Original inherited-floor RSS is kept
+as diagnostic evidence, not a native-memory estimate. It is not a phase-only metric. Raw stderr retains diagnostic phase timings.
 Rows have a fixed 125s supervisor cap; the active CLI timeout is120s. Each45min case
 budgets16*125s timed +4*125s preflight +200s transport. The actual budget is anchored BEFORE setup: min(job-start+2550s, Python-entry+2460s);
 preflight requires2200s still remaining after it completes; otherwise STOP before timing.
@@ -45,7 +47,7 @@ partial/adverse data; technical failure is distinct from descriptive numerical r
 Only TWO blocks/cell: analysis reports geometric paired ratios and both order results,
 not a reliable confidence interval/tail guarantee or an inferred speedup PASS. Retain
 flat, adverse and uncertain results, full raw outputs/exit, source postchecks and owned
-cleanup. No source production edits, gate weakening, release publication or new PR.
+cleanup. No production edits in this package, gate weakening, release publication or new PR.
 
 Activation (root only): review exact package pins, source flags/parser, fixture Git
 manifest, workflow/actionlint and unit results. Copy package to
@@ -67,3 +69,8 @@ setup, row or finally failure writes FAILED. Approved source SHA must equal both
 GITHUB_SHA and GITHUB_WORKFLOW_SHA. Input-bound complete package manifest verifies every
 file (no unexpected files/symlinks) and protocol hash/status remains independently gated.
 Local fixed Git readers have30s timeout, hooks and fsmonitor explicitly disabled.
+
+The original39037971860 comparison2bb→ede remains immutable adverse CPU evidence.
+This revised pair uses current integration main in both arms and requires fresh builds.
+source-proofs.json contains actual current Git fixture/parser/profile checks only; no
+native measurements or performance acceptance have occurred during preparation.

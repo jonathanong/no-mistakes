@@ -1,7 +1,7 @@
 {
   "status": "REVIEWED_ACTIVE_DEADLINE_DIAGNOSTIC",
-  "baseline": "2bb75add206c81218052aa82ccb280237c7faae8",
-  "candidate": "ede951247af20aa434ac22ceec799fba2954c635",
+  "baseline": "21b478d65e404174f32b01f2ac50f64f85db00e3",
+  "candidate": "ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7",
   "runner": "ubuntu-24.04-arm",
   "toolchain": "1.99.1 (58cf8f9c3)",
   "build": {
@@ -18,7 +18,7 @@
     "artifact_transport": "same-run upload-artifact/download-artifact; exact names,run,source,hash,size bound; never fallback"
   },
   "fixture": {
-    "source": "git archive exact baseline2bb tracked tree, same physical readonly path both arms",
+    "source": "Exact current integration baseline 21b478d65e404174f32b01f2ac50f64f85db00e3",
     "manifest": "sorted Git path/mode/SHA256/bytes plus symlink target; complete inventory pinned before publication",
     "config": "saved empty JSON config copied as own immutablepackage file; never alter fixture",
     "discovery": "actual candidate/discovered/classified counts retained; ~23k is expectation not acceptance equality substitute"
@@ -63,39 +63,52 @@
     "actual_deadline": "min(firstjobstepEpoch+2700-150, PythonentryEpoch+2520-60), fixed child125; capacity2200 after4preflight; no reset"
   },
   "metrics": [
-    "elapsed monotonic wall",
-    "direct wait4 user+sys CPU",
-    "direct wait4 peakRSS",
-    "exit",
-    "fullstdoutSHA+bytes",
-    "rawstderr",
-    "diagnostic phase objects when enabled"
+    "monotonic wrapper+child wall including unchanged25ms observer granularity",
+    "direct wait4 wrapper+child aggregate user+sys CPU",
+    "GNU time child-only %M peakRSS KiB in separate raw file",
+    "original inherited-floor wait4 RSS retained separately",
+    "exit/fullstdoutSHA+bytes/rawstderr/diagnostics unchanged"
   ],
   "parity": "full stdout and exit strict equality for every arm/cell; no findings normalization; timings stderr naturally differs",
-  "science": "within-cell paired log ratios and block bootstrap interval; publish individual order estimates/allraw. descriptive current-head improvement/no-detected-regression/uncertain, never copy CI success into performance PASS; all adverse retained; no retuning/retry",
+  "science": "Two blocks per cell descriptive only; allflat/adverse/order-dependent estimates retained, no CI/gate/pooling/retuning",
   "activation": "existing registered workflow receiver-fact-native.yml temporarily delegates reviewed controller on diagnostic branch with exact package hash/expectedhead; root sole explicit dispatch once published and reverified; no new PR/no workflowregistration dependency",
   "planned_files": [
-    "workflow-source.yml",
-    "protocol.json",
-    "empty-rules.json",
-    "build.py",
-    "measure.py",
+    "README.md",
     "analyze.py",
+    "build.py",
+    "common.py",
+    "empty-rules.json",
+    "fixture-inventory.json",
+    "fixtures/rss-extra.txt",
+    "fixtures/rss-valid.txt",
+    "fixtures/rss-zero.txt",
+    "measure.py",
     "process_owner.py",
+    "protocol.json",
+    "rss_time.py",
+    "saved-producer-control.json",
+    "source-proofs.json",
     "subreaper.py",
+    "target_size.py",
     "test_protocol.py",
-    "README.md"
+    "test_rss_time.py",
+    "workflow-source.yml"
   ],
-  "file_count": 10,
+  "file_count": 21,
   "diagnostics_on_flags": [
     "--timings",
     "--verbose-timings"
   ],
   "sample_inference": "Two blocks per cell are descriptive, not a guaranteed regression or tail gate.",
   "source_proofs": {
-    "parser": "Both exactpublicrefs invocation.rs nonzero_seconds(0)=>None; original parser-source-proof.json SHA61605d332250ef073c3c4b052f37961caa1363f7be112317055288004060d179",
-    "fixture": "Root independently rehashed23370 Gitentries from18062blobs, exact2bbtree/manifest matches",
-    "native": "NOT EXECUTED; future actual producers + full CLI preflight required before timed rows",
-    "workflow": "Pinnedactions checked, ARM explicit, same-run artifacts only, draftsourceunits/actionlint passed"
-  }
+    "actual": "source-proofs.json pins complete current baseline fixture and exact pair parser/build profile/dependency source checks",
+    "native": "NOT EXECUTED: two fresh ARM same-run producers required; old ede artifacts not reused",
+    "workflow": "Final local units and pinned actionlint must pass before reviewed publication; no dispatch performed"
+  },
+  "prior_run": {
+    "run": 39037971860,
+    "source": "86f086abeadafe988bbbbacaee0e7526a5fded09",
+    "result": "96timed+24preflight retained; CPUadverse and inheritedRSSfloor unchanged historical evidence"
+  },
+  "rss_observer": "GNUtime thinintermediary child %M; bounded harmless localcapability proof, hosted samecommand rawreceipt mandatory"
 }

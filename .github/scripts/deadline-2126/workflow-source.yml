@@ -34,9 +34,9 @@ jobs:
       matrix:
         include:
           - arm: baseline
-            source: 2bb75add206c81218052aa82ccb280237c7faae8
+            source: 21b478d65e404174f32b01f2ac50f64f85db00e3
           - arm: candidate
-            source: ede951247af20aa434ac22ceec799fba2954c635
+            source: ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7
     steps:
       - name: Anchor job budget before checkout and setup
         run: echo "JOB_STARTED_UNIX=$(date +%s)" >> "$GITHUB_ENV"
@@ -86,7 +86,7 @@ jobs:
           path: controller
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 2bb75add206c81218052aa82ccb280237c7faae8
+          ref: 21b478d65e404174f32b01f2ac50f64f85db00e3
           persist-credentials: false
           path: fixture
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8

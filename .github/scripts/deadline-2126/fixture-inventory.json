@@ -1,6 +1,6 @@
 {
-  "source": "2bb75add206c81218052aa82ccb280237c7faae8",
-  "tree": "f62a09e4adce063cb5b5b70e4aec20c65f50455c",
+  "source": "21b478d65e404174f32b01f2ac50f64f85db00e3",
+  "tree": "3a35f0db32a19296a071d11efe997a9b245f40ed",
   "files": [
     {
       "path": ".ast-grep/rule-tests/no-aggregate-standalone-analysis-test.yml",
@@ -617,8 +617,8 @@
     {
       "path": ".github/scripts/rust-validation.test.cjs",
       "mode": "100644",
-      "sha256": "6e0525e9ef7fcaf9dada022532cd30c6bf95657648a52e87466abd9865f47734",
-      "bytes": 6306
+      "sha256": "06cd8234c1d8f4f910a57026ddabf9772ad46743571ed5b31f0bbff92e3f1e5b",
+      "bytes": 7649
     },
     {
       "path": ".github/scripts/test_frontend_lifecycle_profile.py",
@@ -635,7 +635,7 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "sha256": "e21158e69e713d9911b3e8e7522ded8999ff44b0ce1507d43ba7fd8ca5d3bc8f",
+      "sha256": "cf02bc8d64e1ce3a8641e70020911a4bb1afa92aee01e34801c2d807fd425ebd",
       "bytes": 44512
     },
     {
@@ -857,8 +857,8 @@
     {
       "path": "crates/no-mistakes/AGENTS.md",
       "mode": "100644",
-      "sha256": "15fd951a658a78a99882fc75392306178ff102715da0dbbb80feeb28a833c247",
-      "bytes": 11811
+      "sha256": "f5afaa3dc9584a29bf6dd263d3a57207b7dd59efe9ee56acb48b31a52b2bef27",
+      "bytes": 11927
     },
     {
       "path": "crates/no-mistakes/Cargo.toml",
@@ -1415,20 +1415,20 @@
     {
       "path": "crates/no-mistakes/src/check_runner/run_all/playwright.rs",
       "mode": "100644",
-      "sha256": "22dc870a987c00a9d792e7bfc8504476499c7ac2e2d8d4886e59d98c95e77cae",
-      "bytes": 1110
+      "sha256": "fcb927da64e0712b57b977f68702ae7bb1c54765cbc87f3db480d90215d20879",
+      "bytes": 1243
     },
     {
       "path": "crates/no-mistakes/src/check_runner/run_all/setup.rs",
       "mode": "100644",
-      "sha256": "3a3f9c48764f93e7c01ec5ae8c62c08d54f880de2eb76c9dbac8fa45798536b3",
-      "bytes": 5071
+      "sha256": "ca51a595536d40da93102d62d818bb5b234bab271945627ce2b6ff8d8358e052",
+      "bytes": 5112
     },
     {
       "path": "crates/no-mistakes/src/check_runner/tests.rs",
       "mode": "100644",
-      "sha256": "cf272ba50b071e5a16777ec3db4a49a262151705e708a8b67f89a574c60cb1f5",
-      "bytes": 18559
+      "sha256": "8e11e08890df01571c93494a59ebcd92a93da2ed84cd0f0620b7f8520cc53ae9",
+      "bytes": 18585
     },
     {
       "path": "crates/no-mistakes/src/check_runner/tests/architecture.rs",
@@ -1465,6 +1465,12 @@
       "mode": "100644",
       "sha256": "4ce7a861575a67871eb256c6f3dc5e8b6afe148c6885379727e2fda40c5aff17",
       "bytes": 3013
+    },
+    {
+      "path": "crates/no-mistakes/src/check_runner/tests/playwright_discovery.rs",
+      "mode": "100644",
+      "sha256": "86ed9eaf389a210780e294871c49bd65c3312fb9c82991c1e65544a0de8f8389",
+      "bytes": 2833
     },
     {
       "path": "crates/no-mistakes/src/check_runner/tests/prepared_parser_cache.rs",
@@ -1541,8 +1547,8 @@
     {
       "path": "crates/no-mistakes/src/cli/mod.rs",
       "mode": "100644",
-      "sha256": "3d2cd69730cbbd40b5227cb2878c1e5b4e9a2bd35745de875ff4448356910eae",
-      "bytes": 2212
+      "sha256": "e066b8ee613bac160377e79bd4d245f830d42ab651ec9a2f499824966e420bf6",
+      "bytes": 4959
     },
     {
       "path": "crates/no-mistakes/src/cli/output_format.rs",
@@ -1559,8 +1565,8 @@
     {
       "path": "crates/no-mistakes/src/cli/tests.rs",
       "mode": "100644",
-      "sha256": "ced793ebd86d87b47f83caf10344d4f191d580183bf44b56afb83b45635a673d",
-      "bytes": 3816
+      "sha256": "a26784d24778d837891ed502fe205797151fd9af05d037438c8bfa9b1dcfeb99",
+      "bytes": 7158
     },
     {
       "path": "crates/no-mistakes/src/cli/traversal.rs",
@@ -1985,8 +1991,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/check_facts/staged_playwright/tests/graph.rs",
       "mode": "100644",
-      "sha256": "0154b828a1d1225900c62edb1d55ed38fc0ff26e6f7a28c241ecd6c476cfda9a",
-      "bytes": 3625
+      "sha256": "c2780fc6cf2307e223b49ac510eeb59ed340701865cd17c2d0126c62440efbe3",
+      "bytes": 3639
     },
     {
       "path": "crates/no-mistakes/src/codebase/check_facts/staged_playwright/tests/mod.rs",
@@ -5435,8 +5441,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/dependencies/graph/tests/extra_playwright_routes.rs",
       "mode": "100644",
-      "sha256": "d9070471f78f4463490a500467b5eadd01293d06302418974a9c4ff384b69690",
-      "bytes": 15803
+      "sha256": "4a29f6b00994b28ad2f03c0e132fbc50fe6ded1f0a66ae48bf2544940c3f52ca",
+      "bytes": 16054
     },
     {
       "path": "crates/no-mistakes/src/codebase/dependencies/graph/tests/extra_runtime.rs",
@@ -6467,8 +6473,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/config.rs",
       "mode": "100644",
-      "sha256": "4e3f7bddb64d0518d1f25d438b8976eeb6ee21eda161b3ccce459ccfa77dd798",
-      "bytes": 2596
+      "sha256": "1cdb371dbecb47b3030bf45d6cd07f8ba3c96c14701c381159197ad2a6001d91",
+      "bytes": 2716
     },
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/csharp.rs",
@@ -6539,8 +6545,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/dependency_diff/xml.rs",
       "mode": "100644",
-      "sha256": "97125a408af62b290e8395b46abeeb163c01ce98df04e6f4000f3839fa15d393",
-      "bytes": 6121
+      "sha256": "d7173f00e655a08b4d2c623a2bf92846181c9398395d56789f6bb23282202a28",
+      "bytes": 6198
     },
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/dependency_diff/xml/fingerprints.rs",
@@ -6581,14 +6587,20 @@
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/project_static.rs",
       "mode": "100644",
-      "sha256": "9b942f2edec6d5b976f79f26d6df54ec795fe5077e7e2529518f59492c493ccb",
-      "bytes": 6889
+      "sha256": "f7e8ebe6fa57d9310915c7ffb5a1401148d481d0e5b25f33995cf7e8b474da55",
+      "bytes": 6167
     },
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/project_static/regexes.rs",
       "mode": "100644",
-      "sha256": "894ec45a7e63bef9546d71e8a46efd2d01b8a40f8f391b641ff447f421f0b395",
-      "bytes": 1430
+      "sha256": "4b3854f16e545a300a6cdd47d1d37ee55b9383137272eb91bb50cbb0ab878c80",
+      "bytes": 3664
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/dotnet/project_static/regexes/tests.rs",
+      "mode": "100644",
+      "sha256": "fea9b17a162cc79a750c8bccc3b2a879c17b547fc0db05698b4828128c35ae34",
+      "bytes": 3647
     },
     {
       "path": "crates/no-mistakes/src/codebase/dotnet/test_support.rs",
@@ -9437,8 +9449,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives.rs",
       "mode": "100644",
-      "sha256": "9f4436dd06b943c0a8c9aed27c1377b0d74f9d2c3af3505719d46d6662db8e96",
-      "bytes": 535
+      "sha256": "6f5cd8d20b12639f824f1acda20d75b71d95be16374aa331cca4e652b16da31a",
+      "bytes": 552
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/arena.rs",
@@ -9513,22 +9525,52 @@
       "bytes": 1439
     },
     {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/final_prune.rs",
+      "mode": "100644",
+      "sha256": "ff8fa1da231bb4ab9e4df7b41ba0d6baad79e59aea0d8383fdf60eaaa9645a64",
+      "bytes": 2427
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/final_prune_runtime.rs",
+      "mode": "100644",
+      "sha256": "9a259373e6f0bc5948306620a98e9840e66241309281b432a6a780487c76504b",
+      "bytes": 169
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/final_prune_tests.rs",
+      "mode": "100644",
+      "sha256": "4baf037e6534ff6f9b057e735fcab982f8893a71266621d812374b416fa40c3d",
+      "bytes": 7207
+    },
+    {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/frames.rs",
       "mode": "100644",
-      "sha256": "c0b93575f516a505be7bba44aeca51769b9f3729436faf3b4c0e5dfea02faf6e",
-      "bytes": 5651
+      "sha256": "6b1f6098657afdcf1f89ca6bff453cf5084d18cd4da42c0045b57a97694d9bb5",
+      "bytes": 5873
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/frames/captures.rs",
       "mode": "100644",
-      "sha256": "03776f2351f8d5f53073201107442935b03ddf445f2abc4a2149cb1497d22e11",
-      "bytes": 1192
+      "sha256": "45e7d32a63ea1c6e322a17eaeefeb979e3d7934eb05fc421ac67f35bf121acae",
+      "bytes": 2415
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/frames/captures/identity_tests.rs",
+      "mode": "100644",
+      "sha256": "7c17bb40521ca343ea4883fd89cb5f4b1cb6b754b13cfe7ded46d1e1945ddfcb",
+      "bytes": 6650
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/frames/captures/tests.rs",
       "mode": "100644",
-      "sha256": "b9f7299659c1c706807fa0c1ff3b469b9d2b1c699d7b2635fa5d079fcbafe1d0",
-      "bytes": 1328
+      "sha256": "d1a5afd4f66ea299eb37699a6ec6b8530e39de7be4a14f377440d7bd47ce6581",
+      "bytes": 1520
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/frames/identity_tests.rs",
+      "mode": "100644",
+      "sha256": "0b6d5206dcf4d9043ee45de93ea29eae6fee8a3cbfa065a1565a05d180749371",
+      "bytes": 1699
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/frames/remap.rs",
@@ -9605,14 +9647,14 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/prune.rs",
       "mode": "100644",
-      "sha256": "93e6f1ee75beed62f50ec24dacffb719f4dd26d8aed258817f3bfd2773073dc0",
-      "bytes": 4640
+      "sha256": "c8ced3b218943bdbda1210ae240303dfc67b8eb326d9b6af9b95e81812251751",
+      "bytes": 4659
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/prune/tests.rs",
       "mode": "100644",
-      "sha256": "f5efccf7a122abcc93bf3a01390e44b4ef1658855029b9f22204a98fb06f9cdf",
-      "bytes": 4977
+      "sha256": "a2bd60e9db2ed86f2f2b0a5d9348dfbc923c0158585a1d2613df5272a90ac03c",
+      "bytes": 5348
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/reachable.rs",
@@ -9629,8 +9671,14 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/run.rs",
       "mode": "100644",
-      "sha256": "ec0eac707e7ed80956e9ed313cd37a1dd839cf86f03e2da9e6ab88ff3960902d",
-      "bytes": 10352
+      "sha256": "29043c63b27da10388ab8b9a9b45d133102976aa595d1da87cc3cca9355d3670",
+      "bytes": 8454
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/run_finish.inc",
+      "mode": "100644",
+      "sha256": "7a93de9ca11ec36ba465b0b2cb504f458cfaf5182b6f9ee2f80816bcf62683b5",
+      "bytes": 2653
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/shared_module_tests.rs",
@@ -9677,14 +9725,20 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/callbacks/dependencies.rs",
       "mode": "100644",
-      "sha256": "409c262fc7e816f74a5108e408cb99c5bb0ce4759e6421469dd9491ce5f753d5",
-      "bytes": 3422
+      "sha256": "12f328c58441c185346a095c269e8d8d4bc1929411b8a65d22c94d878a7cfb38",
+      "bytes": 3590
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/callbacks/dependencies_tests.rs",
       "mode": "100644",
       "sha256": "ca7e8154274face995f169905dcb1fff6a853115790bd51ba7547617e3791a7f",
       "bytes": 1905
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/callbacks/dependency_borrow_tests.rs",
+      "mode": "100644",
+      "sha256": "aad7892f58f5305ee2ca094dc9d49b38a12000a951997787e34c1c3caf12c42b",
+      "bytes": 6179
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/callbacks/imported_tests.rs",
@@ -9785,8 +9839,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/calls/scopes.rs",
       "mode": "100644",
-      "sha256": "0be6c01d21f48656a043186e429f63975b629649e2c407510e4eba11e6c6c187",
-      "bytes": 3498
+      "sha256": "4a85d20e512a0dede39c4e1628939cd4585bbab047dcc4892a5c2b980e0ce258",
+      "bytes": 3692
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/calls/scopes/tests.rs",
@@ -9857,8 +9911,26 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/effects.rs",
       "mode": "100644",
-      "sha256": "8df43a77e4660412e7e7b05a5117136874138db5e50daf779a29ca15fe1bafbf",
-      "bytes": 6515
+      "sha256": "db369d2652d1ef467742e2ad58b87360eec397a7e3b1f491c9083e7d9e445242",
+      "bytes": 5450
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/effects/builder_ids.rs",
+      "mode": "100644",
+      "sha256": "4f110a6d34ebd7c32dd6b74337d6ca6104505a4b1f7554fdf8a9df596283fc45",
+      "bytes": 2026
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/effects/tests.rs",
+      "mode": "100644",
+      "sha256": "779cde178311cce39b9e4c645ad68f559558e40264e5aa10d15028d94a2f15f9",
+      "bytes": 7594
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/effects/tests/original_tests.rs",
+      "mode": "100644",
+      "sha256": "1f5fa6b1582c04780a6eec13f0e5a10f1807abe08056d3499803aae85f9f9de4",
+      "bytes": 1435
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/index.rs",
@@ -9869,14 +9941,14 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped.rs",
       "mode": "100644",
-      "sha256": "2f757af8717c07bfae1bf8734b569b1151727d3133a7387423555de1a2062d1c",
-      "bytes": 5762
+      "sha256": "f0fe1d2a1982d03b449f5a2775f28102d9d84d1429c205d5bb234ccfc4594506",
+      "bytes": 5784
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/binding_tests.rs",
       "mode": "100644",
-      "sha256": "1197aacd3ba99ae6cc3c40bec4cba6cf7f30268bc950927d55630356f5f364fe",
-      "bytes": 8677
+      "sha256": "0b9c68bdad2dd286498111f96458c92a645910382db00adf492cacc684172cb2",
+      "bytes": 8843
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/bindings.rs",
@@ -9887,8 +9959,20 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/bindings/tests.rs",
       "mode": "100644",
-      "sha256": "0e95d0d17aec714d523eb26c1500e65af09818abc647d8fc8d471481bbe065d4",
-      "bytes": 6523
+      "sha256": "e2e1efb883aec68c8716486764fda6523c186be7342f54a653bb90b904a2cefd",
+      "bytes": 9607
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/captured_readers.rs",
+      "mode": "100644",
+      "sha256": "e2b16e655ab475c929dac4d470b60c5dd4734f7b3730ebe86ee50a1ac70ff61f",
+      "bytes": 4000
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/captured_readers/tests.rs",
+      "mode": "100644",
+      "sha256": "ac6ba852da60f5da276ce038c1c55cc8e781e8cc075769a8ac6237bb6a157b84",
+      "bytes": 7516
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/fresh.rs",
@@ -9899,14 +9983,14 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/fresh_index.rs",
       "mode": "100644",
-      "sha256": "57152fb5ce4d76bdd1d1d58a6ee9556beffe3622c1822b30e044a8c6487e70d9",
-      "bytes": 2533
+      "sha256": "68467d55046e06ccbb0c7dc041b3900636c9e8511a7a426b993417334e4038f6",
+      "bytes": 3649
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/fresh_tests.rs",
       "mode": "100644",
-      "sha256": "f06d8e380f079f987d6eebe9e9444d0ecc888e789ffdca51de146dcb2e6e4b05",
-      "bytes": 9054
+      "sha256": "8796e7c25f52622480b36c69a29b1455e0173ef404171fdefdb6f7581351ceff",
+      "bytes": 9220
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/owners.rs",
@@ -9941,8 +10025,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/mapped/tests.rs",
       "mode": "100644",
-      "sha256": "340dd1abd0a0836f80afbb6883b8512060dfd0ca9dd0c194762a1a7ec1c9f4c5",
-      "bytes": 7158
+      "sha256": "30fe503fdf22f5c8161633870679ed6f9a8f9c8c4bf0a05573d4c7a36deddbf3",
+      "bytes": 7308
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/member.rs",
@@ -10337,8 +10421,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/source.rs",
       "mode": "100644",
-      "sha256": "64a13d1c5e517871391cb85a0ae3fc2bd53b5f5706660c59778622e002ea3cca",
-      "bytes": 1642
+      "sha256": "fd79e06e1652ee012cc255e0c96eaaae5149fe85ac5d4a766bbb028a8f7efb47",
+      "bytes": 1838
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/source/adjacent_strings.rs",
@@ -10367,14 +10451,14 @@
     {
       "path": "crates/no-mistakes/src/codebase/postgres/source/batch_pool.rs",
       "mode": "100644",
-      "sha256": "7b20cf22e0f4ce8233c666fc9a466bd6ade3935f2c5ef624b5337cfb882fede0",
-      "bytes": 931
+      "sha256": "f5ea2ac343b6dc9626024fef2c35b2b554a990f2b35a8e3d932176ef1ae919d8",
+      "bytes": 1401
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/source/batch_pool_tests.rs",
       "mode": "100644",
-      "sha256": "4ad1643cb48f9f96433ccca795af9ccc1b9a1d870c3cb2a9867f2e8e6bd4a4e9",
-      "bytes": 406
+      "sha256": "dec843d7dc039148190aa2b460cf8b28ae24e9fb2747e5dc5673fe726ac9052f",
+      "bytes": 1258
     },
     {
       "path": "crates/no-mistakes/src/codebase/postgres/source/body.rs",
@@ -13943,8 +14027,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/rules/forbidden_dependencies/tests/shared_facts.rs",
       "mode": "100644",
-      "sha256": "dbf346eced7f23e0f6690e06dc8faede8607960441029da3129c316d0214ac69",
-      "bytes": 11495
+      "sha256": "63376f1b71a5967c0a9b6d5f6b9226d736ac1482531b633ca470ba7f1f0a3bed",
+      "bytes": 11513
     },
     {
       "path": "crates/no-mistakes/src/codebase/rules/forbidden_workspace_closure.rs",
@@ -22895,8 +22979,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/workflow_topology/artifact_values/matrix_value.rs",
       "mode": "100644",
-      "sha256": "5e878e025e0f98b8c556fb7d4eee2a0198a748f42669479b8712819c377f62e0",
-      "bytes": 5164
+      "sha256": "0d26cd14e1925f9303b1f592804aa4983430c316190611dbae4227e04ce83e31",
+      "bytes": 5773
     },
     {
       "path": "crates/no-mistakes/src/codebase/workflow_topology/artifact_values/matrix_value/axes.rs",
@@ -22909,6 +22993,12 @@
       "mode": "100644",
       "sha256": "412ef594f8855f38411cf719724d84577cb586f24ecc268ba122c2a5b7fe7a86",
       "bytes": 782
+    },
+    {
+      "path": "crates/no-mistakes/src/codebase/workflow_topology/artifact_values/matrix_value/tests.rs",
+      "mode": "100644",
+      "sha256": "968267bbbeb961b1e7f8f962de5f46dfc10a811cdc341c35804dab27d3f71603",
+      "bytes": 1670
     },
     {
       "path": "crates/no-mistakes/src/codebase/workflow_topology/call_contract_diagnostics.rs",
@@ -23135,8 +23225,8 @@
     {
       "path": "crates/no-mistakes/src/codebase/workflow_topology/tests.rs",
       "mode": "100644",
-      "sha256": "52cf34c661e0b71d74116a4ed1e03f05f2cb6e64ad38e50230c4f22f65f17281",
-      "bytes": 19091
+      "sha256": "b60bfab23fa3376ef27b2d6de3ce06d47a7e327530b1df31c773ae41c3650737",
+      "bytes": 19102
     },
     {
       "path": "crates/no-mistakes/src/codebase/workflow_topology/tests/artifact.rs",
@@ -26237,8 +26327,8 @@
     {
       "path": "crates/no-mistakes/src/napi_api/async_task.rs",
       "mode": "100644",
-      "sha256": "3663bb68367462327fae1342985c4d16e79552e5ac63750a8d0378cdbc1b7a53",
-      "bytes": 4891
+      "sha256": "34b6f5ab17b8b4ca2cde66b667bb9738ce912f5ebde6833803553d1fb2aa7ad0",
+      "bytes": 5176
     },
     {
       "path": "crates/no-mistakes/src/napi_api/async_task/independent.rs",
@@ -27509,8 +27599,8 @@
     {
       "path": "crates/no-mistakes/src/playwright/playwright_urls/statics.rs",
       "mode": "100644",
-      "sha256": "0446354b021e1fece518310e2911085cdd470669b622ab08e46d6ad91e9b06ee",
-      "bytes": 3760
+      "sha256": "a50260e98e61e1b5f2f653683dcc2c10379ecb8ba26280a2fdc4087c5ee77974",
+      "bytes": 3854
     },
     {
       "path": "crates/no-mistakes/src/playwright/playwright_urls/tests.rs",
@@ -27533,8 +27623,8 @@
     {
       "path": "crates/no-mistakes/src/playwright/playwright_urls/tests/patterns.rs",
       "mode": "100644",
-      "sha256": "598bfc6086e6ae1fe1391a9f59d942d79ed9146fe249583a9675d65d1cc4a3bd",
-      "bytes": 5491
+      "sha256": "db1bff4c43ea86d51463a9342443a3be875b972ebd44a226ed1e4fe065281eb2",
+      "bytes": 6204
     },
     {
       "path": "crates/no-mistakes/src/playwright/playwright_urls/visitor.rs",
@@ -27581,8 +27671,8 @@
     {
       "path": "crates/no-mistakes/src/playwright/rules/fact_plan.rs",
       "mode": "100644",
-      "sha256": "b71a3e1386f5a6b1b3dac464679e2e254d767c70c6b4d6786256f610dde1713f",
-      "bytes": 3927
+      "sha256": "db980bc6460cd740deb122135fd242dde3e448e5897f02648fa642a5d7b020d3",
+      "bytes": 4452
     },
     {
       "path": "crates/no-mistakes/src/playwright/rules/filter.rs",
@@ -30887,8 +30977,8 @@
     {
       "path": "crates/no-mistakes/tests/docs_coverage.rs",
       "mode": "100644",
-      "sha256": "27670ee356fb1cf26dabe03d451019df28cddb68927f7c79f889a6a12f75d468",
-      "bytes": 18337
+      "sha256": "53bcdd589ee0f57db32b3d0289702ed2000c65c6e0f33d1a1004c82c035b6d16",
+      "bytes": 18433
     },
     {
       "path": "crates/no-mistakes/tests/executed_postgres_boolean_api.rs",
@@ -31075,6 +31165,12 @@
       "mode": "100644",
       "sha256": "2adf36ebb9128c378312a0bdee2e32fa9a65d0484f92c4e776059685d9e2291c",
       "bytes": 9825
+    },
+    {
+      "path": "crates/no-mistakes/tests/support/docs_include_fragment_regressions.rs",
+      "mode": "100644",
+      "sha256": "4fe34fcbf4cebf21a314b381d1f82ae9142783284647713994c7358e3859b6aa",
+      "bytes": 1422
     },
     {
       "path": "crates/no-mistakes/tests/support/docs_node_runtime_exports.rs",
@@ -31967,8 +32063,8 @@
     {
       "path": "docs/node-api.md",
       "mode": "100644",
-      "sha256": "5dfb139b7e6d9c28f9b6c1c3cfa782b11749361b423b18381cf8f1ff60a428b2",
-      "bytes": 88551
+      "sha256": "379b04a1ea1ec08f347c2c0fe7c5eb75a85cdf990437dd9127d24aa3a025a589",
+      "bytes": 90090
     },
     {
       "path": "docs/performance/frontend-allocation-probe.rs",
@@ -33335,8 +33431,8 @@
     {
       "path": "docs/postgres-source-api.md",
       "mode": "100644",
-      "sha256": "f52b295643cc4a5f6c124cc8a871547adcc43eb8d91433b15381dce09a90dcdc",
-      "bytes": 55675
+      "sha256": "cbfaca5dcf64e6f71023c92f2c0673597c4c18e7d76f32fcf285485ec1f2a9e2",
+      "bytes": 55893
     },
     {
       "path": "docs/rules/README.md",
@@ -41629,6 +41725,12 @@
       "mode": "100644",
       "sha256": "22d062785c8c3f49e8d8a3b63d8e99fcabed355e4dc70f28b26eb6516e762afe",
       "bytes": 1208
+    },
+    {
+      "path": "fixtures/node-api/jobs-pool-result-types/public.mts",
+      "mode": "100644",
+      "sha256": "ab730f390a8e16918bd0531565881d3cb97391d762299d51019f370a4dcd1f73",
+      "bytes": 1578
     },
     {
       "path": "fixtures/node-api/planning-temp-cleanup/README.md",
@@ -79757,8 +79859,8 @@
     {
       "path": "packages/no-mistakes/analyze-project-types.d.ts",
       "mode": "100644",
-      "sha256": "27c42636939a208a780eac24d7af8890f21ef5a8eba1228194ede9288441ecea",
-      "bytes": 7089
+      "sha256": "8795302e7b6c800406dc0ed71d41e8baf3d9899c86215c8b25d56c721a3d7f91",
+      "bytes": 7426
     },
     {
       "path": "packages/no-mistakes/bin/no-mistakes.js",
@@ -79823,14 +79925,14 @@
     {
       "path": "packages/no-mistakes/index-ci-infra.d.ts",
       "mode": "100644",
-      "sha256": "358f135ccedb7a42075a099ffe7e3c556edbbc080ce67e050d981d5226a7f6e3",
-      "bytes": 2933
+      "sha256": "839b7369f52e9223970faf77dac74c097efd62ffd5ffd88761b1759bc9dfcadd",
+      "bytes": 4356
     },
     {
       "path": "packages/no-mistakes/index.d.ts",
       "mode": "100644",
-      "sha256": "1e2496096537510388c32d08cad101c6e91742bd4933e623d23b2f48b8b95f3c",
-      "bytes": 7912
+      "sha256": "8d26ed2619e6b682f365cfdcc6a24fe4c384850185bd3de9fb913d0404096f10",
+      "bytes": 7689
     },
     {
       "path": "packages/no-mistakes/index.js",
@@ -79847,8 +79949,8 @@
     {
       "path": "packages/no-mistakes/invocation-types.d.ts",
       "mode": "100644",
-      "sha256": "088e3af71dd3762f7309253c06301ed0a3d44026ca08f7a949638b16258e1ded",
-      "bytes": 2775
+      "sha256": "b462e074de31f20388827532f0db68f4188ea1f9b218ebbf934e47142edd6795",
+      "bytes": 3865
     },
     {
       "path": "packages/no-mistakes/mermaid-types.d.ts",
@@ -79913,8 +80015,8 @@
     {
       "path": "packages/no-mistakes/planning-impact-artifacts.js",
       "mode": "100644",
-      "sha256": "b70b29a77bd07bdf3ed85740c4d1ec92bde586242a128928d51463f187a92d0a",
-      "bytes": 7121
+      "sha256": "dc9c8e3e7dcc2ebe118fc02c4c70793e82ae015cb40fc33bd7658d81d4e5624a",
+      "bytes": 7224
     },
     {
       "path": "packages/no-mistakes/planning-impact-cli.js",
@@ -80051,8 +80153,8 @@
     {
       "path": "packages/no-mistakes/scripts/api.test.js",
       "mode": "100644",
-      "sha256": "0564771fed5bd6fbfb930eeef36f8bd80a66cb51873cbf05690ea7fd8efade3e",
-      "bytes": 76011
+      "sha256": "2844e6706ad67acaa6336a3ba9be96cf796124ef3ab9497b2991cd25946b9821",
+      "bytes": 78548
     },
     {
       "path": "packages/no-mistakes/scripts/assignment-receiver-api.test.js",
@@ -80183,8 +80285,8 @@
     {
       "path": "packages/no-mistakes/scripts/planning-impact-artifacts.test.js",
       "mode": "100644",
-      "sha256": "d3ad5db3eef744a0fc44d2021e7a48f23502319170b743e757a1fdbbe9a0c527",
-      "bytes": 87218
+      "sha256": "260ed860e52197b55229ebcffff64b63833d8a79748833cd402fbd7d340816e8",
+      "bytes": 87539
     },
     {
       "path": "packages/no-mistakes/scripts/planning-impact-cli.test.js",
@@ -126807,6 +126909,12 @@
       "bytes": 68
     },
     {
+      "path": "test-cases/rules/postgres-require-query-annotation/fixture/capture-compaction-work.json",
+      "mode": "100644",
+      "sha256": "6a3a5db8601db00b02e961cd2c08e8cb79307619e432aaea289eaf780d5b918d",
+      "bytes": 236
+    },
+    {
       "path": "test-cases/rules/postgres-require-query-annotation/fixture/chained-executor-return/src/query.mts",
       "mode": "100644",
       "sha256": "ef6bde86adb99cb842d09b018576e4b53bb44b6ea12a949bdf0364d3e8845ed4",
@@ -127183,6 +127291,12 @@
       "mode": "100644",
       "sha256": "360d9e422a133f36020583c1260dc0dbf0ba70154f105c684e5027a1c1d3f06c",
       "bytes": 626
+    },
+    {
+      "path": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-callback-profile/nested-shadow.mts",
+      "mode": "100644",
+      "sha256": "ef32ced9533d2f3bc137da4fb3a818ec34ea78f02705f2f6a2ad6be2ab122999",
+      "bytes": 1428
     },
     {
       "path": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-callback-profile/reads.mts",
@@ -128875,6 +128989,12 @@
       "mode": "100644",
       "sha256": "2cba3460b6ba619c704b77e95727680bfb679a620c87fbcf2aa262874d405fcc",
       "bytes": 2633
+    },
+    {
+      "path": "test-cases/rules/postgres-require-query-annotation/fixture/shared-builder-dag.json",
+      "mode": "100644",
+      "sha256": "8d68c18e45245ccf515983f85eac440a839b74b5828a2771de8ebac28d936512",
+      "bytes": 280
     },
     {
       "path": "test-cases/rules/postgres-require-query-annotation/fixture/var-scopes/.no-mistakes.yml",
@@ -138483,6 +138603,30 @@
       "bytes": 232
     },
     {
+      "path": "test-cases/rust-validation/fixture/function-body-include/body.inc",
+      "mode": "100644",
+      "sha256": "1da1bc010dd0491d0f3411b619b5617dfa587f4be18ce1089d345deae55971e8",
+      "bytes": 114
+    },
+    {
+      "path": "test-cases/rust-validation/fixture/function-body-include/legacy-main.rs",
+      "mode": "100644",
+      "sha256": "0ba237e84110e7cfbcd18a1b471743e6e2b73beb8779c91c36a3b988a2a3977d",
+      "bytes": 92
+    },
+    {
+      "path": "test-cases/rust-validation/fixture/function-body-include/legacy.rs",
+      "mode": "100644",
+      "sha256": "1da1bc010dd0491d0f3411b619b5617dfa587f4be18ce1089d345deae55971e8",
+      "bytes": 114
+    },
+    {
+      "path": "test-cases/rust-validation/fixture/function-body-include/main.rs",
+      "mode": "100644",
+      "sha256": "36849ceaaedc05b70c3b2e300c320884324e739f0281e0c9f40c5c5ff13e8d8a",
+      "bytes": 91
+    },
+    {
       "path": "test-cases/rust-validation/fixture/historical-release/Cargo.toml",
       "mode": "100644",
       "sha256": "cc83dc73f4590f4dc3a939847d52563fd9ccd7f048917b58be060045d70284fa",
@@ -138511,6 +138655,12 @@
       "mode": "100644",
       "sha256": "bfbfca84fde056e4e64494c635ce10ae4a217f4033bb78c5d1f1e0a0c5caaf5d",
       "bytes": 81
+    },
+    {
+      "path": "test-cases/rust-validation/fixture/windows-native-api-timing.json",
+      "mode": "100644",
+      "sha256": "8b026146f6a60511ab6f9c2c3e8e7bc8c523447b83127404b24fd6b19745cebd",
+      "bytes": 878
     },
     {
       "path": "test-cases/scan-config/duplicate-defaults/README.md",
@@ -139525,6 +139675,12 @@
       "mode": "100644",
       "sha256": "d115dc6c83ba283a7d17146ad456056f3f70b003edb8c312a52880b48b034001",
       "bytes": 25
+    },
+    {
+      "path": "test-cases/workflow-topology/artifact-axis-lifetime/requests.yml",
+      "mode": "100644",
+      "sha256": "d750dbf942667ea919005b58e4f2d07abce19abc449b39d21ef91daf118830f4",
+      "bytes": 1406
     },
     {
       "path": "test-cases/workflow-topology/artifact-basic/.github/workflows/main.yml",

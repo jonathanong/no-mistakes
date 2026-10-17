@@ -1,0 +1,39 @@
+{
+  "status": "ACTUAL_PUBLIC_GIT_SOURCE_CHECKS_ONLY_NO_NATIVE_EXECUTION",
+  "baseline": "21b478d65e404174f32b01f2ac50f64f85db00e3",
+  "candidate": "ff4a5bd0cb5a2d6ad7bcd11c3e9822ba47d557b7",
+  "fixture": {
+    "entries": 23396,
+    "unique_blobs": 18087,
+    "tree": "3a35f0db32a19296a071d11efe997a9b245f40ed",
+    "inventory_sha256": "80b8e4ad45c894d976c6c409a1019f6401002c68eba70f8776e92c76e0ba47df",
+    "method": "Complete git ls-tree -rz and single cat-file batch; hashes Git blob bytes, modes and Gitlink identities exactly, matching tracked checkout inventory semantics"
+  },
+  "source": {
+    "Cargo.toml": {
+      "baseline_sha256": "5a129f2bb649899a51778f2782a43bf30a494e980f3391831f69a1dd4b4aa782",
+      "candidate_sha256": "5a129f2bb649899a51778f2782a43bf30a494e980f3391831f69a1dd4b4aa782",
+      "equal": true
+    },
+    "Cargo.lock": {
+      "baseline_sha256": "45ee5ac614aad194ea051cf008fb2be6fefa591134f1455fe45abf1581b2d776",
+      "candidate_sha256": "45ee5ac614aad194ea051cf008fb2be6fefa591134f1455fe45abf1581b2d776",
+      "equal": true
+    },
+    "crates/no-mistakes/Cargo.toml": {
+      "baseline_sha256": "efbbec5809354dbb194b17ea95621715fec66dddff68f590a3484f15e85b3013",
+      "candidate_sha256": "efbbec5809354dbb194b17ea95621715fec66dddff68f590a3484f15e85b3013",
+      "equal": true
+    },
+    "crates/no-mistakes/src/invocation.rs": {
+      "baseline_sha256": "36047f1c09934f884732ff72436fac8b6895f1f6aff220eb429126b553567b2e",
+      "candidate_sha256": "36047f1c09934f884732ff72436fac8b6895f1f6aff220eb429126b553567b2e",
+      "equal": true,
+      "parser_lines": [
+        "            timeout: nonzero_seconds(timeout),",
+        "            lock_timeout: nonzero_seconds(lock_timeout),",
+        "pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {"
+      ]
+    }
+  }
+}

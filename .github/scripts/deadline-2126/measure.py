@@ -5,6 +5,7 @@ import json,os,re,sys,time
 from pathlib import Path
 from common import package_guard,command_deadline,command,git,inventory,machine,parity,run,save,schedule,sha,validate_producer
 import subreaper
+from rss_time import run_with_child_rss
 P=Path(__file__).resolve().parent
 
 def capacity(durations,remaining):
@@ -42,7 +43,7 @@ def main():
         runtime=out/(label+'-runtime');runtime.mkdir(mode=0o700)
         env={k:v for k,v in os.environ.items()if k not in ['RAYON_NUM_THREADS','RUST_TEST_THREADS']};env['XDG_RUNTIME_DIR']=str(runtime)
         argv=command(binaries[arm],fixture,P/'empty-rules.json',timeout,diag,jobs)
-        row=run(argv,out/label,min(125,deadline-time.monotonic()),env)
+        row=run_with_child_rss(argv,out/label,min(125,deadline-time.monotonic()),env)
         row.update(arm=arm,timeout=timeout,diagnostics=diag,jobs=jobs,label=label)
         json.loads((out/(label+'.stdout')).read_bytes())
         stderr=(out/(label+'.stderr')).read_text();row['work']={k:int(v)for k,v in re.findall(r'^\[work\] ([\w.]+): (\d+)$',stderr,re.M)}
