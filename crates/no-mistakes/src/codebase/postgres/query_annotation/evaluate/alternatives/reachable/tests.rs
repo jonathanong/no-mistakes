@@ -14,8 +14,8 @@ fn shared_containers_are_visited_once_per_reachability_collection() {
         value = Value::Aggregate(vec![value.clone(), value].into());
     }
     let mut reachable = Reachable::default();
-    reachable.value(&value, &FxHashMap::default());
-    reachable.value(&value, &FxHashMap::default());
+    reachable.value(&value, &FxHashMap::default(), ModulePolicy::Referenced);
+    reachable.value(&value, &FxHashMap::default(), ModulePolicy::Referenced);
     assert_eq!(reachable.visited_values.len(), 13);
     assert_eq!(reachable.identities, FxHashSet::from_iter([7]));
     assert_eq!(reachable.pending_args, vec![8]);
@@ -63,7 +63,7 @@ fn saved_function() -> std::sync::Arc<crate::codebase::postgres::query_annotatio
 fn scalar_containers_skip_reachability_walks_even_through_result_wrappers() {
     let scalar = scalar_tree();
     let mut reachable = Reachable::default();
-    reachable.value(&scalar, &FxHashMap::default());
+    reachable.value(&scalar, &FxHashMap::default(), ModulePolicy::Referenced);
     assert_eq!(
         reachable.visited_values.len(),
         0,
@@ -75,7 +75,7 @@ fn scalar_containers_skip_reachability_walks_even_through_result_wrappers() {
 
     let wrapped = Value::Promise(Box::new(Value::Evaluated(Box::new(scalar), true)));
     let mut reachable = Reachable::default();
-    reachable.value(&wrapped, &FxHashMap::default());
+    reachable.value(&wrapped, &FxHashMap::default(), ModulePolicy::Referenced);
     assert_eq!(
         reachable.visited_values.len(),
         0,
@@ -100,7 +100,7 @@ fn mixed_containers_keep_environment_argument_and_builder_roots() {
     mixed = Value::Promise(Box::new(Value::Evaluated(Box::new(mixed), true)));
     let value = Value::Aggregate(vec![scalar_tree(), mixed].into());
     let mut reachable = Reachable::default();
-    reachable.value(&value, &FxHashMap::default());
+    reachable.value(&value, &FxHashMap::default(), ModulePolicy::Referenced);
     assert_eq!(reachable.pending_env, vec![42]);
     assert_eq!(reachable.pending_args, vec![8]);
     assert_eq!(reachable.identities, FxHashSet::from_iter([7]));
@@ -130,14 +130,22 @@ fn detached_function_only_container_retains_its_environment() {
     // builder/argument summary remains empty after a detached mutation.
     assert!(!values.contains_reference());
     let mut reachable = Reachable::default();
-    reachable.value(&Value::Object(values), &FxHashMap::default());
+    reachable.value(
+        &Value::Object(values),
+        &FxHashMap::default(),
+        ModulePolicy::Referenced,
+    );
     assert_eq!(reachable.pending_env, vec![42]);
     assert!(reachable.pending_args.is_empty());
     assert!(reachable.identities.is_empty());
     assert_eq!(reachable.visited_values.len(), 1);
 
     let mut previous = Reachable::default();
-    previous.value(&Value::Object(scalar_snapshot), &FxHashMap::default());
+    previous.value(
+        &Value::Object(scalar_snapshot),
+        &FxHashMap::default(),
+        ModulePolicy::Referenced,
+    );
     assert_eq!(previous.visited_values.len(), 0);
     assert!(previous.pending_env.is_empty());
 }
@@ -233,4 +241,57 @@ fn module_capture_liveness_follows_only_its_actual_owner_through_nested_values()
     );
     assert_eq!(found.environments, FxHashSet::from_iter([1]));
     assert_eq!(found.arguments, FxHashSet::from_iter([42]));
+}
+
+#[test]
+fn explicit_all_module_roots_preserve_selected_owner_traversal_as_the_default() {
+    use crate::codebase::postgres::query_annotation::evaluate::Capture;
+    let owner = std::path::PathBuf::from("reads.mts");
+    let modules = FxHashMap::from_iter([(owner.clone(), 1), ("unused.mts".into(), 2)]);
+    let scopes = vec![
+        Scope::from(FxHashMap::from_iter([(
+            "callback".into(),
+            Value::Object(
+                vec![Value::Promise(Box::new(Value::Function(
+                    saved_function(),
+                    owner,
+                    Capture::Module,
+                )))]
+                .into(),
+            ),
+        )])),
+        Scope::from(FxHashMap::from_iter([("owned".into(), Value::Array(42))])),
+        Scope::from(FxHashMap::from_iter([(
+            "unrelated".into(),
+            Value::Array(99),
+        )])),
+    ];
+    let objects = FxHashMap::from_iter([(42, vec![Value::Unknown]), (99, vec![Value::Unknown])]);
+    for (policy, environments, arguments) in [
+        (RootSeeds::new(&modules), vec![0, 1], vec![42]),
+        (
+            RootSeeds::all_modules(&modules),
+            vec![0, 1, 2],
+            vec![42, 99],
+        ),
+    ] {
+        let found = collect_from_roots(
+            &scopes,
+            RootSeeds {
+                environments: &[0],
+                ..policy
+            },
+            &[],
+            Arena {
+                objects: &objects,
+                extras: &Default::default(),
+            },
+            &Default::default(),
+            &Default::default(),
+        );
+        // The callback owner is outside the selected frame. Only the explicit
+        // all-module boundary may retain the unrelated module and its object.
+        assert_eq!(found.environments, FxHashSet::from_iter(environments));
+        assert_eq!(found.arguments, FxHashSet::from_iter(arguments));
+    }
 }
