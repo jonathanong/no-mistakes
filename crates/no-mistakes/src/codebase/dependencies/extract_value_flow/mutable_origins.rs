@@ -2,10 +2,15 @@ use super::*;
 use std::collections::BTreeMap;
 #[path = "mutable_origin_data.rs"]
 mod data;
+#[path = "mutable_foreign_writes.rs"]
+mod foreign;
 #[path = "mutable_origin_pending.rs"]
 mod pending;
+pub(super) use foreign::ForeignReceiverWrites;
 #[path = "mutable_origin_phases.rs"]
 mod phases;
+#[path = "mutable_foreign_providers.rs"]
+mod providers;
 #[path = "mutable_origin_records.rs"]
 mod records;
 #[path = "mutable_origin_single.rs"]
