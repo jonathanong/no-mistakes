@@ -167,6 +167,7 @@ impl ReplacementPayloads {
         {
             self.probe.call_admission_checks += admission.checks;
             self.probe.call_proof_steps += admission.steps;
+            self.probe.region_segment_searches += admission.region_searches;
             self.probe.opaque_groups += admission.blocked.len();
         }
     }

@@ -20,6 +20,8 @@ pub struct ReplacementProbeSnapshot {
     pub call_admission_checks: usize,
     /// Prepared-expression matcher entries, including rejected/depth-limit entries.
     pub call_proof_steps: usize,
+    /// Actual owner-map/binary searches; cursor interval hits are excluded.
+    pub region_segment_searches: usize,
     pub opaque_groups: usize,
     pub entry_resolutions: usize,
     pub opaque_entry_resolutions_avoided: usize,
@@ -103,6 +105,7 @@ impl ReplacementProbeSnapshot {
     }
     pub(in super::super) fn append(&mut self, other: Self) {
         self.call_admission_checks += other.call_admission_checks;
+        self.region_segment_searches += other.region_segment_searches;
         self.call_proof_steps += other.call_proof_steps;
         self.opaque_groups += other.opaque_groups;
         self.entry_resolutions += other.entry_resolutions;

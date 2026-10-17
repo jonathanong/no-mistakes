@@ -50,6 +50,7 @@ pub(super) fn apply_value(
                         alternative
                     })
                     .collect();
+                site.target = super::choice_targets::target(&site.alternatives);
                 return;
             }
             other => {
@@ -81,7 +82,7 @@ pub(super) fn apply_value(
             FlowValue::Target(ResolvedCallTarget::Alternatives(_))
         )
     {
-        // A recognized repeat read owns the answer, including Unknown.
+        // A replacement read owns Unknown too; never retain its stale initial edge.
         site.target = match value {
             FlowValue::Target(target) => target,
             _ => ResolvedCallTarget::Unknown,

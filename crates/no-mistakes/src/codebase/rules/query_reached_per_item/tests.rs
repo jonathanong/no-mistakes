@@ -347,13 +347,6 @@ mod projections;
 #[path = "tests/typed_clients.rs"]
 mod typed_clients;
 
-mod namespace_shadows;
-
-#[path = "tests/superseded_provenance.rs"]
-mod superseded_provenance;
-#[path = "tests/type_import_order.rs"]
-mod type_import_order;
-
 mod alternatives;
 
 #[path = "tests/alternative_traversal.rs"]
@@ -362,5 +355,12 @@ mod alternative_traversal;
 #[path = "tests/provenance_clients.rs"]
 mod provenance_clients;
 
+mod namespace_shadows;
+
 #[path = "tests/provenance_cases.rs"]
 mod provenance_cases;
+
+#[path = "tests/superseded_provenance.rs"]
+mod superseded_provenance;
+#[path = "tests/type_import_order.rs"]
+mod type_import_order;

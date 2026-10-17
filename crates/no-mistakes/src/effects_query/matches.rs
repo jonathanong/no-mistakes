@@ -75,6 +75,7 @@ fn needs_effect_call_graph(
                 || file.parse_error.is_some()
                 || file.fatal_parse_error
                 || file.value_flow.has_receiver_replacement_facts()
+                || file.value_flow.has_nullish_alternatives
         })
     })
 }
@@ -86,6 +87,11 @@ fn visit_effect_matches(
     record: &mut impl FnMut(EffectCallAlternative),
 ) {
     use crate::codebase::dependencies::graph::KnownCallTargetRef;
+    if !site.alternatives.is_empty() {
+        site_selection::visit_choice(selection, site, target_nodes, record);
+        return;
+    }
+
     let multiple = has_effect_alternatives(site);
     for candidate in site.targets() {
         let matched = match candidate.target {

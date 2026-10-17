@@ -1,8 +1,8 @@
 pub use extract_value_flow::{
-    CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression, ValueFlowFacts,
+    ValueType, CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression, ValueFlowFacts,
     ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,
     ValueReceiverMutations, ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts,
-    ValueReplacementWrite, ValueType,
+    ValueReplacementWrite,
 };
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {

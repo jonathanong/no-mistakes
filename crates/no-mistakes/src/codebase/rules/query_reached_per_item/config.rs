@@ -63,6 +63,15 @@ impl<'a> Sinks<'a> {
     }
 
     pub(super) fn match_site(&self, site: &ResolvedCallSite) -> Option<bool> {
+        if !site.alternatives.is_empty() {
+            return site
+                .alternatives
+                .iter()
+                .try_fold(false, |transaction, alternative| {
+                    self.match_site(alternative)
+                        .map(|matched| transaction || matched)
+                });
+        }
         let provenance = self.provenance.match_site(site).map(|_| true);
         let returned = site.returned_from.iter().any(|(module, export)| {
             self.returned
@@ -165,35 +174,7 @@ pub(super) fn exempt(config: &EffectKindConfig, name: &str) -> bool {
     })
 }
 
-pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<()> {
-    if options.effects.is_empty() {
-        bail!("{RULE_ID}: options.effects must select at least one configured effect kind");
-    }
-    if options
-        .allow
-        .iter()
-        .any(|allow| allow.file.is_empty() || allow.line == Some(0))
-    {
-        bail!("{RULE_ID}: allow entries require a non-empty file and positive line when supplied");
-    }
-    for kind in &options.effects {
-        let Some(effect) = config.effects.get(kind) else {
-            bail!("{RULE_ID}: unknown effects kind `{kind}`");
-        };
-        crate::effect_provenance::validate(effect, kind)?;
-        anyhow::ensure!(
-            effect
-                .targets
-                .iter()
-                .chain(&effect.returned_executors)
-                .all(|target| {
-                    !target.module.trim().is_empty() && !target.export.trim().is_empty()
-                }),
-            "effects kind `{kind}` targets require non-empty module and export"
-        );
-    }
-    Ok(())
-}
+include!("config_validation.rs");
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {

@@ -52,3 +52,34 @@ pub(super) fn selected_site<'a>(
             .flatten()
         })
 }
+
+// Explicit executor/provenance selectors keep #2071's all-branches policy;
+// plain-name effects retain each independently known fallback identity.
+pub(super) fn visit_choice(
+    selection: &EffectsSelection,
+    site: &crate::codebase::dependencies::graph::ResolvedCallSite,
+    nodes: &crate::fx::FxHashMap<
+        crate::codebase::dependencies::graph::NodeId,
+        &crate::config::v2::schema::EffectTargetConfig,
+    >,
+    record: &mut impl FnMut(EffectCallAlternative),
+) {
+    if let Some(target) = selected_site(selection, site, nodes) {
+        record(effect_alternative(target));
+        return;
+    }
+    use crate::codebase::dependencies::graph::KnownCallTargetRef;
+    for candidate in site.targets() {
+        let name = match candidate.target {
+            KnownCallTargetRef::Global { name } => name,
+            KnownCallTargetRef::ModuleExport { export_path, .. } => export_path,
+            _ => continue,
+        };
+        if let Some(category) = selection.names.get(name) {
+            record(EffectCallAlternative {
+                callee: name.to_owned(),
+                category: category.clone(),
+            });
+        }
+    }
+}

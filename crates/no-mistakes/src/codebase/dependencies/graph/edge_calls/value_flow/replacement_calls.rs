@@ -30,6 +30,8 @@ pub(super) fn prepare(
         checks: 0,
         #[cfg(feature = "test-instrumentation")]
         steps: 0,
+        #[cfg(feature = "test-instrumentation")]
+        region_searches: 0,
     };
     let mut proof = Proof {
         file,
@@ -40,6 +42,7 @@ pub(super) fn prepare(
         #[cfg(feature = "test-instrumentation")]
         steps: 0,
     };
+    let mut region_cursor = index::RegionCursor::default();
     for site in sites {
         if !matches!(
             site.invocation,
@@ -51,7 +54,7 @@ pub(super) fn prepare(
             continue;
         }
         let owner = site.caller_id;
-        let region = writes.region_at(owner, site.offset);
+        let region = writes.region_at_cached(&mut region_cursor, owner, site.offset);
         let owner_wide = owner.is_some_and(|owner| repeated.contains(&owner));
         if !owner_wide && !region.is_some_and(|region| writes.facts.regions[region].repeated) {
             continue;
@@ -82,6 +85,7 @@ pub(super) fn prepare(
     #[cfg(feature = "test-instrumentation")]
     {
         result.steps = proof.steps;
+        result.region_searches = region_cursor.searches();
     }
     result
 }

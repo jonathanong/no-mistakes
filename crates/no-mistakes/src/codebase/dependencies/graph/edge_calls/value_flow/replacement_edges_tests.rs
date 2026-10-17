@@ -3,6 +3,7 @@ use super::*;
 fn occurrence(offset: u32, target: &str) -> ResolvedCallSite {
     let file = std::path::PathBuf::from("/fixture/edge-multiplicity.mts");
     ResolvedCallSite {
+        alternatives: Vec::new(),
         file: file.clone(),
         caller: None,
         caller_id: None,

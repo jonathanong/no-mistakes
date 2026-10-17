@@ -47,11 +47,50 @@ impl RegionSegments {
         self.owners.values().map(Vec::len).sum()
     }
     pub(super) fn at(&self, owner: Option<CallableId>, offset: u32) -> Option<usize> {
+        self.segment_at(owner, offset).map(|(_, _, region)| region)
+    }
+    fn segment_at(&self, owner: Option<CallableId>, offset: u32) -> Option<(u32, u32, usize)> {
         let segments = self.owners.get(&owner)?;
         let index = segments
             .partition_point(|(start, _, _)| *start <= offset)
             .checked_sub(1)?;
-        let (_, end, region) = segments[index];
-        (offset < end).then_some(region)
+        let segment = segments[index];
+        (offset < segment.1).then_some(segment)
     }
 }
+
+// Only this prepare invocation owns the cursor; no graph/index layout changes.
+#[derive(Default)]
+pub(in super::super) struct RegionCursor {
+    last: Option<(Option<CallableId>, u32, u32, usize)>,
+    #[cfg(feature = "test-instrumentation")]
+    searches: usize,
+}
+impl RegionCursor {
+    pub(super) fn at(
+        &mut self,
+        segments: &RegionSegments,
+        owner: Option<CallableId>,
+        offset: u32,
+    ) -> Option<usize> {
+        if let Some((previous, start, end, region)) = self.last {
+            if previous == owner && start <= offset && offset < end {
+                return Some(region);
+            }
+        }
+        #[cfg(feature = "test-instrumentation")]
+        {
+            self.searches += 1;
+        }
+        let segment = segments.segment_at(owner, offset);
+        self.last = segment.map(|(start, end, region)| (owner, start, end, region));
+        segment.map(|(_, _, region)| region)
+    }
+    #[cfg(feature = "test-instrumentation")]
+    pub(in super::super) fn searches(&self) -> usize {
+        self.searches
+    }
+}
+#[cfg(test)]
+#[path = "replacement_regions/cursor_tests.rs"]
+mod cursor_tests;

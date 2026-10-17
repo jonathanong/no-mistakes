@@ -3,6 +3,7 @@ use super::*;
 fn site() -> ResolvedCallSite {
     let file = std::path::PathBuf::from("/saved/entry.mts");
     ResolvedCallSite {
+        alternatives: Vec::new(),
         target_node: Some(NodeId::callable(&file, "direct", CallableId(10))),
         target: ResolvedCallTarget::RepositoryFunction {
             file: file.clone(),

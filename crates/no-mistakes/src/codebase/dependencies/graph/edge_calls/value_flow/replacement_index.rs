@@ -3,6 +3,7 @@ use crate::codebase::dependencies::extract::ValueReplacementFacts;
 
 #[path = "replacement_regions.rs"]
 mod regions;
+pub(super) use regions::RegionCursor;
 
 /// Receiver IDs come from the request's canonical resolved import identities.
 /// Source spellings only select the corresponding prepared identity once.
@@ -145,6 +146,14 @@ impl PreparedReplacements {
         self.repeat_writes
             .get(&receiver)
             .is_some_and(|(properties, dynamic)| *dynamic || properties.contains(property))
+    }
+    pub(super) fn region_at_cached(
+        &self,
+        cursor: &mut RegionCursor,
+        owner: Option<CallableId>,
+        offset: u32,
+    ) -> Option<usize> {
+        cursor.at(&self.regions, owner, offset)
     }
     pub(super) fn region_at(&self, owner: Option<CallableId>, offset: u32) -> Option<usize> {
         self.regions.at(owner, offset)
