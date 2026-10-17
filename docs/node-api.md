@@ -403,8 +403,10 @@ intentionally unavailable from the Cargo-installed native binary.
 The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
 does not have a one-to-one CLI command. Analysis JSON objects may include
-optional `jobsPoolWarning` (`JobsPoolWarning`) when a later `jobs` value cannot
-resize the process pool; the field is omitted otherwise.
+optional `jobsPoolWarning` (`JobsPoolWarning`), exposed by the exported
+`WithInvocationResult<T>` type, when a later `jobs` value cannot
+resize the process pool; the field is omitted otherwise. Arrays, scalar results,
+source-only SQL parsing/extraction, and diagnostics polling do not add this metadata.
 
 The package also exposes its optional Vitest integration through
 `no-mistakes/test-timeout-policy` and

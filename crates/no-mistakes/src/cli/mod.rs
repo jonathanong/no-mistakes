@@ -115,13 +115,21 @@ pub(crate) fn attach_jobs_pool_warning(json: String, warning: Option<JobsPoolWar
 }
 
 fn pool_size_after_build(requested: usize, error: Option<&str>) -> usize {
-    match error {
-        None => requested,
-        Some(message) if message.contains("already been initialized") => {
-            rayon::current_num_threads()
-        }
-        Some(_) => requested,
+    if error.is_none() {
+        return requested;
     }
+    global_pool_size(rayon::current_num_threads)
+}
+
+fn global_pool_size(query: fn() -> usize) -> usize {
+    // A caller may be inside a local Rayon pool. Only a fresh OS thread queries
+    // the global pool; failures unwind before RECORDED_RAYON_THREADS is set.
+    std::thread::Builder::new()
+        .name("no-mistakes-global-pool".to_string())
+        .spawn(query)
+        .expect("query global Rayon pool")
+        .join()
+        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
 }
 
 fn install_global_pool(requested: usize) -> usize {

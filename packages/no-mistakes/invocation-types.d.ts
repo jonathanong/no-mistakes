@@ -32,6 +32,17 @@ export interface InvocationOptions {
 
 export type WithInvocationOptions<T> = T & InvocationOptions;
 
+/** Metadata emitted only on analysis JSON objects, never arrays or scalar results. */
+export interface InvocationResultMetadata {
+  jobsPoolWarning?: JobsPoolWarning;
+}
+
+export type WithInvocationResult<T> = T extends readonly unknown[]
+  ? T
+  : T extends object
+    ? T & InvocationResultMetadata
+    : T;
+
 /** Present when a later call's resolved `jobs` cannot resize the process-wide Rayon pool. */
 export interface JobsPoolWarning {
   code: "rayon-pool-size";

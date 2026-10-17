@@ -1,3 +1,10 @@
+import type { TypeScriptModulesOptions, TypeScriptModulesReport } from "./typescript-module-types";
+import type {
+  PostgresCatalog,
+  PostgresCatalogOptions,
+  PostgresCompleteCatalog,
+  PostgresOrderingCatalog,
+} from "./postgres-catalog-types";
 // CI, impacted-checks, data-flow, infra, and Swift API declarations, split
 // out of `index.d.ts` to stay under the 200-line file limit.
 
@@ -31,6 +38,7 @@ import type {
   TestAuditReport,
   TestsAuditOptions,
   WithInvocationOptions,
+  WithInvocationResult,
   WorkflowTopology,
   WorkflowTopologyIndex,
 } from "./types";
@@ -38,33 +46,41 @@ import type {
 export function lockfileDiff(
   options: WithInvocationOptions<LockfileDiffOptions>,
 ): Promise<LockfileDiffEntry[]>;
-export function ciImpact(options: WithInvocationOptions<CiImpactOptions>): Promise<CiImpactReport>;
-export function ciEnv(options: WithInvocationOptions<CiEnvOptions>): Promise<CiEnvReport>;
+export function ciImpact(
+  options: WithInvocationOptions<CiImpactOptions>,
+): Promise<WithInvocationResult<CiImpactReport>>;
+export function ciEnv(
+  options: WithInvocationOptions<CiEnvOptions>,
+): Promise<WithInvocationResult<CiEnvReport>>;
 export function ciTopology(
   options?: WithInvocationOptions<CiTopologyOptions>,
-): Promise<WorkflowTopology>;
+): Promise<WithInvocationResult<WorkflowTopology>>;
 export function ciTopologyImpact(
   options: WithInvocationOptions<CiTopologyImpactOptions>,
-): Promise<CiTopologyImpactReport>;
+): Promise<WithInvocationResult<CiTopologyImpactReport>>;
 /** Builds a query index over a `ciTopology()` result. Pure JS — never crosses the N-API boundary. */
 export function createWorkflowTopologyIndex(topology: WorkflowTopology): WorkflowTopologyIndex;
 export function impactedChecks(
   options: WithInvocationOptions<ImpactedChecksOptions>,
-): Promise<ImpactedChecksReport>;
-export function dataPw(options: WithInvocationOptions<DataPwOptions>): Promise<DataPwReport>;
-export function effects(options: WithInvocationOptions<EffectsOptions>): Promise<EffectsReport>;
+): Promise<WithInvocationResult<ImpactedChecksReport>>;
+export function dataPw(
+  options: WithInvocationOptions<DataPwOptions>,
+): Promise<WithInvocationResult<DataPwReport>>;
+export function effects(
+  options: WithInvocationOptions<EffectsOptions>,
+): Promise<WithInvocationResult<EffectsReport>>;
 export function rscCallers(
   options: WithInvocationOptions<RscCallersOptions>,
-): Promise<RscCallersReport>;
+): Promise<WithInvocationResult<RscCallersReport>>;
 export function registryExtension(
   options: WithInvocationOptions<RegistryExtensionOptions>,
-): Promise<RegistryExtensionReport>;
+): Promise<WithInvocationResult<RegistryExtensionReport>>;
 export function infraResourceRefs(
   options: WithInvocationOptions<InfraOptions & { address: string }>,
 ): Promise<ResourceRefRow[]>;
 export function infraOutputs(
   options: WithInvocationOptions<InfraOptions & { moduleDir: string }>,
-): Promise<ModuleOutputsResult>;
+): Promise<WithInvocationResult<ModuleOutputsResult>>;
 export function infraTestFor(
   options: WithInvocationOptions<InfraOptions & { tfFile: string }>,
 ): Promise<TestForRow[]>;
@@ -78,4 +94,22 @@ export function version(): Promise<string>;
 
 export function testsAudit(
   options: WithInvocationOptions<TestsAuditOptions>,
-): Promise<TestAuditReport>;
+): Promise<WithInvocationResult<TestAuditReport>>;
+
+/**
+ * Observe committed PostgreSQL metadata in a read-only transaction and return the catalog that
+ * `schemaCatalogPath` reads. Requires psql. `coverage: "ordering"` returns only the ordering facts.
+ */
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions & { coverage: "ordering" }>,
+): Promise<WithInvocationResult<PostgresOrderingCatalog>>;
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions & { coverage?: "complete" }>,
+): Promise<WithInvocationResult<PostgresCompleteCatalog>>;
+export function generatePostgresCatalog(
+  options: WithInvocationOptions<PostgresCatalogOptions>,
+): Promise<WithInvocationResult<PostgresCatalog>>;
+
+export function analyzeTypeScriptModules(
+  options: WithInvocationOptions<TypeScriptModulesOptions>,
+): Promise<WithInvocationResult<TypeScriptModulesReport>>;

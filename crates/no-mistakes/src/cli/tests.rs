@@ -103,19 +103,38 @@ fn rayon_thread_count_prefers_jobs_then_env_then_cpu_default() {
 }
 
 #[test]
-fn pool_size_after_build_keeps_the_request_unless_the_pool_exists() {
-    assert_eq!(super::pool_size_after_build(4, None), 4);
-    assert_eq!(
-        super::pool_size_after_build(4, Some("thread spawn failed")),
-        4
-    );
-    assert_eq!(
-        super::pool_size_after_build(
-            4,
-            Some("the global thread pool has already been initialized")
-        ),
-        rayon::current_num_threads()
-    );
+fn pool_size_after_build_records_actual_global_size_on_any_error() {
+    let global = rayon::current_num_threads();
+    let requested = global + 1;
+    assert_eq!(super::pool_size_after_build(requested, None), requested);
+    for error in [
+        "thread spawn failed",
+        "the global thread pool has already been initialized",
+    ] {
+        assert_eq!(super::pool_size_after_build(requested, Some(error)), global);
+    }
+    let local = rayon::ThreadPoolBuilder::new()
+        .num_threads(requested)
+        .build()
+        .unwrap();
+    local.install(|| {
+        assert_eq!(rayon::current_num_threads(), requested);
+        assert_eq!(
+            super::pool_size_after_build(requested, Some("thread spawn failed")),
+            global
+        );
+    });
+}
+
+#[test]
+fn failed_global_pool_query_does_not_record_a_fictional_size() {
+    let recorded = std::sync::OnceLock::<usize>::new();
+    let result = std::panic::catch_unwind(|| {
+        recorded.get_or_init(|| super::global_pool_size(|| panic!("global initialization failed")));
+    });
+    assert!(result.is_err());
+    assert!(recorded.get().is_none());
+    assert_eq!(*recorded.get_or_init(|| super::global_pool_size(|| 3)), 3);
 }
 
 #[test]
