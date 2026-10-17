@@ -83,8 +83,8 @@ pub(in crate::invocation::deadline) fn load_encoded() -> Option<Encoded> {
             std::hint::spin_loop();
             continue;
         }
-        // Payload loads stay after the even generation that published them.
-        fence(Ordering::Acquire);
+        // The first Acquire load already imports this even publication and
+        // orders its payload reads; an additional Acquire fence is redundant.
         let present = WORDS.present.load(Ordering::Relaxed);
         let expires_nanos = WORDS.expires_nanos.load(Ordering::Relaxed);
         pauses::between_words();
