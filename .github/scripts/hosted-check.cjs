@@ -22,6 +22,8 @@ const {
   successful,
   aggregate,
   formatSummary,
+  calibratedBudget,
+  enforceBudget,
 } = require("./hosted-check-metrics.cjs");
 
 function measure(fixture, artifact, output, sampleNumber, expectedTree) {
@@ -44,11 +46,15 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   const baseline = join(output, "published-no-mistakes");
   copyFileSync(native, baseline);
   const configBefore = hashFile(join(fixture, ".no-mistakes.yml"));
+  const jobs = process.env.HOSTED_CHECK_JOBS || "auto";
+  if (!["1", "4", "auto"].includes(jobs)) throw new Error(`Invalid jobs: ${jobs}`);
+  const checkArgs = jobs === "auto" ? CHECK_ARGS : [...CHECK_ARGS, "--jobs", jobs];
   const metadata = {
+    jobs,
     fixtureCommit,
     fixtureTree,
     configSha256: configBefore,
-    command: ["pnpm", ...CHECK_ARGS],
+    command: ["pnpm", ...checkArgs],
     deadlineSeconds: DEADLINE_SECONDS,
     sampleNumber,
     imageOS: process.env.ImageOS,
@@ -61,10 +67,16 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
     nproc: command("nproc", [], fixture),
     rayonEnvironment: process.env.RAYON_NUM_THREADS || null,
     numCpus: Number(command(join(artifact, "cpu-probe"), [], fixture)),
-    rayonJobs: process.env.RAYON_NUM_THREADS
-      ? Number(process.env.RAYON_NUM_THREADS)
-      : Number(command(join(artifact, "cpu-probe"), [], fixture)),
-    rayonPolicy: "automatic (--jobs omitted; exact source-built num_cpus::get probe)",
+    rayonJobs:
+      jobs !== "auto"
+        ? Number(jobs)
+        : process.env.RAYON_NUM_THREADS
+          ? Number(process.env.RAYON_NUM_THREADS)
+          : Number(command(join(artifact, "cpu-probe"), [], fixture)),
+    rayonPolicy:
+      jobs === "auto"
+        ? "automatic (--jobs omitted; exact source-built num_cpus::get probe)"
+        : "explicit --jobs",
     node: process.version,
     pnpm: command("pnpm", ["--version"], fixture),
     baselineNpm: JSON.parse(
@@ -98,7 +110,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
             "--kill-after=5s",
             `${DEADLINE_SECONDS}s`,
             "pnpm",
-            ...CHECK_ARGS,
+            ...checkArgs,
           ],
           { cwd: fixture, stdio: ["ignore", stdout, stderr] },
         );
@@ -110,6 +122,8 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
       const sample = {
         ...parseTime(readFileSync(`${prefix}.time`, "utf8"), result.status),
         variant,
+        jobs,
+        candidateCommit: metadata.currentBuild.commit,
         order,
         sampleNumber,
         fixtureCommit,
@@ -138,7 +152,7 @@ function summarize(directory) {
   const samples = sampleFiles(directory).map((path) => JSON.parse(readFileSync(path, "utf8")));
   const groups = new Map();
   for (const sample of samples) {
-    const key = `${sample.fixtureCommit}/${sample.variant}`;
+    const key = `${sample.fixtureCommit}/${sample.jobs}/${sample.variant}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(sample);
   }
@@ -152,15 +166,31 @@ function summarize(directory) {
     "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
     "92d0a2061bde8d260aa0b86a2d71110ece1a43ca",
   ];
+  const budgets = JSON.parse(readFileSync(join(__dirname, "hosted-check-budgets.json"), "utf8"));
+  const proposed = {};
+  const failures = [];
   for (const commit of expected) {
-    for (const variant of ["published", "current"]) {
-      const values = groups.get(`${commit}/${variant}`) || [];
-      if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6)
-        throw new Error(`Incomplete samples: ${commit}/${variant}`);
-      if (variant === "current" && !values.every(successful))
-        throw new Error(`Current check failed: ${commit}`);
+    for (const jobs of ["1", "4", "auto"]) {
+      for (const variant of ["published", "current"]) {
+        const values = groups.get(`${commit}/${jobs}/${variant}`) || [];
+        if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6)
+          throw new Error(`Incomplete samples: ${commit}/${variant}`);
+        if (variant === "current") {
+          const key = `${commit}/${jobs}`;
+          proposed[key] = calibratedBudget(values);
+          if (process.env.HOSTED_CHECK_CALIBRATE !== "true") {
+            try {
+              enforceBudget(values, budgets[key]);
+            } catch (error) {
+              failures.push(`${key}: ${error.message}`);
+            }
+          }
+        }
+      }
     }
   }
+  writeFileSync(join(directory, "proposed-budgets.json"), JSON.stringify(proposed, null, 2));
+  if (failures.length) throw new Error(failures.join("\n"));
 }
 
 if (require.main === module) {

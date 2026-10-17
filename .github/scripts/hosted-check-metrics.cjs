@@ -74,6 +74,44 @@ function aggregate(samples) {
   };
 }
 
+function calibratedBudget(samples) {
+  if (samples.length < 6 || !samples.every(successful))
+    throw new Error("Calibration requires six completed successful samples");
+  const budget = { sampleCount: samples.length, sourceCommit: samples[0].candidateCommit };
+  for (const [metric, field] of [
+    ["elapsed", "wallSeconds"],
+    ["rss_kib", "rssKiB"],
+  ]) {
+    const values = samples.map((sample) => sample[metric]);
+    if (!values.every((value) => Number.isFinite(value) && value > 0))
+      throw new Error(`Invalid calibration metric: ${metric}`);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const stddev = Math.sqrt(
+      values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1),
+    );
+    budget[field] = Math.max(...values);
+    budget[`${field}Margin`] = 3 * stddev;
+    budget[`${field}Stddev`] = stddev;
+  }
+  return budget;
+}
+
+function enforceBudget(samples, budget) {
+  if (!budget) throw new Error("Missing calibrated budget; inspect proposed-budgets.json");
+  if (!samples.every(successful)) throw new Error("Candidate did not complete successfully");
+  for (const [metric, field] of [
+    ["elapsed", "wallSeconds"],
+    ["rss_kib", "rssKiB"],
+  ]) {
+    const limit = budget[field] + budget[`${field}Margin`];
+    if (!Number.isFinite(limit) || limit <= 0) throw new Error(`Invalid budget: ${field}`);
+    for (const sample of samples) {
+      if (!Number.isFinite(sample[metric]) || sample[metric] > limit)
+        throw new Error(`${metric} ${sample[metric]} exceeds calibrated limit ${limit}`);
+    }
+  }
+}
+
 function formatSummary(rows) {
   return [
     "| Consumer commit / binary | n | Passed | Timeouts | Max s | p95 s | Resource n | Max user s | Max system s | Max RSS KiB |",
@@ -108,5 +146,7 @@ module.exports = {
   parseTime,
   successful,
   aggregate,
+  calibratedBudget,
+  enforceBudget,
   formatSummary,
 };

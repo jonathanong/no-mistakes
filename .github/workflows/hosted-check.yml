@@ -1,6 +1,8 @@
 name: Hosted full-check performance
 
 on:
+  schedule:
+    - cron: "23 8 * * 1"
   pull_request:
     paths:
       - ".github/workflows/hosted-check.yml"
@@ -10,8 +12,11 @@ on:
     inputs:
       candidateRef:
         description: "Exact 40-character candidate source commit"
-        required: true
-        default: "7c145f3e9fa800dbbeca5db0982c2b96d12b3e58"
+        required: false
+      calibrate:
+        description: "Record variance and proposed budgets without enforcing stored limits"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -26,7 +31,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 80
     env:
-      CANDIDATE_REF: ${{ inputs.candidateRef || '7c145f3e9fa800dbbeca5db0982c2b96d12b3e58' }}
+      CANDIDATE_REF: ${{ inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
       CARGO_PROFILE_RELEASE_LTO: fat
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
       CARGO_BUILD_JOBS: "1"
@@ -123,7 +128,7 @@ jobs:
           if-no-files-found: error
 
   sample:
-    name: ${{ matrix.fixture.name }} pair ${{ matrix.sample }}
+    name: ${{ matrix.fixture.name }} jobs ${{ matrix.jobs }} pair ${{ matrix.sample }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -132,6 +137,7 @@ jobs:
       max-parallel: 6
       matrix:
         sample: [1, 2, 3, 4, 5, 6]
+        jobs: ["1", "4", "auto"]
         fixture:
           - name: acceptance
             commit: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
@@ -194,6 +200,7 @@ jobs:
         timeout-minutes: 7
         env:
           SAMPLE_NUMBER: ${{ matrix.sample }}
+          HOSTED_CHECK_JOBS: ${{ matrix.jobs }}
           EXPECTED_TREE: ${{ matrix.fixture.tree }}
         shell: bash
         run: |
@@ -206,7 +213,7 @@ jobs:
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: hosted-check-${{ matrix.fixture.name }}-${{ matrix.sample }}
+          name: hosted-check-${{ matrix.fixture.name }}-${{ matrix.jobs }}-${{ matrix.sample }}
           path: |
             measurements/*.json
             measurements/*.txt
@@ -237,6 +244,8 @@ jobs:
 
       - name: Report max and empirical p95; enforce complete candidate results
         timeout-minutes: 1
+        env:
+          HOSTED_CHECK_CALIBRATE: ${{ inputs.calibrate || false }}
         run: node .github/scripts/hosted-check.cjs summarize measurements
 
       - name: Upload summary
@@ -245,5 +254,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: hosted-summary
-          path: measurements/summary.*
+          path: |
+            measurements/summary.*
+            measurements/proposed-budgets.json
           if-no-files-found: error
