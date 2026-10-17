@@ -1,4 +1,4 @@
-use super::super::evaluate::ExecutionEvents;
+use super::super::evaluate::{CallSpan, ExecutionEvents};
 use super::output::{prefix, projected_sql};
 use super::{output, ProjectedCalls, Value};
 use crate::codebase::check_facts::CheckFileFacts;
@@ -7,14 +7,22 @@ use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
-pub(super) fn project(
-    files: &mut FileIdMap<CheckFileFacts>,
-    originals: &FxHashMap<PathBuf, PathBuf>,
-    options: &EmbeddedSqlOptions,
-    events: ExecutionEvents,
-    collect_executed: bool,
-    projected: &mut ProjectedCalls,
-) {
+struct CallUpdate {
+    path: PathBuf,
+    span: CallSpan,
+    value: Option<String>,
+}
+
+pub(super) struct Projection {
+    calls: Vec<CallUpdate>,
+    executed: ProjectedCalls,
+}
+
+pub(super) fn reduce(events: ExecutionEvents, collect_executed: bool) -> Projection {
+    let mut projection = Projection {
+        calls: Vec::new(),
+        executed: ProjectedCalls::new(),
+    };
     for ((path, span), events) in events {
         // An exported helper can be called both locally with known SQL and
         // externally with an unknown argument. The annotation rule keeps
@@ -57,7 +65,9 @@ pub(super) fn project(
                     break;
                 }
             }
-            projected.insert((path.clone(), span), reason.map_or(Ok(alternatives), Err));
+            projection
+                .executed
+                .insert((path.clone(), span), reason.map_or(Ok(alternatives), Err));
         }
         let values = values.into_iter().map(prefix).collect::<Vec<_>>();
         // Every analyzable invocation must satisfy the rule. One favorable
@@ -74,6 +84,19 @@ pub(super) fn project(
                     values.into_iter().flatten().next()
                 }
             });
+        projection.calls.push(CallUpdate { path, span, value });
+    }
+    projection
+}
+
+pub(super) fn apply(
+    files: &mut FileIdMap<CheckFileFacts>,
+    originals: &FxHashMap<PathBuf, PathBuf>,
+    options: &EmbeddedSqlOptions,
+    mut projection: Projection,
+    projected: &mut ProjectedCalls,
+) {
+    for CallUpdate { path, span, value } in projection.calls {
         let file = files
             .get_mut(&originals[&path])
             .expect("projected source remains in the prepared map");
@@ -84,4 +107,6 @@ pub(super) fn project(
             .expect("projected annotation profile remains prepared");
         facts.calls.insert(span, value);
     }
+    // Later profiles replace earlier values for the same projected call.
+    projected.append(&mut projection.executed);
 }

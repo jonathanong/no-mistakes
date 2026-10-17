@@ -50,32 +50,17 @@ fn project_impl(
         .into_iter()
         .map(|(path, _)| (normalize_path(path), path.clone()))
         .collect::<FxHashMap<_, _>>();
-    let (profiles, mut per_file) = {
+    let profiles = {
         let profiles = prepare::profiles(files, &resolve);
-        let per_file = parallel::evaluate(&profiles, &resolve);
-        let options = profiles
-            .into_iter()
-            .map(|profile| profile.options)
-            .collect::<Vec<_>>();
-        (options, per_file)
+        parallel::evaluate(profiles, &resolve, collect_executed)
     };
-    // Keep the historical profile/root merge order after the shared parallel pass.
-    per_file.sort_by(|left, right| left.0.cmp(&right.0).then_with(|| left.1.cmp(&right.1)));
-    let mut per_file = per_file.into_iter().peekable();
-    for (index, options) in profiles.into_iter().enumerate() {
-        let mut events = BTreeMap::<_, Vec<_>>::new();
-        while let Some((_, _, file_events)) = per_file.next_if(|(profile, _, _)| *profile == index)
-        {
-            for (call, values) in file_events {
-                events.entry(call).or_default().extend(values);
-            }
-        }
-        merge::project(
+    // Indexed profile collection preserves the historical overwrite order.
+    for profile in profiles {
+        merge::apply(
             files,
             &originals,
-            &options,
-            events,
-            collect_executed,
+            &profile.options,
+            profile.projection,
             &mut projected,
         );
     }
