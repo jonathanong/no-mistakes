@@ -19503,8 +19503,8 @@
     },
     {
       "path": "plan.json",
-      "bytes": 10636,
-      "sha256": "6a3545c3bf015193bf0e669732d26439a271d6d486396d4c98bb95a8bad728e4"
+      "bytes": 15108,
+      "sha256": "fbf465b7f86e5aba9a6dc741f55d7c8b8ca03951a0df48534ff3af46c1a411e3"
     },
     {
       "path": "preflight.py",
@@ -19670,6 +19670,11 @@
       "path": "test_snapshot.py",
       "bytes": 3583,
       "sha256": "fba60e46ea4a6ecb76c68f40fca87f355e62d3726776359552e6ab7546d6d0d0"
+    },
+    {
+      "path": "test_version_carry.py",
+      "bytes": 1777,
+      "sha256": "6c6293c8b7c3950bcf2894fa0a99d6f299704c56cb9b03c55269d1099c86dc78"
     },
     {
       "path": "union-from-artifacts.py",

@@ -1,7 +1,7 @@
 {
   "status": "REVIEWED_ISOLATED_EIGHT_COHORTS",
   "baseline_actual_compiler": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
-  "baseline_equivalent_main": "281673146341e6915c051aedfde6fd05ae6dd055",
+  "baseline_equivalent_main": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
   "candidate_actual_compiler": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
   "candidate_current_source": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
   "rounds": [
@@ -294,5 +294,84 @@
   "completed_api": {
     "path": "/tmp/nm2022-main281-current-pair-functional/actual-api-stage-result.json",
     "sha256": "f77af1adfbdb4afb6c79a59622a90377c9eb29de968c69b20b3ddca7e4301eb1"
+  },
+  "baseline_compiled_equivalent_main": "281673146341e6915c051aedfde6fd05ae6dd055",
+  "baseline_main_version_carry": {
+    "status": "PASS exact own-version metadata source equivalence; not fresh29binary",
+    "baseline_compiled_equivalent_main": "281673146341e6915c051aedfde6fd05ae6dd055",
+    "admitted_current_main": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
+    "baseline_actual_compiler": "099cfed26a23050aee6e9e8427af4de9b7eab4ef",
+    "compiled_baseline_version": "0.91.2",
+    "current_main_version": "0.91.3",
+    "changed_files": [
+      {
+        "path": "Cargo.lock",
+        "old_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+        "new_sha256": "45ee5ac614aad194ea051cf008fb2be6fefa591134f1455fe45abf1581b2d776",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "crates/no-mistakes/Cargo.toml",
+        "old_sha256": "916304703d344055e487cc18e11f3c7764287354105b4aee2f43d45d2821399f",
+        "new_sha256": "efbbec5809354dbb194b17ea95621715fec66dddff68f590a3484f15e85b3013",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "package.json",
+        "old_sha256": "694062f5d2654e0f03685057106f652cc687ea340a44bcb2bc8ca50842c51961",
+        "new_sha256": "f332aa970650cd5daa6919a2b1bcdc8e7afd08a8df32035b3ae59d31becca3ce",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "packages/eslint-plugin-no-mistakes/package.json",
+        "old_sha256": "4cae7f6f09633b2c4f36cb3cf811bae6472ed2f14474bbcf09d8d9775b808113",
+        "new_sha256": "285aa8d23d88e09effc9e7fd5b5b855efb32404be14673431adab527f9d96288",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "packages/no-mistakes-darwin-arm64/package.json",
+        "old_sha256": "c58f6af3b9bfd91350e9a9ea244b54913609fb285823ed8353cad9cea482cb31",
+        "new_sha256": "20f81edb7642f1ae67be11f975ffbeab99f884efe87525ebebebe516b9b26255",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "packages/no-mistakes-linux-arm64-gnu/package.json",
+        "old_sha256": "267ef2394a98b70110c5cbebdea22937124134c6f2dfe1e0ad5b97fc430f4a48",
+        "new_sha256": "5d7a5abb35385d9229c16d413751bb01079ad7a21cf61aec1f635af284b247e5",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "packages/no-mistakes-linux-x64-gnu/package.json",
+        "old_sha256": "91ce1d9c2f742b2ddc7e39b8cd75bb65aef9cedae539e4fa8820c57e781ece5a",
+        "new_sha256": "4393a00a088b6ce6be84ec9599a2ee6aff98f53d82981304a82ccd01dee35e5b",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "packages/no-mistakes-win32-x64-msvc/package.json",
+        "old_sha256": "0d87fd3bd487b7b042bd29cc494f7e094970452e6c74597678b5ba19495b9055",
+        "new_sha256": "dfdead5c5dec54705eb355e4b9e53473233e811f0b77299ca54e4eb5398079d1",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "packages/no-mistakes/package.json",
+        "old_sha256": "a481f15c1be0c421a6ae42aee36ee92cd2df030e7b751548dc3819a250bb2411",
+        "new_sha256": "774cd016504c0a4a54086f90110ffb2db792d73c45d9eb1b63a61c0c93c743c3",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "old_sha256": "c6c8d6b420e93a16c0a2afbc5aea6ac5e1fba11444eac64e6f84f0d66e19a46a",
+        "new_sha256": "d84416b923a34fa01f86a200dba223aceddef4c00e942c88fb99b2c509d534de",
+        "transformation": "Exact literal0.91.2\u21920.91.3 only"
+      }
+    ],
+    "unchanged_git_entries": 22880,
+    "unchanged_git_entry_map_sha256": "c743cbf05cd43bd96e5d707d1dc740a843a19c4215fa7da0bb516f0181ea0fc5",
+    "thirdparty_Cargo_lock_and_all_dependency_records_exact": true,
+    "all_other_paths_modes_types_blobs_exact": true,
+    "version_observable_limit": "Own CLI/NAPI version identity may report0.91.2 for actual retainedproducer. No claim actualcurrent29binary/versionbytes. Analyzer source, thirdparty dependencies, defaults/facades/fixtures/profile unchanged. Existing281producer and allactualfunctional/performance labels preserved.",
+    "source_tree_old": "c70157523be6a6fc1fc5ab343d5a2a983d7fdf81",
+    "source_tree_new": "7d76899b483fc2eeb4b5ac6467e455cb05f9053d",
+    "at_utc": "2026-10-17T01:06:48.496112+00:00"
   }
 }
