@@ -69,7 +69,7 @@ impl ImportCollector {
                     propagated,
                 );
             }
-            let terminal = root_read.read().is_some() && self.mutation_reference_is_terminal(&key);
+            let (terminal, version) = self.classify_receiver_successor(&key, root_read.read());
             #[cfg(feature = "test-instrumentation")]
             if terminal {
                 self.value_flow.reference_terminal_paths += 1;
@@ -80,13 +80,7 @@ impl ImportCollector {
                 affected.insert_owned(key.0, key.1);
                 continue;
             }
-            let version = root_read.read().and_then(|read| {
-                #[cfg(feature = "test-instrumentation")]
-                {
-                    self.value_flow.reference_root_probes += 1;
-                }
-                self.mutable_receiver_version(&key, read)
-            });
+
             // Version-qualified mutable roots may revisit an earlier saved
             // root without conflating it with the replacement's identity.
             #[cfg(feature = "test-instrumentation")]
@@ -94,15 +88,15 @@ impl ImportCollector {
                 self.value_flow.reference_successor_bookkeeping += 1;
             }
             let entered = if root_read.read().is_none() {
-                traversal.enter_ordinary(&key, &path, reads)
+                traversal.enter_ordinary_owned_path(&key, path, reads)
             } else {
-                traversal.enter(&key, &path, reads, version)
+                traversal.enter_owned_path(&key, path, reads, version)
             };
-            let Some(reads) = entered else { continue };
+            let Some((reads, path)) = entered else {
+                continue;
+            };
             #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_path_visits += 1;
-            }
+            pending_work::record_path_visit(&mut self.value_flow);
             let exit_position = pending.len();
             affected.insert(key.0, &key.1);
             for target in self
@@ -120,7 +114,7 @@ impl ImportCollector {
                 // Reserve the slot occupied by the old early exit marker.
                 pending.reserve(2);
                 pending.push((
-                    ((target.clone(), path.clone()), reads.clone(), root_read),
+                    ((target.clone(), path.to_vec()), reads.clone(), root_read),
                     false,
                     false,
                     propagated,

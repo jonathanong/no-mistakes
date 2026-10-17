@@ -1,28 +1,33 @@
 use super::*;
 use std::sync::Arc;
 
+type RootPhaseEvent = ((usize, std::rc::Rc<str>), u32, ValueExpression, bool);
+
 pub(in super::super) struct RootPhaseCapture {
     pub(super) catalog: Arc<phase_catalog::PhaseCatalog>,
-    pub(super) first_changes: FxHashMap<String, u32>,
+    pub(super) first_changes: FxHashMap<std::rc::Rc<str>, u32>,
     pub(super) points: FxHashMap<u32, phase_walk::RootPhaseWrite>,
     pub(super) owner: Option<CallableId>,
     pub(super) conditional_depth: usize,
-    pub(super) events: Vec<((usize, String), u32, ValueExpression, bool)>,
+    pub(super) events: Vec<RootPhaseEvent>,
 }
 impl RootPhaseCapture {
     pub(super) fn first_changes(
         root_writes: &[phase_walk::RootPhaseWrite],
-    ) -> FxHashMap<String, u32> {
-        let mut first_changes: FxHashMap<String, u32> = fx_map();
+    ) -> FxHashMap<std::rc::Rc<str>, u32> {
+        let mut first_changes: FxHashMap<std::rc::Rc<str>, u32> = fx_map();
         for point in root_writes {
             #[cfg(feature = "test-instrumentation")]
             root_target_metrics::phase_key(2);
-            if let Some(phase) = first_changes.get_mut(point.name.as_str()) {
+            if let Some(phase) = first_changes.get_mut(point.name.as_ref()) {
                 *phase = (*phase).min(point.phase);
             } else {
                 #[cfg(feature = "test-instrumentation")]
                 root_target_metrics::phase_key(3);
-                first_changes.insert(point.name.clone(), point.phase);
+                first_changes.insert(
+                    phase_changed_roots::shared_names::copy_name(&point.name),
+                    point.phase,
+                );
             }
         }
         first_changes
@@ -36,7 +41,7 @@ impl ImportCollector {
                 .as_ref()
                 .filter(|capture| capture.owner == self.current_function_id())
                 .and_then(|capture| capture.points.get(&self.assignment_target_start?))
-                .is_some_and(|point| point.name == name)
+                .is_some_and(|point| point.name.as_ref() == name)
     }
     pub(super) fn mutable_root_unchanged(&self, name: &str, offset: u32) -> bool {
         self.receiver_root_phases
@@ -68,9 +73,15 @@ impl ImportCollector {
         let point = capture
             .points
             .get(&target)
-            .filter(|point| point.name == key.1)
-            .map(|point| (point.phase, point.guaranteed));
-        let Some((phase, local_guaranteed)) = point else {
+            .filter(|point| point.name.as_ref() == key.1)
+            .map(|point| {
+                (
+                    point.phase,
+                    point.guaranteed,
+                    phase_changed_roots::shared_names::copy_name(&point.name),
+                )
+            });
+        let Some((phase, local_guaranteed, name)) = point else {
             return;
         };
         let guaranteed = unconditional
@@ -79,6 +90,6 @@ impl ImportCollector {
             && self.repeat_depth == self.call_repeat_base;
         capture
             .events
-            .push(((key.0, key.1.to_string()), phase, value.clone(), guaranteed));
+            .push(((key.0, name), phase, value.clone(), guaranteed));
     }
 }

@@ -82,3 +82,6 @@ const _: () =
 #[cfg(test)]
 #[path = "phase_changed_roots_unit_tests.rs"]
 mod tests;
+
+#[path = "phase_shared_names.rs"]
+pub(super) mod shared_names;

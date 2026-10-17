@@ -14,7 +14,7 @@ pub(super) struct ReferencePhaseEvents {
 }
 pub(super) struct RootPhaseWrite {
     pub(super) target: u32,
-    pub(super) name: String,
+    pub(super) name: std::rc::Rc<str>,
     pub(super) phase: u32,
     pub(super) guaranteed: bool,
 }

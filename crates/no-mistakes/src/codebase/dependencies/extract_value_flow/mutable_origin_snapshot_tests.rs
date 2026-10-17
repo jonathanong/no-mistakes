@@ -40,3 +40,17 @@ fn earlier_completion_promotes_once_without_losing_or_duplicating_entries() {
     assert_eq!(actual, expected);
     assert_eq!(actual.len(), 6);
 }
+
+#[test]
+fn latest_qualification_preserves_strict_and_inclusive_boundaries() {
+    let mut snapshots = RootSnapshots::default();
+    let mut expected = BTreeMap::new();
+    for offset in [0, 1, 17, u32::MAX] {
+        snapshots.insert(offset, offset as usize);
+        expected.insert(offset, offset as usize);
+        for query in [0, 1, 2, 16, 17, 18, u32::MAX - 1, u32::MAX] {
+            assert_eq!(snapshots.at(query), expected.range(..=query).next_back());
+            assert_eq!(snapshots.before(query), expected.range(..query).next_back());
+        }
+    }
+}

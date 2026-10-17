@@ -154,8 +154,8 @@ fn with_callable_receiver_execution(
     let conditional = std::mem::replace(&mut collector.receiver_write_is_conditional, false);
     let conditional_depth = std::mem::take(&mut collector.receiver_write_conditional_depth);
     visit(collector);
-    collector.receiver_write_conditional_depth = conditional_depth;
     collector.receiver_write_is_conditional = conditional;
+    collector.receiver_write_conditional_depth = conditional_depth;
     collector.fresh_receiver_effects.active = fresh;
     collector.fresh_receiver_effects.descriptor_call = descriptor_call;
 }

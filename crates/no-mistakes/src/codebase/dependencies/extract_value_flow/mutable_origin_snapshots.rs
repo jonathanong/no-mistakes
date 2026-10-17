@@ -38,10 +38,41 @@ impl RootSnapshots {
         self.selected(offset, true)
     }
     fn selected(&self, offset: u32, inclusive: bool) -> Option<(&u32, &usize)> {
+        self.selected_observed(offset, inclusive, |_| {})
+    }
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) fn at_counted(
+        &self,
+        offset: u32,
+        work: &std::cell::Cell<[usize; 3]>,
+    ) -> Option<(&u32, &usize)> {
+        self.selected_observed(offset, true, |latest| {
+            let mut counts = work.get();
+            counts[if latest { 1 } else { 2 }] += 1;
+            work.set(counts);
+        })
+    }
+    fn selected_observed(
+        &self,
+        offset: u32,
+        inclusive: bool,
+        mut observe: impl FnMut(bool),
+    ) -> Option<(&u32, &usize)> {
         match self {
             Self::Ordered(entries) => {
-                let end =
-                    entries.partition_point(|(at, _)| *at < offset || (inclusive && *at == offset));
+                // Fresh source reads usually follow the newest completion. An
+                // older read still uses the exact original predecessor search.
+                if let Some((at, selected)) = entries
+                    .last()
+                    .filter(|(at, _)| *at < offset || (inclusive && *at == offset))
+                {
+                    observe(true);
+                    return Some((at, selected));
+                }
+                let end = entries.partition_point(|(at, _)| {
+                    observe(false);
+                    *at < offset || (inclusive && *at == offset)
+                });
                 end.checked_sub(1)
                     .map(|index| (&entries[index].0, &entries[index].1))
             }

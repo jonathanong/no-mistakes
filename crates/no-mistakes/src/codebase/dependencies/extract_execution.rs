@@ -21,7 +21,9 @@ fn with_conditional_execution(
     conditional: bool,
     visit: impl FnOnce(&mut ImportCollector),
 ) {
-    if conditional { collector.invalidate_replacement_execution(); }
+    if conditional {
+        collector.invalidate_replacement_execution();
+    }
     let previous_receiver = collector.collect_value_flow.then(|| {
         #[cfg(feature = "test-instrumentation")]
         extract_value_flow::ordinary_demand_metrics::site(1);

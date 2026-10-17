@@ -60,6 +60,8 @@ fn captured_versions_bound_repeated_membership_probes() {
     );
     assert_eq!(facts.receiver_only_lookups, 128);
     assert_eq!(facts.receiver_only_snapshot_queries, 128);
+    println!("SNAPSHOT_WORK {:?}", facts.receiver_only_snapshot_work);
+    assert_eq!(facts.receiver_only_snapshot_work, [128, 0]);
 }
 #[test]
 fn reused_versions_preserve_deferred_conditional_and_foreign_roots() {

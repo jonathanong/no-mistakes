@@ -69,6 +69,22 @@ fn moved_keys_preserve_full_projection_facts_and_pending_capacity() {
             );
             old.value_flow.reference_pending_capacity = new.value_flow.reference_pending_capacity;
             old.value_flow.reference_pending_bytes = new.value_flow.reference_pending_bytes;
+            // Lookup fusion changes only these additional cfg work counters.
+            println!(
+                "ORACLE_WORK {name} demand={demand} membership={}->{} root_probes={}->{}",
+                old.value_flow.receiver_only_membership_probes,
+                new.value_flow.receiver_only_membership_probes,
+                old.value_flow.reference_root_probes,
+                new.value_flow.reference_root_probes
+            );
+            assert!(
+                new.value_flow.receiver_only_membership_probes
+                    <= old.value_flow.receiver_only_membership_probes
+            );
+            assert!(new.value_flow.reference_root_probes >= old.value_flow.reference_root_probes);
+            old.value_flow.receiver_only_membership_probes =
+                new.value_flow.receiver_only_membership_probes;
+            old.value_flow.reference_root_probes = new.value_flow.reference_root_probes;
             assert_eq!(new, old, "{name} demand={demand}");
         }
     }

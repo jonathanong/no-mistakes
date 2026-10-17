@@ -416,9 +416,9 @@ require("./postgres-wrapper-end-alias-api.test.js");
 require("./postgres-var-scope-api.test.js");
 
 require("./query-reached-per-item-api.test.js");
-require("./effects-alternatives-api.test.js");
-
 require("./mutable-receiver-api.test.js");
+
+require("./effects-alternatives-api.test.js");
 
 require("./postgres-replay-structure-api.test.js");
 require("./postgres-expression-span-api.test.js");

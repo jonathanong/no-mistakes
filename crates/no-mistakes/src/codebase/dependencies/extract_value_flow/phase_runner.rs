@@ -2,6 +2,8 @@ use super::*;
 use phase_catalog::PhaseCatalog;
 use phase_walk::{PhaseWalk, PhaseWrite};
 use std::sync::Arc;
+#[path = "root_phase_segments.rs"]
+mod root_segments;
 
 #[path = "phase_finish.rs"]
 mod finish;
@@ -115,7 +117,7 @@ impl ImportCollector {
             Arc::new(PhaseCatalog {
                 start: target.span().start,
                 end: rhs.span().end.max(target.span().end),
-                segments: segments.clone(),
+                segments: root_segments::capture(&segments, !root_writes.is_empty()),
             })
         });
         let catalog = Arc::new(PhaseCatalog {

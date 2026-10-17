@@ -143,7 +143,10 @@ impl PhaseWalk<'_> {
         if self.collect_root_origins {
             self.root_writes.push(phase_walk::RootPhaseWrite {
                 target,
-                name: name.to_string(),
+                name: phase_changed_roots::shared_names::share_previous(
+                    self.root_writes.last().map(|point| &point.name),
+                    name,
+                ),
                 phase: self.phase,
                 guaranteed: guaranteed && !self.conditional,
             });

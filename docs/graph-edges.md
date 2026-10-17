@@ -590,16 +590,6 @@ it elsewhere can expose invocations outside the canonical caller chain. Repeated
 Earlier writes, exported or deferred writers, and live receiver aliases remain
 conservative.
 
-Repeated imported-member replacement alternatives require a closed execution
-region: a guaranteed multi-item literal `for-of` body or the supported closed
-sequence of synchronous owner invocations. Calls within that proof must be to
-the same region or owner's tracked receiver members, immutable aliases of those methods, or
-closed synchronous getters returning them. Ordinary method arguments remain
-supported. Other calls and constructors make the new repeated-region proof
-unknown, including external calls whose effects are unspecified. Methods copied
-before the region retain their acquisition snapshot. This bounded proof does not
-infer general call purity or track receiver escapes through arbitrary functions.
-
 Mutable object and array bindings retain receiver origins separately from callable
 value provenance. Nested writes through non-reassigned `let` containers invalidate
 the matching imported methods. Root assignments preserve acquisition snapshots
@@ -614,6 +604,16 @@ Known boundaries include aliases introduced by replacement assignment RHS
 ([#2015](https://github.com/jonathanong/no-mistakes/issues/2015)) and root writes
 across callable declaration and runtime execution order
 ([#2052](https://github.com/jonathanong/no-mistakes/issues/2052)).
+
+Repeated imported-member replacement alternatives require a closed execution
+region: a guaranteed multi-item literal `for-of` body or the supported closed
+sequence of synchronous owner invocations. Calls within that proof must be to
+the same region or owner's tracked receiver members, immutable aliases of those methods, or
+closed synchronous getters returning them. Ordinary method arguments remain
+supported. Other calls and constructors make the new repeated-region proof
+unknown, including external calls whose effects are unspecified. Methods copied
+before the region retain their acquisition snapshot. This bounded proof does not
+infer general call purity or track receiver escapes through arbitrary functions.
 
 Repeated calls do not establish one runtime receiver-acquisition phase merely
 because their helper has one syntactic incoming call. Live helper defaults stay

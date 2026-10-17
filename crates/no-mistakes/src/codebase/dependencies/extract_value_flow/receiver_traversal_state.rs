@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "receiver_traversal_owned_path.rs"]
+mod owned_path;
+
 #[cfg(feature = "test-instrumentation")]
 thread_local! {
     pub(super) static FIRST_ALLOCATIONS: std::cell::Cell<[usize; 3]> = const { std::cell::Cell::new([0; 3]) };
@@ -12,6 +15,11 @@ fn first_allocation(index: usize, allocated: bool) {
         counts.set(values);
     });
 }
+
+pub(super) type OwnedEntry<'a> = (
+    Vec<nested::ReceiverRead>,
+    std::borrow::Cow<'a, [Option<String>]>,
+);
 
 type Key = (usize, String);
 type Paths = FxHashMap<(Key, ValueMutationPath), Vec<nested::ReceiverRead>>;
@@ -70,7 +78,11 @@ impl TraversalState {
         match self {
             Self::Empty if path.len() <= 1 && reads.len() <= 1 => {
                 *self = Self::FirstInline {
-                    state: (key.clone(), path.first().cloned()),
+                    state: (key.clone(), {
+                        #[cfg(all(test, feature = "test-instrumentation"))]
+                        owned_path::record_member_clone(path.first());
+                        path.first().cloned()
+                    }),
                     read: reads.first().copied(),
                     active: true,
                 };

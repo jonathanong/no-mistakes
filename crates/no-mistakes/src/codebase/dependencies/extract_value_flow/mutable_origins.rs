@@ -1,6 +1,5 @@
 use super::*;
 use std::collections::BTreeMap;
-
 #[path = "mutable_origin_data.rs"]
 mod data;
 #[path = "mutable_origin_pending.rs"]
@@ -11,7 +10,6 @@ mod phases;
 mod records;
 #[path = "mutable_origin_single.rs"]
 pub(super) mod single;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(super) struct RootVersion {
     context: Option<CallableId>,
@@ -23,12 +21,10 @@ impl RootVersion {
         self.context == other.context && self.selected == other.selected
     }
 }
-#[path = "mutable_origin_snapshots.rs"]
-mod snapshots;
-
 #[path = "mutable_origin_possible.rs"]
 mod possible;
-
+#[path = "mutable_origin_snapshots.rs"]
+mod snapshots;
 #[derive(Default)]
 struct RootStates {
     snapshots: snapshots::RootSnapshots,
@@ -66,44 +62,15 @@ pub(in super::super) struct ReceiverBindingOrigins {
     #[cfg(feature = "test-instrumentation")]
     owned_keys: usize,
     #[cfg(feature = "test-instrumentation")]
-    snapshot_queries: std::cell::Cell<usize>,
+    snapshot_queries: std::cell::Cell<[usize; 3]>,
 }
 impl ReceiverBindingOrigins {
-    #[cfg(feature = "test-instrumentation")]
-    pub(super) fn record_counts(&self, facts: &mut ValueFlowFacts) {
-        facts.receiver_only_nodes = self.arena.len();
-        facts.receiver_only_lookups = self.lookups.get();
-        facts.receiver_only_visits = self.visits.get();
-        facts.receiver_only_pending_spills = self.spills.get();
-        facts.receiver_only_membership_probes = self.membership_probes.get();
-        facts.receiver_only_owned_keys = self.owned_keys;
-        facts.receiver_only_snapshot_queries = self.snapshot_queries.get();
-        for states in self
-            .roots
-            .values()
-            .flat_map(|names| names.values())
-            .flat_map(|root| root.owners.values())
-        {
-            facts.receiver_only_snapshot_tree_buffers += states.snapshots.tree_buffer();
-            for (total, count) in facts
-                .receiver_only_insertion_order
-                .iter_mut()
-                .zip(states.insertion_order)
-            {
-                *total += count;
-            }
-        }
-        facts.receiver_only_predecessor_queries = self
-            .roots
-            .values()
-            .flat_map(|names| names.values())
-            .map(|root| root.predecessor_queries)
-            .sum();
-    }
     pub(super) fn watermark(&self) -> usize {
         self.arena.len()
     }
     pub(super) fn contains(&self, scope: usize, name: &str) -> bool {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        fusion_tests::QUERIES.with(|n| n.set(n.get() + 1));
         #[cfg(feature = "test-instrumentation")]
         self.membership_probes.set(self.membership_probes.get() + 1);
         self.roots
@@ -120,6 +87,8 @@ impl ReceiverBindingOrigins {
         key: &(usize, String),
         read: nested::RootRead,
     ) -> Option<RootVersion> {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        fusion_tests::QUERIES.with(|n| n.set(n.get() + 1));
         let root = self.roots.get(&key.0)?.get(&key.1)?;
         #[cfg(feature = "test-instrumentation")]
         self.lookups.set(self.lookups.get() + 1);
@@ -128,7 +97,12 @@ impl ReceiverBindingOrigins {
             .get(&read.1)
             .and_then(|states| {
                 #[cfg(feature = "test-instrumentation")]
-                self.snapshot_queries.set(self.snapshot_queries.get() + 1);
+                {
+                    let [calls, latest, searches] = self.snapshot_queries.get();
+                    self.snapshot_queries.set([calls + 1, latest, searches]);
+                    states.snapshots.at_counted(read.0, &self.snapshot_queries)
+                }
+                #[cfg(not(feature = "test-instrumentation"))]
                 states.snapshots.at(read.0)
             })
             .map(|(_, id)| *id);
@@ -196,3 +170,7 @@ impl ReceiverBindingOrigins {
             .set(self.spills.get() + usize::from(pending.spilled()));
     }
 }
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "receiver_lookup_fusion_tests.rs"]
+pub(super) mod fusion_tests;

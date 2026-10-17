@@ -345,10 +345,6 @@ fn nested_writes_bound_existing_traversal_and_canonical_lookups() {
 }
 
 #[cfg(feature = "test-instrumentation")]
-#[path = "replacement_demand.rs"]
-mod replacement_demand;
-
-#[cfg(feature = "test-instrumentation")]
 fn assert_no_mutable_root_work(facts: &ValueFlowFacts) {
     // Ordinary aliases retain receiver-read timing without mutable-root coordinates.
     type Receiver = ((usize, String), Vec<Option<String>>);
@@ -362,3 +358,6 @@ fn assert_no_mutable_root_work(facts: &ValueFlowFacts) {
         (0, facts.reference_pending_capacity * entry_bytes),
     );
 }
+
+#[path = "replacement_demand.rs"]
+mod replacement_demand;

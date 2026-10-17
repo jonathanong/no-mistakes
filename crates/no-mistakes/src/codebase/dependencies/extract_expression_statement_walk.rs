@@ -37,9 +37,9 @@ fn visit_expression_with_annex_b_initializer<'a>(
     collector: &mut ImportCollector,
     expression: &Expression<'a>,
 ) {
-    if let Some((_, outer_conditional, outer_receiver_conditional)) = collector
+    if let Some((_, outer_conditional, outer_receiver_conditional, outer_receiver_depth)) = collector
         .annex_b_for_in_initializer
-        .filter(|(span, _, _)| !collector.suppress_imports && *span == expression.span())
+        .filter(|(span, _, _, _)| !collector.suppress_imports && *span == expression.span())
     {
         let initializer = collector.annex_b_for_in_initializer.take();
         let previous = std::mem::replace(&mut collector.conditional_execution, outer_conditional);
@@ -47,7 +47,10 @@ fn visit_expression_with_annex_b_initializer<'a>(
             &mut collector.receiver_write_is_conditional,
             outer_receiver_conditional,
         );
+        let previous_depth = std::mem::replace(
+            &mut collector.receiver_write_conditional_depth, outer_receiver_depth);
         walk::walk_expression(collector, expression);
+        collector.receiver_write_conditional_depth = previous_depth;
         collector.receiver_write_is_conditional = previous_receiver;
         collector.conditional_execution = previous;
         collector.annex_b_for_in_initializer = initializer;
