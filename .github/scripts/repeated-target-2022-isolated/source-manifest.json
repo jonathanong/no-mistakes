@@ -1,5 +1,5 @@
 {
-  "status": "ROOT REVIEWED current eight-cohort source; normal publication authorized, dispatch separate",
+  "status": "SOURCE CORRECTION; final root review required before publication",
   "files": [
     {
       "path": "README-CAPACITY-DRAFT.md",
@@ -60,6 +60,11 @@
       "path": "fixtures/capacity-pilot-observations.json",
       "bytes": 431,
       "sha256": "9e9fa02f175f588ab08bc71a560dbd44262ae9f0e5723a18a8560a53c46af095"
+    },
+    {
+      "path": "fixtures/current-query-api.data",
+      "bytes": 8601,
+      "sha256": "3f00996c2168465e7d2c782d913e0ca52203229e41c45c2f36f67c02f7db78cc"
     },
     {
       "path": "fixtures/explicit-baseline-asset-roles.json",
@@ -7813,8 +7818,8 @@
     },
     {
       "path": "hosted.py",
-      "bytes": 8141,
-      "sha256": "b0277b4024e251f377229ea419a30be09dad8e1f41d55749fd4f3d8cccc2ac53"
+      "bytes": 8060,
+      "sha256": "50c04c5c5ce357b8d342b580deb6f658b60cf1b5471a7751607feede988bb5db"
     },
     {
       "path": "immutable-input-freeze.json",
@@ -7830,6 +7835,11 @@
       "path": "pack-evidence.py",
       "bytes": 2049,
       "sha256": "a88e62685ec906134dd6473a6b5ceb8749a61fbd4c907caf4d2920709eb2218a"
+    },
+    {
+      "path": "payload-index.json",
+      "bytes": 610270,
+      "sha256": "2b45db2ec2437a7e0979b94c64db04014b3dedf0a506e7aae23942aa6b681bf0"
     },
     {
       "path": "payload/0000.data",
@@ -19482,11 +19492,6 @@
       "sha256": "80ec31586aba261129ff9900273da1703329a96283496a8cace7021975fa3666"
     },
     {
-      "path": "payload-index.json",
-      "bytes": 610270,
-      "sha256": "2b45db2ec2437a7e0979b94c64db04014b3dedf0a506e7aae23942aa6b681bf0"
-    },
-    {
       "path": "plan.json",
       "bytes": 10636,
       "sha256": "6a3545c3bf015193bf0e669732d26439a271d6d486396d4c98bb95a8bad728e4"
@@ -19650,6 +19655,11 @@
       "path": "test_facade_lookup.py",
       "bytes": 2893,
       "sha256": "adfccded638536c1822d6a10458b6a50be9d1a8da05a4c2656068e35b85e9306"
+    },
+    {
+      "path": "test_snapshot.py",
+      "bytes": 3583,
+      "sha256": "fba60e46ea4a6ecb76c68f40fca87f355e62d3726776359552e6ab7546d6d0d0"
     },
     {
       "path": "union-from-artifacts.py",

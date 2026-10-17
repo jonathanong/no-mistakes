@@ -110,8 +110,8 @@ proof = transfer(stage, assets, os.environ)
 (O / 'verified-same-run-transfer.json').write_text(json.dumps(proof, indent=2))
 G = Path('/tmp/no-mistakes-2022-region-production')
 assert not G.exists()
-command(['git', 'clone', '--shared', '--no-checkout', str(Path('candidate-source').resolve()), str(G)], 'local-git-clone')
-command(['git', 'checkout', '--detach', plan['candidate_actual_compiler']], 'compiled-producer-checkout', cwd=G)
+# Historical source-closure snapshot: restore authenticated frozen bytes only.
+# The separate CURRENT_GIT checkout below owns all live Git/facade queries.
 CURRENT_GIT = Path('/tmp/no-mistakes-2022-assignment-target-opt')
 assert not CURRENT_GIT.exists()
 command(['git', 'clone', '--shared', '--no-checkout', str(Path('candidate-source').resolve()), str(CURRENT_GIT)], 'current-pair-local-git-clone')
