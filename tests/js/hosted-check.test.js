@@ -200,6 +200,9 @@ test("calibrates wall/RSS headroom from six fresh samples and rejects slowed can
   );
   assert.throws(() => enforceBudget([{ ...samples[0], exit: 124 }], budget), /did not complete/);
   assert.throws(() => enforceBudget([{ ...samples[0], rss_kib: NaN }], budget), /rss_kib/);
+  assert.throws(() => enforceBudget([{ ...samples[0], rss_kib: 0 }], budget), /rss_kib/);
+  assert.throws(() => enforceBudget(samples, { ...budget, wallSeconds: null }), /Invalid budget/);
+  assert.throws(() => enforceBudget(samples, { ...budget, rssKiBMargin: -1 }), /Invalid budget/);
   assert.throws(() => calibratedBudget(samples.slice(1)), /six completed/);
   assert.throws(() => calibratedBudget(samples.map((s) => ({ ...s, exit: 1 }))), /six completed/);
   assert.throws(
