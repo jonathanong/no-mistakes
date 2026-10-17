@@ -1,10 +1,12 @@
 use super::super::Deadline;
 use super::pauses;
 mod encoded;
+mod offset;
 pub(in crate::invocation::deadline) use encoded::Encoded;
+use offset::{encode_instant, encode_timeout};
 use std::collections::HashMap;
 use std::sync::atomic::{fence, AtomicU64, Ordering};
-use std::sync::{LazyLock, Mutex, OnceLock, PoisonError};
+use std::sync::{LazyLock, Mutex, PoisonError};
 use std::thread::ThreadId;
 use std::time::{Duration, Instant};
 
@@ -20,8 +22,11 @@ use std::time::{Duration, Instant};
 struct Words {
     generation: AtomicU64,
     present: AtomicU64,
-    expires_nanos: AtomicU64,
-    timeout_nanos: AtomicU64,
+    /// Signed seconds from the process epoch. Nanoseconds do not fit in `i64`.
+    expires_secs: AtomicU64,
+    timeout_secs: AtomicU64,
+    /// Low 32 bits are the expiry subsec; high 32 bits are the timeout subsec.
+    subsec_nanos: AtomicU64,
     owner_token: AtomicU64,
     committed: AtomicU64,
 }
@@ -29,13 +34,13 @@ struct Words {
 static WORDS: Words = Words {
     generation: AtomicU64::new(0),
     present: AtomicU64::new(0),
-    expires_nanos: AtomicU64::new(0),
-    timeout_nanos: AtomicU64::new(0),
+    expires_secs: AtomicU64::new(0),
+    timeout_secs: AtomicU64::new(0),
+    subsec_nanos: AtomicU64::new(0),
     owner_token: AtomicU64::new(0),
     committed: AtomicU64::new(0),
 };
 
-static EPOCH: OnceLock<Instant> = OnceLock::new();
 static NEXT_OWNER_TOKEN: AtomicU64 = AtomicU64::new(1);
 static OWNER_TOKENS: LazyLock<Mutex<HashMap<ThreadId, u64>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -86,9 +91,11 @@ pub(in crate::invocation::deadline) fn load_encoded() -> Option<Encoded> {
         // The first Acquire load already imports this even publication and
         // orders its payload reads; an additional Acquire fence is redundant.
         let present = WORDS.present.load(Ordering::Relaxed);
-        let expires_nanos = WORDS.expires_nanos.load(Ordering::Relaxed);
+        let expires_secs = WORDS.expires_secs.load(Ordering::Relaxed);
         pauses::between_words();
-        let timeout_nanos = WORDS.timeout_nanos.load(Ordering::Relaxed);
+        let timeout_secs = WORDS.timeout_secs.load(Ordering::Relaxed);
+        let (expires_nanos, timeout_nanos) =
+            unpack_subsec(WORDS.subsec_nanos.load(Ordering::Relaxed));
         let owner_token = WORDS.owner_token.load(Ordering::Relaxed);
         let committed = WORDS.committed.load(Ordering::Relaxed);
         // Payload loads stay before the generation load that accepts them.
@@ -103,7 +110,9 @@ pub(in crate::invocation::deadline) fn load_encoded() -> Option<Encoded> {
             return None;
         }
         return Some(Encoded {
+            expires_secs: expires_secs as i64,
             expires_nanos,
+            timeout_secs,
             timeout_nanos,
             committed: committed != 0,
             owner_token,
@@ -114,20 +123,23 @@ pub(in crate::invocation::deadline) fn load_encoded() -> Option<Encoded> {
 fn store_words(deadline: Option<Deadline>) {
     let Some(deadline) = deadline else {
         WORDS.present.store(0, Ordering::Relaxed);
-        WORDS.expires_nanos.store(0, Ordering::Relaxed);
-        WORDS.timeout_nanos.store(0, Ordering::Relaxed);
+        WORDS.expires_secs.store(0, Ordering::Relaxed);
+        WORDS.timeout_secs.store(0, Ordering::Relaxed);
+        WORDS.subsec_nanos.store(0, Ordering::Relaxed);
         WORDS.owner_token.store(0, Ordering::Relaxed);
         WORDS.committed.store(0, Ordering::Relaxed);
         return;
     };
+    let (expires_secs, expires_nanos) = encode_instant(deadline.expires_at);
+    let (timeout_secs, timeout_nanos) = encode_timeout(deadline.timeout);
     WORDS.present.store(1, Ordering::Relaxed);
     WORDS
-        .expires_nanos
-        .store(encode_instant(deadline.expires_at), Ordering::Relaxed);
-    WORDS.timeout_nanos.store(
-        u64::try_from(deadline.timeout.as_nanos()).unwrap_or(u64::MAX),
-        Ordering::Relaxed,
-    );
+        .expires_secs
+        .store(expires_secs as u64, Ordering::Relaxed);
+    WORDS.timeout_secs.store(timeout_secs, Ordering::Relaxed);
+    WORDS
+        .subsec_nanos
+        .store(pack_subsec(expires_nanos, timeout_nanos), Ordering::Relaxed);
     WORDS
         .owner_token
         .store(owner_token(deadline.owner), Ordering::Relaxed);
@@ -136,33 +148,12 @@ fn store_words(deadline: Option<Deadline>) {
         .store(u64::from(deadline.committed), Ordering::Relaxed);
 }
 
-fn epoch() -> Instant {
-    *EPOCH.get_or_init(Instant::now)
+fn pack_subsec(expires_nanos: u32, timeout_nanos: u32) -> u64 {
+    u64::from(expires_nanos) | (u64::from(timeout_nanos) << 32)
 }
 
-fn encode_instant(instant: Instant) -> u64 {
-    let epoch = epoch();
-    let signed = if instant >= epoch {
-        i64::try_from(instant.duration_since(epoch).as_nanos()).unwrap_or(i64::MAX)
-    } else {
-        let before = epoch.duration_since(instant).as_nanos();
-        -i64::try_from(before).unwrap_or(i64::MAX)
-    };
-    signed as u64
-}
-
-fn decode_instant(bits: u64) -> Instant {
-    let signed = bits as i64;
-    let epoch = epoch();
-    if signed >= 0 {
-        epoch
-            .checked_add(Duration::from_nanos(signed as u64))
-            .unwrap_or(epoch)
-    } else {
-        epoch
-            .checked_sub(Duration::from_nanos(signed.unsigned_abs()))
-            .unwrap_or(epoch)
-    }
+fn unpack_subsec(packed: u64) -> (u32, u32) {
+    (packed as u32, (packed >> 32) as u32)
 }
 
 /// Tokens stand in for `ThreadId`, which has no stable integer conversion.

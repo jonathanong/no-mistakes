@@ -1,11 +1,14 @@
 use super::super::super::expired_timeout_from;
-use super::super::{decode_instant, encode_instant};
+use super::super::offset::{decode_instant, encode_instant, epoch};
 use super::*;
 use std::cell::Cell;
 
 fn image(at: Instant) -> Encoded {
+    let (expires_secs, expires_nanos) = encode_instant(at);
     Encoded {
-        expires_nanos: encode_instant(at),
+        expires_secs,
+        expires_nanos,
+        timeout_secs: 0,
         timeout_nanos: 1234,
         committed: false,
         owner_token: 0,
@@ -31,7 +34,7 @@ fn signed_expiry_matches_full_decoder_before_and_after_epoch() {
         for &now in &instants {
             assert_eq!(
                 encoded.expired_at(now),
-                now >= decode_instant(encoded.expires_nanos)
+                now >= decode_instant(encoded.expires_secs, encoded.expires_nanos)
             );
         }
     }
@@ -56,7 +59,7 @@ fn future_skips_metadata_decode_but_expiry_decodes_second_image() {
     );
     assert!(result.is_none());
     assert_eq!((old_decodes.get(), decodes.get()), (2, 0));
-    let reads = Cell::new(0);
+    let reads = Cell::new(0u32);
     let result = expired_timeout_from(
         || {
             reads.set(reads.get() + 1);
