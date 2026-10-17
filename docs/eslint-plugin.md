@@ -286,3 +286,11 @@ customize diagnostics. See [the rule reference](eslint-rules/gh-api-argument-saf
 
 Opt-in, scope-aware main-module guard lint. Its optional `message` customizes
 entrypoint guidance; see [the rule reference](eslint-rules/no-argv-main-guard.md).
+
+### `no-comment-phrases`
+
+Opt-in comment-phrase lint. `patterns` entries set `pattern`, optional `flags`,
+and an optional scoped `message`; a top-level `message` is the fallback.
+`requireSuppressionReason` defaults off and, when true, requires a nonempty
+reason on this rule's `no-mistakes-disable-*` directives only.
+See [the rule reference](eslint-rules/no-comment-phrases.md).
