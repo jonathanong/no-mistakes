@@ -84,12 +84,19 @@ fn argument_kinds_are_recorded_for_the_projection() {
 #[test]
 fn unexecuted_or_interpolated_helpers_never_become_holes() {
     let facts = extract("pending.ts");
-    // A conditional append is not composed, so there is nothing to complete.
-    assert!(pending_for(&facts, 4).is_none());
+    // A conditional append is not composed into the call's own text; only its
+    // complete alternatives hold the hole.
+    let pending = pending_for(&facts, 4).expect("pending");
+    assert_eq!(pending.template.variants.len(), 2);
+    assert_eq!(
+        pending.template.sql_text.as_deref(),
+        Some("SELECT 1 WHERE ")
+    );
+    assert!(call(&facts, 4).variants.is_empty());
     assert_eq!(call(&facts, 4).sql_text.as_deref(), Some("SELECT 1 WHERE "));
     // An interpolated call is a bound value, not SQL text.
     assert!(pending_for(&facts, 6).is_none());
-    assert_eq!(facts.pending_imported.len(), 7);
+    assert_eq!(facts.pending_imported.len(), 9);
 }
 
 #[test]
@@ -120,8 +127,10 @@ fn aliased_or_alternative_helper_results_are_never_completed() {
     let facts = extract("pending.ts");
     // A stored helper result aliases a mutable builder.
     assert!(pending_for(&facts, 7).is_none());
-    // Alternatives that include a hole publish no partial version set.
-    assert!(pending_for(&facts, 9).is_none());
+    // Alternatives that include a hole publish no partial version set until
+    // every hole is filled.
+    let pending = pending_for(&facts, 9).expect("pending");
+    assert_eq!(pending.template.variants.len(), 2);
     assert!(call(&facts, 9).variants.is_empty());
     assert_eq!(call(&facts, 9).sql_text, None);
 }

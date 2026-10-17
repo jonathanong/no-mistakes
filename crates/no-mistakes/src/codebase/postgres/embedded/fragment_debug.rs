@@ -77,7 +77,8 @@ impl EmbeddedSqlFileFacts {
         else {
             return;
         };
-        if self.calls[index].kind == super::EmbeddedSqlKind::Dynamic {
+        let call = &self.calls[index];
+        if call.kind == super::EmbeddedSqlKind::Dynamic && call.variants.is_empty() {
             self.calls[index] = completed;
             self.imported_call_lines.insert(span, lines);
         }

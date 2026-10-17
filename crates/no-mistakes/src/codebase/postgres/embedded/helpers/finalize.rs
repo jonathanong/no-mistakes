@@ -9,7 +9,7 @@ use super::sentinel;
 use super::split::coordinate;
 use super::summary::{ImportedSite, PendingImportedSql};
 use crate::codebase::postgres::embedded::relative::PendingRelativeCall;
-use crate::codebase::postgres::embedded::walk::has_known_leading_statement;
+use crate::codebase::postgres::embedded::walk::resolve::has_known_leading_statement;
 use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use std::collections::BTreeMap;
@@ -62,13 +62,23 @@ fn take_pending(
     if !in_text && !in_variants {
         return None;
     }
-    let complete = in_text && call.variants.is_empty() && call.kind != EmbeddedSqlKind::Dynamic;
+    // Either the call's own text is a complete statement, or each of its
+    // complete alternatives is and the legacy text holds no hole.
+    let complete = if call.variants.is_empty() {
+        in_text && call.kind != EmbeddedSqlKind::Dynamic
+    } else {
+        !in_text
+    };
     let template = call.clone();
     scrub(call);
     if !complete {
         return None;
     }
-    let sites = used_sites(template.sql_text.as_deref()?, sites)?;
+    let texts = template
+        .sql_text
+        .iter()
+        .chain(template.variants.iter().map(|variant| &variant.sql_text));
+    let sites = used_sites(texts, sites)?;
     Some(PendingImportedSql {
         span,
         template,
@@ -76,11 +86,16 @@ fn take_pending(
     })
 }
 
-fn used_sites(text: &str, sites: &[ImportedSite]) -> Option<Vec<(usize, ImportedSite)>> {
+fn used_sites<'a>(
+    texts: impl Iterator<Item = &'a String>,
+    sites: &[ImportedSite],
+) -> Option<Vec<(usize, ImportedSite)>> {
     let mut used = Vec::new();
-    for (_, index) in sentinel::find_all(text) {
-        if used.iter().all(|(seen, _)| *seen != index) {
-            used.push((index, sites.get(index)?.clone()));
+    for text in texts {
+        for (_, index) in sentinel::find_all(text) {
+            if used.iter().all(|(seen, _)| *seen != index) {
+                used.push((index, sites.get(index)?.clone()));
+            }
         }
     }
     Some(used)

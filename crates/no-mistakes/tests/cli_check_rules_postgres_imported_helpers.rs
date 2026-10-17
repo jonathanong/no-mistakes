@@ -212,6 +212,52 @@ fn caller_directives_still_suppress_sql_reported_in_the_helper() {
 }
 
 #[test]
+fn an_iife_builder_with_a_conditional_and_several_imported_helpers_is_recovered() {
+    // Both reads of the view: the CTE in the caller (inside the IIFE and
+    // outside it) and the EXISTS in the helper reached through a paths alias.
+    assert_eq!(
+        required("imported-peer-shape"),
+        expect(&[
+            ("src/caller.mts", 15, VIEW),
+            ("src/caller.mts", 31, VIEW),
+            ("src/services/links/visibility-sql.mts", 2, VIEW),
+        ])
+    );
+}
+
+#[test]
+fn a_directly_invoked_function_returning_its_local_builder_hands_over_the_builder() {
+    assert_eq!(
+        required("imported-iife-builder"),
+        expect(&[
+            ("src/caller.mts", 9, VIEW),
+            ("src/caller.mts", 18, VIEW),
+            ("src/visibility-sql.mts", 2, VIEW),
+        ])
+    );
+}
+
+#[test]
+fn iifes_outside_the_exact_shape_stay_unanalyzable() {
+    assert_eq!(
+        required("imported-iife-fail-closed"),
+        unanalyzable(&[12, 20, 28, 36, 44, 52, 62, 71, 79, 88, 96, 104])
+    );
+}
+
+#[test]
+fn an_imported_helper_after_a_conditional_fills_every_alternative() {
+    assert_eq!(
+        required("imported-after-conditional"),
+        expect(&[
+            ("src/caller.mts", 19, VIEW),
+            ("src/caller.mts", 34, UNANALYZABLE),
+            ("src/visibility-sql.mts", 2, VIEW),
+        ])
+    );
+}
+
+#[test]
 fn non_literal_or_missing_arguments_stay_unanalyzable() {
     assert_eq!(
         required("imported-nonliteral-arg"),

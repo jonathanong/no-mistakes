@@ -66,6 +66,9 @@ fn invalidate_exception_state(
     }
 }
 pub(super) fn returned<'a>(visitor: &mut ScopeVisitor<'a>, statement: &ReturnStatement<'a>) {
+    // Returning a builder is treated as an escape below; an IIFE's result
+    // needs the state it had just before that.
+    visitor.capture_iife(statement);
     let fragment = statement.argument.as_ref().and_then(|argument| {
         resolve::builder_fragment(argument, visitor).map(|sql| (argument.span().start, sql))
     });

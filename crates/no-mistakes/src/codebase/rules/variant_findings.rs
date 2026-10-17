@@ -1,3 +1,6 @@
+mod attribution;
+use attribution::move_line;
+
 use super::{PostgresFindings, RuleFinding};
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::SqlStatementFileFacts;
@@ -24,44 +27,6 @@ impl<'a> VariantFindingDedup<'a> {
             sources: Some(sources),
             ..Self::default()
         }
-    }
-
-    /// The caller-side line whose directive suppresses `rule`, when SQL
-    /// recovered from another module is executed by a call that opts out. The
-    /// executor call and each imported-helper call count, as does a file-level
-    /// opt-out, so moving a finding to the helper never removes a suppression.
-    fn caller_suppression(
-        &self,
-        facts: &SqlStatementFileFacts,
-        locations: &crate::codebase::postgres::statements::SqlVariantLocations,
-        rule: &str,
-    ) -> Option<(String, usize)> {
-        let (root, sources) = (self.root.as_deref()?, self.sources?);
-        let source = super::read_source(sources, &facts.path)?;
-        let lines = std::iter::once(locations.original_call_line)
-            .chain(locations.caller_lines.iter().copied());
-        let line = lines.into_iter().find(|line| {
-            crate::codebase::ts_source::matching_disable_directive(&source, Some(*line), rule)
-                .is_some()
-        })?;
-        let file = crate::codebase::ts_source::relative_slash_path(root, &facts.path);
-        Some((file, line as usize))
-    }
-
-    /// The module whose physical lines `position` counts, when it is not the
-    /// executor's own file. Findings are attributed to that module so its
-    /// suppression directives apply.
-    fn foreign_file(
-        &self,
-        facts: &SqlStatementFileFacts,
-        position: &crate::codebase::postgres::statements::SqlFactPosition,
-    ) -> Option<String> {
-        let path = position
-            .source_path
-            .as_ref()
-            .filter(|path| **path != facts.path)?;
-        let root = self.root.as_deref()?;
-        Some(crate::codebase::ts_source::relative_slash_path(root, path))
     }
 
     pub(crate) fn push(
@@ -142,17 +107,34 @@ impl<'a> VariantFindingDedup<'a> {
                     )
                     .is_some()
                 });
-                position
-                    .source_offset
-                    .filter(|_| !disabled)
-                    .map(|offset| (offset, position.source_line))
+                position.source_offset.filter(|_| !disabled).map(|offset| {
+                    (
+                        offset,
+                        position.source_line,
+                        self.foreign_file(facts, position),
+                    )
+                })
             })
         });
-        let Some((offset, line)) = position else {
+        let Some((offset, line, foreign)) = position else {
             self.push(output, facts, site, source, finding);
             return;
         };
-        move_line(&mut finding, None, line);
+        if foreign.is_some() {
+            let locations = facts.variant_locations.as_ref();
+            let caller = locations
+                .and_then(|locations| self.caller_suppression(facts, locations, &finding.rule));
+            if let Some((file, line)) = caller {
+                move_line(&mut finding, Some(file), line);
+                output.push_at(finding, None);
+                return;
+            }
+        }
+        // A byte offset into another module cannot tell two executions of the
+        // same helper token apart from a plain finding there, so keep none.
+        let located = foreign.is_none().then_some(offset);
+        let retarget = foreign.filter(|file| *file != finding.file);
+        move_line(&mut finding, retarget, line);
         let identity = identity(&finding, offset);
         if let Some((index, messages)) = self.merged.get_mut(&identity) {
             let original = output.get_mut(*index);
@@ -173,7 +155,7 @@ impl<'a> VariantFindingDedup<'a> {
         if self.keep_at(&finding, Some(offset)) {
             let messages = FxHashSet::from_iter([finding.message.clone()]);
             self.merged.insert(identity, (output.len(), messages));
-            output.push_at(finding, Some(offset));
+            output.push_at(finding, located);
         }
     }
 
@@ -189,16 +171,6 @@ fn identity(finding: &RuleFinding, offset: usize) -> Identity {
         finding.rule.clone(),
         finding.target.clone(),
     )
-}
-
-fn move_line(finding: &mut RuleFinding, file: Option<String>, line: usize) {
-    let prefix = format!("{}:{}:", finding.file, finding.line);
-    let file = file.unwrap_or_else(|| finding.file.clone());
-    if let Some(message) = finding.message.strip_prefix(&prefix) {
-        finding.message = format!("{file}:{line}:{message}");
-    }
-    finding.file = file;
-    finding.line = line;
 }
 
 pub(crate) fn index_sql_variants(

@@ -40,6 +40,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Local names bound by value imports; a call to one is an imported helper.
     pub(crate) imported_names: crate::fx::FxHashSet<String>,
+    /// The `const` initializer being walked, when it is a recognized IIFE.
+    pub(super) iife: Option<super::iife::Iife>,
     pub(crate) imported_sites: std::cell::RefCell<helpers::Sites>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
@@ -94,6 +96,7 @@ pub(crate) fn collect_calls<'a>(
         calls: Vec::new(),
         call_spans: Vec::new(),
         imported_names: imported::value_import_names(program),
+        iife: None,
         imported_sites: Default::default(),
         pending_spans: BTreeMap::new(),
         pending_calls: Vec::new(),

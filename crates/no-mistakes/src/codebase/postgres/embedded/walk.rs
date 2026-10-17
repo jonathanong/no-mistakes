@@ -10,10 +10,10 @@ mod calls;
 mod executor_arguments;
 mod executors;
 mod flow;
+mod iife;
 mod imported;
 pub(crate) mod resolve;
 mod scope;
-pub(crate) use scope::has_known_leading_statement;
 mod state;
 mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
@@ -120,9 +120,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
             .init
             .as_ref()
             .and_then(|init| self.recover_variants(init));
+        let outer = self.enter_iife(declaration);
         walk::walk_variable_declarator(self, declaration);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor);
+        self.leave_iife(&declaration.id, outer);
     }
 
     fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {

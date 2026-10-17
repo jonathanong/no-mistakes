@@ -34,7 +34,7 @@ impl SqlTagNames {
             fragments::collect_fragment_bindings(program, self, sql_statement_types);
     }
 
-    fn contains(&self, name: &str) -> bool {
+    pub(crate) fn contains(&self, name: &str) -> bool {
         self.imported.contains(name)
     }
 }

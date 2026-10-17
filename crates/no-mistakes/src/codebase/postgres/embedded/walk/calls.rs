@@ -5,8 +5,18 @@ use oxc_span::GetSpan;
 
 impl<'a> ScopeVisitor<'a> {
     pub(super) fn visit_sql_call(&mut self, call: &CallExpression<'a>) {
-        let helper_effect = self.call_builder_effect(call);
-        let append_effect = self.append_alias_effect(call);
+        // `helper(builder)` on an imported builder helper appends its fixed
+        // fragments to `builder`, so it composes like `builder.append(...)`.
+        let statement_append = super::imported::builder_statement(self, call);
+        let helper_effect = if statement_append.is_some() {
+            (Vec::new(), None)
+        } else {
+            self.call_builder_effect(call)
+        };
+        let append_effect = match &statement_append {
+            Some((name, _)) => self.hole_append_effect(name),
+            None => self.append_alias_effect(call),
+        };
         if self.suppress_nested_builder_fragments == 0 {
             if let Some(argument) = call.arguments.first() {
                 if let Some(sql_text) = resolve::appended_builder_fragment(call, self) {
@@ -32,10 +42,19 @@ impl<'a> ScopeVisitor<'a> {
                 }
             }
         }
-        let variants = self
-            .appended_variants(call)
-            .map(|(name, values)| (name.to_string(), values));
-        resolve::apply_append(self, call);
+        let variants = match &statement_append {
+            Some((name, hole)) => Some((
+                name.clone(),
+                self.appended_hole_variants(name, hole, call.span.start),
+            )),
+            None => self
+                .appended_variants(call)
+                .map(|(name, values)| (name.to_string(), values)),
+        };
+        match &statement_append {
+            Some((name, hole)) => resolve::apply_hole_append(self, name, hole),
+            None => resolve::apply_append(self, call),
+        }
         if let Some((name, values)) = variants {
             self.set_variants(&name, values);
         }

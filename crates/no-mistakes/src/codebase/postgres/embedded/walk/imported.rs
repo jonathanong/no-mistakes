@@ -47,7 +47,10 @@ pub(super) fn value_import_names(program: &Program<'_>) -> FxHashSet<String> {
 impl ScopeVisitor<'_> {
     /// Whether `name` currently refers to a value import rather than a local.
     pub(super) fn is_imported_helper(&self, name: &str) -> bool {
-        self.imported_names.contains(name) && !self.shadowed_locally(name)
+        // The SQL tag itself is an import too, but it is never a helper.
+        self.imported_names.contains(name)
+            && !self.shadowed_locally(name)
+            && !self.functions.imported_sql_tags().contains(name)
     }
 }
 
@@ -64,27 +67,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn recover_call(
     call: &CallExpression<'_>,
     name: &str,
 ) -> Option<RecoveredSql> {
-    if call.optional || !visitor.imported_names.contains(name) || visitor.shadowed_locally(name) {
+    if call.optional || !visitor.is_imported_helper(name) {
         return None;
     }
     let (args, builder) = classify(visitor, call)?;
-    let line = byte_offset_to_line(visitor.source, call.span.start as usize);
-    let index = visitor.imported_sites.borrow_mut().intern(
-        call.span.start,
-        ImportedSite {
-            local: name.to_string(),
-            args,
-            line,
-        },
-    );
-    let hole = plain(
-        sentinel::encode(index),
-        Marker {
-            line,
-            path: None,
-            origin: call.span.start,
-        },
-    );
+    let hole = site_hole(visitor, call, name, args);
     let Some(argument) = builder else {
         return Some(hole);
     };
@@ -96,6 +83,55 @@ pub(in crate::codebase::postgres::embedded::walk) fn recover_call(
         positions,
     };
     compose([base, hole])
+}
+
+/// `helper(builder, ..)` on an imported helper, when `builder` is a tracked
+/// local: the builder it mutates and the hole its appended fragments fill.
+pub(in crate::codebase::postgres::embedded::walk) fn builder_statement(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+) -> Option<(String, RecoveredSql)> {
+    let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
+        return None;
+    };
+    let name = callee.name.as_str();
+    // An executor is an import too, but it consumes the builder rather than extending it.
+    if call.optional || !visitor.is_imported_helper(name) || visitor.bindings.contains(name) {
+        return None;
+    }
+    let (args, builder) = classify(visitor, call)?;
+    let Expression::Identifier(receiver) = unwrap_ts_wrappers(builder?) else {
+        return None;
+    };
+    Some((
+        receiver.name.to_string(),
+        site_hole(visitor, call, name, args),
+    ))
+}
+
+fn site_hole(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    name: &str,
+    args: Vec<SiteArg>,
+) -> RecoveredSql {
+    let line = byte_offset_to_line(visitor.source, call.span.start as usize);
+    let index = visitor.imported_sites.borrow_mut().intern(
+        call.span.start,
+        ImportedSite {
+            local: name.to_string(),
+            args,
+            line,
+        },
+    );
+    plain(
+        sentinel::encode(index),
+        Marker {
+            line,
+            path: None,
+            origin: call.span.start,
+        },
+    )
 }
 
 /// Every argument must be a value the projection can reason about; at most one
@@ -119,9 +155,10 @@ fn classify<'a>(
             Expression::Identifier(ident) => {
                 let known = visitor.lookup(ident.name.as_str());
                 if known.is_some_and(|binding| {
+                    // A builder with finite alternatives still has a known value.
                     binding.sql_builder
-                        && binding.sql.is_some()
-                        && binding.kind != EmbeddedSqlKind::Dynamic
+                        && (binding.sql.is_some() && binding.kind != EmbeddedSqlKind::Dynamic
+                            || binding.variants.is_some())
                 }) {
                     SiteArg::Builder
                 } else {

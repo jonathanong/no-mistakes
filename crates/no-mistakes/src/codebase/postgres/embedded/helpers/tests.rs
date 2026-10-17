@@ -13,6 +13,8 @@ use std::path::{Path, PathBuf};
 mod pending;
 #[path = "tests/summaries.rs"]
 mod summaries;
+#[path = "tests/variants.rs"]
+mod variants;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -221,6 +223,19 @@ fn splicing_fills_every_hole_and_renumbers_the_generated_binds() {
     // A template holding no hole at all has nothing to compose from.
     let empty = template_call(String::new());
     assert!(super::splice::splice(&empty, &holes).is_none());
+}
+
+#[test]
+fn zz_dump() {
+    let facts = extract("iife.ts");
+    for call in &facts.calls {
+        eprintln!(
+            "{:?} {:?} variants={}",
+            call.kind,
+            call.sql_text,
+            call.variants.len()
+        );
+    }
 }
 
 #[test]
