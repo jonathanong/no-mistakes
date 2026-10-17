@@ -226,19 +226,6 @@ fn splicing_fills_every_hole_and_renumbers_the_generated_binds() {
 }
 
 #[test]
-fn zz_dump() {
-    let facts = extract("iife.ts");
-    for call in &facts.calls {
-        eprintln!(
-            "{:?} {:?} variants={}",
-            call.kind,
-            call.sql_text,
-            call.variants.len()
-        );
-    }
-}
-
-#[test]
 fn extracted_calls_never_expose_a_hole_marker() {
     let facts = extract("pending.ts");
     let leaks = |text: &str| text.contains(MARK);
