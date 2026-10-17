@@ -146,15 +146,7 @@ fn applicable_deadline() -> Option<Deadline> {
 /// copy. A committed deadline must not fire, and a cleared snapshot must not
 /// report the previous deadline.
 fn observed_expiry() -> Option<Deadline> {
-    let deadline = applicable_deadline()?;
-    if clock::now() < deadline.expires_at {
-        return None;
-    }
-    let deadline = applicable_deadline()?;
-    if clock::now() < deadline.expires_at {
-        return None;
-    }
-    Some(deadline)
+    publish::consecutive_expired(applicable_deadline)
 }
 
 /// Return an error once the active invocation deadline has elapsed.
@@ -196,21 +188,7 @@ pub fn commit_timeout() -> Result<()> {
 }
 
 pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
-    let Some(deadline) = applicable_deadline() else {
-        return Ok(None);
-    };
-    if let Some(remaining) = deadline.expires_at.checked_duration_since(clock::now()) {
-        return Ok(Some(remaining));
-    }
-    // Same second snapshot as `observed_expiry`: commit and restore win.
-    let Some(deadline) = applicable_deadline() else {
-        return Ok(None);
-    };
-    deadline
-        .expires_at
-        .checked_duration_since(clock::now())
-        .map(Some)
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::TimedOut, "command timed out"))
+    publish::remaining_from_snapshots(applicable_deadline)
 }
 
 #[cfg(test)]

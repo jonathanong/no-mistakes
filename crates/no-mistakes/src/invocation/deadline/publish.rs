@@ -3,8 +3,22 @@ use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::ptr;
+#[cfg(test)]
+use std::sync::atomic::AtomicBool;
 use std::sync::atomic::{fence, AtomicU64, Ordering};
 use std::sync::{LockResult, OnceLock, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::time::Duration;
+
+#[cfg(test)]
+pub(super) static PAUSE_WHILE_ODD: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+pub(super) static PAUSE_ODD_REACHED: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+pub(super) static ODD_SPINS: AtomicU64 = AtomicU64::new(0);
+#[cfg(test)]
+pub(super) static PAUSE_BEFORE_SECOND: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+pub(super) static PAUSE_SECOND_REACHED: AtomicBool = AtomicBool::new(false);
 
 pub(in crate::invocation) struct ActiveDeadline {
     lock: RwLock<Option<Deadline>>,
@@ -43,6 +57,13 @@ impl Published {
             // even generation.
             ptr::write_volatile(self.snapshot.get(), snapshot);
         }
+        #[cfg(test)]
+        if PAUSE_WHILE_ODD.load(Ordering::Acquire) {
+            PAUSE_ODD_REACHED.store(true, Ordering::Release);
+            while PAUSE_WHILE_ODD.load(Ordering::Acquire) {
+                std::hint::spin_loop();
+            }
+        }
         fence(Ordering::Release);
         self.generation
             .store(generation.wrapping_add(1), Ordering::Release);
@@ -52,6 +73,8 @@ impl Published {
         loop {
             let first = self.generation.load(Ordering::Acquire);
             if first & 1 != 0 {
+                #[cfg(test)]
+                ODD_SPINS.fetch_add(1, Ordering::Relaxed);
                 std::hint::spin_loop();
                 continue;
             }
@@ -61,6 +84,13 @@ impl Published {
                 ptr::read_volatile(self.snapshot.get().cast::<MaybeUninit<Option<Deadline>>>())
             };
             fence(Ordering::Acquire);
+            #[cfg(test)]
+            if PAUSE_BEFORE_SECOND.load(Ordering::Acquire) {
+                PAUSE_SECOND_REACHED.store(true, Ordering::Release);
+                while PAUSE_BEFORE_SECOND.load(Ordering::Acquire) {
+                    std::hint::spin_loop();
+                }
+            }
             let second = self.generation.load(Ordering::Acquire);
             if first == second {
                 return unsafe {
@@ -83,6 +113,51 @@ pub(in crate::invocation) fn active_deadline() -> &'static ActiveDeadline {
 
 pub(super) fn published_deadline() -> Option<Deadline> {
     PUBLISHED.load()
+}
+
+/// Two snapshots that are both already expired. A commit or restore that
+/// publishes between the loads returns no deadline.
+pub(super) fn consecutive_expired(mut load: impl FnMut() -> Option<Deadline>) -> Option<Deadline> {
+    let deadline = load()?;
+    if super::super::clock::now() < deadline.expires_at {
+        return None;
+    }
+    let deadline = load()?;
+    if super::super::clock::now() < deadline.expires_at {
+        return None;
+    }
+    Some(deadline)
+}
+
+/// Remaining time from two snapshots. The second load drops a deadline that
+/// was cleared after the first copy saw it already expired.
+pub(super) fn remaining_from_snapshots(
+    mut load: impl FnMut() -> Option<Deadline>,
+) -> std::io::Result<Option<Duration>> {
+    let Some(deadline) = load() else {
+        return Ok(None);
+    };
+    if let Some(remaining) = deadline
+        .expires_at
+        .checked_duration_since(super::super::clock::now())
+    {
+        return Ok(Some(remaining));
+    }
+    let Some(deadline) = load() else {
+        return Ok(None);
+    };
+    deadline
+        .expires_at
+        .checked_duration_since(super::super::clock::now())
+        .map(Some)
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::TimedOut, "command timed out"))
+}
+
+#[cfg(test)]
+impl ActiveDeadline {
+    pub(super) fn clear_poison_for_test(&self) {
+        self.lock.clear_poison();
+    }
 }
 
 pub(in crate::invocation) struct ActiveWriteGuard<'a> {
