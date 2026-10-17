@@ -1,0 +1,14 @@
+{
+  "api.test.js": 43,
+  "mutable-receiver-api.test.js": 67,
+  "receiver-suspension-api.test.js": 1,
+  "receiver-inline-arguments-api.test.js": 2,
+  "cross-file-inline-receiver-api.test.js": 1,
+  "inline-owned-member-api.test.js": 3,
+  "postgres-conditional-executors-api.test.js": 1,
+  "postgres-source-api.test.js": 34,
+  "postgres-expression-arbiter-api.test.js": 1,
+  "namespace-types-api.test.js": 2,
+  "type-import-order-api.test.js": 1,
+  "effects-alternatives-api.test.js": 2
+}

@@ -1,0 +1,37 @@
+{
+  "utc": "2026-10-17T02:48:20.877156+00:00",
+  "status": "APPROVED local source/data review and metadata-only activation; trusted exact public-payload approval still REQUIRED before diagnostic publication",
+  "reviewed_publication_map_sha256": "5663043ccd0de569a51369056d30e45c9947e257494dd8ae3277cd872fd133a7",
+  "all323files_verified": true,
+  "all_original_scientific_runtime_kernels_exact": [
+    "measure-original.py.txt",
+    "analyze-original.py.txt",
+    "full_control.py",
+    "controls.py",
+    "cohort_sample.py",
+    "cohort_transport.py",
+    "deadline.py",
+    "supervise.py",
+    "subreaper.py",
+    "process_owner.py",
+    "debug_digest.py"
+  ],
+  "controls_delta": "Only actual newlower graph-work expected SHA changes; explicit two observer counter differences preserved; every semantic field exact; Y32 byteexacthistorical; no numeric gate or sample policy changes",
+  "candidate": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "baseline_native": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "baseline_public_cfg_only_carry": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "eight_asset_role_ids": {
+    "baseline-cli": 649293969,
+    "baseline-addon.node": 649305355,
+    "baseline-probe": 649307423,
+    "candidate-cli": 649304450,
+    "candidate-addon.node": 649330339,
+    "candidate-probe": 649313738,
+    "baseline-sql-probe": 649307531,
+    "candidate-sql-probe": 649313927
+  },
+  "gates": "Local actual native/full64/SQL44signatures/APIs/currentYglobal98+fourCodecov allpass; newnumericalperformancePENDING; priorFAILpreserved",
+  "allowed_finalization": "Bind this source review/activate metadata and refresh pins only; preserve all kernels, numeric gates and frozen report content. Return final exact immutable file count+manifest+branch for user approval; DO NOT PUSH before actualtrustedapproval.",
+  "rootsole_dispatch": true,
+  "draft_release": "415271391 neverpublish"
+}

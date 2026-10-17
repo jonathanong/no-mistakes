@@ -1,0 +1,128 @@
+{
+  "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "root": "/tmp/no-mistakes-2054-next-stack-release",
+  "artifacts": {
+    "cli": {
+      "sha256": "614547e72eed9c5800e0e5c9f03b29d530520641dec6e6852bc54f5694f8cbd2",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes#0.91.3",
+          "manifest_path": "/tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2054-next-stack-release/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2054-next-stack-release/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2054-next-stack-release/target/release/no-mistakes"
+    },
+    "addon": {
+      "sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes#0.91.3",
+          "manifest_path": "/tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2054-next-stack-release/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2054-next-stack-release/target/release/libno_mistakes.so"
+    },
+    "probe": {
+      "sha256": "7583f5c1528e464187d2197b6744335a253c23661bc97d0c97c67cf31118b718",
+      "bytes": 83213984,
+      "own_library_producer": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes#0.91.3",
+        "manifest_path": "/tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "/tmp/no-mistakes-2054-next-stack-release/crates/no-mistakes/src/lib.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "/tmp/no-mistakes-2054-next-stack-release/target/release/deps/libno_mistakes-3c767fbb87356a2b.rlib",
+          "/tmp/no-mistakes-2054-next-stack-release/target/release/deps/libno_mistakes-3c767fbb87356a2b.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      }
+    }
+  }
+}

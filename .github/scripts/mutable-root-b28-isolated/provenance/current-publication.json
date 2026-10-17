@@ -1,0 +1,173 @@
+{
+  "status": "PASS normal hooked sequential publication; CI pending; no native/performance/ready/merge claim",
+  "actual_session": 11357,
+  "actual_exit": 0,
+  "layers": [
+    {
+      "role": "parent",
+      "success": true,
+      "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+      "tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e",
+      "branch": "fix/2019-mutable-receiver-origins",
+      "config_restored": true,
+      "target_absent": true,
+      "shared_cache_retained": true,
+      "ended_utc": "2026-10-17T02:19:39.970635+00:00",
+      "PR_still_draft": true,
+      "CI_snapshot": {
+        "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+        "read_at": "2026-10-17T02:20:50.415269+00:00",
+        "runs": [
+          {
+            "id": 38994483575,
+            "name": "Test CI",
+            "status": "in_progress",
+            "conclusion": null,
+            "head_sha": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d"
+          },
+          {
+            "id": 38994481316,
+            "name": "Dependabot PR Auto-merge",
+            "status": "completed",
+            "conclusion": "skipped",
+            "head_sha": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d"
+          },
+          {
+            "id": 38994481215,
+            "name": "Labeler",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d"
+          }
+        ],
+        "global98": "PENDING unless raw completed Rust evidence later verified",
+        "no_wait_or_repeat": true
+      },
+      "proofs": [
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/actual.json",
+          "sha256": "f1163b8ddd776d3edc3bab4f719e154c6fdb8c36789a0f5cbf4be03b078eebb5",
+          "bytes": 314
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/ledger.json",
+          "sha256": "723eabca53dddd4b90621c19c441e3e320d76443f6d916f5be86aa3fb52676ec",
+          "bytes": 1616
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/remote-before.json",
+          "sha256": "85bcce15fbbc0e3b40add57be2d1bd6aa6241ecf91313144cbbf99b28d9d1b79",
+          "bytes": 92
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/remote-after.json",
+          "sha256": "44e1830241c033139a3169772fee2d72929f9809a1058e81eb05032076b605b7",
+          "bytes": 92
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/pr-after.json",
+          "sha256": "7d6468ff556d16a8297d8de2179e9a7933e083bff9216cb16d64823920788f8d",
+          "bytes": 127
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/normal-push.stdout",
+          "sha256": "a3743f6306a03af8e5314cc378f1218e25c821b4068260a4e903646a9391a9ea",
+          "bytes": 1139
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/normal-push.stderr",
+          "sha256": "61b0838d0accfb3fce0680a55e517f86562d0dbe162395d51deaf5160ae9c22a",
+          "bytes": 738
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/parent/exact-head-ci-phase01/snapshot.json",
+          "sha256": "57e34938f3fa3c84df084a58884ab0d02a41987359e9de8309d756af3e45d09e",
+          "bytes": 791
+        }
+      ]
+    },
+    {
+      "role": "top",
+      "success": true,
+      "head": "48046084edf5f658191bde97e4674a14e2187b71",
+      "tree": "0305ed0af71544a0a3975dea11d07d8c8d0d8093",
+      "branch": "fix/2015-ordered-receiver-rhs",
+      "config_restored": true,
+      "target_absent": true,
+      "shared_cache_retained": true,
+      "ended_utc": "2026-10-17T02:19:56.173725+00:00",
+      "PR_still_draft": true,
+      "CI_snapshot": {
+        "head": "48046084edf5f658191bde97e4674a14e2187b71",
+        "read_at": "2026-10-17T02:20:50.513681+00:00",
+        "runs": [
+          {
+            "id": 38994498219,
+            "name": "Test CI",
+            "status": "in_progress",
+            "conclusion": null,
+            "head_sha": "48046084edf5f658191bde97e4674a14e2187b71"
+          },
+          {
+            "id": 38994497156,
+            "name": "Dependabot PR Auto-merge",
+            "status": "completed",
+            "conclusion": "skipped",
+            "head_sha": "48046084edf5f658191bde97e4674a14e2187b71"
+          },
+          {
+            "id": 38994497209,
+            "name": "Labeler",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "48046084edf5f658191bde97e4674a14e2187b71"
+          }
+        ],
+        "global98": "PENDING unless raw completed Rust evidence later verified",
+        "no_wait_or_repeat": true
+      },
+      "proofs": [
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/actual.json",
+          "sha256": "44dbf5d359f338b757679468eb381c242965801c70b332c908ee349a85e2c19d",
+          "bytes": 310
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/ledger.json",
+          "sha256": "41eb5af2630890a935a638dcb12d9b950e86dbe4d366c79514048a0c82c7b491",
+          "bytes": 1612
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/remote-before.json",
+          "sha256": "8983ff7d6d7b99e2aa914805171588a0183c4e3ef693977ca1ef1c22712a934e",
+          "bytes": 88
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/remote-after.json",
+          "sha256": "6d03f388be3ae923af047af2a494e6283ad22cac7a8558348697c88db32d270e",
+          "bytes": 88
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/pr-after.json",
+          "sha256": "bae37105b1e498f261554c3f8bdd5824a3e3ec4c4b60f414874b2a3a0bf06ae6",
+          "bytes": 123
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/normal-push.stdout",
+          "sha256": "5f4bfae257c2098e77fcccd3329e73da47bf744c88e45c8e8dda2e1a7ec6ac9d",
+          "bytes": 1135
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/normal-push.stderr",
+          "sha256": "84273627d7656a5f7a46ac735f8a690fc835c7080e3e7366360ae8a223ce755b",
+          "bytes": 639
+        },
+        {
+          "path": "/tmp/nm2064-final-layer-publication/top/exact-head-ci-phase01/snapshot.json",
+          "sha256": "efcca1c84000eac41b7e2c8d4f2620bb6d2261e6ed760e3948f6b306fcaf1d8f",
+          "bytes": 791
+        }
+      ]
+    }
+  ]
+}

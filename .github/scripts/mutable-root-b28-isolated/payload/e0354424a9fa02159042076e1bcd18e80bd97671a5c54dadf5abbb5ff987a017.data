@@ -1,0 +1,10 @@
+effects:
+  postgres:
+    returnedExecutors:
+      - { module: './psql.mjs', export: beginTransaction }
+      - { module: './psql.mjs', export: beginBoundedTransaction }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]

@@ -1,0 +1,272 @@
+{
+  "status": "PASS all real API and separate shim tests; zero skips",
+  "actual_producer": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "arm": "A28",
+  "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+  "commands": [
+    {
+      "label": "api.test.js",
+      "expected_tests": 43,
+      "addon_sha256": "20bbc31e8260e48a1499a82a463f6e03829495ac8a9aec7643008d719e26ceb5",
+      "scope": "saved declaration shim",
+      "start": "2026-10-17T02:32:52.261729+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 43,
+        "pass": 43,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "ee295126916c777d4578bf4332f62498b202697f778f931556a247e96cc960c8"
+    },
+    {
+      "label": "receiver-suspension-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:52.974930+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "b6ca6b64fd2f8bdb6fa69eb3bdcb793496cb8cf42b0c67193b1a24a021ee46ac"
+    },
+    {
+      "label": "receiver-inline-arguments-api.test.js",
+      "expected_tests": 2,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:53.489345+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "5cfaf06fc69c36fff7c7820c412ea4e59d128292646c43376f9c97fa594b65f4"
+    },
+    {
+      "label": "cross-file-inline-receiver-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:53.701580+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "2859dd4fa83e2be84919a925cf9aa70b96155a593478c92edb307bd3ce7d6486"
+    },
+    {
+      "label": "inline-owned-member-api.test.js",
+      "expected_tests": 3,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:54.014567+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "6f0ea80108087475a7d34f9748a65b799c2372f3370901c62f623ab473ef0d24"
+    },
+    {
+      "label": "postgres-conditional-executors-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:54.227711+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "8e8497ba34a2610c8ef5539ce7288549a2b28cf47a6e944de4d1c1c3b58191f2"
+    },
+    {
+      "label": "postgres-source-api.test.js",
+      "expected_tests": 34,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:54.388943+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "e9a4a5663049e2cd4137cc2c9697c4efd76f2812a34df655739965f6c62b90ef"
+    },
+    {
+      "label": "postgres-expression-arbiter-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:54.601362+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "5d04219aede7c2ab69520e7b156a6875f525c738f90e2724011ab4d03376fee4"
+    },
+    {
+      "label": "namespace-types-api.test.js",
+      "expected_tests": 2,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:54.812912+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "6fbbcfdfbd998cdda4e4d47f4270fc2422e0d79fd1759d7cd9fa99816bbfdccc"
+    },
+    {
+      "label": "type-import-order-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:55.128225+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "9c34143fd3ef78044436f13a75ff155bd9c77c2f541719aba35d690c24c4db1f"
+    },
+    {
+      "label": "effects-alternatives-api.test.js",
+      "expected_tests": 2,
+      "addon_sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:32:55.388745+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "2c52f6442439f6f3bf9ffacfcf0ec4e0ddff328e2668e4aa1afe63f4dcecb95e"
+    }
+  ],
+  "sourcefiles": {
+    "/tmp/no-mistakes-2054-final-cost-source/fixtures/napi/test-addon.js": "20bbc31e8260e48a1499a82a463f6e03829495ac8a9aec7643008d719e26ceb5",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/index.js": "52f9914b87ce22b1be4a5e688d461394d5e6c0f5aae277623c08dabab8c46b7d",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/api.test.js": "e2278b6d934f2dbef6c32da841f115093988614bfd5006594637475063a2a74b",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/mutable-receiver-api.test.js": "38d0f3fe58a505308fa299ca6b0026a04fe58c87fa04095a99dfb055c2b5f8c5",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/receiver-suspension-api.test.js": "4f86edbd3abfe3befe202be8d7ad271f2bb52fa4adf1d8dcfecd63a62706601d",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/receiver-inline-arguments-api.test.js": "44cd124185c816a18650df5667342ab2c5287eea16248088335e264b59ca7b09",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/cross-file-inline-receiver-api.test.js": "87ca0666ab6deec12e3fc71009e56dfb01987a73097f287de072ef64c4fe503f",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/inline-owned-member-api.test.js": "7da3ee40a659a8f2988fc63421e8ce6ac77dca44a8166f9df6120ea904fcca44",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/postgres-conditional-executors-api.test.js": "7fbb0d3307d54c98b682f3d5a4488f59eb0ff55b8495887193e37e9663a47b49",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/postgres-source-api.test.js": "365d3da5e70f10d8cbbad960873a20074fd8ebc185346a87e305b693d06ee062",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js": "b5af1aff318e39834d2bcbb8678092fade09cebec2c220406d9a6c9060664fde",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/namespace-types-api.test.js": "40ff534bafd9fd256fcf269e56cb8019e51298951022542665e9142235f8acd3",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/type-import-order-api.test.js": "e0e38764946eff069607a5618c7e8773d53c27a4e5fdc46f7a34c475330109b6",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/effects-alternatives-api.test.js": "366686e7679902dcb11a8a0ebe96d23e0cf1d9ba74c706c4b3b8d643cfaba4b1"
+  },
+  "build_manifest_sha256": "fe4721e34cd06e8004e172d2837f326dd6e5da7164edcece951cc84ac01fa8e0",
+  "scope": "Untimed real async addon API and separately labeled declaration shim; no performance claim",
+  "node_version": "v26.11.1",
+  "real_tests": 48,
+  "shim_tests": 43,
+  "end": "2026-10-17T02:32:55.931247+00:00"
+}

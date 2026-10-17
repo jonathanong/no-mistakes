@@ -1,0 +1,17 @@
+import { primary, replica, other } from '@vendor/valkey';
+function replacement() {}
+let trigger = { client: other };
+const sink = {};
+// Earlier initializer reads must retain their root before a later var redeclaration.
+[sink[(trigger.client.get = replacement, 'key')]] = [class {
+  static {
+    var holder = { client: primary };
+    var holder; // A declaration without an initializer keeps the existing root.
+    var holder = { client: holder.client };
+    const captured = holder.client;
+    var holder = { client: replica };
+    captured.get = replacement;
+  }
+}];
+function consume(value, changed) { value.get('primary'); changed.get('replica'); }
+consume(primary, replica);

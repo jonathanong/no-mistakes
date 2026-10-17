@@ -1,0 +1,12 @@
+{
+  "status": "Local clean intended candidate Git bytes; public proof pending",
+  "candidate_head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "candidate_tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e",
+  "pnpm_lock_sha256": "d84416b923a34fa01f86a200dba223aceddef4c00e942c88fb99b2c509d534de",
+  "old_wrong_Cargo_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+  "actual_candidate_Cargo_lock_sha256": "45ee5ac614aad194ea051cf008fb2be6fefa591134f1455fe45abf1581b2d776",
+  "source_carry": {
+    "path": "/tmp/nm2064-final-layer-commits/parent-source-carry.json",
+    "sha256": "4997a5ab2dccbd8dccb25956b742d7c8b7194439e40a5de2ad58002277cb9dce"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "head": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "root": "/tmp/no-mistakes-2022-final-cost-native",
+  "artifacts": {
+    "cli": {
+      "sha256": "2027f7ca081721db6aabd3fb5433e930bc248530f0e325ac9cd5daa704142c18",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes#0.91.3",
+          "manifest_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "no-mistakes",
+            "src_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/src/main.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2022-final-cost-native/target/release/no-mistakes"
+          ],
+          "executable": "/tmp/no-mistakes-2022-final-cost-native/target/release/no-mistakes",
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2022-final-cost-native/target/release/no-mistakes"
+    },
+    "addon": {
+      "sha256": "f757d5ae5671ffd188003f8a4514a210439cf2c27c1e46db0ce58362ccb1be40",
+      "producer": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes#0.91.3",
+          "manifest_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/Cargo.toml",
+          "target": {
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "name": "no_mistakes",
+            "src_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/src/lib.rs",
+            "edition": "2021",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "features": [
+            "default",
+            "mermaid-validation"
+          ],
+          "filenames": [
+            "/tmp/no-mistakes-2022-final-cost-native/target/release/libno_mistakes.so"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "original": "/tmp/no-mistakes-2022-final-cost-native/target/release/libno_mistakes.so"
+    },
+    "rlib": {
+      "sha256": "7c2900fe205bb05c8c682046180c9c2b22c0c38096a1746116e634f4da7c4244",
+      "producer": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes#0.91.3",
+        "manifest_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "no_mistakes",
+          "src_path": "/tmp/no-mistakes-2022-final-cost-native/crates/no-mistakes/src/lib.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [
+          "default",
+          "mermaid-validation"
+        ],
+        "filenames": [
+          "/tmp/no-mistakes-2022-final-cost-native/target/release/deps/libno_mistakes-3c767fbb87356a2b.rlib",
+          "/tmp/no-mistakes-2022-final-cost-native/target/release/deps/libno_mistakes-3c767fbb87356a2b.rmeta"
+        ],
+        "executable": null,
+        "fresh": false
+      }
+    }
+  },
+  "scope": "CLI/addon/core only; graph/timing/SQL helpers separately required"
+}

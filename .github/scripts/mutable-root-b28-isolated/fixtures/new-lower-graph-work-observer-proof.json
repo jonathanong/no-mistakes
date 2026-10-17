@@ -1,0 +1,53 @@
+{
+  "status": "PASS complete exact JSON field differential; explicit expected current baseline observer counts",
+  "historical_expected": {
+    "label": "graph-work",
+    "argv": [
+      "/tmp/nm2054-parent2022-baseline-probes-followup/probe-2054",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "1",
+      "work",
+      "calls"
+    ],
+    "bytes": 975906,
+    "sha256": "a98d29605931e2c0e563484c2a14179a95dab21eb4e27ddaf2ad2b9664f486b9"
+  },
+  "current_expected": {
+    "label": "graph-work",
+    "argv": [
+      "/tmp/nm2054-parent2022-baseline-probes-followup/probe-2054",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "1",
+      "work",
+      "calls"
+    ],
+    "bytes": 975906,
+    "sha256": "59bc38eaed9efec3d204d68dea10fac4846bea290e8429a0febaa823be691915"
+  },
+  "actual_full_output_receipt": {
+    "path": "/tmp/nm2054-next-stack-raw32/A28/receipt.json",
+    "sha256": "a7e2234c8461c17a068ead8804e5a0036d6ceb445f05ed52fa225ffa9a61092c"
+  },
+  "actual_full_output": {
+    "path": "/tmp/nm2054-next-stack-raw32/A28/14.stdout",
+    "sha256": "59bc38eaed9efec3d204d68dea10fac4846bea290e8429a0febaa823be691915",
+    "bytes": 975906
+  },
+  "only_changed_fields": {
+    "new_minus_historical_fields": [
+      [
+        ".request_work[0].resolver.cache_hits",
+        832,
+        830
+      ],
+      [
+        ".request_work[0].resolver.requests",
+        1044,
+        1042
+      ]
+    ],
+    "all_other_JSON_fields_equal": true
+  },
+  "semantic_policy": "Every other JSON field and ordered list equal; no masking, no semantic golden normalization; historical source preserved",
+  "scope": "Expected control metadata for genuinely different current producer, no sampler/metrics/gates change"
+}

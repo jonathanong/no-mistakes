@@ -1,0 +1,16 @@
+{
+  "A28": {
+    "status": "PASS authentic native and existing functional controls; fresh VM controls still mandatory",
+    "revision": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+    "tree": "47086f1cfc8fbaa91428846f9cb4f46597c6a03e",
+    "binary_sha256": "3e11594442f1044491919ba50a28446768378c34ad6a9074353e3b0357bdedb3",
+    "raw32_receipt_sha256": "a7e2234c8461c17a068ead8804e5a0036d6ceb445f05ed52fa225ffa9a61092c"
+  },
+  "B28": {
+    "status": "PASS authentic complete native and existing full controls; fresh hosted controls mandatory",
+    "revision": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+    "tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e",
+    "binary_sha256": "7583f5c1528e464187d2197b6744335a253c23661bc97d0c97c67cf31118b718",
+    "raw32_receipt_sha256": "3ee47284b791b8046842fa977f45e1afa4438de3172424518025550d6875881c"
+  }
+}

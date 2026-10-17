@@ -1,0 +1,106 @@
+{
+  "status": "PASS authentic fresh native pair and complete existing functional controls; no performance claim",
+  "utc": "2026-10-17T02:46:36.616289+00:00",
+  "baseline_actual_producer": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "baseline_public_cfg_test_only_carry": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "candidate_actual_public_producer": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "candidate_tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e",
+  "API": {
+    "baseline_real": 48,
+    "candidate_real": 115,
+    "separate_shim_each": 43,
+    "records": 23,
+    "failures": 0,
+    "skips": 0
+  },
+  "full32": {
+    "baseline_bytes": 915405084,
+    "candidate_bytes": 915461181,
+    "both_records": 64,
+    "candidate_historical_d784_byte_exact": 32,
+    "baseline_historical_4e_byte_exact": 31,
+    "baseline_graph_work_only_changed_fields": [
+      "request_work[0].resolver.cache_hits830\u2192832",
+      "request_work[0].resolver.requests1042\u21921044"
+    ],
+    "all_graph_semantics_equal": true
+  },
+  "SQL": {
+    "both_complete_bytes_each": 19221,
+    "sha256": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8"
+  },
+  "signatures": {
+    "records": 44,
+    "all22_both_original_signatures_exact": true
+  },
+  "CI": {
+    "run": 38994483575,
+    "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+    "success": true,
+    "global98": true,
+    "four_Codecov_success": true
+  },
+  "pins": {
+    "lower_native_terminal": {
+      "path": "/tmp/nm2022-final-cost-native-source-draft/actual-owner-terminal.json",
+      "sha256": "79d933e97b420067675cb02e264cf5786c1f7179192a2d705827872ec188df6c"
+    },
+    "parent_native_terminal": {
+      "path": "/tmp/nm2054-next-stack-native-recipe/actual-owner-terminal.json",
+      "sha256": "0e2a61f9401d0dcd7955cf00bbe3ee12dd903c388fa048fb261cee0a8ffa6cfd"
+    },
+    "lower_native": {
+      "path": "/tmp/nm2022-final-cost-native-source-draft/candidate/closed-artifacts.json",
+      "sha256": "fe4721e34cd06e8004e172d2837f326dd6e5da7164edcece951cc84ac01fa8e0"
+    },
+    "parent_native": {
+      "path": "/tmp/nm2054-next-stack-native-recipe/candidate/closed-artifacts.json",
+      "sha256": "ab8154e662d5d154539a60901acb042b59866b2d535d676990505aae3f44dde6"
+    },
+    "lower_helpers": {
+      "path": "/tmp/nm2054-next-lower-helper-links/actual.json",
+      "sha256": "7c36c03125be57451d1a611dfb94e27f3bb00a7e23cc7b73ccbeb431e0198f16"
+    },
+    "parent_SQL_link": {
+      "path": "/tmp/nm2054-next-parent-helper-links/actual.json",
+      "sha256": "eaaddeff2cb69adc15b5261026862b3b367ac7489fa4ce0dc996e63a3835df16"
+    },
+    "lower_API": {
+      "path": "/tmp/nm2054-next-stack-api/A28/receipt.json",
+      "sha256": "e347ed24696bc50e9a62275e8cc43e4c07591262d4ed659976169ac4ea0f3bfb"
+    },
+    "parent_API": {
+      "path": "/tmp/nm2054-next-stack-api/B28/receipt.json",
+      "sha256": "a52b8ab3398c655570ce2cbe5822c72bfd9388cfa771b506c0ec5ac04d91e377"
+    },
+    "lower_full32": {
+      "path": "/tmp/nm2054-next-stack-raw32/A28/receipt.json",
+      "sha256": "a7e2234c8461c17a068ead8804e5a0036d6ceb445f05ed52fa225ffa9a61092c"
+    },
+    "parent_full32": {
+      "path": "/tmp/nm2054-next-stack-raw32/B28/receipt.json",
+      "sha256": "3ee47284b791b8046842fa977f45e1afa4438de3172424518025550d6875881c"
+    },
+    "lower_SQL": {
+      "path": "/tmp/nm2054-next-lower-helper-links/sql-functional-actual.json",
+      "sha256": "bb32e754b9c5997ac220e18d8ba4d192bab3c6f24046b1fbc87549e0b5dfcc94"
+    },
+    "parent_SQL": {
+      "path": "/tmp/nm2054-next-parent-helper-links/sql-functional-actual.json",
+      "sha256": "2ad0042d78128bbd8c40fe4a61682d9b7fb1194904e45b2bb59488571fa7b757"
+    },
+    "pair44_signatures": {
+      "path": "/tmp/nm2054-next-stack-signatures/actual.json",
+      "sha256": "517a4824ba6b1b122ff461390d9a1a0c4e2e2cab2d6d4262bed9562550612bb6"
+    },
+    "Y_CI": {
+      "path": "/tmp/nm2054-newhead-completed-ci/exact-head-ci-receipt.json",
+      "sha256": "0fc2223bea254007572483b58cba0155e736f84992e7cc0b0fb399a5ccb067bd"
+    },
+    "baseline_observer_delta": {
+      "path": "/tmp/nm2054-next-stack-raw32/A28/historical-graph-work-differences.json",
+      "sha256": "2c04dc579a7e4fc8e7c3904e1ee751a44f384ad1492699c7aa69136f80d1350f"
+    }
+  },
+  "prior_adverse": "Retain38987485073 unchanged; no rows generated or acceptance verdict for this genuinely new pair"
+}

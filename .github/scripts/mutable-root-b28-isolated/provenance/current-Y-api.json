@@ -1,0 +1,294 @@
+{
+  "status": "PASS all real API and separate shim tests; zero skips",
+  "actual_producer": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "arm": "B28",
+  "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+  "commands": [
+    {
+      "label": "api.test.js",
+      "expected_tests": 43,
+      "addon_sha256": "20bbc31e8260e48a1499a82a463f6e03829495ac8a9aec7643008d719e26ceb5",
+      "scope": "saved declaration shim",
+      "start": "2026-10-17T02:45:41.036619+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 43,
+        "pass": 43,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "486174969dfe55fb1e8f7b27f92a45b20240c9d13d42986fa174e912089bf863"
+    },
+    {
+      "label": "mutable-receiver-api.test.js",
+      "expected_tests": 67,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:41.699811+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 67,
+        "pass": 67,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "5173dc750ed1a5fdeeb00b5138f329eefbda27dc68e3b2b8529b1a331d2268cb"
+    },
+    {
+      "label": "receiver-suspension-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:44.967994+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "013e8195c48377c43c17307d0d56234bb02b1dfc734959e887478d2b94aec43c"
+    },
+    {
+      "label": "receiver-inline-arguments-api.test.js",
+      "expected_tests": 2,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:45.480642+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "d65026679d6e0d768fa6deedcaaab0b1648f53c9254493d67efe85d30ed2dca4"
+    },
+    {
+      "label": "cross-file-inline-receiver-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:45.694206+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "9925dfd44dbd63cc032f88eb24c03c2486aefd5850daa58951666631d7793452"
+    },
+    {
+      "label": "inline-owned-member-api.test.js",
+      "expected_tests": 3,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:45.954107+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "24e99c3d6abb59acabb136656147b1b24ff9972de2f029c3796bf914bae6518b"
+    },
+    {
+      "label": "postgres-conditional-executors-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:46.166713+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "541fcf8702da76dcb3fc5b940468cff789d4d11268280c640dd334278a6deaef"
+    },
+    {
+      "label": "postgres-source-api.test.js",
+      "expected_tests": 34,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:46.326689+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "a85ae578dc0cec17f616bc3e186ee55bd7debc1ee550f783deafa078e206b516"
+    },
+    {
+      "label": "postgres-expression-arbiter-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:46.541218+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "be914097938799d6cdebb97802a3e89f2f5d62e4dea04849eedf2a4331487355"
+    },
+    {
+      "label": "namespace-types-api.test.js",
+      "expected_tests": 2,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:46.751204+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "34ecf4465e1d77fdf594ea8ab3000044664a66dfc5c8e5dcb5421271f1d3d0f5"
+    },
+    {
+      "label": "type-import-order-api.test.js",
+      "expected_tests": 1,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:47.011553+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "f01b8ce85fa0a6c59e3f375078d47debbdf64c331982918bc7ac60a900966244"
+    },
+    {
+      "label": "effects-alternatives-api.test.js",
+      "expected_tests": 2,
+      "addon_sha256": "e483f8646fb157824e8ea9d08f39fbb51b8ea3b18672240e91b259ca0b6a37b8",
+      "scope": "actual release addon",
+      "start": "2026-10-17T02:45:47.276198+00:00",
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "actual": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0
+      },
+      "stdout_sha256": "206b5315836090deceac65a818dd5a5e2335784ac28e8c3de8423f4247748645"
+    }
+  ],
+  "sourcefiles": {
+    "/tmp/no-mistakes-2054-final-cost-source/fixtures/napi/test-addon.js": "20bbc31e8260e48a1499a82a463f6e03829495ac8a9aec7643008d719e26ceb5",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/index.js": "52f9914b87ce22b1be4a5e688d461394d5e6c0f5aae277623c08dabab8c46b7d",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/api.test.js": "e2278b6d934f2dbef6c32da841f115093988614bfd5006594637475063a2a74b",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/mutable-receiver-api.test.js": "38d0f3fe58a505308fa299ca6b0026a04fe58c87fa04095a99dfb055c2b5f8c5",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/receiver-suspension-api.test.js": "4f86edbd3abfe3befe202be8d7ad271f2bb52fa4adf1d8dcfecd63a62706601d",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/receiver-inline-arguments-api.test.js": "44cd124185c816a18650df5667342ab2c5287eea16248088335e264b59ca7b09",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/cross-file-inline-receiver-api.test.js": "87ca0666ab6deec12e3fc71009e56dfb01987a73097f287de072ef64c4fe503f",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/inline-owned-member-api.test.js": "7da3ee40a659a8f2988fc63421e8ce6ac77dca44a8166f9df6120ea904fcca44",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/postgres-conditional-executors-api.test.js": "7fbb0d3307d54c98b682f3d5a4488f59eb0ff55b8495887193e37e9663a47b49",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/postgres-source-api.test.js": "365d3da5e70f10d8cbbad960873a20074fd8ebc185346a87e305b693d06ee062",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js": "b5af1aff318e39834d2bcbb8678092fade09cebec2c220406d9a6c9060664fde",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/namespace-types-api.test.js": "40ff534bafd9fd256fcf269e56cb8019e51298951022542665e9142235f8acd3",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/type-import-order-api.test.js": "e0e38764946eff069607a5618c7e8773d53c27a4e5fdc46f7a34c475330109b6",
+    "/tmp/no-mistakes-2054-final-cost-source/packages/no-mistakes/scripts/effects-alternatives-api.test.js": "366686e7679902dcb11a8a0ebe96d23e0cf1d9ba74c706c4b3b8d643cfaba4b1"
+  },
+  "build_manifest_sha256": "ab8154e662d5d154539a60901acb042b59866b2d535d676990505aae3f44dde6",
+  "scope": "Untimed real async addon API and separately labeled declaration shim; no performance claim",
+  "node_version": "v26.11.1",
+  "real_tests": 115,
+  "shim_tests": 43,
+  "end": "2026-10-17T02:45:47.887651+00:00"
+}

@@ -1,0 +1,226 @@
+[
+  {
+    "id": "facts-no_writes-values",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+      "values",
+      "@COUNT@"
+    ],
+    "fixed_batch": 391
+  },
+  {
+    "id": "facts-no_writes-imports",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+      "imports",
+      "@COUNT@"
+    ],
+    "fixed_batch": 1006
+  },
+  {
+    "id": "facts-writes-values",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+      "values",
+      "@COUNT@"
+    ],
+    "fixed_batch": 1551
+  },
+  {
+    "id": "facts-writes-imports",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+      "imports",
+      "@COUNT@"
+    ],
+    "fixed_batch": 2467
+  },
+  {
+    "id": "facts-shared_histories-values",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+      "values",
+      "@COUNT@"
+    ],
+    "fixed_batch": 26
+  },
+  {
+    "id": "facts-shared_histories-imports",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+      "imports",
+      "@COUNT@"
+    ],
+    "fixed_batch": 280
+  },
+  {
+    "id": "facts-jsx-values",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+      "values",
+      "@COUNT@"
+    ],
+    "fixed_batch": 20226
+  },
+  {
+    "id": "facts-jsx-imports",
+    "group": "controls",
+    "args": [
+      "@INPUT@/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+      "imports",
+      "@COUNT@"
+    ],
+    "fixed_batch": 20460
+  },
+  {
+    "id": "hot-mutable-root-scale",
+    "group": "hot-facts",
+    "args": [
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+      "values",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "hot-mutable-pattern-phase-scale",
+    "group": "hot-facts",
+    "args": [
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+      "values",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "hot-mutable-pattern-deferred-diamond",
+    "group": "hot-facts",
+    "args": [
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+      "values",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "hot-mutable-pattern-eager-class-scale",
+    "group": "hot-facts",
+    "args": [
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+      "values",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "hot-mutable-pattern-cold-class-scale",
+    "group": "hot-facts",
+    "args": [
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+      "values",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "graph",
+    "group": "graph-effects",
+    "args": [
+      "graph",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "graph-observer",
+    "group": "graph-effects",
+    "args": [
+      "graph-observer",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "graph-no-calls",
+    "group": "graph-effects",
+    "args": [
+      "graph-no-calls",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "@COUNT@"
+    ]
+  },
+  {
+    "id": "effects-mutable-let-direct-off",
+    "group": "graph-effects",
+    "args": [
+      "off",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "valkey",
+      "src/nested-receiver-containers/mutable-let-direct.mts",
+      "@COUNT@"
+    ],
+    "role": "corrected consuming result: one stale primary.get site becomes empty"
+  },
+  {
+    "id": "effects-mutable-let-direct-observer",
+    "group": "graph-effects",
+    "args": [
+      "observer",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "valkey",
+      "src/nested-receiver-containers/mutable-let-direct.mts",
+      "@COUNT@"
+    ],
+    "role": "corrected consuming result: one stale primary.get site becomes empty"
+  },
+  {
+    "id": "effects-mutable-let-copied-off",
+    "group": "graph-effects",
+    "args": [
+      "off",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "valkey",
+      "src/nested-receiver-containers/mutable-let-copied.mts",
+      "@COUNT@"
+    ],
+    "role": "nonempty consuming positive control: copied primary.get remains one exact site"
+  },
+  {
+    "id": "effects-mutable-let-copied-observer",
+    "group": "graph-effects",
+    "args": [
+      "observer",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "valkey",
+      "src/nested-receiver-containers/mutable-let-copied.mts",
+      "@COUNT@"
+    ],
+    "role": "nonempty consuming positive control: copied primary.get remains one exact site"
+  },
+  {
+    "id": "effects-mutable-pattern-deferred-diamond-off",
+    "group": "graph-effects",
+    "args": [
+      "off",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "valkey",
+      "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+      "@COUNT@"
+    ],
+    "role": "empty-effects/shared-DAG negative control; source has no consumer call"
+  },
+  {
+    "id": "effects-mutable-pattern-deferred-diamond-observer",
+    "group": "graph-effects",
+    "args": [
+      "observer",
+      "@INPUT@/test-cases/rules/query-reached-per-item/provenance-fixture",
+      "valkey",
+      "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+      "@COUNT@"
+    ],
+    "role": "empty-effects/shared-DAG negative control; source has no consumer call"
+  }
+]

@@ -1,0 +1,66 @@
+{
+  "A28": {
+    "10": {
+      "label": "facts-mutable-pattern-deferred-diamond-values",
+      "raw_sha256": "6bed779f1bc538ba3cef9f70ed4ddc6de2e817d43f60089dddfcc9276bf3d2e3",
+      "raw_bytes": 818467,
+      "tokens": {
+        "sha256": "a12b5833e1e3af44f9f037cc4fc6740308d05cf894d33676c23a66386e662504",
+        "stats": {
+          "atoms": 17240,
+          "groups": 3961,
+          "unordered_groups": 1504,
+          "entries": 7505,
+          "max_depth": 53
+        }
+      }
+    },
+    "26": {
+      "label": "extra-mutable-projection-wide.ts-values",
+      "raw_sha256": "bb77b65607964dc9ada2b79a926b8488e09403c1c9a00de3dccd2f54d40a141a",
+      "raw_bytes": 55989,
+      "tokens": {
+        "sha256": "caaebb040cd72f6608035c154060c2a46755d9ded44334eb40580d3448ab3c05",
+        "stats": {
+          "atoms": 3851,
+          "groups": 403,
+          "unordered_groups": 37,
+          "entries": 1517,
+          "max_depth": 16
+        }
+      }
+    }
+  },
+  "B28": {
+    "10": {
+      "label": "facts-mutable-pattern-deferred-diamond-values",
+      "raw_sha256": "7b3903226af915db071bde54fa02337f144dfa624ccce5a9e95c0d93825542e1",
+      "raw_bytes": 821945,
+      "tokens": {
+        "sha256": "63439c24dd9a7dd80f634bf7aca9c48fe048a574fb8a29bf65250317113780ce",
+        "stats": {
+          "atoms": 17359,
+          "groups": 3983,
+          "unordered_groups": 1513,
+          "entries": 7551,
+          "max_depth": 53
+        }
+      }
+    },
+    "26": {
+      "label": "extra-mutable-projection-wide.ts-values",
+      "raw_sha256": "8d1de7107ced9dc2aee4207cc06fb7bc000ff64c1af9d685207235381c2c17f7",
+      "raw_bytes": 59467,
+      "tokens": {
+        "sha256": "37b0362b975e807e7c98c50bb0271458b8a6c16258be81d9be11e815f356ba5c",
+        "stats": {
+          "atoms": 3970,
+          "groups": 425,
+          "unordered_groups": 46,
+          "entries": 1563,
+          "max_depth": 16
+        }
+      }
+    }
+  }
+}

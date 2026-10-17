@@ -1,0 +1,423 @@
+[
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+    "kind": "file",
+    "roles": [
+      "A28:facts-jsx-values",
+      "A28:facts-jsx-imports",
+      "B28:facts-jsx-values",
+      "B28:facts-jsx-imports",
+      "timing:facts-jsx-values",
+      "timing:facts-jsx-imports"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-shared_histories-values",
+      "A28:facts-shared_histories-imports",
+      "B28:facts-shared_histories-values",
+      "B28:facts-shared_histories-imports",
+      "timing:facts-shared_histories-values",
+      "timing:facts-shared_histories-imports"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-writes-values",
+      "A28:facts-writes-imports",
+      "B28:facts-writes-values",
+      "B28:facts-writes-imports",
+      "timing:facts-writes-values",
+      "timing:facts-writes-imports"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-no_writes-values",
+      "A28:facts-no_writes-imports",
+      "B28:facts-no_writes-values",
+      "B28:facts-no_writes-imports",
+      "timing:facts-no_writes-values",
+      "timing:facts-no_writes-imports"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+    "kind": "directory",
+    "roles": [
+      "A28:graph-off",
+      "A28:graph-work",
+      "A28:graph-no-calls",
+      "A28:effects-0",
+      "A28:effects-1",
+      "A28:effects-2",
+      "B28:graph-off",
+      "B28:graph-work",
+      "B28:graph-no-calls",
+      "B28:effects-0",
+      "B28:effects-1",
+      "B28:effects-2",
+      "timing:graph",
+      "timing:graph-observer",
+      "timing:graph-no-calls",
+      "timing:effects-mutable-let-direct-off",
+      "timing:effects-mutable-let-direct-observer",
+      "timing:effects-mutable-let-copied-off",
+      "timing:effects-mutable-let-copied-observer",
+      "timing:effects-mutable-pattern-deferred-diamond-off",
+      "timing:effects-mutable-pattern-deferred-diamond-observer"
+    ],
+    "files": [
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/.no-mistakes.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/async-imports.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/mutable-receivers.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/named-clients.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/returned-only.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/review-marker.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/review.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/adapters-and-mutations.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-and-bind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-binding-entry.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-binding-exports.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/clients.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/controls.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/cursors.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor-barrel.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor-entry.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-origin-mutations.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-inherited.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-late.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-stars.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/destructured-export.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/destructured-parameters.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/entry.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/helpers.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/imported-receiver-mutations.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/inherited-constructors.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-client-entry.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-client-helpers.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-value-entry.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-value.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/acquired-wrapper.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/copied-method.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-await.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-deferred-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-new.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-tagged.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-yield.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-between.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-logical.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-await-operand-capture.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-await-saved.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-await.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-yield.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-call-argument-capture.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-capture-chain.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-cold-suspension.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-computed-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-computed-rhs-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-copied-method.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-accessor.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous-late-key.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous-late-member.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-application.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-before-capture.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-class-static.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-cold.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-computed-key.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-copied-snapshot.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-deferred.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-factory.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-late-key.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-member-static.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-nested-class.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-static-block.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-static-field.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-deferred-await.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-deferred-own.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-direct-alias.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-direct-write.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-dynamic-ancestor.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-immediate-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-instance-own.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-many-captures.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-nested-fresh.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-after-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-after.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-argument-before-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-before-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-before.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-descriptor-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-nested-getter.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-original-restore.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-preserved-fresh.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-first.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-getter.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-spread.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-rhs-stress.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-after-fresh.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-before-fresh.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-client.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-old-wrapper.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-sibling-after.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-sibling-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-static-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-unknown-call.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-unrelated-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-yield-operand-capture.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-after.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-ancestor-conditional.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-ancestor-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-arm.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-child.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-descendant.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-dynamic.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-foreign.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-logical.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-many-writes.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-opposite.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-restore.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-root-conditional.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-root-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-const-guarded.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-array.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-conditional-root.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-copied.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-cycle.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-array.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-default.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-object.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-detached.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-direct.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-foreign-root.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-guarded.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-lhs-acquisition.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-logical-root.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-before.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-class-context.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-cold-class.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-whole.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-default.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-final-root.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-foreign-catalog.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-lhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-carrier.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-getter-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-later-lhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-rhs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-self-copy.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-shorthand.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-capture.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-fields.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-local.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-nested.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-twice.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-wrapped.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rebound-detaches-old.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rebound.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rhs-named.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rhs-rebound.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-self-copy.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-shadowed.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-sibling.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-as.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-assertion.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-non-null.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-satisfies.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-unrelated.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-future-foreign-128.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-future-foreign-32.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-rule-mutated.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-rule-sibling.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/replaced-terminal.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/retained-array.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/retained-object.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/sibling.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/unguarded-root.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-cutoffs.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-owned-defaults.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-writes.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/projections.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/psql.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review-contexts.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review-wrappers.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/runtime.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/setup.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/syntax-and-nesting.mts",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/value-selectors.yml",
+      "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/wrapper-only.yml"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-mutable-pattern-cold-class-scale-values",
+      "B28:facts-mutable-pattern-cold-class-scale-values",
+      "timing:hot-mutable-pattern-cold-class-scale"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-mutable-pattern-deferred-diamond-values",
+      "B28:facts-mutable-pattern-deferred-diamond-values",
+      "timing:hot-mutable-pattern-deferred-diamond"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-mutable-pattern-eager-class-scale-values",
+      "B28:facts-mutable-pattern-eager-class-scale-values",
+      "timing:hot-mutable-pattern-eager-class-scale"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-mutable-pattern-phase-scale-values",
+      "B28:facts-mutable-pattern-phase-scale-values",
+      "timing:hot-mutable-pattern-phase-scale"
+    ]
+  },
+  {
+    "path": "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+    "kind": "file",
+    "roles": [
+      "A28:facts-mutable-root-scale-values",
+      "B28:facts-mutable-root-scale-values",
+      "timing:hot-mutable-root-scale"
+    ]
+  },
+  {
+    "path": "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json",
+    "kind": "file",
+    "roles": [
+      "A28:SQL",
+      "B28:SQL"
+    ]
+  },
+  {
+    "path": "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql",
+    "kind": "file",
+    "roles": [
+      "A28:SQL",
+      "B28:SQL"
+    ]
+  },
+  {
+    "path": "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json",
+    "kind": "file",
+    "roles": [
+      "A28:SQL",
+      "B28:SQL"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs",
+    "kind": "file",
+    "roles": [
+      "A28:extra-ordinary-demand-annex.cjs-imports",
+      "A28:extra-ordinary-demand-annex.cjs-values",
+      "B28:extra-ordinary-demand-annex.cjs-imports",
+      "B28:extra-ordinary-demand-annex.cjs-values"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts",
+    "kind": "file",
+    "roles": [
+      "A28:extra-ordinary-demand-boundaries.mts-imports",
+      "A28:extra-ordinary-demand-boundaries.mts-values",
+      "B28:extra-ordinary-demand-boundaries.mts-imports",
+      "B28:extra-ordinary-demand-boundaries.mts-values"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts",
+    "kind": "file",
+    "roles": [
+      "A28:single-descent-history",
+      "B28:single-descent-history"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts",
+    "kind": "file",
+    "roles": [
+      "A28:extra-mutable-projection-wide.ts-imports",
+      "A28:extra-mutable-projection-wide.ts-values",
+      "B28:extra-mutable-projection-wide.ts-imports",
+      "B28:extra-mutable-projection-wide.ts-values"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts",
+    "kind": "file",
+    "roles": [
+      "A28:extra-mutable-root-single-fallbacks.mts-imports",
+      "A28:extra-mutable-root-single-fallbacks.mts-values",
+      "B28:extra-mutable-root-single-fallbacks.mts-imports",
+      "B28:extra-mutable-root-single-fallbacks.mts-values"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts",
+    "kind": "file",
+    "roles": [
+      "A28:extra-mutable-root-single-fields.mts-imports",
+      "A28:extra-mutable-root-single-fields.mts-values",
+      "B28:extra-mutable-root-single-fields.mts-imports",
+      "B28:extra-mutable-root-single-fields.mts-values"
+    ]
+  },
+  {
+    "path": "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts",
+    "kind": "file",
+    "roles": [
+      "A28:extra-mutable-root-target-metadata.ts-imports",
+      "A28:extra-mutable-root-target-metadata.ts-values",
+      "B28:extra-mutable-root-target-metadata.ts-imports",
+      "B28:extra-mutable-root-target-metadata.ts-values"
+    ]
+  }
+]

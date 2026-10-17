@@ -1,0 +1,1183 @@
+{
+  "status": "PASS44 original signatures exact; all stderr empty; owned cleanup complete",
+  "pins": {
+    "/tmp/nm2054-next-cost-hosted-source/source/.github/scripts/mutable-root-b28-isolated/workloads.json": "cdd1b5e66757c37675876c30ad5e36e80657ce91843c7bbc6d28d56c739a6042",
+    "/tmp/nm2054-next-cost-hosted-source/source/.github/scripts/mutable-root-b28-isolated/timing-signatures.json": "b23cca8d43afd9c6ad869ac6004b5b94539678853d7fd42c7e8c26cc142a0a79",
+    "/tmp/nm2054-next-cost-hosted-source/source/.github/scripts/mutable-root-b28-isolated/payload-files.json": "20e9fd54a0d24290c2dbb14cefc4782edcd851b33e2233c3531c30194372640d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx": "3cff42e967c905fbfb740583f5205881569fb92303417898930b654f9b11be79",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts": "926a51a948dcd0c8931befa02d85f929bdb6596a080f23f29c504bc4c35fb6e2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts": "008caf11f621df637d9008a27e60ba2b384bad7bdcd95b9d9626298b14070575",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts": "e4de44094ed0e6caa0b2b6aeb8eb2597749273a6d49133510bc798f1d4ac22ff",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/.no-mistakes.yml": "9d4da80853985b4fde1efaebc29c9a143633e418d24c5c5c1ffd69d4a82bd2fa",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/async-imports.yml": "21aeb210fd6236984aeaecba4a759921413b25a242f5f08f05e61fe4e0212183",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/mutable-receivers.yml": "827b97ea6cf58b802b8547c4e0b63f0b209823431375fda1b681685cf8216bc0",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/named-clients.yml": "5697b8e1205dbde65526fcb1e6d65e77ada955a594d8258860d1ec3b997af9c9",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/returned-only.yml": "e0354424a9fa02159042076e1bcd18e80bd97671a5c54dadf5abbb5ff987a017",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/review-marker.yml": "abcf66dd3b13ae7cb30e62a28d9f9fdcd441b3206449c6af38f864f505c7295e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/review.yml": "005d6374c467e717b39140d1b15a1e7e7251125e2cc94792f0312b320a65c449",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/adapters-and-mutations.mts": "c3917345b5e64ffef0d0f53e74e215c714ed924852eb2d952acede39db1ae3a8",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-and-bind.mts": "65f6f1a55fbaaed6c182aaa2b6c0ce6ea40df6afb802232735e5080a62243d9d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-binding-entry.mts": "9a4ca855d67f6d1e5e1e8f4e54424d7c5997e1234a3c1d93de10254bcd2ed136",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/async-binding-exports.mts": "7e015641557337f4e9ad4cd38aee2ea6b51f2f9694282116e5f7c6ae537f6221",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/clients.mts": "43712f9c3f1eed674db3362d0ee0ee1fc6cd833e519477751e550ab0caf83e4e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/controls.mts": "66ed0f56a6b609a07db33bc6fe9f388adc5e58a304a22996a0af69e693e2706e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/cursors.mts": "fe687faa6344ec4558c7b3288f5308e013fb5071572bc29f592ad023f5baf952",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor-barrel.mts": "c4e740e8d3e3e5c6e96f226d4075584bc373f886d9287be75aec5df00d08eb90",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor-entry.mts": "05db823ed9dd680111d109be5de9f81dbae33f42b6294d0d88927e6c4e04c560",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-executor.mts": "84d6a6fa226b85ccddbb3b6b65ce5138b493601209899c3d6f65e0027f489db5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-origin-mutations.mts": "7d61db4c6c1d1211391e3982332c7dbe76b41deaee3d403b9fc2cd2c48cb50b2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-inherited.mts": "d229cc9060eba2588735b925748afd1f657ac447f46ac82daf8b1f1aac193812",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-late.mts": "24d5fb620ac2f92c4efdb1a53005ff17573de4deda1adefe1d9dcaadc6e48538",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/default-review-stars.mts": "db60339308f0f0c9e429e1991aae7390b7174557450171c146a6d662586b522c",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/destructured-export.mts": "0041c2f0b54198d31d2cff75341b8adab53f546420a913d44d5a3a953d09dabe",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/destructured-parameters.mts": "f8f6cb86294014287345e7426ac61dc4285d4a76edb21654790a0628d678d4b1",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/entry.mts": "ce0a8e035ecb1c730210aa9ef9ebf127ba7f782aacea020fd5a472731361d58c",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/helpers.mts": "56f6aec3863b3b524aa448e0033b23ceec1640d18cc897a17c5ef01092130130",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/imported-receiver-mutations.mts": "d38bc3ebe4ebce63253a8181d210aa260d88526d16d84f2395b8f5a824b426d5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/inherited-constructors.mts": "56358a5bcb99d8bb031c57493945d15a066776359398aab4845b2d8948f455d9",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-client-entry.mts": "7e042c535d90d556598e4868b115b204d415a75de17be031cb7f373ef7cc74a9",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-client-helpers.mts": "b8ff5b3d3fd0fe89d3c3cbba47f235b01bd075f38589f6c8a4bbb6a69237d50f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-value-entry.mts": "39d25fcac0fb8cc755243e7e432cbe0ae26f7c82cb15c3676697016227f1b93f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/local-value.mts": "d3316677d404ea23e983965b54f4e9dcd04eaa33b04cf29f501ee0830d435c85",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/acquired-wrapper.mts": "245c2d3ace6d405cb02ba85d2c4ce104d7d85b297c588ce535e89b443387be47",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/copied-method.mts": "ce69215626c19548ffc49d9eaa2510c99556ba7cd0d67d7c25bc0c7654aee049",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-await.mts": "7b20e576bbd5177bc6578a3c4a3a41567fede16aa77a2b57f75361c2f057b285",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-call.mts": "c2951e35835f2fc291a0878c14bcced7e19cedef48c69c67721b5ae6a50983ed",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-deferred-call.mts": "8a0ac26d8e0cf8dd094dedd8a300685da5d0087b8a555dde85afae5f80a6eec8",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-new.mts": "ba710dce128b85026395cee96d543e19249fdb8103c33015f0bcacec38e135a1",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-tagged.mts": "8785ec3061c9a9dba7753571827e8e0b65dcffb80dc15fb4d70da460696fabb4",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-after-capture-yield.mts": "b8b64282be3db4da6fda74a2f6bc3504c05a2191e0e5a9d56cef74da354ee7c5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-between.mts": "d8a66453ba4c3b3ee3607758b47004e682e6d8644205ab1ed4c9c621bcd301f6",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-logical.mts": "88b72d50f576c967da2761d0e0022ce4fe42e4b86c0c2e9d93a9096218be9602",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-ancestor-rhs.mts": "3ced336e58d35e0726a2f5c92fd837aa4229c24ecf119cf425bd4ca75baeb027",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-await-operand-capture.mts": "5190f2c515a38a8732fdeaeb36597083dadb26dafea36b8ebc6f2eb739bf6805",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-await-saved.mts": "4b0f54cd310bf84923ca069b399faa5ece7a6bc9f040d7b9a20ec646d0eab879",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-await.mts": "7d0fd772f8d8bb930b6ea6176c0ade38ee45c018fbeca01a2bf136b31fe3235e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-call.mts": "62890da779484e15ed206c45f5e000acc30dcfb19ef73b905f16928d5e637893",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-before-capture-yield.mts": "13b54663e563b036b2782f277cf157c9fe0eaf807b8b95dbbb12fb5dffa15a9e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-call-argument-capture.mts": "c7b9a9aa3b76f339d2a964c5b545dc161e33c052eb74e4207db6bb6a329ea93a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-capture-chain.mts": "d1683f9de16f3f9834195215646a0074beafeaf2430cd0d5ba48ee793031549e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-cold-suspension.mts": "bcbe3c6347cb9a362093b3eff368024e8411fec6b42a4d64d617b9f3f54ba29b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-computed-call.mts": "3a20aa188e7c894d7ea1d244a318dbc8c4a1ab087793e29351861058b0b3136d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-computed-rhs-call.mts": "e2b8b025c36a5cc1ba665f77bd8197e46dedee6867de98cd5fcdd5b1118ab844",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-copied-method.mts": "76157904e9c213ef884625736a5f14c907c2fa02d10f94490515c189006f0908",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-accessor.mts": "5e1819950ef6817a63db1dfcf9998612e641593d9d2cfaba9144bd214414c0c1",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous-late-key.mts": "355a694962d30106795ac2a65362f4ae1569ca5e0f2270774be8c1d6696ad12b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous-late-member.mts": "96bb836c6d4b002d0c018c92d75194c4ac5cfc98c268a996d700004583238511",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-anonymous.mts": "fe2d86d2827eceac8b6d3d9e0822a68e4f64c7923210f4c4f853f52c4adc57ef",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-application.mts": "d67d91f755792aca370f4d9b6ad1a5f831a823c44ae61f5ff3ec5cdfd675dac3",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-before-capture.mts": "924735f0c66edbf81c31340ce750bf113ed37399959dc97f16a2d90406e9431b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-class-static.mts": "69382596da2c040f85a7f23a3a9d8dbf265a184bb844f242a609acbe997d01f5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-cold.mts": "7b8d12fe7e8d3b705015badf6421ef60f6a90c52db9694ff8f237ea29181712b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-computed-key.mts": "75d1f5788f190333f3d7ded372f93026b6199762da85ec7db25f348df0ea22d2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-copied-snapshot.mts": "268d1c4b6b3b6daba72f38f02ddfd14a05b918bd6f88bc235d6b809cc5a9c29f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-deferred.mts": "c84a6d90860397076a33e50edf84676e789e3766c3da34eb7cf72d8c308ba25b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-factory.mts": "8f60224dc3e59c26d40a6e3d1fc63f0c292d7562ca0fcdb6940fbdb8eb166c11",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-late-key.mts": "29d3bdd99a2bd4c2304ffe95244afeabb6ba41df1e7e9e862d44b5f65b9af620",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-member-static.mts": "d35f5eb81293df633c0a21e1edada9880065c701480a8b7759a7cd36c7eb48a4",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-nested-class.mts": "9a8599d0ca829f007c2054d18e1868dd2858ec1b3837d6405a2da474a0dbba3c",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-static-block.mts": "64bd9804c01cb3427d2842fb0ba809a5268b5c79a22ce82a74f2d9f431cc4944",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-decorator-static-field.mts": "56ed8b6fd4cae3120742ab0c980e2c7a94d82d79c1d0205daf93f0820d42b966",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-deferred-await.mts": "a655a30d90ccd600d009a03c70f43ad20c88cb018a19610250baa87fb098cd33",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-deferred-own.mts": "cbafe44914f45ad61a2c32700bca0b595dca2e866386b011018ed174041776e8",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-direct-alias.mts": "2f8fe9a2757b84333e9f8dd8b1cbe35bc5a34269f78c492a0a34a9e4e9dce52a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-direct-write.mts": "838f7fe903a4ec0392316db7c6c08bea237a24968626d0d7c069bb0bd7195bdd",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-dynamic-ancestor.mts": "55bc8b2a05bbccf4504bf6c170eb6500ffcc629fe29cedec5601a94a7a4f1d9e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-immediate-call.mts": "5e128a691a4384a4b929ce95d6e91399dd92fca91d0849d436ad5f1331a64a4d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-instance-own.mts": "852681bfbc368083dd6cb044b3d9839e2c1b7ecf9d3ab5fd691229eb7e7e8fb5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-many-captures.mts": "d4e7cf70b5eba7ec60c567e363e490b57b04b99dfc18b3f8b817442fc45027e1",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-nested-fresh.mts": "d09b3dd120aeabb1e2686c4fdea8b31c42894c4688750bc912d46e4cd21567d1",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-after-call.mts": "b05ae2b1a3cddb294175d1adb23d0347b488a68a0e7e12abed861428f4162dce",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-after.mts": "0987f621dc06494d402faf6f69a7f36d449211c93f55c8d19ba268ca6184f301",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-argument-before-call.mts": "95d2489810cc48a290fffb1c6dfe5462cba883ac7f1fcb4bb9f019e7d5e93cd2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-before-call.mts": "3813a6e7d2706febdaa74704b88006b783255d8c0b86022f98993bd113b40b66",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-before.mts": "7e0a6674194b166e9c8681a823985e45f672f8a2eae5fbf2bac7bd55928e7beb",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-descriptor-call.mts": "b37e0bf6f6c3b4e63d246df6aeca8c272c5ebf7d1ec88448c8597e1dcdea4765",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-nested-getter.mts": "a860d2b69455f9c823310bfdbf0c14aff455236da2ce118986c8e62bf271ea74",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-original-restore.mts": "a589dd78a5b82e74659c1b9abeb1dafdbd8e3481cd39bd009ebaed5e62183400",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-preserved-fresh.mts": "c0e9a7f4f0036f0421059af4486d9e7cfe330862d335240f3aa04135e854c660",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-call.mts": "5353ad117e89accc36df021d2dfd1bbcb53e3ea63c1adbc9da531dbc1ea3a524",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-first.mts": "71c6944938cdbf1c719bc7c346f9c65354804ed0503c8bab978fc833cd0d6148",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-getter.mts": "cac4f85bdd3bdeec42c87ec3473127ed95d20d790e7d74cf226b73fe02bd323f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-phase-rhs-spread.mts": "e4a10fd38d0661011cec8b51626a8fa59eb834ab2d19f5758e6b9ecef63a3ba5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-rhs-stress.mts": "57587312500b4245a429ac0eb823f0f01423d43cfd552a1f9d160ed0c292ca41",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-after-fresh.mts": "80e37382da6fb420f32082da763ba3c9f60e44bc1d44f1b8282af77109e6d982",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-before-fresh.mts": "8fc9eab9e5372c262ab7dec9d6781c8ba552a33af867d4a418c766ba5b573754",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-client.mts": "dbef00b6edc5960339a7083333af9686707a4542d80d4a04ae43d59479bca5ac",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-saved-old-wrapper.mts": "2326c928e4b6eec593f55c4d5602376e05f7eaaf759b0cce59125ac13ca5a6db",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-sibling-after.mts": "37a6745ddb55683f37e96574013a81246dbd7f2c6d099c0d651b5035bc32e4c2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-sibling-rhs.mts": "268ee0543723295de233f11f9a33e9cfb2f951e19cbdad3d17fadc79f8e8b37a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-static-call.mts": "ea80939851e47720c9b0082aaa4bf05c8c552ea2c900b4e4dac21f7efd79562f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-unknown-call.mts": "509ebaccd431eff21e48aa4cf0935d87835062f41471c5ac3b303e08bfed9b1d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-unrelated-rhs.mts": "c255094e8d1edabcae43b3fe281e31723077518e1cf670e9bf72d5cc0b3a2c80",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/global-yield-operand-capture.mts": "74caa27138d9222ba312a638bb10669c3b960d339bfd56cd758e936135a4bc40",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-after.mts": "0adc012ade6c18da303975f1d3935176c43af4517bcbb80268ddab028ced58e8",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-ancestor-conditional.mts": "b08c27b5b662d2a9692d9034dbaf03e0ffa6b85db0cc44d19c9942d0f20e6a61",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-ancestor-rhs.mts": "76202e7d8219509d87bfdd445226bfcb7b3be15caf057538ce7db48f8e83ee83",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-arm.mts": "754d482107bad9ea6c55b3893302091203f19a6b6e21686e813bbc6f486a19fe",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-child.mts": "dbe99eb456bb9369a5dc2b721ea11fe22a6ff5c9d02ac666e1bb6b8cab5327b9",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-descendant.mts": "cf0ed3b910148fea3e6c34612df53e3ac3d672ec82fae40f2af70727d4f37d05",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-dynamic.mts": "ffcfef3209ba27e86f64f6e33f5fe7fe32a57a80c2dcc89a181c46a2e1806750",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-foreign.mts": "b7e21cb15a3d683006feb332ddd4994feb47e664c34bc784e2c73cdea23c2b95",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-logical.mts": "be79fbe75015fcb619094d8d575fa2892c3ba3b3b0597a7a09290e56fb1f795d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-many-writes.mts": "fdafbaac463776f0c49c48c38e5d10f757ca699946fd2383e92de0285f336945",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-opposite.mts": "c59f7c0f80ae157362ca48fc4b538896feadd192be0177c53eb3aefa21cabdb5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-restore.mts": "70a58e48b7c5941f4f7ed3e230960c0090ee0c59a4cc5786dc041a0336dcbb60",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-rhs.mts": "60b7eac1839544751bcf869168eca09b20d532a3f3d6362121621685c2766788",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-root-conditional.mts": "2aba10de5edd64559dee454dfb8b8bf08cde0b8b634addd20795c3517813871e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/guarded-root-rhs.mts": "60fb4e97eebbd93ec77cedcf2cf3a14e696b4829cdd37daf668de67871707922",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-const-guarded.mts": "338be48c354149ca8de73dd6e15d5a002d5837c56b63423d6456b50ee178f87a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-array.mts": "a3dca576840b06384b0259ab0626b867f621fe2a855a9c290cd6c5b7d60d476f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-conditional-root.mts": "977502a4f3758bc7a7425a6bf365771f4eeef3cc56d30f1e1f07f8eb2e737e4c",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-copied.mts": "c791444900629596849ba8872629762fd83ed4ea6f8a726c8afc09b1563dfde2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-cycle.mts": "9204d22f8db20f2d28b09963edb3c905f4d91a1366abe8ed8a496a7a6601c24b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-array.mts": "ee571c036329bee718493a32da1e16ef9cea0df2d09c8859b8b45c5b949f0c5f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-default.mts": "d8fc914b1e719e4dd97867f4d95c614d77bafa93f38f6770e8ec76f48c03c9bb",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-destructured-object.mts": "6ff26ac870680f330cdc43eccc856a21cd112b9b27dc494e03dbe8cba8c8df92",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-detached.mts": "8225c10700e3129012ca59b5ece3555e64bff6f874b487be18396d41c22e520c",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-direct.mts": "d81d5b1a33677f83e5fe2d10d4b1ce4226a7495b4ec299a08f54ea0216545024",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-foreign-root.mts": "133a9878be233c6a501d98865fc5dd07206f5acc9ee9bcebcda58b67967cd579",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-guarded.mts": "8b137b6e483f5604db74f8fa424029fd7ba09e8615d5bd81299c9006f4173cb3",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-lhs-acquisition.mts": "9c3db1edfc8eff3704c6e7deeee895c7584b909e006441eafdb6aac4f3f85860",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-logical-root.mts": "6d45f75b0aa279ca58be04df2499847d086fcef88b0f1b01f443300878e33b5d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-before.mts": "ef5a13f2748cc3104f3846f21419e8d59ef078e2ce5350ed032cea09135aeb0f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-class-context.mts": "3a275dcd4974ccba487a3ef0a0a3f10d03e8e06f9dd9bd990ff470e7df21270d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-cold-class.mts": "690c72140cc18c8e4d5b7b559c78d0894661488da024386c549a354b89095bda",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-final.mts": "414e0b400091d35f19ba14907de0fd25a7c78c6d4a4b70ada91bd726184aef69",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-rebind.mts": "a0f8110e014d0ea0ad944267a8d2e2aaac0023e79c69442755269b80797fb4b3",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-conditional-whole.mts": "7cea1b2f803b1199a2280a02b681e059f0bea337e06aed356d388812d5fc1610",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-default.mts": "477ea05ae349d1dd76748dc61eef05328623f27c1f50e5768b7743348bd75cf7",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-final-foreign.mts": "1a861f4ad21b1a12a7a755ac37ad988044b979d1ebb53ab45dd3544c1387699e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-final-root.mts": "2ebb428bdcb65415130cbdb68dbd7be19ed6b70b1c42cdeaad2bf1d655e5180a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-foreign-catalog.mts": "e7ba6700626355844908aed9b479e6fda34cd2167405c1faaccdd4d631ca6a77",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-foreign-rebind.mts": "c2a60991f2a7339fc6d5ff1fbaab5960d1204d6489a1d0f5a3049999fc771e64",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-lhs-rebind.mts": "a6f112c3790620f788f70bb311604e161e555bd7125b3d4ce6c6bc2fd54e6312",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-lhs.mts": "c9c1d8b76f5c2a339d777da64a7c96af10cfd0b3bb3bae81db61d95b11e1eeb3",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-logical-rebind.mts": "6a609041607119b959d653218c6637d410bcc118f13efdf272852c11007d6bdf",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-nested-before-rhs.mts": "dac6a2cdbd9b003b2ceecb002ef24ff83c4e7cab1f8bceda4b62ced1355ea634",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-carrier.mts": "d46a404b7c1948034e1d3d38d4cfda6a51918ec947ab6fed3ba1657decaac9fc",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-earlier-lhs.mts": "e943ef42fb887449fb49350e90dfefcad3856ab329c01560c3de015ba7f92df2",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-getter-rhs.mts": "5f1724fe422c45a79bba47a39081be18e9256bc8142277d9dfe969ead0330847",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-later-lhs.mts": "bf78ceaf77f1418d2cdff48562107a8c7281c1617d833f2941b80a1cb1670bd5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-replaced-rhs-rebind.mts": "35de60eac7b54c0ac49380248d19cc66bf187c68a39dbe48282ef26666bd79df",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-rhs-rebind.mts": "e8666c783c01bd1de1e733bd5b590de51a8545e52990114ea9c29952d96855a0",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-rhs.mts": "88828cd64c13722d9a8fe19604f721e10448f94a647aa68f461d46298e2464d3",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-self-copy.mts": "d1c537cebf6a280d9894c45e34e762fc6d5baebe128b05318d79fc17c1913412",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-shadowed-class.mts": "8c583cea4c13b8a4868a4a3b61e7739c76b8278fda36cda251c76b9c1c917b47",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-shorthand.mts": "73eaa8b4ecdbfcfec586597993e38183706170ca515bafbb83ddb30f64ae8b46",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-capture.mts": "83326c1de5c4ed1d102184277014099fd889437ce26e4e77ff44ad90fb80a752",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-comma-capture.mts": "a85af6aa4dc0c07bf1c2e016b0d0b439af966881060317cb29ef6b752bb6dec0",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-fields.mts": "228e863ec8bb6d69f8dfb9d7ebbd478736b5c005b0041ede789dcbe53bff6541",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-local.mts": "ab8ee5bcf1fcf0392f79db005273f71b25de4935c2cdad57cc17ec39295f41c5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-nested.mts": "4367450265609ae35fdcd15278e2b332f3ab022bdb7c20313d8bb9c984e72906",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-rebind.mts": "e43dc0d664191f7271d7fc149c0625d324d8fda452f77e27346fb6d7539463db",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-self-wrapper.mts": "401a6dee5d1d3e725286a6a1bd6a6425c45c8e55599379e7de0f0af93425dc8f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-static-var-conditional.mts": "a8c0b0d6347a2d8c2e4fec30c0eb5c0f84932660e8d638c910ff0462e8d487b4",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-ternary-rebind.mts": "da9ac9349746993301634ff4cd4d4739206cb9f47ca85d1f970549b7f66aad3a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-twice.mts": "f2b5d7190764d2f85e98b790c83ef6cd81f03425f25ee2fc76ed2989ffd5d4dd",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-pattern-wrapped.mts": "bf417c4a20a60bc60703cb95172ca2f4ca93e639e89694a3a664b5576f5fb2ac",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rebound-detaches-old.mts": "83c44407a493a4517b21a1f222aae2f692f7f1a56de98d7425c7e8f94f95f80f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rebound.mts": "4061f86724785361f1876875a5d435949d5f5efedce1bd6b39478b459ad4602e",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rhs-named.mts": "07e08083e69688acb7b0ba6158d7dac58648b6b66e0e42affd90d5987761f762",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-rhs-rebound.mts": "0766fc9567f4ac6f103dca87509deb914f8929eb5b94cb408ed0be083fd51c73",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-self-copy.mts": "89ad1fff714f327d872ff252a986068ccac4493b91c0e261b423bdc5e5fa7289",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-shadowed.mts": "e1789868d8e4b13abd8bdf0b90fecfde80ebd1b006a67e9991aac73ae1b2f981",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-sibling.mts": "fa0bd815299257f2b302d79b3e326c06aa9f2d742cbc339d099c6f0fef949b88",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-as.mts": "d6604fff3907891d835ee22ddb1b6920fde7820d24fe497de5655af2911e3b77",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-assertion.mts": "ebebded3ffde4ef218c170a3d09b3e1ba37f1ab5edc854358e0a3f53ea679122",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-non-null.mts": "71cb6f78f2bf0d7eb45cd8fed8c237cc90ed7f6f4e8243f396c68909a7bdacf4",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-satisfies.mts": "7c72fae94e4a93e6676bd8b1df58dd4778f74a2ea9347dc8b6b23e824637d565",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-let-wrapped-unrelated.mts": "35c7705edcbbd4e8140f5fa4038c513c003a3995d560a2fac37165f1eb8404a4",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts": "51dba0de96d86d9a59b0890aebe744f61d03d8459bb4333c15da0f7df721b306",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts": "a2f8e6482d906d3e80902bc8f6a560f5764f2d3f0f9146f99abc5c3db26873c3",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts": "5bc4260bef66761a337ce6faab1e70751b256f329ddbcbde0a4d13928887f214",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-future-foreign-128.mts": "e41bfbc9d9a55e767bc85ded84f8d04bf2514f0961b4601144feac68af4e72ec",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-future-foreign-32.mts": "84f4cec39866ab4d54adf07400b9b79edf9d9441c5de978dd5eb848a56ce277d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts": "676d97bd1c5452789e2d00a77196135cab674d7103d7c018d27d35ae64952816",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts": "b6e6b2899d45e0bd97ce93ec61dd78888d1cb13ee1f43703675dd7435a71ed4f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-rule-mutated.mts": "35a5e0f3031926625a34614265f921585ef0880daa0ab360473eedbd593f369a",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-rule-sibling.mts": "e4a6b5c08084e865795c25185dbde7c9665152d248b6cabff395256a30026a47",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/replaced-terminal.mts": "b1c85f31613d47d248e07cdee745aab2e0d4a7b1c12884623851f6fdc5b6c066",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/retained-array.mts": "455e2b74140c98ddbc17d6b95608e1bdff39e37d04b23cb061c2ca69081832ff",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/retained-object.mts": "b0a119734495188d3589e292ecf9b53c68a14736d4afce5f3e04cde245a5c46d",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/sibling.mts": "239bae5e0ad1b75f65bfe8574ce88cbc3309e1739b6800fc4a69ad3ddbfa0159",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/unguarded-root.mts": "c50ddad39405118cadb38e2bcbdddc3a7378a50ba02b2b9efc66c5e07690506b",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-cutoffs.mts": "feea24310f68375a73312ba8e9e800061fb505da6e81d3d7bf51ca70dd5e7787",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-owned-defaults.mts": "aa66b9bec409d7c01ec384c7e2c62857f1bdc51f596acd6390a6c8f5285bc234",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-writes.mts": "9b58a44992c8156ac4d41bcfbaf3654eb27e864a8bfa0fca5a1b5c3b1a9d74d5",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/projections.mts": "3a8378ca699986b1acd342c3a52b2e992a107b196b618a6e3fd66323d7ae9e7f",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/psql.mts": "9f2677b341b6bfd8fbc9aa73b36017911e885edd6f16310219291262efb73be1",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review-contexts.mts": "db7285bdedf6581f837e1fed7f6e096b585ea8f0f9571466a867d0d8a830ba50",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review-wrappers.mts": "f4772acc608232b938842c59f82d25810dcd29b6552bd28773e0727fbf80bbab",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/review.mts": "03b91bad8aa0e4923d7fa57dbdf96807071168cda8fb4a05985169be6c20d973",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/runtime.mts": "4182e53c087d7472871fd626ec84af10b1cd2983733cedab5c837d36fccc7896",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/setup.mts": "1ca7558789f75d9c52baeec058101733a4042cb7480b5e40248b622a9d398e35",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/syntax-and-nesting.mts": "1fe2157e04599196e1369eb5b84c635b980aded67a6fb41f1607650e770ea823",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/value-selectors.yml": "1b43d34e9360b3690181b778c7a69d3eeed8cff86a24f830a1d6729f0f955d37",
+    "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/wrapper-only.yml": "a516ab9b1c68c3bfec47d740fcebb23be9d3df9a3e5f17365a56d2c51f744e0d",
+    "/tmp/nm2019-three-arm-evidence/input-manifest.json": "52ad1c2a371db1403f6a917d5786b3a51fc917b5de8881a50bb3ca8b7964bca1",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.sql": "1e685a552cce974be7765850a3cd5640ef0d99ba3ec7736d19b6bd1b4e72f843",
+    "/tmp/nm2054-b26-sql-control/inputs/index-identity-feature-parity.expected.json": "6bdfcd22de8f994d7d3fb7f9adb0e3feed9c8d059cc8a0ae1281b8240990e5aa",
+    "/tmp/nm2054-b26-sql-control/inputs/legacy-default-full-facts.json": "9e4528c15224dd7fb4396c3396b4021e43855f37012c8bf2cc836bde0f1ab3f8",
+    "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fields.mts": "771eca4e1a080d8b3aea06ed5fe3669992c1b4e2557fd3a731a7022c051464de",
+    "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-single-fallbacks.mts": "0f4c0c0e61d3904ea0e743d1394f331e95f0a994dcbe8afdf14c7ac2c739ed53",
+    "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-target-metadata.ts": "136e9a620e9d2c86be5f2029ef4c1b89cfba222cb79e9c587eac17eabadef830",
+    "/tmp/no-mistakes-2019/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-projection-wide.ts": "0f0482262955161cdcebfa8f09bcab95997e6156aa9081f082744412bdc7bce4",
+    "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-annex.cjs": "8735e7fca9feff063946aea9ddfc3e08a6055ac4b278e96afe54a40639998d56",
+    "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/ordinary-demand-boundaries.mts": "c8f24d92fba69fa8a344a5ffeba6f90a0c3d56f7d4346f943f700b0d48f6988d",
+    "/tmp/no-mistakes-2019/test-cases/codebase-analysis/import-facts/fixture/single-descent-history.mts": "e444f0e649db4a9f6f631869f503cfae005fce4be6df63314ae65fbd86fc580b",
+    "/tmp/nm2054-next-lower-helper-links/probe-2054": "3e11594442f1044491919ba50a28446768378c34ad6a9074353e3b0357bdedb3",
+    "/tmp/nm2054-next-parent-helper-links/probe-2054": "7583f5c1528e464187d2197b6744335a253c23661bc97d0c97c67cf31118b718"
+  },
+  "scope": "44 untimed count1 signature controls, no measurement or acceptance timing",
+  "rows": [
+    {
+      "label": "A28-facts-no_writes-values",
+      "arm": "A28",
+      "workload": "facts-no_writes-values",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "128",
+      "stdout_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff"
+    },
+    {
+      "label": "B28-facts-no_writes-values",
+      "arm": "B28",
+      "workload": "facts-no_writes-values",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "128",
+      "stdout_sha256": "56292515f7d3a7110811eb8de26b3f75f82a0766aa5a1fd66ebcfcb84fe6d5ff"
+    },
+    {
+      "label": "A28-facts-no_writes-imports",
+      "arm": "A28",
+      "workload": "facts-no_writes-imports",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "B28-facts-no_writes-imports",
+      "arm": "B28",
+      "workload": "facts-no_writes-imports",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/shared-destructuring.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-facts-writes-values",
+      "arm": "A28",
+      "workload": "facts-writes-values",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "517",
+      "stdout_sha256": "0f8a3eec58c0e6ecc0c9fc9ab9092146b0d428853da1c9824ed6d7423fa5dfe2"
+    },
+    {
+      "label": "B28-facts-writes-values",
+      "arm": "B28",
+      "workload": "facts-writes-values",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "517",
+      "stdout_sha256": "0f8a3eec58c0e6ecc0c9fc9ab9092146b0d428853da1c9824ed6d7423fa5dfe2"
+    },
+    {
+      "label": "A28-facts-writes-imports",
+      "arm": "A28",
+      "workload": "facts-writes-imports",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2",
+      "stdout_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "label": "B28-facts-writes-imports",
+      "arm": "B28",
+      "workload": "facts-writes-imports",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-member-writes.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2",
+      "stdout_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "label": "A28-facts-shared_histories-values",
+      "arm": "A28",
+      "workload": "facts-shared_histories-values",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1025",
+      "stdout_sha256": "6407f57599ea19aaefd71b13c2771ad25998686a6a2d1b142cfc3060ef008129"
+    },
+    {
+      "label": "B28-facts-shared_histories-values",
+      "arm": "B28",
+      "workload": "facts-shared_histories-values",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1025",
+      "stdout_sha256": "6407f57599ea19aaefd71b13c2771ad25998686a6a2d1b142cfc3060ef008129"
+    },
+    {
+      "label": "A28-facts-shared_histories-imports",
+      "arm": "A28",
+      "workload": "facts-shared_histories-imports",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "513",
+      "stdout_sha256": "129aca65bcd9e9c95006b0311c041862b43c7ecc4d979a274796dc411f721ff8"
+    },
+    {
+      "label": "B28-facts-shared_histories-imports",
+      "arm": "B28",
+      "workload": "facts-shared_histories-imports",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/codebase-analysis/import-facts/fixture/many-late-defaults.mts",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "513",
+      "stdout_sha256": "129aca65bcd9e9c95006b0311c041862b43c7ecc4d979a274796dc411f721ff8"
+    },
+    {
+      "label": "A28-facts-jsx-values",
+      "arm": "A28",
+      "workload": "facts-jsx-values",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "B28-facts-jsx-values",
+      "arm": "B28",
+      "workload": "facts-jsx-values",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-facts-jsx-imports",
+      "arm": "A28",
+      "workload": "facts-jsx-imports",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "B28-facts-jsx-imports",
+      "arm": "B28",
+      "workload": "facts-jsx-imports",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/ast-snippets/selectors/fixture/app-text-targets.tsx",
+        "imports",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-hot-mutable-root-scale",
+      "arm": "A28",
+      "workload": "hot-mutable-root-scale",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "B28-hot-mutable-root-scale",
+      "arm": "B28",
+      "workload": "hot-mutable-root-scale",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-root-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "A28-hot-mutable-pattern-phase-scale",
+      "arm": "A28",
+      "workload": "hot-mutable-pattern-phase-scale",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "B28-hot-mutable-pattern-phase-scale",
+      "arm": "B28",
+      "workload": "hot-mutable-pattern-phase-scale",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-phase-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "A28-hot-mutable-pattern-deferred-diamond",
+      "arm": "A28",
+      "workload": "hot-mutable-pattern-deferred-diamond",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "19",
+      "stdout_sha256": "a9742eb8ee320e006666aef25ae9aeed948247f3125c9cafa7cf97b7e7467dd5"
+    },
+    {
+      "label": "B28-hot-mutable-pattern-deferred-diamond",
+      "arm": "B28",
+      "workload": "hot-mutable-pattern-deferred-diamond",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "19",
+      "stdout_sha256": "a9742eb8ee320e006666aef25ae9aeed948247f3125c9cafa7cf97b7e7467dd5"
+    },
+    {
+      "label": "A28-hot-mutable-pattern-eager-class-scale",
+      "arm": "A28",
+      "workload": "hot-mutable-pattern-eager-class-scale",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2",
+      "stdout_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "label": "B28-hot-mutable-pattern-eager-class-scale",
+      "arm": "B28",
+      "workload": "hot-mutable-pattern-eager-class-scale",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-eager-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2",
+      "stdout_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "label": "A28-hot-mutable-pattern-cold-class-scale",
+      "arm": "A28",
+      "workload": "hot-mutable-pattern-cold-class-scale",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2",
+      "stdout_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "label": "B28-hot-mutable-pattern-cold-class-scale",
+      "arm": "B28",
+      "workload": "hot-mutable-pattern-cold-class-scale",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture/src/nested-receiver-containers/mutable-pattern-cold-class-scale.mts",
+        "values",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "2",
+      "stdout_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "label": "A28-graph",
+      "arm": "A28",
+      "workload": "graph",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "graph",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937",
+      "stdout_sha256": "eaee03b0707d81649bd64d10e4498bbab743dd1e2b88d84b60ea3b5c2c928cba"
+    },
+    {
+      "label": "B28-graph",
+      "arm": "B28",
+      "workload": "graph",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "graph",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937",
+      "stdout_sha256": "eaee03b0707d81649bd64d10e4498bbab743dd1e2b88d84b60ea3b5c2c928cba"
+    },
+    {
+      "label": "A28-graph-observer",
+      "arm": "A28",
+      "workload": "graph-observer",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "graph-observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937",
+      "stdout_sha256": "eaee03b0707d81649bd64d10e4498bbab743dd1e2b88d84b60ea3b5c2c928cba"
+    },
+    {
+      "label": "B28-graph-observer",
+      "arm": "B28",
+      "workload": "graph-observer",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "graph-observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "937",
+      "stdout_sha256": "eaee03b0707d81649bd64d10e4498bbab743dd1e2b88d84b60ea3b5c2c928cba"
+    },
+    {
+      "label": "A28-graph-no-calls",
+      "arm": "A28",
+      "workload": "graph-no-calls",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "graph-no-calls",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "B28-graph-no-calls",
+      "arm": "B28",
+      "workload": "graph-no-calls",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "graph-no-calls",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-effects-mutable-let-direct-off",
+      "arm": "A28",
+      "workload": "effects-mutable-let-direct-off",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "B28-effects-mutable-let-direct-off",
+      "arm": "B28",
+      "workload": "effects-mutable-let-direct-off",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-effects-mutable-let-direct-observer",
+      "arm": "A28",
+      "workload": "effects-mutable-let-direct-observer",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "B28-effects-mutable-let-direct-observer",
+      "arm": "B28",
+      "workload": "effects-mutable-let-direct-observer",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-direct.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-effects-mutable-let-copied-off",
+      "arm": "A28",
+      "workload": "effects-mutable-let-copied-off",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "B28-effects-mutable-let-copied-off",
+      "arm": "B28",
+      "workload": "effects-mutable-let-copied-off",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "A28-effects-mutable-let-copied-observer",
+      "arm": "A28",
+      "workload": "effects-mutable-let-copied-observer",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "B28-effects-mutable-let-copied-observer",
+      "arm": "B28",
+      "workload": "effects-mutable-let-copied-observer",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-let-copied.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "1",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "label": "A28-effects-mutable-pattern-deferred-diamond-off",
+      "arm": "A28",
+      "workload": "effects-mutable-pattern-deferred-diamond-off",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "B28-effects-mutable-pattern-deferred-diamond-off",
+      "arm": "B28",
+      "workload": "effects-mutable-pattern-deferred-diamond-off",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "off",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "A28-effects-mutable-pattern-deferred-diamond-observer",
+      "arm": "A28",
+      "workload": "effects-mutable-pattern-deferred-diamond-observer",
+      "argv": [
+        "/tmp/nm2054-next-lower-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "label": "B28-effects-mutable-pattern-deferred-diamond-observer",
+      "arm": "B28",
+      "workload": "effects-mutable-pattern-deferred-diamond-observer",
+      "argv": [
+        "/tmp/nm2054-next-parent-helper-links/probe-2054",
+        "observer",
+        "/tmp/nm2019-three-arm-evidence/inputs/test-cases/rules/query-reached-per-item/provenance-fixture",
+        "valkey",
+        "src/nested-receiver-containers/mutable-pattern-deferred-diamond.mts",
+        "1"
+      ],
+      "exit": 0,
+      "cleanup": [
+        {
+          "leader_exit": 0,
+          "owned_sid_matches_after_cleanup": [],
+          "proc_read_errors": []
+        }
+      ],
+      "signature": "0",
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  ]
+}

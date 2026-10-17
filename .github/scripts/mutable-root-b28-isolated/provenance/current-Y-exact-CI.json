@@ -1,0 +1,44 @@
+{
+  "utc": "2026-10-17T02:34:43.311312+00:00",
+  "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "run": 38994483575,
+  "conclusion": "success",
+  "codecov": [
+    {
+      "name": "codecov/patch/rust",
+      "conclusion": "success"
+    },
+    {
+      "name": "codecov/project/rust",
+      "conclusion": "success"
+    },
+    {
+      "name": "codecov/patch/javascript",
+      "conclusion": "success"
+    },
+    {
+      "name": "codecov/project/javascript",
+      "conclusion": "success"
+    }
+  ],
+  "global_coverage": {
+    "regions": {
+      "total": 340742,
+      "missed": 5117,
+      "display_percent": 98.5
+    },
+    "functions": {
+      "total": 24666,
+      "missed": 161,
+      "display_percent": 99.35
+    },
+    "lines": {
+      "total": 230860,
+      "missed": 1529,
+      "display_percent": 99.34
+    }
+  },
+  "floor": "All three configured98floors verified from actual log",
+  "raw_coverage_log_sha256": "05310c8da54c3668d4f67b76ba51ca7ad826e2f4120496c10fd316583e1fda17",
+  "performance": "Separate fresh numerical gate stillpending"
+}

@@ -1,0 +1,101 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "approved_diagnostic_commit": null,
+  "repository": "jonathanong/no-mistakes",
+  "main": "29e4439601c3d4a936a7f8a0ad300cb4de8abe7b",
+  "candidate_head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "candidate_tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e",
+  "actual_producer_baseline": "e193aeca201a346115ebe0ee552d6cb1ec995447",
+  "actual_producer_candidate": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+  "api_controls_complete": true,
+  "sampling_minimum_remaining_seconds": 600,
+  "job_seconds": 1800,
+  "operation_seconds": 1500,
+  "transfer_reserve_seconds": 300,
+  "node_version": "26.11.1",
+  "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
+  "review_provenance": {
+    "status": "ACTUAL pair/native/helpers/API/full64/SQL/44signatures/exactCI/assets closed; DRAFT awaits final root review and exact public payload approval",
+    "previous_pair": {
+      "scope": "Reviewed current A28/B28 expected full controls, native API baseline48/candidate115 plus43 declaration tests per arm, SQL19221 and current exact-head CI. Fresh hosted controls mandatory before timing; historical failures preserved.",
+      "historical_B26_run": 38958618870,
+      "historical_verdict": "PERFORMANCE FAILURE; all704rows/110metrics retained; never pooled",
+      "source_carry": "/tmp/nm2054-stack-assessment/final-parent-stack-source-proof.json",
+      "native_functional": "/tmp/nm2054-final-stack-functional/release-api-validation/receipt.json",
+      "exact_head_CI": "/tmp/nm2054-stack-assessment/exact-head-ci-final/receipt.json",
+      "full_raw_review": "/tmp/nm2054-current-stack-raw32/full-field-current-pair-review.json",
+      "root_final_source_review": {
+        "path": "/tmp/nm2054-b28-hosted-source/root-final-source-review.json",
+        "sha256": "3b3c1dafa65213e15ae35a2310f68b6e2b168c3564571379f1c31dffa8b68829"
+      }
+    },
+    "prior_complete_failure": {
+      "run_id": 38987485073,
+      "baseline": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+      "candidate": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+      "verdict": "FROZEN PERFORMANCE FAIL; all704rows/110metrics retained; never pooled/replaced",
+      "receipt": "/tmp/nm2054-isolated-run38987485073/independent-gate-review.json"
+    },
+    "source_carry": {
+      "path": "/tmp/nm2064-final-layer-commits/parent-source-carry.json",
+      "sha256": "4997a5ab2dccbd8dccb25956b742d7c8b7194439e40a5de2ad58002277cb9dce"
+    },
+    "baseline_actual_producer_public_equivalence": "e193 native source and public4a differ only cfg test oracle filename/path, no production rebuild/relabel claim",
+    "public_candidate_proof": {
+      "path": "provenance/current-publication.json",
+      "sha256": "b35796f66222f5d22a27a66bb6248678b39dd1146f4ff9f702e44a12259f24c1",
+      "actual_public_head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+      "actual_public_tree": "2434a2b3a6ff96e8a80dd6c3a37cb36678a6e64e"
+    },
+    "closed_native_pair": {
+      "current-lower-native.json": {
+        "path": "provenance/current-lower-native.json",
+        "sha256": "fe4721e34cd06e8004e172d2837f326dd6e5da7164edcece951cc84ac01fa8e0"
+      },
+      "current-Y-native.json": {
+        "path": "provenance/current-Y-native.json",
+        "sha256": "ab8154e662d5d154539a60901acb042b59866b2d535d676990505aae3f44dde6"
+      },
+      "current-Y-native-terminal.json": {
+        "path": "provenance/current-Y-native-terminal.json",
+        "sha256": "0e2a61f9401d0dcd7955cf00bbe3ee12dd903c388fa048fb261cee0a8ffa6cfd"
+      }
+    },
+    "fresh_controls": {
+      "status": "PASS existing complete local functional controls; fresh hosted controls still mandatory before sampling",
+      "path": "provenance/current-complete-pair-controls.json",
+      "sha256": "d89bffbae2e6a7e5b10f8280d399ee69e4921f4bef7ec713804343570d65c268"
+    },
+    "exact_head_CI": {
+      "path": "provenance/current-Y-exact-CI.json",
+      "sha256": "0fc2223bea254007572483b58cba0155e736f84992e7cc0b0fb399a5ccb067bd",
+      "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+      "run": 38994483575,
+      "conclusion": "success"
+    },
+    "global98": {
+      "path": "provenance/current-Y-exact-CI.json",
+      "sha256": "0fc2223bea254007572483b58cba0155e736f84992e7cc0b0fb399a5ccb067bd",
+      "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+      "run": 38994483575,
+      "conclusion": "success"
+    },
+    "four_Codecov": {
+      "path": "provenance/current-Y-exact-CI.json",
+      "sha256": "0fc2223bea254007572483b58cba0155e736f84992e7cc0b0fb399a5ccb067bd",
+      "head": "4a1b5c3fe97628e3b836d7d54004130a8b4ab67d",
+      "run": 38994483575,
+      "conclusion": "success"
+    },
+    "root_final_source_review": {
+      "path": "provenance/root-final-source-review.json",
+      "sha256": "b45e8656514c86c3bc78583fb3d2047a90955d16771009e8c527098d9e979858"
+    },
+    "historical_role_labels": "A28/B28 and B28 path names are immutable kernel/schedule role labels only; actual scientific producers are explicit new e193/4a-equivalent baseline and Y candidate"
+  },
+  "candidate_lock_sha256": "d84416b923a34fa01f86a200dba223aceddef4c00e942c88fb99b2c509d534de",
+  "baseline_branch": "design/receiver-repeated-targets-1971",
+  "baseline_head": "4a322424894b3d5f965d2e04fad808baa13da392",
+  "baseline_tree": "4e05b71db2b9047e3d55defe29cd7e9c43f95d3f",
+  "candidate_ci_run_id": 38994483575
+}

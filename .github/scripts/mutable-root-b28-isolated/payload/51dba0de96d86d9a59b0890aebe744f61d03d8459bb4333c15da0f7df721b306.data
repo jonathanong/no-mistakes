@@ -1,0 +1,6 @@
+import { primary as client } from '@vendor/valkey';
+function replacement() {}
+let box = { client };
+const sink = {};
+// Nested class RHS schedules must not trigger repeated root-phase walks.
+([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = ([sink.key] = [class { field = box.client.get = replacement; }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]); }]);
