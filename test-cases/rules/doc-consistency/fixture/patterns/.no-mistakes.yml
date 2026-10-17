@@ -1,0 +1,21 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    include: ["**/*.md", README.md]
+    exclude: [docs/excluded.md]
+    options:
+      requiredFiles: [README.md]
+      requiredHeading: "# Documentation policy"
+      bannedPatterns:
+        - files: [README.md, "docs/*.md"]
+          pattern: '(?m)^Current SHA:\s*[a-f0-9]{7,40}\b'
+          message: "Keep live pins in tools/pins.json; link that owner file."
+        - files: [docs/guide.md]
+          pattern: '\bpin\b'
+          message: "Repeated words still produce one finding on each source line."
+        - files: [docs/guide.md]
+          pattern: 'Start\r?\nEnd'
+          message: "Multiline matches report their starting source line."
+        - files: [docs/guide.md]
+          pattern: '[a-f0-9]{64}'
+          message: "Keep digests in tools/pins.json."

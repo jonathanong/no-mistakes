@@ -7,6 +7,8 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+mod patterns;
+
 pub const RULE_ID: &str = "doc-consistency";
 
 #[derive(Deserialize, Default, Clone)]
@@ -23,6 +25,7 @@ pub(crate) struct Options {
     pub(crate) required_heading: Option<String>,
     pub(crate) required_substrings: Vec<SubstringSpec>,
     pub(crate) banned_substrings: Vec<String>,
+    pub(crate) banned_patterns: Vec<patterns::PatternSpec>,
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
@@ -85,6 +88,7 @@ fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    let patterns = patterns::compile(&opts.banned_patterns)?;
     let rel_set: HashSet<String> = files.iter().map(|p| relative_slash_path(root, p)).collect();
 
     // Check required files (parallel)
@@ -143,15 +147,21 @@ fn scan_with_sources(
         .collect();
 
     // Check banned substrings across all tracked files (parallel)
-    if !opts.banned_substrings.is_empty() {
+    if !opts.banned_substrings.is_empty() || !patterns.is_empty() {
         let banned_findings: Vec<RuleFinding> = files
             .par_iter()
             .flat_map(|path| {
+                let rel = relative_slash_path(root, path);
+                if opts.banned_substrings.is_empty()
+                    && !patterns.iter().any(|pattern| pattern.matches_path(&rel))
+                {
+                    return Vec::new();
+                }
                 let Some(content) = super::read_source(sources, path) else {
                     return Vec::new();
                 };
-                let rel = relative_slash_path(root, path);
-                opts.banned_substrings
+                let mut local: Vec<_> = opts
+                    .banned_substrings
                     .iter()
                     .filter(|banned| content.contains(banned.as_str()))
                     .map(|banned| RuleFinding {
@@ -162,7 +172,9 @@ fn scan_with_sources(
                         import: None,
                         target: None,
                     })
-                    .collect()
+                    .collect();
+                local.extend(patterns::findings(&patterns, &rel, &content));
+                local
             })
             .collect();
         findings.extend(banned_findings);
@@ -174,3 +186,6 @@ fn scan_with_sources(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod pattern_tests;

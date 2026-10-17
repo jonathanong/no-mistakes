@@ -301,12 +301,12 @@ database's name.
 | `call-sites`                               | `callSites(options)`                                                                                                                                                                                                                                                       |
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
-| `postgres catalog` | `generatePostgresCatalog(options)` |
-| Source-only library capability | `parsePostgresSql(sourceOrSources)` |
-| Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier })` |
-| Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
+| `postgres catalog`                         | `generatePostgresCatalog(options)`                                                                                                                                                                                                                                         |
+| Source-only library capability             | `parsePostgresSql(sourceOrSources)`                                                                                                                                                                                                                                        |
+| Source-only TS/JS executor SQL extraction  | `extractExecutedPostgresSql({ sources, importSpecifier })`                                                                                                                                                                                                                 |
+| Selected TS/JS modules                     | `analyzeTypeScriptModules({ root, files })`                                                                                                                                                                                                                                |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
-| Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
+| Global `--progress`                        | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots                                                                                                                                                                                    |
 | `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -318,7 +318,7 @@ database's name.
 | `tests impact`                             | `testsImpact(options)`                                                                                                                                                                                                                                                     |
 | `tests why`                                | `testsWhy(options)`                                                                                                                                                                                                                                                        |
 | `tests comment`                            | `testsComment(options)`                                                                                                                                                                                                                                                    |
-| `tests audit` | `testsAudit(options)` compares versioned plan/observation artifacts; see [artifact contract and producer recipe](cli/tests-audit.md) |
+| `tests audit`                              | `testsAudit(options)` compares versioned plan/observation artifacts; see [artifact contract and producer recipe](cli/tests-audit.md)                                                                                                                                       |
 | `tests graph`                              | `testsGraph(options)` or `testsGraphMermaid(options)`                                                                                                                                                                                                                      |
 | `playwright check\|edges\|related\|tests`  | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests`                                                                                                                                                                                               |
 | `queues edges\|related\|check`             | `queueEdges`, `queueRelated`, `queueCheck`                                                                                                                                                                                                                                 |
@@ -332,7 +332,7 @@ database's name.
 | `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
-| `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
+| `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                    |
 
 The `dependencies`, `dependents`, and `related` options accept
 `relationships: ["call"]` to select the opt-in lexical call edges. Calls are
@@ -409,19 +409,19 @@ plugins and imports the optional Vitest peer. See the
 [timeout policy guide](test-timeout-policy.md) for configuration and adoption
 details.
 
-| Runtime export | API | Import |
-| --- | --- | --- |
-| `assertTestTimeout` | `assertTestTimeout(value, label, maximum?)` | `no-mistakes/test-timeout-policy` |
-| `assertTimeoutConfig` | `assertTimeoutConfig(config, maximum?)` | `no-mistakes/test-timeout-policy` |
-| `snapshotTimeoutOptions` | `snapshotTimeoutOptions<T extends object>(options: T, label, maximum?, nullInherits?): T` | `no-mistakes/test-timeout-policy` |
-| `protectTimeoutConfig` | `protectTimeoutConfig(config, maximum?)` | `no-mistakes/test-timeout-policy` |
-| `guardRegistration` | `guardRegistration<T extends Registration>(original: T, kind: Kind, maximum?): T` | `no-mistakes/test-timeout-policy` |
-| `guardRuntimeConfig` | `guardRuntimeConfig<T extends object>(api: T, maximum?): T` | `no-mistakes/test-timeout-policy` |
-| `guardVitestExports` | `guardVitestExports<T extends object>(api: T, maximum?): T` | `no-mistakes/test-timeout-policy` |
-| `guardPublicRunner` | `guardPublicRunner<T extends RunnerConstructor>(original: T, maximum: number, protect: Protector<InstanceType<T>>): T` | `no-mistakes/test-timeout-policy` |
-| `protectRunnerTimeouts` | `protectRunnerTimeouts(runner: { config: object }, maximum?): void` | `no-mistakes/test-timeout-policy` |
-| `testTimeoutPolicyPlugin` | `testTimeoutPolicyPlugin(maximum?, registrationPackages?, nodeRunner?: NodeRunnerPolicy)` | `no-mistakes/test-timeout-policy/plugin` |
-| `browserTestTimeoutPolicyPlugin` | `browserTestTimeoutPolicyPlugin(maximum?, registrationPackages?)` | `no-mistakes/test-timeout-policy/plugin` |
+| Runtime export                   | API                                                                                                                    | Import                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `assertTestTimeout`              | `assertTestTimeout(value, label, maximum?)`                                                                            | `no-mistakes/test-timeout-policy`        |
+| `assertTimeoutConfig`            | `assertTimeoutConfig(config, maximum?)`                                                                                | `no-mistakes/test-timeout-policy`        |
+| `snapshotTimeoutOptions`         | `snapshotTimeoutOptions<T extends object>(options: T, label, maximum?, nullInherits?): T`                              | `no-mistakes/test-timeout-policy`        |
+| `protectTimeoutConfig`           | `protectTimeoutConfig(config, maximum?)`                                                                               | `no-mistakes/test-timeout-policy`        |
+| `guardRegistration`              | `guardRegistration<T extends Registration>(original: T, kind: Kind, maximum?): T`                                      | `no-mistakes/test-timeout-policy`        |
+| `guardRuntimeConfig`             | `guardRuntimeConfig<T extends object>(api: T, maximum?): T`                                                            | `no-mistakes/test-timeout-policy`        |
+| `guardVitestExports`             | `guardVitestExports<T extends object>(api: T, maximum?): T`                                                            | `no-mistakes/test-timeout-policy`        |
+| `guardPublicRunner`              | `guardPublicRunner<T extends RunnerConstructor>(original: T, maximum: number, protect: Protector<InstanceType<T>>): T` | `no-mistakes/test-timeout-policy`        |
+| `protectRunnerTimeouts`          | `protectRunnerTimeouts(runner: { config: object }, maximum?): void`                                                    | `no-mistakes/test-timeout-policy`        |
+| `testTimeoutPolicyPlugin`        | `testTimeoutPolicyPlugin(maximum?, registrationPackages?, nodeRunner?: NodeRunnerPolicy)`                              | `no-mistakes/test-timeout-policy/plugin` |
+| `browserTestTimeoutPolicyPlugin` | `browserTestTimeoutPolicyPlugin(maximum?, registrationPackages?)`                                                      | `no-mistakes/test-timeout-policy/plugin` |
 
 The policy entry also exports the types `Registration`, `Kind`,
 `RunnerConstructor` and `Protector<T extends { config: object } = { config: object }>`. `guardPublicRunner`
@@ -431,71 +431,71 @@ ties the protector argument to the constructed instance with
 the absolute resolved module for the final custom Node runner, or `null` to use
 Vitest's native runner. These named types are part of the entrypoint contract.
 
-| Runtime export | API |
-| --- | --- |
-| `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
-| `version` | `version()` |
-| `diagnosticsSnapshot` | `diagnosticsSnapshot({ id })` |
-| `analyzeProject` | `analyzeProject(options)` |
-| `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
-| `callSites` | `callSites(options)` |
-| `check` | `check(options)` |
-| `ciEnv` | `ciEnv(options)` |
-| `ciImpact` | `ciImpact(options)` |
-| `ciTopology` | `ciTopology(options)` |
-| `ciTopologyImpact` | `ciTopologyImpact(options)` |
-| `dataPw` | `dataPw(options)` |
-| `deadExports` | `deadExports(options)` |
-| `dependencies` | `dependencies(options)` |
-| `dependents` | `dependents(options)` |
-| `effects` | `effects(options)` |
-| `exportsOf` | `exportsOf(options)` |
-| `generatePostgresCatalog` | `generatePostgresCatalog(options)` |
-| `parsePostgresSql` | `parsePostgresSql(sourceOrSources)` |
-| `extractExecutedPostgresSql` | `extractExecutedPostgresSql({ sources, importSpecifier })` |
-| `analyzeTypeScriptModules` | `analyzeTypeScriptModules({ root, files })` |
-| `fetches` | `fetches(options)` |
-| `flow` | `flow(options)` |
-| `impactedChecks` | `impactedChecks(options)` |
-| `importUsages` | `importUsages(options)` |
-| `importers` | `importers(options)` |
-| `infraOutputs` | `infraOutputs(options)` |
-| `infraResourceRefs` | `infraResourceRefs(options)` |
-| `infraTestFor` | `infraTestFor(options)` |
-| `lockfileDiff` | `lockfileDiff(options)` |
-| `validateMermaidMarkdown` | `validateMermaidMarkdown(options)` |
-| `playwrightCheck` | `playwrightCheck(options)` |
-| `playwrightEdges` | `playwrightEdges(options)` |
-| `playwrightRelated` | `playwrightRelated(options)` |
-| `playwrightTests` | `playwrightTests(options)` |
-| `reactAnalyze` | `reactAnalyze(options)` |
-| `reactCheck` | `reactCheck(options)` |
-| `reactUsages` | `reactUsages(options)` |
-| `registryExtension` | `registryExtension(options)` |
-| `related` | `related(options)` |
-| `resolveCheck` | `resolveCheck(options)` |
-| `resolveConfig` | `resolveConfig(options)` |
-| `rscCallers` | `rscCallers(options)` |
-| `swiftImporters` | `swiftImporters(options)` |
-| `swiftTestTargets` | `swiftTestTargets(options)` |
-| `symbols` | `symbols(options)` |
-| `testsComment` | `testsComment(options)` |
-| `testsGraphMermaid` | `testsGraphMermaid(options)` |
-| `queueCheck` | `queueCheck(options)` |
-| `queueEdges` | `queueEdges(options)` |
-| `queueRelated` | `queueRelated(options)` |
-| `queues` | `queues(options)` |
-| `serverContracts` | `serverContracts(options)` |
-| `serverRouteEdges` | `serverRouteEdges(options)` |
-| `serverRouteList` | `serverRouteList(options)` |
-| `serverRouteRelated` | `serverRouteRelated(options)` |
-| `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
-| `testsAudit` | `testsAudit(options)` |
-| `testsGraph` | `testsGraph(options)` |
-| `testsImpact` | `testsImpact(options)` |
-| `testsPlan` | `testsPlan(options)` |
-| `testsTargets` | `testsTargets(options)` |
-| `testsWhy` | `testsWhy(options)` |
+| Runtime export                 | API                                                                                                |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `createWorkflowTopologyIndex`  | `createWorkflowTopologyIndex(topology)`                                                            |
+| `version`                      | `version()`                                                                                        |
+| `diagnosticsSnapshot`          | `diagnosticsSnapshot({ id })`                                                                      |
+| `analyzeProject`               | `analyzeProject(options)`                                                                          |
+| `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)`                                                            |
+| `callSites`                    | `callSites(options)`                                                                               |
+| `check`                        | `check(options)`                                                                                   |
+| `ciEnv`                        | `ciEnv(options)`                                                                                   |
+| `ciImpact`                     | `ciImpact(options)`                                                                                |
+| `ciTopology`                   | `ciTopology(options)`                                                                              |
+| `ciTopologyImpact`             | `ciTopologyImpact(options)`                                                                        |
+| `dataPw`                       | `dataPw(options)`                                                                                  |
+| `deadExports`                  | `deadExports(options)`                                                                             |
+| `dependencies`                 | `dependencies(options)`                                                                            |
+| `dependents`                   | `dependents(options)`                                                                              |
+| `effects`                      | `effects(options)`                                                                                 |
+| `exportsOf`                    | `exportsOf(options)`                                                                               |
+| `generatePostgresCatalog`      | `generatePostgresCatalog(options)`                                                                 |
+| `parsePostgresSql`             | `parsePostgresSql(sourceOrSources)`                                                                |
+| `extractExecutedPostgresSql`   | `extractExecutedPostgresSql({ sources, importSpecifier })`                                         |
+| `analyzeTypeScriptModules`     | `analyzeTypeScriptModules({ root, files })`                                                        |
+| `fetches`                      | `fetches(options)`                                                                                 |
+| `flow`                         | `flow(options)`                                                                                    |
+| `impactedChecks`               | `impactedChecks(options)`                                                                          |
+| `importUsages`                 | `importUsages(options)`                                                                            |
+| `importers`                    | `importers(options)`                                                                               |
+| `infraOutputs`                 | `infraOutputs(options)`                                                                            |
+| `infraResourceRefs`            | `infraResourceRefs(options)`                                                                       |
+| `infraTestFor`                 | `infraTestFor(options)`                                                                            |
+| `lockfileDiff`                 | `lockfileDiff(options)`                                                                            |
+| `validateMermaidMarkdown`      | `validateMermaidMarkdown(options)`                                                                 |
+| `playwrightCheck`              | `playwrightCheck(options)`                                                                         |
+| `playwrightEdges`              | `playwrightEdges(options)`                                                                         |
+| `playwrightRelated`            | `playwrightRelated(options)`                                                                       |
+| `playwrightTests`              | `playwrightTests(options)`                                                                         |
+| `reactAnalyze`                 | `reactAnalyze(options)`                                                                            |
+| `reactCheck`                   | `reactCheck(options)`                                                                              |
+| `reactUsages`                  | `reactUsages(options)`                                                                             |
+| `registryExtension`            | `registryExtension(options)`                                                                       |
+| `related`                      | `related(options)`                                                                                 |
+| `resolveCheck`                 | `resolveCheck(options)`                                                                            |
+| `resolveConfig`                | `resolveConfig(options)`                                                                           |
+| `rscCallers`                   | `rscCallers(options)`                                                                              |
+| `swiftImporters`               | `swiftImporters(options)`                                                                          |
+| `swiftTestTargets`             | `swiftTestTargets(options)`                                                                        |
+| `symbols`                      | `symbols(options)`                                                                                 |
+| `testsComment`                 | `testsComment(options)`                                                                            |
+| `testsGraphMermaid`            | `testsGraphMermaid(options)`                                                                       |
+| `queueCheck`                   | `queueCheck(options)`                                                                              |
+| `queueEdges`                   | `queueEdges(options)`                                                                              |
+| `queueRelated`                 | `queueRelated(options)`                                                                            |
+| `queues`                       | `queues(options)`                                                                                  |
+| `serverContracts`              | `serverContracts(options)`                                                                         |
+| `serverRouteEdges`             | `serverRouteEdges(options)`                                                                        |
+| `serverRouteList`              | `serverRouteList(options)`                                                                         |
+| `serverRouteRelated`           | `serverRouteRelated(options)`                                                                      |
+| `serverRoutes`                 | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
+| `testsAudit`                   | `testsAudit(options)`                                                                              |
+| `testsGraph`                   | `testsGraph(options)`                                                                              |
+| `testsImpact`                  | `testsImpact(options)`                                                                             |
+| `testsPlan`                    | `testsPlan(options)`                                                                               |
+| `testsTargets`                 | `testsTargets(options)`                                                                            |
+| `testsWhy`                     | `testsWhy(options)`                                                                                |
 
 `testsTargets()` and test-plan targets set `workspace: true` when a Vitest
 workspace/project-array source must be passed with `--workspace`; the emitted
@@ -917,14 +917,16 @@ const closure = await dependencies({
 });
 const report = await analyzeProject({
   root,
-  reports: [{
-    type: "dependencies",
-    files: ["web/app/page.tsx"],
-    relationships: ["import-static", "import-dynamic", "import-type"],
-    candidateInclude: ["web/**"],
-    candidateExclude: ["**/*.test.*"],
-    projection: "paths",
-  }],
+  reports: [
+    {
+      type: "dependencies",
+      files: ["web/app/page.tsx"],
+      relationships: ["import-static", "import-dynamic", "import-type"],
+      candidateInclude: ["web/**"],
+      candidateExclude: ["**/*.test.*"],
+      projection: "paths",
+    },
+  ],
 });
 ```
 
@@ -1053,8 +1055,6 @@ incomplete; any recovered facts remain available for inspection. Empty `files`
 returns an empty report, without a global fallback.
 
 <!-- cspell:ignore subarray -->
-
-
 
 `parsePostgresSql()` preserves safely attributed constraint occurrences inside
 nested conditional `DO` bodies, including original global spans, typed foreign
@@ -1290,3 +1290,11 @@ share prepared request facts. `ForbiddenCallArgumentLiteral`,
 `ForbiddenCallUnknownArguments` are exported declaration types. See
 [bounded argument predicates](rules/forbidden-calls.md#bounded-argument-predicates)
 for the explicit unknown policy and source-analysis limits.
+
+### Documentation regex policies
+
+`check()` and the `analyzeProject()` check report accept `doc-consistency`
+`bannedPatterns` through their shared rule configuration. Explicit file globs,
+regular expressions, custom messages and line/file suppressions have the same
+behavior as the CLI; both APIs remain asynchronous. See
+[scoped regex bans](rules/doc-consistency.md#scoped-regex-bans).

@@ -21,6 +21,14 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
         .nth((stmt_line - 2) as usize)
         .map(|line| {
             let trimmed = line.trim();
+            if trimmed.starts_with("<!--") {
+                return line_comment_directive_matches(
+                    source,
+                    stmt_line - 1,
+                    "no-mistakes-disable-next-line ",
+                    rule_id,
+                );
+            }
             let Some(rest) = leading_comment_text(trimmed) else {
                 return false;
             };
@@ -132,7 +140,7 @@ fn line_comment_directive_matches(
         let Some((comment_start, prefix_len)) = comment else {
             return false;
         };
-        let rest = line[comment_start + prefix_len..].trim();
+        let rest = line_comment_text(line, comment_start, prefix_len);
         let Some(after_directive) = rest.strip_prefix(directive) else {
             return false;
         };
@@ -176,13 +184,20 @@ fn disabled_statement_lines_with_scan_observer(
     for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         line_count = index + 1;
         scanned_line();
-        let inline_disabled = line_comment_start(line, &mut state)
-            .and_then(|(start, len)| line[start + len..].trim().strip_prefix("no-mistakes-disable-line "))
+        let comment = line_comment_start(line, &mut state);
+        let inline_disabled = comment
+            .map(|(start, len)| line_comment_text(line, start, len))
+            .and_then(|rest| rest.strip_prefix("no-mistakes-disable-line "))
             .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
         if next_disabled || inline_disabled {
             disabled.push((index + 1) as u32);
         }
         next_disabled = leading_comment_text(line.trim())
+            .filter(|_| {
+                !line.trim().starts_with("<!--")
+                    || comment
+                        .is_some_and(|(start, len)| len == 4 && line[..start].trim().is_empty())
+            })
             .and_then(|rest| rest.strip_prefix("no-mistakes-disable-next-line "))
             .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
     }

@@ -51,6 +51,8 @@ include!("comment_parser_modes.rs");
 include!("syntax_helpers.rs");
 
 #[cfg(test)]
+mod comment_parser_html_tests;
+#[cfg(test)]
 mod comment_parser_template_tests;
 #[cfg(test)]
 mod comment_parser_tests;

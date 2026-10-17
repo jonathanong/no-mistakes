@@ -1,0 +1,383 @@
+[
+  {
+    "kind": "file",
+    "source": "<!-- no-mistakes-disable-file my-rule -->\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "normal Markdown file directive",
+    "directive_line": 1
+  },
+  {
+    "kind": "file",
+    "source": "﻿<!-- no-mistakes-disable-file my-rule-->\r\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "BOM compact closing delimiter and CRLF",
+    "directive_line": 1
+  },
+  {
+    "kind": "file",
+    "source": "<!-- ordinary notice -->\n<!-- no-mistakes-disable-file my-rule: generated -->\nblocked()",
+    "line": 3,
+    "expected": true,
+    "description": "leading notices preserve file directive location",
+    "directive_line": 2
+  },
+  {
+    "kind": "next",
+    "source": "<!-- no-mistakes-disable-next-line my-rule -->\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "normal Markdown next-line directive",
+    "directive_line": 1
+  },
+  {
+    "kind": "next",
+    "source": "<!-- no-mistakes-disable-next-line my-rule-->\r\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "compact next-line boundary",
+    "directive_line": 1
+  },
+  {
+    "kind": "line",
+    "source": "Current SHA: abcdef1 <!-- no-mistakes-disable-line my-rule: historical -->",
+    "line": 1,
+    "expected": true,
+    "description": "normal inline Markdown line directive",
+    "directive_line": 1
+  },
+  {
+    "kind": "line",
+    "source": "<!-- no-mistakes-disable-line my-rule-->",
+    "line": 1,
+    "expected": true,
+    "description": "compact line rule-id boundary",
+    "directive_line": 1
+  },
+  {
+    "kind": "line",
+    "source": "\"<!-- no-mistakes-disable-line wrong-rule -->\" <!-- no-mistakes-disable-line my-rule -->",
+    "line": 1,
+    "expected": true,
+    "description": "quoted marker followed by actual directive",
+    "directive_line": 1
+  },
+  {
+    "kind": "file",
+    "source": "<!-- no-mistakes-disable-file my-rule-extra -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "prefix rule id"
+  },
+  {
+    "kind": "file",
+    "source": "<!-- no-mistakes-disable-file another-rule -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "different rule id"
+  },
+  {
+    "kind": "file",
+    "source": "<!-- no-mistakes-disable-file my-rule\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "unclosed HTML"
+  },
+  {
+    "kind": "file",
+    "source": "<!-- no-mistakes-disable-file my-rule --> trailing text\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "trailing authored text"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- no-mistakes-disable-next-line my-rule-extra -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "prefix rule id"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- no-mistakes-disable-next-line another-rule -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "different rule id"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- no-mistakes-disable-next-line my-rule\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "unclosed HTML"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- no-mistakes-disable-next-line my-rule --> trailing text\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "trailing authored text"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- no-mistakes-disable-line my-rule-extra -->",
+    "line": 1,
+    "expected": false,
+    "description": "prefix rule id"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- no-mistakes-disable-line another-rule -->",
+    "line": 1,
+    "expected": false,
+    "description": "different rule id"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- no-mistakes-disable-line my-rule",
+    "line": 1,
+    "expected": false,
+    "description": "unclosed HTML"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- no-mistakes-disable-line my-rule --> trailing text",
+    "line": 1,
+    "expected": false,
+    "description": "trailing authored text"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- ordinary no-mistakes-disable-line my-rule -->",
+    "line": 1,
+    "expected": false,
+    "description": "phrase inside ordinary HTML comment"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- ordinary // no-mistakes-disable-line my-rule -->",
+    "line": 1,
+    "expected": false,
+    "description": "nested legacy marker inside non-directive HTML comment"
+  },
+  {
+    "kind": "line",
+    "source": "const example = \"<!-- no-mistakes-disable-line my-rule -->\";",
+    "line": 1,
+    "expected": false,
+    "description": "quoted string example"
+  },
+  {
+    "kind": "line",
+    "source": "`<!-- no-mistakes-disable-line my-rule -->`",
+    "line": 1,
+    "expected": false,
+    "description": "Markdown inline code"
+  },
+  {
+    "kind": "line",
+    "source": "const example = `\n<!-- no-mistakes-disable-line my-rule -->\n`;",
+    "line": 2,
+    "expected": false,
+    "description": "multiline template example"
+  },
+  {
+    "kind": "next",
+    "source": "const example = `\n<!-- no-mistakes-disable-next-line my-rule -->\nblocked()\n`;",
+    "line": 3,
+    "expected": false,
+    "description": "next-line marker in template is not an actual comment"
+  },
+  {
+    "kind": "line",
+    "source": "/*\n<!-- no-mistakes-disable-line my-rule -->\n*/",
+    "line": 2,
+    "expected": false,
+    "description": "HTML-looking marker inside block comment"
+  },
+  {
+    "kind": "next",
+    "source": "/*\n<!-- no-mistakes-disable-next-line my-rule -->\nblocked()\n*/",
+    "line": 3,
+    "expected": false,
+    "description": "next-line marker inside block comment"
+  },
+  {
+    "kind": "line",
+    "source": "const example = /<!-- no-mistakes-disable-line my-rule -->/;",
+    "line": 1,
+    "expected": false,
+    "description": "regex example"
+  },
+  {
+    "kind": "file",
+    "source": "text before directive\n<!-- no-mistakes-disable-file my-rule -->\nblocked()",
+    "line": 3,
+    "expected": false,
+    "description": "file directive after authored content"
+  },
+  {
+    "kind": "next",
+    "source": "text <!-- no-mistakes-disable-next-line my-rule -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "next-line directive must lead its line"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- no-mistakes-disable-line my-rule --> <!-- ordinary -->",
+    "line": 1,
+    "expected": false,
+    "description": "multiple HTML comment tail is not one directive"
+  },
+  {
+    "kind": "file",
+    "source": "// no-mistakes-disable-file my-rule\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "existing file syntax parity //",
+    "directive_line": 1
+  },
+  {
+    "kind": "next",
+    "source": "// no-mistakes-disable-next-line my-rule\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "existing next-line syntax parity //",
+    "directive_line": 1
+  },
+  {
+    "kind": "line",
+    "source": "blocked() // no-mistakes-disable-line my-rule",
+    "line": 1,
+    "expected": true,
+    "description": "existing inline syntax parity //",
+    "directive_line": 1
+  },
+  {
+    "kind": "file",
+    "source": "# no-mistakes-disable-file my-rule\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "existing file syntax parity #",
+    "directive_line": 1
+  },
+  {
+    "kind": "next",
+    "source": "# no-mistakes-disable-next-line my-rule\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "existing next-line syntax parity #",
+    "directive_line": 1
+  },
+  {
+    "kind": "line",
+    "source": "blocked() # no-mistakes-disable-line my-rule",
+    "line": 1,
+    "expected": true,
+    "description": "existing inline syntax parity #",
+    "directive_line": 1
+  },
+  {
+    "kind": "file",
+    "source": "-- no-mistakes-disable-file my-rule\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "existing file syntax parity --",
+    "directive_line": 1
+  },
+  {
+    "kind": "next",
+    "source": "-- no-mistakes-disable-next-line my-rule\nblocked()",
+    "line": 2,
+    "expected": true,
+    "description": "existing next-line syntax parity --",
+    "directive_line": 1
+  },
+  {
+    "kind": "line",
+    "source": "blocked() -- no-mistakes-disable-line my-rule",
+    "line": 1,
+    "expected": true,
+    "description": "existing inline syntax parity --",
+    "directive_line": 1
+  },
+  {
+    "kind": "file",
+    "source": "<!-- ordinary --> <!-- no-mistakes-disable-file my-rule -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "ordinary closed comment before final directive file"
+  },
+  {
+    "kind": "file",
+    "source": "<!-- malformed // no-mistakes-disable-file my-rule\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "unclosed HTML containing legacy slash directive file"
+  },
+  {
+    "kind": "file",
+    "source": "<!-- malformed -- no-mistakes-disable-file my-rule\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "unclosed HTML containing legacy SQL directive file"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- ordinary --> <!-- no-mistakes-disable-next-line my-rule -->\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "ordinary closed comment before final directive next"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- malformed // no-mistakes-disable-next-line my-rule\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "unclosed HTML containing legacy slash directive next"
+  },
+  {
+    "kind": "next",
+    "source": "<!-- malformed -- no-mistakes-disable-next-line my-rule\nblocked()",
+    "line": 2,
+    "expected": false,
+    "description": "unclosed HTML containing legacy SQL directive next"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- ordinary --> <!-- no-mistakes-disable-line my-rule -->\nblocked()",
+    "line": 1,
+    "expected": false,
+    "description": "ordinary closed comment before final directive line"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- malformed // no-mistakes-disable-line my-rule\nblocked()",
+    "line": 1,
+    "expected": false,
+    "description": "unclosed HTML containing legacy slash directive line"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- malformed -- no-mistakes-disable-line my-rule\nblocked()",
+    "line": 1,
+    "expected": false,
+    "description": "unclosed HTML containing legacy SQL directive line"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- ordinary --> trailing // no-mistakes-disable-line my-rule",
+    "line": 1,
+    "expected": false,
+    "description": "trailing HTML text cannot expose nested //"
+  },
+  {
+    "kind": "line",
+    "source": "<!-- ordinary --> trailing -- no-mistakes-disable-line my-rule",
+    "line": 1,
+    "expected": false,
+    "description": "trailing HTML text cannot expose nested --"
+  }
+]

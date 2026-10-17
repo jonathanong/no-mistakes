@@ -1,6 +1,7 @@
 enum CodeCharAction {
     Comment(usize),
     Consumed,
+    Stop,
 }
 
 struct CodeModeState<'a> {
@@ -109,6 +110,14 @@ fn scan_code_char(
     if matches!(ch, '\'' | '"' | '`') {
         mode.line_state.quote = Some(ch);
         return Some(CodeCharAction::Consumed);
+    }
+    if ch == '<' && line[idx..].starts_with("<!--") {
+        // The first real HTML opener owns the line, including malformed comments.
+        return Some(if closed_html_comment_text(&line[idx + 4..]).is_some() {
+            CodeCharAction::Comment(4)
+        } else {
+            CodeCharAction::Stop
+        });
     }
     if ch == '/' && next == Some('*') && block_comment_can_start(line, idx) {
         mode.line_state.in_block_comment = true;

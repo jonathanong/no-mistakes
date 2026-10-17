@@ -1,9 +1,13 @@
 fn leading_comment_text(line: &str) -> Option<&str> {
     line.strip_prefix("//")
         .or_else(|| line.strip_prefix('#'))
+        .or_else(|| closed_html_comment_text(line.strip_prefix("<!--")?))
         .or_else(|| {
             let rest = line.strip_prefix("--")?;
-            rest.chars().next().is_some_and(char::is_whitespace).then_some(rest)
+            rest.chars()
+                .next()
+                .is_some_and(char::is_whitespace)
+                .then_some(rest)
         })
         .map(str::trim)
 }
@@ -15,10 +19,7 @@ struct LineCommentScanState {
     template_braces: Vec<usize>,
 }
 
-fn line_comment_start(
-    line: &str,
-    state: &mut LineCommentScanState,
-) -> Option<(usize, usize)> {
+fn line_comment_start(line: &str, state: &mut LineCommentScanState) -> Option<(usize, usize)> {
     let mut escaped = false;
     let mut in_regex = false;
     let mut in_regex_char_class = false;
@@ -54,6 +55,7 @@ fn line_comment_start(
         ) {
             Some(CodeCharAction::Comment(prefix_len)) => return Some((idx, prefix_len)),
             Some(CodeCharAction::Consumed) => continue,
+            Some(CodeCharAction::Stop) => return None,
             None => {}
         }
         if !ch.is_whitespace() {
@@ -158,8 +160,17 @@ fn paren_open_follows_control_flow(line: &str, open_idx: usize) -> bool {
 fn regex_can_start_after_word(word: &str) -> bool {
     matches!(
         word,
-        "return" | "throw" | "case" | "delete" | "typeof" | "void" | "yield" | "await" | "in"
-            | "of" | "new"
+        "return"
+            | "throw"
+            | "case"
+            | "delete"
+            | "typeof"
+            | "void"
+            | "yield"
+            | "await"
+            | "in"
+            | "of"
+            | "new"
     )
 }
 
@@ -176,4 +187,20 @@ fn previous_word(line: &str, idx: usize) -> Option<&str> {
 
 fn is_word_char(ch: char) -> bool {
     ch == '_' || ch == '$' || ch.is_ascii_alphanumeric()
+}
+
+// Directives use one closed HTML comment, with no trailing non-comment text.
+fn closed_html_comment_text(text: &str) -> Option<&str> {
+    let (comment, suffix) = text.split_once("-->")?;
+    suffix.trim().is_empty().then_some(comment.trim())
+}
+
+fn line_comment_text(line: &str, start: usize, prefix_len: usize) -> &str {
+    let text = line[start + prefix_len..].trim();
+    if prefix_len == 4 {
+        // The scanner returns prefix 4 only after validating this closing marker.
+        text[..text.len() - 3].trim_end()
+    } else {
+        text
+    }
 }
