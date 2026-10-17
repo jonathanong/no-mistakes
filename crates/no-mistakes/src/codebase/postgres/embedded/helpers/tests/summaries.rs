@@ -59,6 +59,17 @@ fn only_literal_identifier_templates_are_summarized_as_templates() {
 }
 
 #[test]
+fn a_helper_body_can_call_a_literal_identifier_template() {
+    let facts = extract("exports.ts");
+    let origin = Path::new("/exports.ts");
+    let filled = summary(&facts, "viaArrow")
+        .expect("viaArrow")
+        .fill(&literals(&[]), origin)
+        .expect("static");
+    assert_eq!(filled.sql, "(l.x IS NULL)");
+}
+
+#[test]
 fn parameters_are_spliced_wherever_they_are_interpolated() {
     let facts = extract("exports.ts");
     let origin = Path::new("/exports.ts");

@@ -80,7 +80,18 @@ fn unpublish_restores_only_the_recorded_markers() {
 fn split_and_compose_keep_every_physical_line() {
     let hole = sentinel::encode(0);
     let sql = format!("SELECT 1\nWHERE {hole} ORDER BY z");
-    let joined = caller(sql, 10);
+    let mut joined = caller(sql, 10);
+    // The second SQL line was authored far from the first.
+    joined.positions = [(1, 10), (2, 50)]
+        .map(
+            |(sql_line, source_line)| crate::codebase::postgres::EmbeddedSqlSourcePosition {
+                sql_line,
+                sql_column: 1,
+                source_line,
+                source_path: None,
+            },
+        )
+        .to_vec();
     let markers = sentinel::find_all(&joined.sql);
     let ranges = markers
         .iter()
@@ -91,7 +102,7 @@ fn split_and_compose_keep_every_physical_line() {
     assert_eq!(pieces[0].sql, "SELECT 1\nWHERE ");
     assert_eq!(pieces[1].sql, " ORDER BY z");
     // The marker sits on the caller's second line.
-    assert_eq!((origins[0].line, origins[0].path.clone()), (11, None));
+    assert_eq!((origins[0].line, origins[0].path.clone()), (50, None));
     let helper = plain(
         "EXISTS (SELECT 1\nFROM t)".to_string(),
         Marker {
@@ -112,11 +123,11 @@ fn split_and_compose_keep_every_physical_line() {
     };
     let helper_path = Some(PathBuf::from("/helper.ts"));
     assert_eq!(line_of("SELECT 1\nWHERE"), (10, None));
-    assert_eq!(line_of("WHERE"), (11, None));
+    assert_eq!(line_of("WHERE"), (50, None));
     assert_eq!(line_of("EXISTS"), (40, helper_path.clone()));
     assert_eq!(line_of("FROM t"), (41, helper_path));
     // Text after the helper returns to the caller's own lines and module.
-    assert_eq!(line_of("ORDER"), (11, None));
+    assert_eq!(line_of("ORDER"), (50, None));
 }
 
 #[test]

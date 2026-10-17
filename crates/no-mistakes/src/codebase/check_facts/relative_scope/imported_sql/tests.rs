@@ -294,6 +294,23 @@ fn a_re_exported_namespace_import_is_never_followed() {
 }
 
 #[test]
+fn a_call_whose_import_binding_is_missing_stays_dynamic() {
+    let mut files = prepared("imported-literal-identifiers");
+    let caller = files
+        .keys()
+        .find(|path| path.ends_with("src/caller.mts"))
+        .cloned()
+        .expect("caller");
+    let facts = Arc::make_mut(&mut files.get_mut(&caller).expect("facts").ts);
+    facts.imported_bindings.clear();
+    let calls = Mutex::new(BTreeMap::new());
+    let resolve = resolver(&files, &calls);
+    project(&mut files, resolve);
+    assert_eq!(caller_calls(&files)[0].kind, EmbeddedSqlKind::Dynamic);
+    assert!(calls.into_inner().unwrap().is_empty(), "nothing to resolve");
+}
+
+#[test]
 fn a_re_export_from_an_unresolved_module_is_unprovable() {
     let mut files = prepared("imported-barrel-ambiguous");
     let index = files

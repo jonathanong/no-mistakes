@@ -31,9 +31,7 @@ pub(super) fn apply_template(
     template: &TemplateHelper,
     call: &CallExpression<'_>,
 ) -> Option<super::provenance::RecoveredSql> {
-    if call.optional {
-        return None;
-    }
+    // An optional call is wrapped in a `ChainExpression`, so it never reaches here.
     let literals = call
         .arguments
         .iter()

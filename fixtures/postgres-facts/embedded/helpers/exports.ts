@@ -7,6 +7,11 @@ export function plain(): string {
 
 export const arrow = (column: string) => `(${column} IS NULL)`;
 
+// A helper body may call a literal-identifier template with string literals.
+export function viaArrow(): string {
+  return arrow("l.x");
+}
+
 export function repeated(left: string, right: string): string {
   return `${left} = ${right} AND ${left} IS NOT NULL`;
 }
