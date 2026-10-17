@@ -121,13 +121,10 @@ fn targets_and_indexes_are_shared_across_profiles_and_parallel_evaluators() {
     assert!(calls
         .keys()
         .any(|(_, specifier)| specifier == "./missing.mjs"));
-    // Root demand resolves every runtime edge, including unused imports.
-    assert!(calls
-        .keys()
-        .any(|(_, specifier)| specifier == "./unused.mjs"));
+    // Known executor roots need no speculative resolution of unused imports.
     assert!(!calls
         .keys()
-        .any(|(_, specifier)| specifier == "./type-only.mjs"));
+        .any(|(_, specifier)| specifier == "./unused.mjs" || specifier == "./type-only.mjs"));
     let snapshot = observer.snapshot();
     assert_eq!(
         snapshot.work["postgres.annotation.modules"],
@@ -312,13 +309,28 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
     );
     drop(collected);
     let observer = InvocationObserver::new(true);
+    let resolutions = Mutex::new(BTreeSet::new());
     with_observer(Some(Arc::clone(&observer)), || {
         project(&mut files, |specifier, from| {
+            resolutions
+                .lock()
+                .unwrap()
+                .insert((from.to_path_buf(), specifier.to_string()));
             let target = from.parent().unwrap().join(specifier).with_extension("mts");
             candidates.contains(&target).then_some(target)
         });
     });
     assert_eq!(observer.snapshot().work["postgres.annotation.roots"], 11);
+    assert!(
+        !resolutions
+            .into_inner()
+            .unwrap()
+            .iter()
+            .any(|(from, specifier)| {
+                from.file_stem().unwrap() == "unresolved" && specifier == "./unrelated.mjs"
+            }),
+        "uncertain roots must not resolve their unused remaining imports"
+    );
     let executor = files
         .iter()
         .find(|(path, _)| path.ends_with("executor.mts"))

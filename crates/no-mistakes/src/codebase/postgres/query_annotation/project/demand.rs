@@ -35,7 +35,14 @@ pub(super) fn roots<'a>(
         while let Some(frame) = frames.last_mut() {
             let path = frame.path;
             let module = &files[path].module;
-            if let Some(import) = module.ts.imports.get(frame.next_import) {
+            // A positive answer cannot change: classify the remaining targets
+            // independently later instead of resolving unused imports here.
+            let import = if visits[path].demanded {
+                None
+            } else {
+                module.ts.imports.get(frame.next_import)
+            };
+            if let Some(import) = import {
                 frame.next_import += 1;
                 if import.kind == ImportKind::Type {
                     continue;

@@ -35,10 +35,11 @@ fn dense_branch_fixture_keeps_query_findings_and_tracks_copied_slots() {
             })
     }));
     assert_eq!(diagnostics.work["parse.files"], 14);
+    assert_eq!(diagnostics.work["postgres.annotation.roots"], 12);
     assert_eq!(
         diagnostics.work["postgres.annotation.incoming_dense_slots_copied"],
-        883,
-        "twelve dense argument joins plus the saved callback probe copy only incoming changed slots"
+        876,
+        "twelve executor roots copy only incoming changed slots; the executor-free callback probe is no longer a speculative root"
     );
 }
 
