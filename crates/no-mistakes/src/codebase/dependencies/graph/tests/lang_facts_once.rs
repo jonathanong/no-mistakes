@@ -101,7 +101,7 @@ fn lang_facts_once_queue_routes_and_graph_extract_each_file_once() {
     let sources = dataset.sources_for(&root);
     assert!(files.len() > 1, "fixture must contain multiple files");
 
-    crate::queue::language_queue_sites_for_test(&root, &session, &config);
+    crate::queue::tests::session_lang::language_queue_sites_for_test(&root, &session, &config);
     let once = lang_facts_once_extractions(&observer);
     assert!(once > 1, "extraction must scan more than one file");
 
@@ -110,21 +110,17 @@ fn lang_facts_once_queue_routes_and_graph_extract_each_file_once() {
         paths_dir: root.clone(),
         ..Default::default()
     };
-    let prepared = crate::server_routes::PreparedServerAnalysis {
-        root: root.clone(),
-        source_files: std::sync::Arc::new(Vec::new()),
-        tsconfig: tsconfig.clone(),
-        config: Some(config.clone()),
-        facts: crate::codebase::ts_source::facts::TsFactMap::default(),
-        client_relationships: crate::server_routes::PreparedClientRelationships::new(
-            &[],
-            &tsconfig,
-            &session,
-        ),
-        session: std::sync::Arc::clone(&session),
-    };
+    let prepared = crate::server_routes::tests::session_lang::prepared_with_empty_client_relationships(
+        root.clone(),
+        tsconfig,
+        config.clone(),
+        std::sync::Arc::clone(&session),
+    );
     let mut route_facts = std::collections::HashMap::new();
-    crate::server_routes::merge_language_route_facts(&prepared, &mut route_facts, None);
+    crate::server_routes::tests::session_lang::merge_language_route_facts(
+        &prepared,
+        &mut route_facts,
+    );
     assert_eq!(lang_facts_once_extractions(&observer), once);
 
     let options = lang_facts_once_options(&config);

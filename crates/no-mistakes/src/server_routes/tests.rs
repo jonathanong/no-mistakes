@@ -1,3 +1,5 @@
+pub(crate) mod session_lang;
+
 use super::*;
 use crate::server_routes::model::{Binding, FileFacts, ImportBinding, MountSite, RouteSite};
 use std::collections::HashMap;

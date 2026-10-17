@@ -27,13 +27,4 @@ pub use source::{discover_source_files, relative_string};
 pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};
 
 #[cfg(test)]
-mod tests;
-
-#[cfg(test)]
-pub(crate) fn language_queue_sites_for_test(
-    root: &std::path::Path,
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    config: &crate::config::v2::NoMistakesConfig,
-) {
-    let _ = lang::language_queue_sites(root, session, config, None);
-}
+pub(crate) mod tests;

@@ -18,14 +18,9 @@ pub use graph::{
     prepare_analysis_with_shared_facts_and_session, PreparedServerAnalysis, RelatedDirection,
 };
 pub(crate) use graph::{configure_fact_context, route_defs_from_prepared_facts_with_catalog};
-// The plain library target never names these. The once-per-session test does.
-#[cfg(test)]
-pub(crate) use graph::PreparedClientRelationships;
-#[cfg(test)]
-pub(crate) use lang::merge_language_route_facts;
 pub use model::{PreparedProjectReport, ProjectReport};
 pub use related::related;
 pub use types::{Diagnostic, Edge, EdgeKind, Framework, ServerRoute, Severity, Summary};
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
