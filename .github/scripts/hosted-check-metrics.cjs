@@ -1,26 +1,8 @@
-const { spawnSync } = require("node:child_process");
-const { createHash } = require("node:crypto");
-const { readFileSync, readdirSync } = require("node:fs");
-const { dirname, join } = require("node:path");
+const { command, hashFile, packageManifest } = require("./hosted-check-runtime.cjs");
+const { readFileSync, readdirSync, writeFileSync } = require("node:fs");
+const { join } = require("node:path");
 const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "0", "check"];
 const DEADLINE_SECONDS = 180;
-
-function command(executable, args, cwd) {
-  const result = spawnSync(executable, args, { cwd, encoding: "utf8" });
-  if (result.error || result.status !== 0) {
-    throw new Error(`${executable} ${args.join(" ")}: ${result.error || result.stderr}`);
-  }
-  return result.stdout.trim();
-}
-
-function hashFile(path) {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
-}
-
-function packageManifest(resolvePackage, name) {
-  // The public package exports its entrypoint, but keeps package.json private.
-  return join(dirname(resolvePackage(name)), "package.json");
-}
 
 function parseTime(text, processExit) {
   const values = Object.fromEntries(
@@ -140,6 +122,55 @@ function sampleFiles(directory) {
   });
 }
 
+function budgetReport(groups, budgets, calibrate) {
+  const proposed = {};
+  const failures = [];
+  for (const commit of [
+    "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+    "92d0a2061bde8d260aa0b86a2d71110ece1a43ca",
+  ]) {
+    for (const jobs of ["1", "4", "auto"]) {
+      for (const variant of ["published", "current"]) {
+        const group = `${commit}/${jobs}/${variant}`;
+        const values = groups.get(group) || [];
+        if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6) {
+          failures.push(`Incomplete samples: ${group}`);
+          continue;
+        }
+        if (variant !== "current") continue;
+        const key = `${commit}/${jobs}`;
+        try {
+          proposed[key] = calibratedBudget(values);
+          if (!calibrate) enforceBudget(values, budgets[key]);
+        } catch (error) {
+          failures.push(`${key}: ${error.message}`);
+        }
+      }
+    }
+  }
+  return { proposed, failures };
+}
+
+function summarize(directory) {
+  const groups = new Map();
+  for (const path of sampleFiles(directory)) {
+    const sample = JSON.parse(readFileSync(path, "utf8"));
+    const key = `${sample.fixtureCommit}/${sample.jobs}/${sample.variant}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(sample);
+  }
+  const rows = [...groups].sort().map(([key, values]) => ({ key, ...aggregate(values) }));
+  const table = formatSummary(rows);
+  writeFileSync(join(directory, "summary.json"), JSON.stringify(rows, null, 2));
+  writeFileSync(join(directory, "summary.md"), table);
+  if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, table);
+  console.log(table);
+  const budgets = JSON.parse(readFileSync(join(__dirname, "hosted-check-budgets.json"), "utf8"));
+  const { proposed, failures } = budgetReport(groups, budgets, process.env.HOSTED_CHECK_CALIBRATE === "true");
+  writeFileSync(join(directory, "proposed-budgets.json"), JSON.stringify(proposed, null, 2));
+  if (failures.length) throw new Error(failures.join("\n"));
+}
+
 module.exports = {
   command,
   hashFile,
@@ -153,4 +184,6 @@ module.exports = {
   calibratedBudget,
   enforceBudget,
   formatSummary,
+  budgetReport,
+  summarize,
 };

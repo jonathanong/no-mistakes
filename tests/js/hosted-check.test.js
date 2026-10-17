@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { readFileSync, readdirSync } = require("node:fs");
 const { join } = require("node:path");
 const { createRequire } = require("node:module");
 const {
@@ -7,6 +7,7 @@ const {
   formatSummary,
   calibratedBudget,
   enforceBudget,
+  budgetReport,
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
@@ -220,4 +221,46 @@ test("weekly runs use the event source and separate thread budgets", () => {
   assert.match(workflow, /github.event.pull_request.head.sha \|\| github.sha/);
   assert.match(workflow, /jobs: \["1", "4", "auto"\]/);
   assert.match(workflow, /HOSTED_CHECK_JOBS: \$\{\{ matrix.jobs \}\}/);
+});
+
+
+test("retains valid calibration proposals and reports every failed cohort", () => {
+  const fixtures = [
+    "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+    "92d0a2061bde8d260aa0b86a2d71110ece1a43ca",
+  ];
+  const groups = new Map();
+  for (const commit of fixtures) {
+    for (const jobs of ["1", "4", "auto"]) {
+      for (const variant of ["published", "current"]) {
+        groups.set(`${commit}/${jobs}/${variant}`, Array.from({ length: 6 }, (_, index) => ({
+          sampleNumber: index + 1, candidateCommit: "f".repeat(40), exit: 0,
+          elapsed: 10 + index / 10, rss_kib: 100 + index,
+        })));
+      }
+    }
+  }
+  const calibration = budgetReport(groups, {}, true);
+  assert.deepEqual(calibration.failures, []);
+  assert.equal(Object.keys(calibration.proposed).length, 6);
+  const failed = `${fixtures[0]}/1/current`, slowed = `${fixtures[0]}/4/current`;
+  groups.set(failed, groups.get(failed).map((value, index) => index ? value : { ...value, exit: 124 }));
+  groups.set(slowed, groups.get(slowed).map((value, index) => index ? value : { ...value, elapsed: 50 }));
+  groups.delete(`${fixtures[1]}/auto/published`);
+  const report = budgetReport(groups, calibration.proposed, false);
+  assert.equal(report.failures.length, 3);
+  assert.ok(report.failures.some((failure) => failure.includes("Calibration requires")));
+  assert.ok(report.failures.some((failure) => failure.includes("elapsed 50 exceeds")));
+  assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/published`)));
+  assert.equal(Object.keys(report.proposed).length, 5);
+  assert.ok(report.proposed[`${fixtures[1]}/auto`]);
+  assert.equal(report.proposed[`${fixtures[0]}/1`], undefined);
+});
+
+test("hosted measurement source modules stay within the repository line limit", () => {
+  const directory = join(__dirname, "../../.github/scripts");
+  for (const file of readdirSync(directory).filter((name) => /^hosted-check.*\.cjs$/.test(name))) {
+    const lines = readFileSync(join(directory, file), "utf8").trimEnd().split("\n").length;
+    assert.ok(lines <= 200, `${file} has ${lines} lines; split responsibilities before adding more`);
+  }
 });

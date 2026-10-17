@@ -15,15 +15,12 @@ const {
   command,
   hashFile,
   packageManifest,
-  sampleFiles,
   CHECK_ARGS,
   DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
-  formatSummary,
-  calibratedBudget,
-  enforceBudget,
+  summarize,
 } = require("./hosted-check-metrics.cjs");
 
 function measure(fixture, artifact, output, sampleNumber, expectedTree) {
@@ -146,51 +143,6 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   command("git", ["diff", "--exit-code", "HEAD"], fixture);
   if (failed)
     throw new Error("Current check did not exit successfully before the 180-second deadline");
-}
-
-function summarize(directory) {
-  const samples = sampleFiles(directory).map((path) => JSON.parse(readFileSync(path, "utf8")));
-  const groups = new Map();
-  for (const sample of samples) {
-    const key = `${sample.fixtureCommit}/${sample.jobs}/${sample.variant}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(sample);
-  }
-  const rows = [...groups].sort().map(([key, values]) => ({ key, ...aggregate(values) }));
-  const table = formatSummary(rows);
-  writeFileSync(join(directory, "summary.json"), JSON.stringify(rows, null, 2));
-  writeFileSync(join(directory, "summary.md"), table);
-  if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, table);
-  console.log(table);
-  const expected = [
-    "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
-    "92d0a2061bde8d260aa0b86a2d71110ece1a43ca",
-  ];
-  const budgets = JSON.parse(readFileSync(join(__dirname, "hosted-check-budgets.json"), "utf8"));
-  const proposed = {};
-  const failures = [];
-  for (const commit of expected) {
-    for (const jobs of ["1", "4", "auto"]) {
-      for (const variant of ["published", "current"]) {
-        const values = groups.get(`${commit}/${jobs}/${variant}`) || [];
-        if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6)
-          throw new Error(`Incomplete samples: ${commit}/${jobs}/${variant}`);
-        if (variant === "current") {
-          const key = `${commit}/${jobs}`;
-          proposed[key] = calibratedBudget(values);
-          if (process.env.HOSTED_CHECK_CALIBRATE !== "true") {
-            try {
-              enforceBudget(values, budgets[key]);
-            } catch (error) {
-              failures.push(`${key}: ${error.message}`);
-            }
-          }
-        }
-      }
-    }
-  }
-  writeFileSync(join(directory, "proposed-budgets.json"), JSON.stringify(proposed, null, 2));
-  if (failures.length) throw new Error(failures.join("\n"));
 }
 
 if (require.main === module) {
