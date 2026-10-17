@@ -409,3 +409,6 @@ fn mixed_profile_scopes_match_separate_profile_projections() {
     separate.extend(run(Some("@app/other")));
     assert_eq!(run(None), separate);
 }
+
+#[path = "tests/profile_lifetimes.rs"]
+mod profile_lifetimes;
