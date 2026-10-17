@@ -97,6 +97,7 @@ impl ImportCollector {
         let writers = std::mem::take(&mut work.writers);
         work.indexes.clear();
         self.forward_receiver_writes = Some(work);
+        let mut alias_index = None;
         for mut writer in writers {
             writer
                 .sources
@@ -130,11 +131,13 @@ impl ImportCollector {
                 info,
                 &mut affected,
             );
-            self.invalidate_mutation_bindings(
+            let aliases = alias_index.get_or_insert_with(|| self.prepare_mutation_alias_index());
+            self.invalidate_mutation_bindings_indexed(
                 &affected,
                 info.metadata.context,
                 info.metadata.offset,
                 true,
+                Some(aliases),
             );
         }
     }
