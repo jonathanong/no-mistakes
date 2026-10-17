@@ -146,6 +146,7 @@ impl ImportCollector {
                 }
             }
             if let (Some(read), Some(version)) = (root_read.read(), version) {
+                self.retain_foreign_receiver_write(&key, &path, read, info);
                 if !self.defer_mutable_projection(
                     &key,
                     (&path, &reads, read),

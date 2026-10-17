@@ -609,9 +609,12 @@ For example, after `box.wrapper = retained`, a write through
 saved containers from later replacement objects; methods copied before the
 write keep their acquisition snapshots. Unknown and conditional stores retain
 possible origins. Projection uses locally represented receiver values; arbitrary
-heap transfers through function calls remain unresolved. Root writes
-across callable declaration and runtime execution order remain a known boundary
-([#2052](https://github.com/jonathanong/no-mistakes/issues/2052)).
+heap transfers through function calls remain unresolved. Mutable roots read by
+a callable writer also include possible origins from later-declared foreign
+callable bodies. Declaration order does not prove execution order, so those
+members remain unresolved when a replacement could apply. Repeated writes share
+one root/member/owner projection from the same collected facts. A container
+captured before the root is rebound keeps its acquired identity.
 
 Repeated imported-member replacement alternatives require a closed execution
 region: a guaranteed multi-item literal `for-of` body or the supported closed

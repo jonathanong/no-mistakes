@@ -24,6 +24,7 @@ pub use mutation_sources::{
     ValueReceiverMutations,
 };
 pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
+pub(super) type ForeignReceiverWrites = mutable_origins::ForeignReceiverWrites;
 
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
