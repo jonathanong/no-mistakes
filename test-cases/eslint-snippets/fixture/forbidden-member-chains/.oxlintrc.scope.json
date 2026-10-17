@@ -1,0 +1,21 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "overrides": [
+    {
+      "files": ["scoped.mjs"],
+      "rules": {
+        "no-mistakes/forbidden-member-chains": [
+          "error",
+          {
+            "chains": [{ "path": "records.entry", "message": "Use the entry helper." }]
+          }
+        ]
+      }
+    }
+  ]
+}

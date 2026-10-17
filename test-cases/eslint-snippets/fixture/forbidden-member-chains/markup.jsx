@@ -1,0 +1,2 @@
+<Panel.Open />;
+records.entry;

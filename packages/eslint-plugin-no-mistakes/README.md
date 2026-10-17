@@ -43,3 +43,6 @@ See [options and examples](../../docs/eslint-rules/no-argv-main-guard.md).
 
 `no-comment-phrases` is an opt-in rule for configured phrases in line and block comments.
 See [options and examples](../../docs/eslint-rules/no-comment-phrases.md).
+
+`forbidden-member-chains` is an opt-in rule for configured static member-access chains.
+See [options and examples](../../docs/eslint-rules/forbidden-member-chains.md).

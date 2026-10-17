@@ -93,3 +93,5 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 - [`no-argv-main-guard`](no-argv-main-guard.md) avoids symlink-sensitive main-module comparisons.
 
 - [`no-comment-phrases`](no-comment-phrases.md) flags configured phrases in line and block comments.
+
+- [`forbidden-member-chains`](forbidden-member-chains.md) bans configured static member-access chains.
