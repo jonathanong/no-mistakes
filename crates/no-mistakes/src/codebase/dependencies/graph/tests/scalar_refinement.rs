@@ -111,3 +111,64 @@ fn scalar_refinement_mode_and_counts_stay_request_owned_under_rayon() {
     assert_eq!(new.2 .0, 0);
     assert_eq!(old.2 .0, new.2 .1);
 }
+
+#[test]
+fn in_place_refinement_removes_per_visit_whole_site_clones() {
+    let original = std::env::var_os("NO_MISTAKES_SITE_CLONE_ORIGINAL").is_some();
+    for (name, count) in [
+        ("value-flow-replacement-scale-16", 16),
+        ("value-flow-replacement-scale-256", 256),
+    ] {
+        let ((full, _, (_, visits)), clones) =
+            site_storage::with_cloning(original, || build(name, false, true));
+        assert_eq!(full["sites"].as_array().unwrap().len(), count);
+        assert!(visits >= count, "actual saved hot reads must be refined");
+        println!("SITE_OWNERSHIP_WORK {name} visits={visits} whole_site_clones={clones}");
+        assert_eq!(clones, 0, "per-visit whole-site clone budget");
+    }
+}
+
+#[test]
+fn in_place_refinement_preserves_scalar_vector_incoming_and_physical_edges() {
+    for name in [
+        "value-flow-replacement-cold",
+        "inline-member-precision-no-writes",
+        "value-flow-replacement-scale-16",
+        "value-flow-replacement-scale-256",
+        "value-flow-foreign-parameter-timing",
+        "value-flow-static-call-admission",
+        "value-flow-repeated-replacement-controls",
+        "value-flow-replacement-uncertain-execution",
+    ] {
+        for calls in [false, true] {
+            let ((old, old_probe, old_work), old_clones) =
+                site_storage::with_cloning(true, || build(name, false, calls));
+            let ((new, new_probe, new_work), new_clones) =
+                site_storage::with_cloning(false, || build(name, false, calls));
+            let ((vector, vector_probe, _), _) =
+                site_storage::with_cloning(true, || build(name, true, calls));
+            assert_eq!(old, new, "all scalar graph fields {name}/{calls}");
+            assert_eq!(vector, new, "all original vector fields {name}/{calls}");
+            assert_eq!(old_work, new_work, "same refinement visits {name}/{calls}");
+            assert_eq!(new_clones, 0);
+            if let (Some(old), Some(new), Some(vector)) = (old_probe, new_probe, vector_probe) {
+                assert_eq!(
+                    old.incoming, new.incoming,
+                    "incoming owners/physical arguments {name}"
+                );
+                assert_eq!(vector.incoming, new.incoming);
+                assert_eq!(
+                    old.admission_raw_edges, new.admission_raw_edges,
+                    "raw edge order/multiplicity {name}"
+                );
+                assert_eq!(vector.admission_raw_edges, new.admission_raw_edges);
+                assert_eq!(
+                    old_clones, old_work.1,
+                    "actual old whole-site clone per visit"
+                );
+            } else {
+                assert_eq!((old_clones, new_work.1), (0, 0), "no-calls zero control");
+            }
+        }
+    }
+}

@@ -4,18 +4,15 @@ use super::*;
 mod worklist;
 pub(in super::super) use worklist::refine_value_calls;
 include!("refine_incoming.rs");
-fn refine_site(
+fn refine_site_in_place(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
-    base: &ResolvedCallSite,
+    result: &mut ResolvedCallSite,
     data: ValueInputs<'_>,
     parameters_enabled: bool,
-) -> (
-    ResolvedCallSite,
-    FxHashSet<(std::path::PathBuf, CallableId)>,
-) {
+) -> FxHashSet<(std::path::PathBuf, CallableId)> {
     #[cfg(all(test, feature = "test-instrumentation"))]
     if data.cache.site_storage.original() {
         data.cache.site_storage.vector();
@@ -24,11 +21,12 @@ fn refine_site(
             facts,
             resolver,
             indexes,
-            std::slice::from_ref(base),
+            std::slice::from_ref(result),
             data,
             parameters_enabled,
         );
-        return (sites.remove(0), used);
+        *result = sites.remove(0);
+        return used;
     }
     #[cfg(all(test, feature = "test-instrumentation"))]
     data.cache.site_storage.scalar();
@@ -59,8 +57,7 @@ fn refine_site(
         member_initializer: None,
         member_read: None,
     };
-    let mut result = base.clone();
-    for site in std::iter::once(&mut result) {
+    for site in std::iter::once(result) {
         if site.invocation == InvocationKind::Construct {
             continue;
         }
@@ -99,7 +96,7 @@ fn refine_site(
         super::apply_value::apply_value(inputs, facts, indexes, site, value, flow.replacement_read);
     }
     flow.merge_writer_dependencies();
-    (result, flow.used_parameters)
+    flow.used_parameters
 }
 
 #[cfg(all(test, feature = "test-instrumentation"))]
@@ -109,3 +106,33 @@ mod vector_oracle;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "refinement_boundaries_tests.rs"]
 mod boundary_tests;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "refine_owned_oracle_tests.rs"]
+mod owned_oracle;
+// Existing scalar boundary tests retain their original owned-return entrypoint.
+#[cfg(all(test, feature = "test-instrumentation"))]
+fn refine_site(
+    inputs: &GraphEdgeBuildInputs<'_>,
+    facts: &dyn TsFactLookup,
+    resolver: &dyn ImportResolution,
+    indexes: &CallableResolutionIndexes,
+    base: &ResolvedCallSite,
+    data: ValueInputs<'_>,
+    parameters_enabled: bool,
+) -> (
+    ResolvedCallSite,
+    FxHashSet<(std::path::PathBuf, CallableId)>,
+) {
+    let mut site = base.clone();
+    let used = refine_site_in_place(
+        inputs,
+        facts,
+        resolver,
+        indexes,
+        &mut site,
+        data,
+        parameters_enabled,
+    );
+    (site, used)
+}

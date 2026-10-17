@@ -13,6 +13,10 @@ pub(in super::super::super) fn refine_value_calls(
     indexes: &CallableResolutionIndexes,
     pass: &mut CallPass,
 ) {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    if pass.parameter_cache.site_storage.cloning() || pass.parameter_cache.site_storage.original() {
+        return owned_worklist::refine_value_calls(inputs, facts, resolver, indexes, pass);
+    }
     let base = pass.sites.clone();
     let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
@@ -52,16 +56,18 @@ pub(in super::super::super) fn refine_value_calls(
         }
         // This projection belongs to one immutable incoming-call generation.
         let module_writer_phases = execution_phases::ModuleWriterPhases::default();
-        let results: Vec<_> = batch
-            .par_iter()
-            .map(|index| {
-                let enabled = visits[index] <= base.len() + 1;
-                let (site, used) = refine_site(
+        let selected = selected_sites(&mut pass.sites, &batch);
+        let results: Vec<_> = selected
+            .into_par_iter()
+            .map(|(index, site)| {
+                let enabled = visits[&index] <= base.len() + 1;
+                let previous = reset_resolution(site, &base[index]);
+                let used = refine_site_in_place(
                     inputs,
                     facts,
                     resolver,
                     indexes,
-                    &base[*index],
+                    site,
                     ValueInputs {
                         module_writer_phases: &module_writer_phases,
                         cache: &pass.parameter_cache,
@@ -71,11 +77,12 @@ pub(in super::super::super) fn refine_value_calls(
                     },
                     enabled,
                 );
-                (*index, site, used)
+                (index, previous, used)
             })
             .collect();
         let mut changed = fx_set();
-        for (index, site, used) in results {
+        for (index, mut previous, used) in results {
+            let site = &mut pass.sites[index];
             for key in previous_dependencies.remove(&index).into_iter().flatten() {
                 if let Some(users) = dependencies.get_mut(&key) {
                     users.remove(&index);
@@ -85,12 +92,11 @@ pub(in super::super::super) fn refine_value_calls(
                 dependencies.entry(key.clone()).or_default().insert(index);
             }
             previous_dependencies.insert(index, used);
-            if pass.sites[index].target != site.target
-                || pass.sites[index].target_node != site.target_node
-            {
-                for key in function_keys(&pass.sites[index]) {
+            if previous.0 != site.target || previous.1 != site.target_node {
+                swap_resolution(site, &mut previous);
+                for key in function_keys(site) {
                     if let Some(arguments) = incoming.get_mut(&key) {
-                        let previous = site_argument(&pass.sites[index], indexes, facts);
+                        let previous = site_argument(site, indexes, facts);
                         if let Some(position) =
                             arguments.iter().position(|argument| argument == &previous)
                         {
@@ -99,15 +105,15 @@ pub(in super::super::super) fn refine_value_calls(
                     }
                     changed.insert(key);
                 }
-                for key in function_keys(&site) {
+                swap_resolution(site, &mut previous);
+                for key in function_keys(site) {
                     incoming
                         .entry(key.clone())
                         .or_default()
-                        .push(site_argument(&site, indexes, facts));
+                        .push(site_argument(site, indexes, facts));
                     changed.insert(key);
                 }
             }
-            pass.sites[index] = site;
         }
         if !changed.is_empty() {
             changed = pass.parameter_cache.affected(changed);
@@ -147,6 +153,7 @@ pub(in super::super::super) fn refine_value_calls(
     }
 }
 include!("worklist_edges.rs");
+include!("site_ownership.rs");
 
 fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> + '_ {
     site.target_nodes().filter_map(move |node| {
@@ -181,3 +188,7 @@ fn site_source(inputs: &GraphEdgeBuildInputs<'_>, site: &ResolvedCallSite) -> No
 #[cfg(test)]
 #[path = "replacement_edges_tests.rs"]
 mod tests;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "worklist_owned_oracle_tests.rs"]
+mod owned_worklist;

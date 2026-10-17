@@ -231,3 +231,7 @@ mod choice_targets;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "value_flow/site_storage_tests.rs"]
 pub(super) mod site_storage;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "value_flow/opaque_entry_mode.rs"]
+pub(super) mod opaque_entry_mode;

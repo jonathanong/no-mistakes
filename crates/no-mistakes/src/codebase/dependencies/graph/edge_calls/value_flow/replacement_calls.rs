@@ -3,14 +3,7 @@ use super::*;
 mod member_key;
 use member_key::same_member_root;
 
-pub(super) struct CallAdmission {
-    // (Some(owner), None) blocks every group of that file-local owner.
-    pub(super) blocked: FxHashSet<(Option<CallableId>, Option<usize>)>,
-    #[cfg(feature = "test-instrumentation")]
-    pub(super) checks: usize,
-    #[cfg(feature = "test-instrumentation")]
-    pub(super) steps: usize,
-}
+include!("replacement_call_admission.rs");
 struct Proof<'a> {
     file: &'a CallableFileIndex,
     receivers: &'a FxHashMap<String, usize>,

@@ -139,7 +139,7 @@ impl ReplacementCatalog {
                 &file,
                 &receivers,
                 &writes,
-                &repeated_owners,
+                (&repeated_owners, &admission),
                 &foreign,
             );
             payloads.block_regions(&writes, &admission);

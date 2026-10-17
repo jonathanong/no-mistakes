@@ -232,3 +232,6 @@ pub use value_flow_metrics::execution_steps as benchmark_probe_execution_phase_s
 
 #[cfg(feature = "test-instrumentation")]
 pub use value_flow::admission_mode::with_original_admission as benchmark_probe_with_original_admission;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+pub use value_flow::opaque_entry_mode::with_original_entries as benchmark_probe_with_original_entries;

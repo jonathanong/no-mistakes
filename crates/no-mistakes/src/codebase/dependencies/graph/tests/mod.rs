@@ -163,3 +163,6 @@ mod static_callable_admission;
 
 #[cfg(feature = "test-instrumentation")]
 mod scalar_refinement;
+
+#[cfg(feature = "test-instrumentation")]
+mod opaque_entry_preparation;

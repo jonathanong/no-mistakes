@@ -19,9 +19,10 @@ impl ReplacementPayloads {
         file: &CallableFileIndex,
         receivers: &FxHashMap<String, usize>,
         index: &PreparedReplacements,
-        repeated: &FxHashSet<CallableId>,
+        proof: (&FxHashSet<CallableId>, &super::calls::CallAdmission),
         foreign: &super::writers::ForeignWriters<'_>,
     ) -> Self {
+        let (repeated, admission) = proof;
         #[cfg(feature = "test-instrumentation")]
         let mut probe = ReplacementProbeSnapshot::default();
         let leaves: Vec<_> = index
@@ -98,7 +99,16 @@ impl ReplacementPayloads {
                 || aliases[&receiver]
                     .iter()
                     .any(|name| persistence_barrier(file, name, property, owner));
-            if barrier {
+            let opaque = admission.blocks(owner, region);
+            #[cfg(all(test, feature = "test-instrumentation"))]
+            let opaque = opaque && !flow.cache.opaque_entry_mode.original();
+            #[cfg(feature = "test-instrumentation")]
+            {
+                probe.opaque_entry_resolutions_avoided += usize::from(!barrier && opaque);
+            }
+            // Admission is complete before payload construction. These entries
+            // are hidden by target's blocked-first lookup, including prefixes.
+            if barrier || opaque {
                 blocked
                     .entry(group)
                     .or_default()
@@ -108,6 +118,10 @@ impl ReplacementPayloads {
             let write = &index.facts.writes[first];
             let entry_offset = region.map_or(0, |id| index.facts.regions[id].start);
             flow.default_origins = None;
+            #[cfg(feature = "test-instrumentation")]
+            {
+                probe.entry_resolutions += 1;
+            }
             let original = flow.named(
                 path,
                 &format!("{}.{property}", write.receiver),
@@ -142,9 +156,7 @@ impl ReplacementPayloads {
         admission: &super::calls::CallAdmission,
     ) {
         for (receiver, owner, region, property, _) in index.properties() {
-            if admission.blocked.contains(&(owner, region))
-                || owner.is_some() && admission.blocked.contains(&(owner, None))
-            {
+            if admission.blocks(owner, region) {
                 self.blocked
                     .entry((receiver, owner, region))
                     .or_default()

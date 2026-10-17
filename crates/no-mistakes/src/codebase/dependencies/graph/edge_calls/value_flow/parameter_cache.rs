@@ -35,6 +35,8 @@ type TypeOrigins =
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
     #[cfg(all(test, feature = "test-instrumentation"))]
+    pub(super) opaque_entry_mode: opaque_entry_mode::Mode,
+    #[cfg(all(test, feature = "test-instrumentation"))]
     pub(super) site_storage: site_storage::Probe,
     #[cfg(feature = "test-instrumentation")]
     pub(super) admission_probe: admission_probe::AdmissionProbe,

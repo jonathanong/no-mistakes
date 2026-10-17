@@ -17,6 +17,8 @@ struct AggregateAliasCandidate {
 
 #[derive(Default)]
 struct ImportCollector {
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    statement_mode: statement_mode::Mode,
     bare_callable_callee: Option<u32>,
     /// 0-based byte offsets of each line start. Empty when line numbers are
     /// unused so the collector does not retain a full source copy.

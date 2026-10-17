@@ -189,3 +189,7 @@ fn typed_invalidations_preserve_owner_semantics_and_ordinary_unary_walks() {
 
 #[path = "callable_assignment_targets.rs"]
 mod callable_assignment_targets;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "statement_outline.rs"]
+mod statement_outline;
