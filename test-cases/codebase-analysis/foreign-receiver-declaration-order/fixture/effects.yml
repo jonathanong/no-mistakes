@@ -1,0 +1,8 @@
+effects:
+  receiver:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey', export: replica.get }
+      - { module: '@vendor/valkey', export: primary.info }
+      - { module: '@vendor/valkey', export: replica.info }
+      - { module: '@vendor/valkey', export: unrelated.get }

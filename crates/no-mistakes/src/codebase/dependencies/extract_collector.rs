@@ -52,6 +52,7 @@ struct ImportCollector {
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
     receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,
+    foreign_receiver_writes: Option<Box<extract_value_flow::ForeignReceiverWrites>>,
     prior_member_mutations: extract_value_flow::PriorMemberMutations,
     destructuring_phase_owner: Option<Option<CallableId>>,
     assignment_rhs_frame: Option<Box<extract_value_flow::assignment_rhs_frame::AssignmentRhsFrame>>,
