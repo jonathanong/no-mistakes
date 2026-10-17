@@ -88,7 +88,11 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
       (privateOutput) => writeSuccess(privateOutput, artifacts),
       renameNoReplace,
     );
-    return { outputDirectory: output.path, ...artifacts };
+    return {
+      outputDirectory: output.path,
+      ...artifacts,
+      ...(result.jobsPoolWarning ? { jobsPoolWarning: result.jobsPoolWarning } : {}),
+    };
   } catch (error) {
     if (mayWriteFailureArtifacts && !artifactErrors.isOutputRestorationFailure(error)) {
       try {

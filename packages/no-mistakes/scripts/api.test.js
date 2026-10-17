@@ -124,7 +124,23 @@ test("programmatic API proxies object options through async native addon calls",
       return JSON.stringify({ command: "resolveCheck", options });
     },
     fetchesJson: async (json) => JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
-    checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
+    checkJson: async (json) => {
+      const options = JSON.parse(json);
+      return JSON.stringify({
+        command: "check",
+        options,
+        ...(options.jobs === 2
+          ? {
+              jobsPoolWarning: {
+                code: "rayon-pool-size",
+                message: "existing pool",
+                requestedJobs: 2,
+                effectiveJobs: 4,
+              },
+            }
+          : {}),
+      });
+    },
     resolveConfigJson: async (json) =>
       JSON.stringify({ command: "resolveConfig", options: JSON.parse(json) }),
     validateMermaidMarkdownJson: async (json) =>
@@ -198,6 +214,13 @@ test("programmatic API proxies object options through async native addon calls",
 
   try {
     const api = require(indexPath);
+    assert.deepEqual((await api.check({ jobs: 2 })).jobsPoolWarning, {
+      code: "rayon-pool-size",
+      message: "existing pool",
+      requestedJobs: 2,
+      effectiveJobs: 4,
+    });
+    assert.equal(Object.hasOwn(await api.check(), "jobsPoolWarning"), false);
     assert.deepEqual(
       await api.dependencies({
         files: ["a.mts"],
@@ -728,7 +751,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
-    /options: WithInvocationOptions<SymbolsOptions>,\n\): Promise<SymbolsResult \| SignatureImpactResult>;/,
+    /options: WithInvocationOptions<SymbolsOptions>,\n\): Promise<WithInvocationResult<SymbolsResult \| SignatureImpactResult>>;/,
   );
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
@@ -741,7 +764,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
-    /check\(options\?: WithInvocationOptions<CheckOptions>\): Promise<CheckReport>;/,
+    /check\(\s*options\?: WithInvocationOptions<CheckOptions>,?\s*\): Promise<WithInvocationResult<CheckReport>>;/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -773,7 +796,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
-    /options\?: WithInvocationOptions<ImportUsagesOptions>,\n\): Promise<ImportUsagesResult>;/,
+    /options\?: WithInvocationOptions<ImportUsagesOptions>,\n\): Promise<WithInvocationResult<ImportUsagesResult>>;/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -851,7 +874,7 @@ test("query annotation configuration exposes the unknown SQL policy", () => {
 
 test("generatePostgresCatalog declarations separate complete and ordering catalogs", () => {
   const types = readFileSync(join(packageRoot, "postgres-catalog-types.d.ts"), "utf8");
-  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  const index = readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");
 
   assert.match(types, /export type PostgresCatalogCoverage = "complete" \| "ordering";/);
   assert.match(types, /coverage\?: PostgresCatalogCoverage;/);
@@ -886,15 +909,15 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
   }
   assert.match(
     index,
-    /PostgresCatalogOptions & \{ coverage: "ordering" \}>,\n\): Promise<PostgresOrderingCatalog>;/,
+    /PostgresCatalogOptions & \{ coverage: "ordering" \}>,\n\): Promise<WithInvocationResult<PostgresOrderingCatalog>>;/,
   );
   assert.match(
     index,
-    /PostgresCatalogOptions & \{ coverage\?: "complete" \}>,\n\): Promise<PostgresCompleteCatalog>;/,
+    /PostgresCatalogOptions & \{ coverage\?: "complete" \}>,\n\): Promise<WithInvocationResult<PostgresCompleteCatalog>>;/,
   );
   assert.match(
     index,
-    /WithInvocationOptions<PostgresCatalogOptions>,\n\): Promise<PostgresCatalog>;/,
+    /WithInvocationOptions<PostgresCatalogOptions>,\n\): Promise<WithInvocationResult<PostgresCatalog>>;/,
   );
 });
 
@@ -1181,11 +1204,11 @@ test("dependency declarations expose bounded import-closure inputs and compact o
   );
   assert.match(
     indexDeclarations,
-    /options: WithInvocationOptions<TraversePathsOptions>,\n\): Promise<ImportClosureResult>;/,
+    /options: WithInvocationOptions<TraversePathsOptions>,\n\): Promise<WithInvocationResult<ImportClosureResult>>;/,
   );
   assert.match(
     indexDeclarations,
-    /options: WithInvocationOptions<TraverseGraphOptions>,\n\): Promise<DependencyResult>;/,
+    /options: WithInvocationOptions<TraverseGraphOptions>,\n\): Promise<WithInvocationResult<DependencyResult>>;/,
   );
   assert.doesNotMatch(indexDeclarations, /TraverseGraphOptions \| TraverseOptions/);
 });
@@ -1215,6 +1238,16 @@ test("declarations expose invocation controls on every analysis", () => {
   assert.match(invocationDeclarations, /command-specific options are validated/);
   assert.match(invocationDeclarations, /JSON\/control or lock failures cannot/);
   assert.match(invocationDeclarations, /Later calls cannot resize an already initialized pool/);
+  assert.match(invocationDeclarations, /export interface JobsPoolWarning/);
+  assert.match(invocationDeclarations, /code: "rayon-pool-size"/);
+  assert.match(invocationDeclarations, /requestedJobs: number/);
+  assert.match(invocationDeclarations, /effectiveJobs: number/);
+  assert.match(invocationDeclarations, /jobsPoolWarning/);
+  assert.match(invocationDeclarations, /each queued run uses the full pool/);
+  assert.match(
+    readFileSync(join(packageRoot, "analyze-project-types.d.ts"), "utf8"),
+    /jobsPoolWarning\?: JobsPoolWarning/,
+  );
   assert.match(
     indexDeclarations,
     /analyzeProject\(\n  options: WithInvocationOptions<AnalyzeProjectOptions>/,
@@ -1304,12 +1337,14 @@ test("INSERT facts expose named exported declaration contracts", () => {
 });
 
 test("TypeScript module facts expose named contracts and async invocation options", () => {
-  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  const index =
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8") +
+    readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");
   const types = readFileSync(join(packageRoot, "typescript-module-types.d.ts"), "utf8");
   assert.match(index, /export type \* from "\.\/typescript-module-types"/);
   assert.match(
     index,
-    /options: WithInvocationOptions<TypeScriptModulesOptions>,\n\): Promise<TypeScriptModulesReport>/,
+    /options: WithInvocationOptions<TypeScriptModulesOptions>,\n\): Promise<WithInvocationResult<TypeScriptModulesReport>>/,
   );
   for (const name of [
     "ModulesOptions",
@@ -1562,7 +1597,7 @@ test("audit declarations export named artifacts, evidence and async report contr
   const api = readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");
   assert.match(
     api,
-    /export function testsAudit\(\s*options: WithInvocationOptions<TestsAuditOptions>,?\s*\): Promise<TestAuditReport>;/,
+    /export function testsAudit\(\s*options: WithInvocationOptions<TestsAuditOptions>,?\s*\): Promise<WithInvocationResult<TestAuditReport>>;/,
   );
   const aggregate = readFileSync(join(packageRoot, "analyze-project-types.d.ts"), "utf8");
   assert.match(aggregate, /type: "testsAudit"; id\?: string \} & TestsAuditOptions/);
@@ -1695,7 +1730,7 @@ test("effects alternatives expose a named optional public evidence type", () => 
   );
   assert.match(
     readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8"),
-    /effects\(options: WithInvocationOptions<EffectsOptions>\): Promise<EffectsReport>/,
+    /effects\(\s*options: WithInvocationOptions<EffectsOptions>,?\s*\): Promise<WithInvocationResult<EffectsReport>>/,
   );
 });
 
@@ -1718,4 +1753,31 @@ test("forbidden-call predicates export bounded literal and unknown-policy declar
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/forbidden-call-types"/,
   );
+});
+
+test("analysis object result metadata compiles while pure and array APIs stay unchanged", () => {
+  const { createRequire } = require("node:module");
+  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+  const ts = dependencyRequire("typescript");
+  const program = ts.createProgram(
+    [join(repositoryRoot, "fixtures/node-api/jobs-pool-result-types/public.mts")],
+    {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    },
+  );
+  assert.deepEqual(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+  );
+  const declarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface InvocationResultMetadata/);
+  assert.match(declarations, /export type WithInvocationResult<T>/);
 });

@@ -45,7 +45,7 @@ impl Task for JsonValueTask {
             None => prepare(),
         }
         .map_err(to_napi_error)?;
-        crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
+        let jobs_warning = crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let run = || crate::ast::with_request_parse_cache(|| (self.run)(options));
         let output = match &_diagnostics {
@@ -57,7 +57,7 @@ impl Task for JsonValueTask {
             None => run(),
         };
         crate::invocation::check_timeout().map_err(to_napi_error)?;
-        output.map(|json| Buffer::from(json.into_bytes()))
+        buffer_with_jobs_warning(output, jobs_warning)
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -95,7 +95,7 @@ impl Task for JsonTask {
             None => prepare(),
         }
         .map_err(to_napi_error)?;
-        crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
+        let jobs_warning = crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let run = || crate::ast::with_request_parse_cache(|| (self.run)(options_json));
         let output = match &_diagnostics {
@@ -107,12 +107,20 @@ impl Task for JsonTask {
             None => run(),
         };
         crate::invocation::check_timeout().map_err(to_napi_error)?;
-        output.map(|json| Buffer::from(json.into_bytes()))
+        buffer_with_jobs_warning(output, jobs_warning)
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         Ok(output)
     }
+}
+
+fn buffer_with_jobs_warning(
+    output: napi::Result<String>,
+    warning: Option<crate::cli::JobsPoolWarning>,
+) -> napi::Result<Buffer> {
+    output
+        .map(|json| Buffer::from(crate::cli::attach_jobs_pool_warning(json, warning).into_bytes()))
 }
 
 fn utf8_json(options_json: &Buffer) -> napi::Result<&str> {

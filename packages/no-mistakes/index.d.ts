@@ -1,21 +1,13 @@
 import type { TypeScriptModulesOptions, TypeScriptModulesReport } from "./typescript-module-types";
 export type * from "./typescript-module-types";
 /** Analyze selected TS/JS modules asynchronously with source-local binding semantics. */
-export function analyzeTypeScriptModules(
-  options: WithInvocationOptions<TypeScriptModulesOptions>,
-): Promise<TypeScriptModulesReport>;
+
 import type { PostgresSqlSource, PostgresSqlFacts } from "./postgres-source-types";
 export { extractExecutedPostgresSql } from "./executed-postgres-sql-types";
 export * from "./postgres-source-types";
 /** Parse SQL on the native async worker without repository I/O or a database. */
 export function parsePostgresSql(source: PostgresSqlSource): Promise<PostgresSqlFacts>;
 export function parsePostgresSql(sources: PostgresSqlSource[]): Promise<PostgresSqlFacts[]>;
-import type {
-  PostgresCatalog,
-  PostgresCatalogOptions,
-  PostgresCompleteCatalog,
-  PostgresOrderingCatalog,
-} from "./postgres-catalog-types";
 import type {
   CheckReport,
   AnalyzeProjectOptions,
@@ -74,6 +66,7 @@ import type {
   ImportClosureResult,
   WhyStep,
   WithInvocationOptions,
+  WithInvocationResult,
   WritePlanningImpactArtifactsOptions,
   PlanningImpactArtifacts,
 } from "./types";
@@ -83,71 +76,85 @@ export * from "./index-ci-infra";
 
 export function dependencies(
   options: WithInvocationOptions<TraversePathsOptions>,
-): Promise<ImportClosureResult>;
+): Promise<WithInvocationResult<ImportClosureResult>>;
 export function dependencies(
   options: WithInvocationOptions<TraverseGraphOptions>,
-): Promise<DependencyResult>;
+): Promise<WithInvocationResult<DependencyResult>>;
 export function dependents(
   options: WithInvocationOptions<TraverseOptions>,
-): Promise<DependencyResult>;
-export function related(options: WithInvocationOptions<TraverseOptions>): Promise<DependencyResult>;
+): Promise<WithInvocationResult<DependencyResult>>;
+export function related(
+  options: WithInvocationOptions<TraverseOptions>,
+): Promise<WithInvocationResult<DependencyResult>>;
 export function analyzeProject(
   options: WithInvocationOptions<AnalyzeProjectOptions>,
-): Promise<AnalyzeProjectResult>;
+): Promise<WithInvocationResult<AnalyzeProjectResult>>;
 export function writePlanningImpactArtifacts(
   options: WithInvocationOptions<WritePlanningImpactArtifactsOptions>,
-): Promise<PlanningImpactArtifacts>;
+): Promise<WithInvocationResult<PlanningImpactArtifacts>>;
 export function symbols(
   options: WithInvocationOptions<SymbolsSignatureImpactOptions>,
-): Promise<SignatureImpactResult>;
-export function symbols(options: WithInvocationOptions<SymbolsListOptions>): Promise<SymbolsResult>;
+): Promise<WithInvocationResult<SignatureImpactResult>>;
+export function symbols(
+  options: WithInvocationOptions<SymbolsListOptions>,
+): Promise<WithInvocationResult<SymbolsResult>>;
 export function symbols(
   options: WithInvocationOptions<SymbolsOptions>,
-): Promise<SymbolsResult | SignatureImpactResult>;
+): Promise<WithInvocationResult<SymbolsResult | SignatureImpactResult>>;
 export function importUsages(
   options?: WithInvocationOptions<ImportUsagesOptions>,
-): Promise<ImportUsagesResult>;
+): Promise<WithInvocationResult<ImportUsagesResult>>;
 export function importers(
   options: WithInvocationOptions<ImportersOptions>,
-): Promise<ImportersResult>;
+): Promise<WithInvocationResult<ImportersResult>>;
 export function exportsOf(
   options: WithInvocationOptions<ExportsOfOptions>,
-): Promise<ExportsOfResult>;
+): Promise<WithInvocationResult<ExportsOfResult>>;
 export function deadExports(
   options: WithInvocationOptions<DeadExportsOptions>,
-): Promise<DeadExportsResult>;
+): Promise<WithInvocationResult<DeadExportsResult>>;
 export function callSites(
   options: WithInvocationOptions<CallSitesOptions>,
-): Promise<CallSitesResult>;
+): Promise<WithInvocationResult<CallSitesResult>>;
 export function resolveCheck(
   options: WithInvocationOptions<ResolveCheckOptions>,
-): Promise<ResolveCheckResult>;
+): Promise<WithInvocationResult<ResolveCheckResult>>;
 export function resolveCheck(
   options: WithInvocationOptions<ResolveCheckFilesOptions>,
-): Promise<ResolveCheckBatchResult>;
-export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<FetchReport>;
-export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
-export function check(options?: WithInvocationOptions<CheckOptions>): Promise<CheckReport>;
+): Promise<WithInvocationResult<ResolveCheckBatchResult>>;
+export function fetches(
+  options?: WithInvocationOptions<FetchesOptions>,
+): Promise<WithInvocationResult<FetchReport>>;
+export function flow(
+  options: WithInvocationOptions<FlowOptions>,
+): Promise<WithInvocationResult<FlowReport>>;
+export function check(
+  options?: WithInvocationOptions<CheckOptions>,
+): Promise<WithInvocationResult<CheckReport>>;
 export function resolveConfig(
   options?: WithInvocationOptions<ProjectOptions>,
-): Promise<ResolvedConfig>;
+): Promise<WithInvocationResult<ResolvedConfig>>;
 export function validateMermaidMarkdown(
   options: WithInvocationOptions<MermaidValidationOptions>,
-): Promise<MermaidValidationResult>;
-export function testsPlan(options: WithInvocationOptions<TestsPlanOptions>): Promise<TestPlan>;
-export function testsImpact(options: WithInvocationOptions<TestsImpactOptions>): Promise<TestPlan>;
+): Promise<WithInvocationResult<MermaidValidationResult>>;
+export function testsPlan(
+  options: WithInvocationOptions<TestsPlanOptions>,
+): Promise<WithInvocationResult<TestPlan>>;
+export function testsImpact(
+  options: WithInvocationOptions<TestsImpactOptions>,
+): Promise<WithInvocationResult<TestPlan>>;
 export function testsTargets(
   options: WithInvocationOptions<TestsTargetsOptions>,
-): Promise<TestsTargetsReport>;
+): Promise<WithInvocationResult<TestsTargetsReport>>;
 export function testsWhy(
   options: WithInvocationOptions<TestsWhyOptions>,
-): Promise<Record<string, WhyStep[]>>;
+): Promise<WithInvocationResult<Record<string, WhyStep[]>>>;
 export function testsComment(
   options: WithInvocationOptions<TestsPlanDocumentOptions>,
 ): Promise<string>;
 export function testsGraph(
   options: WithInvocationOptions<TestsPlanDocumentOptions>,
-): Promise<TestGraph>;
+): Promise<WithInvocationResult<TestGraph>>;
 export function testsGraphMermaid(
   options: WithInvocationOptions<TestsPlanDocumentOptions>,
 ): Promise<string>;
@@ -163,7 +170,9 @@ export function playwrightRelated(
 export function playwrightTests(
   options?: WithInvocationOptions<PlaywrightOptions>,
 ): Promise<unknown>;
-export function queues(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueReport>;
+export function queues(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<WithInvocationResult<QueueReport>>;
 export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
 export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
 export function queueCheck(
@@ -171,7 +180,7 @@ export function queueCheck(
 ): Promise<QueueCheckFinding[]>;
 export function serverRoutes(
   options?: WithInvocationOptions<ProjectOptions>,
-): Promise<ServerRoutesReport>;
+): Promise<WithInvocationResult<ServerRoutesReport>>;
 export function serverRouteList(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<unknown[]>;
@@ -183,7 +192,7 @@ export function serverRouteRelated(
 ): Promise<GraphEdge[]>;
 export function serverContracts(
   options?: WithInvocationOptions<ProjectOptions>,
-): Promise<ServerContractsReport>;
+): Promise<WithInvocationResult<ServerContractsReport>>;
 export function reactAnalyze(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<ReactComponentFacts[]>;
@@ -192,18 +201,4 @@ export function reactCheck(
 ): Promise<ReactViolation[]>;
 export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
-): Promise<ReactUsagesReport>;
-
-/**
- * Observe committed PostgreSQL metadata in a read-only transaction and return the catalog that
- * `schemaCatalogPath` reads. Requires psql. `coverage: "ordering"` returns only the ordering facts.
- */
-export function generatePostgresCatalog(
-  options: WithInvocationOptions<PostgresCatalogOptions & { coverage: "ordering" }>,
-): Promise<PostgresOrderingCatalog>;
-export function generatePostgresCatalog(
-  options: WithInvocationOptions<PostgresCatalogOptions & { coverage?: "complete" }>,
-): Promise<PostgresCompleteCatalog>;
-export function generatePostgresCatalog(
-  options: WithInvocationOptions<PostgresCatalogOptions>,
-): Promise<PostgresCatalog>;
+): Promise<WithInvocationResult<ReactUsagesReport>>;

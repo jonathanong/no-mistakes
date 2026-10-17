@@ -55,8 +55,17 @@ pub fn parse_postgres_source(source: &PostgresSqlSource) -> PostgresSqlFacts {
 
 /// Batch independent sources while preserving input order and per-source ownership.
 pub fn parse_postgres_sources(sources: &[PostgresSqlSource]) -> Vec<PostgresSqlFacts> {
+    parse_postgres_sources_with_jobs(sources, 0)
+}
+
+pub(crate) fn parse_postgres_sources_with_jobs(
+    sources: &[PostgresSqlSource],
+    jobs: usize,
+) -> Vec<PostgresSqlFacts> {
     use rayon::prelude::*;
-    batch_pool::pool().install(|| sources.par_iter().map(parse_postgres_source).collect())
+    batch_pool::install(jobs, || {
+        sources.par_iter().map(parse_postgres_source).collect()
+    })
 }
 
 #[cfg(test)]

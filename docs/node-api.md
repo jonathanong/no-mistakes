@@ -394,13 +394,19 @@ The npm package also exposes this integration as `no-mistakes planning-impact
 --changed-files <manifest> --output-dir <directory>`. Its current working
 directory is `root`; `--broad`, `--timeout`, `--invocation-timeout-ms`, `--lock-timeout`,
 `--fail-on-lock`, `--jobs`, and `--profile ci` map to the matching API options.
+A later API `jobs` value that cannot resize the process pool surfaces optional
+`jobsPoolWarning` instead of a new worker count; see Invocation Lock And Timeouts.
 The command is silent on success. Argument and analysis failures write a
 UTF-8-safe diagnostic of at most 4 KiB to stderr and exit `1`. It is
 intentionally unavailable from the Cargo-installed native binary.
 
 The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
-does not have a one-to-one CLI command:
+does not have a one-to-one CLI command. Analysis JSON objects may include
+optional `jobsPoolWarning` (`JobsPoolWarning`), exposed by the exported
+`WithInvocationResult<T>` type, when a later `jobs` value cannot
+resize the process pool; the field is omitted otherwise. Arrays, scalar results,
+source-only SQL parsing/extraction, and diagnostics polling do not add this metadata.
 
 The package also exposes its optional Vitest integration through
 `no-mistakes/test-timeout-policy` and
@@ -846,9 +852,22 @@ command-specific option, such as `check({ jobs: 1, root: 123 })`, can therefore
 select the pool; a later `check({ jobs: 4, root: "." })` retains that one-worker
 pool. Invalid JSON or invocation controls, and requests that fail to acquire
 the lock, do not select it. A positive `jobs` value selects its worker count, overriding
-`RAYON_NUM_THREADS`. Pass `0` or omit it to use `RAYON_NUM_THREADS` when set,
-otherwise the CPU count (matching CLI `--jobs 0`). Later calls retain the
-initialized pool, even when they request a different `jobs` value.
+`RAYON_NUM_THREADS`. Pass `0` or omit it to use `RAYON_NUM_THREADS` when it is a
+positive integer, otherwise the CPU count (matching CLI `--jobs 0`). Later calls retain the
+initialized pool, even when they request a different `jobs` value. The call that
+installs the pool does not warn. A later analysis whose resolved worker count
+differs still succeeds; its JSON object includes optional `jobsPoolWarning`
+(`code` `"rayon-pool-size"`, `requestedJobs`, `effectiveJobs`, and `message`)
+and does not change the pool. The property is omitted when the counts match,
+including when `jobs` is omitted, `0`, or `null` and that resolution equals the
+recorded size. Invalid JSON or invocation controls, and requests that fail to
+acquire the lock, still do not select the pool. Concurrent `analyzeProject()`
+calls, and CLI runs by the same user, queue on this per-user invocation file
+lock. Each queued run then uses the full recorded pool rather than a fraction
+of it. PostgreSQL source batches resolve workers with the same `jobs` rules and
+do not initialize the global pool before repository analysis selects it. If
+that pool is already smaller than the batch's resolved count, the batch uses
+that pool or another pool no larger than it, not a fresh all-CPU pool.
 
 `import-dynamic` follows every string-literal `import()`, including `if` /
 `switch` / nested-function / JSX-handler loaders (`conditional-dynamic-import`

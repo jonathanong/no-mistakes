@@ -3,6 +3,7 @@ import type { CiTopologyOptions } from "./workflow-topology-types";
 import type { CiEnvOptions, CiImpactOptions, ImpactedChecksOptions } from "./ci-types";
 import type { FetchesOptions, FlowOptions } from "./flow-types";
 import type { ImportUsagesOptions } from "./import-usage-types";
+import type { JobsPoolWarning } from "./invocation-types";
 import type { MermaidValidationOptions } from "./mermaid-types";
 import type {
   DataPwOptions,
@@ -156,4 +157,10 @@ export interface AnalyzeProjectResult {
     type: AnalyzeProjectReportRequest["type"];
     result: unknown | EffectsReport | RscCallersReport;
   }>;
+  /**
+   * Set when this call's resolved `jobs` differs from the process-wide Rayon pool.
+   * Omitted when the pool was just created or the resolved count already matches.
+   * Other analysis JSON objects use the same optional field.
+   */
+  jobsPoolWarning?: JobsPoolWarning;
 }

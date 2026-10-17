@@ -39,6 +39,13 @@ const writePlanningImpactArtifacts = (options, analyzeProject) =>
     return true;
   });
 
+const jobsPoolWarning = {
+  code: "rayon-pool-size",
+  message: "requested 2 workers; existing pool has 4",
+  requestedJobs: 2,
+  effectiveJobs: 4,
+};
+
 const aggregateResult = {
   reports: [
     { id: "dependencies", type: "dependencies", result: { files: ["a.mts"] } },
@@ -108,7 +115,7 @@ test("writes the compatible four-report contract from one prepared analysis", as
       },
       async (options) => {
         calls.push(options);
-        return aggregateResult;
+        return { ...aggregateResult, jobsPoolWarning };
       },
     );
 
@@ -149,6 +156,7 @@ test("writes the compatible four-report contract from one prepared analysis", as
       },
     ]);
     assert.deepEqual(result.plan, aggregateResult.reports[3].result);
+    assert.deepEqual(result.jobsPoolWarning, jobsPoolWarning);
     assert.deepEqual(JSON.parse(await readFile(join(directory, "plan.json"), "utf8")), {
       changed_files: ["a.mts"],
       selected_tests: [{ test_file: "a.test.mts" }],
@@ -171,13 +179,14 @@ test("preserves literal manifest paths and traverses hash filenames as files", a
   const calls = [];
   try {
     await writeFile(manifest, " src.mts \nfoo.ts#literal\n#bar.ts\n\n");
-    await writePlanningImpactArtifacts(
+    const result = await writePlanningImpactArtifacts(
       { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
       async (options) => {
         calls.push(options);
         return aggregateResult;
       },
     );
+    assert.equal(Object.hasOwn(result, "jobsPoolWarning"), false);
     assert.deepEqual(calls[0].reports, [
       {
         id: "dependencies",
