@@ -19,12 +19,20 @@ fn batched_deadline_views_reuse_the_prepared_owner_sources_and_programs() {
     let sources = scope.traversal.visible_paths_arc().source_store_for(&root);
     let prepared_reads = sources.physical_read_count();
     assert!(prepared_reads >= 2);
-    let first = context
-        .project_report(&options.reports[0], &options)
-        .unwrap();
-    let second = context
-        .project_report(&options.reports[1], &options)
-        .unwrap();
+    let first = serde_json::from_str::<serde_json::Value>(
+        context
+            .project_report(&options.reports[0], &options)
+            .unwrap()
+            .get(),
+    )
+    .unwrap();
+    let second = serde_json::from_str::<serde_json::Value>(
+        context
+            .project_report(&options.reports[1], &options)
+            .unwrap()
+            .get(),
+    )
+    .unwrap();
     assert_eq!(
         first["runnerConfigDeadlines"],
         second["runnerConfigDeadlines"]

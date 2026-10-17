@@ -39,10 +39,7 @@ fn prepared_scope_report_helpers_surface_missing_inputs() {
     let graph_error = context
         .graph_report(&graph, &graph_options, Direction::Deps)
         .unwrap_err();
-    assert!(
-        graph_error.to_string().contains("glob"),
-        "{graph_error:#}"
-    );
+    assert!(graph_error.to_string().contains("glob"), "{graph_error:#}");
 
     let (imports, import_options) = options(
         &root,
@@ -131,10 +128,8 @@ fn prepared_scope_report_helpers_surface_missing_inputs() {
         .effects_report(&bogus_kind, &bogus_kind_options)
         .is_err());
 
-    let (rsc_missing, rsc_missing_options) = options(
-        &root,
-        json!({ "type": "rscCallers", "component": "a.mts" }),
-    );
+    let (rsc_missing, rsc_missing_options) =
+        options(&root, json!({ "type": "rscCallers", "component": "a.mts" }));
     let _ = context.rsc_callers_report(&rsc_missing, &rsc_missing_options);
 
     let (signature, signature_options) = options(
@@ -164,8 +159,12 @@ fn prepared_flow_report_accepts_dependents_direction() {
     }))
     .unwrap();
     let context = AnalyzeProjectContext::prepare(&prepared).unwrap();
-    let report = context
-        .flow_report(&prepared.reports[0], &prepared)
-        .unwrap();
+    let report = serde_json::from_str::<Value>(
+        context
+            .flow_report(&prepared.reports[0], &prepared)
+            .unwrap()
+            .get(),
+    )
+    .unwrap();
     assert_eq!(report["target"], "utils.mts#parseDate");
 }

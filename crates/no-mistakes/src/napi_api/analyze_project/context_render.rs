@@ -3,12 +3,16 @@ fn render_queue_report(
     options: &ProjectOptions,
     report: &crate::queue::ProjectReport,
     indexed: Option<&crate::queue::PreparedProjectReport>,
-) -> Result<Value> {
+) -> Result<Box<RawValue>> {
     match report_type {
-        "queues" => Ok(json_value(report)),
+        "queues" => Ok(json_raw(report)),
         "queueEdges" => {
             let depth = crate::cli::root_scoped_edge_depth(&options.files, options.depth);
-            Ok(json_value(&indexed.expect("typed queue traversal is prepared").edge_view(&options.files, depth)))
+            Ok(json_raw(
+                &indexed
+                    .expect("typed queue traversal is prepared")
+                    .edge_view(&options.files, depth),
+            ))
         }
         "queueRelated" => {
             if options.files.is_empty() {
@@ -16,9 +20,13 @@ fn render_queue_report(
             }
             let direction =
                 crate::napi_api::options::parse_queue_direction(options.direction.as_deref())?;
-            Ok(json_value(&indexed.expect("typed queue traversal is prepared").related(&options.files, direction)))
+            Ok(json_raw(
+                &indexed
+                    .expect("typed queue traversal is prepared")
+                    .related(&options.files, direction),
+            ))
         }
-        "queueCheck" => Ok(json_value(&report.check)),
+        "queueCheck" => Ok(json_raw(&report.check)),
         _ => bail!("unknown queue report type: {report_type}"),
     }
 }
@@ -38,9 +46,9 @@ fn render_server_report(
     report: &crate::server_routes::ProjectReport,
     indexed: Option<&crate::server_routes::PreparedProjectReport>,
     filters: &[String],
-) -> Result<Value> {
+) -> Result<Box<RawValue>> {
     match report_type {
-        "serverRoutes" => Ok(json_value(report)),
+        "serverRoutes" => Ok(json_raw(report)),
         "serverRouteList" => {
             let routes = report
                 .routes
@@ -53,12 +61,16 @@ fn render_server_report(
                             .any(|file| file == &route.file || file == &route.route)
                 })
                 .collect::<Vec<_>>();
-            Ok(json_value(&routes))
+            Ok(json_raw(&routes))
         }
         "serverRouteEdges" => {
             let roots = crate::napi_api::options::project_roots(options);
             let depth = crate::cli::root_scoped_edge_depth(&roots, options.depth);
-            Ok(json_value(&indexed.expect("typed server traversal is prepared").edge_view(&roots, depth)))
+            Ok(json_raw(
+                &indexed
+                    .expect("typed server traversal is prepared")
+                    .edge_view(&roots, depth),
+            ))
         }
         "serverRouteRelated" => {
             let roots = crate::napi_api::options::project_roots(options);
@@ -67,12 +79,16 @@ fn render_server_report(
             }
             let direction =
                 crate::napi_api::options::parse_server_direction(options.direction.as_deref())?;
-            Ok(json_value(&indexed.expect("typed server traversal is prepared").related(&roots, direction)))
+            Ok(json_raw(
+                &indexed
+                    .expect("typed server traversal is prepared")
+                    .related(&roots, direction),
+            ))
         }
         "serverContracts" => {
             let contracts =
                 crate::server_routes::analyze_contracts_with_prepared(prepared, report, filters)?;
-            Ok(json_value(&contracts))
+            Ok(json_raw(&contracts))
         }
         _ => bail!("unknown server report type: {report_type}"),
     }
@@ -83,16 +99,16 @@ fn render_playwright_report(
     options: &PlaywrightOptions,
     root: &Path,
     analysis: &crate::playwright::analysis::types::Analysis,
-) -> Result<Value> {
+) -> Result<Box<RawValue>> {
     let files = options.files.iter().map(PathBuf::from).collect::<Vec<_>>();
     match report_type {
-        "playwrightCheck" => Ok(json_value(&analysis.coverage)),
-        "playwrightEdges" => Ok(json_value(&analysis.edges)),
+        "playwrightCheck" => Ok(json_raw(&analysis.coverage)),
+        "playwrightEdges" => Ok(json_raw(&analysis.edges)),
         "playwrightRelated" => {
             if files.is_empty() {
                 bail!("files must contain at least one file");
             }
-            Ok(json_value(
+            Ok(json_raw(
                 &crate::playwright::analysis::output::build_related_report(
                     root,
                     &analysis.edges.edges,
@@ -100,7 +116,7 @@ fn render_playwright_report(
                 ),
             ))
         }
-        "playwrightTests" => Ok(json_value(
+        "playwrightTests" => Ok(json_raw(
             &crate::playwright::analysis::tests_report::build_tests_report(
                 &analysis.edges.edges,
                 &files,
@@ -111,6 +127,6 @@ fn render_playwright_report(
     }
 }
 
-fn json_value<T: serde::Serialize>(value: &T) -> Value {
-    crate::cli::json_value(value)
+fn json_raw<T: serde::Serialize + ?Sized>(value: &T) -> Box<RawValue> {
+    json_raw_report(value)
 }

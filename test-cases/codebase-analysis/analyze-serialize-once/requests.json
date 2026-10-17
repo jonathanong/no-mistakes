@@ -1,0 +1,175 @@
+[
+  {
+    "root": "test-cases/codebase-analysis/simple/fixture",
+    "reports": [
+      {
+        "type": "symbols",
+        "files": [
+          "a.mts"
+        ]
+      },
+      {
+        "type": "importUsages"
+      },
+      {
+        "type": "check"
+      },
+      {
+        "type": "dependencies",
+        "id": "closure",
+        "files": [
+          "a.mts"
+        ],
+        "relationships": [
+          "import-static",
+          "import-dynamic",
+          "import-type",
+          "workspace"
+        ],
+        "projection": "paths"
+      },
+      {
+        "type": "resolveCheckDependencies",
+        "dependencyReportIds": [
+          "closure"
+        ]
+      }
+    ]
+  },
+  {
+    "root": "test-cases/codebase-analysis/tests-impact-symbol/fixture",
+    "reports": [
+      {
+        "type": "flow",
+        "target": "utils.mts#parseDate",
+        "direction": "both",
+        "depth": 1,
+        "relationships": [
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "root": "test-cases/codebase-analysis/effects/fixture",
+    "reports": [
+      {
+        "type": "effects",
+        "kind": "valkey",
+        "entry": "app/server.ts"
+      }
+    ]
+  },
+  {
+    "root": "test-cases/codebase-analysis/rsc-callers/fixture",
+    "reports": [
+      {
+        "type": "rscCallers",
+        "component": "app/ui/Button.tsx"
+      }
+    ]
+  },
+  {
+    "root": "test-cases/queue-ast-hop/basic/fixture",
+    "reports": [
+      {
+        "type": "queues"
+      },
+      {
+        "type": "queueEdges",
+        "files": [
+          "enqueue.ts"
+        ],
+        "depth": 2
+      },
+      {
+        "type": "queueRelated",
+        "files": [
+          "enqueue.ts"
+        ],
+        "direction": "deps"
+      },
+      {
+        "type": "queueCheck"
+      }
+    ]
+  },
+  {
+    "root": "test-cases/codebase-analysis/routes/good/fixture",
+    "reports": [
+      {
+        "type": "serverRoutes"
+      },
+      {
+        "type": "serverRouteList",
+        "files": [
+          "/api/v1/users"
+        ]
+      },
+      {
+        "type": "serverRouteEdges",
+        "files": [
+          "backend/api/v1/users.mts"
+        ]
+      },
+      {
+        "type": "serverRouteRelated",
+        "roots": [
+          "backend/api/v1/users.mts"
+        ],
+        "direction": "dependents"
+      },
+      {
+        "type": "serverContracts"
+      }
+    ]
+  },
+  {
+    "root": "test-cases/react-traits-usages/basic/fixture",
+    "reports": [
+      {
+        "type": "reactAnalyze",
+        "targets": [
+          "app/components/**/*.tsx"
+        ]
+      },
+      {
+        "type": "reactCheck",
+        "targets": [
+          "app/components/**/*.tsx"
+        ]
+      },
+      {
+        "type": "reactUsages",
+        "targets": [
+          "app/components/**/*.tsx"
+        ],
+        "target": "app/components/button.tsx#Button",
+        "include": "stories,tests,props"
+      }
+    ]
+  },
+  {
+    "root": "fixtures/parser-count/playwright",
+    "reports": [
+      {
+        "type": "playwrightCheck"
+      },
+      {
+        "type": "playwrightEdges"
+      },
+      {
+        "type": "playwrightRelated",
+        "files": [
+          "app/page.tsx"
+        ]
+      },
+      {
+        "type": "playwrightTests",
+        "files": [
+          "app/page.tsx"
+        ]
+      }
+    ]
+  }
+]

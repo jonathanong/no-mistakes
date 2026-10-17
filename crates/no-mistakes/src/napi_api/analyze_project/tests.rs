@@ -440,3 +440,5 @@ fn analyze_project_server_views_share_one_report_with_standalone_parity() {
         assert_eq!(&value["reports"][index]["result"], expected);
     }
 }
+
+include!("tests/serialize_once.rs");

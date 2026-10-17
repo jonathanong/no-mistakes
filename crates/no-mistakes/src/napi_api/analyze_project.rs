@@ -126,11 +126,7 @@ fn analyze_project_with_context(
     Ok(AnalyzeProjectResult { reports })
 }
 
-fn json_raw_value(value: Value) -> Box<RawValue> {
-    RawValue::from_string(value.to_string()).expect("JSON Value re-serialize never fails")
-}
-
-fn run_report(
+fn run_report_inner(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
     context: &context::AnalyzeProjectContext,
@@ -142,34 +138,28 @@ fn run_report(
         return context.graph_report(request, options, direction);
     }
     if request.report_type == "resolveCheckDependencies" {
-        return Ok(json_raw_value(
-            context.resolve_check_dependencies_report(request, options)?,
-        ));
+        return context.resolve_check_dependencies_report(request, options);
     }
     if is_symbols_report(&request.report_type) {
-        return Ok(json_raw_value(context.symbols_report(request, options)?));
+        return context.symbols_report(request, options);
     }
     if request.report_type == "importUsages" {
-        return Ok(json_raw_value(
-            context.import_usages_report(request, options)?,
-        ));
+        return context.import_usages_report(request, options);
     }
     if is_playwright_report(&request.report_type) {
-        return Ok(json_raw_value(context.playwright_report(request, options)?));
+        return context.playwright_report(request, options);
     }
     if request.report_type == "flow" {
-        return Ok(json_raw_value(context.flow_report(request, options)?));
+        return context.flow_report(request, options);
     }
     if request.report_type == "effects" {
-        return Ok(json_raw_value(context.effects_report(request, options)?));
+        return context.effects_report(request, options);
     }
     if request.report_type == "rscCallers" {
-        return Ok(json_raw_value(
-            context.rsc_callers_report(request, options)?,
-        ));
+        return context.rsc_callers_report(request, options);
     }
     if is_project_report(&request.report_type) {
-        return Ok(json_raw_value(context.project_report(request, options)?));
+        return context.project_report(request, options);
     }
     if is_command_report(&request.report_type) {
         return context.command_report(request, options);
@@ -197,3 +187,13 @@ fn traverse_args(
 ) -> AnyhowResult<TraverseArgs> {
     build_traverse_args(options::traverse_options(request, options)?)
 }
+
+#[cfg(not(test))]
+#[path = "analyze_project/report_adapter.rs"]
+mod report_adapter;
+#[cfg(test)]
+#[path = "analyze_project/byte_oracle_tests.rs"]
+mod report_adapter;
+#[path = "analyze_project/report_serialization.rs"]
+mod report_dispatch;
+use report_adapter::run_report;
