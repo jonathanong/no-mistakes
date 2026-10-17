@@ -16,9 +16,9 @@ VMs provide multiple cores; `ubuntu-slim` would not cover the maximum-worker cas
 
 Each of these public consumer commits gets eighteen fresh `ubuntu-latest` jobs:
 
-| Purpose | Commit | Git tree |
-| --- | --- | --- |
-| Acceptance | `22edf4bfe0a782ac0d030c916dedfd6f8acb499c` | `e848d7ad03e0c0fca7ec70eb0f678653f70c278b` |
+| Purpose                       | Commit                                     | Git tree                                   |
+| ----------------------------- | ------------------------------------------ | ------------------------------------------ |
+| Acceptance                    | `22edf4bfe0a782ac0d030c916dedfd6f8acb499c` | `e848d7ad03e0c0fca7ec70eb0f678653f70c278b` |
 | Reported passing/failing pair | `92d0a2061bde8d260aa0b86a2d71110ece1a43ca` | `11815b62e69a39be94ed790e8984994f50113cd3` |
 
 The latter tree also belongs to merge-group commit
@@ -67,7 +67,6 @@ they cannot guarantee the hosted slow tail or establish a healthy runtime ceilin
 Phase logging on termination must be assessed from the archived candidate
 stderr; this harness does not inject timing flags or change CLI output.
 
-
 Wall and peak-RSS budgets live in `.github/scripts/hosted-check-budgets.json`, keyed
 by the exact consumer commit and worker selection. Every completed candidate
 sample must stay at or below the stored observed maximum plus a margin of three
@@ -85,6 +84,17 @@ The maximum-plus-three-standard-deviations rule is an empirical regression gate.
 Six samples and multiple metric/cohort comparisons do not establish a population
 false-positive guarantee; allocator or hosted-VM drift may require reviewed
 calibration across additional runs. Do not invent a relative floor without data.
+
+Fresh hosted pairs may use different CPU generations despite equal core counts
+and runner images. Inspect the CPU model, actual workers, compiler and build
+flags in `environment.json` before reviewing limits. Pooled dispersion across
+these jobs is variability across the runner population, not noise measured on
+one machine or a statistical power calibration. Both binaries within a pair
+share hardware; their compilers and features can still differ. A reviewed budget
+spanning CPU families must state which runner population it covers and why the
+uncensored observations justify its limits. Do not change analyzer behavior or
+the command deadline to compensate for hardware heterogeneity.
+
 On a four-vCPU runner, automatic workers repeat the explicit four-worker setting.
 This does not exercise the 24-worker RSS growth described in #1734; larger worker
 counts require an explicitly configured larger runner and separate calibration.

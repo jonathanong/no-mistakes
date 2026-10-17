@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/hosted-check.yml"
       - ".github/scripts/hosted-check*.cjs"
+      - ".github/scripts/hosted-check-budgets.json"
       - "tests/js/hosted-check.test.js"
   workflow_dispatch:
     inputs:

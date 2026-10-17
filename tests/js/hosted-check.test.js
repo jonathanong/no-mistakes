@@ -223,6 +223,17 @@ test("weekly runs use the event source and separate thread budgets", () => {
   assert.match(workflow, /HOSTED_CHECK_JOBS: \$\{\{ matrix.jobs \}\}/);
 });
 
+test("budget-only PR edits run the hosted gate", () => {
+  const workflow = readFileSync(
+    join(__dirname, "../../.github/workflows/hosted-check.yml"),
+    "utf8",
+  );
+  const paths = workflow.slice(
+    workflow.indexOf("  pull_request:"),
+    workflow.indexOf("  workflow_dispatch:"),
+  );
+  assert.match(paths, /- "\.github\/scripts\/hosted-check-budgets\.json"/);
+});
 
 test("retains valid calibration proposals and reports every failed cohort", () => {
   const fixtures = [
@@ -233,19 +244,32 @@ test("retains valid calibration proposals and reports every failed cohort", () =
   for (const commit of fixtures) {
     for (const jobs of ["1", "4", "auto"]) {
       for (const variant of ["published", "current"]) {
-        groups.set(`${commit}/${jobs}/${variant}`, Array.from({ length: 6 }, (_, index) => ({
-          sampleNumber: index + 1, candidateCommit: "f".repeat(40), exit: 0,
-          elapsed: 10 + index / 10, rss_kib: 100 + index,
-        })));
+        groups.set(
+          `${commit}/${jobs}/${variant}`,
+          Array.from({ length: 6 }, (_, index) => ({
+            sampleNumber: index + 1,
+            candidateCommit: "f".repeat(40),
+            exit: 0,
+            elapsed: 10 + index / 10,
+            rss_kib: 100 + index,
+          })),
+        );
       }
     }
   }
   const calibration = budgetReport(groups, {}, true);
   assert.deepEqual(calibration.failures, []);
   assert.equal(Object.keys(calibration.proposed).length, 6);
-  const failed = `${fixtures[0]}/1/current`, slowed = `${fixtures[0]}/4/current`;
-  groups.set(failed, groups.get(failed).map((value, index) => index ? value : { ...value, exit: 124 }));
-  groups.set(slowed, groups.get(slowed).map((value, index) => index ? value : { ...value, elapsed: 50 }));
+  const failed = `${fixtures[0]}/1/current`,
+    slowed = `${fixtures[0]}/4/current`;
+  groups.set(
+    failed,
+    groups.get(failed).map((value, index) => (index ? value : { ...value, exit: 124 })),
+  );
+  groups.set(
+    slowed,
+    groups.get(slowed).map((value, index) => (index ? value : { ...value, elapsed: 50 })),
+  );
   groups.delete(`${fixtures[1]}/auto/published`);
   const report = budgetReport(groups, calibration.proposed, false);
   assert.equal(report.failures.length, 3);
@@ -261,6 +285,9 @@ test("hosted measurement source modules stay within the repository line limit", 
   const directory = join(__dirname, "../../.github/scripts");
   for (const file of readdirSync(directory).filter((name) => /^hosted-check.*\.cjs$/.test(name))) {
     const lines = readFileSync(join(directory, file), "utf8").trimEnd().split("\n").length;
-    assert.ok(lines <= 200, `${file} has ${lines} lines; split responsibilities before adding more`);
+    assert.ok(
+      lines <= 200,
+      `${file} has ${lines} lines; split responsibilities before adding more`,
+    );
   }
 });
