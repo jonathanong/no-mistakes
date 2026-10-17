@@ -37,3 +37,6 @@ for options and examples.
 
 `gh-api-argument-safety` is an opt-in rule for structured endpoint fields and explicit API methods.
 See [options and examples](../../docs/eslint-rules/gh-api-argument-safety.md).
+
+`no-argv-main-guard` is an opt-in rule for symlink-sensitive entrypoint comparisons.
+See [options and examples](../../docs/eslint-rules/no-argv-main-guard.md).

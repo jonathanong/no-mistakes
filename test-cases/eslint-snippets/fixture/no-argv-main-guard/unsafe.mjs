@@ -1,0 +1,14 @@
+import { fileURLToPath as fromUrl, pathToFileURL } from 'node:url';
+import * as path from 'node:path';
+import { realpathSync } from 'node:fs';
+import process from 'node:process';
+if (process.argv[1] === import.meta.url) main();
+if (import.meta.filename !== process.argv?.[1]) main();
+if (process.argv.at(1) == __filename) main();
+if (__filename != process.argv?.at?.(1)) main();
+if (Boolean(process.argv[1] === fromUrl(import.meta.url))) main();
+if (Boolean(process.argv[1]) === Boolean(import.meta.filename)) main();
+if (path.resolve(process.argv[1]) === fromUrl(import.meta.url)) main();
+if (realpathSync(process.argv[1]) === realpathSync(__filename)) main();
+if (pathToFileURL(process.argv[1]).href === import.meta.url) main();
+if (process.argv[1] === import.meta['filename']) main();
