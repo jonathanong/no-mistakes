@@ -5,7 +5,7 @@ use mutation_projection::MutationInfo;
 type WriteKey = (
     (usize, String),
     ValueMutationPath,
-    CallableId,
+    (CallableId, CallableId),
     Option<String>,
     bool,
 );
@@ -43,11 +43,11 @@ impl ImportCollector {
         read: nested::RootRead,
         info: MutationInfo<'_>,
     ) {
-        let Some(owner) = info.metadata.context.filter(|owner| Some(*owner) == read.1) else {
+        let (Some(writer), Some(acquired)) = (info.metadata.context, read.1) else {
             return;
         };
-        // A module-acquired alias keeps its old object when the mutable root
-        // is rebound. Only roots read by the writer itself need late origins.
+        // Module captures keep their saved object. A callable capture can see
+        // foreign providers even when a nested closure owns the eventual write.
         if self
             .foreign_receiver_writes
             .as_ref()
@@ -63,7 +63,7 @@ impl ImportCollector {
         let write = writes.writes.entry((
             key.clone(),
             path.to_vec(),
-            owner,
+            (writer, acquired),
             info.assigned_member.map(str::to_owned),
             info.has_assignment,
         ));
@@ -94,7 +94,7 @@ impl ImportCollector {
         count(1, pending.len());
         let mut providers = fx_map();
         let mut aliases = None;
-        for ((key, path, owner, assigned, has_assignment), mut write) in pending {
+        for ((key, path, (owner, acquired), assigned, has_assignment), mut write) in pending {
             let index = providers
                 .entry((key.clone(), path.clone()))
                 .or_insert_with(|| {
@@ -104,7 +104,9 @@ impl ImportCollector {
                             origins.foreign_provider_index(&key, &path)
                         })
                 });
-            let references = index.references(owner, write.metadata.foreign_before);
+            // Same-owner snapshots belong to the acquisition, while timing and
+            // invalidation below still belong to the physical writing closure.
+            let references = index.references(acquired, write.metadata.foreign_before);
             if references.is_empty() {
                 continue;
             }

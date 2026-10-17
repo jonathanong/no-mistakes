@@ -15,6 +15,11 @@ test(
     );
     for (const name of [
       "writer-first",
+      "closure-writer-first",
+      "closure-rebind-first",
+      "closure-live-capture",
+      "closure-writers-16",
+      "closure-writers-64",
       "rebind-first",
       "reverse-calls",
       "uncalled",
@@ -42,6 +47,9 @@ test(
     for (const [name, expected] of [
       ["controls", ["primary.info", "replica.info", "unrelated.get", "replica.get", "primary.get"]],
       ["captured-root", ["replica.get"]],
+      ["closure-module-captured", ["replica.get"]],
+      ["closure-same-owner", ["replica.get"]],
+      ["closure-controls", ["primary.info", "replica.info", "unrelated.get"]],
       ["cold", ["primary.get"]],
     ]) {
       const options = {

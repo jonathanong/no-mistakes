@@ -616,7 +616,12 @@ members remain unresolved when a replacement could apply. Repeated writes share
 one root/member/owner projection from the same collected facts. Deferred
 projections index callable aliases once by lexical scope and binding head, so
 unrelated aliases are not scanned again for every writer. A container
-captured before the root is rebound keeps its acquired identity.
+captured before the root is rebound keeps its acquired identity. A nested
+closure also considers foreign callable replacements visible when its outer
+callable captures the receiver. Immutable captures made at module scope keep
+their saved object identity. Mutable aliases initialized from an already tracked receiver
+also retain later binding replacements; unrelated named values stay outside
+receiver tracking.
 
 Repeated imported-member replacement alternatives require a closed execution
 region: a guaranteed multi-item literal `for-of` body or the supported closed

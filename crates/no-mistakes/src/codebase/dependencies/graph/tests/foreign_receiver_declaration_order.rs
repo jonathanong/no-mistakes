@@ -22,6 +22,11 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
     .unwrap();
     for name in [
         "writer-first",
+        "closure-writer-first",
+        "closure-rebind-first",
+        "closure-live-capture",
+        "closure-writers-16",
+        "closure-writers-64",
         "rebind-first",
         "reverse-calls",
         "uncalled",
@@ -64,6 +69,16 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
             .flatten()
             .any(|(_, kind)| *kind == EdgeKind::Call));
     }
+    // Returned nested writers have no closed module-binding phase proof. Once
+    // their mutations are visible, affected copied methods stay conservative.
+    let sites = graph.call_sites_in_file(&root.join("src/closure-controls.mts"));
+    for callee in ["before", "after"] {
+        let site = sites
+            .iter()
+            .find(|site| site.source_callee == callee)
+            .unwrap();
+        assert!(site.has_unknown_target() && site.targets().next().is_none());
+    }
     for (file, callee, export) in [
         ("controls", "value.info", "primary.info"),
         ("controls", "changed.info", "replica.info"),
@@ -71,6 +86,11 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
         ("controls", "method", "replica.get"),
         ("controls", "original", "primary.get"),
         ("cold", "value.get", "primary.get"),
+        ("closure-module-captured", "changed.get", "replica.get"),
+        ("closure-same-owner", "changed.get", "replica.get"),
+        ("closure-controls", "value.info", "primary.info"),
+        ("closure-controls", "changed.info", "replica.info"),
+        ("closure-controls", "other.get", "unrelated.get"),
         ("captured-root", "stable.get", "replica.get"),
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{file}.mts")));

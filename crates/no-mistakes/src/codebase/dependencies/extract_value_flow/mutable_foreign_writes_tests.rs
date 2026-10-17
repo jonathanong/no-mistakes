@@ -35,7 +35,12 @@ fn foreign_root_demands_share_future_provider_work_and_stay_cold() {
         assert!(history.assignment_invalidated(&["get"], u32::MAX, None, false));
         assert_eq!(collect(&format!("scale-{providers}"), false).1, [0; 4]);
     }
-    assert_eq!(collect("cold", true).1, [0; 4]);
+    let (cold, work) = collect("cold", true);
+    assert_eq!(work, [0; 4]);
+    assert_eq!(
+        cold.value_flow.receiver_only_nodes, 0,
+        "unrelated Named aliases stay cold"
+    );
     assert_eq!(collect("captured-root", true).1, [0; 4]);
     assert_eq!(
         size_of::<Option<Box<ForeignReceiverWrites>>>(),
@@ -104,4 +109,29 @@ fn foreign_writers_do_not_rescan_unrelated_callable_aliases() {
             )
         );
     }
+}
+
+#[test]
+fn foreign_callable_captures_keep_writer_ownership_and_share_provider_work() {
+    for writers in [16, 64] {
+        assert_eq!(
+            collect(&format!("closure-writers-{writers}"), true).1,
+            [writers, writers, 256, 1]
+        );
+    }
+    assert_eq!(collect("closure-module-captured", true).1, [0; 4]);
+    let (facts, work) = collect("closure-writer-first", true);
+    assert_eq!(work, [1, 1, 1, 1]);
+    let source = source("closure-writer-first");
+    let writer = CallableId(source.find("() =>").unwrap() as u32);
+    let acquired = CallableId(source.find("function write").unwrap() as u32);
+    let history = &facts.value_flow.receiver_mutations.as_ref().unwrap()[&0]["replica"];
+    assert_eq!(
+        history.summary.as_ref().unwrap().contexts,
+        [Some(writer)].into_iter().collect()
+    );
+    assert_ne!(
+        writer, acquired,
+        "the physical mutation owner is the nested closure"
+    );
 }
