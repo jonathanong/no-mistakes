@@ -123,3 +123,62 @@ converted to KiB. Unsupported platforms omit the line. Ordinary invocations and
 basic `--timings` perform no memory syscall. Codebase rules have individual
 `rules.<id>` spans; existing filesystem rules retain their
 `filesystem_rule.<id>` labels. Parallel rule spans overlap and are non-additive.
+
+## Measured calibration
+
+The [600-second calibration run](https://github.com/jonathanong/no-mistakes/actions/runs/39074247358)
+collected 36 complete pairs, six per fixture/worker cohort. All 72 checks completed
+successfully. The measured candidate is `d3d3131442c85b1e7d64cf83fcb2bb620e856049`
+(tree `84e887bf581544066820736bc8cfbb26c4ff0104`), with binary SHA256
+`b7811e0eef07d068a380c8e03ca17d54f4f6d745fcbf5115e401ff477c437185`.
+The harness revision is `dad100542d313bfe3ec002f057920bd0050f8837`. Later main
+revisions and this PR's later heads were not measured by that calibration; their
+ordinary workflow runs enforce these stored limits independently.
+
+[The durable measurement record](hosted-check-calibration.json) retains each pair's
+wall/user/system seconds, peak RSS, exits, order, runner identity, actual workers,
+configuration hashes, and source/build provenance. The candidate used Rust 1.99.1,
+default features, fat LTO and one codegen unit. The published comparator is npm
+0.86.2, source `4dd9fcc2e74d45d2a84ff12ceec05d37c3e286ac`, binary SHA256
+`0a6534c01c8b2b91c49b3bb63a267ec38944263e914f16640b400a97f2e2e33f`;
+its compiler is not independently established. These comparator measurements
+claim neither a speedup from instrumentation nor this PR's isolated overhead.
+
+Each row contains six complete samples for each binary. CPU is the largest
+user-plus-system total from one eligible sample; RSS is KiB.
+
+| Fixture / jobs    | Published max wall s | Candidate max wall s | Published max CPU s | Candidate max CPU s | Published max RSS KiB | Candidate max RSS KiB |
+| ----------------- | -------------------: | -------------------: | ------------------: | ------------------: | --------------------: | --------------------: |
+| Acceptance / 1    |               379.46 |               260.48 |              379.49 |              260.52 |             3,114,116 |             4,686,616 |
+| Acceptance / 4    |               176.20 |               128.29 |              543.31 |              424.65 |             3,323,700 |             5,099,860 |
+| Acceptance / auto |               174.65 |               132.06 |              558.75 |              446.42 |             3,433,452 |             5,026,128 |
+| Passing / 1       |               385.11 |               286.66 |              385.13 |              286.66 |             3,113,892 |             4,686,628 |
+| Passing / 4       |               183.95 |               131.41 |              582.69 |              454.66 |             3,489,584 |             5,095,404 |
+| Passing / auto    |               185.16 |               129.14 |              567.24 |              435.41 |             3,486,832 |             5,019,972 |
+
+The observed runner population contains six CPU models, all with four available
+CPUs and image `20261012.334.1`; automatic workers were therefore four. Model
+identities and pair counts are retained in the measurement record. These limits
+cover that observed hosted population, rather than one fixed machine. Pooling
+its completed observations captures the variability the ordinary hosted gate
+will encounter, so the same reviewed maximum-plus-three-standard-deviations
+heuristic is applied to each cohort. It remains a descriptive regression guard,
+not a confidence bound, matched-machine noise estimate or runtime SLO. A new
+runner population or intentional memory/runtime change requires review of the
+new evidence; these limits never widen automatically.
+
+| Fixture / jobs    | Wall maximum s | Wall sample deviation s | Wall limit s | RSS limit KiB |
+| ----------------- | -------------: | ----------------------: | -----------: | ------------: |
+| Acceptance / 1    |         260.48 |                   19.22 |       318.14 |  4,689,906.11 |
+| Acceptance / 4    |         128.29 |                   17.29 |       180.16 |  5,352,283.10 |
+| Acceptance / auto |         132.06 |                   13.75 |       173.32 |  5,164,465.56 |
+| Passing / 1       |         286.66 |                   57.15 |       458.11 |  4,688,885.84 |
+| Passing / 4       |         131.41 |                   11.58 |       166.14 |  5,301,603.55 |
+| Passing / auto    |         129.14 |                   18.05 |       183.28 |  5,135,187.31 |
+
+Displayed limits are rounded; the budget JSON preserves the calculation values.
+The collection cap remains 600 seconds and does not replace these regression
+limits. Historical 180-second runs, including
+[the earlier complete run](https://github.com/jonathanong/no-mistakes/actions/runs/39065375682),
+remain censored failures with their original caps and source identities. They
+do not become successful observations after the cap change.

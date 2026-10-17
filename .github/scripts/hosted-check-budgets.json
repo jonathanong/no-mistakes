@@ -1,1 +1,62 @@
-{}
+{
+  "22edf4bfe0a782ac0d030c916dedfd6f8acb499c/1": {
+    "sampleCount": 6,
+    "sourceCommit": "d3d3131442c85b1e7d64cf83fcb2bb620e856049",
+    "wallSeconds": 260.48,
+    "wallSecondsMargin": 57.660385274467274,
+    "wallSecondsStddev": 19.220128424822423,
+    "rssKiB": 4686616,
+    "rssKiBMargin": 3290.1080833310016,
+    "rssKiBStddev": 1096.7026944436673
+  },
+  "22edf4bfe0a782ac0d030c916dedfd6f8acb499c/4": {
+    "sampleCount": 6,
+    "sourceCommit": "d3d3131442c85b1e7d64cf83fcb2bb620e856049",
+    "wallSeconds": 128.29,
+    "wallSecondsMargin": 51.86718615849524,
+    "wallSecondsStddev": 17.289062052831746,
+    "rssKiB": 5099860,
+    "rssKiBMargin": 252423.10453997672,
+    "rssKiBStddev": 84141.0348466589
+  },
+  "22edf4bfe0a782ac0d030c916dedfd6f8acb499c/auto": {
+    "sampleCount": 6,
+    "sourceCommit": "d3d3131442c85b1e7d64cf83fcb2bb620e856049",
+    "wallSeconds": 132.06,
+    "wallSecondsMargin": 41.2578941537253,
+    "wallSecondsStddev": 13.7526313845751,
+    "rssKiB": 5026128,
+    "rssKiBMargin": 138337.5583708199,
+    "rssKiBStddev": 46112.51945693996
+  },
+  "92d0a2061bde8d260aa0b86a2d71110ece1a43ca/1": {
+    "sampleCount": 6,
+    "sourceCommit": "d3d3131442c85b1e7d64cf83fcb2bb620e856049",
+    "wallSeconds": 286.66,
+    "wallSecondsMargin": 171.44647476690795,
+    "wallSecondsStddev": 57.14882492230265,
+    "rssKiB": 4686628,
+    "rssKiBMargin": 2257.842864328694,
+    "rssKiBStddev": 752.6142881095647
+  },
+  "92d0a2061bde8d260aa0b86a2d71110ece1a43ca/4": {
+    "sampleCount": 6,
+    "sourceCommit": "d3d3131442c85b1e7d64cf83fcb2bb620e856049",
+    "wallSeconds": 131.41,
+    "wallSecondsMargin": 34.734510792582064,
+    "wallSecondsStddev": 11.578170264194021,
+    "rssKiB": 5095404,
+    "rssKiBMargin": 206199.55103733856,
+    "rssKiBStddev": 68733.18367911286
+  },
+  "92d0a2061bde8d260aa0b86a2d71110ece1a43ca/auto": {
+    "sampleCount": 6,
+    "sourceCommit": "d3d3131442c85b1e7d64cf83fcb2bb620e856049",
+    "wallSeconds": 129.14,
+    "wallSecondsMargin": 54.13927927115395,
+    "wallSecondsStddev": 18.046426423717985,
+    "rssKiB": 5019972,
+    "rssKiBMargin": 115215.30583737562,
+    "rssKiBStddev": 38405.101945791874
+  }
+}
