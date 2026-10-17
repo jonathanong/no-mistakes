@@ -21,6 +21,7 @@ fn graph_all_projects_and_rule_a_reuse_exact_complete_variants() {
             graph_selectors: true,
             graph_routes: false,
         },
+        None,
     )
     .unwrap()
     .unwrap();

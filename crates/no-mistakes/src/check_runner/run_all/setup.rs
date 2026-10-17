@@ -39,6 +39,7 @@ pub(super) fn build(
         config,
         canonical_graph_plan,
         prepared.playwright.as_ref(),
+        prepared.visible_paths.as_ref(),
     );
     let mut playwright_fact_plan = playwright_built?;
     let integration_enabled = integration_configured(config);

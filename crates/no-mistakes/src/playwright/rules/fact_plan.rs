@@ -2,6 +2,7 @@ use super::rule_selections;
 use crate::codebase::check_facts::{PlaywrightFactPlan, PlaywrightFactSelection};
 use crate::config::v2::NoMistakesConfig;
 use crate::playwright::analysis::discover::discover_test_files_from_visible;
+use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::{config, playwright_config, playwright_tests};
 use anyhow::Result;
 use std::collections::BTreeMap;
@@ -20,14 +21,26 @@ pub fn fact_plan_for_consumers(
     _config_path: Option<&Path>,
     config: &NoMistakesConfig,
     consumers: PlaywrightFactConsumers,
+    visible_paths: Option<&VisiblePathSnapshot>,
 ) -> Result<Option<PlaywrightFactPlan>> {
-    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
+    // Selections need resolved frontend apps, which need a path snapshot.
+    // Skip both when no Playwright rule or graph consumer will read the plan.
+    if !super::configured(config) && !consumers.graph_selectors && !consumers.graph_routes {
+        return Ok(None);
+    }
+
+    let owned_snapshot;
+    let snapshot = match visible_paths {
+        Some(snapshot) => snapshot,
+        None => {
+            // Same walk as `VisiblePathSnapshot::new` when diagnostics are off.
+            owned_snapshot = VisiblePathSnapshot::new_observed(root, crate::diagnostics::current());
+            &owned_snapshot
+        }
+    };
     let root_paths = snapshot.paths_for(root);
     let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;
     let selections = rule_selections(config, &apps)?;
-    if selections.is_empty() && !consumers.graph_selectors && !consumers.graph_routes {
-        return Ok(None);
-    }
 
     let mut prepared = selections
         .into_iter()
@@ -38,7 +51,7 @@ pub fn fact_plan_for_consumers(
                 &[],
                 selection.playwright_project,
                 selection.app,
-                &snapshot,
+                snapshot,
             );
             Ok((settings?, true, selection.unique_html_ids))
         })
@@ -47,7 +60,7 @@ pub fn fact_plan_for_consumers(
         prepared.push((
             {
                 let settings =
-                    config::settings_from_loaded_v2(root, config, &[], None, None, &snapshot);
+                    config::settings_from_loaded_v2(root, config, &[], None, None, snapshot);
                 settings?
             },
             consumers.graph_selectors,
@@ -78,7 +91,7 @@ pub fn fact_plan_for_consumers(
             &loaded_configs,
         );
         let playwright = playwright?;
-        let test_files = discover_test_files_from_visible(root, &settings, &playwright, &snapshot)?;
+        let test_files = discover_test_files_from_visible(root, &settings, &playwright, snapshot)?;
         for test_file in &test_files {
             let attributes = test_file.test_id_attributes();
             plan.add_file(PlaywrightFactSelection {
@@ -96,7 +109,7 @@ pub fn fact_plan_for_consumers(
                 demands_text_imports,
             });
         }
-        plan.add_source_settings(root, settings.clone(), scan_html_ids, &snapshot)?;
+        plan.add_source_settings(root, settings.clone(), scan_html_ids, snapshot)?;
         test_files_by_project.insert(settings.project.clone(), Arc::new(test_files));
     }
     plan.set_test_files_by_project(test_files_by_project.into_iter().collect());

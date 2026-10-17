@@ -206,6 +206,7 @@ fn playwright_graph_consumers_do_not_reread_cached_parse_errors() {
                 graph_selectors: graph_plan.playwright_selectors,
                 graph_routes: graph_plan.playwright_routes,
             },
+            None,
         )
         .unwrap();
         let mut shared =
