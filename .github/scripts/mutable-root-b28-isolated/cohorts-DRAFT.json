@@ -1,0 +1,85 @@
+{
+  "status": "REVIEWED AND FROZEN fixed source partition; runtime fit unproved",
+  "cohorts": {
+    "A": {
+      "workloads": [
+        "facts-no_writes-imports",
+        "facts-writes-values",
+        "facts-writes-imports",
+        "facts-shared_histories-imports",
+        "hot-mutable-root-scale",
+        "hot-mutable-pattern-phase-scale",
+        "graph-observer",
+        "graph-no-calls",
+        "effects-mutable-let-direct-off",
+        "effects-mutable-let-copied-off",
+        "effects-mutable-let-copied-observer"
+      ],
+      "rows": 352,
+      "historical_wall_sum": 206.4942165511893
+    },
+    "B": {
+      "workloads": [
+        "facts-no_writes-values",
+        "facts-shared_histories-values",
+        "facts-jsx-values",
+        "facts-jsx-imports",
+        "hot-mutable-pattern-deferred-diamond",
+        "hot-mutable-pattern-eager-class-scale",
+        "hot-mutable-pattern-cold-class-scale",
+        "graph",
+        "effects-mutable-let-direct-observer",
+        "effects-mutable-pattern-deferred-diamond-off",
+        "effects-mutable-pattern-deferred-diamond-observer"
+      ],
+      "rows": 352,
+      "historical_wall_sum": 207.99267491721548
+    }
+  },
+  "original_rows": 704,
+  "workload_count": 22,
+  "rows_per_workload": 32,
+  "orders": [
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB",
+    "ABBA",
+    "BAAB"
+  ],
+  "metrics": [
+    "cpu_s",
+    "user_s",
+    "system_s",
+    "wall_s",
+    "rss_kib"
+  ],
+  "bootstrap_seed": 1972,
+  "bootstrap_draws": 10000,
+  "partition_method": "Deterministic largest historical full-workload wall sum first, lower loaded cohort first, tie A, capacity11; retain original workload order within each cohort. Partition fixed before any hosted observations.",
+  "historical_source": {
+    "path": "/tmp/nm2019-b25-evidence-draft/A22_B25-long-all-rows.json",
+    "sha256": "4aab012d03eb985cc3d546de7565e0d5b9e766be33e6334d9bb8a2b49cc206b0",
+    "rows": 704,
+    "total_wall": 414.4868914684048
+  },
+  "budget": {
+    "job_seconds": 1800,
+    "operation_deadline_from_actual_job_started": 1500,
+    "final_retention_reserve_seconds": 300,
+    "sampling_max_seconds": 1500,
+    "setup_and_controls_count_against_operation_deadline": true,
+    "phase_fit": "UNKNOWN; historical414.49s total cannot prove cloud fit; no pilot/recalibration/adaptive split or retry"
+  },
+  "scientific_scope": "Each workload retains all32 rows/eight blocks/both arms/orders on ONE VM. Cross-workload interleaving changes. No cross-host pooling or off/on overhead subtraction. Union is canonical schedule accounting only; retain original cohort order and host attribution.",
+  "producers": {
+    "A28": "c896db3775411e9b7867260db420a73965b91a9e",
+    "B28": "5d37f71759a6e88130785867df5573d9ea8b9d27"
+  },
+  "published_candidate": "97a1c03146db2ed6e45f2884b70ac152ef51d4b3",
+  "current_main": "e0b38220cd2886522dc623e193dbc6fcf33c20fe",
+  "numerical_gate": "All original gates across every workload/metric; either partial/failed cohort makes whole run INELIGIBLE. Preserve all prior adverse/inconclusive results.",
+  "no_samples": true
+}

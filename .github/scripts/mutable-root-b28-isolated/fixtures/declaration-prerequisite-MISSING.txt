@@ -1,0 +1,298 @@
+TAP version 13
+# Subtest: programmatic API proxies object options through async native addon calls
+ok 1 - programmatic API proxies object options through async native addon calls
+  ---
+  duration_ms: 11.236979
+  type: 'test'
+  ...
+# Subtest: testsWhy and analyzeProject clean generated why-plan directories
+ok 2 - testsWhy and analyzeProject clean generated why-plan directories
+  ---
+  duration_ms: 3.732996
+  type: 'test'
+  ...
+# Subtest: preparation write failures clean their temporary directory and preserve the error
+ok 3 - preparation write failures clean their temporary directory and preserve the error
+  ---
+  duration_ms: 0.700157
+  type: 'test'
+  ...
+# Subtest: analyzeProject waits for every preparation before cleaning generated plans
+ok 4 - analyzeProject waits for every preparation before cleaning generated plans
+  ---
+  duration_ms: 0.914989
+  type: 'test'
+  ...
+# Subtest: native exports, JavaScript exports, and declarations stay in parity
+ok 5 - native exports, JavaScript exports, and declarations stay in parity
+  ---
+  duration_ms: 1.408864
+  type: 'test'
+  ...
+# Subtest: native ESM imports expose every declared root API
+ok 6 - native ESM imports expose every declared root API
+  ---
+  duration_ms: 1.202567
+  type: 'test'
+  ...
+# Subtest: analyzeProject declarations mirror report-specific runtime requirements
+ok 7 - analyzeProject declarations mirror report-specific runtime requirements
+  ---
+  duration_ms: 0.51927
+  type: 'test'
+  ...
+# Subtest: query annotation configuration exposes the unknown SQL policy
+ok 8 - query annotation configuration exposes the unknown SQL policy
+  ---
+  duration_ms: 0.129015
+  type: 'test'
+  ...
+# Subtest: generatePostgresCatalog declarations separate complete and ordering catalogs
+ok 9 - generatePostgresCatalog declarations separate complete and ordering catalogs
+  ---
+  duration_ms: 0.306116
+  type: 'test'
+  ...
+# Subtest: SQL expression roots expose named contracts without opaque AST dispatch
+ok 10 - SQL expression roots expose named contracts without opaque AST dispatch
+  ---
+  duration_ms: 0.158127
+  type: 'test'
+  ...
+# Subtest: parsePostgresSql exposes named pure-source contracts and async batch overloads
+ok 11 - parsePostgresSql exposes named pure-source contracts and async batch overloads
+  ---
+  duration_ms: 0.371951
+  type: 'test'
+  ...
+# Subtest: executed PostgreSQL source extraction exposes its named async contract
+ok 12 - executed PostgreSQL source extraction exposes its named async contract
+  ---
+  duration_ms: 0.167241
+  type: 'test'
+  ...
+# Subtest: executed PostgreSQL source extraction compiles from the package root
+not ok 13 - executed PostgreSQL source extraction compiles from the package root
+  ---
+  duration_ms: 0.28103
+  type: 'test'
+  location: '/tmp/no-mistakes-2064-b0b-release/packages/no-mistakes/scripts/api.test.js:1008:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '@storybook/react'
+    Require stack:
+    - /tmp/no-mistakes-2064-b0b-release/packages/no-mistakes/scripts/api.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Module._resolveFilename (node:internal/modules/cjs/loader:1603:15)
+    wrapResolveFilename (node:internal/modules/cjs/loader:1145:27)
+    resolveForCJSWithHooks (node:internal/modules/cjs/loader:1196:12)
+    require.resolve (node:internal/modules/helpers:336:31)
+    TestContext.<anonymous> (/tmp/no-mistakes-2064-b0b-release/packages/no-mistakes/scripts/api.test.js:1013:53)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+  ...
+# Subtest: PostgreSQL metadata facts export routine signatures and typed index operations
+ok 14 - PostgreSQL metadata facts export routine signatures and typed index operations
+  ---
+  duration_ms: 0.097917
+  type: 'test'
+  ...
+# Subtest: resolveCheck declarations mirror its mutually exclusive runtime inputs
+ok 15 - resolveCheck declarations mirror its mutually exclusive runtime inputs
+  ---
+  duration_ms: 0.080593
+  type: 'test'
+  ...
+# Subtest: resolveConfig declarations expose additive per-framework triggers
+ok 16 - resolveConfig declarations expose additive per-framework triggers
+  ---
+  duration_ms: 0.069213
+  type: 'test'
+  ...
+# Subtest: route coverage declarations expose integration ownership and helper arguments
+ok 17 - route coverage declarations expose integration ownership and helper arguments
+  ---
+  duration_ms: 0.081081
+  type: 'test'
+  ...
+# Subtest: Vitest project policy declarations expose repository-relative setup files
+ok 18 - Vitest project policy declarations expose repository-relative setup files
+  ---
+  duration_ms: 0.055377
+  type: 'test'
+  ...
+# Subtest: test plan declarations require current results but accept saved legacy plan documents
+ok 19 - test plan declarations require current results but accept saved legacy plan documents
+  ---
+  duration_ms: 0.223551
+  type: 'test'
+  ...
+# Subtest: graph declarations expose GitHub Actions workflow relationships and virtual nodes
+ok 20 - graph declarations expose GitHub Actions workflow relationships and virtual nodes
+  ---
+  duration_ms: 0.100037
+  type: 'test'
+  ...
+# Subtest: graph declarations expose tRPC relationships and virtual nodes
+ok 21 - graph declarations expose tRPC relationships and virtual nodes
+  ---
+  duration_ms: 0.069252
+  type: 'test'
+  ...
+# Subtest: graph declarations expose opt-in call relationships
+ok 22 - graph declarations expose opt-in call relationships
+  ---
+  duration_ms: 0.051793
+  type: 'test'
+  ...
+# Subtest: dependency declarations expose bounded import-closure inputs and compact output
+ok 23 - dependency declarations expose bounded import-closure inputs and compact output
+  ---
+  duration_ms: 0.09785
+  type: 'test'
+  ...
+# Subtest: declarations expose invocation controls on every analysis
+ok 24 - declarations expose invocation controls on every analysis
+  ---
+  duration_ms: 0.233745
+  type: 'test'
+  ...
+# Subtest: SELECT scope facts expose named public contracts
+ok 25 - SELECT scope facts expose named public contracts
+  ---
+  duration_ms: 0.292186
+  type: 'test'
+  ...
+# Subtest: INSERT facts expose named exported declaration contracts
+ok 26 - INSERT facts expose named exported declaration contracts
+  ---
+  duration_ms: 0.264044
+  type: 'test'
+  ...
+# Subtest: TypeScript module facts expose named contracts and async invocation options
+ok 27 - TypeScript module facts expose named contracts and async invocation options
+  ---
+  duration_ms: 0.381084
+  type: 'test'
+  ...
+# Subtest: nested DO constraints remain typed through procedural declaration paths
+ok 28 - nested DO constraints remain typed through procedural declaration paths
+  ---
+  duration_ms: 0.08025
+  type: 'test'
+  ...
+# Subtest: data-modifying CTE facts expose named exported declaration contracts
+ok 29 - data-modifying CTE facts expose named exported declaration contracts
+  ---
+  duration_ms: 0.277485
+  type: 'test'
+  ...
+# Subtest: SQL wrappers expose named execution and child-source contracts
+ok 30 - SQL wrappers expose named execution and child-source contracts
+  ---
+  duration_ms: 0.131875
+  type: 'test'
+  ...
+# Subtest: literal EXECUTE contracts export decoded SQL provenance
+ok 31 - literal EXECUTE contracts export decoded SQL provenance
+  ---
+  duration_ms: 0.071972
+  type: 'test'
+  ...
+# Subtest: structured trigger events and cast types remain named public contracts
+ok 32 - structured trigger events and cast types remain named public contracts
+  ---
+  duration_ms: 0.074168
+  type: 'test'
+  ...
+# Subtest: SQL recursive expression and INSERT lineage contracts export named additive types
+ok 33 - SQL recursive expression and INSERT lineage contracts export named additive types
+  ---
+  duration_ms: 0.309512
+  type: 'test'
+  ...
+# Subtest: Postgres predicate and value discriminants remain public
+ok 34 - Postgres predicate and value discriminants remain public
+  ---
+  duration_ms: 0.065294
+  type: 'test'
+  ...
+# Subtest: declared payload configuration types are named public exports
+ok 35 - declared payload configuration types are named public exports
+  ---
+  duration_ms: 0.068154
+  type: 'test'
+  ...
+# Subtest: reverse query declarations export bounded collection diagnostics
+ok 36 - reverse query declarations export bounded collection diagnostics
+  ---
+  duration_ms: 0.092013
+  type: 'test'
+  ...
+# Subtest: audit declarations export named artifacts, evidence and async report contracts
+ok 37 - audit declarations export named artifacts, evidence and async report contracts
+  ---
+  duration_ms: 0.206399
+  type: 'test'
+  ...
+# Subtest: scalar quantified query facts export typed operands and quantifier contracts
+ok 38 - scalar quantified query facts export typed operands and quantifier contracts
+  ---
+  duration_ms: 0.080079
+  type: 'test'
+  ...
+# Subtest: timeout policy declarations retain their complete public signatures
+ok 39 - timeout policy declarations retain their complete public signatures
+  ---
+  duration_ms: 0.166937
+  type: 'test'
+  ...
+# Subtest: timeout policy public type contracts compile without losing option fields
+not ok 40 - timeout policy public type contracts compile without losing option fields
+  ---
+  duration_ms: 0.139926
+  type: 'test'
+  location: '/tmp/no-mistakes-2064-b0b-release/packages/no-mistakes/scripts/api.test.js:1612:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '@storybook/react'
+    Require stack:
+    - /tmp/no-mistakes-2064-b0b-release/packages/no-mistakes/scripts/api.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Module._resolveFilename (node:internal/modules/cjs/loader:1603:15)
+    wrapResolveFilename (node:internal/modules/cjs/loader:1145:27)
+    resolveForCJSWithHooks (node:internal/modules/cjs/loader:1196:12)
+    require.resolve (node:internal/modules/helpers:336:31)
+    TestContext.<anonymous> (/tmp/no-mistakes-2064-b0b-release/packages/no-mistakes/scripts/api.test.js:1618:53)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+  ...
+# Subtest: active progress exposes named public snapshot contracts and a live-only polling API
+ok 41 - active progress exposes named public snapshot contracts and a live-only polling API
+  ---
+  duration_ms: 0.116026
+  type: 'test'
+  ...
+# Subtest: Cargo warning declarations retain exported structured warning contracts
+ok 42 - Cargo warning declarations retain exported structured warning contracts
+  ---
+  duration_ms: 0.053031
+  type: 'test'
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 40
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 71.432681

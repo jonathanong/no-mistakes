@@ -1,0 +1,10 @@
+{
+  "complete": true,
+  "candidate": "saved-unit-head",
+  "lock_sha256": "saved-unit-lock",
+  "no_lifecycle_scripts": true,
+  "no_native_build": true,
+  "node_version": "v26.11.1",
+  "pnpm_version": "11.24.0",
+  "scope": "Synthetic admission test state only; not a hosted execution claim"
+}

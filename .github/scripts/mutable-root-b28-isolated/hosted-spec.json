@@ -1,0 +1,34 @@
+{
+  "status": "REVIEWED AND FROZEN",
+  "approved_diagnostic_commit": null,
+  "repository": "jonathanong/no-mistakes",
+  "main": "281673146341e6915c051aedfde6fd05ae6dd055",
+  "candidate_head": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+  "candidate_tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
+  "actual_producer_baseline": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "actual_producer_candidate": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+  "api_controls_complete": true,
+  "sampling_minimum_remaining_seconds": 600,
+  "job_seconds": 1800,
+  "operation_seconds": 1500,
+  "transfer_reserve_seconds": 300,
+  "node_version": "26.11.1",
+  "phase_fit": "UNKNOWN; historical partition sums are capacity evidence only; no adaptive retry",
+  "review_provenance": {
+    "scope": "Reviewed current A28/B28 expected full controls, native API baseline48/candidate115 plus43 declaration tests per arm, SQL19221 and current exact-head CI. Fresh hosted controls mandatory before timing; historical failures preserved.",
+    "historical_B26_run": 38958618870,
+    "historical_verdict": "PERFORMANCE FAILURE; all704rows/110metrics retained; never pooled",
+    "source_carry": "/tmp/nm2054-stack-assessment/final-parent-stack-source-proof.json",
+    "native_functional": "/tmp/nm2054-final-stack-functional/release-api-validation/receipt.json",
+    "exact_head_CI": "/tmp/nm2054-stack-assessment/exact-head-ci-final/receipt.json",
+    "full_raw_review": "/tmp/nm2054-current-stack-raw32/full-field-current-pair-review.json",
+    "root_final_source_review": {
+      "path": "/tmp/nm2054-b28-hosted-source/root-final-source-review.json",
+      "sha256": "3b3c1dafa65213e15ae35a2310f68b6e2b168c3564571379f1c31dffa8b68829"
+    }
+  },
+  "candidate_lock_sha256": "b602051b07b237b8e7dcb25553d415439d76634dcb35262b396d2798a3bf1db3",
+  "baseline_branch": "design/receiver-repeated-targets-1971",
+  "baseline_head": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+  "baseline_tree": "213a7967bc49c6b93bd89c3bf2fc0acfd0f39679"
+}

@@ -1,0 +1,16 @@
+{
+  "A28": {
+    "status": "ACTUAL closed release producer; current full-output review pending root acceptance",
+    "revision": "4e62c503b9d67fb7d928e9f6d3fc8efaae0a751b",
+    "tree": "213a7967bc49c6b93bd89c3bf2fc0acfd0f39679",
+    "binary_sha256": "c798c9dcb585d34e17ab19283e1ae78ca75de55a0381731da458b4e9310e48c6",
+    "raw32_receipt_sha256": "3d17683b7f663b6807c5b09d26d4ea71b1a6d6ba90bc5ee83bef0cbd4ff1bcec"
+  },
+  "B28": {
+    "status": "ACTUAL closed release producer; current full-output review pending root acceptance",
+    "revision": "d7847d84fcfb22a84fd0a2d218aef8c8c1282eb3",
+    "tree": "be83adb6d510c7f107c97211a48638c6c76a1f87",
+    "binary_sha256": "9ffeae3ec16ddb698476df17ca09f6fb1d8173a2d91d20ecebe0ebac50300012",
+    "raw32_receipt_sha256": "2f2b7653f07afb5529618a18693fb5894c27820ffcb113b387246e2be7b06dfe"
+  }
+}
