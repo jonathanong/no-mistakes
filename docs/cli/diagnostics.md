@@ -13,6 +13,15 @@ resolution, graph construction, traversal, and output. Diagnostics go only to
 stderr; stdout, structured output order, exit status, and actionable error text
 are unchanged.
 
+On Unix, `--verbose-timings` also emits `[memory] peak_rss_kib: N` when
+process resource sampling succeeds. This is the process-lifetime peak resident
+memory in KiB, including startup and earlier command work. It is separate from
+request-scoped timing snapshots and cannot attribute memory to concurrent N-API
+requests. Other platforms omit the footer. Basic `--timings` and disabled
+diagnostics perform no memory sampling. See the
+[hosted measurement protocol](../development/hosted-check.md) for external
+whole-command wall, CPU, and memory comparisons.
+
 For a command that may be killed before it returns, add `--progress`:
 
 ```sh

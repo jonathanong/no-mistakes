@@ -1,27 +1,13 @@
-const { spawnSync } = require("node:child_process");
-const { createHash } = require("node:crypto");
-const { readFileSync, readdirSync } = require("node:fs");
-const { dirname, join } = require("node:path");
-const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "0", "check"];
-const DEADLINE_SECONDS = 180;
-
-function command(executable, args, cwd) {
-  const result = spawnSync(executable, args, { cwd, encoding: "utf8" });
-  if (result.error || result.status !== 0) {
-    throw new Error(`${executable} ${args.join(" ")}: ${result.error || result.stderr}`);
-  }
-  return result.stdout.trim();
-}
-
-function hashFile(path) {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
-}
-
-function packageManifest(resolvePackage, name) {
-  // The public package exports its entrypoint, but keeps package.json private.
-  return join(dirname(resolvePackage(name)), "package.json");
-}
-
+const {
+  command,
+  hashFile,
+  packageManifest,
+  CHECK_ARGS,
+  COLLECTION_DEADLINE_SECONDS,
+  successful,
+} = require("./hosted-check-runtime.cjs");
+const { readFileSync, readdirSync, writeFileSync } = require("node:fs");
+const { join } = require("node:path");
 function parseTime(text, processExit) {
   const values = Object.fromEntries(
     text
@@ -42,10 +28,6 @@ function parseTime(text, processExit) {
     result.exit = processExit;
   }
   return result;
-}
-
-function successful(sample) {
-  return sample.exit === 0 && sample.elapsed < DEADLINE_SECONDS && !sample.signal;
 }
 
 function aggregate(samples) {
@@ -73,6 +55,49 @@ function aggregate(samples) {
     rssMaxKiB: resources.length ? Math.max(...resources.map((sample) => sample.rss_kib)) : null,
   };
 }
+function calibratedBudget(samples) {
+  if (samples.length < 6 || !samples.every(successful))
+    throw new Error("Calibration requires six completed successful samples");
+  const budget = { sampleCount: samples.length, sourceCommit: samples[0].candidateCommit };
+  for (const [metric, field] of [
+    ["elapsed", "wallSeconds"],
+    ["rss_kib", "rssKiB"],
+  ]) {
+    const values = samples.map((sample) => sample[metric]);
+    if (!values.every((value) => Number.isFinite(value) && value > 0))
+      throw new Error(`Invalid calibration metric: ${metric}`);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const stddev = Math.sqrt(
+      values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1),
+    );
+    budget[field] = Math.max(...values);
+    budget[`${field}Margin`] = 3 * stddev;
+    budget[`${field}Stddev`] = stddev;
+  }
+  return budget;
+}
+function enforceBudget(samples, budget) {
+  if (!budget) throw new Error("Missing calibrated budget; inspect proposed-budgets.json");
+  if (!samples.every(successful)) throw new Error("Candidate did not complete successfully");
+  for (const [metric, field] of [
+    ["elapsed", "wallSeconds"],
+    ["rss_kib", "rssKiB"],
+  ]) {
+    const limit = budget[field] + budget[`${field}Margin`];
+    if (
+      !Number.isFinite(budget[field]) ||
+      budget[field] <= 0 ||
+      !Number.isFinite(budget[`${field}Margin`]) ||
+      budget[`${field}Margin`] < 0 ||
+      !Number.isFinite(limit)
+    )
+      throw new Error(`Invalid budget: ${field}`);
+    for (const sample of samples) {
+      if (!Number.isFinite(sample[metric]) || sample[metric] <= 0 || sample[metric] > limit)
+        throw new Error(`${metric} ${sample[metric]} exceeds calibrated limit ${limit}`);
+    }
+  }
+}
 
 function formatSummary(rows) {
   return [
@@ -98,15 +123,75 @@ function sampleFiles(directory) {
   });
 }
 
+function budgetReport(groups, budgets, calibrate) {
+  const proposed = {};
+  const failures = [];
+  for (const commit of [
+    "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+    "92d0a2061bde8d260aa0b86a2d71110ece1a43ca",
+  ]) {
+    for (const jobs of ["1", "4", "auto"]) {
+      for (const variant of ["published", "current"]) {
+        const group = `${commit}/${jobs}/${variant}`;
+        const values = groups.get(group) || [];
+        if (
+          values.length !== 6 ||
+          new Set(values.map((sample) => sample.sampleNumber)).size !== 6
+        ) {
+          failures.push(`Incomplete samples: ${group}`);
+          continue;
+        }
+        if (variant !== "current") continue;
+        const key = `${commit}/${jobs}`;
+        try {
+          proposed[key] = calibratedBudget(values);
+          if (!calibrate) enforceBudget(values, budgets[key]);
+        } catch (error) {
+          failures.push(`${key}: ${error.message}`);
+        }
+      }
+    }
+  }
+  return { proposed, failures };
+}
+
+function summarize(directory) {
+  const groups = new Map();
+  for (const path of sampleFiles(directory)) {
+    const sample = JSON.parse(readFileSync(path, "utf8"));
+    const key = `${sample.fixtureCommit}/${sample.jobs}/${sample.variant}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(sample);
+  }
+  const rows = [...groups].sort().map(([key, values]) => ({ key, ...aggregate(values) }));
+  const table = formatSummary(rows);
+  writeFileSync(join(directory, "summary.json"), JSON.stringify(rows, null, 2));
+  writeFileSync(join(directory, "summary.md"), table);
+  if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, table);
+  console.log(table);
+  const budgets = JSON.parse(readFileSync(join(__dirname, "hosted-check-budgets.json"), "utf8"));
+  const { proposed, failures } = budgetReport(
+    groups,
+    budgets,
+    process.env.HOSTED_CHECK_CALIBRATE === "true",
+  );
+  writeFileSync(join(directory, "proposed-budgets.json"), JSON.stringify(proposed, null, 2));
+  if (failures.length) throw new Error(failures.join("\n"));
+}
+
 module.exports = {
   command,
   hashFile,
   packageManifest,
   sampleFiles,
   CHECK_ARGS,
-  DEADLINE_SECONDS,
+  COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
+  calibratedBudget,
+  enforceBudget,
   formatSummary,
+  budgetReport,
+  summarize,
 };
