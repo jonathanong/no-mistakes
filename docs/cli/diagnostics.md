@@ -88,18 +88,24 @@ results before the full pass ends. Results are applied in deterministic profile
 and source order.
 Unresolved, computed, and dynamic imports conservatively retain their modules
 and importers, including cycles. Executor-free callers that supply SQL literals
-to imported helpers remain roots. Successfully resolved imports outside the
-prepared annotation catalog are dead ends; configured executor and trusted-tag
-modules remain demand seeds. An empty `importSpecifier` is not a seed:
-`executorNames` without a module still selects calls, but a non-type import of
-an unrelated module does not. pnpm workspace package names resolve through the
-session workspace map when the TypeScript resolver has no target, the same way
-imported SQL helpers do. A package the workspace does not declare stays
-unresolved and keeps its importer. A parse-failed inventory file is absent from
-the annotation catalog, so a resolved import of it is a dead end: the recovered
-program has no query facts and cannot yield SQL. Resolver targets without an
-exact prepared inventory identity (including ambiguous symlink spellings) stay
-conservative.
+to imported helpers remain roots.
+
+- **Seeds.** Configured executor and trusted-tag modules remain demand seeds.
+  An empty `importSpecifier` is not a seed: `executorNames` without a module
+  still selects calls, but a non-type import of an unrelated module does not.
+- **Dead ends.** A successfully resolved import outside the prepared annotation
+  catalog is a dead end. A parse-failed inventory file is absent from that
+  catalog, so a resolved import of it is a dead end only while parse failure
+  yields no query facts. If recovery later emits partial facts, that edge must
+  become conservative again.
+- **Workspace names.** pnpm workspace package names resolve through the session
+  workspace map when the TypeScript resolver has no target, the same way
+  imported SQL helpers do. That fallback lives in relative executor scope
+  projection, so embedded SQL and annotation demand share it. A package the
+  workspace does not declare stays unresolved and keeps its importer.
+- **Conservative.** Resolver targets without an exact prepared inventory
+  identity (including ambiguous symlink spellings) stay conservative and are
+  not replaced by a workspace target.
 `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`

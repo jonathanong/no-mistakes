@@ -79,10 +79,11 @@ pub(super) fn roots<'a>(
                 };
                 // A successfully resolved edge outside the prepared catalog
                 // cannot lead back to a catalog executor. Parse-failed inventory
-                // files are omitted from that catalog and are the same dead end:
-                // the recovered program has no query facts, so retaining the
-                // importer cannot yield SQL. Keep unresolved edges conservative
-                // without conflating these two outcomes.
+                // files are omitted from that catalog and are the same dead end
+                // only while a parse failure yields no query facts. If recovery
+                // later emits partial facts, this edge must stay conservative.
+                // Keep unresolved edges conservative without conflating these
+                // two outcomes.
                 let Some((target, _)) = files.get_key_value(target) else {
                     continue;
                 };
