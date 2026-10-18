@@ -118,6 +118,7 @@ fn unrelated_member_write_preserves_factory_executor_call() {
 fn factory_member_mutations_keep_only_callable_executor_proof() {
     let options = EmbeddedSqlOptions::configured("@example/db", &[])
         .with_scoped_executors(&["beginTransaction".into()], &[]);
+    let mut failures = Vec::new();
     for (name, sql) in [
         (
             "factory-member-query-assignment.ts",
@@ -131,11 +132,54 @@ fn factory_member_mutations_keep_only_callable_executor_proof() {
             "factory-container-escape.ts",
             "SELECT direct container escape",
         ),
+        (
+            "factory-late-mutable-alias.ts",
+            "SELECT direct late mutable",
+        ),
+        (
+            "factory-conditional-alias.ts",
+            "SELECT direct conditional alias",
+        ),
+        (
+            "factory-conditional-container.ts",
+            "SELECT direct conditional container",
+        ),
+        ("factory-return-escape.ts", "SELECT direct return escape"),
+        (
+            "factory-conditional-argument.ts",
+            "SELECT direct conditional argument",
+        ),
+        (
+            "factory-arrow-return-escape.ts",
+            "SELECT direct arrow escape",
+        ),
+        (
+            "factory-sequence-escape.ts",
+            "SELECT direct sequence escape",
+        ),
+        (
+            "factory-const-conditional-alias.ts",
+            "SELECT direct const conditional",
+        ),
+        (
+            "factory-const-logical-alias.ts",
+            "SELECT direct const logical",
+        ),
+        (
+            "factory-const-sequence-alias.ts",
+            "SELECT direct const sequence",
+        ),
+        (
+            "factory-const-mixed-namespace-alias.ts",
+            "SELECT direct const mixed namespace",
+        ),
     ] {
         let path = fixture(name);
         let source = std::fs::read_to_string(&path).expect("saved factory mutation fixture");
         let facts = extract_embedded_sql_from_source(&path, &source, &options);
-        assert_eq!(facts.calls.len(), 1, "{name}: {:#?}", facts.calls);
-        assert_eq!(facts.calls[0].sql_text.as_deref(), Some(sql), "{name}");
+        if facts.calls.len() != 1 || facts.calls[0].sql_text.as_deref() != Some(sql) {
+            failures.push((name, facts.calls));
+        }
     }
+    assert!(failures.is_empty(), "{failures:#?}");
 }

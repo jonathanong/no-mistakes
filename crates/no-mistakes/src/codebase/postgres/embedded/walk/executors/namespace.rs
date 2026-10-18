@@ -89,6 +89,25 @@ impl ScopeVisitor<'_> {
         &mut self,
         receiver: &Expression<'_>,
     ) {
+        match unwrap_ts_wrappers(receiver) {
+            Expression::ConditionalExpression(value) => {
+                self.revoke_query_receiver(&value.consequent);
+                self.revoke_query_receiver(&value.alternate);
+                return;
+            }
+            Expression::LogicalExpression(value) => {
+                self.revoke_query_receiver(&value.left);
+                self.revoke_query_receiver(&value.right);
+                return;
+            }
+            Expression::SequenceExpression(value) => {
+                if let Some(result) = value.expressions.last() {
+                    self.revoke_query_receiver(result);
+                }
+                return;
+            }
+            _ => {}
+        }
         if self.namespace_expression(receiver) {
             self.member_query_proof.namespace_invalidated = true;
             for (scope, proofs) in self.scopes.iter_mut().zip(&self.namespace_proofs) {
@@ -110,12 +129,7 @@ impl ScopeVisitor<'_> {
     ) {
         for argument in &call.arguments {
             if let Some(expression) = argument.as_expression() {
-                if self.namespace_expression(expression)
-                    || self.proven_executor(expression)
-                    || self.relative_executor_proof(expression).is_some()
-                {
-                    self.revoke_query_receiver(expression);
-                }
+                self.revoke_query_receiver(expression);
             }
         }
     }

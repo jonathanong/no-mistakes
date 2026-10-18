@@ -67,6 +67,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.push_scope();
         self.record_params(&arrow.params);
         self.enter_function();
+        if let Some(result) = arrow.body.as_expression() {
+            // A concise return can expose a receiver to later property writes.
+            self.revoke_query_receiver(result);
+        }
         walk::walk_arrow_function_expression(self, arrow);
         self.leave_function();
         self.pop_scope();

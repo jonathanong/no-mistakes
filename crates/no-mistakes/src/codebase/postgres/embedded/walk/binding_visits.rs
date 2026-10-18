@@ -7,10 +7,12 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclaration<'a>,
     ) {
-        if declaration.kind != ast::VariableDeclarationKind::Const {
-            for declarator in &declaration.declarations {
-                if let Some(init) = &declarator.init {
-                    // A mutable alias can replace the original executor's `.query`.
+        for declarator in &declaration.declarations {
+            if let Some(init) = &declarator.init {
+                // A mutable alias or mixed const result can expose `.query`.
+                if declaration.kind != ast::VariableDeclarationKind::Const
+                    || self.stable_executor_category(init).is_none()
+                {
                     self.revoke_query_receiver(init);
                 }
             }
@@ -122,6 +124,8 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         assign: &oxc_ast::ast::AssignmentExpression<'a>,
     ) {
+        // Any assigned executor value may be rebound through its new owner.
+        self.revoke_query_receiver(&assign.right);
         let identity = self.assignment_builder_identity(assign);
         let variants = self.assigned_variants(assign);
         if matches!(

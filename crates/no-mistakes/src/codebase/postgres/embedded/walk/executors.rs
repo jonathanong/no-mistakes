@@ -4,6 +4,19 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BindingPattern, Expression, VariableDeclarator};
 
 impl ScopeVisitor<'_> {
+    pub(super) fn stable_executor_category(&self, expression: &Expression<'_>) -> Option<bool> {
+        match unwrap_ts_wrappers(expression) {
+            Expression::ConditionalExpression(value) => {
+                let consequent = self.stable_executor_category(&value.consequent)?;
+                (self.stable_executor_category(&value.alternate) == Some(consequent))
+                    .then_some(consequent)
+            }
+            _ => self
+                .proven_executor(expression)
+                .then(|| self.namespace_expression(expression)),
+        }
+    }
+
     pub(super) fn relative_declaration_proof(&self, name: &str, start: u32) -> Option<u32> {
         self.provisional
             .iter()
