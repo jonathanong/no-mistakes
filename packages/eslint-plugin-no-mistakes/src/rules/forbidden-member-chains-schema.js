@@ -17,29 +17,19 @@ function nonStar() {
   return text(128, "^(?!\\*$)[\\s\\S]+$");
 }
 
-function pathString(pattern) {
-  return text(256, pattern);
-}
-
-function segments(maxItems) {
-  return { type: "array", minItems: 1, maxItems, items: nonStar() };
-}
-
-function starThen(minItems, maxItems) {
-  return {
-    type: "array",
-    minItems,
-    maxItems,
-    items: [{ enum: ["*"] }],
-    additionalItems: nonStar(),
-  };
-}
-
-function pathSchema(pattern, starMin, plainMax, starMax) {
-  return {
-    anyOf: [pathString(pattern), segments(plainMax), starThen(starMin, starMax)],
-  };
-}
+// Segment rules run in assertPath so a bad path names the segment. A JSON Schema
+// anyOf only says the value matched none of the alternatives.
+const pathValue = {
+  anyOf: [
+    { type: "string", minLength: 1, maxLength: 256 },
+    {
+      type: "array",
+      minItems: 1,
+      maxItems: 32,
+      items: { type: "string", minLength: 1, maxLength: 128 },
+    },
+  ],
+};
 
 function chain(properties, required) {
   return {
@@ -60,20 +50,17 @@ const schema = [
         maxItems: 64,
         items: {
           anyOf: [
-            chain({ path: pathSchema(OPEN_PATH, 2, MAX_SEGMENTS, MAX_SEGMENTS) }, [
-              "path",
-              "message",
-            ]),
+            chain({ path: pathValue }, ["path", "message"]),
             chain(
               {
-                path: pathSchema(OPEN_PATH, 2, MAX_SEGMENTS, MAX_SEGMENTS),
+                path: pathValue,
                 receiver: { type: "string", enum: ["*"] },
               },
               ["path", "message", "receiver"],
             ),
             chain(
               {
-                path: pathSchema(NAMED_PATH, 1, MAX_SEGMENTS - 1, MAX_SEGMENTS),
+                path: pathValue,
                 receiver: nonStar(),
               },
               ["path", "message", "receiver"],
@@ -85,7 +72,48 @@ const schema = [
   },
 ];
 
+function shownPath(path) {
+  return Array.isArray(path) ? path.join(".") : String(path);
+}
+
+function assertPath(path, named) {
+  const parts = Array.isArray(path) ? path : String(path).split(".");
+  const shown = shownPath(path);
+  const empty = parts.findIndex((part) => part === "");
+  if (empty !== -1) throw new Error(`empty segment at index ${empty} in '${shown}'`);
+  const star = parts.findIndex((part, index) => part === "*" && index !== 0);
+  if (star !== -1) {
+    throw new Error(`'*' segment at index ${star} in '${shown}'; '*' is only a leading segment`);
+  }
+  if (typeof path === "string") {
+    const pattern = new RegExp(named ? NAMED_PATH : OPEN_PATH);
+    if (pattern.test(path)) return;
+    const limit = named && parts[0] !== "*" ? MAX_SEGMENTS - 1 : MAX_SEGMENTS;
+    if (parts.length > limit) {
+      throw new Error(`path '${shown}' has ${parts.length} segments; the maximum is ${limit}`);
+    }
+    throw new Error(`malformed path '${shown}'`);
+  }
+  const leadingStar = parts[0] === "*";
+  const limit = leadingStar ? MAX_SEGMENTS : named ? MAX_SEGMENTS - 1 : MAX_SEGMENTS;
+  const min = leadingStar ? (named ? 1 : 2) : 1;
+  if (parts.length < min) {
+    throw new Error(`path '${shown}' has ${parts.length} segments; at least ${min} are required`);
+  }
+  if (parts.length > limit) {
+    throw new Error(`path '${shown}' has ${parts.length} segments; the maximum is ${limit}`);
+  }
+}
+
+function assertChains(entries) {
+  if (!Array.isArray(entries)) return;
+  for (const entry of entries) {
+    assertPath(entry.path, typeof entry.receiver === "string" && entry.receiver !== "*");
+  }
+}
+
 function compile(entry) {
+  assertPath(entry.path, typeof entry.receiver === "string" && entry.receiver !== "*");
   const parts = Array.isArray(entry.path) ? entry.path.slice() : entry.path.split(".");
   let wildcard = false;
   let body = parts;
@@ -101,4 +129,4 @@ function compile(entry) {
   return { wildcard, parts: body, message: entry.message };
 }
 
-module.exports = { schema, compile };
+module.exports = { schema, compile, assertChains };

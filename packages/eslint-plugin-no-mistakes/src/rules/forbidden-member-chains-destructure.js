@@ -2,12 +2,6 @@
 
 const { matches, expressionInfo } = require("./forbidden-member-chains-match");
 
-const PARAM_PARENTS = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
-
 function patternKey(prop) {
   const key = prop.key;
   if (key.type === "Identifier") return key.name;
@@ -24,8 +18,19 @@ function objectPattern(node) {
 }
 
 function destructureVisitors({ compiled, context, suppressed, info }) {
+  // The outer pattern and a default can reach the same property and chain.
+  // `const { panel: { open } = other.panel } = other` reports that pair once.
+  const reported = new WeakMap();
+
   function report(node, chain) {
     if (suppressed(node)) return;
+    let seen = reported.get(node);
+    if (seen?.has(chain)) return;
+    if (!seen) {
+      seen = new Set();
+      reported.set(node, seen);
+    }
+    seen.add(chain);
     context.report({ node, messageId: "forbiddenChain", data: { message: chain.message } });
   }
 
@@ -63,8 +68,11 @@ function destructureVisitors({ compiled, context, suppressed, info }) {
       const pattern = objectPattern(node.left);
       if (pattern) check(pattern, node.right);
     },
+    // A default is a receiver at any depth, not only on a function parameter.
+    // The parser only allows one in a parameter, property, or array element.
+    // `const { x: { open } = other.panel } = {}` reports `*.panel.open`.
+    // An array element is too: `const [{ open } = other.panel] = []`.
     AssignmentPattern(node) {
-      if (!PARAM_PARENTS.has(node.parent?.type)) return;
       const pattern = objectPattern(node.left);
       if (pattern) check(pattern, node.right);
     },
