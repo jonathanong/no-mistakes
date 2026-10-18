@@ -3,6 +3,7 @@
 import hashlib
 import itertools
 import json
+import re
 import runpy
 import sys
 from collections import defaultdict
@@ -39,7 +40,8 @@ def read_run(path):
     row["normalized_report_sha256"], row["warnings_sha256"] = project(report)
     stderr = path.with_suffix(".stderr").read_text()
     lines = [line for line in stderr.splitlines()
-             if not line.startswith(("[progress] ", "[timing] ", "[work] "))]
+             if not line.startswith(("[progress] ", "[timing] ", "[work] "))
+             and not re.fullmatch(r"\[memory\] peak_rss_kib: [0-9]+", line)]
     row["stderr_semantics_sha256"] = hashlib.sha256("\n".join(lines).encode()).hexdigest()
     return row
 

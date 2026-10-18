@@ -16,6 +16,18 @@ class MimallocReportTests(unittest.TestCase):
         changed = REPORT["read_run"](FIXTURES / "report-nested-change.json")
         self.assertNotEqual(first["normalized_report_sha256"], changed["normalized_report_sha256"])
 
+    def test_numeric_memory_telemetry_is_not_a_semantic_difference(self):
+        first = REPORT["read_run"](FIXTURES / "report-memory-first.json")
+        changed = REPORT["read_run"](FIXTURES / "report-memory-changed.json")
+        warning = REPORT["read_run"](FIXTURES / "report-memory-warning.json")
+        self.assertEqual(first["stderr_semantics_sha256"], changed["stderr_semantics_sha256"])
+        self.assertNotEqual(changed["stderr_semantics_sha256"], warning["stderr_semantics_sha256"])
+
+    def test_nested_memory_named_json_payload_remains_semantic(self):
+        first = REPORT["read_run"](FIXTURES / "report-nested-memory-first.json")
+        changed = REPORT["read_run"](FIXTURES / "report-nested-memory-changed.json")
+        self.assertNotEqual(first["normalized_report_sha256"], changed["normalized_report_sha256"])
+
     def test_rejects_incomplete_and_malformed_json(self):
         for name in ("report-incomplete.json", "report-malformed.json", "report-empty.json"):
             with self.subTest(name=name), self.assertRaises(ValueError):
