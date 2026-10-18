@@ -1,56 +1,55 @@
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
-mod remap;
-use super::super::super::{Environment, Evaluator, Value};
+//! Lazy module initialization promotes a pristine generation into active arm baselines.
+use super::super::super::{frame_arena::FrameCheckpoint, Environment, Evaluator};
 use super::super::{arena::Arena, reachable};
-use crate::fx::{FxHashMap, FxHashSet};
-use std::{
-    collections::BTreeMap,
-    path::{Path, PathBuf},
-};
+use crate::fx::FxHashSet;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
 
 #[derive(Default)]
 pub(in crate::codebase::postgres::query_annotation) struct Initials {
-    pub base: usize,
-    pub known: FxHashSet<PathBuf>,
-    frames: FxHashMap<Environment, Scope>,
-    objects: FxHashMap<u64, Vec<Value>>,
-    extras: FxHashMap<u64, BTreeMap<usize, Value>>,
-    mapped: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: FxHashMap<Environment, FxHashMap<String, Environment>>,
-    fresh: FxHashMap<Environment, FxHashSet<String>>,
+    pub base: FrameCheckpoint,
+    known: FxHashSet<PathBuf>,
+    frames: BTreeMap<u64, Environment>,
+    objects: BTreeSet<u64>,
     identities: FxHashSet<u64>,
-    updates: FxHashMap<u64, Value>,
-    invalidated: FxHashSet<u64>,
-    deleted: FxHashSet<(u64, Option<usize>)>,
-    definite: FxHashSet<(u64, usize)>,
-    disconnected: FxHashSet<(u64, usize)>,
+    modules: FxHashSet<Environment>,
 }
+
 impl Initials {
-    pub fn arguments(&self) -> impl Iterator<Item = u64> + '_ {
-        self.objects.keys().copied()
+    pub fn young_arguments(&self, cutoff: u64) -> impl Iterator<Item = u64> + '_ {
+        self.objects.range(cutoff..).copied()
     }
-    pub fn roots(&self) -> impl Iterator<Item = Environment> + '_ {
-        self.frames.keys().copied()
+    pub fn young_roots(&self, base: FrameCheckpoint) -> impl Iterator<Item = Environment> + '_ {
+        self.frames.range(base.birth..).map(|(_, env)| *env)
     }
 }
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn begin_alternative_module_snapshot(
         &mut self,
-        base: usize,
+        base: FrameCheckpoint,
     ) {
-        let initial = Initials {
+        self.active_module_initials.push(Initials {
             base,
-            known: self.modules.keys().cloned().collect(),
-            ..Initials::default()
-        };
-        self.active_module_initials.push(initial);
+            known: Default::default(),
+            frames: Default::default(),
+            objects: Default::default(),
+            identities: Default::default(),
+            modules: Default::default(),
+        });
     }
+
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn record_alternative_module_initial(
         &mut self,
         path: &Path,
         env: Environment,
     ) {
         if self.active_module_initials.is_empty() {
+            return;
+        }
+        if self.active_module_initials.iter().all(|snapshot| {
+            self.scopes.is_before(env, snapshot.base) || snapshot.known.contains(path)
+        }) {
             return;
         }
         let live = reachable::collect_from_roots(
@@ -67,116 +66,77 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &self.mapped_arguments,
             &self.captured_bindings,
         );
+        let mut promoted_frames = FxHashSet::default();
+        let mut pins = Vec::new();
         for snapshot in &mut self.active_module_initials {
-            if snapshot.known.contains(path) {
+            if self.scopes.is_before(env, snapshot.base)
+                || !snapshot.known.insert(path.to_path_buf())
+            {
                 continue;
             }
-            snapshot.known.insert(path.to_path_buf());
-            for frame in live
+            snapshot.modules.insert(env);
+            let frames = live
                 .environments
                 .iter()
-                .filter(|frame| **frame >= snapshot.base)
-            {
-                snapshot
-                    .frames
-                    .entry(*frame)
-                    .or_insert_with(|| self.scopes[*frame].clone());
-                if let Some(value) = self.mapped_arguments.get(frame) {
-                    snapshot
-                        .mapped
-                        .entry(*frame)
-                        .or_insert_with(|| value.clone());
-                }
-                if let Some(value) = self.captured_bindings.get(frame) {
-                    snapshot
-                        .captured
-                        .entry(*frame)
-                        .or_insert_with(|| value.clone());
-                }
-                if let Some(value) = self.fresh_mapped_parameters.get(frame) {
-                    snapshot
-                        .fresh
-                        .entry(*frame)
-                        .or_insert_with(|| value.clone());
+                .filter(|frame| !self.scopes.is_before(**frame, snapshot.base));
+            for frame in frames {
+                snapshot.frames.insert(self.scopes.birth(*frame), *frame);
+                promoted_frames.insert(*frame);
+            }
+            snapshot.objects.extend(live.arguments.iter().copied());
+            for id in &live.identities {
+                if snapshot.identities.insert(*id) {
+                    pins.push(*id);
                 }
             }
-            for id in &live.arguments {
-                snapshot
-                    .objects
-                    .entry(*id)
-                    .or_insert_with(|| self.argument_objects[id].clone());
-                if let Some(value) = self.argument_extra_slots.get(id) {
-                    snapshot.extras.entry(*id).or_insert_with(|| value.clone());
-                }
-            }
-            snapshot.identities.extend(live.identities.iter().copied());
-            snapshot.updates.extend(
-                self.builder_updates
-                    .iter()
-                    .filter(|(id, _)| live.identities.contains(id))
-                    .map(|(id, value)| (*id, value.clone())),
+        }
+        self.pin_module_identities(&pins);
+        self.promote_module_initial(
+            path,
+            &promoted_frames.into_iter().collect::<Vec<_>>(),
+            &live.arguments.into_iter().collect::<Vec<_>>(),
+            &live.identities.into_iter().collect::<Vec<_>>(),
+        );
+        if let Some(observer) = crate::diagnostics::current() {
+            let oldest = self
+                .active_module_initials
+                .first()
+                .expect("active snapshots")
+                .base;
+            let old_visits = live
+                .environments
+                .iter()
+                .filter(|env| self.scopes.is_before(**env, oldest))
+                .count();
+            observer.increment("postgres.annotation.module_initial_promotions", 1);
+            observer.increment(
+                "postgres.annotation.module_initial_old_frame_visits",
+                old_visits as u64,
             );
-            snapshot.invalidated.extend(
-                self.invalidated_builders
-                    .intersection(&live.identities)
-                    .copied(),
-            );
-            snapshot.deleted.extend(
-                self.deleted_argument_slots
-                    .iter()
-                    .filter(|(id, _)| live.arguments.contains(id))
-                    .copied(),
-            );
-            snapshot.definite.extend(
-                self.definite_deleted_argument_slots
-                    .iter()
-                    .filter(|(id, _)| live.arguments.contains(id))
-                    .copied(),
-            );
-            snapshot.disconnected.extend(
-                self.disconnected_argument_slots
-                    .iter()
-                    .filter(|(id, _)| live.arguments.contains(id))
-                    .copied(),
+            observer.increment(
+                "postgres.annotation.module_initial_new_frame_visits",
+                (live.environments.len() - old_visits) as u64,
             );
         }
     }
-    // The arm runner updates captured readers and rebuilds mapped indexes
-    // after this restoration.
-    pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn restore_alternative_modules(
+    pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn finish_alternative_module_snapshot(
         &mut self,
-    ) {
+    ) -> Vec<super::super::super::temporaries::TransientRoot> {
         let snapshot = self
             .active_module_initials
-            .last()
-            .expect("active alternatives");
-        for (env, values) in &snapshot.frames {
-            self.scopes[*env].clone_from(values);
-        }
-        for (id, values) in &snapshot.objects {
-            self.argument_objects.insert(*id, values.clone());
-            self.argument_extra_slots.remove(id);
-        }
-        self.argument_extra_slots.extend(snapshot.extras.clone());
-        self.mapped_arguments.extend(snapshot.mapped.clone());
-        self.captured_bindings.extend(snapshot.captured.clone());
-        for env in snapshot.frames.keys() {
-            self.fresh_mapped_parameters.remove(env);
-        }
-        self.fresh_mapped_parameters.extend(snapshot.fresh.clone());
-        self.builder_updates
-            .retain(|id, _| !snapshot.identities.contains(id));
-        self.builder_updates.extend(snapshot.updates.clone());
-        self.invalidated_builders
-            .extend(snapshot.invalidated.iter().copied());
-        self.deleted_argument_slots
-            .extend(snapshot.deleted.iter().copied());
-        self.definite_deleted_argument_slots
-            .extend(snapshot.definite.iter().copied());
-        self.disconnected_argument_slots
-            .extend(snapshot.disconnected.iter().copied());
+            .pop()
+            .expect("balanced alternatives");
+        self.unpin_module_identities(&snapshot.identities.into_iter().collect::<Vec<_>>());
+        snapshot
+            .modules
+            .into_iter()
+            .map(super::super::super::temporaries::TransientRoot::Environment)
+            .collect()
     }
 }
 
+#[cfg(test)]
+#[path = "initials/test_accessors.rs"]
+mod test_accessors;
 #[cfg(test)]
 mod tests;

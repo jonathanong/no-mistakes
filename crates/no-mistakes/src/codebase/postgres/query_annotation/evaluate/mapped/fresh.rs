@@ -7,19 +7,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
         ids: &FxHashSet<u64>,
     ) {
+        let mut writes = Vec::new();
         for id in ids {
-            if let Some(bindings) = self.fresh_mapped_argument_bindings.remove(id) {
+            if let Some(bindings) = self.fresh_mapped_argument_bindings.get(id) {
                 for (env, names) in bindings {
-                    if let std::collections::hash_map::Entry::Occupied(mut entry) =
-                        self.fresh_mapped_parameters.entry(env)
-                    {
-                        entry.get_mut().retain(|name| !names.contains(name));
-                        if entry.get().is_empty() {
-                            entry.remove();
-                        }
-                    }
+                    writes.extend(names.iter().map(|name| (*env, name.clone())));
                 }
             }
+        }
+        for (env, name) in writes {
+            self.set_transaction_flag(super::super::transactions::Cell::Fresh(env, name), false);
         }
     }
 
@@ -37,7 +34,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         self.invalidate_mapped_freshness(&ids);
-        self.invalidated_builders.extend(ids);
+        for id in ids {
+            self.set_transaction_flag(super::super::transactions::Cell::Invalidated(id), true);
+        }
     }
 
     pub(super) fn inherit_freshness(

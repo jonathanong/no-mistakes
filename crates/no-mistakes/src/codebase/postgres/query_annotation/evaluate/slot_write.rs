@@ -41,31 +41,28 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let disconnected = self.disconnected_argument_slots.contains(&(id, index));
         let possibly_disconnected = self.deleted_argument_slots.contains(&(id, None))
             || self.deleted_argument_slots.contains(&(id, Some(index)));
-        self.definite_deleted_argument_slots.remove(&(id, index));
+        self.set_transaction_flag(super::transactions::Cell::Definite(id, index), false);
         // A definite deletion already froze the formal, so its index marker
         // can go away. A conditional marker stays: the next write must not
         // treat that formal as mapped again.
         if disconnected || !possibly_disconnected {
-            self.deleted_argument_slots.remove(&(id, Some(index)));
+            self.set_transaction_flag(super::transactions::Cell::Deleted(id, Some(index)), false);
         }
         // This path assigned the property. A dynamic `(id, None)` marker
         // still covers indices that this write did not touch.
-        self.recreated_argument_slots.insert((id, index));
-        let Some(slot) = self
+        self.set_transaction_flag(super::transactions::Cell::Recreated(id, index), true);
+        if !self
             .argument_objects
-            .get_mut(&id)
-            .and_then(|values| values.get_mut(index))
-        else {
-            self.argument_extra_slots
-                .entry(id)
-                .or_default()
-                .insert(index, stored.clone());
+            .get(&id)
+            .is_some_and(|values| index < values.len())
+        {
+            self.write_sparse_slot(id, index, Some(stored.clone()));
             if previously_invalidated {
                 self.opaque_callbacks(std::slice::from_ref(&stored), depth);
             }
             return Value::Evaluated(Box::new(stored), handled_value);
-        };
-        *slot = stored.clone();
+        }
+        self.write_dense_slot(id, index, stored.clone());
         if previously_invalidated {
             self.opaque_callbacks(std::slice::from_ref(&stored), depth);
         } else if disconnected {

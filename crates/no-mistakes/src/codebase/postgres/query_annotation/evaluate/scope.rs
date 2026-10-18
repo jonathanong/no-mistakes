@@ -1,19 +1,22 @@
 use super::Value;
-use crate::fx::{FxHashMap, FxHashSet};
-use std::{
-    ops::{Deref, DerefMut},
-    sync::{Arc, OnceLock},
-};
+use crate::fx::FxHashMap;
+#[cfg(test)]
+use crate::fx::FxHashSet;
+#[cfg(test)]
+use std::sync::OnceLock;
+use std::{ops::Deref, sync::Arc};
 
 #[derive(Default)]
 struct Bindings {
     values: FxHashMap<String, Value>,
+    #[cfg(test)]
     builders: OnceLock<FxHashSet<u64>>,
 }
 impl Clone for Bindings {
     fn clone(&self) -> Self {
         Self {
             values: self.values.clone(),
+            #[cfg(test)]
             builders: OnceLock::new(),
         }
     }
@@ -31,6 +34,21 @@ impl Eq for Bindings {}
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 
 impl Scope {
+    #[cfg(test)]
+    pub(super) fn shares_storage_with(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+    pub(super) fn restore_binding(&mut self, name: String, value: Option<Value>) {
+        let bindings = Arc::make_mut(&mut self.0);
+        #[cfg(test)]
+        bindings.builders.take();
+        if let Some(value) = value {
+            bindings.values.insert(name, value);
+        } else {
+            bindings.values.remove(&name);
+        }
+    }
+    #[cfg(test)]
     pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
         let builders = self.0.builders.get_or_init(|| {
             fn collect(
@@ -74,6 +92,7 @@ impl From<FxHashMap<String, Value>> for Scope {
     fn from(values: FxHashMap<String, Value>) -> Self {
         Self(Arc::new(Bindings {
             values,
+            #[cfg(test)]
             builders: OnceLock::new(),
         }))
     }
@@ -84,9 +103,11 @@ impl Deref for Scope {
         &self.0.values
     }
 }
-impl DerefMut for Scope {
+#[cfg(test)]
+impl std::ops::DerefMut for Scope {
     fn deref_mut(&mut self) -> &mut Self::Target {
         let bindings = Arc::make_mut(&mut self.0);
+        #[cfg(test)]
         bindings.builders.take();
         &mut bindings.values
     }
@@ -98,6 +119,7 @@ impl<'a> IntoIterator for &'a Scope {
         self.iter()
     }
 }
+#[cfg(test)]
 impl<'a> IntoIterator for &'a mut Scope {
     type Item = (&'a String, &'a mut Value);
     type IntoIter = std::collections::hash_map::IterMut<'a, String, Value>;

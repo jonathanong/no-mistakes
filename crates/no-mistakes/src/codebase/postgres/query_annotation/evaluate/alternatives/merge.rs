@@ -1,4 +1,5 @@
 use super::super::Value;
+#[cfg(test)]
 use crate::fx::{FxHashMap, FxHashSet};
 
 fn alternatives(value: Value, values: &mut Vec<Value>) {
@@ -19,6 +20,7 @@ fn alternatives(value: Value, values: &mut Vec<Value>) {
     }
 }
 
+#[cfg(test)]
 pub(super) fn objects(
     joined: &mut FxHashMap<u64, Vec<Value>>,
     current: &FxHashMap<u64, Vec<Value>>,
@@ -65,6 +67,7 @@ pub(super) fn objects(
     }
 }
 
+#[cfg(test)]
 pub(super) fn definite(
     common: &mut Option<FxHashSet<(u64, usize)>>,
     private: &mut FxHashSet<(u64, usize)>,
@@ -100,15 +103,6 @@ pub(super) fn value(before: Value, after: Value) -> Value {
     alternatives(after, &mut values);
     // Sparse slots use the same candidate join as dense argument vectors.
     Value::Possible(values.into())
-}
-
-pub(super) fn shared_ids(
-    objects: &FxHashMap<u64, Vec<Value>>,
-    initial: &super::modules::Initials,
-) -> FxHashSet<u64> {
-    let mut shared = objects.keys().copied().collect::<FxHashSet<_>>();
-    shared.extend(initial.arguments());
-    shared
 }
 
 #[cfg(test)]

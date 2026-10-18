@@ -29,7 +29,8 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -124,7 +125,8 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
             (specifier == "./later.mts" && from == root.as_path()).then(|| later.clone())
         },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -162,7 +164,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
     assert!(evaluator
         .modules
         .values()
-        .all(|env| *env < evaluator.scopes.len()));
+        .all(|env| evaluator.scopes.get(*env).is_some()));
     assert!(
         evaluator.argument_objects.len() <= 1,
         "dead calls before the later module environment must not become permanent roots"

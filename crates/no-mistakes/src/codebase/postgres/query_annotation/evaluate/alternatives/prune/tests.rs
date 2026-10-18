@@ -10,7 +10,8 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         files: &files,
         resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        // The unrooted frame deliberately precedes the module, forcing a remap.
+        transactions: Default::default(),
+        // The unrooted earlier frame must disappear without renumbering peers.
         scopes: vec![
             FxHashMap::from_iter([("dead".into(), Value::Prefix("dead".into(), true, Some(9)))])
                 .into(),
@@ -20,7 +21,8 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
             ])
             .into(),
             FxHashMap::from_iter([("arguments".into(), Value::Arguments(43))]).into(),
-        ],
+        ]
+        .into(),
         modules: FxHashMap::from_iter([(path.clone(), 1)]),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -69,16 +71,24 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
+    evaluator.initialize_reference_index_for_tests();
     // Production registration maintains both relations together. This manually
     // seeded evaluator must establish that invariant before measured compaction.
     evaluator.rebuild_captured_readers();
+    let live_before = [evaluator.scopes[1].clone(), evaluator.scopes[2].clone()];
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     evaluator.prune_snapshot_state();
-    assert_eq!(evaluator.scopes.len(), 2);
-    assert_eq!(evaluator.modules[&path], 0);
+    assert_eq!(evaluator.scopes.ids().count(), 2);
+    assert_eq!(evaluator.modules[&path], 1);
+    assert!(
+        evaluator.scopes.get(0).is_none(),
+        "the dead frame is released"
+    );
+    assert!(evaluator.scopes[1] == live_before[0]);
+    assert!(evaluator.scopes[2] == live_before[1]);
     assert!(matches!(
-        evaluator.scopes[0]["live"],
+        evaluator.scopes[1]["live"],
         Value::Prefix(_, _, Some(7))
     ));
     assert_eq!(
@@ -116,11 +126,11 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         evaluator.disconnected_argument_slots,
         FxHashSet::from_iter([(43, 1)])
     );
-    assert_eq!(evaluator.captured_bindings[&0]["owner"], 1);
-    assert_eq!(evaluator.captured_bindings[&1]["owner"], 0);
-    let mut targets = evaluator.captured_write_targets(0, "owner");
+    assert_eq!(evaluator.captured_bindings[&1]["owner"], 2);
+    assert_eq!(evaluator.captured_bindings[&2]["owner"], 1);
+    let mut targets = evaluator.captured_write_targets(1, "owner");
     targets.sort_unstable();
-    assert_eq!(targets, vec![0, 1]);
+    assert_eq!(targets, vec![1, 2]);
     // Compaction already found exactly the module-rooted mutation identities.
     assert_eq!(
         observer.snapshot().work["postgres.annotation.reachability_walks"],

@@ -7,11 +7,12 @@ fn evaluator<'a>(
     files: &'a FxHashMap<PathBuf, super::super::File<'a>>,
     scope: FxHashMap<String, Value>,
 ) -> Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> {
-    Evaluator {
+    let mut evaluator: Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> = Evaluator {
         files,
         resolve: |_name, _path| None,
         events: Default::default(),
-        scopes: vec![scope.into()],
+        transactions: Default::default(),
+        scopes: vec![scope.into()].into(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -34,7 +35,9 @@ fn evaluator<'a>(
         fresh_mapped_parameters: Default::default(),
         fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
-    }
+    };
+    evaluator.initialize_reference_index_for_tests();
+    evaluator
 }
 
 #[test]

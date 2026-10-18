@@ -1,14 +1,17 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::{
+    frame_arena::ScopeArena, scope::Scope,
+};
 
 #[test]
-fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness() {
-    let mut scopes = vec![Scope::from(FxHashMap::from_iter([(
+fn stable_handles_still_prune_dead_argument_and_freshness_state() {
+    let mut scopes: ScopeArena = vec![Scope::from(FxHashMap::from_iter([(
         "arg".into(),
-        Value::Arguments(7),
-    )]))];
-    // Branch restoration can replace values while every frame ID stays fixed.
-    // Capture identity must not short-circuit the rest of compaction.
-    scopes[0].insert("arg".into(), Value::Arguments(8));
+        Value::Arguments(8),
+    )]))]
+    .into();
+    let root = scopes.ids().next().unwrap();
+    let dead_frame = scopes.allocate(Scope::default());
     let mut objects = FxHashMap::from_iter([
         (7, vec![Value::Arguments(7)]),
         (8, vec![Value::Arguments(8)]),
@@ -17,19 +20,16 @@ fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness()
     let mut extras = FxHashMap::default();
     let mut mapped = FxHashMap::default();
     let mut fresh = FxHashMap::from_iter([
-        (0, FxHashSet::from_iter(["arg".into()])),
-        (9, FxHashSet::from_iter(["stale".into()])),
+        (root, FxHashSet::from_iter(["arg".into()])),
+        (dead_frame, FxHashSet::from_iter(["stale".into()])),
     ]);
-    let mut captured = FxHashMap::from_iter([(0, FxHashMap::default())]);
-    let result = compact_from_roots(
+    let mut captured = FxHashMap::from_iter([(root, FxHashMap::default())]);
+    let compacted = compact_from_roots(
         &mut scopes,
-        Roots {
-            environments: &[0],
-            arguments: &[],
-            preserved: 1,
-            transient: &[],
-        },
-        &mut [],
+        &[root],
+        &[],
+        &[],
+        &[],
         &mut mapped,
         ArenaMut {
             objects: &mut objects,
@@ -38,14 +38,17 @@ fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness()
         &mut fresh,
         &mut captured,
     );
-    assert!(result.indices.is_empty());
-    assert!(!result.captured_changed);
-    assert_eq!(result.arguments, FxHashSet::from_iter([8]));
-    assert!(scopes[0]["arg"] == Value::Arguments(8));
+
+    assert_eq!(compacted.indices, FxHashMap::from_iter([(root, root)]));
+    assert_eq!(compacted.arguments, FxHashSet::from_iter([8]));
+    assert!(scopes.get(root).is_some());
+    assert!(scopes.get(dead_frame).is_none());
+    assert!(scopes[root]["arg"] == Value::Arguments(8));
     assert_eq!(
         objects.keys().copied().collect::<FxHashSet<_>>(),
         FxHashSet::from_iter([8])
     );
-    assert!(fresh.contains_key(&0));
-    assert!(!fresh.contains_key(&9));
+    assert!(fresh.contains_key(&root));
+    assert!(!fresh.contains_key(&dead_frame));
+    assert!(captured.contains_key(&root));
 }

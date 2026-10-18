@@ -34,7 +34,8 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -67,12 +68,26 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
                 matches!(evaluator.scopes[*frame].get("caseName"), Some(Value::Prefix(text, _, _)) if text == label)
                     .then_some((*id, *frame))
             })
-            .unwrap()
+            .unwrap_or_else(|| panic!("canonical owner for {label}"))
     };
     let (direct, direct_frame) = owner("direct");
     let (duplicate, duplicate_frame) = owner("duplicate");
-    let (absent, _) = owner("absent");
-    let (empty, _) = owner("empty");
+    let unowned_mapping = |label: &str| {
+        let frame = evaluator
+            .scopes
+            .ids()
+            .find(|frame| {
+                matches!(evaluator.scopes[*frame].get("caseName"), Some(Value::Prefix(text, _, _)) if text == label)
+            })
+            .unwrap_or_else(|| panic!("saved mapping frame for {label}"));
+        let id = evaluator.mapped_arguments[&frame]
+            .iter()
+            .find_map(|(id, names)| names.iter().all(String::is_empty).then_some(*id))
+            .unwrap_or_else(|| panic!("zero-slot mapping for {label}"));
+        (id, frame)
+    };
+    let (absent, _) = unowned_mapping("absent");
+    let (empty, _) = unowned_mapping("empty");
     let (outer, outer_frame) = owner("outer");
     let (inner, inner_frame) = owner("inner");
     assert!(evaluator.mapped_arguments[&inner_frame]

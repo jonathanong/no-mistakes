@@ -1,4 +1,6 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::frame_arena::ScopeArena;
+use crate::codebase::postgres::query_annotation::evaluate::scope::Scope;
 
 #[test]
 fn shared_containers_are_visited_once_per_reachability_collection() {
@@ -140,10 +142,11 @@ fn detached_function_only_container_retains_its_environment() {
 
 #[test]
 fn transient_roots_keep_private_environments_sparse_slots_and_argument_cycles() {
-    let scopes = vec![
+    let scopes: ScopeArena = vec![
         Scope::default(),
         FxHashMap::from_iter([("args".into(), Value::Arguments(8))]).into(),
-    ];
+    ]
+    .into();
     let objects = FxHashMap::from_iter([(8, vec![Value::Arguments(8)]), (99, vec![])]);
     let extras = FxHashMap::from_iter([(
         8,

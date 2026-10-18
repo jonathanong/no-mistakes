@@ -4,15 +4,6 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 type Seen = Option<FxHashSet<CallbackIdentity>>;
 
-pub(super) fn accumulate(joined: &mut Seen, current: &Seen, first: bool) {
-    if first {
-        joined.clone_from(current);
-    } else if let (Some(joined), Some(current)) = (joined, current) {
-        // Only callbacks consumed on every possible path may suppress a later call.
-        joined.retain(|key| current.contains(key));
-    }
-}
-
 /// Seen keys do not keep frames alive. Only retained captured environments
 /// survive, using exactly the compactor's identity mapping.
 pub(super) fn remap(
@@ -34,9 +25,6 @@ pub(super) fn remap(
 }
 
 impl<F: Fn(&str, &std::path::Path) -> Option<std::path::PathBuf>> super::super::Evaluator<'_, F> {
-    pub(super) fn accumulate_callback_seen(&self, joined: &mut Seen, first: bool) {
-        accumulate(joined, &self.active_callback_functions, first);
-    }
     pub(super) fn remap_active_callbacks(
         &mut self,
         preserved: usize,

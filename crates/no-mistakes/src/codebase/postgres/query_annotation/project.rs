@@ -69,3 +69,6 @@ fn project_impl(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod checkpoint_work_tests;

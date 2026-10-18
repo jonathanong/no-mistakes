@@ -1,46 +1,10 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
-pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_state(
-    scopes: &[Scope],
-    returned: &[Value],
-    state: MutationState<'_>,
-    mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    arena: ArenaMut<'_>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
-    transient: &[super::super::super::temporaries::TransientRoot],
-) {
-    // Scalar-only branches have no heap or mutation state to discard.
-    if arena.objects.is_empty()
-        && arena.extras.is_empty()
-        && state.deleted.is_empty()
-        && state.definite.is_empty()
-        && state.disconnected.is_empty()
-        && state.invalidated.is_empty()
-        && state.updates.is_empty()
-    {
-        return;
-    }
-    let roots = (0..scopes.len()).collect::<Vec<_>>();
-    let reachable = reachable::collect_from_roots(
-        scopes,
-        reachable::RootSeeds {
-            environments: &roots,
-            transient,
-            ..Default::default()
-        },
-        returned,
-        arena.read(),
-        mapped,
-        captured,
-    );
-    arena
-        .objects
-        .retain(|id, _| reachable.arguments.contains(id));
-    arena
-        .extras
-        .retain(|id, _| reachable.arguments.contains(id));
-    prune_mutations(state, &reachable.arguments, &reachable.identities);
-}
+
+#[cfg(test)]
+#[path = "tests/prune_state.rs"]
+mod legacy;
+#[cfg(test)]
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) use legacy::prune_state;
 
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_mutations(
     state: MutationState<'_>,
@@ -54,10 +18,8 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     state.updates.retain(|id, _| identities.contains(id));
 }
 
-/// Compact request state from explicit module roots, then remap cached module
-/// identities so later lookups continue to address their initialized frames.
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn compact_modules(
-    scopes: &mut Vec<Scope>,
+    scopes: &mut ScopeArena,
     modules: &mut FxHashMap<std::path::PathBuf, Environment>,
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
@@ -65,26 +27,17 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Compaction {
     let roots = modules.values().copied().collect::<Vec<_>>();
-    let indices = compact_from_roots(
+    compact_from_roots(
         scopes,
-        Roots {
-            environments: &roots,
-            arguments: &[],
-            preserved: 0,
-            transient: &[],
-        },
-        &mut [],
+        &roots,
+        &[],
+        &[],
+        &[],
         mapped,
         arena,
         fresh,
         captured,
-    );
-    for env in modules.values_mut() {
-        if let Some(remapped) = indices.indices.get(env) {
-            *env = *remapped;
-        }
-    }
-    indices
+    )
 }
 
 #[cfg(test)]

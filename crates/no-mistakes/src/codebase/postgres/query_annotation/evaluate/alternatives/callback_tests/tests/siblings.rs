@@ -34,7 +34,8 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -58,8 +59,8 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         fresh_mapped_argument_bindings: Default::default(),
         mapped_arguments: Default::default(),
     };
-    // A discarded earlier invocation forces module-root compaction to change
-    // live environment IDs; seen keys must not preserve that discarded frame.
+    // An earlier discarded invocation must be released without changing the
+    // retained callback identity or letting its seen key keep garbage alive.
     let discarded = evaluator.environment(Default::default());
     let root = evaluator.module_environment(&path);
     let start = source.find("write(arguments[0])").unwrap() as u32;
@@ -96,7 +97,15 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     evaluator.active_callback_functions =
         Some(crate::fx::FxHashSet::from_iter([key, discarded_key]));
     evaluator.active_callback_executions = evaluator.active_callback_functions.clone();
+    let module_before = evaluator.scopes[root].clone();
+    let captured_before = evaluator.scopes[captured].clone();
+    let events_before = evaluator.events.clone();
     evaluator.prune_snapshot_state();
+    assert!(evaluator.scopes.get(discarded).is_none());
+    assert!(evaluator.scopes[root] == module_before);
+    assert!(evaluator.scopes[captured] == captured_before);
+    assert!(evaluator.events == events_before);
+    assert_eq!(evaluator.modules[&path], root);
     assert_eq!(
         evaluator.active_callback_executions,
         evaluator.active_callback_functions
@@ -104,10 +113,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     let seen = evaluator.active_callback_functions.as_ref().unwrap();
     assert_eq!(seen.len(), 1, "seen keys never keep discarded frames alive");
     let live = seen.iter().next().unwrap();
-    assert!(
-        live.2 < captured,
-        "captured environment key follows the module compaction mapping"
-    );
+    assert_eq!(live.2, captured, "live callback handles never change");
     let module = evaluator.modules[&path];
     assert!(
         matches!(&evaluator.scopes[module]["installer"], super::super::super::Value::Function(_,_,env) if *env == live.2)

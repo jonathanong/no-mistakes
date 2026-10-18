@@ -51,7 +51,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let id = self.next_builder;
             self.next_builder += 1;
             {
-                self.argument_objects.insert(id, values.to_vec());
+                self.create_argument_object(id, values.to_vec());
                 Value::Arguments(id)
             }
         }

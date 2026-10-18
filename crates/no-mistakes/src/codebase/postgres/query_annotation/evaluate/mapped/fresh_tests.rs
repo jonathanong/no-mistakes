@@ -52,7 +52,8 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),
-            scopes: Vec::new(),
+            transactions: Default::default(),
+            scopes: Default::default(),
             modules: Default::default(),
             active_module_initials: Default::default(),
             transient_roots: Default::default(),
@@ -113,7 +114,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             // Probe the private read boundary using the saved factory's real
             // callback identity, including multiple inherited mapping sets.
             let id = 1000;
-            evaluator.argument_objects.insert(
+            evaluator.create_argument_object(
                 id,
                 vec![
                     Value::Evaluated(Box::new(Value::Promise(Box::new(callback.clone()))), true),
@@ -123,9 +124,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             // Distinct invocation objects retain their own canonical positions;
             // inherited copies can shadow names but cannot move a slot.
             let other_id = id + 1;
-            evaluator
-                .argument_objects
-                .insert(other_id, evaluator.argument_objects[&id].clone());
+            evaluator.create_argument_object(other_id, evaluator.argument_objects[&id].clone());
             evaluator.mapped_arguments.insert(
                 env,
                 vec![
@@ -159,11 +158,12 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             // still survive without inventing a missing formal value.
             evaluator.deleted_argument_slots.insert((id, None));
             evaluator.scopes[env].remove("probe");
+            evaluator.initialize_reference_index_for_tests();
             assert!(matches!(
                 evaluator.mapped_parameter_value(env, "probe"),
                 Some(Value::Possible(_))
             ));
-            evaluator.scopes[env].insert("probe".into(), Value::Unknown);
+            evaluator.write_binding(env, "probe".into(), Value::Unknown);
             assert!(
                 matches!(
                     evaluator.mapped_parameter_value(env, "probe"),
@@ -171,7 +171,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
                 ),
                 "unknown copied formal does not discard live callback possibilities"
             );
-            evaluator.scopes[env].insert("probe".into(), callback.clone());
+            evaluator.write_binding(env, "probe".into(), callback.clone());
             evaluator.disconnect_mapped_slot(id, 0);
             assert!(matches!(evaluator.scopes[env]["probe"], Value::Possible(_)));
             continue;

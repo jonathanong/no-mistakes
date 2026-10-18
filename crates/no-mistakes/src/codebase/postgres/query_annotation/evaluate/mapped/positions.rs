@@ -10,7 +10,7 @@ pub(super) fn collect<'a>(names: impl Iterator<Item = &'a String>) -> FxHashMap<
         .collect()
 }
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
-    pub(super) fn mapped_parameter_index(
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn mapped_parameter_index(
         &self,
         id: u64,
         params: &[String],

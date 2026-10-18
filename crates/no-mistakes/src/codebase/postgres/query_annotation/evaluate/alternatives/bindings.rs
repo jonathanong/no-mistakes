@@ -1,5 +1,7 @@
 use super::super::Value;
+#[cfg(test)]
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
+#[cfg(test)]
 use crate::fx::FxHashMap;
 
 fn scalar(value: &Value) -> bool {
@@ -34,10 +36,12 @@ fn candidates(value: Value, joined: &mut Vec<Value>) {
     }
 }
 
+#[cfg(test)]
 const UNPROVEN: Value = Value::Unknown;
 
 /// A binding absent from one arm is not SQL proof. Callers compare this instead
 /// of indexing a divergent scope.
+#[cfg(test)]
 pub(super) fn binding_or_unproven<'a>(
     scope: &'a FxHashMap<String, Value>,
     name: &str,
@@ -48,6 +52,7 @@ pub(super) fn binding_or_unproven<'a>(
 /// Joins preserve an annotated builder prefix only when the original scope and
 /// both arms still have that builder. A missing arm or original binding is
 /// unproven and must not keep or synthesize a SQL prefix.
+#[cfg(test)]
 pub(super) fn join_with_sql(
     joined: &mut [Scope],
     current: &[Scope],
@@ -66,36 +71,41 @@ pub(super) fn join_with_sql(
             .collect::<Vec<_>>();
         for name in changed {
             let value = before.get_mut(&name).expect("existing binding");
-            // Divergent arms add and drop names. Neither hole is a builder.
-            let Some(next) = after.get(&name) else {
-                *value = Value::Unknown;
-                continue;
-            };
-            let Some(initial_value) = initial.get(&name) else {
-                *value = Value::Unknown;
-                continue;
-            };
-            if let Value::Prefix(_, _, Some(id)) = initial_value {
-                if !whole_sql
-                    && annotated_builder(initial_value, *id)
-                    && annotated_builder(value, *id)
-                    && annotated_builder(next, *id)
-                {
-                    *value = initial_value.clone();
-                    continue;
-                }
-            }
-            *value = if !whole_sql && scalar(value) && scalar(next) {
-                Value::Unknown
-            } else {
-                let mut values = Vec::new();
-                candidates(std::mem::replace(value, Value::Unknown), &mut values);
-                candidates(next.clone(), &mut values);
-                super::super::concat::joined(values)
-            };
+            *value = join_value(initial.get(&name), value, after.get(&name), whole_sql);
         }
     }
 }
 
 #[cfg(test)]
 mod tests;
+
+pub(super) fn join_value(
+    initial: Option<&Value>,
+    before: &Value,
+    after: Option<&Value>,
+    whole_sql: bool,
+) -> Value {
+    let (Some(initial), Some(after)) = (initial, after) else {
+        return Value::Unknown;
+    };
+    if before == after {
+        return before.clone();
+    }
+    if let Value::Prefix(_, _, Some(id)) = initial {
+        if !whole_sql
+            && annotated_builder(initial, *id)
+            && annotated_builder(before, *id)
+            && annotated_builder(after, *id)
+        {
+            return initial.clone();
+        }
+    }
+    if !whole_sql && scalar(before) && scalar(after) {
+        Value::Unknown
+    } else {
+        let mut values = Vec::new();
+        candidates(before.clone(), &mut values);
+        candidates(after.clone(), &mut values);
+        super::super::concat::joined(values)
+    }
+}

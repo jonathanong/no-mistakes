@@ -4,7 +4,7 @@ mod memo;
 mod state;
 mod values;
 use super::{calls::scopes, Environment, Evaluator, Value};
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Default)]
@@ -20,10 +20,8 @@ pub(in crate::codebase::postgres::query_annotation) type CallbackIdentity =
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn opaque_callbacks_with_roots(&mut self, arguments: &[Value], depth: u8) {
         let outermost = self.active_callback_functions.is_none();
-        self.active_callback_functions
-            .get_or_insert_with(FxHashSet::default);
-        self.active_callback_executions
-            .get_or_insert_with(FxHashSet::default);
+        self.set_transaction_flag(super::transactions::Cell::CallbackEnabled, true);
+        self.set_transaction_flag(super::transactions::Cell::ExecutionsEnabled, true);
         let mut state = CallbackState::default();
         self.callback_values(arguments, depth, &mut state);
         // Only objects reached by this consumer participate. Each revisit
@@ -70,10 +68,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
             callbacks.sort_unstable_by(|left, right| left.0.cmp(&right.0));
             for (key, budget, value) in callbacks {
-                self.active_callback_functions
-                    .as_mut()
-                    .unwrap()
-                    .remove(&key);
+                self.set_transaction_flag(super::transactions::Cell::CallbackSeen(key), false);
                 self.callback_values(std::slice::from_ref(&value), budget, &mut state);
             }
             changed.sort_unstable_by_key(|(id, _, _)| *id);
@@ -83,8 +78,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         if outermost {
-            self.active_callback_functions = None;
-            self.active_callback_executions = None;
+            self.set_transaction_flag(super::transactions::Cell::CallbackEnabled, false);
+            self.set_transaction_flag(super::transactions::Cell::ExecutionsEnabled, false);
         }
     }
 }

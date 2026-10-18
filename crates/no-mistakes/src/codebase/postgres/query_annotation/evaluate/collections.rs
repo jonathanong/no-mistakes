@@ -45,10 +45,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let values = self.argument_objects[id].clone();
         let result = match name {
             "push" => {
-                self.argument_objects
-                    .get_mut(id)
-                    .unwrap()
-                    .extend_from_slice(args);
+                self.append_dense_slots(*id, args);
                 Value::Number(self.argument_objects[id].len() as i64)
             }
             "join" => {
@@ -85,7 +82,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
                 let mapped = self.next_builder;
                 self.next_builder += 1;
-                self.argument_objects.insert(mapped, Vec::new());
+                self.create_argument_object(mapped, Vec::new());
                 for index in 0..values.len() {
                     let value = self.index(Value::Array(*id), index);
                     // Invoke through the ordinary callback/effect machinery, never
@@ -113,10 +110,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         self.invalidate_live_builders();
                         return Some(Value::Failure("opaque-collection-callback-effect"));
                     }
-                    self.argument_objects
-                        .get_mut(&mapped)
-                        .unwrap()
-                        .push(value.exposed());
+                    self.append_dense_slots(mapped, &[value.exposed()]);
                 }
                 if name == "map" {
                     Value::Array(mapped)

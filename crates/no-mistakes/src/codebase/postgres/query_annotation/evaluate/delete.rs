@@ -21,23 +21,30 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             match key {
                 DeleteKey::Index(index) => {
                     self.disconnect_mapped_slot(*id, index);
-                    self.disconnected_argument_slots.insert((*id, index));
-                    self.deleted_argument_slots.insert((*id, Some(index)));
-                    self.definite_deleted_argument_slots.insert((*id, index));
-                    if let Some(slot) = self
+                    self.set_transaction_flag(
+                        super::transactions::Cell::Disconnected(*id, index),
+                        true,
+                    );
+                    self.set_transaction_flag(
+                        super::transactions::Cell::Deleted(*id, Some(index)),
+                        true,
+                    );
+                    self.set_transaction_flag(
+                        super::transactions::Cell::Definite(*id, index),
+                        true,
+                    );
+                    if self
                         .argument_objects
-                        .get_mut(id)
-                        .and_then(|values| values.get_mut(index))
+                        .get(id)
+                        .is_some_and(|values| index < values.len())
                     {
-                        *slot = Value::Unknown;
+                        self.write_dense_slot(*id, index, Value::Unknown);
                     }
-                    if let Some(slots) = self.argument_extra_slots.get_mut(id) {
-                        slots.remove(&index);
-                    }
+                    self.write_sparse_slot(*id, index, None);
                 }
                 DeleteKey::Named => {}
                 DeleteKey::Dynamic => {
-                    self.deleted_argument_slots.insert((*id, None));
+                    self.set_transaction_flag(super::transactions::Cell::Deleted(*id, None), true);
                 }
             }
             self.invalidate_builders(&values[1..]);

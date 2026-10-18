@@ -57,16 +57,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         {
                             continue;
                         }
-                        if self
+                        if !self
                             .active_callback_functions
-                            .as_mut()
+                            .as_ref()
                             .expect("active opaque consumer")
-                            .insert(key.clone())
+                            .contains(&key)
                         {
-                            self.active_callback_executions
-                                .as_mut()
-                                .unwrap()
-                                .insert(key.clone());
+                            self.set_transaction_flag(
+                                super::super::transactions::Cell::CallbackSeen(key.clone()),
+                                true,
+                            );
+                            self.set_transaction_flag(
+                                super::super::transactions::Cell::CallbackRunning(key.clone()),
+                                true,
+                            );
                             let snapshot = self.memoized_callback_snapshot(
                                 path,
                                 *captured,
@@ -105,10 +109,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                                 next_depth,
                                 visited,
                             );
-                            self.active_callback_executions
-                                .as_mut()
-                                .unwrap()
-                                .remove(&key);
+                            self.set_transaction_flag(
+                                super::super::transactions::Cell::CallbackRunning(key),
+                                false,
+                            );
                         }
                     }
                 }

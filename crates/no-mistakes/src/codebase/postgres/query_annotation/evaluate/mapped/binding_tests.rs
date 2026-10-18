@@ -39,7 +39,8 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),
-            scopes: Vec::new(),
+            transactions: Default::default(),
+            scopes: Default::default(),
             modules: Default::default(),
             active_module_initials: Default::default(),
             transient_roots: Default::default(),
@@ -73,7 +74,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
                 evaluator.scopes.len() >= 33,
                 "many earlier invocation frames exist"
             );
-            for frame in 0..evaluator.scopes.len() {
+            for frame in evaluator.scopes.ids() {
                 assert_eq!(
                     evaluator.captured_write_targets(frame, "unrelated_local"),
                     vec![frame]

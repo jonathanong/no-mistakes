@@ -1,6 +1,7 @@
 pub(super) mod async_suspension;
 mod budget;
 mod collections;
+mod invocation;
 mod module_loads;
 mod names;
 pub(super) mod scopes;
@@ -136,7 +137,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             return Value::Unsupported;
         }
         let Value::Function(function, function_path, captured) = target else {
-            self.untrusted_array_intrinsics = true;
+            self.set_transaction_flag(super::transactions::Cell::Trust, true);
             self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
             return if handled_projection {
@@ -145,65 +146,13 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 Value::Unknown
             };
         };
-        if !function.supported
-            || (!self.files[&function_path].facts.precise_records
-                && function.body.iter().any(|step| {
-                    matches!(
-                        step,
-                        crate::codebase::postgres::query_annotation::Step::Branch(_, _, _)
-                    )
-                }))
-        {
-            return self.unsupported_call(
-                &function,
-                &function_path,
-                &arguments,
-                receiver.as_ref(),
-                (captured, depth, spread),
-            );
-        }
-        let mut locals = scopes::locals(&self.scopes[captured], &function);
-        if let Some(name) = &function.self_name {
-            locals.insert(name.clone(), Value::Unknown);
-        }
-        let object = self.arguments_object(&arguments, spread);
-        let mapping = self.parameter_mapping(&function, &function_path, &object);
-        scopes::arguments(&mut locals, &function, object);
-        for (index, param) in function.params.iter().enumerate() {
-            locals.insert(
-                param.clone(),
-                if spread {
-                    Value::Unknown
-                } else {
-                    arguments.get(index).cloned().unwrap_or(Value::Unknown)
-                },
-            );
-        }
-        scopes::bind_this(&mut locals, &function, receiver.as_ref());
-        let mut scope = self.environment(locals);
-        self.register_mappings(scope, captured, &function, mapping);
-        self.register_captured_bindings(scope, captured, &function);
-        let suspended = self.files[&function_path].facts.precise_records
-            && function.asynchronous
-            && async_suspension::has_suspension(&function.body);
-        let prior_events = suspended.then(|| async_suspension::event_lengths(&self.events));
-        let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
-        if let Some(prior_events) = prior_events {
-            // The evaluator does not schedule post-await work. Whether the
-            // caller awaits this promise or reads a shared builder first is
-            // unknown. Events recorded while evaluating the body are just as
-            // uncertain as its return value and captured builders.
-            async_suspension::invalidate_new_events(&mut self.events, &prior_events);
-            self.invalidate_builders(&arguments);
-            self.invalidate_captured(captured, &function);
-            return Value::Promise(Box::new(Value::Unknown));
-        }
-        // Trace forwarded executor calls, but do not treat a helper's return
-        // as immutable SQL when arbitrary effects could mutate its builder.
-        if !function.asynchronous {
-            value
-        } else {
-            Value::Promise(Box::new(value))
-        }
+        self.invoke_known_function(
+            function,
+            function_path,
+            captured,
+            &arguments,
+            receiver.as_ref(),
+            (depth, spread),
+        )
     }
 }

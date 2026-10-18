@@ -76,7 +76,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .collect();
                 let id = self.next_builder;
                 self.next_builder += 1;
-                self.argument_objects.insert(id, values);
+                self.create_argument_object(id, values);
                 Value::Array(id)
             }
             _ => unsupported.clone(),

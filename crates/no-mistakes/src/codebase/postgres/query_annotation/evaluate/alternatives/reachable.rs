@@ -1,7 +1,6 @@
 use super::super::temporaries::TransientRoot;
 use super::super::{Environment, Value};
 use super::arena::Arena;
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
 
 #[derive(Default)]
@@ -55,14 +54,15 @@ impl Reachable {
 mod tests;
 
 pub(super) fn collect_from_roots(
-    scopes: &[Scope],
+    scopes: &super::super::frame_arena::ScopeArena,
     roots: RootSeeds<'_>,
     returned: &[Value],
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Reachable {
-    if let Some(observer) = crate::diagnostics::current() {
+    let observer = crate::diagnostics::current();
+    if let Some(observer) = &observer {
         observer.increment("postgres.annotation.reachability_walks", 1);
     }
     let mut found = Reachable::default();
@@ -99,7 +99,7 @@ pub(super) fn collect_from_roots(
         while let Some(id) = found.pending_args.pop() {
             if found.arguments.insert(id) {
                 found.identities.insert(id);
-                for value in arena.objects[&id].iter().chain(
+                for value in arena.dense(id).iter().chain(
                     arena
                         .extras
                         .get(&id)
@@ -111,5 +111,14 @@ pub(super) fn collect_from_roots(
             }
         }
     }
+    if let Some(observer) = observer {
+        observer.increment(
+            "postgres.annotation.full_frame_visits",
+            found.environments.len() as u64,
+        );
+    }
     found
 }
+
+mod young;
+pub(super) use young::{collect_young, Frozen};

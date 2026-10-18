@@ -16,6 +16,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut env = self.environment(fx_map());
         // Publish before initialization: cycles and TDZ references share the
         // reserved module bindings instead of recursively initializing again.
+        self.save_cell(super::transactions::Cell::Module(path.to_path_buf()));
         self.modules.insert(path.to_path_buf(), env);
         let files = self.files;
         if files[path].facts.precise_records {
@@ -67,13 +68,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for (name, expr) in &facts.globals {
             match expr {
                 Expr::Function(function) => {
-                    self.scopes[env].insert(
+                    self.write_binding(
+                        env,
                         name.clone(),
                         Value::Function(std::sync::Arc::clone(function), path.to_path_buf(), env),
                     );
                 }
                 Expr::Unknown => {
-                    self.scopes[env].insert(name.clone(), Value::Unknown);
+                    self.write_binding(env, name.clone(), Value::Unknown);
                 }
                 _ => {}
             }

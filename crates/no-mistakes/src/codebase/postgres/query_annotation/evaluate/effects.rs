@@ -14,7 +14,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     pub(super) fn invalidate_opaque_builders(&mut self, values: &[Value]) {
         // Opaque hooks can patch intrinsics even when no builder exists yet.
-        self.untrusted_array_intrinsics = true;
+        self.set_transaction_flag(super::transactions::Cell::Trust, true);
         self.invalidate_builders(values);
     }
 
@@ -37,16 +37,20 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return;
         }
         self.invalidate_mapped_freshness(&ids);
-        self.invalidated_builders.extend(ids.iter().copied());
-        for scope in &mut self.scopes {
-            if !scope.contains_builders(&ids) {
-                continue;
-            }
-            for value in scope.values_mut() {
-                if matches!(value, Value::Prefix(_, _, Some(id)) if ids.contains(id)) {
-                    *value = Value::Unknown;
+        for id in &ids {
+            self.set_transaction_flag(super::transactions::Cell::Invalidated(*id), true);
+        }
+        let mut writes = Vec::new();
+        for cell in self.builder_locations(&ids) {
+            if let super::transactions::Cell::Binding(env, name) = cell {
+                if matches!(self.scopes[env].get(&name), Some(Value::Prefix(_, _, Some(id))) if ids.contains(id))
+                {
+                    writes.push((env, name));
                 }
             }
+        }
+        for (env, name) in writes {
+            self.write_binding(env, name, Value::Unknown);
         }
     }
 
@@ -75,71 +79,16 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .map(|(_, value)| value.clone())
             .collect::<Vec<_>>();
         self.invalidate_builders(&values);
-        for (name, value) in &mut self.scopes[env] {
-            if !shadowed.contains(name) && matches!(value, Value::Prefix(_, _, _)) {
-                *value = Value::Unknown;
-            }
-        }
-    }
-    pub(super) fn replace_builder(&mut self, replacement: &Value) {
-        fn identity(value: &Value) -> Option<u64> {
-            match value {
-                Value::Prefix(_, _, Some(id)) => Some(*id),
-                Value::Joined(values) if !values.is_empty() => {
-                    let id = identity(&values[0])?;
-                    values
-                        .iter()
-                        .all(|value| identity(value) == Some(id))
-                        .then_some(id)
-                }
-                _ => None,
-            }
-        }
-        let Some(id) = identity(replacement) else {
-            return;
-        };
-        self.builder_updates.insert(id, replacement.clone());
-        fn replace(value: &mut Value, id: u64, replacement: &Value) {
-            if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
-                *value = replacement.clone();
-            } else {
-                match value {
-                    Value::Promise(value) | Value::Evaluated(value, _) => {
-                        replace(value, id, replacement)
-                    }
-                    Value::Aggregate(values)
-                    | Value::References(values)
-                    | Value::Object(values)
-                    | Value::Record(values, _)
-                    | Value::Joined(values)
-                    | Value::Possible(values) => {
-                        for value in values {
-                            replace(value, id, replacement);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        let ids = FxHashSet::from_iter([id]);
-        for scope in &mut self.scopes {
-            if !scope.contains_builders(&ids) {
-                continue;
-            }
-            for value in scope.values_mut() {
-                replace(value, id, replacement);
-            }
-        }
-        // Argument references are identity-only; update each arena slot once.
-        for values in self.argument_objects.values_mut() {
-            for value in values {
-                replace(value, id, replacement);
-            }
-        }
-        for values in self.argument_extra_slots.values_mut() {
-            for value in values.values_mut() {
-                replace(value, id, replacement);
-            }
+        let names = self.scopes[env]
+            .iter()
+            .filter_map(|(name, value)| {
+                (!shadowed.contains(name) && matches!(value, Value::Prefix(_, _, _)))
+                    .then(|| name.clone())
+            })
+            .collect::<Vec<_>>();
+        for name in names {
+            self.write_binding(env, name, Value::Unknown);
         }
     }
 }
+mod replace;

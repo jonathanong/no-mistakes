@@ -1,0 +1,15 @@
+{
+  "old_identity_cutoff": 100,
+  "argument_objects": [
+    { "id": 1, "arguments": [2], "builders": [9] },
+    { "id": 2, "arguments": [1], "builders": [] }
+  ],
+  "builder_id": 9,
+  "builder_prefix": "/* retained builder */ SELECT 1",
+  "alias_names": ["left", "right"],
+  "slot_name": "slot",
+  "module_binding": "moduleRoot",
+  "module_path": "saved/module.mts",
+  "extra_slot": 1000,
+  "extra_prefix": "/* sparse retained builder */ SELECT 2"
+}

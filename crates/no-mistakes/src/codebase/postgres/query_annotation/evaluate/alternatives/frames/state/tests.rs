@@ -1,8 +1,10 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::frame_arena::ScopeArena;
 
 #[test]
 fn pruning_shares_one_walk_for_heap_mutations_and_builder_updates() {
-    let scopes = vec![FxHashMap::from_iter([("args".into(), Value::Arguments(8))]).into()];
+    let scopes: ScopeArena =
+        vec![FxHashMap::from_iter([("args".into(), Value::Arguments(8))]).into()].into();
     let mut objects = FxHashMap::from_iter([
         (8, vec![Value::Prefix("SELECT 1".into(), true, Some(7))]),
         (9, vec![Value::Unknown]),
@@ -103,7 +105,7 @@ fn pruning_skips_only_completely_empty_state() {
         let observer = crate::diagnostics::InvocationObserver::new(true);
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         prune_state(
-            &[],
+            &ScopeArena::default(),
             &[Value::Prefix("SELECT 1".into(), true, None)],
             MutationState {
                 deleted: &mut deleted,

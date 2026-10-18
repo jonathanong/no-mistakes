@@ -15,7 +15,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for frame in self.captured_write_targets(owner, &name) {
             let previous = self.scopes[frame][&name].clone();
             // Keep the actual property precise; only the uncertain formal joins.
-            self.scopes[frame].insert(
+            self.write_binding(
+                frame,
                 name.clone(),
                 Value::Possible(vec![previous, stored.clone()].into()),
             );

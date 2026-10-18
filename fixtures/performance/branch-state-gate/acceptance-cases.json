@@ -1,0 +1,36 @@
+{
+  "metadata": {"jobs": "1", "diagnostics": "off", "pair": 1},
+  "valid": {
+    "complete": true,
+    "parity": true,
+    "report_sha256": "74a840c1cf712381f89787a052dca418ff4ed22c6eade305fa91e14df33a65b5",
+    "jobs": "1",
+    "diagnostics": "off",
+    "pair": 1,
+    "wrapper_exit": 1,
+    "resources": {"exit": 1, "elapsed": 2.0, "user": 1.0, "system": 0.5, "rss_kib": 128000}
+  },
+  "censored": {
+    "complete": false,
+    "parity": false,
+    "report_sha256": "74a840c1cf712381f89787a052dca418ff4ed22c6eade305fa91e14df33a65b5",
+    "jobs": "1",
+    "diagnostics": "off",
+    "pair": 1,
+    "wrapper_exit": 124,
+    "resources": {"exit": 124, "elapsed": 300.0, "user": 100.0, "system": 1.0, "rss_kib": 128000}
+  },
+  "wrong_report": {
+    "complete": true,
+    "parity": false,
+    "report_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "jobs": "1",
+    "diagnostics": "off",
+    "pair": 1,
+    "wrapper_exit": 1,
+    "resources": {"exit": 1, "elapsed": 2.0, "user": 1.0, "system": 0.5, "rss_kib": 128000}
+  },
+  "rank_values": [3, 1, 6, 2, 5, 4],
+  "present_cells": [["1", "off"]],
+  "missing_pairs": [1, 2, 4, 5, 6]
+}

@@ -34,7 +34,8 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -102,9 +103,8 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         memo.constructions, 2,
         "proof revocation invalidates the same memo key"
     );
-    let previous = evaluator.scopes[captured]
-        .insert("parameter".into(), Value::Unknown)
-        .unwrap();
+    let previous = evaluator.scopes[captured]["parameter"].clone();
+    evaluator.write_binding(captured, "parameter".into(), Value::Unknown);
     let changed_binding =
         evaluator.memoized_callback_snapshot(&path, captured, &function, 8, &mut memo);
     assert!(changed_binding != changed_proof);
@@ -112,7 +112,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         memo.constructions, 3,
         "changed actual root binding invalidates cached snapshot"
     );
-    evaluator.scopes[captured].insert("parameter".into(), previous);
+    evaluator.write_binding(captured, "parameter".into(), previous);
 
     evaluator.mark_mapped_fresh(captured, "parameter");
     evaluator.invalidated_builders.insert(id);
@@ -144,7 +144,8 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
     assert!(before != evaluator.callback_snapshot(captured, &function));
     // Preserve real reference identities while probing private wrapper traversal.
     let builder = evaluator.scopes[root]["builder"].clone();
-    evaluator.scopes[captured].insert(
+    evaluator.write_binding(
+        captured,
         "parameter".into(),
         Value::Possible(vec![Value::Evaluated(Box::new(builder), true)].into()),
     );

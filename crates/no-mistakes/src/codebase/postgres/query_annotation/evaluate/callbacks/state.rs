@@ -1,5 +1,5 @@
 use super::super::{Environment, Evaluator, Function, Value};
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use crate::codebase::postgres::query_annotation::evaluate::frame_arena::ScopeArena;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -21,7 +21,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
 
 pub(super) struct View<'a> {
     untrusted_array_intrinsics: bool,
-    scopes: &'a [Scope],
+    scopes: &'a ScopeArena,
     objects: &'a FxHashMap<u64, Vec<Value>>,
     extras: &'a FxHashMap<u64, BTreeMap<usize, Value>>,
     updates: &'a FxHashMap<u64, Value>,
@@ -152,7 +152,7 @@ impl View<'_> {
             return;
         }
         let slots = &self.objects[&id];
-        found.objects.insert(id, slots.clone());
+        found.objects.insert(id, slots.to_vec());
         if let Some(extras) = self.extras.get(&id) {
             found.extras.insert(id, extras.clone());
         }
@@ -162,7 +162,7 @@ impl View<'_> {
         if self.possible.contains(&(id, None)) {
             found.possible.insert((id, None));
         }
-        for (index, value) in self.objects[&id].iter().enumerate().chain(
+        for (index, value) in slots.iter().enumerate().chain(
             self.extras
                 .get(&id)
                 .into_iter()

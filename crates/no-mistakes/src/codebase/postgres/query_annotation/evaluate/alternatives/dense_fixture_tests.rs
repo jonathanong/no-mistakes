@@ -48,7 +48,8 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -81,7 +82,9 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
         !callbacks.is_empty(),
         "the selected callback remains reachable"
     );
-    assert!(callbacks.iter().all(|env| *env < evaluator.scopes.len()));
+    assert!(callbacks
+        .iter()
+        .all(|env| evaluator.scopes.get(*env).is_some()));
     for env in &callbacks {
         if let Some(captured) = evaluator.scopes[*env].get("arguments") {
             references(captured, &mut Vec::new(), &mut arguments);

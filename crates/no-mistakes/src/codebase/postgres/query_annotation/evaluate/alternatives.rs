@@ -1,18 +1,21 @@
 //! Alternative arms restore input state and join effects conservatively.
 //! Imported modules keep one request-local initialization identity.
-mod arena;
+pub(super) mod arena;
 mod bindings;
 mod callback_seen;
+mod delta;
+#[cfg(test)]
 mod extras;
+#[cfg(test)]
 mod final_prune;
 pub(super) mod frames;
-mod freshness;
+mod generation;
 mod merge;
 pub(super) mod modules;
 mod prune;
 mod reachable;
 mod run;
-mod updates;
+#[cfg(test)]
 mod values;
 
 #[cfg(test)]

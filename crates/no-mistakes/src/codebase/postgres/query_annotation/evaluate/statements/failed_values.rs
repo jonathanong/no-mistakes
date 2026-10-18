@@ -21,7 +21,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             } else {
                 unsupported.clone()
             };
-            self.scopes[env].insert(name, value);
+            self.write_binding(env, name, value);
         }
     }
 

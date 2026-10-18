@@ -63,14 +63,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         self.inherit_freshness(scope, captured, &mappings);
         if let Some(own) = own {
-            self.mapped_argument_owners.insert(own.0, scope);
-            self.mapped_parameter_indices
-                .insert(own.0, positions::collect(own.1.iter()));
+            if own.1.iter().any(|name| !name.is_empty()) {
+                self.mapped_argument_owners.insert(own.0, scope);
+                self.mapped_parameter_indices
+                    .insert(own.0, positions::collect(own.1.iter()));
+            }
             mappings.push(own);
         }
         if !mappings.is_empty() {
             self.mapped_arguments.insert(scope, mappings);
             self.index_mapped_freshness(scope);
+            self.register_mapping_references(scope);
         }
     }
 
@@ -123,7 +126,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let value = self
                 .mapped_parameter_value(frame, &name)
                 .expect("dirty connected mapped parameter");
-            self.scopes[frame].insert(name.clone(), value);
+            self.write_binding(frame, name.clone(), value);
         }
     }
 
@@ -140,7 +143,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) -> (bool, bool) {
         let mut mapped = false;
         let mut escaped = false;
-        for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
+        let mappings = self.mapped_arguments.get(&env).cloned().unwrap_or_default();
+        for (id, params) in &mappings {
             // With duplicate sloppy parameters, only the last occurrence maps.
             if let Some(index) = self.mapped_parameter_index(*id, params, name) {
                 mapped = true;
@@ -148,9 +152,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     escaped |= self.invalidated_builders.contains(id);
                     // Callback and container values retain their modeled identities;
                     // opaque consumers must still see their captures and aliases.
-                    self.argument_objects
-                        .get_mut(id)
-                        .expect("mapped arguments object")[index] = value.clone();
+                    self.write_dense_slot(*id, index, value.clone());
                 }
             }
         }

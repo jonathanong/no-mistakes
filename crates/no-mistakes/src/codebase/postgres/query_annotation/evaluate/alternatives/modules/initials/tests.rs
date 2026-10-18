@@ -1,10 +1,12 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::File;
+use crate::codebase::postgres::query_annotation::evaluate::{File, Value};
 use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::fx::FxHashMap;
+
 #[test]
-fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() {
+fn pristine_module_snapshots_keep_live_frame_and_argument_roots() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-module-snapshot/initial.cjs",
     );
@@ -19,7 +21,7 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         path.clone(),
         File {
             facts: &facts,
-            module: std::sync::Arc::new(Module::new(ts.clone().into())),
+            module: std::sync::Arc::new(Module::new(ts.into())),
             executors: Default::default(),
         },
     )]);
@@ -27,7 +29,8 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -51,106 +54,35 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
-    evaluator
-        .active_module_initials
-        .push(super::Initials::default());
+
+    let base = evaluator.scopes.checkpoint();
+    evaluator.begin_alternative_module_snapshot(base);
+    let transaction = evaluator.begin_transaction();
     let root = evaluator.module_environment(&path);
-    evaluator.record_alternative_module_initial(&path, root);
-    let mut initial = evaluator.active_module_initials.pop().unwrap();
-    assert!(!initial.objects.is_empty());
+    let initial = evaluator.active_module_initials.last().unwrap();
+    let roots = initial.roots().collect::<FxHashSet<_>>();
+    let arguments = initial.arguments().collect::<FxHashSet<_>>();
+
     assert!(
-        initial
-            .objects
-            .keys()
-            .any(|id| !initial.extras.contains_key(id)),
-        "dense-only argument objects remain live"
+        roots.contains(&root),
+        "the module frame is promoted as a root"
     );
     assert!(
-        !initial.updates.is_empty(),
-        "reachable builder append updates are recorded"
+        !arguments.is_empty(),
+        "callbacks retain the module's argument objects"
     );
-    assert!(initial
-        .extras
-        .values()
-        .any(|slots| slots.contains_key(&1000)));
-    assert!(!initial.mapped.is_empty());
-    assert!(!initial.captured.is_empty());
-    assert!(initial
-        .fresh
-        .values()
-        .any(|names| names.contains("parameter")));
-    assert!(!initial.invalidated.is_empty());
-    assert!(!initial.deleted.is_empty());
-    assert!(!initial.definite.is_empty());
-    assert!(!initial.disconnected.is_empty());
-    let base = evaluator.scopes.len();
-    let original_readers = evaluator.captured_binding_readers.clone();
-    assert!(!original_readers.is_empty());
-    let offset = base + 5;
-    let indices = initial
-        .roots()
-        .map(|env| (env, env + offset))
-        .collect::<FxHashMap<_, _>>();
-    initial.remap(&indices);
-    assert!(initial.roots().all(|env| env >= offset));
-    assert!(initial
-        .captured
-        .values()
-        .flat_map(|names| names.values())
-        .all(|env| *env >= offset));
-    assert!(initial
-        .extras
-        .values()
-        .flat_map(|slots| slots.values())
-        .any(|value| matches!(value, Value::Function(_,_,env) if *env >= offset)));
-    evaluator
-        .scopes
-        .resize(evaluator.scopes.len() + offset, Default::default());
-    evaluator.argument_objects.clear();
-    evaluator.argument_extra_slots.clear();
-    evaluator.mapped_arguments.clear();
-    evaluator.fresh_mapped_parameters.clear();
-    evaluator.invalidated_builders.clear();
-    evaluator.builder_updates.clear();
-    evaluator.deleted_argument_slots.clear();
-    evaluator.definite_deleted_argument_slots.clear();
-    evaluator.disconnected_argument_slots.clear();
-    evaluator.active_module_initials.push(initial);
-    evaluator.restore_alternative_modules();
-    evaluator.add_alternative_captured_readers(base);
-    let readers = evaluator.captured_binding_readers.clone();
-    assert!(readers.keys().any(|origin| *origin >= offset));
-    // Removing the restored arm empties its private origins without losing
-    // readers on the original frames. Reinstalling must recover the exact index.
-    evaluator.remove_alternative_captured_readers(base);
-    assert_eq!(evaluator.captured_binding_readers, original_readers);
-    evaluator.add_alternative_captured_readers(base);
-    assert_eq!(evaluator.captured_binding_readers, readers);
-    evaluator.rebuild_captured_readers();
-    assert_eq!(evaluator.captured_binding_readers, readers);
-    // If every captured frame belongs to the arm, restoring it can clear
-    // the whole reverse index, including the remapped module-initial readers.
-    evaluator.remove_alternative_captured_readers(0);
-    assert!(evaluator.captured_binding_readers.is_empty());
-    evaluator.add_alternative_captured_readers(0);
-    assert_eq!(evaluator.captured_binding_readers, readers);
-    assert!(evaluator
-        .fresh_mapped_parameters
-        .values()
-        .any(|names| names.contains("parameter")));
-    assert!(evaluator
-        .argument_extra_slots
-        .values()
-        .any(|slots| slots.contains_key(&1000)));
-    assert!(!evaluator.disconnected_argument_slots.is_empty());
-    assert!(
-        !evaluator.builder_updates.is_empty(),
-        "pristine append state is restored"
-    );
-    assert!(evaluator
-        .argument_objects
-        .keys()
-        .any(|id| !evaluator.argument_extra_slots.contains_key(id)));
+    assert!(arguments.iter().any(|id| {
+        evaluator.argument_objects.get(id).is_some_and(|slots| {
+            slots.iter().any(|value| matches!(value, Value::Prefix(text, _, _) if text.contains("dense-only callback")))
+        })
+    }));
+
+    evaluator.finish_transaction(transaction);
+    assert_eq!(evaluator.modules.get(&path), Some(&root));
+    assert!(roots.iter().all(|env| evaluator.scopes.get(*env).is_some()));
+    assert!(arguments
+        .iter()
+        .all(|id| evaluator.argument_objects.contains_key(id)));
     evaluator.active_module_initials.pop();
     assert!(evaluator.active_module_initials.is_empty());
 }

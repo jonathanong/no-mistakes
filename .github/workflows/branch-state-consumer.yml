@@ -1,0 +1,175 @@
+name: Branch-state consumer gate
+on:
+  workflow_dispatch:
+    inputs:
+      baselineRef:
+        description: "Exact baseline source SHA (40 lowercase hex characters)"
+        required: true
+      candidateRef:
+        description: "Exact candidate source SHA (40 lowercase hex characters)"
+        required: true
+  pull_request:
+    paths:
+      - "crates/no-mistakes/src/codebase/postgres/query_annotation/**"
+      - ".github/workflows/branch-state-consumer.yml"
+      - "scripts/branch-state-gate/**"
+      - "fixtures/performance/branch-state-gate/**"
+permissions:
+  contents: read
+concurrency:
+  group: branch-state-consumer-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  harness-tests:
+    name: Test saved measurement acceptance cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          persist-credentials: false
+      - name: Verify incomplete and mismatched measurements are rejected
+        timeout-minutes: 1
+        run: python3 -O scripts/branch-state-gate/tests.py
+  build:
+    # The hidden PR-body marker makes this expensive evaluation explicitly opt-in.
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.body, '<!-- branch-state-consumer-gate -->') }}
+    needs: harness-tests
+    name: Build ${{ matrix.variant }} source
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, candidate]
+    env:
+      SOURCE_SHA: ${{ matrix.variant == 'baseline' && (inputs.baselineRef || '6d763fc2b4795745ae1ddb5a5aca5313af7e3d02') || inputs.candidateRef || github.event.pull_request.head.sha }}
+      BUILD_OUTPUT: ${{ github.workspace }}/artifact
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          path: source
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: harness
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        timeout-minutes: 3
+        with:
+          toolchain: 1.99.1
+      - name: Build matched default-feature fat-LTO CLI
+        timeout-minutes: 28
+        working-directory: source
+        run: python3 ../harness/scripts/branch-state-gate/build.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: branch-state-${{ matrix.variant }}
+          path: artifact/
+          if-no-files-found: error
+  measure:
+    name: jobs ${{ matrix.jobs }} diagnostics ${{ matrix.diagnostics }} pair ${{ matrix.pair }}
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        jobs: ["1", "4", "default"]
+        diagnostics: ["off", "on"]
+        pair: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: harness
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          repository: vouchington/vouchington
+          ref: f38a048f5eeff0438fc59a15e9eb742def575a36
+          path: consumer
+          persist-credentials: false
+      - uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        timeout-minutes: 3
+        with:
+          node-version-file: consumer/.nvmrc
+          package-manager-cache: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        timeout-minutes: 3
+        with:
+          version: latest-12
+          package_json_file: consumer/package.json
+      - name: Install complete frozen consumer dependency closure
+        timeout-minutes: 10
+        working-directory: consumer
+        run: pnpm install --frozen-lockfile --loglevel=warn
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        timeout-minutes: 5
+        with:
+          cache: false
+          working_directory: consumer
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          pattern: branch-state-*
+          path: artifacts
+      - name: Place exact verified artifacts
+        timeout-minutes: 1
+        run: |
+          mv artifacts/branch-state-baseline artifacts/baseline
+          mv artifacts/branch-state-candidate artifacts/candidate
+      - name: Collect ABBA or reverse BAAB raw samples and JSON hashes
+        timeout-minutes: 22
+        env:
+          CONSUMER_ROOT: ${{ github.workspace }}/consumer
+          ARTIFACT_ROOT: ${{ github.workspace }}/artifacts
+          MEASUREMENT_ROOT: ${{ github.workspace }}/measurements
+          CHECK_JOBS: ${{ matrix.jobs }}
+          CHECK_DIAGNOSTICS: ${{ matrix.diagnostics }}
+          PAIR_NUMBER: ${{ matrix.pair }}
+        run: python3 harness/scripts/branch-state-gate/measure.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: branch-state-measure-${{ matrix.jobs }}-${{ matrix.diagnostics }}-${{ matrix.pair }}
+          path: measurements/
+          if-no-files-found: error
+  summarize:
+    name: Verify parity and summarize matched pairs
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.body, '<!-- branch-state-consumer-gate -->')) }}
+    needs: [build, measure]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 3
+        with:
+          pattern: branch-state-measure-*
+          path: measurements
+      - name: Reject incomplete evidence and report every matched resource result
+        timeout-minutes: 1
+        run: python3 scripts/branch-state-gate/summarize.py measurements
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: branch-state-summary
+          path: measurements/summary.json
+          if-no-files-found: error

@@ -23,9 +23,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.failed_array_slot(id, index, value, unsupported, depth, seen)
             })
             .collect();
-        self.argument_objects.insert(id, dense);
+        self.replace_dense_object(id, dense);
         if let Some(extras) = extras {
-            let extras = extras
+            let extras: Vec<_> = extras
                 .into_iter()
                 .map(|(index, value)| {
                     (
@@ -34,7 +34,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     )
                 })
                 .collect();
-            self.argument_extra_slots.insert(id, extras);
+            for (index, value) in extras {
+                self.write_sparse_slot(id, index, Some(value));
+            }
         }
         // Deletion, recreation and shape uncertainty already use this same ID.
     }

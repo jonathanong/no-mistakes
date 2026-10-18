@@ -39,7 +39,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if let Some(names) = self.fresh_mapped_parameters.get(&env) {
             for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
                 for name in names {
-                    if self.mapped_parameter_index(*id, params, name).is_none() {
+                    if self
+                        .mapped_parameter_index(*id, params, name)
+                        .is_none_or(|index| {
+                            self.disconnected_argument_slots.contains(&(*id, index))
+                        })
+                    {
                         continue;
                     }
                     self.fresh_mapped_argument_bindings
@@ -57,23 +62,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
         name: &str,
     ) {
-        self.fresh_mapped_parameters
-            .entry(env)
-            .or_default()
-            .insert(name.to_string());
-        for (id, params) in self.mapped_arguments.get(&env).into_iter().flatten() {
-            if let Some(index) = self.mapped_parameter_index(*id, params, name) {
-                if !self.disconnected_argument_slots.contains(&(*id, index)) {
-                    self.fresh_mapped_argument_bindings
-                        .entry(*id)
-                        .or_default()
-                        .entry(env)
-                        .or_default()
-                        .insert(name.to_string());
-                }
-            }
-        }
+        self.set_transaction_flag(
+            super::super::transactions::Cell::Fresh(env, name.to_string()),
+            true,
+        );
     }
+
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn rebuild_fresh_mapped_argument_bindings(
         &mut self,
     ) {

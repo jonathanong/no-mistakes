@@ -1,44 +1,23 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::{File, Scope};
+use crate::codebase::postgres::query_annotation::evaluate::File;
 use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
-use std::cell::Cell;
+#[path = "final_prune_tests/lifecycle.rs"]
+mod lifecycle;
 
-thread_local! {
-    static MODE: Cell<(bool, usize)> = const { Cell::new((false, 0)) };
-}
-pub(super) fn original_prune() -> bool {
-    MODE.with(|mode| mode.get().0)
-}
-pub(super) fn record_reuse() {
-    MODE.with(|mode| {
-        let (old, count) = mode.get();
-        mode.set((old, count + 1));
-    });
-}
-struct Guard((bool, usize));
-impl Guard {
-    fn new(original: bool) -> Self {
-        Self(MODE.with(|mode| mode.replace((original, 0))))
-    }
-}
-impl Drop for Guard {
-    fn drop(&mut self) {
-        MODE.with(|mode| mode.set(self.0));
-    }
-}
 fn resolve(_: &str, _: &Path) -> Option<PathBuf> {
     None
 }
-type TestEvaluator<'a> = Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>>;
+pub(super) type TestEvaluator<'a> = Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>>;
 fn evaluator<'a>(files: &'a FxHashMap<PathBuf, File<'a>>) -> TestEvaluator<'a> {
     Evaluator {
         files,
         resolve,
         events: Default::default(),
-        scopes: Vec::new(),
+        transactions: Default::default(),
+        scopes: Default::default(),
         modules: Default::default(),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
@@ -63,20 +42,35 @@ fn evaluator<'a>(files: &'a FxHashMap<PathBuf, File<'a>>) -> TestEvaluator<'a> {
         disconnected_argument_slots: Default::default(),
     }
 }
-fn evaluate(evaluator: &mut TestEvaluator<'_>, path: &Path, original: bool) -> (u64, usize) {
-    let _mode = Guard::new(original);
+#[derive(Debug)]
+struct Work {
+    reachability_walks: u64,
+    full_frame_visits: u64,
+    full_old_frame_visits: u64,
+}
+fn evaluate(evaluator: &mut TestEvaluator<'_>, path: &Path, full: bool) -> Work {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _observer = crate::diagnostics::InvocationGuard::install(observer.clone());
-    evaluator.module_environment(path);
-    let walks = observer
-        .snapshot()
-        .work
-        .get("postgres.annotation.reachability_walks")
-        .copied()
-        .unwrap_or(0);
-    (walks, MODE.with(|mode| mode.get().1))
+    super::super::generation::with_collection_mode(full, || {
+        evaluator.module_environment(path);
+    });
+    let work = observer.snapshot().work;
+    Work {
+        reachability_walks: work
+            .get("postgres.annotation.reachability_walks")
+            .copied()
+            .unwrap_or(0),
+        full_frame_visits: work
+            .get("postgres.annotation.generation_full_frame_visits")
+            .copied()
+            .unwrap_or(0),
+        full_old_frame_visits: work
+            .get("postgres.annotation.generation_full_old_frame_visits")
+            .copied()
+            .unwrap_or(0),
+    }
 }
-fn compare(name: &str) -> ((u64, usize), (u64, usize)) {
+fn compare(name: &str) -> (Work, Work) {
     let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("helper-tracing-alternative-callback/src")
         .join(name);
@@ -95,9 +89,13 @@ fn compare(name: &str) -> ((u64, usize), (u64, usize)) {
         },
     )]);
     let (mut old, mut new) = (evaluator(&files), evaluator(&files));
-    let before = evaluate(&mut old, &path, true);
-    let after = evaluate(&mut new, &path, false);
-    assert!(old.scopes == new.scopes, "all scope values");
+    let before = evaluate(&mut old, &path, false);
+    let after = evaluate(&mut new, &path, true);
+    let old_frames = old.scopes.ids().collect::<FxHashSet<_>>();
+    assert_eq!(old_frames, new.scopes.ids().collect::<FxHashSet<_>>());
+    for env in old_frames {
+        assert!(old.scopes[env] == new.scopes[env], "scope {env}");
+    }
     macro_rules! equal { ($($field:ident),+ $(,)?) => { $(assert!(old.$field == new.$field, "{}", stringify!($field));)+ }; }
     equal!(
         events,
@@ -132,56 +130,29 @@ fn compare(name: &str) -> ((u64, usize), (u64, usize)) {
 }
 
 #[test]
-fn deleted_state_reuses_the_last_walk_and_preserves_every_mutation_table() {
-    let (old, new) = compare("deleted-state.cjs");
-    assert_eq!(old.1, 0, "verbatim old prune path");
+fn young_collection_matches_full_oracle_for_deleted_state_and_preserves_every_mutation_table() {
+    let (young, full) = compare("deleted-state.cjs");
     assert_eq!(
-        new.1, 32,
-        "all32 saved conditionals hit the proved boundary"
+        young.full_frame_visits, 0,
+        "young collector skips full scans"
     );
-    assert_eq!(
-        old.0 - new.0,
-        32,
-        "remove actual walks, not diagnostic bookkeeping"
+    assert!(
+        full.full_frame_visits > 0,
+        "the full liveness oracle visits retained frames"
     );
+    assert!(
+        full.full_old_frame_visits > 0,
+        "the oracle includes pre-checkpoint frames"
+    );
+    assert!(full.reachability_walks >= young.reachability_walks);
 }
 #[test]
-fn opaque_invalidations_retain_the_original_walk_fallback() {
-    let (old, new) = compare("invalidated-state.mts");
-    assert_eq!(new.1, 0, "opaque mutations invalidate the no-write proof");
-    assert_eq!(old.0, new.0);
-}
-#[test]
-fn final_live_guard_keeps_captures_and_moved_transient_environments_conservative() {
-    use query_annotation::evaluate::temporaries::TransientRoot;
-    let files = FxHashMap::default();
-    let mut evaluator = evaluator(&files);
-    evaluator.scopes.push(Scope::default());
-    let identity = FxHashMap::from_iter([(0, 0)]);
-    let moved = FxHashMap::from_iter([(1, 0)]);
-    assert!(evaluator.can_reuse_final_live(1, true, true, &identity));
-    assert!(!evaluator.can_reuse_final_live(1, false, true, &identity));
-    assert!(!evaluator.can_reuse_final_live(1, true, false, &identity));
-    assert!(!evaluator.can_reuse_final_live(1, true, true, &moved));
-    evaluator.transient_roots = vec![
-        TransientRoot::Argument(7),
-        TransientRoot::Builder(9),
-        TransientRoot::Environment(0),
-    ];
-    assert!(evaluator.can_reuse_final_live(1, true, true, &identity));
-    evaluator
-        .transient_roots
-        .push(TransientRoot::Environment(1));
-    assert!(!evaluator.can_reuse_final_live(1, true, true, &identity));
-    evaluator.transient_roots.clear();
-    evaluator
-        .captured_bindings
-        .insert(0, FxHashMap::from_iter([("x".into(), 0)]));
-    assert!(!evaluator.can_reuse_final_live(1, true, true, &identity));
-    evaluator.captured_bindings.clear();
-    evaluator.scopes[0].insert("arguments".into(), Value::Arguments(7));
-    evaluator.argument_objects.insert(7, vec![Value::Unknown]);
-    evaluator.begin_alternative_module_snapshot(0);
-    evaluator.record_alternative_module_initial(Path::new("guard.mts"), 0);
-    assert!(!evaluator.can_reuse_final_live(1, true, true, &identity));
+fn young_collection_matches_full_oracle_for_opaque_invalidations() {
+    let (young, full) = compare("invalidated-state.mts");
+    assert_eq!(
+        young.full_frame_visits, 0,
+        "young collector skips full scans"
+    );
+    assert!(full.full_frame_visits > 0);
+    assert!(full.full_old_frame_visits > 0);
 }

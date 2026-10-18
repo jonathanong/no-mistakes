@@ -17,23 +17,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.prune_snapshot_state();
         let env = self.modules[path];
         let unmodeled = &file.facts.unmodeled_calls;
-        let scopes = self.scopes.clone();
-        let modules = self.modules.clone();
-        let invalidated = self.invalidated_builders.clone();
-        let deleted = self.deleted_argument_slots.clone();
-        let mapped = self.mapped_arguments.clone();
-        let fresh = self.fresh_mapped_parameters.clone();
-        let objects = self.argument_objects.clone();
-        let extra_slots = self.argument_extra_slots.clone();
-        let definite = self.definite_deleted_argument_slots.clone();
-        let recreated = self.recreated_argument_slots.clone();
-        let disconnected = self.disconnected_argument_slots.clone();
-        let builder_updates = self.builder_updates.clone();
-        let untrusted_array_intrinsics = self.untrusted_array_intrinsics;
-        let captured_bindings = self.captured_bindings.clone();
-        let captured_binding_readers = self.captured_binding_readers.clone();
-        let mapped_argument_owners = self.mapped_argument_owners.clone();
-        let mapped_parameter_indices = self.mapped_parameter_indices.clone();
         for call in unmodeled {
             if file.facts.precise_records
                 && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end)))
@@ -42,28 +25,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
             if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
             {
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.fresh_mapped_parameters.clone_from(&fresh);
-                self.rebuild_fresh_mapped_argument_bindings();
-                self.argument_objects.clone_from(&objects);
-                self.argument_extra_slots.clone_from(&extra_slots);
-                self.definite_deleted_argument_slots.clone_from(&definite);
-                self.recreated_argument_slots.clone_from(&recreated);
-                self.disconnected_argument_slots.clone_from(&disconnected);
-                self.builder_updates.clone_from(&builder_updates);
-                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
-                self.captured_bindings.clone_from(&captured_bindings);
-                self.captured_binding_readers
-                    .clone_from(&captured_binding_readers);
-                self.mapped_argument_owners
-                    .clone_from(&mapped_argument_owners);
-                self.mapped_parameter_indices
-                    .clone_from(&mapped_parameter_indices);
+                let checkpoint = self.begin_root_transaction();
                 self.expr(call, path, &env, 16, false);
+                self.finish_root_transaction(checkpoint);
             }
         }
         // Function declarations describe possible entrypoints; contextual
@@ -106,27 +70,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             for function in functions {
                 // Speculative entrypoints share initialized facts, never effects
                 // from an unrelated function considered earlier in name order.
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.fresh_mapped_parameters.clone_from(&fresh);
-                self.rebuild_fresh_mapped_argument_bindings();
-                self.argument_objects.clone_from(&objects);
-                self.argument_extra_slots.clone_from(&extra_slots);
-                self.definite_deleted_argument_slots.clone_from(&definite);
-                self.recreated_argument_slots.clone_from(&recreated);
-                self.disconnected_argument_slots.clone_from(&disconnected);
-                self.builder_updates.clone_from(&builder_updates);
-                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
-                self.captured_bindings.clone_from(&captured_bindings);
-                self.captured_binding_readers
-                    .clone_from(&captured_binding_readers);
-                self.mapped_argument_owners
-                    .clone_from(&mapped_argument_owners);
-                self.mapped_parameter_indices
-                    .clone_from(&mapped_parameter_indices);
+                let checkpoint = self.begin_root_transaction();
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
@@ -140,6 +84,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
                 let mut env = self.environment(values);
                 self.steps(&function.body, path, &mut env, 16, true);
+                self.finish_root_transaction(checkpoint);
             }
         }
     }

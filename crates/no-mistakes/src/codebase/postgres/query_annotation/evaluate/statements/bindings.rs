@@ -17,23 +17,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Step::Bind(name, _) if vars.contains(name.as_str()) => {
                     // Initialized var redeclarations assign at this statement,
                     // rather than replacing a parameter during hoisting.
-                    self.scopes[*env]
-                        .entry(name.clone())
-                        .or_insert(Value::Unknown);
+                    self.reserve_binding(*env, name.clone(), Value::Unknown);
                 }
                 Step::Bind(name, _) | Step::Hoisted(name, _) => {
-                    self.scopes[*env].insert(name.clone(), Value::Unknown);
+                    self.write_binding(*env, name.clone(), Value::Unknown);
                 }
                 Step::Var(name) => {
-                    self.scopes[*env]
-                        .entry(name.clone())
-                        .or_insert(Value::Unsupported);
+                    self.reserve_binding(*env, name.clone(), Value::Unsupported);
                 }
                 Step::Reserve(names) => {
                     for name in names {
-                        self.scopes[*env]
-                            .entry(name.clone())
-                            .or_insert(Value::Unknown);
+                        self.reserve_binding(*env, name.clone(), Value::Unknown);
                     }
                 }
                 _ => {}
