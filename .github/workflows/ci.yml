@@ -313,6 +313,7 @@ jobs:
           packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js
           packages/no-mistakes/scripts/forward-receiver-alias-api.test.js
           packages/no-mistakes/scripts/lexical-member-replacement-api.test.js
+          packages/no-mistakes/scripts/exported-value-receiver-api.test.js
           packages/no-mistakes/scripts/namespace-types-api.test.js
           packages/no-mistakes/scripts/preserved-provenance-api.test.js
           packages/no-mistakes/scripts/vitest-project-setups-api.test.js

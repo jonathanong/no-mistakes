@@ -118,6 +118,9 @@ its acquisition snapshot; copying a container keeps descendant members live.
 Writers declared before later receiver aliases reuse the aliases' initializer
 facts while preserving copied methods and untouched members. Unknown execution
 and unavailable receivers remain conservative.
+Immutable repository aliases and named re-export barrels retain external receiver
+identity. Repeated foreign reads of replaced methods become unknown while earlier
+method copies and unrelated members retain their effects.
 For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
 This includes an IIFE evaluated in `export default`, directly or as an object

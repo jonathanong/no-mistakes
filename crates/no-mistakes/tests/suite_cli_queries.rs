@@ -14,6 +14,8 @@ mod cli_codebase_acceptance;
 mod cli_config_resolve;
 #[path = "cli_diagnostics.rs"]
 mod cli_diagnostics;
+#[path = "cli_exported_value_receivers.rs"]
+mod cli_exported_value_receivers;
 #[path = "cli_extra.rs"]
 mod cli_extra;
 #[path = "cli_extra2.rs"]
