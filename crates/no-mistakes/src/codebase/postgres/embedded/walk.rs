@@ -57,13 +57,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
-        resolve::initialize_vars(declaration, self);
-        walk::walk_variable_declaration(self, declaration);
-        if declaration.kind == ast::VariableDeclarationKind::Const {
-            for declarator in &declaration.declarations {
-                resolve::bind_query_property(declarator, true, self);
-            }
-        }
+        self.walk_variable_declaration_bindings(declaration);
     }
 
     fn visit_arrow_function_expression(
@@ -119,6 +113,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
     fn visit_identifier_reference(&mut self, id: &ast::IdentifierReference<'a>) {
         self.escape_builder_reference(id);
+    }
+    fn visit_expression(&mut self, expression: &ast::Expression<'a>) {
+        self.revoke_aggregate_values(expression);
+        walk::walk_expression(self, expression);
     }
     fn visit_static_member_expression(&mut self, member: &ast::StaticMemberExpression<'a>) {
         self.with_builder_receiver(&member.object, member.property.name == "text", |visitor| {

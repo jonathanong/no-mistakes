@@ -3,6 +3,27 @@ use oxc_ast::ast::{self, AssignmentTarget};
 use oxc_ast_visit::{walk, Visit};
 
 impl<'a> ScopeVisitor<'a> {
+    pub(super) fn walk_variable_declaration_bindings(
+        &mut self,
+        declaration: &oxc_ast::ast::VariableDeclaration<'a>,
+    ) {
+        if declaration.kind != ast::VariableDeclarationKind::Const {
+            for declarator in &declaration.declarations {
+                if let Some(init) = &declarator.init {
+                    // A mutable alias can replace the original executor's `.query`.
+                    self.revoke_query_receiver(init);
+                }
+            }
+        }
+        resolve::initialize_vars(declaration, self);
+        walk::walk_variable_declaration(self, declaration);
+        if declaration.kind == ast::VariableDeclarationKind::Const {
+            for declarator in &declaration.declarations {
+                resolve::bind_query_property(declarator, true, self);
+            }
+        }
+    }
+
     pub(super) fn walk_assignment_target_reference(
         &mut self,
         target: &ast::SimpleAssignmentTarget<'a>,

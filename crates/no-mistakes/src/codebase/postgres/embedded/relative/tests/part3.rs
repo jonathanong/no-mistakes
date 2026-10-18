@@ -46,6 +46,22 @@ fn relative_imports_stay_unresolved_until_projection() {
 }
 
 #[test]
+fn relative_member_escapes_drop_pending_calls_before_projection() {
+    let mut pending = extract("relative-member-escape.ts", &scoped("@example/db"));
+    assert_eq!(pending.pending_relative.calls.len(), 1);
+    assert_eq!(
+        pending.pending_relative.calls[0].call.sql_text.as_deref(),
+        Some("SELECT direct relative")
+    );
+    let root = PathBuf::from("/virtual/db");
+    project_relative_scoped_facts(&mut pending, Some(&root), |specifier| {
+        assert_eq!(specifier, "../transaction");
+        Some(root.join("src/transaction.ts"))
+    });
+    assert_eq!(bodies(&pending), ["SELECT direct relative"]);
+}
+
+#[test]
 fn projecting_a_saved_relative_import_keeps_only_files_inside_the_package() {
     let mut pending = extract("scoped-relative-pending.ts", &scoped("@example/db"));
     let root = PathBuf::from("/virtual/db");

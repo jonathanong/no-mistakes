@@ -2,7 +2,9 @@ rules:
   - rule: postgres-require-query-annotation
     scope: repository
     options:
-      importSpecifier: "@app/db"
+      # Match the helper-tracing rule test's explicit broad member-query opt-in.
+      importSpecifier: ""
+      executorNames: [write, query]
       include:
         - "src/query.mts"
         - "src/import-equals.mts"

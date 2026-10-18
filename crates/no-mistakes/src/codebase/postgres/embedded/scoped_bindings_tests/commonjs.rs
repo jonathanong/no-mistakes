@@ -126,6 +126,11 @@ fn factory_member_mutations_keep_only_callable_executor_proof() {
         ("factory-member-query-delete.ts", "SELECT direct delete"),
         ("factory-member-query-computed.ts", "SELECT direct computed"),
         ("factory-member-query-escape.ts", "SELECT direct escape"),
+        ("factory-mutable-alias.ts", "SELECT direct mutable alias"),
+        (
+            "factory-container-escape.ts",
+            "SELECT direct container escape",
+        ),
     ] {
         let path = fixture(name);
         let source = std::fs::read_to_string(&path).expect("saved factory mutation fixture");
