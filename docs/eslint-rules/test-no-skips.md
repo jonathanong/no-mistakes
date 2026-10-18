@@ -11,8 +11,10 @@ and unrelated fixtures are unaffected.
 
 By default, the rule reports Vitest and Playwright test modifiers `skip`,
 `skipIf`, `runIf`, `only`, `todo`, and `fixme`. It recognizes named, aliased,
-and namespace imports from `vitest` and `@playwright/test`, plus the unbound
-`it`, `test`, and `describe` globals in files selected by ESLint. Member chains
+and namespace imports from `vitest` and `@playwright/test`, statically named
+`const` bindings from CommonJS `require()` and awaited dynamic `import()` calls,
+plus the unbound `it`, `test`, and `describe` globals in files selected by
+ESLint. Member chains
 such as `test.skip.each(cases)(...)`, `test.concurrent.only(...)`, and
 `test.only.for(cases)(...)` are checked, as are Playwright forms such as
 `test.describe.fixme(...)`. In Vitest callbacks, a call to the actual callback
