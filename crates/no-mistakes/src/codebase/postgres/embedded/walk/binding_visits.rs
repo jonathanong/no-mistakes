@@ -11,7 +11,8 @@ impl<'a> ScopeVisitor<'a> {
             if let Some(init) = &declarator.init {
                 // A mutable alias or mixed const result can expose `.query`.
                 if declaration.kind != ast::VariableDeclarationKind::Const
-                    || self.stable_executor_category(init).is_none()
+                    || (self.stable_executor_category(init).is_none()
+                        && self.relative_executor_proof(init).is_none())
                 {
                     self.revoke_query_receiver(init);
                 }
