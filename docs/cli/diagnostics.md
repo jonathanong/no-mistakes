@@ -90,8 +90,16 @@ Unresolved, computed, and dynamic imports conservatively retain their modules
 and importers, including cycles. Executor-free callers that supply SQL literals
 to imported helpers remain roots. Successfully resolved imports outside the
 prepared annotation catalog are dead ends; configured executor and trusted-tag
-modules remain demand seeds. Resolver targets without an exact prepared
-inventory identity (including ambiguous symlink spellings) stay conservative.
+modules remain demand seeds. An empty `importSpecifier` is not a seed:
+`executorNames` without a module still selects calls, but a non-type import of
+an unrelated module does not. pnpm workspace package names resolve through the
+session workspace map when the TypeScript resolver has no target, the same way
+imported SQL helpers do. A package the workspace does not declare stays
+unresolved and keeps its importer. A parse-failed inventory file is absent from
+the annotation catalog, so a resolved import of it is a dead end: the recovered
+program has no query facts and cannot yield SQL. Resolver targets without an
+exact prepared inventory identity (including ambiguous symlink spellings) stay
+conservative.
 `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`

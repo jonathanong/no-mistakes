@@ -1,0 +1,9 @@
+{
+  "name": "@fixture/app",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@fixture/constants": "workspace:*",
+    "@fixture/executor": "workspace:*"
+  }
+}

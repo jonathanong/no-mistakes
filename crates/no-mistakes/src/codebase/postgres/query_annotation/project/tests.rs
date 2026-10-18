@@ -414,6 +414,8 @@ fn mixed_profile_scopes_match_separate_profile_projections() {
     assert_eq!(run(None), separate);
 }
 
+#[path = "tests/demand_followups.rs"]
+mod demand_followups;
 #[path = "tests/external_roots.rs"]
 mod external_roots;
 #[path = "tests/profile_lifetimes.rs"]

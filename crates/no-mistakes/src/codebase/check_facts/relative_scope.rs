@@ -96,9 +96,14 @@ pub(super) fn project_relative_executor_scopes(
                         // Canonical visibility also admits symlink aliases that do
                         // not identify a prepared source. Keep those unresolved:
                         // only an exact inventory identity proves an external edge.
-                        resolver
-                            .resolve(specifier, from)
-                            .filter(|target| visible.contains(target))
+                        // Do not replace that hit with a workspace target.
+                        // Package names the scoped resolver misses use the session
+                        // workspace map, as imported SQL helpers do. No target
+                        // from either source stays unresolved.
+                        if let Some(target) = resolver.resolve(specifier, from) {
+                            return visible.contains(&target).then_some(target);
+                        }
+                        workspace.resolve_specifier_from_file_visible(specifier, from, &visible)
                     },
                 );
             });
