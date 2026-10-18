@@ -400,8 +400,9 @@ fn annotation_work_maps_match_pristine_diagnostics_counters() {
         let plain = check_json(&root).unwrap();
         let (observed, diagnostics) = check_json_observed(&root, true).unwrap();
         assert_eq!(observed, plain);
-        // Freeze the complete annotation map from ef62b0, including absent
-        // zero metrics, so counter storage changes cannot alter its public shape.
+        // Freeze the complete annotation map, including absent zero metrics,
+        // so counter storage changes cannot alter its public shape.
+        // `parallel_passes` stays in the map because these fixtures run one pass.
         let annotation = diagnostics
             .work
             .into_iter()

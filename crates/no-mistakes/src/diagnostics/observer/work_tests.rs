@@ -55,6 +55,7 @@ fn annotation_counters_are_live_core_slots_in_parallel() {
         "postgres.annotation.captured_reader_rebuilds",
         "postgres.annotation.captured_reader_names_retained",
         "postgres.annotation.roots",
+        "postgres.annotation.parallel_passes",
     ];
     std::thread::scope(|scope| {
         for _ in 0..4 {

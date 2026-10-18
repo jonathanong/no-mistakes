@@ -95,6 +95,7 @@ fn longest(metric: &str) -> Option<usize> {
         "postgres.annotation.incoming_dense_slots_copied" => 53,
         "postgres.annotation.captured_reader_rebuilds" => 54,
         "postgres.annotation.captured_reader_names_retained" => 55,
+        "postgres.annotation.parallel_passes" => 57,
         "resolver.classification_requests" => 25,
         "resolver.scope_cache_requests" => 30,
         "test_filter.project_filters" => 41,

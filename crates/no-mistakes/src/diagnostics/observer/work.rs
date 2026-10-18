@@ -128,6 +128,7 @@ const NAMES: &[&str] = &[
     "postgres.annotation.captured_reader_rebuilds",
     "postgres.annotation.captured_reader_names_retained",
     "postgres.annotation.roots",
+    "postgres.annotation.parallel_passes",
 ];
 
 #[cfg(test)]
