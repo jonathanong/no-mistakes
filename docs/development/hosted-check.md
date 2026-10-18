@@ -182,3 +182,9 @@ limits. Historical 180-second runs, including
 [the earlier complete run](https://github.com/jonathanong/no-mistakes/actions/runs/39065375682),
 remain censored failures with their original caps and source identities. They
 do not become successful observations after the cap change.
+
+## Optional matched source comparison
+
+For an exact source baseline, diagnostics OFF/ON, output parity and the paired
+relative-variability decision rule, see [matched hosted source comparisons](hosted-source-comparison.md).
+This optional mode preserves the default published-baseline budget gate.

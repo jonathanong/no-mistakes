@@ -1,0 +1,1 @@
+Synthetic saved protocol/artifact/statistics fixtures. Artifact text files must never execute and are not performance evidence. ON traces protect actual --timings --verbose-timings markers; OFF has neither. The belowHistorical case distinguishes normalized historical ratio CV from raw ratio SD.

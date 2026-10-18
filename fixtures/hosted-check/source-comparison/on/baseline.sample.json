@@ -1,0 +1,20 @@
+{
+  "elapsed": 100,
+  "user": 90,
+  "system": 1,
+  "rss_kib": 1000,
+  "exit": 0,
+  "signal": null,
+  "deadlineSeconds": 600,
+  "variant": "baseline",
+  "sourceCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "candidateCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "fixtureCommit": "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+  "fixtureTree": "e848d7ad03e0c0fca7ec70eb0f678653f70c278b",
+  "jobs": "4",
+  "diagnostics": "on",
+  "sampleNumber": 1,
+  "order": 0,
+  "binarySha256": "9f850e1456dea1d8c5f5d878d140fb79573b1e641abdbc7bc9684f3907518093",
+  "binaryVersion": "synthetic fixture 1"
+}

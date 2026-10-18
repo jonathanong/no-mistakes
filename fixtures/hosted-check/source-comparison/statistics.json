@@ -1,0 +1,592 @@
+{
+  "historical": [
+    {
+      "current": {
+        "elapsed": 60,
+        "rss_kib": 145,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      },
+      "published": {
+        "elapsed": 100,
+        "rss_kib": 100,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      }
+    },
+    {
+      "current": {
+        "elapsed": 70,
+        "rss_kib": 150,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      },
+      "published": {
+        "elapsed": 100,
+        "rss_kib": 100,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      }
+    },
+    {
+      "current": {
+        "elapsed": 80,
+        "rss_kib": 155,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      },
+      "published": {
+        "elapsed": 100,
+        "rss_kib": 100,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      }
+    },
+    {
+      "current": {
+        "elapsed": 60,
+        "rss_kib": 145,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      },
+      "published": {
+        "elapsed": 100,
+        "rss_kib": 100,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      }
+    },
+    {
+      "current": {
+        "elapsed": 70,
+        "rss_kib": 150,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      },
+      "published": {
+        "elapsed": 100,
+        "rss_kib": 100,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      }
+    },
+    {
+      "current": {
+        "elapsed": 80,
+        "rss_kib": 155,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      },
+      "published": {
+        "elapsed": 100,
+        "rss_kib": 100,
+        "exit": 0,
+        "signal": null,
+        "deadlineSeconds": 600
+      }
+    }
+  ],
+  "cases": {
+    "clear": [
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      }
+    ],
+    "flat": [
+      {
+        "current": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      }
+    ],
+    "belowHistorical": [
+      {
+        "current": {
+          "elapsed": 70,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 70,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 70,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 70,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 70,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 70,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      }
+    ],
+    "noisy": [
+      {
+        "current": {
+          "elapsed": 50,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 99,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 99,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 99,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 99,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 99,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      }
+    ],
+    "controlSlowdown": [
+      {
+        "current": {
+          "elapsed": 100.1,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100.1,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100.1,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100.1,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100.1,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      },
+      {
+        "current": {
+          "elapsed": 100.1,
+          "rss_kib": 50,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        },
+        "baseline": {
+          "elapsed": 100,
+          "rss_kib": 100,
+          "exit": 0,
+          "signal": null,
+          "deadlineSeconds": 600
+        }
+      }
+    ]
+  }
+}

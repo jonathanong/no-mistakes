@@ -8,12 +8,21 @@ on:
       - ".github/workflows/hosted-check.yml"
       - ".github/scripts/hosted-check*.cjs"
       - ".github/scripts/hosted-check-budgets.json"
-      - "tests/js/hosted-check.test.js"
+      - "tests/js/hosted-check*.test.js"
+      - "fixtures/hosted-check/**"
   workflow_dispatch:
     inputs:
       candidateRef:
         description: "Exact 40-character candidate source commit"
         required: false
+      baselineRef:
+        description: "Optional exact 40-character source baseline; default is published 0.86.2"
+        required: false
+      diagnosticsMode:
+        description: "Source comparisons: diagnostics off, on, or both"
+        type: choice
+        options: ["off", "on", "both"]
+        default: "off"
       calibrate:
         description: "Record variance and proposed budgets without enforcing stored limits"
         type: boolean
@@ -28,11 +37,17 @@ concurrency:
 
 jobs:
   build:
-    name: Build production candidate CLI
+    name: ${{ matrix.variant == 'baseline' && 'Build production baseline CLI' || 'Build production candidate CLI' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.baselineRef && '["current", "baseline"]' || '["current"]') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 80
     env:
-      CANDIDATE_REF: ${{ inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
+      CANDIDATE_REF: ${{ matrix.variant == 'baseline' && inputs.baselineRef || inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
+      BASELINE_REF: ${{ inputs.baselineRef }}
+      DIAGNOSTICS_MODE: ${{ inputs.diagnosticsMode || 'off' }}
       CARGO_PROFILE_RELEASE_LTO: fat
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
       CARGO_BUILD_JOBS: "1"
@@ -45,6 +60,9 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$CANDIDATE_REF" =~ ^[0-9a-f]{40}$ ]]
+          [[ -z "$BASELINE_REF" || "$BASELINE_REF" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$DIAGNOSTICS_MODE" =~ ^(off|on|both)$ ]]
+          if [[ "$DIAGNOSTICS_MODE" != off ]]; then test -n "$BASELINE_REF"; fi
 
       - name: Checkout candidate source
         timeout-minutes: 5
@@ -81,7 +99,7 @@ jobs:
           mkdir -p production-cli
           python - <<'PY'
           from pathlib import Path
-          import json, os, subprocess
+          import hashlib, json, os, subprocess
           def run(*args):
               return subprocess.check_output(args, text=True).strip()
           manifest = Path('crates/no-mistakes/Cargo.toml')
@@ -100,8 +118,10 @@ jobs:
               'rustflags': os.environ.get('RUSTFLAGS', ''),
               'imageOS': os.environ.get('ImageOS'), 'imageVersion': os.environ.get('ImageVersion'),
               'releaseManifestPatch': 'rlib plus cdylib, identical to release.yml',
-              'baselineSourceCommit': '4dd9fcc2e74d45d2a84ff12ceec05d37c3e286ac',
-              'baselineCompiler': 'published npm binary; build compiler not independently established',
+              'cargoLockSha256': hashlib.sha256(Path('Cargo.lock').read_bytes()).hexdigest(),
+              'sourceManifestSha256': hashlib.sha256(source.encode()).hexdigest(),
+              'baselineSourceCommit': os.environ.get('BASELINE_REF') or '4dd9fcc2e74d45d2a84ff12ceec05d37c3e286ac',
+              'baselineCompiler': 'matching source build; verify both provenance records' if os.environ.get('BASELINE_REF') else 'published npm binary; build compiler not independently established',
           }
           Path('production-cli/provenance.json').write_text(json.dumps(provenance, indent=2))
           manifest.write_text(source.replace(original, 'crate-type = ["rlib", "cdylib"]', 1))
@@ -117,6 +137,22 @@ jobs:
           rustc /tmp/hosted-cpu-probe.rs --edition=2021 --target x86_64-unknown-linux-gnu \
             -L dependency=target/x86_64-unknown-linux-gnu/release/deps \
             --extern "num_cpus=$cpu_library" -o production-cli/cpu-probe
+          python - <<'PYBUILD'
+          from pathlib import Path
+          import hashlib, json, subprocess
+          directory = Path('production-cli')
+          provenance = json.loads((directory / 'provenance.json').read_text())
+          fingerprints = list(Path('target/x86_64-unknown-linux-gnu/release/.fingerprint').glob('no-mistakes-*/lib-no_mistakes.json'))
+          if len(fingerprints) != 1:
+              raise SystemExit('expected one production library fingerprint')
+          provenance.update({
+              'effectiveBuildManifestSha256': hashlib.sha256(Path('crates/no-mistakes/Cargo.toml').read_bytes()).hexdigest(),
+              'libraryFingerprint': json.loads(fingerprints[0].read_text()),
+              'binarySha256': hashlib.sha256((directory / 'no-mistakes').read_bytes()).hexdigest(),
+              'binaryVersion': subprocess.check_output([str(directory / 'no-mistakes'), '--version'], text=True).strip(),
+          })
+          (directory / 'provenance.json').write_text(json.dumps(provenance, indent=2))
+          PYBUILD
           sha256sum production-cli/no-mistakes > production-cli/SHA256SUMS
           production-cli/no-mistakes --version
 
@@ -124,22 +160,23 @@ jobs:
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: hosted-production-cli
+          name: ${{ matrix.variant == 'baseline' && 'hosted-baseline-cli' || 'hosted-production-cli' }}
           path: production-cli/
           if-no-files-found: error
 
   sample:
-    name: ${{ matrix.fixture.name }} jobs ${{ matrix.jobs }} pair ${{ matrix.sample }}
+    name: ${{ matrix.fixture.name }} jobs ${{ matrix.jobs }} pair ${{ matrix.sample }}${{ matrix.diagnostics == 'on' && ' (diagnostics on)' || '' }}
     needs: build
     runs-on: ubuntu-latest
     # 22 minutes for two capped commands, plus setup and artifact upload.
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: ${{ inputs.baselineRef && 72 || 6 }}
       matrix:
         sample: [1, 2, 3, 4, 5, 6]
         jobs: ["1", "4", "auto"]
+        diagnostics: ${{ fromJSON(inputs.diagnosticsMode == 'both' && '["off", "on"]' || inputs.diagnosticsMode == 'on' && '["on"]' || '["off"]') }}
         fixture:
           - name: acceptance
             commit: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
@@ -198,17 +235,30 @@ jobs:
           name: hosted-production-cli
           path: production-cli
 
+      - name: Download optional source baseline CLI
+        if: ${{ inputs.baselineRef != '' }}
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: hosted-baseline-cli
+          path: baseline-cli
+
       - name: Measure both exact public commands with a 600-second collection cap
         # Two 600-second commands + two 5-second kill grace periods + overhead.
         timeout-minutes: 22
         env:
           SAMPLE_NUMBER: ${{ matrix.sample }}
+          HOSTED_CHECK_BASELINE_REF: ${{ inputs.baselineRef }}
+          HOSTED_CHECK_CANDIDATE_REF: ${{ inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
+          HOSTED_CHECK_BASELINE_ARTIFACT: baseline-cli
+          HOSTED_CHECK_DIAGNOSTICS: ${{ matrix.diagnostics }}
           HOSTED_CHECK_JOBS: ${{ matrix.jobs }}
           EXPECTED_TREE: ${{ matrix.fixture.tree }}
         shell: bash
         run: |
           set -euo pipefail
           chmod +x production-cli/no-mistakes production-cli/cpu-probe
+          if [[ -f baseline-cli/no-mistakes ]]; then chmod +x baseline-cli/no-mistakes; fi
           node harness/.github/scripts/hosted-check.cjs measure fixture production-cli measurements "$SAMPLE_NUMBER" "$EXPECTED_TREE"
 
       - name: Upload measurements, provenance, and raw logs
@@ -216,7 +266,7 @@ jobs:
         timeout-minutes: 3
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: hosted-check-${{ matrix.fixture.name }}-${{ matrix.jobs }}-${{ matrix.sample }}
+          name: hosted-check-${{ matrix.fixture.name }}-${{ matrix.jobs }}-${{ matrix.sample }}${{ matrix.diagnostics == 'on' && '-on' || '' }}
           path: |
             measurements/*.json
             measurements/*.txt
@@ -249,6 +299,9 @@ jobs:
         timeout-minutes: 1
         env:
           HOSTED_CHECK_CALIBRATE: ${{ inputs.calibrate || false }}
+          HOSTED_CHECK_BASELINE_REF: ${{ inputs.baselineRef }}
+          HOSTED_CHECK_CANDIDATE_REF: ${{ inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
+          HOSTED_CHECK_DIAGNOSTICS_MODE: ${{ inputs.diagnosticsMode || 'off' }}
         run: node .github/scripts/hosted-check.cjs summarize measurements
 
       - name: Upload summary

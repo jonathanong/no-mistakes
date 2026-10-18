@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "trackedTreeClean": true,
+  "initialConfigSha256": "5611a8b6d36bba76d20cebb7e574cd728502d698242c5554295e3f78e4acf4a3",
+  "finalConfigSha256": "5611a8b6d36bba76d20cebb7e574cd728502d698242c5554295e3f78e4acf4a3",
+  "candidateCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "baselineCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "fixtureCommit": "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+  "fixtureTree": "e848d7ad03e0c0fca7ec70eb0f678653f70c278b",
+  "jobs": "4",
+  "diagnostics": "on",
+  "sampleNumber": 1
+}

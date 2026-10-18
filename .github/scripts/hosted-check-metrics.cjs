@@ -156,6 +156,8 @@ function budgetReport(groups, budgets, calibrate) {
 }
 
 function summarize(directory) {
+  if (process.env.HOSTED_CHECK_BASELINE_REF)
+    return require("./hosted-check-paired.cjs").summarize(directory);
   const groups = new Map();
   for (const path of sampleFiles(directory)) {
     const sample = JSON.parse(readFileSync(path, "utf8"));

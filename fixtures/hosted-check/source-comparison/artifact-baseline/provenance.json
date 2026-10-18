@@ -1,0 +1,26 @@
+{
+  "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "tree": "cccccccccccccccccccccccccccccccccccccccc",
+  "rustc": "matching test compiler",
+  "cargo": "matching test cargo",
+  "command": "matching source build command",
+  "features": "default (including mermaid-validation)",
+  "lto": "fat",
+  "codegenUnits": 1,
+  "rustflags": "-D warnings",
+  "releaseManifestPatch": "rlib plus cdylib",
+  "buildJobs": 1,
+  "cargoLockSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "sourceManifestSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "effectiveBuildManifestSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "libraryFingerprint": {
+    "rustc": 42,
+    "features": "[\"default\", \"mermaid-validation\"]",
+    "profile": 77,
+    "target": 99,
+    "rustflags": ["-D", "warnings"],
+    "compile_kind": 0
+  },
+  "binarySha256": "9f850e1456dea1d8c5f5d878d140fb79573b1e641abdbc7bc9684f3907518093",
+  "binaryVersion": "synthetic fixture 1"
+}
