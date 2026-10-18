@@ -41,8 +41,17 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 One request-scoped session per CLI/N-API/runner call owns the file inventory,
 `SourceStore`, declared facts, resolver projections, and canonical graph. Lower
 layers borrow them and never re-read, re-parse, re-resolve, or build a private
-graph. Additive flags must not change existing report fields. Details:
+graph. Details:
 [crates/AGENTS.md](crates/AGENTS.md#prepared-analysis-source-session-ownership-and-relationship-projection).
+
+- Distinct resolver/catalog projections (e.g. codebase vs test-runner
+  resolution) may coexist but share the inventory, sources, and fact pass. Each
+  output field uses the projection that defines its semantics; catalog, file
+  universe, config fallback, and filters are part of that semantics, so a
+  broader runner/project catalog never answers an ordinary codebase query.
+- Additive CLI flags must not change existing report fields (`testImpact` must
+  not change `directImporters`). When one widens resolver scope, add a fixture
+  parity test with the flag off and on.
 
 ## Context Management
 

@@ -51,21 +51,6 @@ Keep layer responsibilities declarative:
 Explicit fact plans, shared input identities, and canonical relationships
 keep results deterministic as well as avoiding repeated work.
 
-Semantically distinct resolver/catalog projections may coexist in one session
-when a request needs them (for example, ordinary codebase resolution plus
-broader test-runner project resolution). They share the inventory, sources, and
-union fact pass, and each output field uses the projection whose scope defines
-its public semantics. The resolver catalog, candidate-file universe, config
-fallback, and relationship filters are part of that semantics: reuse a prepared
-graph or reverse projection only when those inputs are equivalent for the field,
-and never let a broader runner/project catalog answer an ordinary codebase query.
-
-Additive CLI flags must not change pre-existing report fields. Requesting test
-impact may add `testImpact` but must not change `directImporters` or
-`dependentsCount`. When an additive analysis uses a broader resolver scope, add
-a fixture-backed parity test comparing the baseline fields with the flag off and
-on.
-
 Keep facts in final ownership form: `Arc` is for retained sharing, never an owned
 value recovered with `as_deref().cloned()` by its sole consumer, copying nested data.
 
