@@ -44,3 +44,11 @@ pub(super) fn record_execution_steps(count: usize) {
 pub fn execution_steps() -> usize {
     LAST_EXECUTION_STEPS.get()
 }
+
+thread_local! { static LAST_MODULE_PROVIDER_CHECKS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+pub(super) fn record_module_provider_checks(count: usize) {
+    LAST_MODULE_PROVIDER_CHECKS.set(count);
+}
+pub fn module_provider_checks() -> usize {
+    LAST_MODULE_PROVIDER_CHECKS.get()
+}

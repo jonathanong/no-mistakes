@@ -99,6 +99,37 @@ for (const [name, expected] of [
     },
   );
 }
+
+for (const [entry, expected] of [
+  ["module-writer-rebind-before.mts", ["primary.get", "primary.get"]],
+  ["module-writer-write-before-rebind.mts", ["replica.get"]],
+  ["module-writer-declaration-after-rebind.mts", []],
+  ["module-writer-finishing-same-owner-chain.mts", []],
+]) {
+  test(
+    `compiled async CJS and ESM preserve module-owned deferred receiver writes: ${entry}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = {
+        root,
+        config,
+        kind: "valkey",
+        entry: `src/${entry}`,
+      };
+      const pending = cjs.effects(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.effects(options), report, entry);
+      assert.deepEqual(
+        report.callSites.map(({ callee }) => callee),
+        expected,
+        entry,
+      );
+    },
+  );
+}
 for (const name of [
   "mutable-let-pattern-static-capture",
   "mutable-let-pattern-static-comma-capture",
@@ -170,3 +201,68 @@ test(
     assert.ok(findings[0].file.endsWith("mutable-rule-sibling.mts"));
   },
 );
+
+for (const [name, expected] of [
+  ["controls", ["primary.get", "replica.get"]],
+  ["capture-before", ["replica.get"]],
+  ["capture-after", ["primary.get"]],
+  ["uncalled", ["primary.get", "replica.get"]],
+  ["escaped", []],
+  ["cycle", []],
+  ["conditional", []],
+  ["reset", ["replica.get"]],
+  ["reordered-rebind", ["replica.get"]],
+  ["reordered-copy", ["replica.get"]],
+  ["eager-class", ["replica.get"]],
+  ["argument-rebind", []],
+]) {
+  test(
+    `compiled async CJS and ESM preserve module provider guard controls: ${name}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = { root, config, kind: "valkey", entry: `src/module-writer-${name}.mts` };
+      const pending = cjs.effects(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.effects(options), report, name);
+      assert.deepEqual(
+        report.callSites.map((site) => site.callee),
+        expected,
+        name,
+      );
+    },
+  );
+}
+
+for (const name of [
+  "providers-16-reads-16",
+  "providers-256-reads-16",
+  "providers-256-reads-128",
+  "providers-256-reads-128-diamond",
+]) {
+  test(
+    `compiled async CJS and ESM preserve bounded module provider projections: ${name}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const fixture = join(
+        __dirname,
+        "../../../test-cases/codebase-analysis/module-receiver-provider-scale/fixture",
+      );
+      const options = {
+        root: join(fixture, name),
+        config: join(fixture, "effects.yml"),
+        kind: "receiver",
+        entry: "src/entry.mts",
+      };
+      const pending = cjs.effects(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.effects(options), report, name);
+      assert.deepEqual(report.callSites, [], name);
+    },
+  );
+}

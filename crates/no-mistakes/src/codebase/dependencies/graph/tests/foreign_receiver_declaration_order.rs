@@ -43,6 +43,7 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
         for callee in ["value.get", "changed.get"]
             .into_iter()
             .filter(|callee| !name.starts_with("scale-") || *callee == "changed.get")
+            .filter(|callee| !matches!(name, "uncalled" | "deferred") || *callee != "value.get")
         {
             let site = sites
                 .iter()
@@ -79,7 +80,11 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
             .unwrap();
         assert!(site.has_unknown_target() && site.targets().next().is_none());
     }
+    // A closed canonical caller chain with no invocation leaves the module's
+    // initial provider unchanged. Foreign callable providers stay conservative.
     for (file, callee, export) in [
+        ("uncalled", "value.get", "primary.get"),
+        ("deferred", "value.get", "primary.get"),
         ("controls", "value.info", "primary.info"),
         ("controls", "changed.info", "replica.info"),
         ("controls", "other.get", "unrelated.get"),

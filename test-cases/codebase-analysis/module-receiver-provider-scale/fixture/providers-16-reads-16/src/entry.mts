@@ -1,0 +1,67 @@
+import { primary, replica } from '@vendor/valkey';
+function replacement() {}
+let box = { client: primary };
+function write0() { box.client.get = replacement; }
+function write1() { box.client.get = replacement; }
+function write2() { box.client.get = replacement; }
+function write3() { box.client.get = replacement; }
+function write4() { box.client.get = replacement; }
+function write5() { box.client.get = replacement; }
+function write6() { box.client.get = replacement; }
+function write7() { box.client.get = replacement; }
+function write8() { box.client.get = replacement; }
+function write9() { box.client.get = replacement; }
+function write10() { box.client.get = replacement; }
+function write11() { box.client.get = replacement; }
+function write12() { box.client.get = replacement; }
+function write13() { box.client.get = replacement; }
+function write14() { box.client.get = replacement; }
+function write15() { box.client.get = replacement; }
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+box = { client: replica };
+write0();
+write1();
+write2();
+write3();
+write4();
+write5();
+write6();
+write7();
+write8();
+write9();
+write10();
+write11();
+write12();
+write13();
+write14();
+write15();
+replica.get('changed-0');
+replica.get('changed-1');
+replica.get('changed-2');
+replica.get('changed-3');
+replica.get('changed-4');
+replica.get('changed-5');
+replica.get('changed-6');
+replica.get('changed-7');
+replica.get('changed-8');
+replica.get('changed-9');
+replica.get('changed-10');
+replica.get('changed-11');
+replica.get('changed-12');
+replica.get('changed-13');
+replica.get('changed-14');
+replica.get('changed-15');

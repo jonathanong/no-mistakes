@@ -42,7 +42,13 @@ test(
       assert.ok(pending instanceof Promise);
       const report = await pending;
       assert.deepEqual(await esm.effects(options), report, name);
-      assert.deepEqual(report.callSites, [], name);
+      // The closed uncalled writer leaves the module's initial provider alone.
+      const expected = ["uncalled", "deferred"].includes(name) ? ["primary.get"] : [];
+      assert.deepEqual(
+        report.callSites.map((site) => site.callee),
+        expected,
+        name,
+      );
     }
     for (const [name, expected] of [
       ["controls", ["primary.info", "replica.info", "unrelated.get", "replica.get", "primary.get"]],

@@ -34,4 +34,7 @@ fn foreign_provider_index_without_a_retained_root_is_empty() {
     let origins = ReceiverBindingOrigins::default();
     let index = origins.foreign_provider_index(&(0, "missing".into()), &[]);
     assert!(index.references(CallableId(0), 0).is_empty());
+    assert!(origins
+        .module_provider_index(&(0, "missing".into()), &[])
+        .is_empty());
 }

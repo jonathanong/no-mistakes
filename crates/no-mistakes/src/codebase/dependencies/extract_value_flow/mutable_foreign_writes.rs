@@ -48,11 +48,7 @@ impl ImportCollector {
         };
         // Module captures keep their saved object. A callable capture can see
         // foreign providers even when a nested closure owns the eventual write.
-        if self
-            .foreign_receiver_writes
-            .as_ref()
-            .is_some_and(|writes| writes.finishing)
-        {
+        if self.foreign_receiver_writes_finishing() {
             return;
         }
         #[cfg(feature = "test-instrumentation")]
@@ -82,6 +78,14 @@ impl ImportCollector {
             });
     }
 
+    /// True while finalization replays ordinary references; module-owned
+    /// origins must then be walked directly because no write is retained.
+    pub(in super::super) fn foreign_receiver_writes_finishing(&self) -> bool {
+        self.foreign_receiver_writes
+            .as_ref()
+            .is_some_and(|writes| writes.finishing)
+    }
+
     pub(in super::super::super) fn finish_foreign_receiver_writes(&mut self) {
         let Some(mut writes) = self.foreign_receiver_writes.take() else {
             return;
@@ -107,10 +111,6 @@ impl ImportCollector {
             // Same-owner snapshots belong to the acquisition, while timing and
             // invalidation below still belong to the physical writing closure.
             let references = index.references(acquired, write.metadata.foreign_before);
-            if references.is_empty() {
-                continue;
-            }
-            let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
             // The declaration order cannot establish an exact replacement or
             // a fresh-object certificate. Preserve the writer, member and scope.
             write.metadata.fresh = false;
@@ -125,6 +125,21 @@ impl ImportCollector {
                 has_assignment,
                 proof: None,
             };
+            for (reference, provider) in &index.module_references {
+                self.active_module_provider = Some(std::sync::Arc::clone(provider));
+                let mut affected = mutation_projection::Affected::default();
+                self.project_member_mutation(
+                    mutation_projection::PendingQueue::new((reference.clone(), false, true, true)),
+                    None,
+                    info,
+                    &mut affected,
+                );
+            }
+            self.active_module_provider = None;
+            if references.is_empty() {
+                continue;
+            }
+            let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
             let mut affected = mutation_projection::Affected::default();
             self.project_member_mutation(
                 mutation_projection::PendingQueue::from_vec(

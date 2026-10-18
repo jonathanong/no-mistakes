@@ -623,6 +623,18 @@ their saved object identity. Mutable aliases initialized from an already tracked
 also retain later binding replacements; unrelated named values stay outside
 receiver tracking.
 
+Deferred member writers select module-owned receiver providers at their closed
+canonical invocation phase. For example, rebinding `box` to `replica` before
+calling `write()` makes the affected `replica.get` unresolved; calling `write()`
+before that rebind preserves `replica.get`. Function declaration placement does
+not change this behavior. Module provider intervals and alias diamonds share one
+prepared root/member projection, and active writer summaries are shared within
+each immutable canonical incoming-call generation. Closed uncalled writers leave
+their module providers unchanged. Escaped or cyclic writers, repeated calls, and
+patterns with uncertain execution order retain conservative alternatives;
+methods copied before the whole pattern and untouched members keep their
+supported acquisition precision.
+
 Repeated imported-member replacement alternatives require a closed execution
 region: a guaranteed multi-item literal `for-of` body or the supported closed
 sequence of synchronous owner invocations. Calls within that proof must be to

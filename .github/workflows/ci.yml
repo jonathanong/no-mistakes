@@ -303,6 +303,7 @@ jobs:
         timeout-minutes: 5
         run: pnpm run test:ci
 
+      # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
       - name: Run real N-API API test
         timeout-minutes: 2
         run: >-

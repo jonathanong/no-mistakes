@@ -94,6 +94,13 @@ mod default_origins;
 #[path = "extract_value_flow/mutation_history.rs"]
 mod mutation_history;
 pub use mutation_history::ValueMutationHistory;
+#[path = "extract_value_flow/module_provider_guards.rs"]
+mod module_provider_guards;
+pub(crate) use module_provider_guards::ModuleAssignedMutations;
+#[path = "extract_value_flow/module_provider_intervals.rs"]
+mod module_provider_intervals;
+pub(crate) use module_provider_intervals::ModuleProviderTarget;
+pub(crate) use mutation_history::ValueAssignedMutations;
 
 #[path = "extract_value_flow/write_targets.rs"]
 pub(super) mod write_targets;

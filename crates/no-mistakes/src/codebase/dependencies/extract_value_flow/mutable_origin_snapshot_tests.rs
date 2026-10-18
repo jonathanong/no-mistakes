@@ -3,6 +3,16 @@ use super::*;
 fn assert_queries(snapshots: &RootSnapshots, expected: &BTreeMap<u32, usize>) {
     #[cfg(feature = "test-instrumentation")]
     assert_eq!(snapshots.last_key_value(), expected.last_key_value());
+    let mut reversed = Vec::new();
+    snapshots.reversed(|offset, selected| reversed.push((offset, selected)));
+    assert_eq!(
+        reversed,
+        expected
+            .iter()
+            .rev()
+            .map(|(at, id)| (*at, *id))
+            .collect::<Vec<_>>()
+    );
     for offset in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, u32::MAX] {
         assert_eq!(
             snapshots.before(offset),

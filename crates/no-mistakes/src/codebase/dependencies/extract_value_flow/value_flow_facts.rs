@@ -2,6 +2,8 @@
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    #[cfg(feature = "test-instrumentation")]
+    pub module_provider_work: [usize; 3],
     /// Prepared nullish expressions can add known plain-name fallback effects.
     pub has_nullish_alternatives: bool,
     /// Local callable values can escape through containers, returns, or stores.

@@ -10,6 +10,21 @@ impl Default for RootSnapshots {
     }
 }
 impl RootSnapshots {
+    pub(super) fn reversed(&self, mut visit: impl FnMut(u32, usize)) {
+        match self {
+            Self::Ordered(entries) => entries
+                .iter()
+                .rev()
+                .for_each(|(offset, selected)| visit(*offset, *selected)),
+            Self::Tree(entries) => entries
+                .iter()
+                .rev()
+                .for_each(|(offset, selected)| visit(*offset, *selected)),
+        }
+    }
+    pub(super) fn unordered(&self) -> bool {
+        matches!(self, Self::Tree(_))
+    }
     pub(super) fn insert(&mut self, offset: u32, selected: usize) {
         match self {
             Self::Ordered(entries) if entries.last().is_none_or(|(last, _)| *last <= offset) => {

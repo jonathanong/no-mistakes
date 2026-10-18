@@ -129,9 +129,21 @@ impl ImportCollector {
         output: &mut impl Extend<nested::ReceiverWrite<R>>,
         foreign_before: usize,
         version: mutable_origins::RootVersion,
+        writer: Option<CallableId>,
     ) {
         if let Some(origins) = &self.receiver_only_bindings {
-            origins.append_references(key, coordinates, output, foreign_before, version);
+            let defer_module = writer.is_some()
+                && writer == coordinates.2 .1
+                && self.active_module_provider.is_none()
+                && !self.foreign_receiver_writes_finishing();
+            origins.append_references(
+                key,
+                coordinates,
+                output,
+                foreign_before,
+                version,
+                defer_module,
+            );
         }
     }
 

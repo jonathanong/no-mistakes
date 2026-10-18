@@ -13,7 +13,7 @@ test(
       __dirname,
       "../../../test-cases/rules/query-reached-per-item/provenance-fixture",
     );
-    for (const [file, resolved] of [
+    const cases = [
       ["global-decorator-application", false],
       ["global-decorator-late-key", true],
       ["global-decorator-anonymous-late-key", true],
@@ -30,12 +30,21 @@ test(
       ["global-decorator-computed-key", true],
       ["global-decorator-copied-snapshot", true],
       ["global-decorator-deferred", true],
-    ]) {
-      const options = { root, kind: "valkey", entry: `src/nested-receiver-containers/${file}.mts` };
-      const pending = cjs.effects(options);
-      assert.ok(pending instanceof Promise);
-      const report = await pending;
-      assert.deepEqual(await esm.effects(options), report, file);
+    ];
+    // Share one analysis per facade while keeping every decorator report assertion.
+    const reports = cases.map(([file]) => ({
+      type: "effects",
+      kind: "valkey",
+      entry: `src/nested-receiver-containers/${file}.mts`,
+    }));
+    const pending = cjs.analyzeProject({ root, reports });
+    assert.ok(pending instanceof Promise);
+    const result = await pending;
+    const esmPending = esm.analyzeProject({ root, reports });
+    assert.ok(esmPending instanceof Promise);
+    assert.deepEqual(await esmPending, result);
+    for (const [index, [file, resolved]] of cases.entries()) {
+      const report = result.reports[index].result;
       assert.equal(
         report.callSites.some((site) => site.caller === "scan" && site.callee === "primary.get"),
         resolved,

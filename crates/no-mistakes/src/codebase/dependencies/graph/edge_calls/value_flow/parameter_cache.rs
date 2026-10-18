@@ -47,6 +47,8 @@ pub(in super::super) struct ParameterCache {
     origin_nodes: std::sync::atomic::AtomicUsize,
     #[cfg(feature = "test-instrumentation")]
     execution_steps: std::sync::atomic::AtomicUsize,
+    #[cfg(feature = "test-instrumentation")]
+    module_provider_checks: std::sync::atomic::AtomicUsize,
 }
 pub(super) enum CacheAccess<'a> {
     Ready(Arc<CachedParameter>),

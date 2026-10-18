@@ -1,6 +1,7 @@
 use crate::codebase::ts_resolver::ImportResolver;
 use crate::codebase::ts_source::facts::collect_ts_facts_with_context;
 mod foreign_receiver_declaration_order;
+mod module_receiver_providers;
 
 fn package_name_from_spec(spec: &str) -> &str {
     if spec.starts_with('@') {

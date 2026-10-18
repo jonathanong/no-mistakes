@@ -17,6 +17,7 @@ pub struct ValueMutationHistory {
 }
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueAssignedMutations {
+    pub(crate) module: Option<Box<module_provider_guards::ModuleAssignedMutations>>,
     pub members: FxHashMap<String, ValueAssignedMutation>,
     pub dynamic: Option<ValueAssignedMutation>,
     pub propagated: Option<Box<ValuePropagatedMutations>>,

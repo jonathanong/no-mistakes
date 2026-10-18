@@ -7,6 +7,8 @@ mod foreign;
 #[path = "mutable_origin_pending.rs"]
 mod pending;
 pub(super) use foreign::ForeignReceiverWrites;
+#[path = "mutable_module_providers.rs"]
+mod module_providers;
 #[path = "mutable_origin_phases.rs"]
 mod phases;
 #[path = "mutable_foreign_providers.rs"]
@@ -79,6 +81,8 @@ pub(in super::super) struct ReceiverBindingOrigins {
     #[cfg(feature = "test-instrumentation")]
     owned_keys: usize,
     #[cfg(feature = "test-instrumentation")]
+    module_work: std::cell::Cell<[usize; 3]>,
+    #[cfg(feature = "test-instrumentation")]
     snapshot_queries: std::cell::Cell<[usize; 3]>,
 }
 impl ReceiverBindingOrigins {
@@ -140,6 +144,7 @@ impl ReceiverBindingOrigins {
         output: &mut impl Extend<nested::ReceiverWrite<R>>,
         foreign_before: usize,
         version: RootVersion,
+        defer_module: bool,
     ) {
         let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {
             return;
@@ -154,6 +159,9 @@ impl ReceiverBindingOrigins {
             pending.extend(version.selected.map(|id| (id, false)));
         }
         for (owner, states) in &root.owners {
+            if defer_module && owner.is_none() {
+                continue;
+            }
             if root_read.1 != *owner {
                 // Normal leaves append in arena order. Later foreign bodies
                 // cannot force replay to walk a suffix beyond this acquisition.
