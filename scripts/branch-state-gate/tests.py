@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from tool_tests import ToolProvisionTests
 from build import compile_cpu_probe
+from tool_build import pinned_environment
 from summarize import nearest_rank, validate_cells, validate_pairs, validate_sample
 
 
@@ -41,10 +42,11 @@ class AcceptanceTests(unittest.TestCase):
         fixture = Path(__file__).resolve().parents[2] / 'fixtures/performance/branch-state-gate/cpu-probe'
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
+            environment = pinned_environment()
             dependency = output / 'libnum_cpus.rlib'
             subprocess.run(['rustc', '--crate-name', 'num_cpus', '--crate-type', 'rlib',
                             '-Clinker-plugin-lto', str(fixture / 'num_cpus.rs'), '-o', str(dependency)],
-                           check=True)
+                           check=True, env=environment)
             common = ['rustc', str(fixture / 'main.rs'), '--edition=2021', '-L',
                       'dependency='+temporary, '--extern', 'num_cpus='+str(dependency)]
             # Rust's x86 default linker accepts bitcode. Use the hosted ARM
@@ -52,7 +54,7 @@ class AcceptanceTests(unittest.TestCase):
             linker = ['-Clinker=cc', '-Clink-arg=-fuse-ld=bfd']
             real_run = subprocess.run
             failed = real_run(common + linker + ['-o', str(output / 'vanilla-probe')],
-                              capture_output=True, text=True)
+                              capture_output=True, text=True, env=environment)
             self.assertNotEqual(failed.returncode, 0, failed.stderr)
             self.assertIn('file format not recognized', failed.stderr)
             probe = output / 'cpu-probe'
