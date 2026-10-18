@@ -2,6 +2,15 @@ use super::*;
 use std::borrow::Borrow;
 use std::hash::{Hash, Hasher};
 
+pub(super) fn alias(path: &Path, normalized: &Path) -> Option<Arc<Path>> {
+    // Identity spellings and failures need no extra retained canonical text.
+    path.canonicalize()
+        .ok()
+        .map(|path| normalize_path(&path))
+        .filter(|real| real != normalized)
+        .map(Arc::<Path>::from)
+}
+
 /// Retain an inventory position instead of cloning its lexical path text.
 /// Explicit paths outside prepared inventories still keep their exact spelling.
 pub(super) enum CanonicalPath {

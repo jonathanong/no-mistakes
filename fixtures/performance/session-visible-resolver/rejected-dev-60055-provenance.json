@@ -1,0 +1,112 @@
+{
+  "_spelling": "cspell:ignore rustc RUSTC",
+  "status": "rejected experiment; not the final production candidate",
+  "reason": "Near-flat repository timing with higher peak RSS; no runtime improvement claimed.",
+  "baseline": {
+    "revision": "871b3ce5607f71440ec488aaebeafe50bc2a24bc",
+    "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "flags": "dev default-features debug0 CARGO_INCREMENTAL=0 RUSTC_WRAPPER= jobs2",
+    "sha256": "a5787432ae94ba68066be7fbbc09b814d4143b27ccf13f57b5c1c6cf0765f530"
+  },
+  "candidate": {
+    "revision": "60055c7bbdf31f85d5adf45c868f86e20db00552",
+    "base": "871b3ce5607f71440ec488aaebeafe50bc2a24bc",
+    "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "flags": "dev default-features debug0 CARGO_INCREMENTAL=0 RUSTC_WRAPPER= jobs2",
+    "sha256": "15993e3157ae9c9a988c8fafa90a4bfdc594f7d1cf132ea5a54d22f08d6651db"
+  },
+  "machine": "x86_64",
+  "system": "Linux",
+  "cpuAffinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "measurement": "fresh processes; ABBA for each workload/diagnostics/jobs cell; two observations per binary per cell",
+  "samples": 120,
+  "physicalRoot": "/tmp/nm-2117-worktree",
+  "tool": "/usr/bin/time wall, user, system seconds and peak RSS KiB",
+  "diagnostics": [
+    false,
+    true
+  ],
+  "jobs": [
+    1,
+    4,
+    0
+  ],
+  "jobsZero": "automatic maximum",
+  "inputCount": 23844,
+  "inputVerification": "All tracked inputs unchanged during measurement; only new regression assertions added afterward.",
+  "outputParity": "Every cell has one shared report/exit/non-diagnostic-warning hash across baseline and candidate.",
+  "sourceCounts": {
+    "repoNode": {
+      "files": 165,
+      "bytes": 873629,
+      "lines": 23306,
+      "jsxFiles": 0,
+      "jsxBytes": 0,
+      "jsxLines": 0
+    },
+    "core": {
+      "files": 14,
+      "bytes": 1694,
+      "lines": 63,
+      "jsxFiles": 2,
+      "jsxBytes": 315,
+      "jsxLines": 9
+    },
+    "graph": {
+      "files": 77,
+      "bytes": 18316,
+      "lines": 389,
+      "jsxFiles": 20,
+      "jsxBytes": 6350,
+      "jsxLines": 144
+    },
+    "runner": {
+      "files": 4,
+      "bytes": 397,
+      "lines": 8,
+      "jsxFiles": 0,
+      "jsxBytes": 0,
+      "jsxLines": 0
+    },
+    "fullRepository": {
+      "files": 10668,
+      "bytes": 5551085,
+      "lines": 156505,
+      "jsxFiles": 3076,
+      "jsxBytes": 347140,
+      "jsxLines": 9424
+    }
+  },
+  "workloads": {
+    "repo-consuming": "repository root; consuming.yml",
+    "repo-control": "repository root; control.yml",
+    "core-analysis": "fixtures/performance/core-analysis",
+    "graph-gates": "fixtures/performance/graph-gates",
+    "runner-shared-imports": "fixtures/test-config/session-visible-resolver"
+  }
+}

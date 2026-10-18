@@ -40,6 +40,10 @@ fn canonical_aliases_and_read_failures_are_shared_without_widening_raw_scopes() 
     let session = AnalysisSession::new(Some(observer.clone()));
     let raw = session.prepared_visible(&visible);
     let normalized = session.normalized_visible(&visible);
+    assert!(Arc::ptr_eq(
+        raw.normalized.get().unwrap(),
+        &normalized.paths
+    ));
     assert!(raw.contains_visible(&lexical));
     assert!(!raw.contains_visible(&real));
     assert!(normalized.contains_visible(&real));
@@ -122,4 +126,28 @@ fn lexical_parent_components_keep_the_raw_and_normalized_projections_separate() 
     assert!(!raw.contains_visible(&root.join("utils.mts")));
     assert!(normalized.contains_visible(&root.join("utils.mts")));
     assert!(!normalized.contains_visible(&lexical));
+}
+
+#[test]
+fn prepared_owner_retains_the_existing_path_storage() {
+    let root = fixture_root();
+    let owner = Arc::new(PreparedVisible::new(crate::fx::PathSet::from_iter([
+        root.join("consumer.mts"),
+        root.join("utils.mts"),
+    ])));
+    let session = AnalysisSession::disabled();
+    let borrowed = &owner;
+    let retained = session.prepared_visible(&borrowed);
+    // Runner preparation already owns this immutable set; copying it would
+    // retain a second repository-sized allocation for the rest of the request.
+    assert!(Arc::ptr_eq(&owner.paths, &retained.paths));
+    let normalized = session.normalized_visible(&owner);
+    assert!(Arc::ptr_eq(&owner.paths, &normalized.paths));
+}
+
+#[test]
+fn standalone_prepared_normalization_reuses_unchanged_path_storage() {
+    let root = fixture_root();
+    let owner = PreparedVisible::new(crate::fx::PathSet::from_iter([root.join("utils.mts")]));
+    assert!(Arc::ptr_eq(&owner.paths, &owner.normalized_visible()));
 }

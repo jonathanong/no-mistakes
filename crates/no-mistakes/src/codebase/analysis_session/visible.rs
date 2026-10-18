@@ -26,8 +26,11 @@ pub(crate) struct PreparedVisible {
 
 impl PreparedVisible {
     pub(crate) fn new(paths: crate::fx::PathSet) -> Self {
+        Self::from_shared(Arc::new(paths))
+    }
+    fn from_shared(paths: Arc<crate::fx::PathSet>) -> Self {
         Self {
-            paths: Arc::new(paths),
+            paths,
             identity: VisibleScopeIdentity::new(),
             normalized: Arc::default(),
             standalone_cache: Arc::default(),
@@ -67,12 +70,14 @@ impl VisiblePathLookup for PreparedVisible {
     fn scope_identity(&self) -> Option<VisibleScopeIdentity> {
         Some(self.identity.clone())
     }
+    fn prepared_projection(&self) -> Option<PreparedVisible> {
+        Some(self.clone())
+    }
     fn normalized_visible(&self) -> Arc<crate::fx::PathSet> {
-        Arc::clone(self.normalized.get_or_init(|| {
-            Arc::new(crate::codebase::ts_resolver::normalized_visible_path_set(
-                self.paths.iter().cloned(),
-            ))
-        }))
+        Arc::clone(
+            self.normalized
+                .get_or_init(|| normalize_visible(&self.paths, canonical::alias)),
+        )
     }
 }
 
@@ -90,11 +95,8 @@ impl AnalysisSession {
         let normalized = scope.normalized.get_or_init(|| {
             self.increment("resolver.visible_normalizations", 1);
             let inventories = canonical::inventories(self);
-            let mut rewrites = Vec::new();
-            let mut aliases = Vec::new();
-            for path in scope.paths.iter() {
-                let normalized = normalize_path(path);
-                let canonical = if let Some(cached) = registry.canonical.get(path.as_path()) {
+            normalize_visible(&scope.paths, |path, normalized| {
+                if let Some(cached) = registry.canonical.get(path) {
                     cached.value().clone()
                 } else {
                     registry
@@ -102,47 +104,44 @@ impl AnalysisSession {
                         .entry(canonical::CanonicalPath::new(path, &inventories))
                         .or_insert_with(|| {
                             self.increment("resolver.visible_canonicalize_calls", 1);
-                            // Identity spellings and failures both need no extra
-                            // alias. Retain text only when canonicalization adds one.
-                            path.canonicalize()
-                                .ok()
-                                .map(|path| normalize_path(&path))
-                                .filter(|real| real != &normalized)
-                                .map(Arc::<Path>::from)
+                            canonical::alias(path, normalized)
                         })
                         .value()
                         .clone()
-                };
-                if normalized != *path {
-                    rewrites.push((path.clone(), normalized));
                 }
-                if let Some(path) = canonical {
-                    if !scope.paths.contains(path.as_ref()) {
-                        aliases.push(path.as_ref().to_path_buf());
-                    }
-                }
-            }
-            if rewrites.is_empty() && aliases.is_empty() {
-                Arc::clone(&scope.paths)
-            } else {
-                let mut paths = scope.paths.as_ref().clone();
-                for (original, normalized) in rewrites {
-                    paths.remove(&original);
-                    paths.insert(normalized);
-                }
-                paths.extend(aliases);
-                Arc::new(paths)
-            }
+            })
         });
         if Arc::ptr_eq(normalized, &scope.paths) {
             return scope;
         }
-        let prepared = self.prepared_visible(normalized);
+        let prepared = self.prepared_visible(&PreparedVisible::from_shared(Arc::clone(normalized)));
         // This projection already includes all canonical aliases. Re-borrowing
         // it as prepared input must not canonicalize the aliases a second time.
         let _ = prepared.normalized.set(Arc::clone(&prepared.paths));
         prepared
     }
+}
+
+fn normalize_visible(
+    paths: &Arc<crate::fx::PathSet>,
+    mut canonical: impl FnMut(&Path, &Path) -> Option<Arc<Path>>,
+) -> Arc<crate::fx::PathSet> {
+    let mut output = None;
+    for path in paths.iter() {
+        let normalized = normalize_path(path);
+        let alias = canonical(path, &normalized).filter(|path| !paths.contains(path.as_ref()));
+        if normalized != *path || alias.is_some() {
+            let output = output.get_or_insert_with(|| paths.as_ref().clone());
+            if normalized != *path {
+                output.remove(path);
+                output.insert(normalized);
+            }
+            if let Some(alias) = alias {
+                output.insert(alias.as_ref().to_path_buf());
+            }
+        }
+    }
+    output.map_or_else(|| Arc::clone(paths), Arc::new)
 }
 
 #[cfg(test)]

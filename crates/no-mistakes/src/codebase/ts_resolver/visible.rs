@@ -23,6 +23,11 @@ pub(crate) trait VisiblePathLookup: Send + Sync {
         None
     }
 
+    /// Reuse storage already frozen by a request owner instead of copying paths.
+    fn prepared_projection(&self) -> Option<crate::codebase::analysis_session::PreparedVisible> {
+        None
+    }
+
     /// Normalized plus canonical aliases used by scoped import resolution.
     ///
     /// Graph-backed lookups override this to reuse one request-scoped Arc;

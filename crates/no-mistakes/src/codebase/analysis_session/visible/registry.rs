@@ -39,6 +39,9 @@ impl AnalysisSession {
 }
 
 fn collect(visible: &dyn VisiblePathLookup) -> Arc<PreparedVisible> {
+    if let Some(prepared) = visible.prepared_projection() {
+        return Arc::new(prepared);
+    }
     let mut paths = crate::fx::PathSet::default();
     visible.visit_visible(&mut |path| {
         paths.insert(path.to_path_buf());
