@@ -56,8 +56,8 @@ Helpers also compose with the rest of a builder:
   finite alternatives and any holes. The function must be a directly invoked,
   non-async, non-generator arrow or function expression with no name,
   parameters or arguments, must not use `this` or `arguments`, must declare the
-  returned `const`/`let` itself, and must have exactly one `return`, last. The
-  `const` must be declared with `const`.
+  returned local with `const` or `let` and must have exactly one `return`, last.
+  The outer result binding (`built` in this example) must use `const`.
 
 Imports resolve through the same per-importing-file scoped resolver as the
 rest of the request, so a package's own `paths` win over the root's `@/*`.
@@ -154,7 +154,7 @@ to a function whose body is unknown, a helper that reads the builder it was
 given, and an IIFE outside the exact shape above (parameters, arguments,
 `async`, generators, `this`, `arguments`, several returns, returning an outer or
 captured binding, statements after the return, a named function expression, or
-a `let` binding). A same-file helper that receives the caller's builder is
+an outer result bound with `let`). A same-file helper that receives the caller's builder is
 composed only when the call is straight-line in the builder's own function; in
 a conditional, loop or nested function it keeps the established per-call
 effect analysis. A call that stays `Dynamic` keeps only the verified leading

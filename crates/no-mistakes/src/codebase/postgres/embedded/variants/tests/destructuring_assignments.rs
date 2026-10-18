@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn destructuring_writes_forget_sql_snapshots_and_member_targets_preserve_receivers() {
+fn destructuring_writes_invalidate_builders_but_preserve_independent_receivers() {
     let file = file_facts("variants-destructuring-assignments.ts");
     let source = std::fs::read_to_string(&file.path).unwrap();
     let expected = source

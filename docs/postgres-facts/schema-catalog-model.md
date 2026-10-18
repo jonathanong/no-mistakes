@@ -11,9 +11,14 @@ The file must state `formatVersion: 2` and its `coverage`, which is `complete`
 (every fact below) or `ordering` (only what conflict and lock ordering need).
 Nothing is assumed complete: a missing `coverage` is a load error. Every column
 must carry `dataType`, so a missing type fails the load instead of becoming `""`.
-An invalid catalog names the failing field, as in
-`schemaCatalogPath <path> has an invalid schema: tables.accounts.columns.id:
-missing field `dataType``, and says to generate the catalog with
+An invalid catalog names the failing field. For example:
+
+```text
+schemaCatalogPath <path> has an invalid schema: tables.accounts.columns.id:
+missing field `dataType`
+```
+
+Generate the catalog with
 `no-mistakes postgres catalog`. Catalogs accept strict JSON syntax with `//` and
 `/* */` comments (JSONC); trailing commas and other JSONC extensions remain invalid.
 Apart from those required fields, a missing field takes its default so a

@@ -29,6 +29,12 @@ object. Later reads cannot treat its earlier SQL as complete. This is a conserva
 reference boundary; an uncalled function containing such an escape can also lose
 precision. Simple aliases whose identity is already tracked remain supported.
 
+Writing or deleting a builder property also invalidates its complete SQL,
+including `.strings`, `.text`, and apparently unrelated metadata targets. There
+is no verified property-write summary that rules out a mutating setter.
+Reading `.text` copies a primitive;
+replacing a name leaves other aliases of the original object unchanged.
+
 Supported same-file helpers with an imported `SQLStatement` parameter retain
 their established recovery. For example, executing the result of a verified
 helper that appends a fixed fragment still checks that final SQL. A local alias

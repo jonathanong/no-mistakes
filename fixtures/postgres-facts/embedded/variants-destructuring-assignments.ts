@@ -32,14 +32,17 @@ let computed = gate ? "SELECT 19" : "SELECT 20";
 const key = "statement";
 ({ [key]: computed } = { statement: "SELECT 19 OFFSET 10" });
 query(computed); // opaque
-/* Member targets write a property, never the receiver's SQL binding. */
+/* Unverified property writes invalidate builders, including apparent metadata. */
 const receiver = gate ? sql`SELECT 21` : sql`SELECT 22`;
+const untouched = gate ? sql`SELECT 21` : sql`SELECT 22`;
+query(untouched); // variants: SELECT 21 | SELECT 22
 ({ statement: receiver.extra } = { statement: "unrelated" });
 [receiver["extra"]] = ["also unrelated"];
-query(receiver); // variants: SELECT 21 | SELECT 22
+query(receiver); // opaque
+query(untouched); // variants: SELECT 21 | SELECT 22
 let scalar = 0;
 ({ scalar } = { scalar: 1 });
-query(receiver); // variants: SELECT 21 | SELECT 22
+query(receiver); // opaque
 let shadowed = gate ? "SELECT 23" : "SELECT 24";
 {
   let shadowed = gate ? "SELECT 25" : "SELECT 26";
@@ -83,9 +86,9 @@ let rhsFirst = gate ? "SELECT 62" : "SELECT 63";
   laterArray = query(rhsFirst), // opaque
 ] = (query(rhsFirst), // variants: SELECT 62 | SELECT 63
   ["SELECT 62 OFFSET 28"]);
-[(receiver.extra as string) = (query(receiver), "unrelated")] = []; // variants: SELECT 21 | SELECT 22
-[[] = (query(receiver), [])] = []; // variants: SELECT 21 | SELECT 22
-[{} = (query(receiver), {})] = []; // variants: SELECT 21 | SELECT 22
+[(receiver.extra as string) = (query(receiver), "unrelated")] = []; // opaque
+[[] = (query(untouched), [])] = []; // variants: SELECT 21 | SELECT 22
+[{} = (query(untouched), {})] = []; // variants: SELECT 21 | SELECT 22
 let asTarget = gate ? "SELECT 46" : "SELECT 47";
 [asTarget as string] = ["SELECT 46 OFFSET 20"];
 query(asTarget); // opaque
@@ -99,7 +102,7 @@ let assertionTarget = gate ? "SELECT 52" : "SELECT 53";
 [<string>assertionTarget] = ["SELECT 52 OFFSET 23"];
 query(assertionTarget); // opaque
 [(receiver.extra as string)] = ["still unrelated"];
-query(receiver); // variants: SELECT 21 | SELECT 22
+query(receiver); // opaque
 shorthand = gate ? "SELECT 27" : "SELECT 28";
 query(shorthand); // variants: SELECT 27 | SELECT 28
 let guard = gate ? "SELECT 29" : "SELECT 30";

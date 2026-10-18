@@ -102,6 +102,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.walk_assignment_target_reference(target);
     }
 
+    fn visit_unary_expression(&mut self, unary: &ast::UnaryExpression<'a>) {
+        self.walk_unary_write_expression(unary);
+    }
+
     fn visit_tagged_template_expression(&mut self, template: &ast::TaggedTemplateExpression<'a>) {
         self.visit_builder_template(template);
     }

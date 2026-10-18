@@ -1,5 +1,4 @@
 use super::{assignments, resolve, ScopeVisitor};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{self, AssignmentTarget};
 use oxc_ast_visit::{walk, Visit};
 
@@ -8,12 +7,51 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         target: &ast::SimpleAssignmentTarget<'a>,
     ) {
-        // A name write replaces its reference. A member write can mutate a
-        // builder receiver, so its root reference must still escape.
-        if matches!(target, ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(_)) {
-            return;
+        let wrapped = match target {
+            ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(_) => return,
+            ast::SimpleAssignmentTarget::TSAsExpression(value) => Some(&value.expression),
+            ast::SimpleAssignmentTarget::TSSatisfiesExpression(value) => Some(&value.expression),
+            ast::SimpleAssignmentTarget::TSNonNullExpression(value) => Some(&value.expression),
+            ast::SimpleAssignmentTarget::TSTypeAssertion(value) => Some(&value.expression),
+            _ => None,
+        };
+        let member = match wrapped {
+            Some(expression) => {
+                // Wrapped name writes also replace a reference without escaping it.
+                let Some(member) = expression.get_inner_expression().as_member_expression() else {
+                    return;
+                };
+                member
+            }
+            None => target.to_member_expression(),
+        };
+        self.walk_builder_write_member(member);
+    }
+
+    pub(super) fn walk_unary_write_expression(&mut self, unary: &ast::UnaryExpression<'a>) {
+        if unary.operator.is_delete() {
+            if let Some(member) = unary.argument.get_inner_expression().as_member_expression() {
+                self.walk_builder_write_member(member);
+                return;
+            }
         }
-        walk::walk_simple_assignment_target(self, target);
+        walk::walk_unary_expression(self, unary);
+    }
+
+    fn walk_builder_write_member(&mut self, member: &ast::MemberExpression<'a>) {
+        // The ordinary .text read projection must not exempt a write/delete
+        // receiver. Walk each receiver/key once, including computed effects.
+        match member {
+            ast::MemberExpression::StaticMemberExpression(member) => {
+                walk::walk_static_member_expression(self, member);
+            }
+            ast::MemberExpression::ComputedMemberExpression(member) => {
+                walk::walk_computed_member_expression(self, member);
+            }
+            ast::MemberExpression::PrivateFieldExpression(member) => {
+                walk::walk_private_field_expression(self, member);
+            }
+        }
     }
 
     pub(super) fn walk_variable_declarator_bindings(

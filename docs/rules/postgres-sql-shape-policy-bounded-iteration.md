@@ -54,7 +54,7 @@ When the outer query has no `ORDER BY`, the one inside the parentheses orders th
 A cursor bounds one side of the walk, so a lower and an upper bound on the ordered columns
 together (`id >= $1 AND id < $2`) are a window, which narrows it; an optional bound
 (`($1 IS NULL OR id >= $1)`) does not count, because a NULL bind switches it off. A constant `TRUE` or
-`1 = 1` conjunct, which query builders seed a `WHERE` with, selects nothing, and a relation
+`1 = 1` conjunct, which query builders seed a `WHERE` with, does not narrow the walk, and a relation
 with a `TABLESAMPLE` is restricted before it is ordered, so it is not a whole-table walk.
 A bare `ORDER BY` name
 that is also an output name means that output expression: `SELECT random() AS id … ORDER BY
