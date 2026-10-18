@@ -13,23 +13,17 @@ impl<'a> ScopeVisitor<'a> {
         let start = self.builder_reference_exemptions.len();
         let expression = match target {
             ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(_) => return,
-            ast::SimpleAssignmentTarget::StaticMemberExpression(member) => &member.object,
-            ast::SimpleAssignmentTarget::ComputedMemberExpression(member) => &member.object,
-            ast::SimpleAssignmentTarget::PrivateFieldExpression(member) => &member.object,
             ast::SimpleAssignmentTarget::TSAsExpression(value) => &value.expression,
             ast::SimpleAssignmentTarget::TSSatisfiesExpression(value) => &value.expression,
             ast::SimpleAssignmentTarget::TSNonNullExpression(value) => &value.expression,
             ast::SimpleAssignmentTarget::TSTypeAssertion(value) => &value.expression,
+            member => member.to_member_expression().object(),
         };
-        match unwrap_ts_wrappers(expression) {
-            ast::Expression::StaticMemberExpression(member) => {
-                self.allow_builder_reference(&member.object)
-            }
-            ast::Expression::ComputedMemberExpression(member) => {
-                self.allow_builder_reference(&member.object)
-            }
-            expression => self.allow_builder_reference(expression),
-        }
+        let expression = unwrap_ts_wrappers(expression);
+        let receiver = expression
+            .as_member_expression()
+            .map_or(expression, |member| member.object());
+        self.allow_builder_reference(receiver);
         walk::walk_simple_assignment_target(self, target);
         self.builder_reference_exemptions.truncate(start);
     }

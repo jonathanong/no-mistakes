@@ -25,3 +25,9 @@ read(typed(typedArgument));
 // Type-only references do not expose an object at runtime.
 type OriginalStatement = typeof original;
 read(original);
+
+// Trusted SQL copy factories consume fragments without retaining their builders.
+const factoryInput = sql`SELECT id FROM accounts WHERE active IS TRUE`;
+sql(factoryInput);
+sql.join([factoryInput]);
+read(factoryInput);
