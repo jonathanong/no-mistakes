@@ -15,9 +15,12 @@ const {
   checkArguments,
   sourceBaseline,
   resetCompletion,
-  recordCompletion,
-  recordParity,
 } = require("./hosted-check-source.cjs");
+const {
+  comparisonContract,
+  completedSample,
+  finishMeasurement,
+} = require("./hosted-check-completion.cjs");
 
 const {
   command,
@@ -99,6 +102,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
     wrapper:
       "Published npm no-mistakes@0.86.2 launcher for both binaries; only its untracked native CLI is replaced",
   };
+  Object.assign(metadata, comparisonContract(metadata));
   writeFileSync(join(output, "environment.json"), JSON.stringify(metadata, null, 2));
   writeFileSync(join(output, "cpu.txt"), command("lscpu", [], fixture));
   const reference = source?.variant || "published";
@@ -152,27 +156,21 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         fixtureTree,
         binarySha256: hashFile(native),
         binaryVersion: command(native, ["--version"], fixture),
+        checkOutcome: result.status === 0 ? "success" : "failure",
+        checkAccepted: result.status === 0,
         signal: result.signal,
         processExit: result.status,
         deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
       };
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
       console.log(JSON.stringify(sample));
-      if ((variant === "current" || source) && !successful(sample)) failed = true;
+      if ((variant === "current" || source) && !completedSample(sample, metadata.expectedExit))
+        failed = true;
     }
   } finally {
     copyFileSync(baseline, native);
   }
-  if (source && !recordParity(output, diagnostics))
-    throw new Error("Source check output parity failed");
-  if (hashFile(join(fixture, ".no-mistakes.yml")) !== configBefore)
-    throw new Error("Consumer config changed");
-  command("git", ["diff", "--exit-code", "HEAD"], fixture);
-  if (failed)
-    throw new Error(
-      `Current check did not exit successfully within the ${COLLECTION_DEADLINE_SECONDS}-second collection cap`,
-    );
-  if (source) recordCompletion(output, metadata, hashFile(join(fixture, ".no-mistakes.yml")));
+  finishMeasurement(output, metadata, fixture, source, failed);
 }
 
 if (require.main === module) {

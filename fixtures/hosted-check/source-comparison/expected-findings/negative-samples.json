@@ -1,0 +1,92 @@
+{
+  "runtime": {
+    "exit": 2,
+    "elapsed": 100,
+    "deadlineSeconds": 600,
+    "signal": null
+  },
+  "timeout": {
+    "exit": 124,
+    "elapsed": 600,
+    "deadlineSeconds": 600,
+    "signal": null
+  },
+  "killed": {
+    "exit": 137,
+    "elapsed": 100,
+    "deadlineSeconds": 600,
+    "signal": "SIGKILL"
+  },
+  "signal": {
+    "exit": 1,
+    "elapsed": 100,
+    "deadlineSeconds": 600,
+    "signal": "SIGTERM"
+  },
+  "wrongSuccess": {
+    "exit": 0,
+    "elapsed": 100,
+    "deadlineSeconds": 600,
+    "signal": null
+  },
+  "late": {
+    "exit": 1,
+    "elapsed": 601,
+    "deadlineSeconds": 600,
+    "signal": null
+  },
+  "invalidElapsed": {
+    "exit": 1,
+    "elapsed": -1,
+    "deadlineSeconds": 600,
+    "signal": null
+  },
+  "wrongProcessExit": {
+    "elapsed": 128.92,
+    "user": 412.83,
+    "system": 14.51,
+    "rss_kib": 5030980,
+    "exit": 1,
+    "timeExit": 1,
+    "variant": "current",
+    "jobs": "4",
+    "diagnostics": "off",
+    "sourceCommit": "96b085829fff6f151533ea4228dc14dda676fad1",
+    "candidateCommit": "96b085829fff6f151533ea4228dc14dda676fad1",
+    "order": 1,
+    "sampleNumber": 1,
+    "fixtureCommit": "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+    "fixtureTree": "e848d7ad03e0c0fca7ec70eb0f678653f70c278b",
+    "binarySha256": "853233619aa206d2d4c24195e26d70fa816a8fbd9d657f0c453522b9266e0020",
+    "binaryVersion": "no-mistakes 0.92.0",
+    "signal": null,
+    "processExit": 0,
+    "deadlineSeconds": 600,
+    "checkOutcome": "failure",
+    "checkAccepted": false
+  },
+  "wrongTimeExit": {
+    "elapsed": 128.92,
+    "user": 412.83,
+    "system": 14.51,
+    "rss_kib": 5030980,
+    "exit": 1,
+    "timeExit": 0,
+    "variant": "current",
+    "jobs": "4",
+    "diagnostics": "off",
+    "sourceCommit": "96b085829fff6f151533ea4228dc14dda676fad1",
+    "candidateCommit": "96b085829fff6f151533ea4228dc14dda676fad1",
+    "order": 1,
+    "sampleNumber": 1,
+    "fixtureCommit": "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
+    "fixtureTree": "e848d7ad03e0c0fca7ec70eb0f678653f70c278b",
+    "binarySha256": "853233619aa206d2d4c24195e26d70fa816a8fbd9d657f0c453522b9266e0020",
+    "binaryVersion": "no-mistakes 0.92.0",
+    "signal": null,
+    "processExit": 1,
+    "deadlineSeconds": 600,
+    "checkOutcome": "failure",
+    "checkAccepted": false
+  }
+}

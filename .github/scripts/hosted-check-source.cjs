@@ -111,6 +111,15 @@ function recordCompletion(output, metadata, finalConfig) {
       {
         complete: true,
         trackedTreeClean: true,
+        ...Object.fromEntries(
+          [
+            "expectedFindings",
+            "expectedExit",
+            "expectedReportSha256",
+            "checkOutcome",
+            "checkAccepted",
+          ].map((key) => [key, metadata[key]]),
+        ),
         initialConfigSha256: metadata.configSha256,
         finalConfigSha256: finalConfig,
         candidateCommit: metadata.currentBuild.commit,

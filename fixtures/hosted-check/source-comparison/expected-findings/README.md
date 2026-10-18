@@ -1,0 +1,1 @@
+The reviewed report is actual main284/candidate96b output from invalid campaign39093709993:16findings and1advisory, bothactualexit1. The pair completion marker is SYNTHETIC for protocol regression only; it does not retroactively validate the canceled campaign or supply accepted performance evidence.

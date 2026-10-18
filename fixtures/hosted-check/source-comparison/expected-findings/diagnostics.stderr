@@ -1,0 +1,3 @@
+[timing] check.total: 100.000ms
+[work] source.reads: 1
+[memory] peak_rss_kib: 1000

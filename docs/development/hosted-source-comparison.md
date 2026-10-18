@@ -11,10 +11,11 @@ budget enforcement remain the default.
 `diagnosticsMode` selects `off`, `on`, or `both` for source comparisons. ON adds
 `--timings --verbose-timings`; both source binaries must emit real `[timing]` and
 `[work]` records. OFF must emit neither. Diagnostics remain on stderr; the check's
-stdout findings and advisories must match byte for byte. Both commands must
-complete successfully. The consumer configuration and tracked tree remain
-unchanged. Invalid source identity, output, diagnostics, or completeness cannot
-be treated as performance evidence.
+stdout findings and advisories must match byte for byte. By default both checks
+must exit zero. The narrow expected-findings mode below can record comparable
+completed checks that still fail; it never changes their exit or acceptance. The
+consumer configuration and tracked tree remain unchanged. Invalid source identity,
+output, diagnostics, or completeness cannot be treated as performance evidence.
 
 The fixed complete campaign uses six fresh VM pairs for each combination of two
 pinned consumer trees, jobs 1/4/automatic and diagnostics OFF/ON: 72 pairs and
@@ -68,3 +69,49 @@ cannot establish a measured no-win. Both retain raw evidence. Do not repeat a
 valid slow observation or valid no-win campaign to seek another outcome. A
 necessary repeat after fixing a proven measurement defect must preserve the
 original attempt, fix and reason separately.
+
+## Registered artifact reuse
+
+An optional numeric `artifactRunId` reuses only an explicitly registered original
+run and its immutable baseline/current artifact IDs. The verifier checks the exact
+requested source commit and checked-out Git tree, all four original file hashes
+(`no-mistakes`, `cpu-probe`, `provenance.json`, `SHA256SUMS`), and the source
+checkout's Cargo lock, original manifest and recorded release-manifest patch.
+Missing, extra, changed or non-file artifact entries fail verification. The source
+checkout must remain clean. The original compiler, commands and build provenance
+remain unchanged; this path installs no Rust compiler and runs no cache/build
+step. It does not claim a new build or new compiler identity.
+
+Only the build job receives `actions: read` for the registered cross-run download.
+The replacement uploads the same production artifact names with identical four
+files, and saves reuse verification separately. Sample jobs still download their
+pair from the replacement run. Arbitrary run IDs, artifact roles or source commits
+cannot enable reuse. Without the input, the existing production build path stays
+in place.
+
+## Expected findings remain failed checks
+
+`expectedFindings` defaults to false and requires an exact source baseline. Its
+opt-in contract is limited to the registered main284/full-stack96b source pair,
+pinned consumer trees, configuration hashes and exact stdout report hashes. A
+completed expected-finding result retains actual exit1, `checkOutcome: failure`
+and `checkAccepted: false`. Non-diagnostic stderr must match its registered
+contract; diagnostic output must satisfy its requested mode and strict parser.
+Runtime exit2, signals, timeouts, missing or changed reports, unexpected stderr
+and mismatched source/configuration are not comparable measurements.
+
+Performance completion/comparability and the paired metric criterion are separate
+from check acceptance. A complete expected-findings sample still fails its check
+and the workflow remains failed even if its performance comparison meets the
+metric criterion. Legacy zero-exit success, default published-baseline enforcement
+and absolute budget rules are unchanged. No findings are suppressed and no
+consumer configuration is edited.
+
+The original attempt at
+[run39093709993](https://github.com/jonathanong/no-mistakes/actions/runs/39093709993)
+used a zero-exit-only source collector on matching normal findings. It remains an
+invalid measurement attempt, with raw exits/reports and cancellation preserved;
+it is not a measured optimization loss or a successful check. A replacement may
+reuse its independently verified immutable production bytes while fixing only
+the explicit expected-outcome contract. Keep both attempts and their harness
+sources; never combine their sample populations or retry valid slow observations.

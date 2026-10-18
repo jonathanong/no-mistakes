@@ -9,5 +9,10 @@
   "fixtureTree": "e848d7ad03e0c0fca7ec70eb0f678653f70c278b",
   "jobs": "4",
   "diagnostics": "on",
-  "sampleNumber": 1
+  "sampleNumber": 1,
+  "expectedFindings": false,
+  "expectedExit": 0,
+  "checkOutcome": "success",
+  "checkAccepted": true,
+  "expectedReportSha256": null
 }

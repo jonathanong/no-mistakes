@@ -1,0 +1,19 @@
+{
+  "baselineRef": "284f95bdc3a5285d4745a238806b7c4aa6ad3d85",
+  "expectedExit": 1,
+  "stdoutSha256": "add9958bd61822a8df86cab2aebd258e842da174374baa33196e142755caaf39",
+  "report": "fixtures/hosted-check/source-comparison/expected-findings/expected.stdout",
+  "findings": 16,
+  "advisories": 1,
+  "fixtures": {
+    "22edf4bfe0a782ac0d030c916dedfd6f8acb499c": {
+      "fixtureTree": "e848d7ad03e0c0fca7ec70eb0f678653f70c278b",
+      "configSha256": "5611a8b6d36bba76d20cebb7e574cd728502d698242c5554295e3f78e4acf4a3"
+    },
+    "92d0a2061bde8d260aa0b86a2d71110ece1a43ca": {
+      "fixtureTree": "11815b62e69a39be94ed790e8984994f50113cd3",
+      "configSha256": "5611a8b6d36bba76d20cebb7e574cd728502d698242c5554295e3f78e4acf4a3"
+    }
+  },
+  "candidateRef": "96b085829fff6f151533ea4228dc14dda676fad1"
+}

@@ -49,11 +49,40 @@ function decision(rows, failures) {
     hasConsistentSlowdown,
   };
 }
+function outcome(rows, failures) {
+  const comparison = decision(rows, failures);
+  const checkAccepted =
+    comparison.validMeasurement &&
+    rows.every((row) =>
+      row.pairs.every((pair) => pair.current.exit === 0 && pair.baseline.exit === 0),
+    );
+  return {
+    ...comparison,
+    measurementComplete: comparison.validMeasurement,
+    performanceCriterionMet: comparison.accepted,
+    accepted: comparison.accepted && checkAccepted,
+    checkAccepted,
+    checkOutcome: checkAccepted ? "success" : "failure",
+    performanceClassification: !comparison.validMeasurement
+      ? "invalid-measurement"
+      : comparison.accepted
+        ? "qualifying-win"
+        : "valid-no-qualifying-win",
+    classification: !comparison.validMeasurement
+      ? "invalid-measurement"
+      : !checkAccepted
+        ? "comparable-with-check-failures"
+        : comparison.accepted
+          ? "qualifying-win"
+          : "valid-no-qualifying-win",
+  };
+}
 function summarize(directory) {
   const refs = {
     candidate: process.env.HOSTED_CHECK_CANDIDATE_REF,
     baseline: process.env.HOSTED_CHECK_BASELINE_REF,
     modes: modes(process.env.HOSTED_CHECK_DIAGNOSTICS_MODE || "off"),
+    expectedFindings: process.env.HOSTED_CHECK_EXPECTED_FINDINGS === "true",
   };
   const { groups, failures, binaries } = load(sampleFiles(directory), refs);
   const historical = JSON.parse(
@@ -97,7 +126,7 @@ function summarize(directory) {
           rows.push({ key, error: error.message, pairs });
         }
       }
-  const verdict = decision(rows, failures);
+  const verdict = outcome(rows, failures);
   const report = {
     refs,
     binaries,
@@ -111,23 +140,18 @@ function summarize(directory) {
     interpretation:
       "Paired relative-variability heuristic, not AA-calibrated noise, significance, guaranteed tails, or causal evidence across different source changes. Historical OFF calibration comes from mixed CPU models and different analyzer versions; its OFF CV is transferred to ON as an explicit limitation alongside observed contemporary ON CV. Old absolute budget outcomes are informational for source comparisons; default published-baseline enforcement is unchanged.",
     ...verdict,
-    classification: !verdict.validMeasurement
-      ? "invalid-measurement"
-      : verdict.accepted
-        ? "qualifying-win"
-        : "valid-no-qualifying-win",
     failures,
     rows,
   };
-  const text = `# Matched source comparison: ${report.classification}\n\nBaseline: \`${refs.baseline}\`. Candidate: \`${refs.candidate}\`. Six fresh pairs per row; empirical p95 equals observed maximum. CPU maximum sums user+system from one sample.\n\n${report.criterion}\n\n${report.interpretation}\n\n${format(rows)}\n\n${failures.join("\n")}`;
+  const text = `# Matched source comparison: ${report.classification}\n\nBaseline: \`${refs.baseline}\`. Candidate: \`${refs.candidate}\`. Check outcome: ${report.checkOutcome}; checkAccepted=${report.checkAccepted}; performanceCriterionMet=${report.performanceCriterionMet}. These are separate outcomes. Six fresh comparable pairs per row; empirical p95 equals observed maximum. CPU maximum sums user+system from one sample.\n\n${report.criterion}\n\n${report.interpretation}\n\n${format(rows)}\n\n${failures.join("\n")}`;
   writeFileSync(join(directory, "summary.json"), JSON.stringify(report, null, 2));
   writeFileSync(join(directory, "summary.md"), text);
   if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, text);
   console.log(text);
-  if (!verdict.accepted)
+  if (!report.accepted)
     throw new Error(
       `${report.classification}: inspect complete raw evidence; invalid measurements are not a measured no-win`,
     );
 }
 
-module.exports = { summarize, format, legacyBudget, decision };
+module.exports = { summarize, format, legacyBudget, decision, outcome };

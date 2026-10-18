@@ -1,3 +1,4 @@
+const { comparisonContract, completedSample } = require("./hosted-check-completion.cjs");
 const { successful } = require("./hosted-check-runtime.cjs");
 
 function mean(values) {
@@ -43,8 +44,21 @@ function compare(pairs, historical) {
     throw new Error("A paired cohort requires six contemporary and historical pairs");
   if (!historical.every((pair) => successful(pair.current) && successful(pair.published)))
     throw new Error("Historical calibration must contain completed successful pairs");
-  if (!pairs.every((pair) => successful(pair.current) && successful(pair.baseline)))
-    throw new Error("Both source checks must complete successfully");
+  if (
+    !pairs.every((pair) => {
+      const contract = comparisonContract(
+        pair.environment || {},
+        pair.environment?.expectedFindings === true,
+      );
+      return (
+        completedSample(pair.current, contract.expectedExit) &&
+        completedSample(pair.baseline, contract.expectedExit)
+      );
+    })
+  )
+    throw new Error(
+      "Both source measurements must complete with their exact expected check status",
+    );
   return { wall: metric(pairs, historical, "elapsed"), rss: metric(pairs, historical, "rss_kib") };
 }
 

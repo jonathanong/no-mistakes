@@ -3,6 +3,7 @@ const { dirname, join } = require("node:path");
 const { hashFile } = require("./hosted-check-runtime.cjs");
 const { diagnosticEvidence, compareBuilds } = require("./hosted-check-source.cjs");
 
+const { comparisonContract, verifyReport } = require("./hosted-check-completion.cjs");
 const calibration = require("../../docs/development/hosted-check-calibration.json");
 
 const FIXTURES = {
@@ -19,6 +20,9 @@ function read(path) {
 }
 function validatePair(pair, refs) {
   const { current, baseline, environment, parity, completion } = pair;
+  const contract = comparisonContract(environment, refs.expectedFindings === true);
+  if (Object.entries(contract).some(([key, value]) => environment[key] !== value))
+    throw new Error("Environment check contract differs");
   const historical = calibration.cohorts[`${current.fixtureCommit}/${current.jobs}`] || [];
   const configs = new Set(historical.map((entry) => entry.environment.configSha256));
   const expectedConfig = [...configs][0];
@@ -27,6 +31,7 @@ function validatePair(pair, refs) {
   if (
     completion?.complete !== true ||
     completion.trackedTreeClean !== true ||
+    Object.entries(contract).some(([key, value]) => completion[key] !== value) ||
     completion.initialConfigSha256 !== expectedConfig ||
     completion.finalConfigSha256 !== expectedConfig ||
     completion.candidateCommit !== refs.candidate ||
@@ -37,7 +42,7 @@ function validatePair(pair, refs) {
     completion.diagnostics !== current.diagnostics ||
     completion.sampleNumber !== current.sampleNumber
   )
-    throw new Error("Missing successful final input-integrity completion record");
+    throw new Error("Missing final input-integrity completion record");
   if (!parity.equal || parity.currentStdoutSha256 !== parity.baselineStdoutSha256)
     throw new Error("Check output parity failed");
   if (
@@ -58,6 +63,8 @@ function validatePair(pair, refs) {
     ["baseline", baseline, refs.baseline],
   ]) {
     if (
+      sample.checkOutcome !== (sample.exit === 0 ? "success" : "failure") ||
+      sample.checkAccepted !== (sample.exit === 0) ||
       sample.variant !== variant ||
       sample.sourceCommit !== source ||
       sample.candidateCommit !== refs.candidate ||
@@ -102,6 +109,11 @@ function loadPair(file, refs) {
   for (const variant of ["current", "baseline"]) {
     if (pair.parity[`${variant}StdoutSha256`] !== hashFile(join(directory, `${variant}.stdout`)))
       throw new Error("Check output hash does not match raw output");
+    verifyReport(
+      hashFile(join(directory, `${variant}.stdout`)),
+      readFileSync(join(directory, `${variant}.stderr`), "utf8"),
+      pair.environment,
+    );
     diagnosticEvidence(
       readFileSync(join(directory, `${variant}.stderr`), "utf8"),
       pair[variant].diagnostics,

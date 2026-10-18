@@ -1,0 +1,24 @@
+{
+  "39093709993": {
+    "current": {
+      "artifactId": 12124318348,
+      "sourceCommit": "96b085829fff6f151533ea4228dc14dda676fad1",
+      "files": {
+        "no-mistakes": "853233619aa206d2d4c24195e26d70fa816a8fbd9d657f0c453522b9266e0020",
+        "cpu-probe": "dbab7e85e2882d454eb36eb441074546a9bbececaac83977d7b5db30f544d32a",
+        "provenance.json": "2a7937d7e857c14faa5d92b2c64348a413b2d78744be867c683e4a921371b855",
+        "SHA256SUMS": "db05716fa20066f60ea4ee657cf96e51991640171c281c6e1385415796a8ac2e"
+      }
+    },
+    "baseline": {
+      "artifactId": 12123918631,
+      "sourceCommit": "284f95bdc3a5285d4745a238806b7c4aa6ad3d85",
+      "files": {
+        "no-mistakes": "b3650bafa7726f51b783481da998d9545a76207407c11f6d1cea7a0eaecbcd47",
+        "cpu-probe": "dbab7e85e2882d454eb36eb441074546a9bbececaac83977d7b5db30f544d32a",
+        "provenance.json": "1ed56230fa551c7583137cee6225ca910b1f432deb25ae45d6b2b8b65c3ce5f7",
+        "SHA256SUMS": "0a2456a5358ed757502c3c6172ac608669bf13f75c17380447b032a223a41982"
+      }
+    }
+  }
+}

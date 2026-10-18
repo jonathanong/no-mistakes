@@ -188,3 +188,10 @@ do not become successful observations after the cap change.
 For an exact source baseline, diagnostics OFF/ON, output parity and the paired
 relative-variability decision rule, see [matched hosted source comparisons](hosted-source-comparison.md).
 This optional mode preserves the default published-baseline budget gate.
+
+Matched source mode also supports narrowly registered artifact reuse and an
+explicit expected-findings contract. Reuse verifies original production bytes and
+source/Cargo provenance; it does not rebuild or relabel the compiler. An expected
+exit1 remains a failed, unaccepted check even when its completed resources can be
+compared. This does not relax the ordinary zero-exit or calibrated-budget gate;
+see the [source comparison contract](hosted-source-comparison.md#expected-findings-remain-failed-checks).

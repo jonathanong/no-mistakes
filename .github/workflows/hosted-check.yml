@@ -8,6 +8,7 @@ on:
       - ".github/workflows/hosted-check.yml"
       - ".github/scripts/hosted-check*.cjs"
       - ".github/scripts/hosted-check-budgets.json"
+      - ".github/scripts/hosted-check*.json"
       - "tests/js/hosted-check*.test.js"
       - "fixtures/hosted-check/**"
   workflow_dispatch:
@@ -23,6 +24,13 @@ on:
         type: choice
         options: ["off", "on", "both"]
         default: "off"
+      artifactRunId:
+        description: "Optional registered run with immutable matching production artifacts; no rebuild"
+        required: false
+      expectedFindings:
+        description: "Matched-only expected findings contract; checks still fail on exit 1"
+        type: boolean
+        default: false
       calibrate:
         description: "Record variance and proposed budgets without enforcing stored limits"
         type: boolean
@@ -37,6 +45,9 @@ concurrency:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      actions: read
     name: ${{ matrix.variant == 'baseline' && 'Build production baseline CLI' || 'Build production candidate CLI' }}
     strategy:
       fail-fast: false
@@ -48,6 +59,9 @@ jobs:
       CANDIDATE_REF: ${{ matrix.variant == 'baseline' && inputs.baselineRef || inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
       BASELINE_REF: ${{ inputs.baselineRef }}
       DIAGNOSTICS_MODE: ${{ inputs.diagnosticsMode || 'off' }}
+      ARTIFACT_RUN_ID: ${{ inputs.artifactRunId }}
+      ARTIFACT_VARIANT: ${{ matrix.variant }}
+      EXPECTED_FINDINGS: ${{ inputs.expectedFindings || false }}
       CARGO_PROFILE_RELEASE_LTO: fat
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
       CARGO_BUILD_JOBS: "1"
@@ -62,7 +76,11 @@ jobs:
           [[ "$CANDIDATE_REF" =~ ^[0-9a-f]{40}$ ]]
           [[ -z "$BASELINE_REF" || "$BASELINE_REF" =~ ^[0-9a-f]{40}$ ]]
           [[ "$DIAGNOSTICS_MODE" =~ ^(off|on|both)$ ]]
-          if [[ "$DIAGNOSTICS_MODE" != off ]]; then test -n "$BASELINE_REF"; fi
+          if [[ "$DIAGNOSTICS_MODE" != off || "$EXPECTED_FINDINGS" == true ]]; then test -n "$BASELINE_REF"; fi
+          if [[ -n "$ARTIFACT_RUN_ID" ]]; then
+            [[ "$ARTIFACT_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+            test -n "$BASELINE_REF"
+          fi
 
       - name: Checkout candidate source
         timeout-minutes: 5
@@ -71,7 +89,51 @@ jobs:
           ref: ${{ env.CANDIDATE_REF }}
           persist-credentials: false
 
+      - name: Checkout artifact reuse verifier
+        if: ${{ inputs.artifactRunId != '' }}
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: reuse-harness
+          persist-credentials: false
+
+      - name: Select registered immutable artifact
+        if: ${{ inputs.artifactRunId != '' }}
+        id: reuse
+        timeout-minutes: 1
+        run: node reuse-harness/.github/scripts/hosted-check-reuse.cjs select "$ARTIFACT_RUN_ID" "$ARTIFACT_VARIANT" "$CANDIDATE_REF"
+
+      - name: Download registered production bytes
+        if: ${{ inputs.artifactRunId != '' }}
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: ${{ steps.reuse.outputs.artifact-id }}
+          run-id: ${{ inputs.artifactRunId }}
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: production-cli
+
+      - name: Verify unchanged bytes and original source-build provenance
+        if: ${{ inputs.artifactRunId != '' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node reuse-harness/.github/scripts/hosted-check-reuse.cjs verify "$ARTIFACT_RUN_ID" "$ARTIFACT_VARIANT" "$CANDIDATE_REF" production-cli "$GITHUB_WORKSPACE" | tee reuse-verification.json
+
+      - name: Preserve reuse verification separately from original artifact
+        if: ${{ inputs.artifactRunId != '' }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: hosted-reuse-verification-${{ matrix.variant }}
+          path: reuse-verification.json
+          if-no-files-found: error
+
       - name: Install production Rust compiler
+        if: ${{ inputs.artifactRunId == '' }}
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         with:
@@ -79,6 +141,7 @@ jobs:
           targets: x86_64-unknown-linux-gnu
 
       - name: Cache production build
+        if: ${{ inputs.artifactRunId == '' }}
         timeout-minutes: 5
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
@@ -87,6 +150,7 @@ jobs:
           cache-bin: "false"
 
       - name: Build with official x86 release flags and default features
+        if: ${{ inputs.artifactRunId == '' }}
         timeout-minutes: 60
         shell: bash
         run: |
@@ -253,6 +317,7 @@ jobs:
           HOSTED_CHECK_BASELINE_ARTIFACT: baseline-cli
           HOSTED_CHECK_DIAGNOSTICS: ${{ matrix.diagnostics }}
           HOSTED_CHECK_JOBS: ${{ matrix.jobs }}
+          HOSTED_CHECK_EXPECTED_FINDINGS: ${{ inputs.expectedFindings || false }}
           EXPECTED_TREE: ${{ matrix.fixture.tree }}
         shell: bash
         run: |
@@ -299,6 +364,7 @@ jobs:
         timeout-minutes: 1
         env:
           HOSTED_CHECK_CALIBRATE: ${{ inputs.calibrate || false }}
+          HOSTED_CHECK_EXPECTED_FINDINGS: ${{ inputs.expectedFindings || false }}
           HOSTED_CHECK_BASELINE_REF: ${{ inputs.baselineRef }}
           HOSTED_CHECK_CANDIDATE_REF: ${{ inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
           HOSTED_CHECK_DIAGNOSTICS_MODE: ${{ inputs.diagnosticsMode || 'off' }}

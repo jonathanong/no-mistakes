@@ -16,5 +16,7 @@
   "sampleNumber": 1,
   "order": 1,
   "binarySha256": "4eb7c8098ee94abe83babd220db0fd9841538d26070222659fc4866371c636e9",
-  "binaryVersion": "synthetic fixture 1"
+  "binaryVersion": "synthetic fixture 1",
+  "checkOutcome": "success",
+  "checkAccepted": true
 }

@@ -1,0 +1,15 @@
+{
+  "equal": true,
+  "baselineStdoutSha256": "add9958bd61822a8df86cab2aebd258e842da174374baa33196e142755caaf39",
+  "currentStdoutSha256": "add9958bd61822a8df86cab2aebd258e842da174374baa33196e142755caaf39",
+  "diagnostics": {
+    "baseline": {
+      "timing": false,
+      "work": false
+    },
+    "current": {
+      "timing": false,
+      "work": false
+    }
+  }
+}
