@@ -92,7 +92,10 @@ fn supplemental_call_sources_share_one_fact_collection_and_graph() {
     assert_eq!(work.get("check.prepare.catalog"), Some(&1), "{work:#?}");
     assert_eq!(work.get("check.prepare.independent"), Some(&1), "{work:#?}");
     assert_eq!(work.get("graph.builds"), Some(&1), "{work:#?}");
-    assert_eq!(work.get("parse.files_after_extract"), work.get("parse.files"));
+    assert_eq!(
+        work.get("parse.files_after_extract"),
+        work.get("parse.files")
+    );
     assert!(results
         .rules
         .iter()
@@ -115,7 +118,10 @@ fn supplemental_call_sources_share_one_fact_collection_and_graph() {
     assert_eq!(work.get("check.prepare.catalog"), Some(&1), "{work:#?}");
     assert_eq!(work.get("check.prepare.independent"), Some(&1), "{work:#?}");
     assert!(work.get("graph.builds").is_none(), "{work:#?}");
-    assert_eq!(work.get("parse.files_after_extract"), work.get("parse.files"));
+    assert_eq!(
+        work.get("parse.files_after_extract"),
+        work.get("parse.files")
+    );
     assert_eq!(
         first_observer.snapshot().work.get("check.prepare.catalog"),
         Some(&1)

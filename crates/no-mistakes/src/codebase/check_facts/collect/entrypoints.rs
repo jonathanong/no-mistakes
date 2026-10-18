@@ -2,6 +2,11 @@ use super::super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod scope;
+mod supplemental;
+use scope::collect_with_scope;
+pub use supplemental::collect_check_facts_with_supplemental_call_sites;
+
 pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan) -> CheckFactMap {
     collect_check_facts_with_playwright(root, files, plan, None)
 }
@@ -86,47 +91,6 @@ pub fn collect_check_facts_with_graph_files_playwright_sources_and_session(
     )
 }
 
-/// Collect call sites outside the ordinary file and graph scopes in the same
-/// request fact pass. Their paths remain addressable without widening either scope.
-#[doc(hidden)]
-pub fn collect_check_facts_with_supplemental_call_sites(
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
-    file_scope: (Vec<PathBuf>, Vec<PathBuf>),
-    supplemental_call_sites: Vec<PathBuf>,
-    plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-    sources: Arc<crate::codebase::ts_source::SourceStore>,
-) -> CheckFactMap {
-    let supplemental = if supplemental_call_sites.is_empty() {
-        crate::codebase::ts_source::FileIdMap::with_inventory(Arc::clone(sources.inventory()))
-    } else {
-        super::collect_fact_map_with_sources(
-            session,
-            root,
-            &supplemental_call_sites,
-            &CheckFactPlan {
-                graph: crate::codebase::ts_source::facts::TsFactPlan {
-                    call_sites: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            None,
-            &sources,
-        )
-    };
-    collect_with_scope(
-        session,
-        root,
-        (file_scope.0, file_scope.1, true),
-        plan,
-        playwright,
-        sources,
-        supplemental,
-    )
-}
-
 pub(crate) fn collect_check_facts_with_precollected_graph_facts(
     root: &Path,
     graph_files: Vec<PathBuf>,
@@ -200,48 +164,6 @@ pub(crate) fn collect_check_facts_with_precollected_file_facts(
         session,
         root,
         (file_scope.0, file_scope.1, true),
-        plan,
-        playwright,
-        sources,
-        precollected,
-    )
-}
-
-fn collect_with_scope(
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    root: &Path,
-    file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
-    mut plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-    sources: Arc<crate::codebase::ts_source::SourceStore>,
-    precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
-) -> CheckFactMap {
-    session.record_work("check.fact_collections", 1);
-    let (files, graph_files, graph_files_complete) = file_scope;
-    let files = plan.with_production_files(files);
-    if plan.graph_context.visible_files.is_none() {
-        let mut visible_files = files.clone();
-        visible_files.extend(graph_files.iter().cloned());
-        if let Some(playwright) = &playwright {
-            visible_files.extend(playwright.source_files().iter().cloned());
-        }
-        plan.graph_context.set_visible_files(visible_files);
-    }
-    if let Some(playwright) = playwright {
-        return super::super::staged_playwright::collect_with_sources_and_session(
-            session,
-            root,
-            (files, graph_files, graph_files_complete),
-            plan,
-            playwright,
-            sources,
-            precollected,
-        );
-    }
-    super::collect_check_facts_inner(
-        session,
-        root,
-        (files, graph_files, graph_files_complete),
         plan,
         playwright,
         sources,

@@ -4,6 +4,8 @@ use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::Path;
 use std::sync::Arc;
 
+mod catalog;
+
 pub(crate) struct PreparedCheckInputs {
     pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
     pub(crate) inferred_roots: no_mistakes::codebase::config::InferredRoots,
@@ -77,42 +79,15 @@ pub(crate) fn prepare_from_shared(
                 if let Some(observer) = no_mistakes::diagnostics::current() {
                     observer.increment("check.prepare.catalog", 1);
                 }
-                let catalog = if let Some(path) = tsconfig_path {
-                    let path = if path.is_absolute() {
-                        path.to_path_buf()
-                    } else {
-                        root.join(path)
-                    };
-                    no_mistakes::codebase::ts_resolver::TsConfigCatalog::forced(
-                        root,
-                        tsconfig.clone(),
-                        Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
-                    )
-                } else {
-                    let mut candidate_roots = vec![root.to_path_buf()];
-                    candidate_roots.extend(
-                        no_mistakes::integration_tests::configured_runner_config_dirs_from_visible(
-                            root,
-                            &config,
-                            root_paths.as_ref(),
-                        ),
-                    );
-                    candidate_roots.extend(
-                    no_mistakes::codebase::rules::require_storybook_stories::configured_project_roots(
-                        root, &config,
-                    ),
-                );
-                    no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources_with_workspace(
+                catalog::prepare(
                     root,
-                    &candidate_roots,
+                    tsconfig_path,
+                    &tsconfig,
+                    &config,
                     root_paths.as_ref(),
                     &sources,
-                    workspace
-                        .as_deref()
-                        .expect("automatic tsconfig catalog requires a workspace projection"),
+                    workspace.as_deref(),
                 )
-                };
-                Arc::new(catalog)
             })
         },
         || {
