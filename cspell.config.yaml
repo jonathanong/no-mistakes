@@ -120,6 +120,7 @@ words:
   - syncpack
   - syncpackrc
   - Symfony
+  - subcheck
   - subclass
   - subclassed
   - subclassing
