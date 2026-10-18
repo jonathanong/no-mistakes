@@ -15,11 +15,12 @@ const {
 const { shouldCheckOptionsFile } = require("./required-call-selector-compile");
 const { createCallSelectors } = require("./required-call-selectors");
 
-function reportMissing(context, node, target, resolved, suppressed, fallback) {
-  if (suppressed(node)) return;
+function reportMissing(context, node, target, resolved, suppressed, fallback, reported) {
+  if (suppressed(node) || reported?.has(node)) return;
   if (hasRequiredOptions(node.arguments[target.optionsPosition - 1], target, context.sourceCode)) {
     return;
   }
+  reported?.add(node);
   const custom = target.message || fallback;
   if (custom) {
     context.report({ node, messageId: "customOptions", data: { message: custom } });
@@ -63,6 +64,7 @@ module.exports = Object.assign(
       const matcher = optionTargets.length > 0 ? createTargetMatcher(context) : null;
       const suppressed = ruleSuppression(context, "require-options-on-imported-call");
       const fallback = typeof options.message === "string" ? options.message : "";
+      const reported = new WeakSet();
 
       return {
         ...(matcher ? matcher.visitors : {}),
@@ -79,12 +81,20 @@ module.exports = Object.assign(
                 resolved.source,
                 resolved.calleeName,
               )) {
-                reportMissing(context, node, target, resolved, suppressed, fallback);
+                reportMissing(context, node, target, resolved, suppressed, fallback, null);
               }
             }
           }
           for (const match of selectors.matches(node)) {
-            reportMissing(context, node, match.target, match.resolved, suppressed, fallback);
+            reportMissing(
+              context,
+              node,
+              match.target,
+              match.resolved,
+              suppressed,
+              fallback,
+              reported,
+            );
           }
         },
       };

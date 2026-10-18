@@ -36,58 +36,38 @@ describe("global name and receiver shape patterns", () => {
     assert.deepEqual(member(["/^client\\.responses$/"]), ["missingOptions"]);
   });
 
-  it("ignores invalid selector patterns and ambiguous kind combinations", () => {
-    const call = "createResponse();\nclient.responses.create();\n";
-    assert.deepEqual(
-      messages(
-        call,
-        RULE,
-        { targets: [{ ...required, globalNamePatterns: ["/[/"] }] },
-        "invalid-global.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        call,
-        RULE,
-        {
-          targets: [
-            {
-              ...required,
-              calleeNamePatterns: ["create"],
-              receiverPatterns: ["/[/"],
-            },
-          ],
-        },
-        "invalid-receiver.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        call,
-        RULE,
-        {
-          targets: [
-            {
-              ...required,
-              globalNamePatterns: ["createResponse"],
-              calleeNamePatterns: ["create"],
-              receiverPatterns: ["*.responses"],
-            },
-          ],
-        },
-        "ambiguous.ts",
-      ),
-      [],
-    );
+  it("rejects a missing kind, mixed kinds, and an invalid pattern at load", () => {
+    const call = "createResponse();\n";
+    const reject = (targets) =>
+      assert.throws(
+        () => messages(call, RULE, { targets }, "selectors-shape.ts"),
+        /schema|oneOf|pattern/i,
+      );
+    reject([{ ...required, calleeNamePatterns: ["create"] }]);
+    reject([
+      {
+        ...required,
+        globalNamePatterns: ["createResponse"],
+        receiverPatterns: ["*.responses"],
+        calleeNamePatterns: ["create"],
+      },
+    ]);
+    reject([{ ...required, globalNamePatterns: ["/[/"] }]);
+    reject([
+      {
+        sourceSpecifierPatterns: ["agent/node"],
+        calleeNamePatterns: ["createResponse"],
+        globalNamePatterns: ["fetch"],
+        ...required,
+      },
+    ]);
   });
 
-  it("keeps imported provenance when a target also lists a global pattern", () => {
-    const source = `import { createResponse } from "agent/node";
-createResponse();
-fetch();
+  it("reports a global and a matching receiver once, including a literal computed alias", () => {
+    const source = `const { ["createResponse"]: respond } = globalThis;
+respond();
+globalThis.createResponse();
+client.responses.create();
 `;
     assert.deepEqual(
       messages(
@@ -95,18 +75,18 @@ fetch();
         RULE,
         {
           targets: [
+            { ...required, globalNamePatterns: ["createResponse"] },
             {
-              sourceSpecifierPatterns: ["agent/node"],
+              ...required,
               calleeNamePatterns: ["createResponse"],
-              globalNamePatterns: ["fetch"],
-              optionsPosition: 1,
-              requiredProperties: ["signal"],
+              receiverPatterns: ["globalThis"],
             },
+            { ...required, calleeNamePatterns: ["create"], receiverPatterns: ["*.responses"] },
           ],
         },
-        "import-only.ts",
+        "selectors-dedupe.ts",
       ),
-      ["missingOptions"],
+      ["missingOptions", "missingOptions", "missingOptions"],
     );
   });
 

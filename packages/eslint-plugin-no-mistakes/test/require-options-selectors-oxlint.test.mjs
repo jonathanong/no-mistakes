@@ -9,18 +9,39 @@ const fixtureRoot = resolve(
   "../../../test-cases/eslint-plugin/require-options-on-imported-call/fixture",
 );
 
+function oxlint(configName) {
+  return spawnSync(
+    process.execPath,
+    [
+      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+      "--config",
+      resolve(fixtureRoot, configName),
+      resolve(fixtureRoot, "selectors-invalid.ts"),
+    ],
+    { encoding: "utf8" },
+  );
+}
+
 describe("oxlint selector support", () => {
+  it("rejects a missing kind, mixed kinds, and an invalid pattern", () => {
+    for (const configName of [
+      ".oxlintrc.selectors-missing-kind.json",
+      ".oxlintrc.selectors-both-kinds.json",
+      ".oxlintrc.selectors-bad-pattern.json",
+    ]) {
+      const result = oxlint(configName);
+      assert.equal(result.error, undefined, result.stderr);
+      assert.notEqual(result.status, 0, configName);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /pattern|oneOf|schema|invalid/i,
+        configName,
+      );
+    }
+  });
+
   it("reports global and receiver-shaped calls through the plugin", () => {
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--config",
-        resolve(fixtureRoot, ".oxlintrc.selectors.json"),
-        resolve(fixtureRoot, "selectors-invalid.ts"),
-      ],
-      { encoding: "utf8" },
-    );
+    const result = oxlint(".oxlintrc.selectors.json");
     assert.equal(result.error, undefined, result.stderr);
     assert.notEqual(result.status, 0);
     assert.match(

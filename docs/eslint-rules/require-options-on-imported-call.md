@@ -63,8 +63,8 @@ client.chat.responses.create({ signal });
   A target uses one selector kind:
   - Imported: `sourceSpecifierPatterns` and `calleeNamePatterns`. Glob or
     `/regex/` strings select the import specifier and exported callee name.
-    If `sourceSpecifierPatterns` is set, the target stays on the imported
-    matcher even when `globalNamePatterns` is also present.
+    A target is exactly one kind. Adding `globalNamePatterns` to an imported
+    target fails at config load.
   - Global: `globalNamePatterns` matches the callee name. Bare calls use
     source text `global`. `globalThis.name`, `window.name`, `self.name`, and
     `global.name` match the same names when that root is not a local binding.
@@ -74,8 +74,9 @@ client.chat.responses.create({ signal });
     matches `responses`), and `/regex/` is tested against the dotted path
     without added anchors. `client.responses.create` matches `*.responses`;
     `client.chat.responses.create` does not.
-  A target that sets both `globalNamePatterns` and `receiverPatterns` is
-  ignored. Incomplete or invalid patterns are ignored.
+  A target that sets both `globalNamePatterns` and `receiverPatterns`, omits
+  its kind, or uses an invalid `/regex/` such as `/[/` fails at config load
+  in ESLint and Oxlint. It does not load and then match nothing.
   Each group also sets:
   - `optionsPosition`: one-based argument index of the options object.
   - `requiredProperties`: property names that must be statically present with a
@@ -118,9 +119,11 @@ Global and receiver selectors do not follow `const alias = createResponse` or
 or `var` object destructure with one initialization and no later writes:
 `const { createResponse: respond } = globalThis` and
 `const { create: make } = client.responses`, including a defaulted binding.
-Reassigned bindings, computed destructure keys, nested patterns, and receiver
-aliases are not reported. A local binding, parameter, catch clause, class, or
-function with the global's name shadows it, and so does a value import. A
+Reassigned bindings, dynamic computed destructure keys, nested patterns, and
+receiver aliases are not reported. A literal computed key is static, so
+`const { ["createResponse"]: respond } = globalThis` is followed. A local
+binding, parameter, catch clause, class, or function with the global's name
+shadows it, and so does a value import. A
 type-only import does not. Ambient declarations do not count as shadowing.
 Receiver shape is the static spelling, so a local named `client` still matches
 `client.responses`. Dynamic members, call receivers, private names, and

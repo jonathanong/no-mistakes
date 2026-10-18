@@ -5,35 +5,56 @@ const { compileTargets, matchingTargets } = require("./async-patterns");
 const { isDefinitelyUndefinedValue } = require("./imported-call-undefined");
 const { propertyName, literalString } = require("./module-mock-helpers");
 
-const patternList = { type: "array", items: { type: "string" } };
+const pathPatternList = { type: "array", items: { type: "string" } };
+// Slash-wrapped values are regexes. An unclosed class such as `/[/` must fail
+// here, before the rule can drop the target and match nothing.
+const selectorPattern = {
+  type: "string",
+  minLength: 1,
+  pattern: "^(?:[^/].*|/(?:[^/\\\\\\[\\]]|\\\\.|\\[[^\\]\\\\]*(?:\\\\.[^\\]\\\\]*)*\\])*/)$",
+};
+const selectorPatterns = { type: "array", minItems: 1, items: selectorPattern };
+const targetOptions = {
+  optionsPosition: { type: "integer", minimum: 1 },
+  requiredProperties: { type: "array", items: { type: "string" }, minItems: 1 },
+  propertyMatch: { type: "string", enum: ["any", "all"] },
+  message: { type: "string", minLength: 1 },
+};
+
+function targetKind(required, properties) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: [...required, "optionsPosition", "requiredProperties"],
+    properties: { ...properties, ...targetOptions },
+  };
+}
 
 const importedCallOptionsSchema = [
   {
     type: "object",
+    additionalProperties: false,
     properties: {
       targets: {
         type: "array",
         items: {
-          type: "object",
-          properties: {
-            sourceSpecifierPatterns: patternList,
-            calleeNamePatterns: patternList,
-            globalNamePatterns: patternList,
-            receiverPatterns: patternList,
-            optionsPosition: { type: "integer", minimum: 1 },
-            requiredProperties: { type: "array", items: { type: "string" }, minItems: 1 },
-            propertyMatch: { type: "string", enum: ["any", "all"] },
-            message: { type: "string", minLength: 1 },
-          },
-          required: ["optionsPosition", "requiredProperties"],
-          additionalProperties: false,
+          oneOf: [
+            targetKind(["sourceSpecifierPatterns", "calleeNamePatterns"], {
+              sourceSpecifierPatterns: selectorPatterns,
+              calleeNamePatterns: selectorPatterns,
+            }),
+            targetKind(["globalNamePatterns"], { globalNamePatterns: selectorPatterns }),
+            targetKind(["receiverPatterns", "calleeNamePatterns"], {
+              receiverPatterns: selectorPatterns,
+              calleeNamePatterns: selectorPatterns,
+            }),
+          ],
         },
       },
       message: { type: "string", minLength: 1 },
-      checkedPathPatterns: patternList,
-      allowedPathPatterns: patternList,
+      checkedPathPatterns: pathPatternList,
+      allowedPathPatterns: pathPatternList,
     },
-    additionalProperties: false,
   },
 ];
 

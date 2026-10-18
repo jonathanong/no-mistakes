@@ -2,13 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { __dirname, lint, messages, require } from "./helpers.mjs";
-
-const {
-  compileCallSelectors,
-  matchesDotted,
-  shouldCheckOptionsFile,
-} = require("../src/rules/required-call-selector-compile.js");
+import { __dirname, lint, messages } from "./helpers.mjs";
 
 const RULE = "require-options-on-imported-call";
 
@@ -89,86 +83,6 @@ describe("selector options, suppression, and file scope", () => {
     assert.deepEqual(
       messages(code, RULE, { ...base, checkedPathPatterns: ["/[/"] }, "agents/client.ts"),
       [],
-    );
-  });
-
-  it("compiles selector targets and skips incomplete ones", () => {
-    assert.deepEqual(compileCallSelectors({}), { globals: [], members: [] });
-    assert.deepEqual(
-      compileCallSelectors({
-        targets: [
-          {
-            globalNamePatterns: ["createResponse"],
-            optionsPosition: 0,
-            requiredProperties: ["signal"],
-          },
-          { globalNamePatterns: ["/[/"], optionsPosition: 1, requiredProperties: ["signal"] },
-          {
-            sourceSpecifierPatterns: ["agent/node"],
-            globalNamePatterns: ["fetch"],
-            optionsPosition: 1,
-            requiredProperties: ["signal"],
-          },
-          {
-            globalNamePatterns: ["createResponse"],
-            receiverPatterns: ["*.responses"],
-            optionsPosition: 1,
-            requiredProperties: ["signal"],
-          },
-          { receiverPatterns: ["*.responses"], optionsPosition: 1, requiredProperties: ["signal"] },
-        ],
-      }),
-      { globals: [], members: [] },
-    );
-    const compiled = compileCallSelectors({
-      targets: [
-        {
-          globalNamePatterns: ["createResponse", "createResponse", ""],
-          optionsPosition: 1,
-          requiredProperties: ["", "signal", "signal"],
-          propertyMatch: "all",
-          message: "Global needs signal",
-        },
-        {
-          calleeNamePatterns: ["create"],
-          receiverPatterns: ["*.responses"],
-          optionsPosition: 2,
-          requiredProperties: ["signal"],
-        },
-      ],
-    });
-    assert.equal(compiled.globals.length, 1);
-    assert.equal(compiled.globals[0].propertyMatch, "all");
-    assert.equal(compiled.globals[0].message, "Global needs signal");
-    assert.deepEqual(compiled.globals[0].requiredProperties, ["signal"]);
-    assert.equal(compiled.globals[0].globalNamePatterns.length, 2);
-    assert.equal(compiled.members.length, 1);
-    assert.equal(compiled.members[0].optionsPosition, 2);
-    assert.equal(compiled.members[0].propertyMatch, "any");
-    const shaped = compileCallSelectors({
-      targets: [
-        {
-          calleeNamePatterns: ["create"],
-          receiverPatterns: ["", null, "/[/", "*.responses", "/^client\\.responses$/"],
-          optionsPosition: 1,
-          requiredProperties: ["signal"],
-        },
-      ],
-    });
-    assert.equal(shaped.members.length, 1);
-    assert.equal(matchesDotted("client.responses", shaped.members[0].receiverPatterns), true);
-    assert.equal(matchesDotted("client.chat.responses", shaped.members[0].receiverPatterns), false);
-    assert.equal(
-      shouldCheckOptionsFile("web/app.ts", { checkedPathPatterns: ["agents/**"] }),
-      false,
-    );
-    assert.equal(
-      shouldCheckOptionsFile("", { checkedPathPatterns: ["**"], allowedPathPatterns: [] }),
-      true,
-    );
-    assert.equal(
-      shouldCheckOptionsFile("agents/skip.ts", { allowedPathPatterns: ["agents/skip.ts"] }),
-      false,
     );
   });
 

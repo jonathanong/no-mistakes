@@ -4,20 +4,31 @@ const { patternToRegExp } = require("./async-patterns");
 const { normalizeRequiredProperties } = require("./imported-call-options");
 const { repoRelativeFilename, stringMatches } = require("./module-mock-helpers");
 
+function compileSelectorPattern(pattern, globSource) {
+  const regexForm = pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2;
+  if (regexForm) {
+    try {
+      return { regex: new RegExp(pattern.slice(1, -1)), glob: false };
+    } catch (error) {
+      throw new Error(`Invalid selector pattern ${pattern}: ${error.message}`);
+    }
+  }
+  const regex = patternToRegExp(globSource);
+  return regex ? { regex, glob: true } : null;
+}
+
 function compileNamePatterns(patterns) {
   if (!Array.isArray(patterns)) return [];
   return patterns
     .filter((pattern) => typeof pattern === "string" && pattern)
-    .map((pattern) => patternToRegExp(pattern))
+    .map((pattern) => compileSelectorPattern(pattern, pattern)?.regex)
     .filter(Boolean);
 }
 
 // Globs use `.` as a segment separator. `/regex/` is tested against the dotted path.
 function compileDottedPattern(pattern) {
   if (typeof pattern !== "string" || !pattern) return null;
-  const regexForm = pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2;
-  const regex = patternToRegExp(regexForm ? pattern : pattern.replaceAll(".", "/"));
-  return regex ? { regex, glob: !regexForm } : null;
+  return compileSelectorPattern(pattern, pattern.replaceAll(".", "/"));
 }
 
 function compileDottedPatterns(patterns) {

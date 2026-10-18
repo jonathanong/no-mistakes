@@ -83,27 +83,28 @@ configure({ other: 1 });
     ]);
   });
 
-  it("is a no-op without complete targets and ignores invalid regexes", () => {
+  it("is a no-op without complete targets and rejects an invalid pattern", () => {
     const code = ruleFixture("invalid.ts");
     assert.deepEqual(messages(code, RULE, undefined, "invalid.ts"), []);
     assert.deepEqual(messages(code, RULE, { targets: [] }, "invalid.ts"), []);
-    assert.deepEqual(
-      messages(
-        code,
-        RULE,
-        {
-          targets: [
-            {
-              sourceSpecifierPatterns: ["/[/"],
-              calleeNamePatterns: ["validateUrl"],
-              optionsPosition: 2,
-              requiredProperties: ["timeoutMs"],
-            },
-          ],
-        },
-        "invalid.ts",
-      ),
-      [],
+    assert.throws(
+      () =>
+        messages(
+          code,
+          RULE,
+          {
+            targets: [
+              {
+                sourceSpecifierPatterns: ["/[/"],
+                calleeNamePatterns: ["validateUrl"],
+                optionsPosition: 2,
+                requiredProperties: ["timeoutMs"],
+              },
+            ],
+          },
+          "invalid.ts",
+        ),
+      /schema|pattern|oneOf/i,
     );
   });
 
