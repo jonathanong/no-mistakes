@@ -21,33 +21,20 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct MutationSta
 #[cfg(test)]
 mod captures;
 #[cfg(test)]
+#[path = "frames/tests/remap.rs"]
 mod remap;
-#[cfg(test)]
-pub(super) use remap::remap;
 
 fn compact_from_roots(
     scopes: &mut ScopeArena,
-    roots: &[Environment],
-    arguments: &[u64],
-    transient: &[super::super::temporaries::TransientRoot],
+    roots: reachable::RootSeeds<'_>,
     returned: &[Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
     captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
 ) -> Compaction {
-    let live = reachable::collect_from_roots(
-        scopes,
-        reachable::RootSeeds {
-            environments: roots,
-            arguments,
-            transient,
-        },
-        returned,
-        arena.read(),
-        mapped,
-        captured,
-    );
+    let live =
+        reachable::collect_from_roots(scopes, roots, returned, arena.read(), mapped, captured);
     let dead = scopes
         .ids()
         .filter(|env| !live.environments.contains(env))

@@ -8,6 +8,8 @@ use crate::fx::FxHashMap;
 mod callback_cleanup;
 #[path = "final_prune_tests/lifecycle.rs"]
 mod lifecycle;
+#[path = "final_prune_tests/mapped_generation.rs"]
+mod mapped_generation;
 #[path = "final_prune_tests/module_domains.rs"]
 mod module_domains;
 #[path = "final_prune_tests/returned_roots.rs"]
@@ -57,7 +59,7 @@ struct Work {
 fn evaluate(evaluator: &mut TestEvaluator<'_>, path: &Path, full: bool) -> Work {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _observer = crate::diagnostics::InvocationGuard::install(observer.clone());
-    super::super::generation::with_collection_mode(full, || {
+    super::super::generation::collection::with_collection_mode(full, || {
         evaluator.module_environment(path);
     });
     let work = observer.snapshot().work;

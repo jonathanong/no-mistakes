@@ -3,8 +3,6 @@ use super::*;
 #[cfg(test)]
 #[path = "tests/prune_state.rs"]
 mod legacy;
-#[cfg(test)]
-pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) use legacy::prune_state;
 
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_mutations(
     state: MutationState<'_>,
@@ -29,9 +27,11 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     let roots = modules.values().copied().collect::<Vec<_>>();
     compact_from_roots(
         scopes,
-        &roots,
-        &[],
-        &[],
+        reachable::RootSeeds {
+            environments: &roots,
+            arguments: &[],
+            transient: &[],
+        },
         &[],
         mapped,
         arena,

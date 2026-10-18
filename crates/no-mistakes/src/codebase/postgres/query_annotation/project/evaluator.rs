@@ -36,7 +36,5 @@ pub(super) fn new<'a, F: Fn(&str, &Path) -> Option<PathBuf>>(
         recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
-    #[cfg(test)]
-    let evaluator = evaluator.with_checkpoint_index_oracle();
-    evaluator
+    evaluator.with_checkpoint_index_oracle()
 }

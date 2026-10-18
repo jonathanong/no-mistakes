@@ -58,8 +58,7 @@ pub(super) struct Frame {
 #[derive(Default)]
 pub(in crate::codebase::postgres::query_annotation) struct Transactions {
     pub(super) frames: Vec<Frame>,
-    #[cfg(test)]
-    pub(super) verify_indexes: bool,
+    pub(super) index_oracle: index_oracle::State,
     pub(super) reclamation: super::reclamation::Reclamation,
 }
 pub(super) struct Change {
@@ -75,4 +74,8 @@ pub(super) struct Delta {
 
 #[cfg(test)]
 #[path = "transactions/tests/index_oracle.rs"]
+mod index_oracle;
+
+#[cfg(not(test))]
+#[path = "transactions/index_oracle_runtime.rs"]
 mod index_oracle;

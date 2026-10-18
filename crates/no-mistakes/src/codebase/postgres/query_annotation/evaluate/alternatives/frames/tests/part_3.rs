@@ -33,9 +33,11 @@ fn compaction_releases_dead_slots_without_remapping_live_handles() {
     let mut captured = FxHashMap::from_iter([(2, FxHashMap::from_iter([("owner".into(), 2)]))]);
     let compacted = compact_from_roots(
         &mut scopes,
-        &[0],
-        &[],
-        &[],
+        reachable::RootSeeds {
+            environments: &[0],
+            arguments: &[],
+            transient: &[],
+        },
         &returned,
         &mut mapped,
         ArenaMut {
@@ -83,9 +85,11 @@ fn argument_roots_preserve_cycles_and_callbacks_without_copying_returns() {
 
     let compacted = compact_from_roots(
         &mut scopes,
-        &[0],
-        &[42],
-        &[],
+        reachable::RootSeeds {
+            environments: &[0],
+            arguments: &[42],
+            transient: &[],
+        },
         &returned,
         &mut mapped,
         ArenaMut {

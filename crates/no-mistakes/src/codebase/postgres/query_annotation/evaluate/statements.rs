@@ -134,9 +134,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // Its previous prefix is no longer proof.
             let names = self.scopes[*env]
                 .iter()
-                .filter_map(|(name, value)| {
-                    matches!(value, Value::Prefix(_, _, _)).then(|| name.clone())
-                })
+                .filter(|&(_, value)| matches!(value, Value::Prefix(_, _, _)))
+                .map(|(name, _)| name.clone())
                 .collect::<Vec<_>>();
             for name in names {
                 let value = if matches!(effect, Value::Unsupported) {

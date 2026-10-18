@@ -1,3 +1,4 @@
+use super::legacy::prune_state;
 use super::*;
 use crate::codebase::postgres::query_annotation::evaluate::frame_arena::ScopeArena;
 

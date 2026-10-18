@@ -95,7 +95,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.restore_checkpoint(old.iter());
         self.finish_checkpoint(cp);
         self.reclaim_dead_state();
-        #[cfg(test)]
         self.assert_checkpoint_indexes();
         if self.transactions.frames.is_empty() && self.active_module_initials.is_empty() {
             self.scopes.clear_allocation_log();

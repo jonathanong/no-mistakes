@@ -26,9 +26,11 @@ fn stable_handles_still_prune_dead_argument_and_freshness_state() {
     let mut captured = FxHashMap::from_iter([(root, FxHashMap::default())]);
     let compacted = compact_from_roots(
         &mut scopes,
-        &[root],
-        &[],
-        &[],
+        reachable::RootSeeds {
+            environments: &[root],
+            arguments: &[],
+            transient: &[],
+        },
         &[],
         &mut mapped,
         ArenaMut {

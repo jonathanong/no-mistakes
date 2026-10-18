@@ -1,3 +1,4 @@
+#[test]
 fn bench_shard_rejects_unknown_values() {
     for current in [Some("grap"), Some("GRAPH"), Some("cpu")] {
         let err = parse_bench_shard(current).expect_err("unknown shard names must fail");

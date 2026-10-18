@@ -2,11 +2,15 @@
 use super::super::Evaluator;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
+#[derive(Default)]
+pub(in crate::codebase::postgres::query_annotation::evaluate) struct State {
+    enabled: bool,
+}
 impl<F> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation) fn with_checkpoint_index_oracle(
         mut self,
     ) -> Self {
-        self.transactions.verify_indexes = true;
+        self.transactions.index_oracle.enabled = true;
         self
     }
 }
@@ -14,7 +18,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn assert_checkpoint_indexes(
         &self,
     ) {
-        if !self.transactions.verify_indexes {
+        if !self.transactions.index_oracle.enabled {
             return;
         }
         let mut readers = FxHashMap::<_, FxHashMap<_, FxHashSet<_>>>::default();

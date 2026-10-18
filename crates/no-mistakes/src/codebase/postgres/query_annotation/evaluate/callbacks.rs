@@ -1,6 +1,7 @@
 mod dependencies;
 mod imports;
 mod memo;
+mod ordering;
 mod state;
 mod values;
 use super::{calls::scopes, Environment, Evaluator, Value};
@@ -66,7 +67,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             if changed.is_empty() && callbacks.is_empty() {
                 break;
             }
-            callbacks.sort_unstable_by(|left, right| left.0.cmp(&right.0));
+            ordering::sort(&mut callbacks, &self.scopes);
             for (key, budget, value) in callbacks {
                 self.set_transaction_flag(super::transactions::Cell::CallbackSeen(key), false);
                 self.callback_values(std::slice::from_ref(&value), budget, &mut state);

@@ -14,11 +14,11 @@ fn prefixes(value: &Value, out: &mut FxHashMap<u64, Value>) {
         | Value::Object(values)
         | Value::Record(values, _)
         | Value::Joined(values)
-        | Value::Possible(values) => {
-            if values.contains_reference() {
-                for value in values {
-                    prefixes(value, out);
-                }
+        | Value::Possible(values)
+            if values.contains_reference() =>
+        {
+            for value in values {
+                prefixes(value, out);
             }
         }
         _ => {}

@@ -155,5 +155,3 @@ fn bench_shard_named_values_isolate_one_surface() {
         }
     }
 }
-
-#[test]

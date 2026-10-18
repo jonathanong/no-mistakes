@@ -81,10 +81,10 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.invalidate_builders(&values);
         let names = self.scopes[env]
             .iter()
-            .filter_map(|(name, value)| {
-                (!shadowed.contains(name) && matches!(value, Value::Prefix(_, _, _)))
-                    .then(|| name.clone())
+            .filter(|&(name, value)| {
+                !shadowed.contains(name) && matches!(value, Value::Prefix(_, _, _))
             })
+            .map(|(name, _)| name.clone())
             .collect::<Vec<_>>();
         for name in names {
             self.write_binding(env, name, Value::Unknown);

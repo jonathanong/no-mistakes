@@ -1,10 +1,107 @@
 use super::*;
+use crate::fx::FxHashSet;
+use std::{cell::RefCell, collections::HashMap, ops::DerefMut, sync::Arc};
+
+type BuilderIndexes = HashMap<usize, (FxHashMap<String, Value>, Arc<FxHashSet<u64>>)>;
+
+thread_local! {
+    static BUILDER_INDEXES: RefCell<BuilderIndexes> = RefCell::new(HashMap::new());
+}
 
 impl Scope {
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn shares_storage_with(
+        &self,
+        other: &Self,
+    ) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn builder_index_initialized(
         &self,
     ) -> bool {
-        self.0.builders.get().is_some()
+        let key = Arc::as_ptr(&self.0) as usize;
+        BUILDER_INDEXES.with(|indexes| {
+            indexes
+                .borrow()
+                .get(&key)
+                .is_some_and(|(values, _)| values == &self.0.values)
+        })
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn contains_builders(
+        &self,
+        ids: &FxHashSet<u64>,
+    ) -> bool {
+        let key = Arc::as_ptr(&self.0) as usize;
+        let values = self.0.values.clone();
+        let builders = BUILDER_INDEXES.with(|indexes| {
+            let mut indexes = indexes.borrow_mut();
+            if indexes
+                .get(&key)
+                .is_none_or(|(cached, _)| cached != &values)
+            {
+                let mut found = FxHashSet::default();
+                let mut visited = FxHashSet::default();
+                for value in values.values() {
+                    collect_builders(value, &mut found, &mut visited);
+                }
+                indexes.insert(key, (values, Arc::new(found)));
+            }
+            indexes.get(&key).expect("builder index inserted").1.clone()
+        });
+        !builders.is_disjoint(ids)
+    }
+}
+
+fn collect_builders(value: &Value, found: &mut FxHashSet<u64>, visited: &mut FxHashSet<*const ()>) {
+    match value {
+        Value::Prefix(_, _, Some(id)) => {
+            found.insert(*id);
+        }
+        Value::Promise(value) | Value::Evaluated(value, _) => {
+            collect_builders(value, found, visited)
+        }
+        Value::Aggregate(values)
+        | Value::References(values)
+        | Value::Object(values)
+        | Value::Record(values, _)
+        | Value::Joined(values)
+        | Value::Possible(values)
+            if values.contains_reference() && visited.insert(values.identity()) =>
+        {
+            for value in values {
+                collect_builders(value, found, visited);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn builder_index_identity(scope: &Scope) -> usize {
+    let key = Arc::as_ptr(&scope.0) as usize;
+    BUILDER_INDEXES.with(|indexes| {
+        Arc::as_ptr(
+            &indexes
+                .borrow()
+                .get(&key)
+                .expect("builder index initialized")
+                .1,
+        ) as usize
+    })
+}
+
+impl<'a> IntoIterator for &'a mut Scope {
+    type Item = (&'a String, &'a mut Value);
+    type IntoIter = std::collections::hash_map::IterMut<'a, String, Value>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
+impl DerefMut for Scope {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut Arc::make_mut(&mut self.0).values
     }
 }
 
@@ -30,9 +127,9 @@ fn builder_index_reuses_snapshots_and_follows_every_write() {
     ]));
     let snapshot = scope.clone();
     assert!(scope.contains_builders(&ids));
-    let index = scope.0.builders.get().unwrap() as *const _;
+    let index = builder_index_identity(&scope);
     assert!(snapshot.contains_builders(&FxHashSet::from_iter([8])));
-    assert_eq!(index, snapshot.0.builders.get().unwrap() as *const _);
+    assert_eq!(index, builder_index_identity(&snapshot));
     assert!(!scope.contains_builders(&FxHashSet::from_iter([9])));
     assert!(scope == snapshot);
     assert_eq!((&scope).into_iter().count(), 3);

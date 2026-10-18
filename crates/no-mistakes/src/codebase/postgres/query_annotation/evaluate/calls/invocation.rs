@@ -61,7 +61,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             // unknown. Events recorded while evaluating the body are just as
             // uncertain as its return value and captured builders.
             async_suspension::invalidate_new_events(&mut self.events, &prior_events);
-            self.invalidate_builders(&arguments);
+            self.invalidate_builders(arguments);
             self.invalidate_captured(captured, &function);
             return Value::Promise(Box::new(Value::Unknown));
         }

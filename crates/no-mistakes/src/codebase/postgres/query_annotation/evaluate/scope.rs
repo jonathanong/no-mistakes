@@ -1,25 +1,10 @@
 use super::Value;
 use crate::fx::FxHashMap;
-#[cfg(test)]
-use crate::fx::FxHashSet;
-#[cfg(test)]
-use std::sync::OnceLock;
 use std::{ops::Deref, sync::Arc};
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct Bindings {
     values: FxHashMap<String, Value>,
-    #[cfg(test)]
-    builders: OnceLock<FxHashSet<u64>>,
-}
-impl Clone for Bindings {
-    fn clone(&self) -> Self {
-        Self {
-            values: self.values.clone(),
-            #[cfg(test)]
-            builders: OnceLock::new(),
-        }
-    }
 }
 impl PartialEq for Bindings {
     fn eq(&self, other: &Self) -> bool {
@@ -28,88 +13,29 @@ impl PartialEq for Bindings {
 }
 impl Eq for Bindings {}
 
-/// Request-local snapshots share immutable bindings and their builder index.
-/// Any write detaches the bindings and invalidates the index before mutation.
+/// Request-local snapshots share immutable bindings until a write detaches them.
 #[derive(Clone, Default, Eq, PartialEq)]
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 
 impl Scope {
-    #[cfg(test)]
-    pub(super) fn shares_storage_with(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
     pub(super) fn restore_binding(&mut self, name: String, value: Option<Value>) {
         let bindings = Arc::make_mut(&mut self.0);
-        #[cfg(test)]
-        bindings.builders.take();
         if let Some(value) = value {
             bindings.values.insert(name, value);
         } else {
             bindings.values.remove(&name);
         }
     }
-    #[cfg(test)]
-    pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
-        let builders = self.0.builders.get_or_init(|| {
-            fn collect(
-                value: &Value,
-                ids: &mut FxHashSet<u64>,
-                visited: &mut FxHashSet<*const ()>,
-            ) {
-                match value {
-                    Value::Prefix(_, _, Some(id)) => {
-                        ids.insert(*id);
-                    }
-                    Value::Promise(value) | Value::Evaluated(value, _) => {
-                        collect(value, ids, visited)
-                    }
-                    Value::Aggregate(values)
-                    | Value::References(values)
-                    | Value::Object(values)
-                    | Value::Record(values, _)
-                    | Value::Joined(values)
-                    | Value::Possible(values)
-                        if values.contains_reference() && visited.insert(values.identity()) =>
-                    {
-                        for value in values {
-                            collect(value, ids, visited);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            let mut builders = FxHashSet::default();
-            let mut visited = FxHashSet::default();
-            for value in self.values() {
-                collect(value, &mut builders, &mut visited);
-            }
-            builders
-        });
-        !builders.is_disjoint(ids)
-    }
 }
 impl From<FxHashMap<String, Value>> for Scope {
     fn from(values: FxHashMap<String, Value>) -> Self {
-        Self(Arc::new(Bindings {
-            values,
-            #[cfg(test)]
-            builders: OnceLock::new(),
-        }))
+        Self(Arc::new(Bindings { values }))
     }
 }
 impl Deref for Scope {
     type Target = FxHashMap<String, Value>;
     fn deref(&self) -> &Self::Target {
         &self.0.values
-    }
-}
-#[cfg(test)]
-impl std::ops::DerefMut for Scope {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        let bindings = Arc::make_mut(&mut self.0);
-        #[cfg(test)]
-        bindings.builders.take();
-        &mut bindings.values
     }
 }
 impl<'a> IntoIterator for &'a Scope {
@@ -119,14 +45,5 @@ impl<'a> IntoIterator for &'a Scope {
         self.iter()
     }
 }
-#[cfg(test)]
-impl<'a> IntoIterator for &'a mut Scope {
-    type Item = (&'a String, &'a mut Value);
-    type IntoIter = std::collections::hash_map::IterMut<'a, String, Value>;
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter_mut()
-    }
-}
-
 #[cfg(test)]
 mod tests;

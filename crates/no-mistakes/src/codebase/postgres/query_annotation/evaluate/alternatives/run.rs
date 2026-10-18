@@ -22,20 +22,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.revoke_changed_freshness(checkpoint);
             self.collect_arm_generation(checkpoint, &returned);
             joined.add(self.finish_transaction(checkpoint), precise);
-            #[cfg(test)]
             self.assert_checkpoint_indexes();
         }
         joined.apply(self);
         if !precise {
             self.taint_changed_bindings(&joined.changed_builders);
         }
-        #[cfg(test)]
         self.assert_checkpoint_indexes();
         joined.release_pins(self);
         let mut remembered = joined.remembered_roots(self);
         remembered.extend(self.finish_alternative_module_snapshot());
         self.collect_final_generation(base, identities, &remembered, &returned);
-        #[cfg(test)]
         self.assert_checkpoint_indexes();
         if self.transactions.frames.is_empty() && self.active_module_initials.is_empty() {
             self.scopes.clear_allocation_log();

@@ -62,13 +62,18 @@ fn lazy_module_argument_ids_use_shared_definite_intersections() {
     for _mask in ["property absence", "permanent mapping disconnection"] {
         let mut common = None;
         let mut private = crate::fx::FxHashSet::default();
-        super::merge::definite(
+        super::merge::tests::legacy::definite(
             &mut common,
             &mut private,
             &crate::fx::FxHashSet::from_iter([(id, 0)]),
             &shared,
         );
-        super::merge::definite(&mut common, &mut private, &Default::default(), &shared);
+        super::merge::tests::legacy::definite(
+            &mut common,
+            &mut private,
+            &Default::default(),
+            &shared,
+        );
         assert!(
             common.unwrap().is_empty(),
             "the pristine sibling retains its callback slot"

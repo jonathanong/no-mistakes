@@ -130,11 +130,11 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
     assert!(matches!(scopes[0]["bare"], Value::Prefix(_, _, Some(_))));
     let callback = evaluator.scopes[root]["callback"].clone();
     let mut dense_joined = FxHashMap::default();
-    super::merge::objects(
+    super::merge::tests::legacy::objects(
         &mut dense_joined,
         &FxHashMap::from_iter([(1000, vec![callback.clone()])]),
     );
-    super::merge::objects(
+    super::merge::tests::legacy::objects(
         &mut dense_joined,
         &FxHashMap::from_iter([(1000, vec![Value::Unknown])]),
     );

@@ -52,20 +52,20 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
     let root = evaluator.module_environment(&path);
     // Restoring the four two-arm alternatives updates only arm-created
     // readers. Their compactions do not change capture ownership either.
-    assert!(!observer
-        .snapshot()
-        .work
-        .contains_key("postgres.annotation.captured_reader_rebuilds"));
+    assert!(
+        !observer
+            .snapshot()
+            .work
+            .contains_key("postgres.annotation.captured_reader_rebuilds")
+    );
     for (name, references) in [("scalar", false), ("callback", true)] {
-        let original =
-            vec![
-                FxHashMap::from_iter([("value".into(), evaluator.scopes[root][name].clone())])
-                    .into(),
-            ];
+        let original = vec![
+            FxHashMap::from_iter([("value".into(), evaluator.scopes[root][name].clone())]).into(),
+        ];
         let mut joined = original.clone();
         let current =
             vec![FxHashMap::from_iter([("value".into(), super::super::Value::Unknown)]).into()];
-        super::bindings::join_with_sql(&mut joined, &current, &original, false);
+        super::bindings::tests::legacy::join_with_sql(&mut joined, &current, &original, false);
         if references {
             assert!(matches!(joined[0]["value"], super::super::Value::Joined(_)));
         } else {

@@ -1,7 +1,10 @@
 use super::super::super::Value;
-use super::binding_or_unproven;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::fx_map;
+use legacy::{binding_or_unproven, join_with_sql};
+
+#[path = "tests/legacy.rs"]
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) mod legacy;
 
 fn prefix(text: &str, id: Option<u64>) -> Value {
     Value::Prefix(text.to_string(), true, id)
@@ -134,5 +137,5 @@ fn unchanged_binding_joins_keep_the_shared_scope_snapshot() {
 }
 
 fn join(joined: &mut [Scope], current: &[Scope], original: &[Scope]) {
-    super::join_with_sql(joined, current, original, false)
+    join_with_sql(joined, current, original, false)
 }

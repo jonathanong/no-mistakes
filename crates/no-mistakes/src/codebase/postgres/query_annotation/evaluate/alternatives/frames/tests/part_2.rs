@@ -52,9 +52,11 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
     ]);
     let compacted = compact_from_roots(
         &mut scopes,
-        &[0],
-        &[],
-        &[],
+        reachable::RootSeeds {
+            environments: &[0],
+            arguments: &[],
+            transient: &[],
+        },
         &returned,
         &mut mapped,
         ArenaMut {
