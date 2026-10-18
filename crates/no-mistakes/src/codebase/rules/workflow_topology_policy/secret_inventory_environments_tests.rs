@@ -103,15 +103,20 @@ fn exempt_names_that_are_explicitly_declared_still_count_as_used() {
 #[test]
 fn job_environment_does_not_apply_to_workflow_level_env() {
     let findings = run("queued-env", ".no-mistakes.yml").unwrap();
+    // ENV_ONLY stays undeclared. Its unused claim is withheld because
+    // workflow-level env versus job environment is not verified.
     assert_eq!(findings.len(), 2, "{findings:?}");
     assert_eq!(findings[0].file, ".github/workflows/check.yml");
-    assert_eq!(findings[0].line, 6);
+    assert_eq!(findings[0].line, 5);
     assert!(findings[0].message.contains("undeclared secret ENV_ONLY"));
     assert_eq!(findings[1].file, ".no-mistakes.yml");
-    assert_eq!(findings[1].line, 10);
+    assert_eq!(findings[1].line, 12);
     assert!(findings[1]
         .message
-        .contains("unused declared secret ENV_ONLY in prod"));
+        .contains("unused declared secret OTHER_UNUSED in stage"));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.message.contains("unused declared secret ENV_ONLY")));
 }
 
 #[test]

@@ -1,4 +1,5 @@
-//! Local composite actions referenced by `uses: ./...`.
+//! Local composite actions referenced by `uses: ./...`, including `uses: ./`
+//! for the repository-root action.
 //!
 //! Secret inventory must not parse every visible `action.yml`. Vendored and
 //! fixture copies are included only when a workflow or an already referenced
@@ -95,13 +96,20 @@ fn collect_local_uses(value: &Value, uses: &mut Vec<String>) {
 fn local_use_relative(uses: &str) -> Option<String> {
     let uses = uses.trim().replace('\\', "/");
     let rest = uses.strip_prefix("./")?.trim_matches('/');
-    if rest.is_empty() || rest.split('/').any(|part| part == "..") {
+    if rest.split('/').any(|part| part == "..") {
         return None;
+    }
+    // `uses: ./` and `uses: ./.` are the repository-root action.
+    if rest.is_empty() || rest == "." {
+        return Some(String::new());
     }
     Some(rest.to_owned())
 }
 
 fn descriptor_relatives(path: &str) -> Vec<String> {
+    if path.is_empty() || path == "." {
+        return vec!["action.yml".to_owned(), "action.yaml".to_owned()];
+    }
     let lower = path.to_ascii_lowercase();
     if lower == "action.yml"
         || lower == "action.yaml"

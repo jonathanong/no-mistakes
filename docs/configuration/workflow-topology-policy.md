@@ -49,16 +49,10 @@ For a job with a literal environment, that environment's declaration takes
 precedence for a same-named secret and a missing environment name falls back to
 the repository inventory.
 
-Workflow-level `env` is evaluated once when the run is queued, before any job
-starts. It is checked only against `repository`. A job `environment:` does not
-apply to that map, even when every job uses the same environment. The
-[secrets reference](https://docs.github.com/en/actions/reference/secrets-reference)
-states: "Organization and repository secrets are read when a workflow run is
-queued, and environment secrets are read when a job referencing the environment
-starts." The workflow `env` key is separate from `jobs.<job_id>.env` in the
-[context availability](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability)
-table and is not re-evaluated per job. Environment secrets are only available
-to workflow jobs that reference the environment.
+Workflow-level references, including top-level `env`, are checked against
+`repository`. A name missing there is undeclared. Whether that map is evaluated
+again for each job `environment` is not verified, so the undeclared finding is
+kept and the same name is not reported unused from an environment inventory.
 
 Reusable workflow contracts define aliases, not inventory entries. If a caller
 maps `DEPLOY_KEY: ${{ secrets.CI_DEPLOY_TOKEN }}`, the caller's source name is
@@ -84,7 +78,12 @@ statically.
 Incomplete analysis only affects the unused proof. Incomplete findings are
 emitted only when `reportUnused` is `true`. With the default
 `reportUnused: false`, those inputs do not fail the check by themselves. An
-incomplete result never hides a static undeclared `secrets.NAME` reference.
+incomplete result never hides a static undeclared `secrets.NAME` reference. A
+`workflow_call` reference that is not a contract alias is undeclared when the
+name is absent from `repository` and from every environment inventory, including
+when `reportUnused` is false. A name present in either inventory is not an
+undeclared finding; the missing contract only blocks the unused proof.
+`secrets: inherit` can pass those caller secrets.
 
 These inputs make unused-name analysis incomplete:
 
@@ -114,9 +113,12 @@ location.
 Composite actions cannot read the `secrets` context directly, even when that
 name appears in the inventory. Pass a value from the calling workflow through
 an action input or environment variable instead. Inventory declarations do
-not make direct composite-action access valid. Only composite actions reached
-by `uses: ./...` from a workflow, or from an action already reached that way,
-are scanned. An unreferenced vendored or fixture `action.yml` is ignored.
+not make direct composite-action access valid. `uses: ./` is the repository-root
+`action.yml` or `action.yaml`. Only composite actions reached through
+`uses: ./...` from a workflow, or from an action already reached that way, are
+scanned. Actions not reached that way are skipped, including actions used only
+by remote callers, actions invoked by a path in a script, and an unreferenced
+vendored or fixture `action.yml`.
 
 Bare `if` expressions are scanned only for real job-level and step-level `if:`
 keys. An action input named `if` under `with:` is ordinary text.

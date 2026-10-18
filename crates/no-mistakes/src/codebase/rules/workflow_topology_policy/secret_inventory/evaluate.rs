@@ -71,15 +71,9 @@ pub(in super::super) fn lint(
             used: &mut used,
             findings: &mut findings,
         };
-        // Workflow-level `env` is evaluated once when the run is queued, not
-        // once per job. Environment secrets are unavailable there even when
-        // every job sets `environment:`. The workflow `env` key is separate
-        // from `jobs.<job_id>.env` and is not re-evaluated per job
-        // (https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability).
-        // https://docs.github.com/en/actions/reference/secrets-reference
-        // "Organization and repository secrets are read when a workflow run is
-        // queued, and environment secrets are read when a job referencing the
-        // environment starts."
+        // Checked against repository names. Whether workflow-level `env` also
+        // sees job `environment` secrets is not verified, so those environment
+        // declarations are not reported unused.
         for reference in &document.references {
             complete &= resolver.reference(
                 path,
@@ -88,6 +82,7 @@ pub(in super::super) fn lint(
                 &aliases,
                 reusable,
             );
+            resolver.withhold_workflow_level_environment_unused(reference);
         }
         for scope in document.jobs.values() {
             for reference in &scope.references {

@@ -2,9 +2,11 @@ use super::*;
 use std::path::{Path, PathBuf};
 
 #[test]
-fn local_use_paths_reject_non_local_empty_and_parent_segments() {
+fn local_use_paths_map_the_repository_root_and_reject_parents() {
     assert_eq!(local_use_relative("actions/checkout@v4"), None);
-    assert_eq!(local_use_relative("./"), None);
+    assert_eq!(local_use_relative("./"), Some(String::new()));
+    assert_eq!(local_use_relative("./."), Some(String::new()));
+    assert_eq!(local_use_relative("././"), Some(String::new()));
     assert_eq!(local_use_relative("./../secret/action.yml"), None);
     assert_eq!(
         local_use_relative(r".\actions\outer"),
@@ -43,6 +45,8 @@ fn tagged_and_non_string_uses_do_not_invent_local_actions() {
 
 #[test]
 fn descriptors_follow_directories_and_ignore_workflow_files() {
+    assert_eq!(descriptor_relatives(""), ["action.yml", "action.yaml"]);
+    assert_eq!(descriptor_relatives("."), ["action.yml", "action.yaml"]);
     assert_eq!(
         descriptor_relatives("actions/outer"),
         ["actions/outer/action.yml", "actions/outer/action.yaml"]

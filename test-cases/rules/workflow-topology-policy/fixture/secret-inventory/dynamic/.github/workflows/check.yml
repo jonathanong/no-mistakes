@@ -1,4 +1,6 @@
 on: push
+env:
+  dyn: '${{ secrets[inputs.secret] }}'
 jobs:
   selectors:
     runs-on: ubuntu-latest

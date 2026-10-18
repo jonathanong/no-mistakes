@@ -146,12 +146,9 @@ jobs:
 ```
 
 For secret names, this workflow-level use is undeclared unless `DEPLOY_TOKEN`
-is listed in the repository inventory. Top-level `env` is not a job, so a job
-`environment:` does not supply environment secrets there. The
-[secrets reference](https://docs.github.com/en/actions/reference/secrets-reference)
-states: "Organization and repository secrets are read when a workflow run is
-queued, and environment secrets are read when a job referencing the environment
-starts."
+is listed in the repository inventory. Whether top-level `env` is evaluated
+with each job's `environment` secrets is not verified, so the undeclared
+finding stays and that environment name is not reported unused.
 
 ```yaml
 env:
@@ -168,7 +165,13 @@ organization secrets and Dependabot secrets under `repository`. Remove the
 reference, or pass a composite action value through an input. Findings point to
 the source file and line. Incomplete analysis is reported only when
 `reportUnused` is on; it blocks the unused proof and does not hide a static
-undeclared name. See the
+undeclared name. A `workflow_call` reference with no contract alias is still
+undeclared when the name is absent from the repository inventory and every
+environment inventory. Composite actions are scanned only when a workflow, or
+an action already reached that way, references them through `uses: ./...`.
+`uses: ./` is the repository-root action. Actions not reached that way are not
+scanned, including actions used only by remote callers and actions invoked by
+a path in a script. See the
 [inventory guide](../configuration/workflow-topology-policy.md).
 
 ## Suppression

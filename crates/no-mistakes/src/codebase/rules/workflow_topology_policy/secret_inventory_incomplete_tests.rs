@@ -8,7 +8,7 @@ fn dynamic_selectors_whole_context_and_dynamic_environments_are_explicitly_incom
             .iter()
             .map(|finding| (finding.line, finding.message.contains("undeclared")))
             .collect::<Vec<_>>(),
-        [(6, false), (7, false), (12, false), (15, true)]
+        [(3, false), (8, false), (9, false), (14, false), (17, true)]
     );
     assert!(findings
         .iter()
@@ -21,8 +21,11 @@ fn dynamic_selectors_whole_context_and_dynamic_environments_are_explicitly_incom
         .contains("dynamic selector or whole secrets context"));
     assert!(findings[2]
         .message
+        .contains("dynamic selector or whole secrets context"));
+    assert!(findings[3]
+        .message
         .contains("environment is not a literal name"));
-    assert!(findings[3].message.contains("undeclared secret NOT_LISTED"));
+    assert!(findings[4].message.contains("undeclared secret NOT_LISTED"));
     assert!(!findings.iter().any(|finding| {
         finding.message.contains("ENV_ONLY")
             || finding.message.contains("GITHUB_TOKEN")
@@ -30,6 +33,17 @@ fn dynamic_selectors_whole_context_and_dynamic_environments_are_explicitly_incom
             || finding.message.contains("KNOWN")
             || finding.message.starts_with("unused declared")
     }));
+}
+
+#[test]
+fn repository_root_composite_action_is_scanned() {
+    let findings = run("root-action", ".no-mistakes.yml").unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "action.yml");
+    assert_eq!(findings[0].line, 5);
+    assert!(findings[0]
+        .message
+        .contains("composite actions cannot access the secrets context directly"));
 }
 
 #[test]

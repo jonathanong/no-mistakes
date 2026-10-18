@@ -8,4 +8,6 @@ rules:
         environments:
           prod:
             - ENV_ONLY
+          stage:
+            - OTHER_UNUSED
         reportUnused: true

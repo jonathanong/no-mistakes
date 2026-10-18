@@ -1,6 +1,5 @@
-# Workflow-level env is read when the run is queued, before any job starts.
-# Applying environment: prod here would hide a real undeclared reference and
-# a real unused prod secret.
+# Unused claim withheld: workflow-level env vs job environment is not verified.
+# ENV_ONLY stays undeclared against the repository inventory.
 on: push
 env:
   K: ${{ secrets.ENV_ONLY }}

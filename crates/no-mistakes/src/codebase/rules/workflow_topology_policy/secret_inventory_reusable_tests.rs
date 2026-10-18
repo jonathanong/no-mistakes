@@ -112,7 +112,7 @@ fn reusable_references_without_contract_aliases_are_incomplete_even_if_repositor
             .iter()
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [9, 12, 14]
+        [9, 12, 14, 14]
     );
     assert!(findings
         .iter()
@@ -126,9 +126,39 @@ fn reusable_references_without_contract_aliases_are_incomplete_even_if_repositor
     assert!(findings[2]
         .message
         .contains("reusable secret has no declared contract source"));
+    // OTHER is in no inventory. REPO_NAME is declared, so it stays incomplete only.
+    assert!(findings[3].message.contains("undeclared secret OTHER"));
     assert!(!findings.iter().any(|finding| {
-        finding.message.contains("undeclared secret")
+        finding.message.contains("undeclared secret REPO_NAME")
+            || finding.message.contains("undeclared secret ALIAS")
             || finding.message.starts_with("unused declared")
+    }));
+}
+
+#[test]
+fn report_unused_off_still_reports_workflow_call_names_missing_from_every_inventory() {
+    let findings = run("reusable-undeclared", ".no-mistakes.yml").unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            (".github/workflows/reusable.yml", 16),
+            (".github/workflows/reusable.yml", 21),
+        ]
+    );
+    assert!(findings.iter().all(|finding| {
+        finding.message.starts_with("undeclared secret") && !finding.message.contains("incomplete")
+    }));
+    assert!(findings[0].message.contains("undeclared secret MISSING"));
+    assert!(findings[1]
+        .message
+        .contains("undeclared secret ALSO_MISSING"));
+    assert!(!findings.iter().any(|finding| {
+        finding.message.contains("ALIAS")
+            || finding.message.contains("REPO_ONLY")
+            || finding.message.contains("ENV_ONLY")
     }));
 }
 
