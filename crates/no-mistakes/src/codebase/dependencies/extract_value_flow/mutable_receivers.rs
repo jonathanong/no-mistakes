@@ -13,7 +13,7 @@ impl ImportCollector {
         if !matches!(
             value,
             ValueExpression::Object(..) | ValueExpression::Array(..)
-        ) && !self.references_mutable_receiver(&value)
+        ) && !self.assigned_rhs_has_receiver(&value)
         {
             return;
         }

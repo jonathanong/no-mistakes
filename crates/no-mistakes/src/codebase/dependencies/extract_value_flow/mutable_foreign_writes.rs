@@ -120,7 +120,9 @@ impl ImportCollector {
                             .is_some_and(|names| names.contains_key(&receiver.0 .1))
                     }) {
                         arguments
-                            .get_or_insert_with(|| arguments::MemberArguments::new(self))
+                            .get_or_insert_with(|| {
+                                arguments::MemberArguments::new(self.parameter_call_origins())
+                            })
                             .expand(&mut members);
                     }
                     self.receiver_only_bindings

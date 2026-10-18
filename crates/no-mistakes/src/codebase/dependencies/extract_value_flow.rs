@@ -85,6 +85,8 @@ mod templates;
 #[path = "extract_value_flow/nested.rs"]
 mod nested;
 
+#[path = "extract_value_flow/parameter_call_origins.rs"]
+pub(super) mod parameter_call_origins;
 #[path = "extract_value_flow/parameter_patterns.rs"]
 mod parameter_patterns;
 

@@ -632,6 +632,13 @@ their saved object identity. Mutable aliases initialized from an already tracked
 also retain later binding replacements; unrelated named values stay outside
 receiver tracking.
 
+Receiver providers also follow prepared parameter arguments through wrappers,
+method calls, default values, literal-array callbacks, and literal-array loop
+bindings. `Object.assign` sources contribute partial member-store origins to
+the target's canonical history. These possible origins invalidate later member
+writes through aliases or captured parameters without making an exact replacement
+claim; untouched sibling members and unrelated receivers keep their targets.
+
 Deferred member writers select module-owned receiver providers at their closed
 canonical invocation phase. For example, rebinding `box` to `replica` before
 calling `write()` makes the affected `replica.get` unresolved; calling `write()`

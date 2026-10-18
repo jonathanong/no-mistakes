@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "object_assign_providers.rs"]
+mod object_assign_providers;
+
 impl ReceiverHistories {
     pub(in super::super) fn foreign_member_provider_references(
         &self,

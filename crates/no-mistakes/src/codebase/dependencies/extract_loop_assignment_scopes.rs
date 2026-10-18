@@ -118,6 +118,7 @@ fn visit_for_of_statement_with_scope<'a>(
         });
     });
     collector.visit_expression(&statement.right);
+    collector.record_for_of_value_binding(&statement.left, &statement.right);
     let (repeated, may_repeat, guaranteed_assignment) =
         replacement_for_of_execution(collector, statement);
     with_repeat_execution(collector, &statement.body, |collector, body| {
