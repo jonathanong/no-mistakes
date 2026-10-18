@@ -51,7 +51,11 @@ pub(super) fn roots<'a>(
                 }
                 // Configured SQL sources remain demand seeds even when their
                 // implementation resolves outside this profile's fact catalog.
-                if from_configured_module(&import.specifier, &options.import_specifier)
+                // `from_configured_module` is true for an empty specifier, which
+                // is how executor names match any module. That must not seed
+                // every non-type import when `importSpecifier` is omitted.
+                if (!options.import_specifier.is_empty()
+                    && from_configured_module(&import.specifier, &options.import_specifier))
                     || options.trusted_sql_tags.iter().any(|tag| {
                         !tag.module.is_empty()
                             && !tag.name.is_empty()
@@ -74,8 +78,12 @@ pub(super) fn roots<'a>(
                     continue;
                 };
                 // A successfully resolved edge outside the prepared catalog
-                // cannot lead back to a catalog executor. Keep unresolved
-                // edges conservative without conflating these two outcomes.
+                // cannot lead back to a catalog executor. Parse-failed inventory
+                // files are omitted from that catalog and are the same dead end
+                // only while a parse failure yields no query facts. If recovery
+                // later emits partial facts, this edge must stay conservative.
+                // Keep unresolved edges conservative without conflating these
+                // two outcomes.
                 let Some((target, _)) = files.get_key_value(target) else {
                     continue;
                 };
