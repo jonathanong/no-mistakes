@@ -5,6 +5,7 @@ root=$(git rev-parse --show-toplevel)
 variant=${1:?variant must be system or mimalloc}
 out=${2:?output directory required}
 case "$variant" in system|mimalloc) ;; *) exit 2 ;; esac
+source "$root/scripts/performance/mimalloc-build-args.sh"
 target=$(rustc -vV | sed -n 's/^host: //p')
 case "$target" in
   aarch64-unknown-linux-gnu) lto=fat; units=1; addon=libno_mistakes.so ;;
@@ -36,11 +37,8 @@ export CARGO_INCREMENTAL=0
 export CARGO_BUILD_JOBS=2
 export RUSTC_WRAPPER=
 export NO_MISTAKES_BUILD_NAPI=1
-features=()
-if [[ "$variant" == system ]]; then
-  features=(--no-default-features --features mermaid-validation)
-fi
-cargo build --release --locked --target "$target" -p no-mistakes --lib --bin no-mistakes --example allocator_probe "${features[@]}"
+mimalloc_build "$variant" cargo build --release --locked --target "$target" \
+  -p no-mistakes --lib --bin no-mistakes --example allocator_probe
 binary="$CARGO_TARGET_DIR/$target/release/no-mistakes"
 cp "$binary" "$out/$variant/no-mistakes"
 cp "$CARGO_TARGET_DIR/$target/release/examples/allocator_probe" "$out/$variant/rayon-probe"

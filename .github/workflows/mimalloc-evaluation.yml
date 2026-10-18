@@ -34,7 +34,9 @@ jobs:
           persist-credentials: false
       - name: Test saved measurement fixtures
         timeout-minutes: 2
-        run: python3 scripts/performance/mimalloc-report-tests.py
+        run: |
+          python3 scripts/performance/mimalloc-report-tests.py
+          bash scripts/performance/mimalloc-build-tests.sh
   build:
     needs: harness-tests
     uses: ./.github/workflows/mimalloc-evaluation-build.yml

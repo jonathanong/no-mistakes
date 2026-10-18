@@ -1,0 +1,5 @@
+--release
+--locked
+--no-default-features
+--features
+mermaid-validation
