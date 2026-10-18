@@ -6,8 +6,12 @@ const { isDefinitelyUndefinedValue } = require("./imported-call-undefined");
 const { propertyName, literalString } = require("./module-mock-helpers");
 
 const pathPatternList = { type: "array", items: { type: "string" } };
-// Slash-wrapped values are regexes. An unclosed class such as `/[/` must fail
-// here, before the rule can drop the target and match nothing.
+// A leading `/` is a wrapped regex, not a glob. The body cannot contain an
+// unescaped `/`, so `/^@acme/http$/` and `/abs/**` fail here instead of
+// matching a package path or an absolute glob. Escape slashes
+// (`/^@acme\/http$/`) or write a glob that does not start with `/`.
+// An unclosed class such as `/[/` must also fail before the rule can drop
+// the target and match nothing.
 const selectorPattern = {
   type: "string",
   minLength: 1,

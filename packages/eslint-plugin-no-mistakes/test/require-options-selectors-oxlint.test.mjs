@@ -29,6 +29,8 @@ describe("oxlint selector support", () => {
       ".oxlintrc.selectors-both-kinds.json",
       ".oxlintrc.selectors-bad-pattern.json",
       ".oxlintrc.selectors-uncompilable-imported.json",
+      ".oxlintrc.selectors-slash-regex.json",
+      ".oxlintrc.selectors-slash-glob.json",
     ]) {
       const result = oxlint(configName);
       assert.equal(result.error, undefined, result.stderr);

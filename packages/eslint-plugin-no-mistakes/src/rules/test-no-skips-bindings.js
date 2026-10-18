@@ -16,6 +16,31 @@ function memberName(node) {
       : null
     : node.property.name;
 }
+function unwrapBinding(node) {
+  let current = node;
+  while (current.type === "AssignmentPattern") current = current.left;
+  return current;
+}
+function propertyKey(property) {
+  if (property.key.type === "Literal") return String(property.key.value);
+  if (!property.computed && property.key.type === "Identifier") return property.key.name;
+  return null;
+}
+// The key that introduces the identifier, after defaults and nested objects.
+// `const { test: t = x } = require("vitest")` and
+// `const { runner: { test: t } = fallback } = require("vitest")` both yield `test`.
+function patternBindingName(pattern, name) {
+  for (const property of pattern.properties) {
+    if (property.type !== "Property") continue;
+    const value = unwrapBinding(property.value);
+    if (value.type === "Identifier" && value.name === name) return propertyKey(property);
+    if (value.type === "ObjectPattern") {
+      const nested = patternBindingName(value, name);
+      if (nested) return nested;
+    }
+  }
+  return null;
+}
 function imported(node, context, namespace = false) {
   const variable = resolveVariable(node, context);
   for (const def of variable?.defs || []) {
@@ -43,18 +68,7 @@ function imported(node, context, namespace = false) {
         source = init.source?.type === "Literal" ? init.source.value : null;
       }
       if (declaration.id.type === "ObjectPattern") {
-        const property = declaration.id.properties.find(
-          (item) =>
-            item.type === "Property" &&
-            item.value.type === "Identifier" &&
-            item.value.name === node.name,
-        );
-        importedName =
-          property?.key?.type === "Literal"
-            ? String(property.key.value)
-            : property?.key?.type === "Identifier" && !property.computed
-              ? property.key.name
-              : null;
+        importedName = patternBindingName(declaration.id, node.name);
       } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
         importedName = "*";
       }

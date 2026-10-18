@@ -15,12 +15,27 @@ const {
 const { shouldCheckOptionsFile } = require("./required-call-selector-compile");
 const { createCallSelectors } = require("./required-call-selectors");
 
+// Same call and same requirement share one finding. A different property set,
+// match mode, argument position, or message is a separate finding.
+function requirementKey(target, fallback) {
+  return JSON.stringify([
+    target.optionsPosition,
+    target.propertyMatch,
+    [...target.requiredProperties].sort(),
+    target.message || fallback || "",
+  ]);
+}
+
 function reportMissing(context, node, target, resolved, suppressed, fallback, reported) {
-  if (suppressed(node) || reported?.has(node)) return;
+  if (suppressed(node)) return;
+  const key = requirementKey(target, fallback);
+  const seen = reported.get(node);
+  if (seen?.has(key)) return;
   if (hasRequiredOptions(node.arguments[target.optionsPosition - 1], target, context.sourceCode)) {
     return;
   }
-  reported?.add(node);
+  if (seen) seen.add(key);
+  else reported.set(node, new Set([key]));
   const custom = target.message || fallback;
   if (custom) {
     context.report({ node, messageId: "customOptions", data: { message: custom } });
@@ -64,7 +79,7 @@ module.exports = Object.assign(
       const matcher = optionTargets.length > 0 ? createTargetMatcher(context) : null;
       const suppressed = ruleSuppression(context, "require-options-on-imported-call");
       const fallback = typeof options.message === "string" ? options.message : "";
-      const reported = new WeakSet();
+      const reported = new WeakMap();
 
       return {
         ...(matcher ? matcher.visitors : {}),
@@ -81,7 +96,7 @@ module.exports = Object.assign(
                 resolved.source,
                 resolved.calleeName,
               )) {
-                reportMissing(context, node, target, resolved, suppressed, fallback, null);
+                reportMissing(context, node, target, resolved, suppressed, fallback, reported);
               }
             }
           }
