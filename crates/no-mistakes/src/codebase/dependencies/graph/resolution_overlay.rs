@@ -40,7 +40,15 @@ impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
     }
 
     fn visible_len(&self) -> usize {
-        self.universe.visible_len()
+        // `visit_visible` walks universe ∪ graph files. Explicit roots outside
+        // the universe must count, or this projection never matches its own scope.
+        let mut len = self.universe.visible_len();
+        for path in self.graph_files.iter_visible() {
+            if !self.universe.contains_visible(path) {
+                len += 1;
+            }
+        }
+        len
     }
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {

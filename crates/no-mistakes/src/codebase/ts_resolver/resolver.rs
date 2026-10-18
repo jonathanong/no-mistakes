@@ -68,6 +68,21 @@ pub(crate) struct ResolveKey {
     specifier: Arc<str>,
 }
 
+/// Queue compatibility resolves specifiers the standard policy leaves external.
+/// A shared classification table must not treat those answers as interchangeable.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum ClassificationPolicy {
+    Standard,
+    Queue { root: Arc<Path> },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct ClassificationKey {
+    importing_file: Arc<Path>,
+    specifier: Arc<str>,
+    policy: ClassificationPolicy,
+}
+
 pub(crate) type ResolverResultCache =
     DashMap<ResolveKey, Option<PathBuf>, rustc_hash::FxBuildHasher>;
 
