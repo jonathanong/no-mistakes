@@ -1,11 +1,33 @@
+mod values;
 use super::{Cell, Saved};
-use crate::codebase::postgres::query_annotation::evaluate::{Evaluator, Value};
+use crate::codebase::postgres::query_annotation::evaluate::Evaluator;
 use std::path::{Path, PathBuf};
 fn membership<T: Eq + std::hash::Hash>(set: &mut crate::fx::FxHashSet<T>, key: T, present: bool) {
     if present {
         set.insert(key);
     } else {
         set.remove(&key);
+    }
+}
+fn callback_membership<T: Clone + Eq + std::hash::Hash>(
+    set: &mut Option<crate::fx::FxHashSet<T>>,
+    key: &T,
+    present: bool,
+) {
+    if present {
+        set.get_or_insert_with(Default::default).insert(key.clone());
+    } else if let Some(seen) = set {
+        seen.remove(key);
+    }
+}
+fn callback_enabled<T>(set: &mut Option<T>, present: bool)
+where
+    T: Default,
+{
+    if present {
+        set.get_or_insert_with(Default::default);
+    } else {
+        *set = None;
     }
 }
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -16,48 +38,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) {
         match (cell, old) {
             (Cell::Binding(env, name), Saved::Value(value)) => {
-                if let Some(value) = value {
-                    self.scopes[*env].restore_binding(name.clone(), Some(value.clone()));
-                } else {
-                    self.scopes[*env].restore_binding(name.clone(), None);
-                }
+                self.restore_saved_binding(env, name, value);
             }
             (Cell::Dense(id, index), Saved::Value(value)) => {
-                if let Some(value) = value {
-                    let slots = self.argument_objects.get_mut(id).expect("incoming object");
-                    slots.resize(slots.len().max(index + 1), Value::Unknown);
-                    slots[*index] = value.clone();
-                }
+                self.restore_saved_dense(id, index, value);
             }
             (Cell::Length(id), Saved::Length(length)) => {
-                let old_length = self.argument_objects[id].len();
-                self.argument_objects
-                    .get_mut(id)
-                    .expect("incoming object")
-                    .resize(*length, Value::Unknown);
-                for index in *length..old_length {
-                    self.note_reference_cell(&Cell::Dense(*id, index));
-                }
+                self.restore_saved_length(id, length);
             }
             (Cell::Extra(id, index), Saved::Value(value)) => {
-                if let Some(value) = value {
-                    self.argument_extra_slots
-                        .entry(*id)
-                        .or_default()
-                        .insert(*index, value.clone());
-                } else if let Some(slots) = self.argument_extra_slots.get_mut(id) {
-                    slots.remove(index);
-                    if slots.is_empty() {
-                        self.argument_extra_slots.remove(id);
-                    }
-                }
+                self.restore_saved_extra(id, index, value);
             }
             (Cell::Builder(id), Saved::Value(value)) => {
-                if let Some(value) = value {
-                    self.builder_updates.insert(*id, value.clone());
-                } else {
-                    self.builder_updates.remove(id);
-                }
+                self.restore_saved_builder(id, value);
             }
             (Cell::Invalidated(id), Saved::Flag(present)) => {
                 membership(&mut self.invalidated_builders, *id, *present)
@@ -79,51 +72,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 membership(&mut self.recreated_argument_slots, (*id, *index), *present)
             }
             (Cell::Fresh(env, name), Saved::Flag(present)) => {
-                if *present {
-                    self.fresh_mapped_parameters
-                        .entry(*env)
-                        .or_default()
-                        .insert(name.clone());
-                } else if let Some(names) = self.fresh_mapped_parameters.get_mut(env) {
-                    names.remove(name);
-                    if names.is_empty() {
-                        self.fresh_mapped_parameters.remove(env);
-                    }
-                }
+                self.restore_saved_fresh(env, name, present);
             }
             (Cell::CallbackSeen(key), Saved::Flag(present)) => {
-                if *present {
-                    self.active_callback_functions
-                        .get_or_insert_with(Default::default)
-                        .insert(key.clone());
-                } else if let Some(seen) = &mut self.active_callback_functions {
-                    seen.remove(key);
-                }
+                callback_membership(&mut self.active_callback_functions, key, *present);
             }
             (Cell::CallbackRunning(key), Saved::Flag(present)) => {
-                if *present {
-                    self.active_callback_executions
-                        .get_or_insert_with(Default::default)
-                        .insert(key.clone());
-                } else if let Some(seen) = &mut self.active_callback_executions {
-                    seen.remove(key);
-                }
+                callback_membership(&mut self.active_callback_executions, key, *present);
             }
             (Cell::CallbackEnabled, Saved::Flag(present)) => {
-                if *present {
-                    self.active_callback_functions
-                        .get_or_insert_with(Default::default);
-                } else {
-                    self.active_callback_functions = None;
-                }
+                callback_enabled(&mut self.active_callback_functions, *present);
             }
             (Cell::ExecutionsEnabled, Saved::Flag(present)) => {
-                if *present {
-                    self.active_callback_executions
-                        .get_or_insert_with(Default::default);
-                } else {
-                    self.active_callback_executions = None;
-                }
+                callback_enabled(&mut self.active_callback_executions, *present);
             }
             (Cell::Module(path), Saved::Environment(value)) => {
                 if let Some(env) = value {

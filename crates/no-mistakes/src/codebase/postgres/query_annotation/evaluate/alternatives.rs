@@ -16,6 +16,7 @@ mod prune;
 mod reachable;
 mod run;
 #[cfg(test)]
+#[path = "alternatives/tests/values.rs"]
 mod values;
 
 #[cfg(test)]
