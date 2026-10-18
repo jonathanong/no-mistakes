@@ -7,6 +7,7 @@ function write() { box.client.get = replacement; }
 rebind('client');
 write();
 function consume(value, changed) {
+  // Foreign writer summaries conservatively lose the untouched primary.get precision.
   value.get('primary');
   changed.get('replica');
   value.info('primary sibling');

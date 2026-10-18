@@ -99,12 +99,14 @@ fn captured_sibling_calls_remain_present_and_never_follow_the_rebound_root() {
         .find(|site| site.source_callee == "captured.client.info")
         .expect("the statically named captured sibling call must not be dropped");
     assert_eq!(site.line, 17);
+    // This nested captured read is conservative at the reviewed baseline too.
     assert!(
-        site.targets().all(|target| matches!(target.target,
-            KnownCallTargetRef::ModuleExport { export_path, .. } if export_path == "primary.info")),
+        site.has_unknown_target() && site.targets().next().is_none(),
         "{site:?}"
     );
 }
+
+include!("receiver_const_member_providers.rs");
 
 #[test]
 fn uncalled_writers_keep_the_documented_conservative_foreign_provider_summary() {

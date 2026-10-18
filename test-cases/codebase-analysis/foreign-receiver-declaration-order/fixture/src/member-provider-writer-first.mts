@@ -6,6 +6,7 @@ function rebind() { box.client = replica; }
 rebind();
 write();
 function consume(value, changed) {
+  // Foreign writer summaries conservatively lose the untouched primary.get precision.
   value.get('primary');
   changed.get('replica');
   value.info('primary sibling');
