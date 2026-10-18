@@ -1,12 +1,12 @@
 use super::super::{resolve::compose, ScopeVisitor};
 use super::{combine, expression, Recovered, ValueKind};
-use crate::codebase::postgres::embedded::{
-    first_call_argument, placeholders, source_positions, tags,
-};
+use crate::codebase::postgres::embedded::{first_call_argument, placeholders, tags};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
+pub(super) mod builder_text;
 mod effects;
+mod piece;
 
 pub(super) fn recover(
     visitor: &ScopeVisitor<'_>,
@@ -20,25 +20,7 @@ pub(super) fn recover(
     let origin = byte_offset_to_line(visitor.source, template.span.start as usize);
     let mut versions = vec![Recovered::empty(origin)];
     for (index, quasi) in template.quasis.iter().enumerate() {
-        let line = byte_offset_to_line(visitor.source, quasi.span.start as usize);
-        let raw = &visitor.source[quasi.span.start as usize..quasi.span.end as usize];
-        let decoded = tags::quasi_text(quasi, false);
-        let piece = Recovered {
-            value: ValueKind::Sql,
-            sql: decoded.into(),
-            origins: source_positions::origins::piece(
-                raw,
-                decoded,
-                quasi.span.start,
-                quasi.value.cooked.is_none(),
-            ),
-            line,
-            positions: source_positions::piece(raw, decoded, line, quasi.value.cooked.is_none()),
-            fragment: true,
-            choices: Vec::new(),
-            append_sites: Vec::new(),
-            enumerated: false,
-        };
+        let piece = piece::quasi(visitor, quasi);
         versions = combine(versions, vec![piece])?;
         if let Some(expr) = template.expressions.get(index) {
             let is_fragment = tags::fragments::is_sql_fragment(

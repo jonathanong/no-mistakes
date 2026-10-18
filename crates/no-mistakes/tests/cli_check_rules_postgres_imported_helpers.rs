@@ -267,18 +267,25 @@ fn non_literal_or_missing_arguments_stay_unanalyzable() {
 
 #[test]
 fn parameters_used_outside_an_interpolation_stay_unanalyzable() {
-    assert_eq!(
-        required("imported-param-outside-interpolation"),
-        unanalyzable(&[10, 16, 22])
-    );
+    // Concatenation with a module constant and a method call on the parameter
+    // stay opaque; a plain local alias of the parameter is still a literal.
+    let mut expected = unanalyzable(&[10, 16]);
+    expected.extend(expect(&[("src/visibility-sql.mts", 13, VIEW)]));
+    expected.sort();
+    assert_eq!(required("imported-param-outside-interpolation"), expected);
 }
 
 #[test]
-fn helpers_with_control_flow_stay_unanalyzable() {
-    assert_eq!(
-        required("imported-control-flow"),
-        unanalyzable(&[9, 15, 21])
-    );
+fn bounded_helper_control_flow_is_recovered_and_loops_stay_unanalyzable() {
+    // `branching` returns on an unknown test (two alternatives) and
+    // `throwing` ends the path that throws; the loop is never unrolled.
+    let mut expected = unanalyzable(&[15]);
+    expected.extend(expect(&[
+        ("src/visibility-sql.mts", 3, VIEW),
+        ("src/visibility-sql.mts", 18, VIEW),
+    ]));
+    expected.sort();
+    assert_eq!(required("imported-control-flow"), expected);
 }
 
 #[test]

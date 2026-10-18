@@ -10,7 +10,7 @@ function annotatedOrdersSql(): SQLStatement {
 }
 
 function unannotatedOrdersSql(): SQLStatement {
-  return templateSql`SELECT id FROM orders`;
+  return templateSql`SELECT id FROM orders`; // finding:branch-alternative
 }
 
 export async function reassignedLocalHelper() {
@@ -49,7 +49,8 @@ function unsupportedBranch(flag: boolean): SQLStatement {
 }
 
 export async function branchIsNotAssumedSafe(flag: boolean) {
-  return write(unsupportedBranch(flag)); // unanalyzable:branch
+  // Both alternatives of the helper are recovered; the unannotated one is reported above.
+  return write(unsupportedBranch(flag));
 }
 
 function restParameterHelper(...parts: string[]): SQLStatement {

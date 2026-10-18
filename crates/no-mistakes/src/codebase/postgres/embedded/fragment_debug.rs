@@ -25,6 +25,9 @@ pub struct EmbeddedSqlFileFacts {
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Summaries of this file's helpers, collected during its single AST pass.
     pub(crate) exported_helpers: crate::fx::FxHashMap<String, super::helpers::HelperSummary>,
+    /// Lowered bodies of the same helpers, run per call site by the projection.
+    pub(crate) exported_programs:
+        crate::fx::FxHashMap<String, std::sync::Arc<super::helpers::program::Program>>,
     /// Executor SQL that is complete once imported helpers resolve.
     pub(crate) pending_imported: Vec<super::helpers::PendingImportedSql>,
     /// Caller lines of the imported-helper calls completed into a call, by span.

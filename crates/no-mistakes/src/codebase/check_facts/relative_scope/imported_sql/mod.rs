@@ -8,14 +8,16 @@
 
 use super::CheckFileFacts;
 use crate::codebase::postgres::{
-    splice_imported_sql, EmbeddedSqlCall, EmbeddedSqlOptions, HelperSummary, PendingImportedSql,
+    splice_imported_sql, EmbeddedSqlCall, EmbeddedSqlOptions, PendingImportedSql,
 };
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
-use locate::{Located, Locator};
+use locate::Locator;
+use program::Shared;
 use std::path::{Path, PathBuf};
 
 mod locate;
+mod program;
 
 #[cfg(test)]
 mod tests;
@@ -49,13 +51,12 @@ fn complete(
     files: &FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<Completed> {
-    let mut locator = Locator::new(files, resolve);
+    let mut shared = Shared::new(files, Locator::new(files, resolve));
     let mut completed = Vec::new();
     for (path, file) in files {
         for (profile, (options, embedded)) in file.embedded_sql.iter().enumerate() {
             for pending in &embedded.pending_imported {
-                if let Some(call) = complete_call(&mut locator, files, path, file, options, pending)
-                {
+                if let Some(call) = complete_call(&mut shared, path, profile, options, pending) {
                     let lines = pending.sites.iter().map(|(_, site)| site.line).collect();
                     completed.push((path.clone(), profile, pending.span, call, lines));
                 }
@@ -66,38 +67,15 @@ fn complete(
 }
 
 fn complete_call(
-    locator: &mut Locator<'_, impl FnMut(&str, &Path) -> Option<PathBuf>>,
-    files: &FileIdMap<CheckFileFacts>,
+    shared: &mut Shared<'_, impl FnMut(&str, &Path) -> Option<PathBuf>>,
     path: &Path,
-    file: &CheckFileFacts,
+    profile: usize,
     options: &EmbeddedSqlOptions,
     pending: &PendingImportedSql,
 ) -> Option<EmbeddedSqlCall> {
     let mut holes = FxHashMap::default();
     for (index, site) in &pending.sites {
-        let import = file
-            .ts
-            .imported_bindings
-            .iter()
-            .find(|binding| binding.local == site.local && !binding.is_type_only)?;
-        let target = locator.target(&import.specifier, path)?;
-        let Located::Found(origin, local) = locator.locate(&target, &import.imported) else {
-            return None;
-        };
-        let summary = helper_summary(files.get(&origin)?, options, &local)?;
-        holes.insert(*index, summary.fill(site, &origin)?);
+        holes.insert(*index, shared.fill(profile, options, path, site)?);
     }
     splice_imported_sql(&pending.template, &holes)
-}
-
-fn helper_summary<'a>(
-    file: &'a CheckFileFacts,
-    options: &EmbeddedSqlOptions,
-    local: &str,
-) -> Option<&'a HelperSummary> {
-    let (_, embedded) = file
-        .embedded_sql
-        .iter()
-        .find(|(known, _)| known == options)?;
-    embedded.exported_helpers.get(local)
 }

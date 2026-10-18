@@ -68,6 +68,7 @@ pub(super) fn resolve_fragment(
             depth,
             lookup,
             is_shadowed,
+            &mut |_| None,
             context.imported_sql_tags,
         ),
     }

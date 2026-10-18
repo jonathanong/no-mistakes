@@ -1,4 +1,5 @@
-use super::super::{BindingState, EmbeddedSqlKind};
+use super::super::super::EmbeddedSqlKind;
+use super::super::BindingState;
 
 // Keep the exact pre-proof field list: a scalar proof must not silently grow
 // every SQL binding or add a heap allocation.

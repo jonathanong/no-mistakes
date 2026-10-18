@@ -15,7 +15,7 @@ const fluent = sql`SELECT id FROM users`;
 const fluentAlias = fluent;
 fluent.append(sql` WHERE id = 1`).append(sql` OFFSET 9`);
 query(gate ? fluentAlias : sql`SELECT 5`); // findings: unanalyzable
-query(gate ? fluent : sql`SELECT 6`); // findings: unanalyzable
+query(gate ? fluent : sql`SELECT 6`);
 let replaced = sql`SELECT id FROM users`;
 const previous = replaced;
 replaced = sql`SELECT id FROM accounts`;

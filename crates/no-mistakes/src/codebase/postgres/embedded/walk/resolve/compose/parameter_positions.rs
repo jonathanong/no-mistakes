@@ -11,7 +11,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn contains_parameter_helper(
         Expression::Identifier(ident) => {
             !visitor.shadowed_locally(ident.name.as_str())
                 && (visitor.functions.is_parameter_builder(ident.name.as_str())
-                    || visitor.is_imported_helper(ident.name.as_str())
+                    || visitor.is_hole_helper(ident.name.as_str())
                         && crate::codebase::postgres::embedded::walk::imported::passes_builder(
                             visitor, call,
                         ))

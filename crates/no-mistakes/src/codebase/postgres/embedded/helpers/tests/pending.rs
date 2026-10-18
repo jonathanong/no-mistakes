@@ -40,6 +40,7 @@ fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
             ImportedSite {
                 local: "ownerVisible".into(),
                 args: vec![SiteArg::Literal("l.parent_id".into())],
+                value_used: true,
                 line: 8,
             }
         )]
@@ -96,7 +97,7 @@ fn unexecuted_or_interpolated_helpers_never_become_holes() {
     assert_eq!(call(&facts, 4).sql_text.as_deref(), Some("SELECT 1 WHERE "));
     // An interpolated call is a bound value, not SQL text.
     assert!(pending_for(&facts, 6).is_none());
-    assert_eq!(facts.pending_imported.len(), 9);
+    assert_eq!(facts.pending_imported.len(), 10);
 }
 
 #[test]
@@ -108,12 +109,18 @@ fn argument_shapes_decide_whether_a_hole_is_recorded() {
         Some(vec![
             SiteArg::Literal("l.template".into()),
             SiteArg::Scalar,
-            SiteArg::Scalar,
-            SiteArg::Scalar,
+            SiteArg::Bool(true),
+            SiteArg::Null,
         ])
     );
-    // Spread, object and two-builder arguments cannot be reasoned about.
-    for index in [11, 12, 13] {
+    // An object literal of classifiable values is recorded as such.
+    let object = pending_for(&facts, 12).map(|pending| pending.sites[0].1.args.clone());
+    assert_eq!(
+        object,
+        Some(vec![SiteArg::Object(vec![("a".into(), SiteArg::Scalar)])])
+    );
+    // Spread and two-builder arguments cannot be reasoned about.
+    for index in [11, 13] {
         assert!(pending_for(&facts, index).is_none(), "{index}");
         assert_eq!(
             call(&facts, index).sql_text.as_deref(),

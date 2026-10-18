@@ -7,10 +7,17 @@ use crate::codebase::postgres::embedded::EmbeddedSqlCall;
 use std::path::Path;
 
 /// One argument of an imported-helper call, as far as the walk can tell.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) enum SiteArg {
     Literal(String),
-    /// An identifier or non-string literal. It never contributes SQL text.
+    Bool(bool),
+    Null,
+    Undefined,
+    /// An object literal whose properties are all values the walk can classify.
+    Object(Vec<(String, SiteArg)>),
+    /// An array literal whose elements are all classifiable values.
+    Array(Vec<SiteArg>),
+    /// An identifier or number. It never contributes SQL text.
     Scalar,
     /// A SQL builder whose text precedes the call's hole.
     Builder,
@@ -22,6 +29,9 @@ pub(crate) struct ImportedSite {
     /// The callee's local name; the projection looks up its import binding.
     pub(crate) local: String,
     pub(crate) args: Vec<SiteArg>,
+    /// The call's result feeds an expression (not just a statement), so a
+    /// builder helper must hand back the builder it was given.
+    pub(crate) value_used: bool,
     /// Line of the call in the caller's file.
     pub(crate) line: u32,
 }

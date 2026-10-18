@@ -90,11 +90,13 @@ fn parameter_builder_is_shared_by_annotation_and_offset_rules() {
         "{body}"
     );
     assert!(
-        findings.iter().any(|f| f["line"] == 31
+        // A literal tail (line 31) is recovered; a non-literal one is not.
+        findings.iter().any(|f| f["line"] == 42
             && f["rule"] == "postgres-no-offset"
             && f["target"] == "unanalyzable"),
         "{body}"
     );
+    assert!(findings.iter().all(|f| f["line"] != 31), "{body}");
     assert!(
         findings.iter().any(|f| f["line"] == 40
             && f["rule"] == "postgres-no-offset"

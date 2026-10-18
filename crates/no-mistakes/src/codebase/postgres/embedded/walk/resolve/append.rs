@@ -18,8 +18,18 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
     let Expression::Identifier(ident) = unwrap_ts_wrappers(&member.object) else {
         return;
     };
+    apply_append_to(visitor, ident.name.as_str(), call);
+}
+
+/// Appends `call`'s argument to the builder `name`; `call` is one `.append`
+/// link, whose receiver may be an earlier link of the same fluent chain.
+pub(crate) fn apply_append_to(
+    visitor: &mut ScopeVisitor<'_>,
+    name: &str,
+    call: &CallExpression<'_>,
+) {
     let Some(arg) = first_static_arg(call, visitor) else {
-        visitor.mark_dynamic_keep_known_statement(ident.name.as_str());
+        visitor.mark_dynamic_keep_known_statement(name);
         return;
     };
     // Loops may append a runtime-unknown number of times. Nested functions
@@ -27,22 +37,22 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
     // Sequential function-local mutations still compose. Conditional static
     // fragments keep recovered SQL but mark Dynamic so INSERT cannot pass
     // a branch-only ORDER BY as if it always ran.
-    if visitor.loop_depth > 0 || visitor.append_crosses_function(ident.name.as_str()) {
-        visitor.mark_dynamic_keep_known_statement(ident.name.as_str());
+    if visitor.loop_depth > 0 || visitor.append_crosses_function(name) {
+        visitor.mark_dynamic_keep_known_statement(name);
         return;
     }
     if visitor.control_depth > 0 {
-        visitor.mark_dynamic_keep_known_statement(ident.name.as_str());
+        visitor.mark_dynamic_keep_known_statement(name);
         return;
     }
     let offset = visitor
-        .lookup(ident.name.as_str())
+        .lookup(name)
         .and_then(|binding| binding.sql)
         .map(|sql| count_placeholders(&sql))
         .unwrap_or(0);
     let (fragment_line, fragment_positions) = positions::fragment(call, visitor, offset);
     for scope in visitor.scopes.iter_mut().rev() {
-        if let Some(binding) = scope.get_mut(ident.name.as_str()) {
+        if let Some(binding) = scope.get_mut(name) {
             match (&binding.sql, binding.kind) {
                 (Some(sql), EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed) => {
                     positions::append(

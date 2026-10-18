@@ -26,6 +26,8 @@ mod cli_check_rules_postgres_finite_text;
 mod cli_check_rules_postgres_fk_on_delete;
 #[path = "cli_check_rules_postgres_generated.rs"]
 mod cli_check_rules_postgres_generated;
+#[path = "cli_check_rules_postgres_helper_flow.rs"]
+mod cli_check_rules_postgres_helper_flow;
 #[path = "cli_check_rules_postgres_identifier_length.rs"]
 mod cli_check_rules_postgres_identifier_length;
 #[path = "cli_check_rules_postgres_imported_helpers.rs"]
