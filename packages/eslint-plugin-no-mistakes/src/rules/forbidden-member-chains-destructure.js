@@ -2,12 +2,6 @@
 
 const { matches, expressionInfo } = require("./forbidden-member-chains-match");
 
-const PARAM_PARENTS = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
-
 function patternKey(prop) {
   const key = prop.key;
   if (key.type === "Identifier") return key.name;
@@ -75,13 +69,10 @@ function destructureVisitors({ compiled, context, suppressed, info }) {
       if (pattern) check(pattern, node.right);
     },
     // A default is a receiver at any depth, not only on a function parameter.
+    // The parser only allows one in a parameter, property, or array element.
     // `const { x: { open } = other.panel } = {}` reports `*.panel.open`.
     // An array element is too: `const [{ open } = other.panel] = []`.
     AssignmentPattern(node) {
-      const parent = node.parent?.type;
-      if (parent !== "Property" && parent !== "ArrayPattern" && !PARAM_PARENTS.has(parent)) {
-        return;
-      }
       const pattern = objectPattern(node.left);
       if (pattern) check(pattern, node.right);
     },
