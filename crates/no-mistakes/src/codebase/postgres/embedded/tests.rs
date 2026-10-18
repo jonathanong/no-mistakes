@@ -118,14 +118,7 @@ fn identifier_bindings_and_member_query_calls() {
         "query"
     );
     assert_eq!(by_sql("SELECT 2").callee, "read");
-    assert_eq!(by_sql("SELECT 3").callee, "query");
-    assert_eq!(by_sql("SELECT 4").callee, "query");
-    let shadowed = facts
-        .calls
-        .iter()
-        .find(|call| call.callee == "query" && call.sql_text.is_none())
-        .expect("param shadow");
-    assert!(shadowed.line > 1);
+    assert_eq!(facts.calls.len(), 3);
 }
 
 #[test]
@@ -200,8 +193,7 @@ fn default_and_namespace_imports_are_ignored() {
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert!(facts.executor_bindings.is_empty());
-    assert_eq!(facts.calls.len(), 1);
-    assert_eq!(facts.calls[0].sql_text.as_deref(), Some("y"));
+    assert!(facts.calls.is_empty());
 }
 
 #[test]
@@ -214,7 +206,7 @@ fn is_database_call_and_bindings_from_program() {
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     assert!(bindings.contains("query"));
-    assert!(bindings.contains(super::bindings::MEMBER_QUERY_OPT_IN));
+    assert!(!bindings.contains(super::bindings::MEMBER_QUERY_OPT_IN));
     let empty = HashSet::new();
     let mut saw_member = false;
     for statement in &parsed.program.body {
@@ -227,7 +219,7 @@ fn is_database_call_and_bindings_from_program() {
             }
         }
     }
-    assert!(saw_member);
+    assert!(!saw_member);
 }
 
 #[test]
@@ -267,7 +259,7 @@ fn computed_template_query_key_is_detected() {
     let facts = extract_embedded_sql_from_source(
         Path::new("computed.ts"),
         source,
-        &EmbeddedSqlOptions::configured("@example/db", &[]),
+        &EmbeddedSqlOptions::configured("", &["query".into()]),
     );
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 9"));
 }
@@ -479,17 +471,17 @@ fn unconfigured_executors_and_members_are_not_selected() {
         (EmbeddedSqlOptions::default(), 0),
         (EmbeddedSqlOptions::configured("", &["read".into()]), 1),
         (EmbeddedSqlOptions::configured("", &["query".into()]), 5),
-        (EmbeddedSqlOptions::configured("@example/db", &[]), 6),
+        (EmbeddedSqlOptions::configured("@example/db", &[]), 2),
         (
             EmbeddedSqlOptions {
                 import_specifier: "@example/db".into(),
                 ..EmbeddedSqlOptions::default()
             },
-            6,
+            2,
         ),
         (
             EmbeddedSqlOptions::configured("@example/db", &["run".into()]),
-            4,
+            0,
         ),
     ] {
         let facts = extract_embedded_sql_from_source(&path, &source, &options);

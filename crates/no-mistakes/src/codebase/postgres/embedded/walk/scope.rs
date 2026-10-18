@@ -1,6 +1,7 @@
 use super::super::EmbeddedSqlKind;
 use super::{resolve, BindingState, ScopeVisitor};
 use oxc_ast::ast::{BindingPattern, FormalParameters, TSType, TSTypeName};
+use oxc_span::GetSpan;
 use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
@@ -42,11 +43,14 @@ impl ScopeVisitor<'_> {
         let mut names = Vec::new();
         resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
         for name in names {
+            let executor = self
+                .scoped
+                .contains_declaration(&name, pattern.span().start);
             if let Some(scope) = self.current_scope() {
                 scope.insert(
                     name,
                     BindingState {
-                        executor_alias: None,
+                        executor_alias: executor.then_some(true),
                         builder_identity: None,
                         builder_effect_revision: 0,
                         condition_key: None,

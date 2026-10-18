@@ -100,7 +100,9 @@ not match. `executorNames` still requires the exact module.
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
+A configured module enables `.query` only for proven executor receivers.
+Explicit `executorNames: [query]` without a module enables broad member matching.
+A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
 

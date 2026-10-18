@@ -37,6 +37,12 @@ pub(super) struct ScopedExecutors {
 }
 
 impl ScopedExecutors {
+    pub(super) fn contains_declaration(&self, name: &str, start: u32) -> bool {
+        self.spans
+            .get(name)
+            .is_some_and(|spans| spans.iter().any(|span| span.start == start))
+    }
+
     pub(super) fn contains(&self, name: &str, position: u32) -> bool {
         self.spans.get(name).is_some_and(|spans| {
             spans

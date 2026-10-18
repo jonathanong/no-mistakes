@@ -106,6 +106,10 @@ recoverable conditional alternative, in source order. Sources without a configur
 executor call return an empty array, including when import-aware analysis evaluates
 nested SQL-building helpers. Records include `fileName`, the one-based executor
 `line`, `annotation`, `sqlText`, `kind`, and `complete`.
+With `importSpecifier`, a `.query` member requires a receiver from a configured
+import, factory, type, or immutable alias; unrelated HTTP query parameters are
+excluded. Explicit `executorNames: [query]` without a module selects broad
+member matching.
 Recovered conditional alternatives have `kind: "composed"`. The named
 `ExecutedPostgresTrustedSqlTag` type describes each `trustedSqlTags` entry.
 Template interpolations appear as `sql_placeholder_N` markers and remain

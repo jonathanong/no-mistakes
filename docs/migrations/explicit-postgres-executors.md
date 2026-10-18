@@ -65,8 +65,8 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
   of it, a relative path that resolves into that package, or any module when it
   is empty) that return an executor. A local declared with
   `const`, `let`, `using`, or `await using` whose initializer calls the factory,
-  with or without `await`, is an executor. Calls `tx(sql)` and, when `.query`
-  members are enabled, `tx.query(sql)` are scanned.
+  with or without `await`, is an executor. Calls `tx(sql)` and `tx.query(sql)`
+  are scanned when the configured module enables member queries.
 - `executorTypeNames` lists type names imported from `importSpecifier`, a
   subpath of it, a relative path that resolves into that package, or any module
   when it is empty, through `import type`, an inline `type` specifier, or
@@ -77,6 +77,13 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
   (parameters). A same-named identifier in a sibling function or outside the
   block is not scanned. A same-named import from outside that package does not
   match.
+
+For a configured module, `.query(sql)` requires a receiver proven to be a
+configured import, factory result, typed parameter, or immutable alias. A
+same-named nested local does not inherit that proof. An HTTP request's `.query`
+parameters therefore do not become SQL candidates merely because the file uses
+PostgreSQL elsewhere. Without `importSpecifier`, explicit
+`executorNames: [query]` opts into broad member matching.
 
 Neither option counts as executor selection: a rule configured with only these
 options still needs `importSpecifier` or `executorNames` (for example

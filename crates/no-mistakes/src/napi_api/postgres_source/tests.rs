@@ -2,6 +2,35 @@ use super::extract_executed_postgres_sql_json_impl;
 use super::parse_postgres_sql_json_impl;
 
 #[test]
+fn executed_source_binding_excludes_unowned_member_queries() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/embedded/executor-provenance.ts"
+    ));
+    let result: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": [{"fileName": "executor-provenance.ts", "source": source}],
+            "importSpecifier": "@example/db",
+            "executorNames": ["connection"],
+            "executorFactoryNames": ["openTransaction"],
+            "executorTypeNames": ["TxExecutor"]
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(result.as_array().unwrap().len(), 4);
+    assert_eq!(
+        result
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|call| call["line"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        [5, 10, 14, 19]
+    );
+}
+
+#[test]
 fn executed_source_binding_keeps_annotation_text_and_source_location() {
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

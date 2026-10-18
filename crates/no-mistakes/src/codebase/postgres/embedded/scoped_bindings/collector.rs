@@ -63,10 +63,18 @@ impl ScopeCollector {
             match &param.pattern {
                 BindingPattern::BindingIdentifier(ident) => {
                     let hit = owners::type_hit(&self.types, &self.provisional_types, annotated);
-                    self.record(ident.name.as_str(), scope, hit);
+                    self.record(
+                        ident.name.as_str(),
+                        Span::new(param.pattern.span().start, scope.end),
+                        hit,
+                    );
                 }
                 BindingPattern::ObjectPattern(object) => {
-                    self.bind_object_properties(object, annotated, scope);
+                    self.bind_object_properties(
+                        object,
+                        annotated,
+                        Span::new(param.pattern.span().start, scope.end),
+                    );
                 }
                 _ => {}
             }
@@ -171,7 +179,7 @@ impl<'a> Visit<'a> for ScopeCollector {
                 {
                     let hit =
                         owners::factory_hit(&self.factories, &self.provisional_factories, init);
-                    let span = Span::new(declarator.span().start, end);
+                    let span = Span::new(declarator.id.span().start, end);
                     self.record(ident.name.as_str(), span, hit);
                 }
             }

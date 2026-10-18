@@ -58,6 +58,37 @@ fn ignore_keeps_only_proven_offsets() {
 }
 
 #[test]
+fn configured_executor_provenance_excludes_http_query_parameters() {
+    let root = fixture("executor-provenance");
+    let files = [root.join("src/client.mts"), root.join("src/http-only.mts")];
+    let options = "importSpecifier: db\nexecutorNames: [connection]\ninclude: ['**/*.mts']\nunanalyzableSql: fail";
+    let mut findings = check_with_files(&root, &config_with_options(options), &files).unwrap();
+    let sources = super::super::source_store_for_files(&files);
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (
+                finding.file.as_str(),
+                finding.line,
+                finding.target.as_deref()
+            ))
+            .collect::<Vec<_>>(),
+        [
+            ("src/client.mts", 6, Some("unanalyzable")),
+            ("src/client.mts", 7, Some("offset"))
+        ]
+    );
+    let ignored = check_with_files(
+        &root,
+        &config_with_options(&options.replace("unanalyzableSql: fail", "unanalyzableSql: ignore")),
+        &files,
+    )
+    .unwrap();
+    assert_eq!(lines_and_targets(&ignored), [(7, "offset")]);
+}
+
+#[test]
 fn unknown_unanalyzable_mode_is_a_config_error() {
     let root = fixture("unanalyzable");
     let error = check_with_files(

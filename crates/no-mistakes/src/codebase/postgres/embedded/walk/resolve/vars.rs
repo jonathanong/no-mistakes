@@ -6,6 +6,7 @@ use oxc_ast::ast::{
     VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::HashMap;
 
@@ -144,7 +145,14 @@ pub(super) fn record_declarator(
         scope.insert(
             ident.name.to_string(),
             BindingState {
-                executor_alias: is_const.then_some(false),
+                executor_alias: if visitor
+                    .scoped
+                    .contains_declaration(ident.name.as_str(), declarator.id.span().start)
+                {
+                    Some(true)
+                } else {
+                    is_const.then_some(false)
+                },
                 builder_identity,
                 builder_effect_revision: 0,
                 condition_key,

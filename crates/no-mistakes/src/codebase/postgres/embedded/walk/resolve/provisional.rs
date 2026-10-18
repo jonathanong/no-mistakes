@@ -1,4 +1,4 @@
-use super::super::super::bindings::callee_name;
+use super::super::super::bindings::{callee_name, member_query_receiver, MEMBER_QUERY_OPT_IN};
 use super::super::super::relative::PendingRelativeCall;
 use super::super::ScopeVisitor;
 use super::executor_call;
@@ -18,9 +18,17 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         );
         return;
     }
+    if let Some(receiver) = member_query_receiver(call) {
+        if visitor.query_members
+            && (visitor.bindings.contains(MEMBER_QUERY_OPT_IN) || visitor.proven_executor(receiver))
+        {
+            push_confirmed(visitor, call, "query".to_string());
+        }
+        return;
+    }
     let member = unwrap_ts_wrappers(&call.callee).is_member_expression();
     if let Some(callee) = callee_name(call, visitor.bindings, visitor.scoped) {
-        if visitor.query_members || !member {
+        if !member && visitor.proven_executor(&call.callee) {
             push_confirmed(visitor, call, callee);
         }
         return;
