@@ -1,5 +1,5 @@
 enum CodeCharAction {
-    Comment(usize),
+    Comment(CommentKind),
     Consumed,
 }
 
@@ -115,10 +115,10 @@ fn scan_code_char(
         return Some(CodeCharAction::Consumed);
     }
     if ch == '<' && html_directive_comment(line, idx) {
-        return Some(CodeCharAction::Comment(4));
+        return Some(CodeCharAction::Comment(CommentKind::Html));
     }
     if ch == '/' && next == Some('/') {
-        return Some(CodeCharAction::Comment(2));
+        return Some(CodeCharAction::Comment(CommentKind::line("//")));
     }
     if ch == '/' && regex_can_start_at(line, idx, mode.prev_significant) {
         *mode.in_regex = true;
@@ -132,10 +132,10 @@ fn scan_code_char(
         return Some(CodeCharAction::Consumed);
     }
     if ch == '#' && comment_prefix_can_start(line, idx) {
-        return Some(CodeCharAction::Comment(1));
+        return Some(CodeCharAction::Comment(CommentKind::line("#")));
     }
     if ch == '-' && next == Some('-') && dash_comment_can_start(line, idx) {
-        return Some(CodeCharAction::Comment(2));
+        return Some(CodeCharAction::Comment(CommentKind::line("--")));
     }
     None
 }

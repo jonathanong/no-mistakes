@@ -86,7 +86,11 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
         include_str!("../../codebase/rules/run/prepared/execution/independent.rs"),
         include_str!("../../codebase/rules/run/prepared/execution/independent_collect.rs"),
     );
-    let rule_roots = include_str!("../../codebase/rules/mod.rs");
+    // include! is textual at compile time; include_str does not follow it.
+    let rule_roots = concat!(
+        include_str!("../../codebase/rules/mod.rs"),
+        include_str!("../../codebase/rules/reexports.rs"),
+    );
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
     let tasks = check_task_sources();
 

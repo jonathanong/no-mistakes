@@ -152,8 +152,8 @@ fn disabled_statement_lines_with_scan_observer(
         line_count = index + 1;
         scanned_line();
         let inline_disabled = line_comment_start(line, &mut state)
-            .and_then(|(start, len)| {
-                comment_body(line, start, len).strip_prefix("no-mistakes-disable-line ")
+            .and_then(|(start, kind)| {
+                comment_body(line, start, kind).strip_prefix("no-mistakes-disable-line ")
             })
             .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
         if next_disabled || inline_disabled {

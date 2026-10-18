@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::source_store_for_files;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -247,6 +248,85 @@ fn entrypoint_option_and_include_errors_propagate() {
         ..Default::default()
     });
     assert!(check_with_files(&root, &invalid_options, &files).is_err());
+}
+
+fn pattern_error(root: &Path, pattern: &str) -> String {
+    let yaml = format!(
+        "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: '{pattern}'\n    message: hi"
+    );
+    let files = [root.join("CLAUDE.md")];
+    let sources = source_store_for_files(&files);
+    let error =
+        check_with_files_and_sources(root, &config_with_rule(&yaml), &files, &sources).unwrap_err();
+    assert_eq!(sources.physical_read_count(), 0, "{error}");
+    error.to_string()
+}
+
+#[test]
+fn empty_matching_patterns_fail_at_config_load() {
+    let root = fixture_root("patterns-empty");
+    let error = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap(),
+    )
+    .unwrap_err();
+    let message = error.to_string();
+    assert!(message.contains("bannedPatterns[0]"), "{message}");
+    assert!(message.contains("can match the empty string"), "{message}");
+
+    let pass = fixture_root("pass");
+    for pattern in ["a*", "a?", "(a|)?", "(|b)", "(?m)^", "a*|QQ", "QQ|a*"] {
+        let message = pattern_error(&pass, pattern);
+        assert!(
+            message.contains("can match the empty string"),
+            "{pattern}: {message}"
+        );
+    }
+    let later = pattern_error_at(
+        &pass,
+        "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: PIN\n    message: hi\n  - files: [\"docs/*.md\"]\n    pattern: 'a*|QQ'\n    message: later",
+    );
+    assert!(later.contains("bannedPatterns[1]"), "{later}");
+    assert!(later.contains("can match the empty string"), "{later}");
+}
+
+#[test]
+fn non_empty_patterns_still_compile() {
+    let root = fixture_root("patterns");
+    let living = [root.join("docs/living.md")];
+    for pattern in ["a+", "(?:a*)?PIN-[0-9]{3}", "[a&&b]"] {
+        let yaml = format!(
+            "bannedPatterns:\n  - files: [\"docs/living.md\"]\n    pattern: '{pattern}'\n    message: kept"
+        );
+        check_with_files(&root, &config_with_rule(&yaml), &living)
+            .unwrap_or_else(|error| panic!("{pattern} should compile: {error}"));
+    }
+}
+
+#[test]
+fn oversized_patterns_report_pattern_too_large() {
+    let message = pattern_error(&fixture_root("pass"), "(a{1000}){1000}");
+    assert!(message.contains("pattern too large"), "{message}");
+    assert!(
+        !message.contains("invalid regex"),
+        "size failures must not look like syntax errors: {message}"
+    );
+}
+
+fn pattern_error_at(root: &Path, yaml: &str) -> String {
+    let files = [root.join("CLAUDE.md")];
+    let sources = source_store_for_files(&files);
+    let error =
+        check_with_files_and_sources(root, &config_with_rule(yaml), &files, &sources).unwrap_err();
+    assert_eq!(sources.physical_read_count(), 0, "{error}");
+    error.to_string()
+}
+
+#[test]
+fn empty_engine_matches_are_not_findings() {
+    let regex = regex::Regex::new("a*").unwrap();
+    assert!(super::patterns::match_start_lines(&regex, "QQ").is_empty());
+    assert_eq!(super::patterns::match_start_lines(&regex, "ba"), vec![1]);
 }
 
 mod patterns;
