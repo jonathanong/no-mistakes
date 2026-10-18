@@ -28,7 +28,6 @@ fn provider_argument_shapes_invalidate_only_the_written_member() {
         "provider-for-of",
         "provider-assign",
         "provider-recursive-wrapper",
-        "provider-destructured",
     ] {
         let sites = graph.call_sites_in_file(&root.join(format!("src/{name}.mts")));
         let changed = sites

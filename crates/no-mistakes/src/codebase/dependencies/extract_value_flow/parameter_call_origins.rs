@@ -1,6 +1,6 @@
 use super::*;
 
-/// Call-site argument identities for parameter bindings. Constructed on demand
+/// Call-site argument identities for bare parameters. Constructed on demand
 /// from the request's collected facts and shared by receiver-write projections.
 pub(in crate::codebase::dependencies) struct ParameterCallOrigins {
     values: FxHashMap<(usize, String), Vec<ValueExpression>>,
@@ -8,14 +8,14 @@ pub(in crate::codebase::dependencies) struct ParameterCallOrigins {
 
 impl ParameterCallOrigins {
     pub(super) fn new(collector: &ImportCollector) -> Self {
-        let mut slots: FxHashMap<CallableId, FxHashMap<usize, Vec<&ValueParameter>>> = fx_map();
+        let mut slots: FxHashMap<CallableId, FxHashMap<usize, (usize, String)>> = fx_map();
         for parameter in &collector.value_flow.parameters {
-            slots
-                .entry(parameter.owner)
-                .or_default()
-                .entry(parameter.index)
-                .or_default()
-                .push(parameter);
+            if parameter.projection.is_empty() {
+                slots
+                    .entry(parameter.owner)
+                    .or_default()
+                    .insert(parameter.index, (parameter.scope, parameter.name.clone()));
+            }
         }
         let mut values: FxHashMap<(usize, String), Vec<ValueExpression>> = fx_map();
         for call in &collector.value_flow.calls {
@@ -27,14 +27,13 @@ impl ParameterCallOrigins {
                         if let Some(parameters) =
                             callable_owner(collector, callback).and_then(|owner| slots.get(&owner))
                         {
-                            if let Some(parameters) = parameters.get(&0) {
+                            if let Some(key) = parameters.get(&0) {
                                 let mut entries: Vec<_> = items.iter().collect();
                                 entries.sort_by(|left, right| left.0.cmp(right.0));
-                                for (_, value) in entries {
-                                    for parameter in parameters {
-                                        append_origin(&mut values, parameter, value.clone());
-                                    }
-                                }
+                                values
+                                    .entry(key.clone())
+                                    .or_default()
+                                    .extend(entries.into_iter().map(|(_, value)| value.clone()));
                             }
                         }
                     }
@@ -46,16 +45,22 @@ impl ParameterCallOrigins {
                 continue;
             };
             for (index, argument) in call.arguments.iter().enumerate() {
-                if let Some(parameters) = parameters.get(&index) {
-                    for parameter in parameters {
-                        append_origin(&mut values, parameter, argument.clone());
-                    }
+                if let Some(key) = parameters.get(&index) {
+                    values
+                        .entry(key.clone())
+                        .or_default()
+                        .push(argument.clone());
                 }
             }
         }
         for parameter in &collector.value_flow.parameters {
-            if !matches!(parameter.default, ValueExpression::Unknown) {
-                append_origin(&mut values, parameter, parameter.default.clone());
+            if parameter.projection.is_empty()
+                && !matches!(parameter.default, ValueExpression::Unknown)
+            {
+                values
+                    .entry((parameter.scope, parameter.name.clone()))
+                    .or_default()
+                    .push(parameter.default.clone());
             }
         }
         Self { values }
@@ -64,28 +69,6 @@ impl ParameterCallOrigins {
     pub(super) fn values(&self, key: &(usize, String)) -> Option<&[ValueExpression]> {
         self.values.get(key).map(Vec::as_slice)
     }
-}
-
-fn append_origin(
-    values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
-    parameter: &ValueParameter,
-    mut value: ValueExpression,
-) {
-    for projection in &parameter.projection {
-        value = match projection {
-            ValueProjection::Member(member) | ValueProjection::Element(member) => {
-                ValueExpression::Member(std::sync::Arc::new(value), member.clone())
-            }
-            ValueProjection::Default(fallback, _) => ValueExpression::Default(
-                std::sync::Arc::new(value),
-                std::sync::Arc::new(fallback.clone()),
-            ),
-        };
-    }
-    values
-        .entry((parameter.scope, parameter.name.clone()))
-        .or_default()
-        .push(value);
 }
 
 impl ImportCollector {
