@@ -8,24 +8,12 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         target: &ast::SimpleAssignmentTarget<'a>,
     ) {
-        // A name write replaces its reference; a member write retains the
-        // receiver. Neither operation hands that receiver to an opaque owner.
-        let start = self.builder_reference_exemptions.len();
-        let expression = match target {
-            ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(_) => return,
-            ast::SimpleAssignmentTarget::TSAsExpression(value) => &value.expression,
-            ast::SimpleAssignmentTarget::TSSatisfiesExpression(value) => &value.expression,
-            ast::SimpleAssignmentTarget::TSNonNullExpression(value) => &value.expression,
-            ast::SimpleAssignmentTarget::TSTypeAssertion(value) => &value.expression,
-            member => member.to_member_expression().object(),
-        };
-        let expression = unwrap_ts_wrappers(expression);
-        let receiver = expression
-            .as_member_expression()
-            .map_or(expression, |member| member.object());
-        self.allow_builder_reference(receiver);
+        // A name write replaces its reference. A member write can mutate a
+        // builder receiver, so its root reference must still escape.
+        if matches!(target, ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(_)) {
+            return;
+        }
         walk::walk_simple_assignment_target(self, target);
-        self.builder_reference_exemptions.truncate(start);
     }
 
     pub(super) fn walk_variable_declarator_bindings(
