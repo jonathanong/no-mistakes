@@ -51,11 +51,12 @@ collisions, canonical aliases, failed canonicalization, queue policy/root
 separation, and runner configuration reuse. Existing resolver/domain fixtures
 protect public findings and catalog selection.
 
-The final storage-sharing source passes the 98% gates: lines 99.32%, functions
+Source `fe8f1562e`, rebased onto `9579d3184` (v0.92.0), passes the 98% gates:
+lines 99.32%, functions
 99.32%, regions 98.49%. The all-feature workspace run covers library, binary,
-and integration tests without filename exclusions. The library reports 11,718
+and integration tests without filename exclusions. The library reports 11,739
 passes, three existing ignores and one environment failure; binary tests report
-303 passes and integration targets report 382/251/173/381/69 passes.
+303 passes and integration targets report 395/251/173/381/69 passes.
 The failure is
 `codebase::ts_source::tests::ignore_walk::ancestor_star_gitignore_does_not_hide_ad_hoc_directory_files`,
 also reproduced on the unchanged baseline. It remains enabled and unmodified.
@@ -71,6 +72,13 @@ an explicit writable runtime directory:
 cargo llvm-cov --workspace --all-features --lib --bins --tests --no-fail-fast --no-report
 cargo llvm-cov report --summary-only --fail-under-lines 98 --fail-under-functions 98 --fail-under-regions 98
 ```
+
+After a package-version rebase, remove obsolete instrumented executable objects
+before reporting. An old v0.91 CLI beside the v0.92 CLI introduced duplicate
+unexecuted mappings and a false coverage failure in the first report. Verify
+the actual instrumented CLI version and object identity, retain only current
+objects, and regenerate from the fresh profiles. The corrected report above
+uses every test and source file; no filename suppression was added.
 
 Matched measurement results and source provenance are recorded for this change
 before handoff. The saved consuming/control configurations are in
