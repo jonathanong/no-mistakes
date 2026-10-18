@@ -5,7 +5,7 @@ impl ReceiverHistories {
         &self,
         key: &(usize, String),
         path: &[Option<String>],
-    ) -> Vec<(nested::ReceiverWrite, CallableId)> {
+    ) -> Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))> {
         let Some(origins) = &self.assigned_origins else {
             return Vec::new();
         };

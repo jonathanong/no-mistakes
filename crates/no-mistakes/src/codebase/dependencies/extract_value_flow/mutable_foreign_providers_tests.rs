@@ -50,7 +50,7 @@ fn callable_member_providers_are_available_without_a_root_rebinding() {
     let index = origins.foreign_provider_index(
         &(0, "missing".into()),
         &[],
-        vec![(reference, CallableId(1))],
+        vec![(reference, Some(CallableId(1)), (0, u32::MAX))],
     );
     let selected = index.references(None, usize::MAX);
     assert_eq!(selected.len(), 1);

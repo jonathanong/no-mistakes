@@ -7,7 +7,7 @@ impl AssignedReceiverOrigins {
         &self,
         root: usize,
         path: &[Option<String>],
-    ) -> Vec<(nested::ReceiverWrite, CallableId)> {
+    ) -> Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))> {
         let mut output = Vec::new();
         let reads = vec![None; path.len()];
         for prefixes in self
@@ -25,9 +25,11 @@ impl AssignedReceiverOrigins {
                     continue;
                 }
                 for (owner, identities) in owners {
-                    let Some(owner) = owner else { continue };
                     for timeline in identities.values() {
-                        for origin in timeline.events.values() {
+                        let mut end = u32::MAX;
+                        // A complete store ends earlier module providers. Visit
+                        // each event once, including long runs of partial stores.
+                        for (at, origin) in timeline.events.iter().rev() {
                             let mut references = Vec::new();
                             nested::write_receiver_references(
                                 &origin.value,
@@ -36,8 +38,13 @@ impl AssignedReceiverOrigins {
                                 &mut references,
                             );
                             output.extend(
-                                references.into_iter().map(|reference| (reference, *owner)),
+                                references
+                                    .into_iter()
+                                    .map(|reference| (reference, *owner, (*at, end))),
                             );
+                            if owner.is_none() && origin.complete {
+                                end = *at;
+                            }
                         }
                     }
                 }

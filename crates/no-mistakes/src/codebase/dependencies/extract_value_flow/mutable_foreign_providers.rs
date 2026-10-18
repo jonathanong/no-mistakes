@@ -59,7 +59,7 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         path: &[Option<String>],
-        member_references: Vec<(nested::ReceiverWrite, CallableId)>,
+        member_references: Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))>,
     ) -> ForeignProviderIndex {
         let root = self.roots.get(&key.0).and_then(|names| names.get(&key.1));
         let reads = vec![None; path.len()];
@@ -99,9 +99,20 @@ impl ReceiverBindingOrigins {
                 }
             }
         }
-        // Member RHS stores are callable summaries, independent of visitation order.
-        for (reference, owner) in member_references {
-            insert(reference, usize::MAX, owner);
+        let mut module_references = self.module_provider_index(key, path);
+        // Callable stores are summaries; module stores retain execution intervals.
+        for (reference, owner, interval) in member_references {
+            if let Some(owner) = owner {
+                insert(reference, usize::MAX, owner);
+            } else {
+                module_references.push((
+                    reference,
+                    std::sync::Arc::new(ModuleProviderTarget {
+                        intervals: vec![interval],
+                        uncertain: false,
+                    }),
+                ));
+            }
         }
         let mut references: Vec<_> = indexed.into_iter().collect();
         references.sort_by(|(left, _), (right, _)| left.cmp(right));
@@ -109,7 +120,7 @@ impl ReceiverBindingOrigins {
         foreign::count(3, references.len());
         ForeignProviderIndex {
             references,
-            module_references: self.module_provider_index(key, path),
+            module_references,
         }
     }
 }

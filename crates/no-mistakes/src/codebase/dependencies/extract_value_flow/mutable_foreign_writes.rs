@@ -1,6 +1,8 @@
 use super::*;
 use mutation_metadata::MutationMetadata;
 use mutation_projection::MutationInfo;
+#[path = "mutable_foreign_arguments.rs"]
+mod arguments;
 
 type WriteKey = (
     (usize, String),
@@ -53,6 +55,9 @@ impl ImportCollector {
         if self.foreign_receiver_writes_finishing() {
             return;
         }
+        if arguments::forwarded_alias(self, key) {
+            return;
+        }
         #[cfg(feature = "test-instrumentation")]
         count(0, 1);
         let writes = self
@@ -99,21 +104,29 @@ impl ImportCollector {
         #[cfg(feature = "test-instrumentation")]
         count(1, pending.len());
         let mut providers = fx_map();
+        let empty_origins = ReceiverBindingOrigins::default();
+        let mut arguments = None;
         let mut aliases = None;
         for ((key, path, (owner, acquired), assigned, has_assignment), mut write) in pending {
             let index = providers
                 .entry((key.clone(), path.clone()))
                 .or_insert_with(|| {
+                    let mut members = self
+                        .prior_member_mutations
+                        .foreign_member_provider_references(&key, &path);
+                    if members.iter().any(|((receiver, _, _), _, _)| {
+                        self.value_parameter_indexes
+                            .get(&receiver.0 .0)
+                            .is_some_and(|names| names.contains_key(&receiver.0 .1))
+                    }) {
+                        arguments
+                            .get_or_insert_with(|| arguments::MemberArguments::new(self))
+                            .expand(&mut members);
+                    }
                     self.receiver_only_bindings
-                        .as_ref()
-                        .map_or_else(Default::default, |origins| {
-                            origins.foreign_provider_index(
-                                &key,
-                                &path,
-                                self.prior_member_mutations
-                                    .foreign_member_provider_references(&key, &path),
-                            )
-                        })
+                        .as_deref()
+                        .unwrap_or(&empty_origins)
+                        .foreign_provider_index(&key, &path, members)
                 });
             // A direct writer may acquire its own later provider on another call.
             // A nested closure retains its enclosing owner's saved acquisition.
