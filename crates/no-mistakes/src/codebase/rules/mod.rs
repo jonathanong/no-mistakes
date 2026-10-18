@@ -196,6 +196,8 @@ pub(crate) use target_roots::{
 #[cfg(test)]
 mod suppression_absolute_paths_tests;
 #[cfg(test)]
+mod suppression_source_filter_tests;
+#[cfg(test)]
 mod suppression_tests;
 #[cfg(test)]
 mod target_roots_tests;
