@@ -54,5 +54,6 @@ pub(crate) fn collect_precollected_route_facts(
             routes: precollected.routes,
         },
         sources,
+        &[],
     )
 }

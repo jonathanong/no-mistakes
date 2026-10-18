@@ -13,6 +13,7 @@ pub(super) fn collect_with_scope(
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<SourceStore>,
     precollected: FileIdMap<CheckFileFacts>,
+    supplemental_call_sites: &[PathBuf],
 ) -> CheckFactMap {
     session.record_work("check.fact_collections", 1);
     let (files, graph_files, graph_files_complete) = file_scope;
@@ -34,6 +35,7 @@ pub(super) fn collect_with_scope(
             playwright,
             sources,
             precollected,
+            supplemental_call_sites,
         );
     }
     super::super::collect_check_facts_inner(

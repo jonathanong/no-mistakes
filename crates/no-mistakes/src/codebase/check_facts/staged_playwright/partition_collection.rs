@@ -13,12 +13,36 @@ pub(super) fn collect_partitions(
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &mut FileIdMap<CheckFileFacts>,
+    supplemental_call_sites: &[std::path::PathBuf],
 ) {
+    let call_tests = if supplemental_call_sites.is_empty() {
+        Vec::new()
+    } else {
+        let supplemental =
+            crate::codebase::check_facts::PathMembership::new(supplemental_call_sites);
+        partitions
+            .playwright_only_tests
+            .iter()
+            .filter(|path| supplemental.contains(path))
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    let ordinary_tests = (!call_tests.is_empty()).then(|| {
+        let calls = crate::codebase::check_facts::PathMembership::new(&call_tests);
+        partitions
+            .playwright_only_tests
+            .iter()
+            .filter(|path| !calls.contains(path))
+            .cloned()
+            .collect::<Vec<_>>()
+    });
     let test_partitions = [
         (&partitions.scoped_tests, with_imports(plan.clone())),
         (&partitions.graph_tests, with_imports(graph_plan(plan))),
         (
-            &partitions.playwright_only_tests,
+            ordinary_tests
+                .as_ref()
+                .unwrap_or(&partitions.playwright_only_tests),
             with_imports(CheckFactPlan::default()),
         ),
     ];
@@ -28,6 +52,19 @@ pub(super) fn collect_partitions(
             root,
             files,
             partition_plan,
+            playwright,
+            sources,
+            facts,
+        );
+    }
+    if !call_tests.is_empty() {
+        let mut call_plan = with_imports(CheckFactPlan::default());
+        call_plan.graph.call_sites = true;
+        collect_test_partition(
+            session,
+            root,
+            &call_tests,
+            call_plan,
             playwright,
             sources,
             facts,

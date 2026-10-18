@@ -36,6 +36,7 @@ pub(super) fn collect_with_sources_and_session(
     mut playwright: PlaywrightFactPlan,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
     mut precollected: FileIdMap<super::CheckFileFacts>,
+    supplemental_call_sites: &[PathBuf],
 ) -> CheckFactMap {
     module_resolution::initialize_if_missing(root, &mut playwright, &sources);
     crate::playwright::integration_routes::runner_plan(root, &mut plan, &playwright, &sources);
@@ -61,6 +62,7 @@ pub(super) fn collect_with_sources_and_session(
             routes: Default::default(),
         },
         sources,
+        supplemental_call_sites,
     )
 }
 
@@ -72,6 +74,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
     playwright: PlaywrightFactPlan,
     precollected: PrecollectedFacts,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+    supplemental_call_sites: &[PathBuf],
 ) -> CheckFactMap {
     let PrecollectedFacts {
         ts: precollected_ts,
@@ -148,6 +151,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &playwright,
         &sources,
         &mut ts,
+        supplemental_call_sites,
     );
     let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
         session,

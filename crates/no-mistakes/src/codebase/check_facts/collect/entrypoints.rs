@@ -148,6 +148,7 @@ pub fn collect_check_facts_with_playwright_and_session(
         playwright,
         sources,
         Default::default(),
+        &[],
     )
 }
 
@@ -168,5 +169,6 @@ pub(crate) fn collect_check_facts_with_precollected_file_facts(
         playwright,
         sources,
         precollected,
+        &[],
     )
 }

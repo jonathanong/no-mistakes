@@ -15,13 +15,27 @@ pub fn collect_check_facts_with_supplemental_call_sites(
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<SourceStore>,
 ) -> CheckFactMap {
-    let supplemental = if supplemental_call_sites.is_empty() {
-        FileIdMap::with_inventory(Arc::clone(sources.inventory()))
-    } else {
-        super::super::collect_fact_map_with_sources(
+    // Main collection can admit these paths through production imports,
+    // Playwright sources, or runner helpers. Keep the richer entry when it does.
+    let mut facts = super::collect_with_scope(
+        session,
+        root,
+        (file_scope.0, file_scope.1, true),
+        plan,
+        playwright,
+        Arc::clone(&sources),
+        FileIdMap::with_inventory(Arc::clone(sources.inventory())),
+        &supplemental_call_sites,
+    );
+    let missing = supplemental_call_sites
+        .into_iter()
+        .filter(|path| !facts.ts.contains_key(path))
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        let supplemental = super::super::collect_fact_map_with_sources(
             session,
             root,
-            &supplemental_call_sites,
+            &missing,
             &CheckFactPlan {
                 graph: crate::codebase::ts_source::facts::TsFactPlan {
                     call_sites: true,
@@ -31,15 +45,17 @@ pub fn collect_check_facts_with_supplemental_call_sites(
             },
             None,
             &sources,
-        )
-    };
-    super::collect_with_scope(
-        session,
-        root,
-        (file_scope.0, file_scope.1, true),
-        plan,
-        playwright,
-        sources,
-        supplemental,
-    )
+        );
+        facts.stats.files_parsed += supplemental.values().filter(|file| file.parsed).count();
+        facts.stats.parse_errors += supplemental
+            .values()
+            .filter(|file| file.parse_error.is_some())
+            .count();
+        facts.ts.extend(supplemental.map_values(Arc::new));
+    }
+    facts
 }
+
+#[cfg(test)]
+#[path = "supplemental/tests.rs"]
+mod tests;
