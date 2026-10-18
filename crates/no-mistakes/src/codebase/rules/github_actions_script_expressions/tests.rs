@@ -439,22 +439,28 @@ fn fixture_root(scenario: &str) -> PathBuf {
     )
 }
 
-fn fixture_files(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    collect_files(root, &mut files);
-    files.sort();
-    files
-}
-
-fn collect_files(dir: &Path, files: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.is_dir() {
-            collect_files(&path, files);
-        } else {
-            files.push(path);
-        }
-    }
+fn fixture_files(root: &Path, scenario: &str) -> Vec<PathBuf> {
+    let names: &[&str] = match scenario {
+        "pass" => &[
+            ".github/actions/image/action.yml",
+            ".github/actions/pack/action.yml",
+            ".github/workflows/ci.yml",
+            ".no-mistakes.yml",
+        ],
+        "fail" => &[
+            ".github/actions/pack/action.yml",
+            ".github/workflows/ci.yml",
+            ".no-mistakes.yml",
+        ],
+        "allowlist" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
+        "unanalyzable" => &[
+            ".github/workflows/alias.yml",
+            ".github/workflows/flow.yml",
+            ".no-mistakes.yml",
+        ],
+        other => panic!("unknown fixture scenario {other}"),
+    };
+    names.iter().map(|name| root.join(name)).collect()
 }
 
 fn load_fixture(scenario: &str) -> (PathBuf, NoMistakesConfig, Vec<PathBuf>) {
@@ -462,7 +468,7 @@ fn load_fixture(scenario: &str) -> (PathBuf, NoMistakesConfig, Vec<PathBuf>) {
     let config =
         serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
             .unwrap();
-    let files = fixture_files(&root);
+    let files = fixture_files(&root, scenario);
     (root, config, files)
 }
 
