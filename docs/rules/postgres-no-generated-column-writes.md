@@ -25,6 +25,17 @@ recreating a table replaces its generated status and positional column order.
 
 ## Options and defaults
 
+```yaml
+rules:
+  - rule: postgres-no-generated-column-writes
+    options:
+      importSpecifier: "@app/db"
+```
+
+The configured `importSpecifier` limits executor calls to proven receivers from
+that module. There are no direct
+`schema` or `embedded` options.
+
 `unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
 `--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
 

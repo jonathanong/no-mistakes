@@ -1,0 +1,14 @@
+[
+  {"fixture": "postgres-bounded-statements", "subcheck": "select", "knownSpan": [42, 117], "exactSpan": [195, 227], "unknownSpan": [334, 351], "unknownLine": 8},
+  {"fixture": "postgres-generated-column-predicates", "subcheck": "where", "knownSpan": [37, 140], "exactSpan": [218, 270], "unknownSpan": [377, 394], "unknownLine": 10},
+  {"fixture": "postgres-no-generated-column-writes", "subcheck": "generated-write", "knownSpan": [37, 151], "exactSpan": [229, 287], "unknownSpan": [394, 411], "unknownLine": 10},
+  {"fixture": "postgres-sql-shape-policy", "subcheck": "banned-function-call", "knownSpan": [37, 88], "exactSpan": [166, 193], "unknownSpan": [300, 317], "unknownLine": 10},
+  {"fixture": "postgres-idempotent-insert", "subcheck": "replay-guard", "knownSpan": [37, 151], "exactSpan": [229, 271], "unknownSpan": [378, 395], "unknownLine": 10},
+  {"fixture": "postgres-required-predicates", "subcheck": "relation:accounts:predicate:active IS TRUE", "knownSpan": [42, 142], "exactSpan": [220, 252], "unknownSpan": [359, 376], "unknownLine": 8},
+  {"fixture": "postgres-no-offset", "subcheck": "offset", "knownSpan": [37, 125], "exactSpan": [203, 244], "unknownSpan": [351, 368], "unknownLine": 10},
+  {"fixture": "postgres-conflict-ordering", "subcheck": "canonical-conflict-order", "knownSpan": [37, 286], "exactSpan": [364, 476], "unknownSpan": [583, 600], "unknownLine": 10},
+  {"fixture": "postgres-lock-ordering", "subcheck": "row-lock-order", "knownSpan": [42, 185], "exactSpan": [263, 327], "unknownSpan": [434, 451], "unknownLine": 8},
+  {"fixture": "postgres-explicit-columns", "subcheck": "select-star", "knownSpan": [37, 107], "exactSpan": [185, 216], "unknownSpan": [323, 340], "unknownLine": 10},
+  {"fixture": "postgres-require-query-annotation", "subcheck": "leading-annotation", "knownSpan": [37, 95], "exactSpan": [173, 190], "unknownSpan": [297, 314], "unknownLine": 10},
+  {"fixture": "postgres-sql-statement-policy", "subcheck": "statement:CREATE INDEX", "knownSpan": [37, 117], "exactSpan": [195, 251], "unknownSpan": [358, 375], "unknownLine": 10}
+]

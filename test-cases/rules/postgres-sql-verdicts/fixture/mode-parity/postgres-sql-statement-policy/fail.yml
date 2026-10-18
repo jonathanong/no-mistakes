@@ -1,0 +1,9 @@
+rules:
+- rule: postgres-sql-statement-policy
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    trustedSqlTags:
+    - module: '@example/db'
+      name: sql
+    unanalyzableSql: fail
