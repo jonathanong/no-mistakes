@@ -112,3 +112,9 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
 
 #[path = "receiver_writer_edges.rs"]
 mod writer_edges;
+
+#[path = "provider_argument_shapes.rs"]
+mod provider_argument_shapes;
+
+#[path = "object_assign_provider_controls.rs"]
+mod object_assign_provider_controls;

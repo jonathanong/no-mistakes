@@ -104,6 +104,11 @@ regardless of declaration order. If execution order is uncertain, affected live
 member calls remain unresolved. Saved container identities, copied methods,
 sibling members, and unrelated receivers retain their supported precision.
 
+Possible providers include receivers passed through parameters and wrappers,
+default parameters, literal-array callbacks and loop bindings, and sources copied
+by `Object.assign`. Member writes through those receivers invalidate the affected
+method even when a mutable alias or closure carries the receiver to the writer.
+
 Deferred writers also use module receiver replacements at invocation: after
 `box = { client: replica }; write();`, a write through `box.client.get` makes
 `replica.get` unresolved. Reversing those two statements preserves the untouched

@@ -1,4 +1,6 @@
 use super::*;
+#[path = "for_of_value_binding.rs"]
+mod for_of_value_binding;
 
 impl ImportCollector {
     fn record_value_binding(&mut self, declarator: &VariableDeclarator<'_>, immutable: bool) {
@@ -31,7 +33,7 @@ impl ImportCollector {
             self.record_value_pattern(&declarator.id, value, declarator.span.start);
         }
     }
-    fn record_value_pattern(
+    pub(super) fn record_value_pattern(
         &mut self,
         pattern: &BindingPattern<'_>,
         value: ValueExpression,
@@ -135,6 +137,7 @@ impl ImportCollector {
         }
         self.record_replacement_call(call);
         let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
+        self.record_object_assign_providers(&callee, &arguments, call.span.end);
         self.value_flow.calls.push(ValueCall {
             context: self.current_function_id(),
             offset: call.span.start,

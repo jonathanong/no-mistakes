@@ -1,5 +1,7 @@
 use super::*;
 use mutation_projection::{MutationInfo, PendingQueue};
+#[path = "forward_parameter_arguments.rs"]
+mod parameter_arguments;
 
 /// Only unresolved lexical receivers retain work. Group shared alias paths by
 /// physical writer, then reuse the ordinary visited projection after collection.
@@ -33,14 +35,14 @@ impl ImportCollector {
                 .forward_receiver_writes
                 .as_ref()
                 .is_some_and(|work| work.completed)
-            || !self.has_lexical_binding_at(key.0, &key.1)
+            || (!self.has_lexical_binding_at(key.0, &key.1)
+                && !self
+                    .value_parameter_indexes
+                    .get(&key.0)
+                    .is_some_and(|names| names.contains_key(key.1.as_str())))
             || self.has_mutable_receiver_binding(key.0, &key.1)
             || self
                 .value_binding_indexes
-                .get(&key.0)
-                .is_some_and(|names| names.contains_key(key.1.as_str()))
-            || self
-                .value_parameter_indexes
                 .get(&key.0)
                 .is_some_and(|names| names.contains_key(key.1.as_str()))
         {
@@ -98,6 +100,7 @@ impl ImportCollector {
         work.indexes.clear();
         self.forward_receiver_writes = Some(work);
         let mut alias_index = None;
+        let mut parameter_arguments = None;
         for mut writer in writers {
             writer
                 .sources
@@ -105,9 +108,34 @@ impl ImportCollector {
                     self.value_binding_indexes
                         .get(scope)
                         .is_some_and(|names| names.contains_key(name.as_str()))
+                        || self.has_mutable_receiver_binding(*scope, name)
+                        || self
+                            .value_parameter_indexes
+                            .get(scope)
+                            .is_some_and(|names| names.contains_key(name.as_str()))
                 });
             if writer.sources.is_empty() {
                 continue;
+            }
+            if writer
+                .sources
+                .iter()
+                .any(|((((scope, name), _), _, _), _, _, _)| {
+                    self.value_parameter_indexes
+                        .get(scope)
+                        .is_some_and(|names| names.contains_key(name.as_str()))
+                })
+            {
+                let arguments =
+                    parameter_arguments.get_or_insert_with(|| self.parameter_call_origins());
+                writer.sources = writer
+                    .sources
+                    .into_iter()
+                    .flat_map(|source| parameter_arguments::expand(arguments, source))
+                    .collect();
+                if writer.sources.is_empty() {
+                    continue;
+                }
             }
             #[cfg(feature = "test-instrumentation")]
             {

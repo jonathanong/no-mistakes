@@ -98,3 +98,37 @@ fn forward_receiver_aliases_preserve_selected_root_snapshots_and_shadowing() {
         assert_forward_targets(&graph, &root, file, &expected);
     }
 }
+
+#[test]
+fn mutable_aliases_and_parameters_invalidate_the_receiver_used_at_the_write() {
+    let (root, graph) = forward_graph();
+    for (file, changed) in [
+        ("parameter-live", "replica"),
+        ("parameter-object", "replica"),
+        ("captured-let", "primary"),
+        ("rebound-let", "replica"),
+        ("import-let", "replica"),
+        ("forward-let", "replica"),
+        ("forward-var", "replica"),
+        ("member-swap", "replica"),
+        ("loop-let", "replica"),
+    ] {
+        // Each case has an independent imported control that must stay Known.
+        assert_forward_targets(
+            &graph,
+            &root,
+            file,
+            &[
+                (&format!("{changed}.get"), None),
+                ("untouched.get", Some("untouched.get")),
+            ],
+        );
+    }
+    // The direct call receives the live box after its rebind.
+    assert_forward_targets(
+        &graph,
+        &root,
+        "parameter-live",
+        &[("primary.get", Some("primary.get"))],
+    );
+}
