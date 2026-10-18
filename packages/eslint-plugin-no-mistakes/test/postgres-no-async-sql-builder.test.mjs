@@ -6,12 +6,18 @@ const RULE = "postgres-no-async-sql-builder";
 const NAMES = { builders: [{ names: ["build"] }] };
 const SQL = { builders: [{ callees: ["sql"], source: "@example/db" }] };
 
+// Existing callers named `read` stand in for a same-file consumer whose
+// parameter is a string, not a Promise. Unresolved `read` is tested separately.
+function withSyncRead(code) {
+  return `${code}\nfunction read(query: string): string { return query; }\n`;
+}
+
 function ids(code, option = NAMES) {
-  return messages(code, RULE, option, "app.ts");
+  return messages(withSyncRead(code), RULE, option, "app.ts");
 }
 
 function reported(code, option = NAMES) {
-  return lint(code, { [`no-mistakes/${RULE}`]: ["error", option] }, "app.ts");
+  return lint(withSyncRead(code), { [`no-mistakes/${RULE}`]: ["error", option] }, "app.ts");
 }
 
 describe("postgres-no-async-sql-builder", () => {
@@ -52,7 +58,7 @@ describe("postgres-no-async-sql-builder", () => {
     );
     assert.deepEqual(
       ids(`
-        async function build(): string { return "SELECT 1"; }
+        async function build() { return \`SELECT 1\`; }
         read(build());
       `),
       ["removeAsync"],
@@ -60,38 +66,41 @@ describe("postgres-no-async-sql-builder", () => {
     assert.deepEqual(
       ids(`
         type Sql = string;
-        async function build(): Sql { return "SELECT 1"; }
-        read(build());
+        function accept(query: Sql) { return query; }
+        async function build() { return "SELECT 1"; }
+        accept(build());
       `),
       ["removeAsync"],
     );
     assert.deepEqual(
       ids(`
-        async function build(): string | number { return "SELECT 1"; }
-        read(build());
+        function accept(query: string | number) { return query; }
+        async function build() { return "SELECT 1"; }
+        accept(build());
       `),
       ["removeAsync"],
     );
     assert.deepEqual(
       ids(`
-        async function build(): string & { length: number } { return "SELECT 1"; }
-        read(build());
+        function run(load: () => (string & { length: number })) { return load(); }
+        async function build() { return "SELECT 1"; }
+        run(build);
       `),
       ["removeAsync"],
     );
     assert.deepEqual(
       ids(`
-        async function build(): string[] { return ["SELECT 1"]; }
+        async function build(): Promise<string[]> { return ["SELECT 1"]; }
         read(build());
       `),
-      ["removeAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
-        async function build(): () => string { return () => "SELECT 1"; }
+        async function build(): Promise<() => string> { return () => "SELECT 1"; }
         read(build());
       `),
-      ["removeAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -148,7 +157,7 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         SQL,
       ),
-      ["removeAsync"],
+      [],
     );
     assert.deepEqual(
       ids(
@@ -195,7 +204,7 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         { builders: [{ callees: ["sql"] }] },
       ),
-      ["removeAsync"],
+      [],
     );
   });
 
@@ -216,7 +225,17 @@ describe("postgres-no-async-sql-builder", () => {
       ids(`async function build() { await using scope = open(); return "SELECT 1"; }`),
       [],
     );
-    assert.deepEqual(ids(`async function build(id = await nextId()) { return "SELECT 1"; }`), []);
+    // Parameter defaults cannot await, so a real suspension lives in the body.
+    assert.deepEqual(
+      ids(`
+        declare function nextId(): Promise<string>;
+        async function build(id: string) {
+          await nextId();
+          return "SELECT " + id;
+        }
+      `),
+      [],
+    );
     assert.deepEqual(ids(`const build = async () => import("./sql");`), []);
     assert.deepEqual(ids(`async function build() { return import("./sql"); }`), []);
     assert.deepEqual(
@@ -353,32 +372,27 @@ describe("postgres-no-async-sql-builder", () => {
     );
   });
 
-  it("does not tell the user to delete async when the visible contract requires a Promise", () => {
+  it("abstains when the visible contract requires a Promise", () => {
     assert.deepEqual(
       ids(`
         async function build(): Promise<string> { return "SELECT 1"; }
         read(build());
       `),
-      ["keepAsync"],
-    );
-    assert.match(
-      reported(`async function build(): Promise<string> { return "SELECT 1"; }\nread(build());`)[0]
-        .message,
-      /Do not remove async/,
+      [],
     );
     assert.deepEqual(
       ids(`
         async function build(): Promise<string> | null { return "SELECT 1"; }
         read(build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
         async function build(): (Promise<string>) { return "SELECT 1"; }
         read(build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -386,14 +400,14 @@ describe("postgres-no-async-sql-builder", () => {
         async function build(): Sql { return "SELECT 1"; }
         read(build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
         async function build(): globalThis.Promise<string> { return "SELECT 1"; }
         read(build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -401,7 +415,7 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         run(build);
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -410,7 +424,7 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         run(build);
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -434,14 +448,14 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         build().then(() => {});
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
         async function build() { return "SELECT 1"; }
         build()?.then(() => {});
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -449,14 +463,14 @@ describe("postgres-no-async-sql-builder", () => {
         const query: Promise<string> = build();
         read(query);
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
         async function build() { return "SELECT 1"; }
         function load(): Promise<string> { return build(); }
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(
@@ -467,7 +481,7 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         SQL,
       ),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(
@@ -599,7 +613,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync", "keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -613,7 +627,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync", "keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -635,7 +649,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Other();
         repo.build().then(() => {});
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -700,7 +714,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -724,7 +738,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -746,7 +760,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -771,7 +785,7 @@ describe("postgres-no-async-sql-builder", () => {
         };
         read(builders.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -780,7 +794,7 @@ describe("postgres-no-async-sql-builder", () => {
         } satisfies { build(): Promise<string> };
         read(builders.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -788,7 +802,7 @@ describe("postgres-no-async-sql-builder", () => {
           async build(): Promise<string> { return "SELECT 1"; }
         }
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -841,7 +855,7 @@ describe("postgres-no-async-sql-builder", () => {
           }
         }
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -861,6 +875,440 @@ describe("postgres-no-async-sql-builder", () => {
     );
     assert.deepEqual(ids(`export default async function build() { return "SELECT 1"; }`), []);
     assert.deepEqual(ids(`export default class { async build() { return "SELECT 1"; } }`), []);
+  });
+
+  it("abstains when a named builder returns a promise or an opaque value", () => {
+    assert.deepEqual(
+      ids(`
+        declare const db: { query(text: string): Promise<string> };
+        async function build() { return db.query("SELECT 1"); }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(value: string) { return Promise.resolve(value); }
+        await build("x");
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        declare function loadSql(key: string): Promise<string>;
+        async function build(key: string) { return loadSql(key); }
+        await build("k");
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(id: string) { return \`SELECT \${id}\`; }
+        await build("1");
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        declare function loadSql(key: string): string;
+        async function build(flag: boolean) {
+          if (flag) return "SELECT 1";
+          return loadSql("k");
+        }
+        await build(true);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return "SELECT 1";
+        }
+        await build(false);
+      `),
+      [],
+    );
+  });
+
+  it("abstains when removing async would throw before later caller statements", () => {
+    assert.deepEqual(
+      ids(`
+        function other() {}
+        async function build(id: string) {
+          if (!id) throw new Error("missing");
+          return "SELECT 1";
+        }
+        const query = build("1");
+        other();
+        await query;
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function log(_id: string) {}
+        async function build(id: string) {
+          log(id);
+          return "SELECT 1";
+        }
+        await build("1");
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          for (const id of ["1"]) void id;
+          return "SELECT 1";
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          switch (1) {
+            case 1:
+              return "SELECT 1";
+          }
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          try {
+            return "SELECT 1";
+          } catch {
+            return "SELECT 2";
+          }
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          while (false) void 0;
+          return "SELECT 1";
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          do void 0;
+          while (false);
+          return "SELECT 1";
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          return new String("SELECT 1");
+        }
+        await build();
+      `),
+      [],
+    );
+  });
+
+  it("reports only when every path returns judged SQL", () => {
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return "SELECT 1";
+          else return "SELECT 2";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return "SELECT 1";
+          return "SELECT 2";
+        }
+        await build(false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean, other: boolean) {
+          if (flag) {
+            if (other) return "SELECT 1";
+          }
+          return "SELECT 2";
+        }
+        await build(false, false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) void flag;
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) {
+            const label = "kept";
+            void label;
+          }
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) {}
+          else {}
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) void flag;
+          else void flag;
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) {}
+          else return "SELECT 1";
+          return "SELECT 2";
+        }
+        await build(false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) void flag;
+          else return "SELECT 1";
+          return "SELECT 2";
+        }
+        await build(false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean, other: boolean) {
+          if (flag) {
+            if (other) return "SELECT 1";
+          } else return "SELECT 2";
+          return "SELECT 3";
+        }
+        await build(false, false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          done: return "SELECT 1";
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          function nested() {}
+          class Box {}
+          ;
+          debugger;
+          return \`SELECT 1\`;
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          const query = "SELECT 1";
+          return query;
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          return (0, "SELECT 1");
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          return "SELECT 1" && "SELECT 2";
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const build = async () => "SELECT 1";
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          declare function sql(text: string): string;
+          async function build() { return sql("SELECT 1"); }
+          await build();
+        `,
+        { builders: [{ callees: ["sql"] }] },
+      ),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return;
+          return "SELECT 1";
+        }
+        await build(false);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        declare function loadSql(key: string): string;
+        async function build() {
+          return (0, loadSql("k"));
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          const left = right;
+          const right = left;
+          return left;
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          let query = "SELECT 1";
+          query = "SELECT 2";
+          return query;
+        }
+        await build();
+      `),
+      [],
+    );
+  });
+
+  it("abstains when a call result is passed to an untyped, Promise, or unresolved parameter", () => {
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(query: Promise<string>) { return query.then((value) => value); }
+          async function build() { return "SELECT 1"; }
+          wrap(build());
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(query) { return query.then((value) => value); }
+          async function build() { return "SELECT 1"; }
+          wrap(build());
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          async function build() { return "SELECT 1"; }
+          read(build());
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function wrap(query: string) { return query; }
+        async function build() { return "SELECT 1"; }
+        wrap(build());
+      `),
+      ["removeAsync"],
+    );
+  });
+
+  it("reports a same-file sql tag whose synchronous rewrite the analyzer can judge", () => {
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function buildQuery(id: string) {
+            return sql\`/* orders/by-id */ SELECT id FROM orders WHERE account_id = \${id}\`;
+          }
+          await buildQuery("1");
+        `,
+        SQL,
+      ),
+      ["removeAsync"],
+    );
   });
 
   it("honors ESLint and no-mistakes suppression", () => {
@@ -935,7 +1383,7 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         SQL,
       ),
-      ["removeAsync"],
+      [],
     );
     assert.deepEqual(
       ids(
@@ -1032,7 +1480,7 @@ describe("postgres-no-async-sql-builder", () => {
     );
     assert.deepEqual(
       ids(`
-        async function build(): string | Missing { return "SELECT 1"; }
+        async function build(): Promise<string> | Missing { return "SELECT 1"; }
         read(build());
       `),
       [],
@@ -1059,7 +1507,7 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         run(build);
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1083,7 +1531,7 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         run(build);
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1112,7 +1560,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1178,7 +1626,7 @@ describe("postgres-no-async-sql-builder", () => {
         };
         read(builders.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1186,7 +1634,7 @@ describe("postgres-no-async-sql-builder", () => {
         const builders: Query = { async build() { return "SELECT 1"; } };
         read(builders.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1242,7 +1690,7 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         run(build);
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1256,7 +1704,7 @@ describe("postgres-no-async-sql-builder", () => {
       ids(
         `
           import { sql } from "@example/db";
-          read(async function buildQuery() { return sql\`SELECT 1\`; });
+          unknownConsumer(async function buildQuery() { return sql\`SELECT 1\`; });
         `,
         SQL,
       ),
@@ -1370,7 +1818,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new Repo();
         read(repo.build());
       `),
-      ["keepAsync", "keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1451,7 +1899,7 @@ describe("postgres-no-async-sql-builder", () => {
         const repo = new A();
         read(repo.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1459,7 +1907,7 @@ describe("postgres-no-async-sql-builder", () => {
         const query = build();
         query.then(() => {});
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1482,7 +1930,7 @@ describe("postgres-no-async-sql-builder", () => {
       ids(
         `
           import { sql } from "@example/db";
-          read(async () => sql\`SELECT 1\`);
+          unknownConsumer(async () => sql\`SELECT 1\`);
         `,
         SQL,
       ),
@@ -1715,7 +2163,7 @@ describe("postgres-no-async-sql-builder", () => {
     );
     assert.deepEqual(
       ids(`
-        async function build(): asserts ready { return; }
+        async function build(): Promise<string> extends infer Ready ? Ready : never { return "SELECT 1"; }
         read(build());
       `),
       [],
@@ -1727,7 +2175,7 @@ describe("postgres-no-async-sql-builder", () => {
         const builders: Left | Right = { async build() { return "SELECT 1"; } };
         read(builders.build());
       `),
-      ["keepAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`

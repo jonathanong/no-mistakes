@@ -192,8 +192,10 @@ of `{ names?: string[], callees?: string[], source?: string }`. `names` selects
 async functions by local name. `callees` selects async functions that return
 those calls or tagged templates. `source`, when set, limits `callees` to a
 named import or namespace member from that exact module. The rule tells you to
-remove `async` only when the visible contract allows a synchronous literal
-return; otherwise it says not to remove `async`, or it abstains. See
+remove `async` only when every return is a judged SQL string or configured
+callee and the visible contract allows that synchronous return. Otherwise it
+abstains, including when a caller parameter is untyped, `Promise`-typed, or
+unresolved. See
 [the rule reference](eslint-rules/postgres-no-async-sql-builder.md).
 
 ### `postgres-no-manual-transaction`

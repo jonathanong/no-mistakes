@@ -29,7 +29,9 @@ function callResultContract(call, context, types) {
     if (parent.type === "AwaitExpression" && parent.argument === current) return "allows";
     if (parent.type === "ReturnStatement" && parent.argument === current)
       return returnedPromiseContract(parent, context, types);
-    if (parent.type === "CallExpression" && parent.arguments.includes(current)) return "allows";
+    if (parent.type === "CallExpression" && parent.arguments.includes(current)) {
+      return argumentParameterContract(current, context, types);
+    }
     if (
       parent.type === "UnaryExpression" &&
       parent.operator === "void" &&

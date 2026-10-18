@@ -170,6 +170,8 @@ function isConfiguredBuilder(func, builders, context) {
 }
 
 module.exports = {
+  calleeMatches,
   configuredBuilders,
   isConfiguredBuilder,
+  localInitializer,
 };

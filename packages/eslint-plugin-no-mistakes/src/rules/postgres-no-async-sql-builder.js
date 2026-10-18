@@ -8,6 +8,10 @@ const {
   configuredBuilders,
   isConfiguredBuilder,
 } = require("./postgres-no-async-sql-builder-match");
+const {
+  bodyHasUnjudgedEffect,
+  returnsJudgedSql,
+} = require("./postgres-no-async-sql-builder-returns");
 
 function importSuspends(node, func) {
   let current = node;
@@ -54,7 +58,7 @@ module.exports = rule(
     type: "problem",
     docs: {
       description:
-        "report async SQL builders that never wait, and suggest removing async only when the contract allows it",
+        "report async SQL builders that never wait only when every return is judged SQL and the contract allows a synchronous rewrite",
       recommended: false,
     },
     schema: [
@@ -80,8 +84,6 @@ module.exports = rule(
     messages: {
       removeAsync:
         "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
-      keepAsync:
-        "This async SQL builder never waits, but the visible contract still requires a Promise. Do not remove async. No autofix is offered.",
     },
   },
   (context) => {
@@ -93,12 +95,13 @@ module.exports = rule(
     function visit(node) {
       if (!node.async || node.generator || suppressed(node)) return;
       if (!isConfiguredBuilder(node, builders, context) || functionSuspends(context, node)) return;
-      const decision = contractFor(node, context, types);
-      if (decision === "unknown") return;
-      context.report({
-        node,
-        messageId: decision === "allows" ? "removeAsync" : "keepAsync",
-      });
+      if (
+        !returnsJudgedSql(context, node, builders) ||
+        bodyHasUnjudgedEffect(context, node, builders)
+      )
+        return;
+      if (contractFor(node, context, types) !== "allows") return;
+      context.report({ node, messageId: "removeAsync" });
     }
 
     return {
