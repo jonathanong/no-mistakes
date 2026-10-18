@@ -119,6 +119,9 @@ def summarize_group(rows):
 
 
 def summarize(rows):
+    rows = list(rows)
+    if not rows:
+        raise ValueError("no measurement samples were produced")
     groups = defaultdict(list)
     identities = defaultdict(set)
     sources, locks = set(), set()
@@ -130,6 +133,11 @@ def summarize(rows):
         locks.add(json.dumps(row["metadata"].get("lock"), sort_keys=True))
         workloads[row["metadata"]["workload"]].add((row["metadata"].get("workload_commit"),
                                                    row["metadata"].get("workload_tree")))
+    expected = set(itertools.product(("linux-arm64", "macos-arm64"),
+                                    ("consumer", "hosted-acceptance", "hosted-passing-failing"),
+                                    (False, True), ("1", "4", "max")))
+    if set(groups) != expected:
+        raise ValueError(f"expected all 36 native cells; missing={expected - set(groups)}, extra={set(groups) - expected}")
     if any(len(hashes) != 1 or None in hashes for hashes in identities.values()):
         raise ValueError("executable identity changed across native cells")
     if len(sources) != 1 or None in sources or len(locks) != 1 or "null" in locks:
@@ -137,11 +145,6 @@ def summarize(rows):
     if any(len(pins) != 1 or any(not commit or not tree for commit, tree in pins)
            for pins in workloads.values()):
         raise ValueError("workload commit or tree changed across native cells")
-    expected = set(itertools.product(("linux-arm64", "macos-arm64"),
-                                    ("consumer", "hosted-acceptance", "hosted-passing-failing"),
-                                    (False, True), ("1", "4", "max")))
-    if set(groups) != expected:
-        raise ValueError(f"expected all 36 native cells; missing={expected - set(groups)}, extra={set(groups) - expected}")
     return [summarize_group(entries) for _, entries in sorted(groups.items())]
 
 

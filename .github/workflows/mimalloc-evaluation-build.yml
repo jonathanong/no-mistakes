@@ -31,7 +31,6 @@ jobs:
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && '1' || '16' }}
       CARGO_PROFILE_RELEASE_DEBUG: "0"
       CARGO_INCREMENTAL: "0"
-      CARGO_BUILD_JOBS: "2"
       RUSTC_WRAPPER: ""
       CARGO_TARGET_DIR: ${{ github.workspace }}/target
     steps:
@@ -54,7 +53,10 @@ jobs:
           key: ${{ matrix.target }}
           cache-bin: "false"
       - name: Build release CLI and addon
-        timeout-minutes: 24
+        # Cold releases took 22m40s on ubuntu-22.04-arm and 18m45s on macOS.
+        # The Linux comparison predates ubuntu-24.04-arm, so retain a margin:
+        # 27m build plus at most 3m setup/upload inside the 30m job cap.
+        timeout-minutes: 27
         env:
           TARGET: ${{ matrix.target }}
           CARGO_TARGET_DIR: ${{ github.workspace }}/target

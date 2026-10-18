@@ -34,7 +34,9 @@ export CARGO_PROFILE_RELEASE_LTO="$lto"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS="$units"
 export CARGO_PROFILE_RELEASE_DEBUG=0
 export CARGO_INCREMENTAL=0
-export CARGO_BUILD_JOBS=2
+build_jobs=$(mimalloc_cargo_jobs "$target")
+case "$build_jobs" in ''|*[!0-9]*|0) echo "invalid Cargo build job count: $build_jobs" >&2; exit 2 ;; esac
+export CARGO_BUILD_JOBS="$build_jobs"
 export RUSTC_WRAPPER=
 export NO_MISTAKES_BUILD_NAPI=1
 mimalloc_build "$variant" cargo build --release --locked --target "$target" \

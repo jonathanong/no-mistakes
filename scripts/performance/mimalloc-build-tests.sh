@@ -14,3 +14,18 @@ for variant in system mimalloc; do
     exit 1
   fi
 done
+
+# Match Cargo's native runner parallelism on both ARM builders.
+nproc() {
+  printf '4\n'
+}
+sysctl() {
+  [[ "$*" == '-n hw.logicalcpu' ]] || return 2
+  printf '3\n'
+}
+[[ "$(mimalloc_cargo_jobs aarch64-apple-darwin)" == 3 ]]
+[[ "$(mimalloc_cargo_jobs aarch64-unknown-linux-gnu)" == 4 ]]
+if mimalloc_cargo_jobs unknown-target; then
+  printf 'unexpected build target accepted\n' >&2
+  exit 1
+fi

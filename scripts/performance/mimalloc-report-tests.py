@@ -111,6 +111,11 @@ class MimallocReportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "all 36"):
             REPORT["summarize"](json.loads((FIXTURES / "paired-success.json").read_text()))
 
+    def test_empty_sample_set_fails_closed_before_provenance_checks(self):
+        rows = json.loads((FIXTURES / "matrix-empty.json").read_text())
+        with self.assertRaisesRegex(ValueError, "no measurement samples"):
+            REPORT["summarize"](rows)
+
     def test_artifact_change_across_cells_is_rejected(self):
         rows = json.loads((FIXTURES / "matrix-wrong-binary.json").read_text())
         with self.assertRaisesRegex(ValueError, "identity changed"):
