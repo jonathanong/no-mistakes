@@ -75,8 +75,9 @@ client.chat.responses.create({ signal });
     without added anchors. `client.responses.create` matches `*.responses`;
     `client.chat.responses.create` does not.
   A target that sets both `globalNamePatterns` and `receiverPatterns`, omits
-  its kind, or uses an invalid `/regex/` such as `/[/` fails at config load
-  in ESLint and Oxlint. It does not load and then match nothing.
+  its kind, or uses a slash-wrapped pattern that does not compile (`/[/`,
+  `/(/`, `/*/`) fails at config load in ESLint and Oxlint. It does not load
+  and then match nothing.
   Each group also sets:
   - `optionsPosition`: one-based argument index of the options object.
   - `requiredProperties`: property names that must be statically present with a

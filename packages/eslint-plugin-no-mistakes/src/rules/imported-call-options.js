@@ -64,9 +64,26 @@ function normalizeRequiredProperties(value) {
     : [];
 }
 
+// Slash-wrapped patterns are regexes. `/(/` and `/*/` pass the schema, and
+// `compileTargets` would drop them so the rule loads and checks nothing.
+function assertCompilableSelectorPatterns(patterns) {
+  if (!Array.isArray(patterns)) return;
+  for (const pattern of patterns) {
+    if (typeof pattern !== "string" || pattern.length < 3) continue;
+    if (!pattern.startsWith("/") || !pattern.endsWith("/")) continue;
+    try {
+      RegExp(pattern.slice(1, -1));
+    } catch (error) {
+      throw new Error(`Invalid selector pattern ${pattern}: ${error.message}`);
+    }
+  }
+}
+
 function compileImportedCallTargets(options) {
   const compiled = [];
   for (const target of options.targets || []) {
+    assertCompilableSelectorPatterns(target.sourceSpecifierPatterns);
+    assertCompilableSelectorPatterns(target.calleeNamePatterns);
     const [matched] = compileTargets({ targets: [target] }, "targets");
     const optionsPosition = target.optionsPosition;
     const requiredProperties = normalizeRequiredProperties(target.requiredProperties);

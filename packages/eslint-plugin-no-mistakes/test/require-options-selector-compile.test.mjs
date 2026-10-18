@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { require } from "./helpers.mjs";
+import { messages, require } from "./helpers.mjs";
 
 const {
   compileCallSelectors,
   matchesDotted,
   shouldCheckOptionsFile,
 } = require("../src/rules/required-call-selector-compile.js");
+const { compileImportedCallTargets } = require("../src/rules/imported-call-options.js");
 
 describe("selector compile", () => {
   it("skips incomplete targets and rejects an uncompilable pattern", () => {
@@ -101,5 +102,33 @@ describe("selector compile", () => {
       shouldCheckOptionsFile("agents/skip.ts", { allowedPathPatterns: ["agents/skip.ts"] }),
       false,
     );
+  });
+
+  it("throws when an imported slash pattern does not compile", () => {
+    const compiled = compileImportedCallTargets({
+      targets: [
+        {
+          sourceSpecifierPatterns: ["/^agent$/"],
+          calleeNamePatterns: ["fetch"],
+          optionsPosition: 1,
+          requiredProperties: ["signal"],
+        },
+      ],
+    });
+    assert.equal(compiled.length, 1);
+    for (const patterns of [
+      { sourceSpecifierPatterns: ["agent"], calleeNamePatterns: ["/(/"] },
+      { sourceSpecifierPatterns: ["/*/"], calleeNamePatterns: ["fetch"] },
+    ]) {
+      const target = { ...patterns, optionsPosition: 1, requiredProperties: ["signal"] };
+      assert.throws(
+        () => compileImportedCallTargets({ targets: [target] }),
+        (error) => error.message.startsWith("Invalid selector pattern "),
+      );
+      assert.throws(
+        () => messages("fetch();", "require-options-on-imported-call", { targets: [target] }),
+        /Invalid selector pattern /,
+      );
+    }
   });
 });
