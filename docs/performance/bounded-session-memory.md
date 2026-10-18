@@ -10,10 +10,12 @@ Those programs remain on the preparing thread, where all requested variants
 are projected from the existing AST. They cannot cross threads, and an owned
 worker cache must not force a second parse of these helpers.
 
-Evicting a file removes its interned path and its Standard, TypeScript fallback,
-and legacy-symbol entries with three hash-map removals. Its cost is independent
-of the number of other cached programs. Other paths and parser failures retain
-their request identity.
+Evicting a file removes its interned path. When the parsed-program table's
+capacity is at most three, eviction scans that bounded table to drop every mode;
+after the table grows, it uses three indexed removals even if its length later
+shrinks. This keeps removal cost independent of other cached programs while
+avoiding redundant lookups for tiny caches. Other paths and parser failures
+retain their request identity.
 
 Saved regressions in `fixtures/check-facts/bounded-session-memory` exercise a
 single-worker nested batch and path eviction. The nested batch previously left

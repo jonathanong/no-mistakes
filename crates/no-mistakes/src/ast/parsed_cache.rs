@@ -51,6 +51,15 @@ pub(crate) struct ParsedProgramCache {
 #[cfg(test)]
 pub(super) mod tests;
 
+#[cfg(not(test))]
+macro_rules! eviction_probe {
+    () => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+mod eviction_tests;
+
 mod intern;
 mod modes;
 mod parse;
@@ -95,11 +104,21 @@ impl ParsedProgramCache {
             return;
         };
         let mut entries = self.entries.borrow_mut();
+        // Retain scans capacity, not length. Only scan a bounded tiny table;
+        // previously grown caches keep indexed eviction even after shrinking.
+        if entries.capacity() <= 3 {
+            entries.retain(|(cached, _), _| {
+                eviction_probe!();
+                cached.as_ref() != path.as_ref()
+            });
+            return;
+        }
         for mode in [
             ParseMode::Standard,
             ParseMode::TypeScriptFallback,
             ParseMode::LegacySymbols,
         ] {
+            eviction_probe!();
             entries.remove(&(Arc::clone(&path), mode));
         }
     }
@@ -162,6 +181,3 @@ pub(crate) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
         && !source_type.is_typescript_definition()
         && source_type.is_unambiguous()
 }
-
-#[cfg(test)]
-mod eviction_tests;
