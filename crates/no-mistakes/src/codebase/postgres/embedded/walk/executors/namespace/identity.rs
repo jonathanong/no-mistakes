@@ -61,6 +61,31 @@ impl ScopeVisitor<'_> {
                     .map(|name| vec![Origin::Module(name)])
                     .unwrap_or_default()
             }
+            Expression::StaticMemberExpression(member) => self
+                .receiver_origins(&member.object)
+                .into_iter()
+                .filter_map(|origin| match origin {
+                    Origin::Module(module) => {
+                        Some(Origin::Export(module, member.property.name.to_string()))
+                    }
+                    _ => None,
+                })
+                .collect(),
+            Expression::ComputedMemberExpression(member) => {
+                let Expression::StringLiteral(property) = unwrap_ts_wrappers(&member.expression)
+                else {
+                    return Vec::new();
+                };
+                self.receiver_origins(&member.object)
+                    .into_iter()
+                    .filter_map(|origin| match origin {
+                        Origin::Module(module) => {
+                            Some(Origin::Export(module, property.value.to_string()))
+                        }
+                        _ => None,
+                    })
+                    .collect()
+            }
             Expression::ConditionalExpression(value) => {
                 let mut origins = self.receiver_origins(&value.consequent);
                 for origin in self.receiver_origins(&value.alternate) {

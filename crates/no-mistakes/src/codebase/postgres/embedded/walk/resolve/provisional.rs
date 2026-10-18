@@ -40,9 +40,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
                 let known = recovered
                     .sql_text
                     .as_deref()
-                    .is_some_and(super::super::scope::has_known_leading_statement)
+                    .is_some_and(super::super::scope::has_diagnostic_leading_statement)
                     || recovered.variants.iter().any(|variant| {
-                        super::super::scope::has_known_leading_statement(&variant.sql_text)
+                        super::super::scope::has_diagnostic_leading_statement(&variant.sql_text)
                     });
                 if known {
                     observer.increment("postgres.unproven_member_query_sql", 1);

@@ -55,3 +55,67 @@ fn two_named_import_aliases_share_one_export_origin() {
         ],
     );
 }
+
+#[test]
+fn namespace_export_writes_share_named_import_origin() {
+    let options = EmbeddedSqlOptions::configured(
+        "@example/db",
+        &["connection".into(), "other".into(), "query".into()],
+    );
+    assert_sites(
+        "review-cross-form-export-write.ts",
+        &options,
+        &[
+            site(
+                7,
+                "left.query('SELECT id FROM before_export_write')",
+                Some("SELECT id FROM before_export_write"),
+            ),
+            site(9, "left.query('SELECT id FROM after_export_write')", None),
+            site(
+                10,
+                "other.query('SELECT id FROM other_export_unaffected')",
+                Some("SELECT id FROM other_export_unaffected"),
+            ),
+            site(
+                12,
+                "left.query('SELECT id FROM after_computed_export_write')",
+                None,
+            ),
+        ],
+    );
+}
+
+#[test]
+fn namespace_export_and_whole_namespace_transfer_have_distinct_reach() {
+    let options = EmbeddedSqlOptions::configured(
+        "@example/db",
+        &["connection".into(), "other".into(), "query".into()],
+    );
+    assert_sites(
+        "review-cross-form-export-transfer.ts",
+        &options,
+        &[
+            site(
+                7,
+                "left.query('SELECT id FROM before_export_transfer')",
+                Some("SELECT id FROM before_export_transfer"),
+            ),
+            site(
+                9,
+                "left.query('SELECT id FROM after_export_transfer')",
+                None,
+            ),
+            site(
+                10,
+                "other.query('SELECT id FROM other_export_before_namespace_transfer')",
+                Some("SELECT id FROM other_export_before_namespace_transfer"),
+            ),
+            site(
+                12,
+                "other.query('SELECT id FROM other_export_after_namespace_transfer')",
+                None,
+            ),
+        ],
+    );
+}

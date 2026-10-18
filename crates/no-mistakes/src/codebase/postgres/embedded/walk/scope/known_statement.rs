@@ -16,19 +16,55 @@ pub(in crate::codebase::postgres::embedded::walk) fn mark_binding_dynamic_keep_k
     }
 }
 
-pub(crate) fn has_known_leading_statement(mut sql: &str) -> bool {
+pub(crate) fn has_known_leading_statement(sql: &str) -> bool {
+    is_known_keyword(leading_keyword(sql))
+}
+
+fn is_known_keyword(keyword: &str) -> bool {
+    ["select", "update", "insert", "delete", "merge"]
+        .iter()
+        .any(|candidate| keyword.eq_ignore_ascii_case(candidate))
+}
+
+// Advisory visibility only: these statements do not become executor candidates.
+pub(crate) fn has_diagnostic_leading_statement(sql: &str) -> bool {
+    let keyword = leading_keyword(sql);
+    is_known_keyword(keyword)
+        || [
+            "with",
+            "begin",
+            "commit",
+            "rollback",
+            "savepoint",
+            "release",
+            "create",
+            "alter",
+            "drop",
+            "truncate",
+            "explain",
+            "deallocate",
+            "prepare",
+            "refresh",
+            "show",
+            "set",
+        ]
+        .iter()
+        .any(|candidate| keyword.eq_ignore_ascii_case(candidate))
+}
+
+fn leading_keyword(mut sql: &str) -> &str {
     loop {
         sql = sql.trim_start();
         if let Some(comment) = sql.strip_prefix("--") {
             let Some((_, rest)) = comment.split_once('\n') else {
-                return false;
+                return "";
             };
             sql = rest;
             continue;
         }
         if let Some(comment) = sql.strip_prefix("/*") {
             let Some((_, rest)) = comment.split_once("*/") else {
-                return false;
+                return "";
             };
             sql = rest;
             continue;
@@ -36,11 +72,7 @@ pub(crate) fn has_known_leading_statement(mut sql: &str) -> bool {
         break;
     }
 
-    let keyword = sql
-        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+    sql.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
         .next()
-        .unwrap_or_default();
-    ["select", "update", "insert", "delete", "merge"]
-        .iter()
-        .any(|candidate| keyword.eq_ignore_ascii_case(candidate))
+        .unwrap_or_default()
 }

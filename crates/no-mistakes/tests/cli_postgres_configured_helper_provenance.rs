@@ -19,7 +19,10 @@ fn imported_configured_sql_helper_is_checked_without_owning_http_query() {
     let findings = report["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 1, "{report}");
     let finding = &findings[0];
-    assert_eq!(finding["rule"], "postgres-require-query-annotation", "{report}");
+    assert_eq!(
+        finding["rule"], "postgres-require-query-annotation",
+        "{report}"
+    );
     assert_eq!(finding["file"], "src/helper.mts", "{report}");
     assert_eq!(finding["line"], 4, "{report}");
     assert_eq!(finding["target"], "annotation", "{report}");

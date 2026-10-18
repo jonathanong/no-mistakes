@@ -1,15 +1,20 @@
 use super::super::ScopeVisitor;
+use super::identity::Origin;
 use super::MemberCall;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
 use std::collections::HashSet;
 
 fn uncertain(call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
     call.origins.iter().any(|origin| {
-        proof.escapes.get(origin).is_some_and(|escapes| {
-            escapes.iter().any(|escape| {
-                escape.event < call.event || escape.owner != call.owner || escape.in_loop
+        let escaped = |origin| {
+            proof.escapes.get(origin).is_some_and(|escapes| {
+                escapes.iter().any(|escape| {
+                    escape.event < call.event || escape.owner != call.owner || escape.in_loop
+                })
             })
-        })
+        };
+        escaped(origin)
+            || matches!(origin, Origin::Export(module, _) if escaped(&Origin::Module(module.clone())))
     })
 }
 

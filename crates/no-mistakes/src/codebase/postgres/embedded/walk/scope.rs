@@ -185,5 +185,5 @@ impl ScopeVisitor<'_> {
 mod function;
 mod known_statement;
 mod params;
-pub(crate) use known_statement::has_known_leading_statement;
 pub(super) use known_statement::mark_binding_dynamic_keep_known_statement;
+pub(crate) use known_statement::{has_diagnostic_leading_statement, has_known_leading_statement};

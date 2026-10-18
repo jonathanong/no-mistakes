@@ -75,8 +75,8 @@ fn unproven_sql_looking_member_is_counted_without_making_a_verdict() {
             .work
             .get("postgres.unproven_member_query_sql")
             .copied(),
-        Some(1),
-        "SQL-looking unproven query counts once; HTTP object query does not"
+        Some(4),
+        "SQL-looking queries, including WITH and DDL, count; HTTP object query does not"
     );
 }
 
