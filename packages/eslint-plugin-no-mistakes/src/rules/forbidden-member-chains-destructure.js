@@ -24,8 +24,19 @@ function objectPattern(node) {
 }
 
 function destructureVisitors({ compiled, context, suppressed, info }) {
+  // The outer pattern and a default can reach the same property and chain.
+  // `const { panel: { open } = other.panel } = other` reports that pair once.
+  const reported = new WeakMap();
+
   function report(node, chain) {
     if (suppressed(node)) return;
+    let seen = reported.get(node);
+    if (seen?.has(chain)) return;
+    if (!seen) {
+      seen = new Set();
+      reported.set(node, seen);
+    }
+    seen.add(chain);
     context.report({ node, messageId: "forbiddenChain", data: { message: chain.message } });
   }
 
@@ -65,9 +76,12 @@ function destructureVisitors({ compiled, context, suppressed, info }) {
     },
     // A default is a receiver at any depth, not only on a function parameter.
     // `const { x: { open } = other.panel } = {}` reports `*.panel.open`.
+    // An array element is too: `const [{ open } = other.panel] = []`.
     AssignmentPattern(node) {
       const parent = node.parent?.type;
-      if (parent !== "Property" && !PARAM_PARENTS.has(parent)) return;
+      if (parent !== "Property" && parent !== "ArrayPattern" && !PARAM_PARENTS.has(parent)) {
+        return;
+      }
       const pattern = objectPattern(node.left);
       if (pattern) check(pattern, node.right);
     },

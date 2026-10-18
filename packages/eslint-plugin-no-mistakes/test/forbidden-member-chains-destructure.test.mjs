@@ -61,6 +61,30 @@ describe("forbidden-member-chains destructure", () => {
     );
   });
 
+  it("reports one shared property and an array-pattern default", () => {
+    const names = ["destructure-shared-report.mjs", "destructure-array-default.mjs"];
+    const expected = {
+      "destructure-shared-report.mjs": [
+        [2, panel],
+        [4, drawer],
+      ],
+      "destructure-array-default.mjs": [
+        [1, panel],
+        [2, panel],
+      ],
+    };
+    const diagnostics = oxlintFiles(names);
+    for (const name of names) {
+      const messages = check(name);
+      assert.deepEqual(lineMessages(messages), expected[name], name);
+      assert.deepEqual(
+        diagnostics.get(name).map((diagnostic) => diagnostic.message),
+        messages.map((message) => message.message),
+        name,
+      );
+    }
+  });
+
   it("matches a call receiver and a shadowed named root", () => {
     assert.deepEqual(
       lineMessages(

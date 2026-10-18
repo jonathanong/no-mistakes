@@ -105,9 +105,13 @@ Object destructuring is the same access. `const { open } = other.panel`, a
 rename `const { open: show } = other.panel`, and a nested pattern
 `const { panel: { open } } = other` match `*.panel.open`. So does a default on
 a parameter, `function f({ open } = other.panel) {}`, and a default at any
-nesting depth, `const { x: { open } = other.panel } = {}`. The finding is the
-property whose key completes the chain. A repeated suffix inside one pattern
-reports once. Computed pattern keys stay unproven and are not reported,
+nesting depth, `const { x: { open } = other.panel } = {}`. An object pattern
+in an array element is the same kind of default,
+`const [{ open } = other.panel] = []`. The finding is the property whose key
+completes the chain. A repeated suffix inside one pattern reports once. The
+outer pattern and its default share that pair, so
+`const { panel: { open } = other.panel } = other` reports `*.panel.open` once.
+Computed pattern keys stay unproven and are not reported,
 including a literal computed key such as `{ ["open"]: show }`. A non-computed
 key may be an identifier or a string or numeric literal. A static tail on the
 receiver can still match a wildcard after a dynamic member
