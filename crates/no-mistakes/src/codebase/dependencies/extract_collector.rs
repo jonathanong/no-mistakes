@@ -58,6 +58,7 @@ struct ImportCollector {
     destructuring_phase_owner: Option<Option<CallableId>>,
     assignment_rhs_frame: Option<Box<extract_value_flow::assignment_rhs_frame::AssignmentRhsFrame>>,
     deferred_mutable_writes: Option<Box<extract_value_flow::mutable_deferred::DeferredMutations>>,
+    forward_receiver_writes: Option<Box<extract_value_flow::forward_receiver_writes::ForwardWrites>>,
     receiver_root_phases: Option<Box<extract_value_flow::root_phase_capture::RootPhaseCapture>>,
     destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,
     /// Present only while the normal visitor records this exact assignment leaf.

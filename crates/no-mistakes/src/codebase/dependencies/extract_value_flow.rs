@@ -163,6 +163,8 @@ mod suspension_tests;
 
 #[path = "extract_value_flow/callable_uses.rs"]
 mod callable_uses;
+#[path = "extract_value_flow/forward_receiver_writes.rs"]
+pub(super) mod forward_receiver_writes;
 #[path = "extract_value_flow/mutable_receivers.rs"]
 mod mutable_receivers;
 

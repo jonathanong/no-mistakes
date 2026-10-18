@@ -596,6 +596,10 @@ the matching imported methods. Root assignments preserve acquisition snapshots
 for saved aliases and exclude overwritten roots from later direct reads.
 Conditional root writes retain possible acquisitions. Copied methods and untouched
 members retain the precision covered by the saved controls.
+Callable bodies can refer to receiver aliases declared later: pending writes
+reuse the completed binding facts and each initializer's acquisition coordinates.
+Uncalled, unavailable, and escaped writers retain conservative unknown targets;
+declaration order does not establish execution.
 Assignment-pattern receiver reads use RHS-before-LHS execution order, including
 computed targets and conditional root writes. Eager class writes borrow the normal
 collector's scoped binding facts; deferred field values retain their own execution
