@@ -8,6 +8,7 @@
 
 mod call;
 mod expr;
+mod forms;
 mod loops;
 mod ops;
 mod sql;

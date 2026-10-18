@@ -1,5 +1,6 @@
 //! Lowers a top-level helper's AST to a [`Program`].
 
+mod compound;
 mod expr;
 mod stmt;
 mod template;
