@@ -184,6 +184,18 @@ scoped executors that also match imports from `importSpecifier` subpaths and rel
 and `trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
 shared executor configuration validates; this rule does not read SQL text).
 
+### `postgres-no-async-sql-builder`
+
+Opt-in and inert until configured. Not in `configs.recommended` or
+`configs.strict`. No autofix and no editor suggestion. `builders` is an array
+of `{ names?: string[], callees?: string[], source?: string }`. `names` selects
+async functions by local name. `callees` selects async functions that return
+those calls or tagged templates. `source`, when set, limits `callees` to a
+named import or namespace member from that exact module. The rule tells you to
+remove `async` only when the visible contract allows a synchronous literal
+return; otherwise it says not to remove `async`, or it abstains. See
+[the rule reference](eslint-rules/postgres-no-async-sql-builder.md).
+
 ### `postgres-no-manual-transaction`
 
 `importSpecifier?: string` (default empty),
