@@ -32,6 +32,16 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   opt-in. Do not add default-on global behavior or infer project conventions
   when a scoped configuration knob can make the behavior intentional.
 - Rules to keep the AST parsable (e.g. no indirection, no dynamism)
+- Change the code, not the analyzer — when analysis cannot follow a pattern
+  (runtime mutation of shared registries, identifiers from unbounded config,
+  computed keys), prefer a rule that bans it and names the static rewrite
+  (`as const` literals, finite unions, declared-once values) over teaching the
+  analyzer to recover it. Teach recovery only for common patterns that are
+  sound to recover and have no reasonable static rewrite.
+- Apply rules only when confident — a rule judges the facts it can soundly
+  judge (exact values, finite unions, known statement shape) and abstains on
+  the rest. An abstention is reported as unanalyzable, never as a pass or a
+  guessed finding.
 - Reduce Agent token usage
 - Allow custom error messages for agents
 - Automatically fix when possible

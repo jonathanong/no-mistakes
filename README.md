@@ -103,6 +103,9 @@ There are a few trade-offs with this approach:
 
 1. Dynamic imports, selectors, routes, and queue names cannot always be resolved.
    The bundled rules help keep important relationships static and analyzable.
+   That is the intended workflow: when `no-mistakes` cannot follow a pattern,
+   a rule points to a static rewrite, and the code changes to fit the
+   analyzer rather than the analyzer guessing.
 2. Some relationships are heuristic. The engine favors recall, so agents should
    confirm exact call sites with `rg` after the graph narrows the file set.
 3. On-demand parsing is CPU-intensive. A machine-wide lock prevents competing
