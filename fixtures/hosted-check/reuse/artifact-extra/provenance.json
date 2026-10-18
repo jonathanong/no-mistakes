@@ -1,0 +1,12 @@
+{
+  "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "sourceVersion": "[package]\nname = \"synthetic-reuse-fixture\"\nversion = \"0.0.0\"\n[lib]\ncrate-type = [\"rlib\"]",
+  "cargoLockSha256": "17e900e6095001cffe13a9b13d696c537888f6e7133b8d33491dc2521ce37089",
+  "sourceManifestSha256": "f18ecd1e33f7f0927ddbe5bf7b698a195e1f091259b8dee5319b77b4f61732a9",
+  "effectiveBuildManifestSha256": "5146d0827ff568b19c3f61660751b6df502aa12322aa035889ce43f2df195dea",
+  "releaseManifestPatch": "rlib plus cdylib, identical to release.yml",
+  "binarySha256": "23e699baf7e87c1303a8546554e2ec4645fdf8bf467f80f8aaad7a9cce7bb345",
+  "rustc": "synthetic compiler retained verbatim",
+  "command": "synthetic build never executed"
+}

@@ -1,0 +1,24 @@
+{
+  "42": {
+    "current": {
+      "artifactId": 123,
+      "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "files": {
+        "provenance.json": "98b81b995afe44a0e8f39c77029917ee6043942124344a2b2a675b278f089689",
+        "SHA256SUMS": "bc6ef246e29e512d8bde421df17fe4b85f214dff519744d0edd6d6eeded87204",
+        "no-mistakes": "23e699baf7e87c1303a8546554e2ec4645fdf8bf467f80f8aaad7a9cce7bb345",
+        "cpu-probe": "d136445e774e539d24a025e66cbb2d1d5805cb5cc104ae69e0193dcc55a6efdc"
+      }
+    },
+    "baseline": {
+      "artifactId": 123,
+      "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "files": {
+        "provenance.json": "98b81b995afe44a0e8f39c77029917ee6043942124344a2b2a675b278f089689",
+        "SHA256SUMS": "bc6ef246e29e512d8bde421df17fe4b85f214dff519744d0edd6d6eeded87204",
+        "no-mistakes": "23e699baf7e87c1303a8546554e2ec4645fdf8bf467f80f8aaad7a9cce7bb345",
+        "cpu-probe": "d136445e774e539d24a025e66cbb2d1d5805cb5cc104ae69e0193dcc55a6efdc"
+      }
+    }
+  }
+}

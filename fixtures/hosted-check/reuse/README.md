@@ -1,0 +1,1 @@
+Saved synthetic artifact/source inputs exercise strict reuse identity, byte hashes and Cargo provenance. These files are not executable and are never compiled. Tests only read them; malformed variants intentionally protect rejection paths.
