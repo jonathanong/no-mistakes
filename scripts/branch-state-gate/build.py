@@ -20,6 +20,12 @@ def require(condition, message):
         raise RuntimeError(message)
 
 
+def compile_cpu_probe(source, dependency, dependency_dir, output):
+    subprocess.run(['rustc', str(source), '--edition=2021', '-Clto=fat', '-L',
+                    'dependency='+str(dependency_dir), '--extern',
+                    'num_cpus='+str(dependency), '-o', str(output)], check=True)
+
+
 def build():
     output = Path(os.environ['BUILD_OUTPUT']).resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -55,12 +61,9 @@ def build():
                     raise RuntimeError('Isolated target size or build deadline exceeded')
                 time.sleep(5)
             require(child.wait() == 0, 'Source build failed; inspect build.log')
-        probe = output / 'cpu-probe.rs'
-        probe.write_text('fn main() { println!("{}", num_cpus::get()); }\n')
+        probe = Path(__file__).resolve().parents[2] / 'fixtures/performance/branch-state-gate/cpu-probe/main.rs'
         dependency = next((target / 'release/deps').glob('libnum_cpus-*.rlib'))
-        subprocess.run(['rustc', str(probe), '--edition=2021', '-L',
-                        'dependency='+str(target / 'release/deps'), '--extern',
-                        'num_cpus='+str(dependency), '-o', str(output / 'cpu-probe')], check=True)
+        compile_cpu_probe(probe, dependency, target / 'release/deps', output / 'cpu-probe')
         binary = output / 'no-mistakes'
         shutil.copy2(target / 'release/no-mistakes', binary)
         provenance.update(binary_sha256=digest(binary), elapsed_seconds=time.monotonic()-started,
