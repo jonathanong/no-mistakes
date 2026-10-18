@@ -88,6 +88,14 @@ argument slots cloned into a branch join, including every slot of a new object
 and only changed slots of an existing object. It excludes clones of prior
 values needed to build candidate sets for changed slots.
 
+`postgres.annotation.run.entrypoints.zero`, `.one`, and `.many` count root runs
+by their number of speculative entrypoints; `postgres.annotation.run.entrypoints`
+counts the entrypoints themselves. `postgres.annotation.run.checkpoint_captures`
+and `.checkpoint_restores` count saved and restored module states, while
+`postgres.annotation.run.fresh_index_rebuilds` counts derived argument-index
+rebuilds. Roots with zero or one entrypoint need no checkpoint. Other roots save
+one checkpoint and restore it before every entrypoint after the first.
+
 File-scoped forbidden call checks report `forbidden_calls.path_filter_checks`
 once per selected file instead of once per call occurrence.
 

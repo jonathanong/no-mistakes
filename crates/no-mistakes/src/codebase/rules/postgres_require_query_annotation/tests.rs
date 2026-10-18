@@ -454,3 +454,6 @@ fn helpers_use_importer_owned_aliases_even_when_unknown_sql_is_ignored() {
 
 #[cfg(test)]
 mod helper_contexts;
+
+#[path = "tests/entrypoint_checkpoints.rs"]
+mod entrypoint_checkpoints;

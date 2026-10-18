@@ -1,132 +1,68 @@
 use super::{Evaluator, Value};
-use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashMap;
-use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod checkpoint;
+mod counters;
 mod entrypoints;
 mod reachability;
+mod tasks;
 
-use reachability::export_reachable_globals;
+use {checkpoint::Checkpoint, counters::Counters, tasks::Task};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
-        let file = &self.files[path];
-        let globals = &file.facts.globals;
+        let files = self.files;
+        let file = &files[path];
         self.module_environment(path);
         self.prune_snapshot_state();
         let env = self.modules[path];
-        let unmodeled = &file.facts.unmodeled_calls;
-        let scopes = self.scopes.clone();
-        let modules = self.modules.clone();
-        let invalidated = self.invalidated_builders.clone();
-        let deleted = self.deleted_argument_slots.clone();
-        let mapped = self.mapped_arguments.clone();
-        let fresh = self.fresh_mapped_parameters.clone();
-        let objects = self.argument_objects.clone();
-        let extra_slots = self.argument_extra_slots.clone();
-        let definite = self.definite_deleted_argument_slots.clone();
-        let recreated = self.recreated_argument_slots.clone();
-        let disconnected = self.disconnected_argument_slots.clone();
-        let builder_updates = self.builder_updates.clone();
-        let untrusted_array_intrinsics = self.untrusted_array_intrinsics;
-        let captured_bindings = self.captured_bindings.clone();
-        let captured_binding_readers = self.captured_binding_readers.clone();
-        let mapped_argument_owners = self.mapped_argument_owners.clone();
-        let mapped_parameter_indices = self.mapped_parameter_indices.clone();
-        for call in unmodeled {
-            if file.facts.precise_records
-                && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end)))
-            {
-                continue;
-            }
-            if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
-            {
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.fresh_mapped_parameters.clone_from(&fresh);
-                self.rebuild_fresh_mapped_argument_bindings();
-                self.argument_objects.clone_from(&objects);
-                self.argument_extra_slots.clone_from(&extra_slots);
-                self.definite_deleted_argument_slots.clone_from(&definite);
-                self.recreated_argument_slots.clone_from(&recreated);
-                self.disconnected_argument_slots.clone_from(&disconnected);
-                self.builder_updates.clone_from(&builder_updates);
-                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
-                self.captured_bindings.clone_from(&captured_bindings);
-                self.captured_binding_readers
-                    .clone_from(&captured_binding_readers);
-                self.mapped_argument_owners
-                    .clone_from(&mapped_argument_owners);
-                self.mapped_parameter_indices
-                    .clone_from(&mapped_parameter_indices);
-                self.expr(call, path, &env, 16, false);
-            }
+        let mut counts = Counters::new();
+        let mut tasks = tasks::Tasks::new(file);
+        let Some(first) = tasks.next() else {
+            return;
+        };
+        let Some(second) = tasks.next() else {
+            counts.plan(1);
+            // Release any precise selector/DFS state before the only entrypoint.
+            drop(tasks);
+            self.rebuild_fresh_mapped_argument_bindings();
+            operations::fresh();
+            counts.fresh_rebuild();
+            counts.task();
+            self.run_task(first, path, env);
+            return;
+        };
+        counts.plan(2);
+        let checkpoint = Checkpoint::capture(self);
+        counts.capture();
+        // The first task starts from exactly the state just captured. Preserve
+        // the historical freshness normalization without a redundant restore.
+        self.rebuild_fresh_mapped_argument_bindings();
+        operations::fresh();
+        counts.fresh_rebuild();
+        counts.task();
+        self.run_task(first, path, env);
+        checkpoint.restore(self);
+        counts.restore();
+        counts.fresh_rebuild();
+        counts.task();
+        self.run_task(second, path, env);
+        for task in tasks {
+            checkpoint.restore(self);
+            counts.restore();
+            counts.fresh_rebuild();
+            counts.task();
+            self.run_task(task, path, env);
         }
-        // Function declarations describe possible entrypoints; contextual
-        // callback invocations take precedence over this unknown input.
-        let reachable = file.facts.precise_records.then(|| {
-            export_reachable_globals(
-                globals,
-                file.module
-                    .ts
-                    .exported_bindings
-                    .iter()
-                    .filter(|binding| binding.specifier.is_none())
-                    .map(|binding| binding.local.as_str()),
-            )
-        });
-        let mut seen_functions = BTreeSet::new();
-        for (name, expr) in globals {
-            // Only exported functions are independently callable by a
-            // supplied-source consumer. A private callback still contributes
-            // its contextual invocations, but speculative calls to it must
-            // not erase the exact argument supplied by its owner.
-            if reachable
-                .as_ref()
-                .is_some_and(|names| !names.contains(name.as_str()))
-            {
-                continue;
+    }
+
+    fn run_task(&mut self, task: Task<'_>, path: &Path, module_env: super::Environment) {
+        match task {
+            Task::Call(call) => {
+                self.expr(call, path, &module_env, 16, false);
             }
-            let mut functions = Vec::new();
-            if file.facts.precise_records {
-                entrypoints::collect(
-                    globals,
-                    expr,
-                    &mut BTreeSet::new(),
-                    &mut seen_functions,
-                    &mut functions,
-                );
-            } else if let Expr::Function(function) = expr {
-                functions.push(std::sync::Arc::clone(function));
-            }
-            for function in functions {
-                // Speculative entrypoints share initialized facts, never effects
-                // from an unrelated function considered earlier in name order.
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.fresh_mapped_parameters.clone_from(&fresh);
-                self.rebuild_fresh_mapped_argument_bindings();
-                self.argument_objects.clone_from(&objects);
-                self.argument_extra_slots.clone_from(&extra_slots);
-                self.definite_deleted_argument_slots.clone_from(&definite);
-                self.recreated_argument_slots.clone_from(&recreated);
-                self.disconnected_argument_slots.clone_from(&disconnected);
-                self.builder_updates.clone_from(&builder_updates);
-                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
-                self.captured_bindings.clone_from(&captured_bindings);
-                self.captured_binding_readers
-                    .clone_from(&captured_binding_readers);
-                self.mapped_argument_owners
-                    .clone_from(&mapped_argument_owners);
-                self.mapped_parameter_indices
-                    .clone_from(&mapped_parameter_indices);
+            Task::Function(function) => {
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
@@ -148,3 +84,24 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 #[cfg(test)]
 #[path = "run/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "run/reference_tests.rs"]
+mod reference;
+#[cfg(test)]
+#[path = "run/state_tests.rs"]
+mod state_tests;
+
+#[cfg(test)]
+#[path = "run/operation_tests.rs"]
+mod operations;
+
+#[cfg(test)]
+#[path = "run/imported_state_tests.rs"]
+mod imported_state_tests;
+#[cfg(not(test))]
+#[path = "run/operations.rs"]
+mod operations;
+#[cfg(test)]
+#[path = "run/state_test_support.rs"]
+mod state_test_support;

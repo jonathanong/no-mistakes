@@ -1,0 +1,262 @@
+[
+  {
+    "fileName": "array-many.mts",
+    "line": 5,
+    "annotation": null,
+    "sqlText": "SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "array-many.mts",
+    "line": 8,
+    "annotation": "array pristine",
+    "sqlText": "/* array pristine */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "array-many.mts",
+    "line": 13,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "array-one.mts",
+    "line": 5,
+    "annotation": "array initial",
+    "sqlText": "/* array initial */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "array-one.mts",
+    "line": 6,
+    "annotation": null,
+    "sqlText": "SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "array-one.mts",
+    "line": 8,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "captured.mts",
+    "line": 3,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "captured.mts",
+    "line": 7,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unsupported-syntax-or-control-flow"
+  },
+  {
+    "fileName": "captured.mts",
+    "line": 18,
+    "annotation": "module builder",
+    "sqlText": "/* module builder */ SELECT 2",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "captured.mts",
+    "line": 22,
+    "annotation": "module builder",
+    "sqlText": "/* module builder */ SELECT 2",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "many.mts",
+    "line": 5,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "many.mts",
+    "line": 8,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unsupported-syntax-or-control-flow"
+  },
+  {
+    "fileName": "many.mts",
+    "line": 11,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "many.mts",
+    "line": 16,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "one.mts",
+    "line": 5,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "one.mts",
+    "line": 7,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "precise-aliases.mts",
+    "line": 2,
+    "annotation": null,
+    "sqlText": "SELECT hidden",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "precise-aliases.mts",
+    "line": 3,
+    "annotation": "first",
+    "sqlText": "/* first */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "precise-aliases.mts",
+    "line": 4,
+    "annotation": null,
+    "sqlText": "SELECT 2",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "precise-lookahead.mts",
+    "line": 2,
+    "annotation": "module preflight",
+    "sqlText": "/* module preflight */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "precise-lookahead.mts",
+    "line": 5,
+    "annotation": null,
+    "sqlText": null,
+    "complete": false,
+    "onlyValuePlaceholders": false,
+    "kind": "dynamic",
+    "incompleteReason": "unresolved-value-or-effect"
+  },
+  {
+    "fileName": "precise-lookahead.mts",
+    "line": 523,
+    "annotation": null,
+    "sqlText": "SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "zero-dense.mts",
+    "line": 133,
+    "annotation": "dense_zero",
+    "sqlText": "/* dense_zero */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "zero-dense.mts",
+    "line": 134,
+    "annotation": null,
+    "sqlText": "SELECT 2",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "zero.mts",
+    "line": 4,
+    "annotation": "zero",
+    "sqlText": "/* zero */ SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "composed",
+    "incompleteReason": null
+  },
+  {
+    "fileName": "zero.mts",
+    "line": 5,
+    "annotation": null,
+    "sqlText": "SELECT 1",
+    "complete": true,
+    "onlyValuePlaceholders": false,
+    "kind": "inline",
+    "incompleteReason": null
+  }
+]
