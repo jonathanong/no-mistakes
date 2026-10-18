@@ -88,7 +88,11 @@ results before the full pass ends. Results are applied in deterministic profile
 and source order.
 Unresolved, computed, and dynamic imports conservatively retain their modules
 and importers, including cycles. Executor-free callers that supply SQL literals
-to imported helpers remain roots. `postgres.annotation.reachability_walks` counts the
+to imported helpers remain roots. Successfully resolved imports outside the
+prepared annotation catalog are dead ends; configured executor and trusted-tag
+modules remain demand seeds. Resolver targets without an exact prepared
+inventory identity (including ambiguous symlink spellings) stay conservative.
+`postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
 counts reverse capture-index reconstruction; unchanged compaction retains the

@@ -21,6 +21,7 @@ mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
+pub(crate) use scoped_bindings::from_configured_module;
 pub(crate) use tags::matches_trusted_sql_import;
 pub(crate) mod walk;
 
