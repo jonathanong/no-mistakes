@@ -78,7 +78,7 @@ Abstaining is not permission to delete `async`.
 - `callees` lists calls or tagged templates whose result the function returns,
   including a direct return, a conditional or logical branch, or a `const` /
   `let` binding that is not reassigned. A chained member such as
-  `` sql`...`.append(...) `` still counts as `sql`.
+  ``sql`...`.append(...)`` still counts as `sql`.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
   name (`import { sql as tag }` matches `sql`). Type-only and default imports
@@ -148,5 +148,5 @@ async function buildQuery() {
 - [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md) keeps
   transaction control in one helper.
 - [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md)
-  is why an unawaited builder promise stays unanalyzable and why the
+  is why a builder promise that is not awaited stays unanalyzable and why the
   synchronous literal above can be judged.
