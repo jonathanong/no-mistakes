@@ -9,6 +9,8 @@ import signal
 import subprocess
 import time
 
+from tool_build import pinned_environment
+
 
 def digest(path):
     with open(path, 'rb') as source:
@@ -23,7 +25,7 @@ def require(condition, message):
 def compile_cpu_probe(source, dependency, dependency_dir, output):
     subprocess.run(['rustc', str(source), '--edition=2021', '-Clto=fat', '-L',
                     'dependency='+str(dependency_dir), '--extern',
-                    'num_cpus='+str(dependency), '-o', str(output)], check=True)
+                    'num_cpus='+str(dependency), '-o', str(output)], check=True, env=pinned_environment())
 
 
 def build():
@@ -35,15 +37,15 @@ def build():
     actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
     require(actual == expected and len(expected) == 40, 'Checkout does not match the requested source SHA')
     command = ['cargo', 'build', '--release', '--locked', '-p', 'no-mistakes', '--bin', 'no-mistakes']
-    environment = os.environ.copy()
-    for key in ('RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS'):
-        environment.pop(key, None)
-    environment.update(CARGO_BUILD_JOBS='2', CARGO_TARGET_DIR=str(target), CARGO_INCREMENTAL='0',
+    environment = pinned_environment()
+    environment.update(RUSTUP_TOOLCHAIN='1.99.1', CARGO_BUILD_JOBS='2', CARGO_TARGET_DIR=str(target), CARGO_INCREMENTAL='0',
                        CARGO_PROFILE_RELEASE_LTO='fat', CARGO_PROFILE_RELEASE_CODEGEN_UNITS='1',
                        CARGO_PROFILE_RELEASE_DEBUG='0', RUSTC_WRAPPER='', RUSTC_WORKSPACE_WRAPPER='')
+    rustc = subprocess.check_output(['rustc', '-Vv'], env=environment, text=True)
+    require(rustc.startswith('rustc 1.99.1 '), 'Expected Rust 1.99.1')
     provenance = dict(source=actual, tree=subprocess.check_output(
         ['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(), command=command,
-        rustc=subprocess.check_output(['rustc', '-Vv'], text=True), features='default',
+        rustc=rustc, rustup_toolchain='1.99.1', features='default',
         lto='fat', codegen_units=1, build_jobs=2, rustflags='', debug=0, cargo_lock_sha256=digest('Cargo.lock'),
         image_os=os.environ.get('ImageOS'), image_version=os.environ.get('ImageVersion'))
     started = time.monotonic()

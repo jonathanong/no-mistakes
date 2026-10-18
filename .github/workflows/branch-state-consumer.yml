@@ -12,6 +12,7 @@ on:
     paths:
       - "crates/no-mistakes/src/codebase/postgres/query_annotation/**"
       - ".github/workflows/branch-state-consumer.yml"
+      - ".github/workflows/branch-state-native-tool.yml"
       - "scripts/branch-state-gate/**"
       - "fixtures/performance/branch-state-gate/**"
 permissions:
@@ -32,6 +33,12 @@ jobs:
       - name: Verify incomplete and mismatched measurements are rejected
         timeout-minutes: 1
         run: python3 -O scripts/branch-state-gate/tests.py
+  native-tool:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.body, '<!-- branch-state-consumer-gate -->') }}
+    needs: harness-tests
+    uses: ./.github/workflows/branch-state-native-tool.yml
+    with:
+      sourceSha: ${{ inputs.candidateRef || github.event.pull_request.head.sha }}
   build:
     # The hidden PR-body marker makes this expensive evaluation explicitly opt-in.
     if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.body, '<!-- branch-state-consumer-gate -->') }}
@@ -44,6 +51,7 @@ jobs:
       matrix:
         variant: [baseline, candidate]
     env:
+      RUSTUP_TOOLCHAIN: 1.99.1
       SOURCE_SHA: ${{ matrix.variant == 'baseline' && (inputs.baselineRef || '6d763fc2b4795745ae1ddb5a5aca5313af7e3d02') || inputs.candidateRef || github.event.pull_request.head.sha }}
       BUILD_OUTPUT: ${{ github.workspace }}/artifact
     steps:
@@ -76,7 +84,7 @@ jobs:
           if-no-files-found: error
   measure:
     name: jobs ${{ matrix.jobs }} diagnostics ${{ matrix.diagnostics }} pair ${{ matrix.pair }}
-    needs: build
+    needs: [build, native-tool]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     strategy:
@@ -86,6 +94,8 @@ jobs:
         jobs: ["1", "4", "default"]
         diagnostics: ["off", "on"]
         pair: [1, 2, 3, 4, 5, 6]
+    env:
+      MISE_DISABLE_TOOLS: aqua:Kampfkarren/selene
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         timeout-minutes: 3
@@ -122,7 +132,8 @@ jobs:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         timeout-minutes: 3
         with:
-          pattern: branch-state-*
+          # Fetch build artifacts, not concurrently completed measurement records.
+          pattern: branch-state-[bcn]*
           path: artifacts
       - name: Place exact verified artifacts
         timeout-minutes: 1
@@ -132,13 +143,18 @@ jobs:
       - name: Collect ABBA or reverse BAAB raw samples and JSON hashes
         timeout-minutes: 22
         env:
+          NATIVE_TOOL_ROOT: ${{ github.workspace }}/artifacts/branch-state-native-selene
+          SOURCE_SHA: ${{ inputs.candidateRef || github.event.pull_request.head.sha }}
           CONSUMER_ROOT: ${{ github.workspace }}/consumer
           ARTIFACT_ROOT: ${{ github.workspace }}/artifacts
           MEASUREMENT_ROOT: ${{ github.workspace }}/measurements
           CHECK_JOBS: ${{ matrix.jobs }}
           CHECK_DIAGNOSTICS: ${{ matrix.diagnostics }}
           PAIR_NUMBER: ${{ matrix.pair }}
-        run: python3 harness/scripts/branch-state-gate/measure.py
+        run: |
+          python3 harness/scripts/branch-state-gate/tool_verify.py
+          export PATH="$NATIVE_TOOL_ROOT:$PATH"
+          python3 harness/scripts/branch-state-gate/measure.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: ${{ always() }}
         timeout-minutes: 2
@@ -149,7 +165,7 @@ jobs:
   summarize:
     name: Verify parity and summarize matched pairs
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.body, '<!-- branch-state-consumer-gate -->')) }}
-    needs: [build, measure]
+    needs: [build, native-tool, measure]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 10
     steps:

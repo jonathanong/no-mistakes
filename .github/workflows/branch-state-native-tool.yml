@@ -1,0 +1,46 @@
+name: Branch-state native tool provisioning
+on:
+  workflow_call:
+    inputs:
+      sourceSha:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Build pinned native ARM Selene
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      SOURCE_SHA: ${{ inputs.sourceSha }}
+      TOOL_OUTPUT: ${{ github.workspace }}/native-tool
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: harness
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 3
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          path: source
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        timeout-minutes: 3
+        with:
+          toolchain: 1.99.1
+      - name: Build configured Selene with locked default features
+        timeout-minutes: 18
+        working-directory: source
+        run: python3 ../harness/scripts/branch-state-gate/tool_build.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        timeout-minutes: 2
+        with:
+          name: branch-state-native-selene
+          path: native-tool/
+          if-no-files-found: error

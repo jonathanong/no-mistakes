@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from tool_tests import ToolProvisionTests
 from build import compile_cpu_probe
 from summarize import nearest_rank, validate_cells, validate_pairs, validate_sample
 

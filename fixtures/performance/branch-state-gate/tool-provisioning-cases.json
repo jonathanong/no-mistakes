@@ -1,0 +1,47 @@
+{
+  "valid": {
+    "complete": true,
+    "source": "fecd25324b6dd4edbe40bf57628b729e1d7cc878",
+    "binary_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "tool_version": "0.29.0",
+    "default_features": true,
+    "target_triple": "aarch64-unknown-linux-gnu",
+    "rustup_toolchain": "1.99.1",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "version_output": "selene 0.29.0"
+  },
+  "rejected": [
+    {
+      "complete": false
+    },
+    {
+      "source": "0000000000000000000000000000000000000000"
+    },
+    {
+      "binary_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "tool_version": "0.28.0"
+    },
+    {
+      "default_features": false
+    },
+    {
+      "target_triple": "x86_64-unknown-linux-gnu"
+    },
+    {
+      "rustup_toolchain": "stable"
+    },
+    {
+      "rustc": "rustc 1.99.0 (directory override)"
+    },
+    {
+      "version_output": "selene 0.28.0"
+    }
+  ],
+  "shadowed_environment": {
+    "RUSTUP_TOOLCHAIN": "stable",
+    "RUSTFLAGS": "-Clto=thin",
+    "CARGO_ENCODED_RUSTFLAGS": "-Clto=thin"
+  }
+}
