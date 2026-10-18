@@ -31,5 +31,5 @@ Do not treat an incomplete run as proof that a declared name is unused.
 Composite actions cannot access `secrets.*` directly; pass the value through an
 input or environment variable.
 
-See the [full configuration guide](../../../docs/configuration/workflow-topology-policy.md)
-and the [rule reference](../../../docs/rules/workflow-topology-policy.md).
+See the [full configuration guide](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/workflow-topology-policy.md)
+and the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
