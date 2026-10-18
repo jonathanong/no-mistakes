@@ -1,5 +1,3 @@
-<!-- cspell:ignore jonathanong -->
-
 ## Design principles
 
 Goal: AI-powered AST-based codebase intelligence for AI Agents.
@@ -18,8 +16,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Programmatic API parity — every stable `no-mistakes` CLI capability must expose
   an equivalent N-API interface for Node/programmatic usage. Downstream tools should call
   structured in-process APIs instead of shelling out to `no-mistakes`, avoiding
-  repeated graph builds, output parsing, subprocess overhead, and reliability issues
-  like jonathanong/filaments#4058.
+  repeated graph builds, output parsing, subprocess overhead, and flaky runs.
 - N-API functions must be asynchronous. CPU-heavy analysis must run through
   libuv async tasks and JS-facing helpers must return promises rather than
   blocking the Node event loop.
@@ -31,7 +28,9 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Full-suite, repository-wide, and global fallback behavior must be explicit
   opt-in. Do not add default-on global behavior or infer project conventions
   when a scoped configuration knob can make the behavior intentional.
-- Rules to keep the AST parsable (e.g. no indirection, no dynamism)
+- Change the code, not the analyzer: rules ban hard-to-parse code (indirection,
+  dynamism, runtime mutation) and name a static rewrite. Rules judge only what
+  they can soundly judge; see [why](docs/why.md).
 - Reduce Agent token usage
 - Allow custom error messages for agents
 - Automatically fix when possible
@@ -39,7 +38,6 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Aim for 100% test coverage; enforce the repository's configured coverage floors
 - Test fixture-based — can't be perfect, but add more tests to improve coverage
 - Heuristics — can't be perfect, but we'll try our best
-- All CLIs must also be available through the N-API API for node.js
 
 ## Prepared analysis ownership
 

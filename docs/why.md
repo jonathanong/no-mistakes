@@ -21,6 +21,17 @@ Static literals produce edges. Dynamic values are skipped rather than
 guessed. That is why the bundled rules exist: they keep the shapes the graph
 can trust.
 
+When the analyzer cannot follow a pattern, the default fix is the code, not
+the analyzer. A rule bans the pattern and names the static rewrite: an
+`as const` literal, a finite union, or a value declared once instead of a
+shared registry mutated at runtime. Recovery is worth teaching only for common
+patterns that are sound to recover and have no reasonable static rewrite.
+
+Rules apply only when confident. A rule judges the facts it can soundly judge,
+such as an exact value, a finite union, or a known statement shape, and
+abstains on the rest. An abstention is reported as unanalyzable, never as a
+pass or a guessed finding.
+
 ## Three jobs
 
 1. **Scope the change.** Callers, routes, queues, workflows, and named
