@@ -24,11 +24,15 @@ read(sql);
 const exec = read;
 exec(sql);
 (flag ? read : write)(sql);
+tx(sql);
+tx.query(sql);
 ```
 
 `const` is required for that alias. A `let` binding, a const alias of a scoped
 factory or typed parameter, and `(flag ? client.query : read)(sql)` are not
-judged. Call `client.query(sql)` or the scoped executor itself (`tx(sql)`).
+judged. Call the scoped executor itself (`tx(sql)` or `tx.query(sql)` on a
+typed or factory receiver). An untyped `client.query(sql)` has no receiver
+provenance, so it is not a judged offset.
 
 This rule is opt-in. It is not part of `configs.recommended` or `configs.strict`.
 It does not ban ordinary object mutation; that is [issue #2219](https://github.com/jonathanong/no-mistakes/issues/2219).
@@ -36,15 +40,15 @@ It does not ban ordinary object mutation; that is [issue #2219](https://github.c
 ## Disallowed
 
 ```ts
-import { read, write } from "@example/db";
+import { read, write, type Tx } from "@example/db";
 
 declare function run(exec: (statement: string) => unknown, account: string): unknown;
 
-export function list(account: string, flag: boolean, client: { query: (sql: string) => unknown }) {
+export function list(account: string, flag: boolean, tx: Tx) {
   run((statement) => read(statement), account);
   run(flag ? read : write, account);
   run(read, account);
-  run(client.query, account);
+  run(tx.query, account);
   const selected = flag ? read : write;
   run(selected, account);
   const adapter = (statement: string) => read(statement);
@@ -80,6 +84,7 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
   const exec = read;
   exec("SELECT id FROM orders WHERE account_id = $1");
   (flag ? read : write)("SELECT id FROM orders WHERE account_id = $1");
+  // Not a judged offset: this receiver has no configured type or factory proof.
   client.query("SELECT id FROM orders WHERE account_id = $1");
   function load(account: string) {
     return read(sql`SELECT id FROM orders WHERE account_id = ${account}`);
@@ -118,9 +123,10 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that
   package. If the package root cannot be determined, relative imports do not match.
-- A configured module keeps `.query` member matching even when `executorNames`
-  omits `query`. Without a module, `.query` matches only when `executorNames`
-  includes `query`.
+- A configured module matches `.query` only when the receiver is a configured
+  import, a scoped factory or typed parameter, or a `const` alias of one.
+  An untyped `client.query` is not an executor. Without a module, `.query`
+  matches every member only when `executorNames` includes `query`.
 - Omitting both `importSpecifier` and `executorNames` is a configuration error.
   Set `executorNames: []` to select no executor calls.
 
@@ -151,7 +157,7 @@ exec("SELECT id FROM orders WHERE account_id = $1");
 (flag ? read : write)("SELECT id FROM orders WHERE account_id = $1");
 ```
 
-`flag ? read : write`, `client.query(statement)`, `read.call` / `read.apply`,
+`flag ? read : write`, `tx.query(statement)` on a proven receiver, `read.call` / `read.apply`,
 extra or missing arguments, rest or spread, defaulted parameters, `await`,
 `async`, generators, type assertions, and extra statements are still reported.
 The message names the direct call and says why that adapter cannot be rewritten.

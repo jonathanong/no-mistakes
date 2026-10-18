@@ -1,7 +1,6 @@
 "use strict";
 
 const { childNodes, resolveVariable } = require("./postgres-query-text");
-const { memberPropertyName } = require("./postgres-executor");
 
 const TS_ASSERTIONS = new Set([
   "TSAsExpression",
@@ -59,14 +58,6 @@ function variableIsScopedExecutor(variable, scoped, node) {
   });
 }
 
-function isQueryMember(node, bindings) {
-  return (
-    bindings.queryMembers === true &&
-    node?.type === "MemberExpression" &&
-    memberPropertyName(node) === "query"
-  );
-}
-
 function executorRef(node, context, bindings, options) {
   if (node.type === "ChainExpression") return null;
   let current = node;
@@ -84,7 +75,14 @@ function executorRef(node, context, bindings, options) {
     }
     return null;
   }
-  if (isQueryMember(current, bindings)) {
+  if (
+    require("./postgres-no-executor-adapter-member").isProvenQueryMember(
+      current,
+      context,
+      bindings,
+      options,
+    )
+  ) {
     return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
   }
   return null;
@@ -200,4 +198,6 @@ module.exports = {
   executorLeaves,
   matchForward,
   unwrapArgument,
+  variableIsImportedExecutor,
+  variableIsScopedExecutor,
 };

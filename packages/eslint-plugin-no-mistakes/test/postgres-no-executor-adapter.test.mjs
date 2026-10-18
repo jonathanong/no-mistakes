@@ -8,6 +8,12 @@ const RULE = "postgres-no-executor-adapter";
 const DB = { importSpecifier: "@example/db" };
 
 const IMPORT = `import { read, write } from "@example/db";\n`;
+const SCOPED = {
+  importSpecifier: "@example/db",
+  executorFactoryNames: ["openTx"],
+  executorTypeNames: ["Tx"],
+};
+const TX = `import { read, type Tx } from "@example/db";\n`;
 
 function ruleConfig(option) {
   return {
@@ -115,11 +121,16 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run((statement) => (flag ? read(statement) : write(statement)), account);`,
     );
 
-    const mixed = check(`${IMPORT}run(flag ? client.query : read, account);`);
+    // An untyped member is not an executor, so the conditional abstains.
+    assert.deepEqual(ids(`${IMPORT}run(flag ? client.query : read, account);`), []);
+
+    const mixed = check(
+      `${TX}function load(tx: Tx, flag: boolean, account: string) {\n  return run(flag ? tx.query : read, account);\n}\n`,
+      SCOPED,
+    );
     assert.deepEqual(mixed.ids, ["blocked"]);
-    assert.match(mixed.messages[0], /client\.query\(sql\) or read\(sql\)/);
-    assert.doesNotMatch(mixed.messages[0], /\(flag \? client\.query : read\)\(sql\)/);
-    assert.equal(mixed.output, `${IMPORT}run(flag ? client.query : read, account);`);
+    assert.match(mixed.messages[0], /tx\.query\(sql\) or read\(sql\)/);
+    assert.doesNotMatch(mixed.messages[0], /\(flag \? tx\.query : read\)\(sql\)/);
 
     assert.deepEqual(ids(`${IMPORT}run(flag ? read : other, account);`), []);
     assert.deepEqual(
@@ -129,19 +140,27 @@ describe("postgres-no-executor-adapter", () => {
   });
 
   it("does not autofix a different receiver, this, arity, rest, or side effect", () => {
-    const member = check(`${IMPORT}run((statement) => client.query(statement), account);`);
+    const memberCode = `${TX}function load(tx: Tx, account: string) {\n  return run((statement) => tx.query(statement), account);\n}\n`;
+    const member = check(memberCode, SCOPED);
     assert.deepEqual(member.ids, ["blocked"]);
     assert.match(member.messages[0], /receiver or this/);
-    assert.match(member.messages[0], /client\.query\(sql\)/);
-    assert.doesNotMatch(member.messages[0], /const exec = client\.query/);
-    assert.match(member.messages[0], /run\(client\.query, account\)/);
-    assert.equal(member.output, `${IMPORT}run((statement) => client.query(statement), account);`);
+    assert.match(member.messages[0], /tx\.query\(sql\)/);
+    assert.doesNotMatch(member.messages[0], /const exec = tx\.query/);
+    assert.match(member.messages[0], /run\(tx\.query, account\)/);
+    assert.equal(member.output, memberCode);
+    assert.deepEqual(ids(`${IMPORT}run((statement) => client.query(statement), account);`), []);
 
-    const computed = check(`${IMPORT}run((statement) => client["query"](statement), account);`);
+    const computed = check(
+      `${TX}function load(tx: Tx, account: string) {\n  return run((statement) => tx["query"](statement), account);\n}\n`,
+      SCOPED,
+    );
     assert.deepEqual(computed.ids, ["blocked"]);
-    assert.match(computed.messages[0], /client\["query"\]/);
+    assert.match(computed.messages[0], /tx\["query"\]/);
 
-    const template = check(`${IMPORT}run((statement) => client[\`query\`](statement), account);`);
+    const template = check(
+      `${TX}function load(tx: Tx, account: string) {\n  return run((statement) => tx[\`query\`](statement), account);\n}\n`,
+      SCOPED,
+    );
     assert.deepEqual(template.ids, ["blocked"]);
 
     const call = check(`${IMPORT}run((statement) => read.call(receiver, statement), account);`);
@@ -359,20 +378,33 @@ describe("postgres-no-executor-adapter", () => {
     assert.match(passed.messages[0], /not a judged rewrite/);
     assert.doesNotMatch(passed.messages[0], /run\(read, account\)/);
 
-    const query = check(`${IMPORT}run(client.query, account);`);
+    const queryCode = `${TX}function load(tx: Tx, account: string) {\n  return run(tx.query, account);\n}\n`;
+    const query = check(queryCode, SCOPED);
     assert.deepEqual(query.ids, ["passed"]);
-    assert.match(query.messages[0], /client\.query\(sql`…`\)/);
-    assert.doesNotMatch(query.messages[0], /const exec = client\.query/);
-    assert.equal(query.output, `${IMPORT}run(client.query, account);`);
+    assert.match(query.messages[0], /tx\.query\(sql`…`\)/);
+    assert.doesNotMatch(query.messages[0], /const exec = tx\.query/);
+    assert.equal(query.output, queryCode);
+    assert.deepEqual(ids(`${IMPORT}run(client.query, account);`), []);
+    assert.deepEqual(ids(`${IMPORT}run(client["query"], account);`), []);
 
-    const computed = check(`${IMPORT}run(client["query"], account);`);
+    const computed = check(
+      `${TX}function load(tx: Tx, account: string) {\n  return run(tx["query"], account);\n}\n`,
+      SCOPED,
+    );
     assert.deepEqual(computed.ids, ["passed"]);
-    assert.match(computed.messages[0], /client\["query"\]\(sql`…`\)/);
+    assert.match(computed.messages[0], /tx\["query"\]\(sql`…`\)/);
 
-    const mixed = check(`${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`);
+    assert.deepEqual(
+      ids(`${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`),
+      [],
+    );
+    const mixed = check(
+      `${TX}function load(tx: Tx, flag: boolean, account: string) {\n  const exec = flag ? tx.query : read;\n  return run(exec, account);\n}\n`,
+      SCOPED,
+    );
     assert.deepEqual(mixed.ids, ["passed"]);
-    assert.match(mixed.messages[0], /client\.query\(sql`…`\) or read\(sql`…`\)/);
-    assert.doesNotMatch(mixed.messages[0], /\(flag \? client\.query : read\)/);
+    assert.match(mixed.messages[0], /tx\.query\(sql`…`\) or read\(sql`…`\)/);
+    assert.doesNotMatch(mixed.messages[0], /\(flag \? tx\.query : read\)/);
 
     const selected = check(`${IMPORT}const exec = flag ? read : write;\nrun(exec, account);`);
     assert.deepEqual(selected.ids, ["passed"]);
@@ -415,11 +447,12 @@ describe("postgres-no-executor-adapter", () => {
     assert.match(functionAdapter.messages[0], /read\(sql\)/);
 
     const memberAdapter = check(
-      `${IMPORT}const adapter = (statement) => client.query(statement);\nrun(adapter, account);`,
+      `${TX}function load(tx: Tx, account: string) {\n  const adapter = (statement) => tx.query(statement);\n  return run(adapter, account);\n}\n`,
+      SCOPED,
     );
     assert.deepEqual(memberAdapter.ids, ["blocked"]);
     assert.match(memberAdapter.messages[0], /receiver or this/);
-    assert.match(memberAdapter.messages[0], /client\.query\(sql\)/);
+    assert.match(memberAdapter.messages[0], /tx\.query\(sql\)/);
 
     const asyncAdapter = check(
       `${IMPORT}const adapter = async (statement) => read(statement);\nrun(adapter as Executor, account);`,
@@ -477,12 +510,13 @@ describe("postgres-no-executor-adapter", () => {
       "passed",
     ]);
     assert.deepEqual(ids(`run(client.query, account);`, namesOnly), []);
+    assert.deepEqual(ids(`run(client.query, account);`, { executorNames: ["query"] }), ["passed"]);
     assert.deepEqual(
       ids(`${IMPORT}run(client.query, account);`, {
         importSpecifier: "@example/db",
         executorNames: ["read"],
       }),
-      ["passed"],
+      [],
     );
   });
 
@@ -511,6 +545,13 @@ describe("postgres-no-executor-adapter", () => {
     const withModule = { importSpecifier: "@example/db", executorNames: ["read"] };
     assert.deepEqual(
       ids(`${IMPORT}run((statement) => client.query(statement), account);`, withModule),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `${TX}function load(tx: Tx, account: string) {\n  return run((statement) => tx.query(statement), account);\n}\n`,
+        { ...withModule, executorTypeNames: ["Tx"] },
+      ),
       ["blocked"],
     );
   });
@@ -550,6 +591,14 @@ describe("postgres-no-executor-adapter", () => {
     assert.deepEqual(factoryPassed.ids, ["passed"]);
     assert.match(factoryPassed.messages[0], /tx\(sql`…`\)/);
     assert.doesNotMatch(factoryPassed.messages[0], /const exec = tx/);
+
+    const memberQuery = check(
+      `import { openTx } from "@example/db";\n{\n  const tx = openTx();\n  const alias = tx;\n  run(alias.query, account);\n  run(openTx().query, account);\n}\n`,
+      option,
+    );
+    assert.deepEqual(memberQuery.ids, ["passed"]);
+    assert.match(memberQuery.messages[0], /alias\.query\(sql`…`\)/);
+    assert.equal(memberQuery.messages.length, 1);
 
     const aliasedFactory = check(
       `import { openTx } from "@example/db";\n{\n  const tx = openTx();\n  const alias = tx;\n  run(alias, account);\n}\n`,
