@@ -1,0 +1,16 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ["src/*.ts"]
+      importSpecifier: "@example/db"
+      executorNames: [read]
+      unanalyzableSql: fail
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      include: ["src/*.ts"]
+      importSpecifier: "@example/db"
+      executorNames: [read]
+      unanalyzableSql: fail
+      relations: [{ table: accounts, require: ["active IS TRUE"] }]

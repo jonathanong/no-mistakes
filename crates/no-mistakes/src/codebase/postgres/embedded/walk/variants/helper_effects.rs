@@ -74,7 +74,7 @@ impl ScopeVisitor<'_> {
         name: String,
         identity: Option<u32>,
         preserved_scope: Option<usize>,
-        variants_only: bool,
+        include_shadowed_aliases: bool,
         forget_prefix: bool,
         minimum_scope: usize,
     ) {
@@ -128,20 +128,18 @@ impl ScopeVisitor<'_> {
                     .is_some_and(|identity| binding.builder_identity == Some(identity))
                     || seen.contains(bound_name)
                         && (identity.is_none() || binding.builder_identity.is_none())
-                        && (variants_only || visible.get(bound_name) == Some(&index));
+                        && (include_shadowed_aliases || visible.get(bound_name) == Some(&index));
                 let preserved = preserved_scope == Some(index) && *bound_name == name;
                 if affected && !preserved {
                     // Even an already-opaque snapshot can be mutated again
                     // before throwing; exception boundaries track every effect.
                     binding.builder_effect_revision =
                         binding.builder_effect_revision.wrapping_add(1);
-                    if variants_only {
-                        binding.variants = None;
-                    } else {
-                        scope::mark_binding_dynamic_keep_known_statement(binding);
-                        if forget_prefix {
-                            binding.sql = None;
-                        }
+                    // Legacy SQL and finite alternatives describe the same
+                    // mutable object; neither may remain complete after escape.
+                    scope::mark_binding_dynamic_keep_known_statement(binding);
+                    if forget_prefix {
+                        binding.sql = None;
                     }
                 }
             }

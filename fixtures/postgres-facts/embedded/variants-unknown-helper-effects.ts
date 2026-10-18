@@ -95,14 +95,14 @@ unknownHelper({ primitive });
 query(gate ? primitive : "SELECT 20"); // finite
 const ordinary = sql`SELECT id FROM ordinary_users`;
 unknownHelper(ordinary);
-query(ordinary); // unchanged builder
+query(ordinary); // opaque known-prefix
 query(gate ? ordinary : sql`SELECT 21`); // opaque
 const captured = sql`SELECT id FROM captured_users`;
 const capturedAlias = captured;
 function callback() {
   unknownHelper(captured);
   query(gate ? captured : sql`SELECT 22`); // opaque
-  query(captured); // unchanged builder
+  query(captured); // opaque known-prefix
   const localAlias = capturedAlias;
   query(choose(localAlias) ? localAlias : sql`SELECT 23`); // opaque
   query(capturedAlias); // opaque
