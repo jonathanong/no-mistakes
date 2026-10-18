@@ -12,9 +12,6 @@ impl ImportCollector {
         let ForStatementLeft::VariableDeclaration(declaration) = left else {
             return;
         };
-        let Some(declarator) = declaration.declarations.first() else {
-            return;
-        };
         let ValueExpression::Array(elements) = self.value_expression(right) else {
             return;
         };
@@ -30,7 +27,17 @@ impl ImportCollector {
         {
             return;
         }
-        let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
+        let Some((identifier, declaration_end)) =
+            declaration
+                .declarations
+                .first()
+                .and_then(|declarator| match &declarator.id {
+                    BindingPattern::BindingIdentifier(identifier) => {
+                        Some((identifier, declarator.span.end))
+                    }
+                    _ => None,
+                })
+        else {
             return;
         };
         // Receiver histories traverse both Default branches as alternatives.
@@ -45,6 +52,6 @@ impl ImportCollector {
             .callee_binding_scope(name)
             .unwrap_or(self.current_lexical_scope_id());
         self.capture_mutable_root_phase((scope, name), identifier.span.start, &value, false);
-        self.retain_receiver_origin(scope, name, value, declarator.span.end, false);
+        self.retain_receiver_origin(scope, name, value, declaration_end, false);
     }
 }
