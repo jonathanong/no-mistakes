@@ -128,7 +128,11 @@ impl ScopeVisitor<'_> {
                     .is_some_and(|identity| binding.builder_identity == Some(identity))
                     || seen.contains(bound_name)
                         && (identity.is_none() || binding.builder_identity.is_none())
-                        && (include_shadowed_aliases || visible.get(bound_name) == Some(&index));
+                        && (visible.get(bound_name) == Some(&index)
+                            || include_shadowed_aliases
+                                && binding.variants.as_ref().is_some_and(|values| {
+                                    values.iter().any(|value| value.fragment)
+                                }));
                 let preserved = preserved_scope == Some(index) && *bound_name == name;
                 if affected && !preserved {
                     // Even an already-opaque snapshot can be mutated again
