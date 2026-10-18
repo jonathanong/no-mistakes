@@ -9,6 +9,7 @@ on:
       - "crates/no-mistakes/src/lib.rs"
       - "crates/no-mistakes/examples/allocator_probe.rs"
       - "scripts/performance/mimalloc-*"
+      - "scripts/performance/fixtures/mimalloc-report/**"
       - "docs/performance/mimalloc-evaluation.md"
   workflow_dispatch:
 
@@ -20,11 +21,28 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  harness-tests:
+    name: Saved measurement harness tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out candidate source
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Test saved measurement fixtures
+        timeout-minutes: 2
+        run: python3 scripts/performance/mimalloc-report-tests.py
   build:
+    needs: harness-tests
     uses: ./.github/workflows/mimalloc-evaluation-build.yml
   prepare:
+    needs: harness-tests
     uses: ./.github/workflows/mimalloc-evaluation-prepare.yml
   probe:
+    needs: harness-tests
     uses: ./.github/workflows/mimalloc-evaluation-probe.yml
   napi:
     needs: build
@@ -34,5 +52,5 @@ jobs:
     uses: ./.github/workflows/mimalloc-evaluation-measure.yml
   summarize:
     if: always()
-    needs: [build, probe, napi, prepare, measure]
+    needs: [harness-tests, build, probe, napi, prepare, measure]
     uses: ./.github/workflows/mimalloc-evaluation-summary.yml
