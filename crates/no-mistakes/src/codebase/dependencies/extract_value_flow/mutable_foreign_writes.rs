@@ -48,11 +48,7 @@ impl ImportCollector {
         };
         // Module captures keep their saved object. A callable capture can see
         // foreign providers even when a nested closure owns the eventual write.
-        if self
-            .foreign_receiver_writes
-            .as_ref()
-            .is_some_and(|writes| writes.finishing)
-        {
+        if self.foreign_receiver_writes_finishing() {
             return;
         }
         #[cfg(feature = "test-instrumentation")]
@@ -80,6 +76,14 @@ impl ImportCollector {
                 metadata: info.metadata,
                 completed_at: info.completed_at,
             });
+    }
+
+    /// True while finalization replays ordinary references; module-owned
+    /// origins must then be walked directly because no write is retained.
+    pub(in super::super) fn foreign_receiver_writes_finishing(&self) -> bool {
+        self.foreign_receiver_writes
+            .as_ref()
+            .is_some_and(|writes| writes.finishing)
     }
 
     pub(in super::super::super) fn finish_foreign_receiver_writes(&mut self) {

@@ -265,6 +265,19 @@ fn deferred_module_writes_follow_root_replacement_execution_order() {
         matches!(replica.target, ResolvedCallTarget::Unknown),
         "declaration placement must not change the runtime write phase: {replica:?}"
     );
+
+    // Finalization replays a foreign origin into a same-owner root; its
+    // module-owned origins must still be walked, never silently skipped.
+    let same_owner_chain =
+        graph.call_sites_in_file(&root.join("src/module-writer-finishing-same-owner-chain.mts"));
+    let replica = same_owner_chain
+        .iter()
+        .find(|site| site.source_callee == "replica.get")
+        .unwrap();
+    assert!(
+        matches!(replica.target, ResolvedCallTarget::Unknown),
+        "finalization replay must not skip module-owned origins: {replica:?}"
+    );
 }
 
 #[cfg(feature = "test-instrumentation")]

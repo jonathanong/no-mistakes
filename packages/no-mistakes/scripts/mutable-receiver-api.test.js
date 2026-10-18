@@ -104,6 +104,7 @@ for (const [entry, expected] of [
   ["module-writer-rebind-before.mts", ["primary.get", "primary.get"]],
   ["module-writer-write-before-rebind.mts", ["replica.get"]],
   ["module-writer-declaration-after-rebind.mts", []],
+  ["module-writer-finishing-same-owner-chain.mts", []],
 ]) {
   test(
     `compiled async CJS and ESM preserve module-owned deferred receiver writes: ${entry}`,

@@ -134,7 +134,8 @@ impl ImportCollector {
         if let Some(origins) = &self.receiver_only_bindings {
             let defer_module = writer.is_some()
                 && writer == coordinates.2 .1
-                && self.active_module_provider.is_none();
+                && self.active_module_provider.is_none()
+                && !self.foreign_receiver_writes_finishing();
             origins.append_references(
                 key,
                 coordinates,
