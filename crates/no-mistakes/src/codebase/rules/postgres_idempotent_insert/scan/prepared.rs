@@ -1,8 +1,8 @@
-use super::{finding, is_embedded_source, CompiledOptions, RULE_ID};
+use super::{collect_findings, is_embedded_source, CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::{
-    judge_file_with_insert_indices, judge_idempotent_subcheck, postgres_sql_paths,
-    record_sql_policy_verdicts, IdempotentCatalog, SqlStatementFileFacts,
+    judge_idempotent_subcheck, postgres_sql_paths, record_sql_policy_verdicts, IdempotentCatalog,
+    SqlStatementFileFacts,
 };
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use std::path::{Path, PathBuf};
@@ -84,49 +84,7 @@ pub(crate) fn scan(
             );
         }
     }
-    let mut findings = crate::codebase::rules::PostgresFindings::default();
-    let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
-    if opts.scan_embedded {
-        for file in &embedded {
-            let rel = relative_slash_path(root, &file.path);
-            for call in &file.calls {
-                if opts.fail_unanalyzable && call.is_unanalyzable() {
-                    findings.push(finding(
-                        &rel,
-                        call.line.max(1) as usize,
-                        "executed INSERT SQL is not statically recoverable",
-                    ));
-                }
-            }
-        }
-    }
-    for file in statements {
-        if !opts.scan_embedded && is_embedded_source(&file.path) {
-            continue;
-        }
-        let rel = relative_slash_path(root, &file.path);
-        let judged = if file.parse_failed && !opts.fail_unanalyzable {
-            let mut recoverable = file.clone();
-            recoverable.parse_failed = false;
-            judge_file_with_insert_indices(&recoverable, &catalog)
-        } else {
-            judge_file_with_insert_indices(file, &catalog)
-        };
-        let source = crate::codebase::rules::read_source(sources, &file.path);
-        for (index, line, message) in judged {
-            let site = index.map_or(
-                crate::codebase::postgres::statements::SqlFactSite::Origin,
-                crate::codebase::postgres::statements::SqlFactSite::Insert,
-            );
-            dedup.push(
-                &mut findings,
-                file,
-                site,
-                source.as_deref(),
-                finding(&rel, line, &message),
-            );
-        }
-    }
-    findings.sort();
-    Ok(findings)
+    Ok(collect_findings(
+        root, opts, embedded, statements, sources, &catalog,
+    ))
 }

@@ -1,7 +1,8 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
-    collect_postgres_facts, judge_file_with_insert_indices, IdempotentCatalog,
+    collect_postgres_facts, judge_file_with_insert_indices, EmbeddedSqlFileFacts,
+    IdempotentCatalog, SqlStatementFileFacts,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
@@ -45,10 +46,28 @@ pub(super) fn scan(
         check_generated: opts.check_generated,
         trigger_writes: &opts.trigger_writes,
     };
+    Ok(collect_findings(
+        root,
+        opts,
+        facts.embedded.iter(),
+        facts.statements.iter(),
+        sources,
+        &catalog,
+    ))
+}
+
+fn collect_findings<'a>(
+    root: &Path,
+    opts: &CompiledOptions,
+    embedded: impl IntoIterator<Item = &'a EmbeddedSqlFileFacts>,
+    statements: impl IntoIterator<Item = &'a SqlStatementFileFacts>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    catalog: &IdempotentCatalog<'_>,
+) -> crate::codebase::rules::PostgresFindings {
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if opts.scan_embedded {
-        for file in &facts.embedded {
+        for file in embedded {
             let rel = relative_slash_path(root, &file.path);
             for call in &file.calls {
                 if opts.fail_unanalyzable && call.is_unanalyzable() {
@@ -61,7 +80,7 @@ pub(super) fn scan(
             }
         }
     }
-    for file in &facts.statements {
+    for file in statements {
         if !opts.scan_embedded && is_embedded_source(&file.path) {
             continue;
         }
@@ -69,9 +88,9 @@ pub(super) fn scan(
         let judged = if file.parse_failed && !opts.fail_unanalyzable {
             let mut recoverable = file.clone();
             recoverable.parse_failed = false;
-            judge_file_with_insert_indices(&recoverable, &catalog)
+            judge_file_with_insert_indices(&recoverable, catalog)
         } else {
-            judge_file_with_insert_indices(file, &catalog)
+            judge_file_with_insert_indices(file, catalog)
         };
         let source = crate::codebase::rules::read_source(sources, &file.path);
         for (index, line, message) in judged {
@@ -89,7 +108,7 @@ pub(super) fn scan(
         }
     }
     findings.sort();
-    Ok(findings)
+    findings
 }
 
 fn is_embedded_source(path: &Path) -> bool {

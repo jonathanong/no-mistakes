@@ -61,17 +61,6 @@ pub(super) fn scan_with_sources(
     Ok(findings)
 }
 
-#[cfg(test)]
-pub(super) fn findings_for_call_with_catalog(
-    file: &str,
-    source: &str,
-    call: &crate::codebase::postgres::EmbeddedSqlCall,
-    opts: &CompiledOptions,
-    catalog: Option<&SchemaCatalog>,
-) -> Vec<RuleFinding> {
-    findings_for_prepared_call(file, source, call, opts, catalog, None)
-}
-
 pub(super) fn findings_for_prepared_call(
     file: &str,
     source: &str,
