@@ -1,16 +1,18 @@
 use super::super::EmbeddedSqlKind;
 use super::{resolve, BindingState, ScopeVisitor};
-use oxc_ast::ast::{BindingPattern, FormalParameters, TSType, TSTypeName};
+use oxc_ast::ast::{BindingPattern, FormalParameters};
 use oxc_span::GetSpan;
 use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
     pub(super) fn push_scope(&mut self) {
         self.scopes.push(HashMap::new());
+        self.relative_proofs.push(HashMap::new());
     }
 
     pub(super) fn pop_scope(&mut self) {
         self.scopes.pop();
+        self.relative_proofs.pop();
     }
 
     pub(super) fn current_scope(&mut self) -> Option<&mut HashMap<String, BindingState>> {
@@ -46,11 +48,15 @@ impl ScopeVisitor<'_> {
             let executor = self
                 .scoped
                 .contains_declaration(&name, pattern.span().start);
+            let relative_executor_proof =
+                self.relative_declaration_proof(&name, pattern.span().start);
             if let Some(scope) = self.current_scope() {
                 scope.insert(
-                    name,
+                    name.clone(),
                     BindingState {
-                        executor_alias: executor.then_some(true),
+                        executor_alias: executor
+                            .then_some(true)
+                            .or(relative_executor_proof.map(|_| false)),
                         builder_identity: None,
                         builder_effect_revision: 0,
                         condition_key: None,
@@ -63,6 +69,12 @@ impl ScopeVisitor<'_> {
                         sql_source_positions: Vec::new(),
                     },
                 );
+            }
+            if let Some(index) = relative_executor_proof {
+                self.relative_proofs
+                    .last_mut()
+                    .expect("scope")
+                    .insert(name, index);
             }
         }
     }
@@ -127,7 +139,7 @@ impl ScopeVisitor<'_> {
         for param in &params.items {
             self.bind_param(
                 &param.pattern,
-                param_is_sql_statement(param, &self.sql_statement_types),
+                params::param_is_sql_statement(param, &self.sql_statement_types),
             );
         }
         if let Some(rest) = &params.rest {
@@ -172,61 +184,7 @@ impl ScopeVisitor<'_> {
     }
 }
 
-fn param_is_sql_statement(
-    param: &oxc_ast::ast::FormalParameter<'_>,
-    bindings: &std::collections::HashSet<String>,
-) -> bool {
-    let Some(annotation) = &param.type_annotation else {
-        return false;
-    };
-    let TSType::TSTypeReference(reference) = &annotation.type_annotation else {
-        return false;
-    };
-    matches!(
-        &reference.type_name,
-        TSTypeName::IdentifierReference(identifier) if bindings.contains(identifier.name.as_str())
-    )
-}
-
-pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingState) {
-    binding.executor_alias = None;
-    binding.kind = EmbeddedSqlKind::Dynamic;
-    binding.condition_key = None;
-    binding.variants = None;
-    if binding
-        .sql
-        .as_deref()
-        .is_none_or(|sql| !has_known_leading_statement(sql))
-    {
-        binding.sql = None;
-    }
-}
-
-pub(crate) fn has_known_leading_statement(mut sql: &str) -> bool {
-    loop {
-        sql = sql.trim_start();
-        if let Some(comment) = sql.strip_prefix("--") {
-            let Some((_, rest)) = comment.split_once('\n') else {
-                return false;
-            };
-            sql = rest;
-            continue;
-        }
-        if let Some(comment) = sql.strip_prefix("/*") {
-            let Some((_, rest)) = comment.split_once("*/") else {
-                return false;
-            };
-            sql = rest;
-            continue;
-        }
-        break;
-    }
-
-    let keyword = sql
-        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-        .next()
-        .unwrap_or_default();
-    ["select", "update", "insert", "delete", "merge"]
-        .iter()
-        .any(|candidate| keyword.eq_ignore_ascii_case(candidate))
-}
+mod known_statement;
+mod params;
+pub(crate) use known_statement::has_known_leading_statement;
+pub(super) use known_statement::mark_binding_dynamic_keep_known_statement;

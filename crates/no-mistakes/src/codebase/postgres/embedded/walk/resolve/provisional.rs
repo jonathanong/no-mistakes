@@ -19,10 +19,14 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         return;
     }
     if let Some(receiver) = member_query_receiver(call) {
-        if visitor.query_members
-            && (visitor.bindings.contains(MEMBER_QUERY_OPT_IN) || visitor.proven_executor(receiver))
-        {
+        if !visitor.query_members {
+            return;
+        }
+        if visitor.bindings.contains(MEMBER_QUERY_OPT_IN) || visitor.proven_executor(receiver) {
             push_confirmed(visitor, call, "query".to_string());
+        } else {
+            let owners = visitor.relative_executor_owners(receiver);
+            push_pending(visitor, call, "query", owners);
         }
         return;
     }
@@ -39,7 +43,16 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     let Expression::Identifier(ident) = unwrap_ts_wrappers(&call.callee) else {
         return;
     };
-    let owners = owners_at(visitor, ident.name.as_str(), call.span.start);
+    let owners = visitor.relative_executor_owners(&call.callee);
+    push_pending(visitor, call, ident.name.as_str(), owners);
+}
+
+fn push_pending(
+    visitor: &mut ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    callee: &str,
+    owners: Vec<u32>,
+) {
     if owners.is_empty() {
         return;
     }
@@ -51,7 +64,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     visitor.pending_calls.push(PendingRelativeCall {
         seq,
         owners,
-        call: executor_call(visitor, call, ident.name.to_string()),
+        call: executor_call(visitor, call, callee.to_string()),
     });
 }
 
@@ -63,19 +76,4 @@ fn push_confirmed(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>, cal
     }
     visitor.calls.push(executor_call(visitor, call, callee));
     visitor.call_spans.push((call.span.start, call.span.end));
-}
-
-fn owners_at(visitor: &ScopeVisitor<'_>, name: &str, start: u32) -> Vec<u32> {
-    let mut owners = Vec::new();
-    for span in visitor.provisional {
-        if span.name != name || start < span.start || start >= span.end {
-            continue;
-        }
-        for owner in &span.owners {
-            if !owners.contains(owner) {
-                owners.push(*owner);
-            }
-        }
-    }
-    owners
 }

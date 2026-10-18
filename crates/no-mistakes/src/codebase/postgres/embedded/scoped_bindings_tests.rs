@@ -73,7 +73,7 @@ fn member_query_requires_executor_receiver_provenance() {
         extract_embedded_sql_from_source(&path, &source, &broad)
             .calls
             .len(),
-        8
+        9
     );
 }
 

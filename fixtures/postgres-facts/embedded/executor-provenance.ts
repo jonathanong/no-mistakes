@@ -33,3 +33,10 @@ export function unrelated(sql: string) {
 export function shadow(connection: { query: (value: object) => unknown }) {
   return connection.query({ value: 1 })
 }
+
+export function rebound() {
+  let db: unknown = openTransaction()
+  // Reassignment revokes the factory proof before the HTTP `.query` call.
+  db = createRequest().get('/users')
+  return (db as { query: (value: object) => unknown }).query({ resource: 'http' })
+}

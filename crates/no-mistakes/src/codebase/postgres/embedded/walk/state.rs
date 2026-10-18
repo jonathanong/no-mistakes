@@ -12,8 +12,6 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 #[derive(Clone)]
 pub(crate) struct BindingState {
-    // None: ineligible; Some(false): const awaiting its initializer; Some(true): proven.
-    pub(super) executor_alias: Option<bool>,
     pub(super) builder_identity: Option<u32>,
     pub(super) builder_effect_revision: u64,
     pub(super) condition_key: Option<(u64, u32)>,
@@ -21,6 +19,8 @@ pub(crate) struct BindingState {
     pub(crate) sql: Option<String>,
     pub(crate) kind: EmbeddedSqlKind,
     pub(crate) line: u32,
+    // None: ineligible; Some(false): awaiting or pending proof; Some(true): proven.
+    pub(super) executor_alias: Option<bool>,
     pub(crate) initialized: bool,
     pub(crate) sql_builder: bool,
     pub(crate) sql_source_positions: Vec<super::super::EmbeddedSqlSourcePosition>,
@@ -33,6 +33,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
+    pub(crate) relative_proofs: Vec<HashMap<String, u32>>,
     pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(super) argument_effects: Vec<super::executor_arguments::ArgumentEffect>,
     pub(super) argument_frames: usize,
@@ -97,6 +98,7 @@ pub(crate) fn collect_calls<'a>(
         scoped,
         provisional,
         scopes: Vec::new(),
+        relative_proofs: Vec::new(),
         builder_aliases: crate::fx::FxHashMap::default(),
         argument_effects: Vec::new(),
         argument_frames: 0,
