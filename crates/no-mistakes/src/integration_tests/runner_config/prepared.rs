@@ -16,6 +16,10 @@ mod json;
 mod missing;
 mod roots;
 mod setup;
+#[cfg(test)]
+mod sharing_tests;
+mod specs;
+use specs::add_framework_specs;
 
 pub use roots::{configured_runner_config_dirs, configured_runner_config_dirs_from_visible};
 pub use setup::prepare_runner_configs_with_deadline_evidence;
@@ -65,7 +69,8 @@ impl PreparedIntegrationRunnerConfigs {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
             &self.tsconfig_catalog,
             &self.visible_files,
-        );
+        )
+        .with_shared_cache(self.visible_files.resolver_cache());
         let (results, mut analyses) = collect_analyses(|| {
             specs
                 .into_iter()

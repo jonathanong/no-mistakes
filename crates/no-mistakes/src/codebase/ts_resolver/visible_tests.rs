@@ -106,7 +106,7 @@ fn normalized_visibility_projects_paths_and_blanket_lookups_delegate() {
 
 #[test]
 fn import_resolver_with_visible_stays_a_public_pathset_api() {
-    let source = include_str!("resolver_impl.rs");
+    let source = include_str!("resolver_builders.rs");
     assert!(
         source.contains("pub fn with_visible(self, visible: &'a crate::fx::PathSet)"),
         "ImportResolver::with_visible must stay a public PathSet API"
@@ -172,7 +172,10 @@ fn borrowed_resolver_visible_clones_by_reference() {
     let cloned = borrowed.clone();
     let path = Path::new("/fixture/a.ts");
     assert!(cloned.lookup().contains_visible(path));
-    assert_eq!(cloned.cache_paths(), borrowed.cache_paths());
+    assert_eq!(
+        cloned.lookup().visible_cache_key(),
+        borrowed.lookup().visible_cache_key()
+    );
 }
 
 #[test]

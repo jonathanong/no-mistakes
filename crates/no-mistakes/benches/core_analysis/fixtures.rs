@@ -8,9 +8,9 @@ use std::path::{Path, PathBuf};
 
 pub(super) const EXPECTED_SOURCE_FILES: usize = 14;
 pub(super) const EXPECTED_IMPACTED_CHECKS: usize = 1;
-// Nine graph-scope keys plus two session-scoped legacy-symbol keys, plus the
-// previously pruned `import()` in `src/lazy.ts`.
-pub(super) const EXPECTED_MULTI_REPORT_RESOLVER_KEYS: u64 = 12;
+// Ten distinct graph keys, including `src/lazy.ts`'s `import()`. Equivalent
+// legacy-symbol lookups now reuse those session-scoped keys.
+pub(super) const EXPECTED_MULTI_REPORT_RESOLVER_KEYS: u64 = 10;
 // Fourteen TS sources, one Rust rule source, and four config/manifest parses.
 // Graph edge collectors now reuse those manifests, so requests/cache-hits rise.
 pub(super) const EXPECTED_CHECK_SOURCE_READS: u64 = 19;

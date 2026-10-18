@@ -14,10 +14,13 @@ mod io;
 mod lang_facts;
 mod parsing;
 mod registry_extension;
+mod resolver;
+mod visible;
 
 pub use intern::PathInterner;
 pub use io::SourceReadError;
 use registry_extension::{RegistryExtensionCell, RegistryExtensionKey};
+pub(crate) use visible::PreparedVisible;
 
 /// Invocation-owned analysis gateways and memoized work.
 ///
@@ -30,6 +33,7 @@ pub struct AnalysisSession {
     observer: Option<Arc<InvocationObserver>>,
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
+    visible_scopes: OnceLock<visible::VisibleScopes>,
     resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
     registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
@@ -59,6 +63,7 @@ impl AnalysisSession {
             observer,
             datasets: DashMap::new(),
             supplemental_sources,
+            visible_scopes: OnceLock::new(),
             resolver_caches: DashMap::new(),
             registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
@@ -76,30 +81,6 @@ impl AnalysisSession {
 
     pub fn observer(&self) -> Option<&Arc<InvocationObserver>> {
         self.observer.as_ref()
-    }
-
-    /// Return the invocation-owned result cache for one exact resolver scope.
-    pub(crate) fn resolver_cache(
-        &self,
-        tsconfig: &TsConfig,
-        visible: Option<&[std::path::PathBuf]>,
-    ) -> Arc<ResolverResultCache> {
-        self.increment("resolver.scope_cache_requests", 1);
-        self.resolver_cache_for_scope(ResolverCacheScopeKey::new(tsconfig, visible, None, &[]))
-    }
-
-    pub(crate) fn resolver_cache_for_scope(
-        &self,
-        scope: ResolverCacheScopeKey,
-    ) -> Arc<ResolverResultCache> {
-        match self.resolver_caches.entry(scope) {
-            Entry::Occupied(entry) => Arc::clone(entry.get()),
-            Entry::Vacant(entry) => {
-                let cache = Arc::new(ResolverResultCache::default());
-                entry.insert(Arc::clone(&cache));
-                cache
-            }
-        }
     }
 
     /// Return the canonical visible-path snapshot for `root`, discovering a

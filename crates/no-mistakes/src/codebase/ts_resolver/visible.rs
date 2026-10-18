@@ -11,6 +11,23 @@ pub(crate) trait VisiblePathLookup: Send + Sync {
     /// Paths that distinguish one resolver cache scope from another.
     fn visible_cache_key(&self) -> Vec<PathBuf>;
 
+    /// Visit exact members without sorting or cloning a repository-sized key.
+    fn visit_visible(&self, visit: &mut dyn FnMut(&Path)) {
+        for path in self.visible_cache_key() {
+            visit(&path);
+        }
+    }
+
+    /// Reserved for prepared exact membership and default alias semantics.
+    fn scope_identity(&self) -> Option<VisibleScopeIdentity> {
+        None
+    }
+
+    /// Reuse storage already frozen by a request owner instead of copying paths.
+    fn prepared_projection(&self) -> Option<crate::codebase::analysis_session::PreparedVisible> {
+        None
+    }
+
     /// Normalized plus canonical aliases used by scoped import resolution.
     ///
     /// Graph-backed lookups override this to reuse one request-scoped Arc;
@@ -35,7 +52,12 @@ pub(crate) fn normalized_visible_path_set(
             let normalized = crate::codebase::ts_resolver::normalize_path(&path);
             path.canonicalize().ok().map_or_else(
                 || vec![normalized.clone()],
-                |real| vec![normalized.clone(), crate::codebase::ts_resolver::normalize_path(&real)],
+                |real| {
+                    vec![
+                        normalized.clone(),
+                        crate::codebase::ts_resolver::normalize_path(&real),
+                    ]
+                },
             )
         })
         .collect()
@@ -48,6 +70,12 @@ impl VisiblePathLookup for HashSet<PathBuf> {
 
     fn visible_len(&self) -> usize {
         self.len()
+    }
+
+    fn visit_visible(&self, visit: &mut dyn FnMut(&Path)) {
+        for path in self {
+            visit(path);
+        }
     }
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {
@@ -66,54 +94,16 @@ impl VisiblePathLookup for crate::fx::PathSet {
         self.len()
     }
 
+    fn visit_visible(&self, visit: &mut dyn FnMut(&Path)) {
+        for path in self {
+            visit(path);
+        }
+    }
+
     fn visible_cache_key(&self) -> Vec<PathBuf> {
         let mut paths: Vec<_> = self.iter().cloned().collect();
         paths.sort();
         paths
-    }
-}
-
-impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for &T {
-    fn contains_visible(&self, path: &Path) -> bool {
-        (**self).contains_visible(path)
-    }
-
-    fn visible_len(&self) -> usize {
-        (**self).visible_len()
-    }
-
-    fn visible_cache_key(&self) -> Vec<PathBuf> {
-        (**self).visible_cache_key()
-    }
-
-    fn normalized_visible(&self) -> Arc<crate::fx::PathSet> {
-        (**self).normalized_visible()
-    }
-
-    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
-        (**self).visible_alias(path)
-    }
-}
-
-impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for std::sync::Arc<T> {
-    fn contains_visible(&self, path: &Path) -> bool {
-        (**self).contains_visible(path)
-    }
-
-    fn visible_len(&self) -> usize {
-        (**self).visible_len()
-    }
-
-    fn visible_cache_key(&self) -> Vec<PathBuf> {
-        (**self).visible_cache_key()
-    }
-
-    fn normalized_visible(&self) -> Arc<crate::fx::PathSet> {
-        (**self).normalized_visible()
-    }
-
-    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
-        (**self).visible_alias(path)
     }
 }
 

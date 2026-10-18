@@ -74,3 +74,5 @@ include!("domain_parity_tests/postgres_writes.rs");
 include!("domain_parity_tests/effects_provenance.rs");
 
 include!("domain_parity_tests/lang_frontend_shared_session.rs");
+
+include!("domain_parity_tests/resolver_projection_parity.rs");

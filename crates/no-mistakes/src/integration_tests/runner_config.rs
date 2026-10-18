@@ -40,7 +40,7 @@ pub struct PreparedIntegrationRunnerConfigs {
     specs: Vec<RunnerConfigSpec>,
     deadline_runners: std::collections::BTreeSet<&'static str>,
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    visible_files: crate::fx::PathSet,
+    visible_files: crate::codebase::analysis_session::PreparedVisible,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
 }
 

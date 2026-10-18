@@ -9,12 +9,9 @@ impl GraphFiles {
             return false;
         }
         let mut changed = false;
-        match self
-            .all
-            .binary_search_by(|candidate| {
-                crate::codebase::ts_source::cmp_os_str_paths(candidate, &path)
-            })
-        {
+        match self.all.binary_search_by(|candidate| {
+            crate::codebase::ts_source::cmp_os_str_paths(candidate, &path)
+        }) {
             Ok(index) => {
                 if self.visible.get(index).copied() != Some(1) {
                     self.visible[index] = 1;
@@ -55,7 +52,9 @@ impl GraphFiles {
 
     fn visible_index(&self, path: &Path) -> Option<usize> {
         self.all
-            .binary_search_by(|candidate| crate::codebase::ts_source::cmp_os_str_paths(candidate, path))
+            .binary_search_by(|candidate| {
+                crate::codebase::ts_source::cmp_os_str_paths(candidate, path)
+            })
             .ok()
             .filter(|&index| self.visible.get(index).copied() == Some(1))
     }
@@ -100,17 +99,21 @@ impl crate::codebase::ts_resolver::VisiblePathLookup for GraphFiles {
         GraphFiles::contains_visible(self, path)
     }
 
+    fn visit_visible(&self, visit: &mut dyn FnMut(&Path)) {
+        for path in self.iter_visible() {
+            visit(path);
+        }
+    }
+
     fn visible_cache_key(&self) -> Vec<PathBuf> {
         self.iter_visible().cloned().collect()
     }
 
     fn normalized_visible(&self) -> std::sync::Arc<crate::fx::PathSet> {
         std::sync::Arc::clone(self.scoped_visible.get_or_init(|| {
-            std::sync::Arc::new(
-                crate::codebase::ts_resolver::normalized_visible_path_set(
-                    self.iter_visible().cloned(),
-                ),
-            )
+            std::sync::Arc::new(crate::codebase::ts_resolver::normalized_visible_path_set(
+                self.iter_visible().cloned(),
+            ))
         }))
     }
 

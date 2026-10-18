@@ -54,8 +54,13 @@ impl<'a> ImportResolver<'a> {
 
         let key = self.resolve_key(specifier, importing_file);
 
-        if let Some(cache) = self.shared_cache {
-            return self.resolve_cached(&cache.raw_entries, key, specifier);
+        // Prepared graph scopes share the session import table. Unprepared
+        // legacy lookups can remap canonical aliases differently, so retain
+        // their explicit raw projection rather than inferring equivalence.
+        if !self.session_exact_visibility {
+            if let Some(cache) = self.shared_cache {
+                return self.resolve_cached(&cache.raw_entries, key, specifier);
+            }
         }
         self.resolve_cached(&self.cache, key, specifier)
     }

@@ -8,9 +8,13 @@ use std::sync::Arc;
 include!("ts_resolver/config_ast.rs");
 include!("ts_resolver/config.rs");
 include!("ts_resolver/resolve_entry.rs");
+include!("ts_resolver/visible_identity.rs");
 include!("ts_resolver/visible.rs");
+include!("ts_resolver/visible_forwarding.rs");
 include!("ts_resolver/resolver.rs");
+include!("ts_resolver/resolver_types.rs");
 include!("ts_resolver/resolver_impl.rs");
+include!("ts_resolver/resolver_builders.rs");
 include!("ts_resolver/resolver_cache_impl.rs");
 include!("ts_resolver/resolver_paths.rs");
 include!("ts_resolver/resolver_candidates.rs");
@@ -18,6 +22,8 @@ include!("ts_resolver/path.rs");
 include!("ts_resolver/catalog.rs");
 include!("ts_resolver/catalog_config.rs");
 include!("ts_resolver/scoped.rs");
+include!("ts_resolver/scoped_policy.rs");
+include!("ts_resolver/scoped_selection.rs");
 include!("ts_resolver/scoped_setup.rs");
 include!("ts_resolver/project_resolver.rs");
 
@@ -41,3 +47,19 @@ mod tests;
 #[cfg(test)]
 #[path = "ts_resolver/tests/parallel_catalog.rs"]
 mod parallel_catalog_tests;
+
+#[cfg(test)]
+#[path = "ts_resolver/session_visible_tests.rs"]
+mod session_visible_tests;
+
+#[cfg(test)]
+#[path = "ts_resolver/session_visible_projection_tests.rs"]
+mod session_visible_projection_tests;
+
+#[cfg(test)]
+#[path = "ts_resolver/session_graph_cache_tests.rs"]
+mod session_graph_cache_tests;
+
+#[cfg(test)]
+#[path = "ts_resolver/session_builder_tests.rs"]
+mod session_builder_tests;

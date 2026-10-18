@@ -7,6 +7,7 @@ pub struct ImportResolver<'a> {
     cache: std::sync::Arc<ResolverResultCache>,
     shared_cache: Option<&'a ImportResolutionCache>,
     session_scoped: bool,
+    session_exact_visibility: bool,
     observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
     interner: Option<Arc<crate::codebase::analysis_session::PathInterner>>,
 }
@@ -53,10 +54,6 @@ impl ResolverVisible<'_> {
             Self::Owned(visible) => visible.as_ref(),
         }
     }
-
-    pub(crate) fn cache_paths(&self) -> Vec<PathBuf> {
-        self.lookup().visible_cache_key()
-    }
 }
 
 #[derive(Clone, Copy)]
@@ -76,32 +73,15 @@ pub(crate) type ResolverResultCache =
 
 /// Exact identity for a resolver cache within one analysis invocation.
 ///
-/// Store the complete effective config and visible universe rather than a hash
-/// fingerprint so distinct resolution semantics can never share an entry.
+/// Keep complete config semantics and an exact visible identity. Session-owned
+/// identities retain their allocations; standalone scopes keep complete paths.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct ResolverScopeKey {
     dir: PathBuf,
     paths: Vec<(String, Vec<String>)>,
     paths_dir: PathBuf,
     base_url: Option<PathBuf>,
-    visible: Option<Vec<PathBuf>>,
-}
-
-impl ResolverScopeKey {
-    pub(crate) fn new(tsconfig: &TsConfig, visible: Option<&[PathBuf]>) -> Self {
-        let visible = visible.map(|paths| {
-            let mut paths = paths.to_vec();
-            paths.sort();
-            paths
-        });
-        Self {
-            dir: tsconfig.dir.clone(),
-            paths: tsconfig.paths.clone(),
-            paths_dir: tsconfig.paths_dir.clone(),
-            base_url: tsconfig.base_url.clone(),
-            visible,
-        }
-    }
+    visible: Option<ResolverVisibleKey>,
 }
 
 /// Session cache identity for either a legacy resolver or one catalog-selected
@@ -112,67 +92,36 @@ pub(crate) struct ResolverCacheScopeKey {
     resolver: ResolverScopeKey,
     module_resolution: Option<String>,
     identity: Vec<PathBuf>,
+    queue_root: Option<PathBuf>,
 }
 
 impl ResolverCacheScopeKey {
-    pub(crate) fn new(
+    pub(crate) fn with_queue_root(mut self, root: Option<&Path>) -> Self {
+        self.queue_root = root.map(normalize_path);
+        self
+    }
+
+    pub(crate) fn for_lookup(
         tsconfig: &TsConfig,
-        visible: Option<&[PathBuf]>,
+        visible: Option<&dyn VisiblePathLookup>,
         module_resolution: Option<&str>,
         identity: &[PathBuf],
     ) -> Self {
+        let visible = visible.map(|visible| match visible.scope_identity() {
+            Some(identity) => ResolverVisibleKey::Session(identity),
+            None => ResolverVisibleKey::Exact(visible.visible_cache_key()),
+        });
         Self {
-            resolver: ResolverScopeKey::new(tsconfig, visible),
+            resolver: ResolverScopeKey {
+                dir: tsconfig.dir.clone(),
+                paths: tsconfig.paths.clone(),
+                paths_dir: tsconfig.paths_dir.clone(),
+                base_url: tsconfig.base_url.clone(),
+                visible,
+            },
             module_resolution: module_resolution.map(str::to_string),
             identity: identity.to_vec(),
+            queue_root: None,
         }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ImportClassification {
-    resolver_target: Option<PathBuf>,
-    workspace_target: Option<PathBuf>,
-    workspace_recognized: bool,
-}
-
-impl ImportClassification {
-    pub(crate) fn preferred_path(&self) -> Option<&Path> {
-        self.resolver_target
-            .as_deref()
-            .or(self.workspace_target.as_deref())
-    }
-
-    pub(crate) fn resolver_path(&self) -> Option<&Path> {
-        self.resolver_target.as_deref()
-    }
-
-    pub(crate) fn workspace_path(&self) -> Option<&Path> {
-        self.workspace_target.as_deref()
-    }
-
-    pub(crate) fn is_unresolved_external(&self) -> bool {
-        self.resolver_target.is_none()
-            && self.workspace_target.is_none()
-            && !self.workspace_recognized
-    }
-}
-
-/// Request-scoped memo table shared by graph consumers that classify imports.
-///
-/// The cache owns only resolution outcomes, so sharing it does not make lazy
-/// traversal prepare any other graph consumer.
-#[derive(Default)]
-pub(crate) struct ImportResolutionCache {
-    raw_entries: DashMap<ResolveKey, Option<PathBuf>, rustc_hash::FxBuildHasher>,
-    final_entries: DashMap<ResolveKey, ImportClassification, rustc_hash::FxBuildHasher>,
-    classifications: std::sync::atomic::AtomicUsize,
-    requests: std::sync::atomic::AtomicUsize,
-}
-
-impl ImportResolutionCache {
-    pub(crate) fn clear(&self) {
-        self.raw_entries.clear();
-        self.final_entries.clear();
     }
 }
