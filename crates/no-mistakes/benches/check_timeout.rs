@@ -6,11 +6,28 @@ use std::time::Duration;
 fn per_file_check_timeout(c: &mut Criterion) {
     let _guard = no_mistakes::invocation::install_test_deadline(Duration::from_secs(3_600))
         .expect("install live deadline");
-    c.bench_function("per_file_check_timeout", |b| {
-        b.iter(|| {
-            no_mistakes::invocation::check_timeout().expect("deadline is still live");
+    // One iteration is one call on every job. Wall time is the contended call,
+    // not thread spawn: Criterion's iteration count amortizes the scope.
+    let mut group = c.benchmark_group("per_file_check_timeout");
+    for jobs in [1usize, 28] {
+        group.bench_function(format!("{jobs}_jobs"), |b| {
+            b.iter_custom(|iters| {
+                let start = std::time::Instant::now();
+                std::thread::scope(|scope| {
+                    for _ in 0..jobs {
+                        scope.spawn(|| {
+                            for _ in 0..iters {
+                                no_mistakes::invocation::check_timeout()
+                                    .expect("deadline is still live");
+                            }
+                        });
+                    }
+                });
+                start.elapsed()
+            });
         });
-    });
+    }
+    group.finish();
 }
 
 criterion_group!(benches, per_file_check_timeout);
