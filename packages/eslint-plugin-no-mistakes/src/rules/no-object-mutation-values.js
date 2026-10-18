@@ -135,10 +135,32 @@ function readMember(tag, key) {
   if (key && tag.fields.has(key)) {
     return tag.fields.get(key);
   }
+  // A computed key can name any field. Prefer a shared or already-escaped
+  // candidate over the fresh object, which would hide that write.
+  if (!key && tag.type === "fresh") {
+    for (const field of tag.fields.values()) {
+      if (reportableMember(field)) {
+        return field;
+      }
+    }
+    if (reportableMember(tag.dynamic)) {
+      return tag.dynamic;
+    }
+  }
   if (tag.dynamic) {
     return tag.dynamic;
   }
   return tag;
+}
+
+function reportableMember(tag) {
+  if (!tag) {
+    return false;
+  }
+  if (tag.type === "shared" || tag.type === "this") {
+    return true;
+  }
+  return tag.type === "fresh" && tag.escaped;
 }
 
 function escapeFresh(tag, seen = new Set()) {

@@ -109,9 +109,6 @@ function callFunction(state, tag) {
       report(state, write.node, write.objectNode, write.viaCall);
     }
   }
-  for (const fresh of tag.captured) {
-    markEscaped(state, fresh);
-  }
 }
 
 function escapeFunction(state, tag) {

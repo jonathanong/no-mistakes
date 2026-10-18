@@ -155,7 +155,9 @@ describe("no-object-mutation", () => {
     );
   });
 
-  it("treats a direct local closure as a builder and a later write as escaped", () => {
+  it("keeps a called local closure from escaping its builder", () => {
+    // Calling the closure runs its writes. It does not escape the builder
+    // unless the closure itself escapes or the body passes the object out.
     assert.deepEqual(
       ids(`
         function build() {
@@ -166,7 +168,38 @@ describe("no-object-mutation", () => {
           return box;
         }
       `),
+      [],
+    );
+  });
+
+  it("reports a dynamic read that can reach a shared field", () => {
+    assert.deepEqual(
+      ids(`
+        function edit(param, key, other) {
+          const box = {};
+          box.user = param;
+          box[other] = 1;
+          box[key].name = "a";
+          const local = {};
+          local[key] = 1;
+        }
+      `),
       ["mutation"],
+    );
+  });
+
+  it("lints an Espree class that has no decorators list", () => {
+    assert.deepEqual(
+      ids(
+        `
+        class Box {
+          set(value) { this.slot = value; }
+        }
+      `,
+        undefined,
+        "fixture.js",
+      ),
+      [],
     );
   });
 

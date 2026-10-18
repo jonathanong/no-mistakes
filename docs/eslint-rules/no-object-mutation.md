@@ -60,8 +60,9 @@ class Client {
 
 The local object is created in that function and the writes finish before it
 is returned, passed to a call, stored on a shared object, or captured by a
-closure that escapes or is called only after a later write. `Map` and `Set`
-are allowed. Class `this` writes are allowed unless `allowThis` is `false`.
+closure that itself escapes. Calling that closure does not escape the builder
+unless the call passes the object out. `Map` and `Set` are allowed. Class
+`this` writes are allowed unless `allowThis` is `false`.
 
 ## Options
 

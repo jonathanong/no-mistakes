@@ -144,7 +144,7 @@ function visit(state, node, scope, role) {
       if (node.superClass) {
         visit(state, node.superClass, scope, "read");
       }
-      for (const decorator of node.decorators) {
+      for (const decorator of node.decorators ?? []) {
         visit(state, decorator.expression, scope, "escape");
       }
       visitClass(state, node.body, scope);
