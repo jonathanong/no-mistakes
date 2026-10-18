@@ -87,7 +87,7 @@ repository paths and explicitly limit checks to the Node package. Existing
 `core-analysis` and `graph-gates` fixtures retain JSX and configured include
 payloads. No issue estimate is a measured speed claim.
 
-### Performance validation remains pending
+### Rejected development comparison
 
 The retained [development observations](../../fixtures/performance/session-visible-resolver/rejected-dev-60055-abba.csv)
 and [provenance](../../fixtures/performance/session-visible-resolver/rejected-dev-60055-provenance.json)
@@ -112,8 +112,9 @@ The matrix retained raw diagnostic stderr separately. Timing was near flat and
 peak RSS increased, so this experiment does not satisfy the regression gate.
 No speedup is claimed. It was stopped before reverse rechecks because concrete
 unnecessary prepared-path copies had been found and needed correction.
-Matched production-build wall/CPU/RSS results and investigation of anonymous
-versus executable-page RSS remain required before marking the PR ready.
+The subsequent [production comparison](resolver-session-release.md) retains
+matched release wall/CPU/RSS observations and focused timing rechecks. No runtime
+gain or explanation of anonymous versus executable-page RSS is claimed.
 
 The physical repository contained 10,668 TS/JS sources, 5,551,085 bytes and
 156,505 lines; 3,076 JSX/TSX sources contained 347,140 bytes and 9,424 lines.

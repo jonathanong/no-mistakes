@@ -1,0 +1,27 @@
+{
+  "binaryProvenance": "release-repository-43cb-provenance.json",
+  "baselineRevision": "9579d3184b5a6d7a07cafb2e6778784ad4616bc4",
+  "candidateMeasuredRevision": "43cb40d9621e2a691726de90cad0a36032b58021",
+  "productionSourceRevision": "fe8f1562e46953eec1e166a5ea759d77a07dbe78",
+  "baselineSha256": "3f6458cda725f2d4563771313ad4a5e8048302a77f2cc520ae6348a3de4dafe9",
+  "candidateSha256": "342610cfc3eaf9ad08d9c52d73267a602e86aa7d21459cc08be6163b137179c6",
+  "samples": 144,
+  "cells": 18,
+  "samplesPerBinaryPerCell": 4,
+  "order": "forward balanced block then adjacent reverse",
+  "diagnostics": "off and on",
+  "jobs": [
+    1,
+    4,
+    0
+  ],
+  "root": "/tmp/nm-2117-worktree",
+  "affinity": "unrestricted; no builds/tests/analyzer processes during measurements",
+  "inputManifestSha256": "5a6057185a633af37f715ab58fb96d7d3ec22523c7c65f570b51f6da65493080",
+  "trackedInputs": 23922,
+  "changedInputsAfterMeasurement": [],
+  "inputRevision": "fda2253e7 with pinned-control documentation changes only",
+  "hashParity": "report,exit,non-diagnostic stderr match in every cell",
+  "timerPrecisionSeconds": 0.01,
+  "interpretation": "Wall and CPU values mostly quantized at this precision; no workload speed claim. Raw peak RSS retained."
+}

@@ -34,8 +34,8 @@
     "buildLog": "/tmp/nm-2117-evidence/release-candidate-build.log",
     "fullProvenanceSha256": "5f1a3b807da06f8b8d5bf865d652dcfbbfbf9fe54fb0eb77bfbb2f785ba37f4f"
   },
-  "status": "performance-validation-pending",
-  "samples": 104,
+  "status": "local production comparison complete; configured CI/review pending; no runtime gain claimed",
+  "samples": 136,
   "order": "baseline/candidate/candidate/baseline then adjacent reverse; control off/jobs1 repeated separately",
   "root": "/tmp/nm-2117-worktree",
   "inputManifestSha256": "155ed7bb22abfcf6173d0b84e6b96c94228fc221af7932cf5922d7c73eeb7038",
@@ -46,5 +46,26 @@
   "configs": [
     "fixtures/performance/session-visible-resolver/consuming.yml",
     "fixtures/performance/session-visible-resolver/control.yml"
-  ]
+  ],
+  "pinnedRecheck": {
+    "samples": 16,
+    "affinity": "CPU3, fast host core; both binaries",
+    "diagnostics": "off and on",
+    "order": "forward balanced block then adjacent reverse",
+    "inputManifestSha256": "8175c959a7a99d36492b45aad1701c98f80af7351d96c72590207abf01fafd84",
+    "trackedInputs": 23922,
+    "changedInputsAfterMeasurement": [],
+    "inputRevision": "fda2253e7; benchmark, cfg(test) and documentation only since measured43cb"
+  },
+  "consumingPinnedRecheck": {
+    "samples": 16,
+    "affinity": "CPU0-7, fast host cores; both binaries",
+    "jobs": 4,
+    "diagnostics": "off and on",
+    "order": "forward balanced block then adjacent reverse",
+    "inputManifestSha256": "5a6057185a633af37f715ab58fb96d7d3ec22523c7c65f570b51f6da65493080",
+    "trackedInputs": 23922,
+    "changedInputsAfterMeasurement": [],
+    "inputRevision": "fda2253e7 with pinned-control documentation changes only"
+  }
 }

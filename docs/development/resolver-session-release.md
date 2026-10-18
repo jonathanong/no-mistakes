@@ -2,11 +2,11 @@
 
 <!-- cspell:ignore codegen BAAB clippy -->
 
-Performance validation remains pending. No speedup is claimed, and the PR stays
-draft until the control timing gate is resolved. The earlier rejected development
+The local production comparison is complete. No speedup is claimed; configured
+CI and review checks still gate readiness. The earlier rejected development
 comparison remains in [the visibility notes](resolver-session-visibility.md).
 
-The [raw observations](../../fixtures/performance/session-visible-resolver/release-repository-43cb.csv)
+The [136 repository observations](../../fixtures/performance/session-visible-resolver/release-repository-43cb.csv)
 and [provenance](../../fixtures/performance/session-visible-resolver/release-repository-43cb-provenance.json)
 compare baseline `9579d3184` with candidate `43cb40d96`. The latter contains
 production source `fe8f1562e` plus documentation only. Both are v0.92.0,
@@ -45,7 +45,7 @@ every cell. Diagnostic stderr is retained separately; no clock is subtracted.
 
 Peak RSS is lower in these release observations, unlike the rejected development
 experiment. Timing directions vary across the matched blocks. In particular,
-the control without diagnostics at jobs 1 requires further investigation.
+the control without diagnostics at jobs 1 prompted the focused rechecks below.
 
 An additional eight-process ABBA/BAAB recheck of that cell did not reproduce its
 original median delta: wall A/B was 2.800/2.760 seconds, CPU 2.800/2.615 seconds,
@@ -55,10 +55,59 @@ candidate process took 3.77 wall seconds versus 2.89 CPU seconds. Those unstable
 samples do not establish a control pass. The host has different CPU classes
 and these processes had unrestricted affinity. All observations are retained.
 
-Before readiness, resolve that control gate with a separately labeled matched
-comparison, then cover the smaller saved consuming/control fixtures. Configured
-ARM release CI comparisons also require the expected base and runner. Work-count
-reductions and lower RSS alone do not establish a runtime improvement.
+An additional 16 processes pin both binaries to the same fast CPU core (CPU 3),
+with jobs 1 and diagnostics off/on, in balanced forward/reverse blocks. Physical
+inputs are refrozen at `fda2253e7`; its benchmark, test and documentation changes
+leave the measured analyzer and dependencies unchanged. All 23,922 tracked input
+hashes remain unchanged throughout this comparison, and report/exit/warning
+hashes match in both cells.
+
+| Pinned diagnostics | Wall seconds A/B | CPU seconds A/B | Peak RSS KiB A/B |
+| --- | --- | --- | --- |
+| Off | 2.205 / 2.200 | 2.190 / 2.195 | 323474 / 322468 |
+| On | 2.215 / 2.230 | 2.210 / 2.220 | 331734 / 326604 |
+
+The original large diagnostics-off control gap does not reproduce. Its forward
+and reverse wall deltas are +0.005 and -0.010 seconds. Diagnostics-on deltas are
++0.030 and -0.005 seconds: the small cost changes direction in the reverse block.
+These four observations per binary per cell do not establish a workload gain.
+Peak RSS remains lower. The original unrestricted-affinity data remains above.
+
+A separate 16-process recheck pins the consuming configuration to CPU 0–7,
+the host's fast cores, with jobs 4 and diagnostics off/on. The original unrestricted
+diagnostics-off forward/reverse blocks had positive wall deltas; one candidate
+sample took 0.50 wall seconds versus the other samples' 0.37–0.39 seconds.
+
+| Pinned consuming diagnostics | Wall seconds A/B | CPU seconds A/B | Peak RSS KiB A/B |
+| --- | --- | --- | --- |
+| Off | 0.330 / 0.325 | 0.475 / 0.470 | 133484 / 130524 |
+| On | 0.325 / 0.320 | 0.460 / 0.455 | 134158 / 130732 |
+
+Forward/reverse wall deltas are -0.005/0.000 seconds without diagnostics and
++0.005/-0.010 seconds with diagnostics. These focused rechecks do not reproduce
+a consistently slower direction. The original matrix retains mixed costs,
+including higher candidate CPU time for consuming automatic-maximum jobs.
+Memory observations and work-count reductions do not establish a runtime gain.
+
+## Smaller saved fixtures
+
+The [144 fixture observations](../../fixtures/performance/session-visible-resolver/release-fixtures-43cb.csv)
+and [fixture provenance](../../fixtures/performance/session-visible-resolver/release-fixtures-43cb-provenance.json)
+cover `core-analysis`, `graph-gates`, and `runner-shared-imports`, diagnostics
+off/on and jobs 1/4/automatic maximum, with four observations per binary per cell.
+All 18 cells preserve report/exit/warning hashes. Inputs remain unchanged.
+Core analysis has 14 TS sources, 1,694 bytes and 63 lines, including two TSX
+sources (315 bytes, nine lines). Graph gates has 77 TS/JS sources, 18,316 bytes
+and 389 lines, including 20 JSX/TSX sources (6,350 bytes, 144 lines), with saved
+queue, route, selector and test-include configuration payloads. The runner has
+four module sources, 397 bytes and eight lines; its two configurations share
+imports. Diagnostics confirm actual runner preparation: one normalization,
+four canonicalization attempts, three resolver computations and five cache hits.
+
+Fixture wall times are mostly 0.00–0.02 seconds; the timer's 0.01-second precision
+cannot establish workload speed. All cells have lower median candidate peak RSS
+(roughly 2–3.5 MiB). The raw CSV retains CPU time and diagnostic RSS too. Configured
+ARM CI comparisons require the expected base and runner before interpretation.
 
 ## Benchmark verification gap
 
