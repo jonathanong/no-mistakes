@@ -1,0 +1,17 @@
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: {name: pROd}
+    env:
+      shadowed: '${{ secrets.shared }}'
+      fallback: '${{ secrets.REPO_ONLY }}'
+      scoped: '${{ secrets.ENV_ONLY }}'
+    steps:
+      - run: echo ready
+  plain:
+    runs-on: ubuntu-latest
+    env:
+      wrong_scope: '${{ secrets.ENV_ONLY }}'
+    steps:
+      - run: echo ready

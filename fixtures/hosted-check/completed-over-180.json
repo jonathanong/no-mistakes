@@ -1,0 +1,50 @@
+[
+  {
+    "sampleNumber": 1,
+    "candidateCommit": "ffffffffffffffffffffffffffffffffffffffff",
+    "elapsed": 181,
+    "rss_kib": 100,
+    "exit": 0,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 2,
+    "candidateCommit": "ffffffffffffffffffffffffffffffffffffffff",
+    "elapsed": 182,
+    "rss_kib": 101,
+    "exit": 0,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 3,
+    "candidateCommit": "ffffffffffffffffffffffffffffffffffffffff",
+    "elapsed": 183,
+    "rss_kib": 102,
+    "exit": 0,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 4,
+    "candidateCommit": "ffffffffffffffffffffffffffffffffffffffff",
+    "elapsed": 184,
+    "rss_kib": 103,
+    "exit": 0,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 5,
+    "candidateCommit": "ffffffffffffffffffffffffffffffffffffffff",
+    "elapsed": 185,
+    "rss_kib": 104,
+    "exit": 0,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 6,
+    "candidateCommit": "ffffffffffffffffffffffffffffffffffffffff",
+    "elapsed": 186,
+    "rss_kib": 105,
+    "exit": 0,
+    "deadlineSeconds": 600
+  }
+]

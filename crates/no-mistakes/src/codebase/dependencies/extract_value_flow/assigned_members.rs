@@ -3,6 +3,11 @@ use mutation_history::{ValueAssignedMutation, ValueAssignedMutations};
 
 impl ValueAssignedMutations {
     pub(super) fn merge(&mut self, mut source: Self) {
+        if let Some(source) = source.module.take() {
+            self.module
+                .get_or_insert_with(Default::default)
+                .merge(*source);
+        }
         if let Some(early) = source.early.take() {
             self.early
                 .get_or_insert_with(Default::default)
@@ -46,6 +51,19 @@ impl ValueAssignedMutations {
     }
 
     pub(super) fn invalidated(
+        &self,
+        member: &str,
+        reader: &impl Fn(Option<CallableId>) -> Option<u32>,
+        owner: &impl Fn() -> Option<CallableId>,
+    ) -> bool {
+        self.unguarded_invalidated(member, reader, owner)
+            || self
+                .module
+                .as_ref()
+                .is_some_and(|module| module.aggregate.invalidated(member, reader, owner))
+    }
+
+    pub(super) fn unguarded_invalidated(
         &self,
         member: &str,
         reader: &impl Fn(Option<CallableId>) -> Option<u32>,

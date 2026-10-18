@@ -65,6 +65,8 @@ impl PreparedScopePlan {
                 )
             })
             .transpose()?;
+        let ci_topology = prepare_ci_topology(options, &traversal, check.as_ref());
+        traversal.set_workflow_inputs(ci_topology.clone());
         let mut report_plan = check_fact_plan(options, &traversal)?;
         report_plan
             .graph_context
@@ -107,26 +109,8 @@ impl PreparedScopePlan {
         }
         files.sort();
         files.dedup();
-        let mut playwright_fact_plan = check
-            .as_ref()
-            .and_then(SharedCheckContext::playwright_fact_plan);
-        for view in playwright.values() {
-            match playwright_fact_plan.as_mut() {
-                Some(plan) => plan.include(view.fact_plan.clone()),
-                None => playwright_fact_plan = Some(view.fact_plan.clone()),
-            }
-        }
-        if let Some(plan) = &playwright_fact_plan {
-            files.extend(
-                plan.files()
-                    .iter()
-                    .filter(|path| !configs.contains(*path))
-                    .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-                    .collect::<Vec<_>>(),
-            );
-            files.sort();
-            files.dedup();
-        }
+        let playwright_fact_plan =
+            merge_playwright_fact_files(check.as_ref(), &playwright, &configs, &mut files);
         let graph_files = scope_graph_files(check.as_ref(), has_non_check_report, &traversal);
         check_plan
             .graph_context
@@ -191,6 +175,7 @@ impl PreparedScopePlan {
             configs,
             import_usages,
             check,
+            ci_topology,
             playwright,
             queue_traversal_keys,
             server_traversal_keys,

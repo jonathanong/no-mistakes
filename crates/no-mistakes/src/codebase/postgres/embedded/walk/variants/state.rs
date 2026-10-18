@@ -107,22 +107,29 @@ impl ScopeVisitor<'_> {
         let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) else {
             return None;
         };
-        let variants = (|| {
-            if self.append_crosses_function(id.name.as_str()) {
-                return None;
-            }
-            let prefix = self.lookup(id.name.as_str())?.variants?;
-            if !prefix.iter().all(|value| value.fragment) {
-                return None;
-            }
-            let suffix = self.recover_variants(super::super::super::first_call_argument(call)?)?;
-            combine(prefix, suffix).map(|mut versions| {
-                for version in &mut versions {
-                    version.append_sites.push(call.span.start);
-                }
-                versions
-            })
-        })();
+        let variants = self
+            .lookup(id.name.as_str())
+            .and_then(|binding| binding.variants)
+            .and_then(|prefix| self.append_step(id.name.as_str(), prefix, call));
         Some((id.name.to_string(), variants))
+    }
+
+    /// `prefix` after one `.append(..)` link on the builder `name`.
+    pub(in crate::codebase::postgres::embedded::walk) fn append_step(
+        &self,
+        name: &str,
+        prefix: Vec<Recovered>,
+        call: &CallExpression<'_>,
+    ) -> Option<Vec<Recovered>> {
+        if self.append_crosses_function(name) || !prefix.iter().all(|value| value.fragment) {
+            return None;
+        }
+        let suffix = self.recover_variants(super::super::super::first_call_argument(call)?)?;
+        combine(prefix, suffix).map(|mut versions| {
+            for version in &mut versions {
+                version.append_sites.push(call.span.start);
+            }
+            versions
+        })
     }
 }

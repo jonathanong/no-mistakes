@@ -48,7 +48,7 @@ pub(crate) struct DomainCheckInputs<'a> {
     pub(crate) playwright_projects:
         Option<&'a no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
     pub(crate) workflow_documents:
-        Option<&'a no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>,
+        Option<&'a no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
     pub(crate) tsconfig_gate_project_inputs:
         Option<&'a no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
     pub(crate) defer_suppression: bool,

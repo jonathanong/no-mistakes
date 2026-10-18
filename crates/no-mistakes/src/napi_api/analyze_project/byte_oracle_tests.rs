@@ -16,7 +16,8 @@ pub(super) fn json_raw_report<T: serde::Serialize + ?Sized>(value: &T) -> Box<Ra
 pub(super) fn json_raw_text(output: String) -> AnyhowResult<Box<RawValue>> {
     if OLD_TYPED_SERIALIZER.get() {
         // Prior symbols path: parse writer JSON to Value, compact stringify, wrap as RawValue.
-        // Default features include serde_json/preserve_order, so this does not sort object keys.
+        // `--all-features` includes mermaid-validation, which enables
+        // serde_json/preserve_order, so this does not sort object keys.
         SYMBOLS_VALUE_SERIALIZER_RUNS.set(SYMBOLS_VALUE_SERIALIZER_RUNS.get() + 1);
         let value = serde_json::from_str::<Value>(&output)
             .expect("symbols raw JSON parses for the original serializer");

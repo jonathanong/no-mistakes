@@ -1,0 +1,5 @@
+name: malformed
+jobs:
+  build:
+    env:
+      invalid: "${{ secrets.MALFORMED"

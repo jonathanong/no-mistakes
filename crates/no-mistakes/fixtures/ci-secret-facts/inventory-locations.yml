@@ -1,0 +1,5 @@
+secretInventory:
+  repository: not-a-sequence
+  environments:
+    ? {}
+    : [IGNORED]

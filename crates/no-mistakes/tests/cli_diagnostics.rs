@@ -112,6 +112,37 @@ fn global_check_verbose_timings_reports_fine_grained_labels() {
         );
     }
     assert!(err.contains("[work] output.renders: 1"), "{err}");
+    #[cfg(unix)]
+    assert!(
+        err.lines().any(|line| line
+            .strip_prefix("[memory] peak_rss_kib: ")
+            .is_some_and(|rss| rss.parse::<u64>().is_ok_and(|rss| rss > 0))),
+        "{err}"
+    );
+}
+
+#[test]
+fn independent_codebase_rule_timing_is_opt_in() {
+    let root = fixture("rules", "server-route-client-boundary").join("fail");
+    let config = root.join("boundary-only.no-mistakes.yml");
+    let args = [
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--format",
+        "json",
+    ];
+    let plain = run(&args);
+    let mut verbose = args.to_vec();
+    verbose.push("--verbose-timings");
+    let verbose = run(&verbose);
+    assert_eq!(plain.status.code(), Some(1));
+    assert_eq!(verbose.status.code(), plain.status.code());
+    assert_eq!(verbose.stdout, plain.stdout);
+    assert!(!stderr(&plain).contains("rules.server_route_client_boundary:"));
+    assert!(stderr(&verbose).contains("rules.server_route_client_boundary:"));
 }
 
 fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
@@ -121,6 +152,7 @@ fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
             !line.starts_with("[progress] ")
                 && !line.starts_with("[timing] ")
                 && !line.starts_with("[work] ")
+                && !line.starts_with("[memory] ")
                 && !line.starts_with("waiting for lock held by ")
         })
         .flat_map(|line| [line.as_bytes(), b"\n"].concat())
@@ -214,6 +246,10 @@ fn global_check_without_verbose_timings_omits_fine_grained_labels() {
     assert!(
         !err.contains("rules.forbidden_dependencies:") && !err.contains("graph.imports:"),
         "verbose timing labels should not appear without --verbose-timings: {err}"
+    );
+    assert!(
+        !err.contains("[memory]"),
+        "basic timings must not sample memory: {err}"
     );
     assert!(
         !err.contains("[work]"),

@@ -2,6 +2,8 @@
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    #[cfg(feature = "test-instrumentation")]
+    pub module_provider_work: [usize; 3],
     /// Prepared nullish expressions can add known plain-name fallback effects.
     pub has_nullish_alternatives: bool,
     /// Local callable values can escape through containers, returns, or stores.
@@ -23,6 +25,16 @@ pub struct ValueFlowFacts {
     pub callable_assignment_target_constructions: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_link_constructions: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_callable_alias_visits: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_callable_alias_index_builds: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_callable_alias_index_entries: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_forward_sources: usize,
+    #[cfg(feature = "test-instrumentation")]
+    pub reference_forward_writer_replays: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_component_links: usize,
     #[cfg(feature = "test-instrumentation")]

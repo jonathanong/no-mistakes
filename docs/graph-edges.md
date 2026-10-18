@@ -596,6 +596,15 @@ the matching imported methods. Root assignments preserve acquisition snapshots
 for saved aliases and exclude overwritten roots from later direct reads.
 Conditional root writes retain possible acquisitions. Copied methods and untouched
 members retain the precision covered by the saved controls.
+Callable bodies can refer to receiver aliases declared later: pending writes
+reuse the completed binding facts and each initializer's acquisition coordinates.
+Uncalled, unavailable, and escaped writers retain conservative unknown targets;
+declaration order does not establish execution.
+An immutable repository export alias of an external receiver, such as
+`export const receiver = shared`, keeps that external receiver's canonical
+identity through named re-exports. Repeated foreign helper reads of a written
+member become unknown; earlier method copies, other members, and distinct
+receiver exports keep their acquisition targets.
 Assignment-pattern receiver reads use RHS-before-LHS execution order, including
 computed targets and conditional root writes. Eager class writes borrow the normal
 collector's scoped binding facts; deferred field values retain their own execution
@@ -609,9 +618,36 @@ For example, after `box.wrapper = retained`, a write through
 saved containers from later replacement objects; methods copied before the
 write keep their acquisition snapshots. Unknown and conditional stores retain
 possible origins. Projection uses locally represented receiver values; arbitrary
-heap transfers through function calls remain unresolved. Root writes
-across callable declaration and runtime execution order remain a known boundary
-([#2052](https://github.com/jonathanong/no-mistakes/issues/2052)).
+heap transfers through function calls remain unresolved. Mutable roots read by
+a callable writer also include possible origins from later-declared foreign
+callable bodies. Declaration order does not prove execution order, so those
+members remain unresolved when a replacement could apply. Repeated writes share
+one root/member/owner projection from the same collected facts. Deferred
+projections index callable aliases once by lexical scope and binding head, so
+unrelated aliases are not scanned again for every writer. A container
+captured before the root is rebound keeps its acquired identity. A nested
+closure also considers foreign callable replacements visible when its outer
+callable captures the receiver. Immutable captures made at module scope keep
+their saved object identity. Mutable aliases initialized from an already tracked receiver
+also retain later binding replacements; unrelated named values stay outside
+receiver tracking.
+
+Deferred member writers select module-owned receiver providers at their closed
+canonical invocation phase. For example, rebinding `box` to `replica` before
+calling `write()` makes the affected `replica.get` unresolved; calling `write()`
+before that rebind preserves `replica.get`. Function declaration placement does
+not change this behavior. Module provider intervals and alias diamonds share one
+prepared root/member projection, and active writer summaries are shared within
+each immutable canonical incoming-call generation. Closed uncalled writers leave
+their module providers unchanged. Escaped or cyclic writers, repeated calls, and
+patterns with uncertain execution order retain conservative alternatives;
+methods copied before the whole pattern and untouched members keep their
+supported acquisition precision.
+
+A direct imported member call after an earlier lexical property write is
+unknown when the replacement cannot be proved, including a one-time module
+write before a loop. Calls before the write, methods copied before the write,
+and untouched members retain their existing acquisition proofs.
 
 Repeated imported-member replacement alternatives require a closed execution
 region: a guaranteed multi-item literal `for-of` body or the supported closed

@@ -24,6 +24,7 @@ pub use mutation_sources::{
     ValueReceiverMutations,
 };
 pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
+pub(super) type ForeignReceiverWrites = mutable_origins::ForeignReceiverWrites;
 
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
@@ -93,6 +94,13 @@ mod default_origins;
 #[path = "extract_value_flow/mutation_history.rs"]
 mod mutation_history;
 pub use mutation_history::ValueMutationHistory;
+#[path = "extract_value_flow/module_provider_guards.rs"]
+mod module_provider_guards;
+pub(crate) use module_provider_guards::ModuleAssignedMutations;
+#[path = "extract_value_flow/module_provider_intervals.rs"]
+mod module_provider_intervals;
+pub(crate) use module_provider_intervals::ModuleProviderTarget;
+pub(crate) use mutation_history::ValueAssignedMutations;
 
 #[path = "extract_value_flow/write_targets.rs"]
 pub(super) mod write_targets;
@@ -155,6 +163,8 @@ mod suspension_tests;
 
 #[path = "extract_value_flow/callable_uses.rs"]
 mod callable_uses;
+#[path = "extract_value_flow/forward_receiver_writes.rs"]
+pub(super) mod forward_receiver_writes;
 #[path = "extract_value_flow/mutable_receivers.rs"]
 mod mutable_receivers;
 
@@ -180,6 +190,8 @@ mod mutation_metadata;
 #[path = "extract_value_flow/mutation_projection.rs"]
 mod mutation_projection;
 
+#[path = "extract_value_flow/mutation_alias_index.rs"]
+mod mutation_alias_index;
 #[path = "extract_value_flow/mutation_invalidation.rs"]
 mod mutation_invalidation;
 

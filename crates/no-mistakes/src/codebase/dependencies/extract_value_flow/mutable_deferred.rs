@@ -151,6 +151,7 @@ impl ImportCollector {
                         &mut references,
                         deferred.metadata.foreign_before,
                         current,
+                        deferred.metadata.context,
                     );
                 }
             }

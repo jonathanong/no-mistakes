@@ -1,9 +1,10 @@
 pub use extract_value_flow::{
-    ValueType, CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression, ValueFlowFacts,
-    ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,
+    CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression,
+    ValueFlowFacts, ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,
     ValueReceiverMutations, ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts,
-    ValueReplacementWrite,
+    ValueReplacementWrite, ValueType,
 };
+pub(crate) use extract_value_flow::{ModuleAssignedMutations, ValueAssignedMutations};
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {
     /// Top-level literal requires without a conditional execution guard.

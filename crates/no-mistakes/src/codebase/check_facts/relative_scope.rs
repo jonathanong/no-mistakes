@@ -80,7 +80,13 @@ pub(super) fn project_relative_executor_scopes(
         };
         let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);
         if imported {
-            imported_sql::project(files, |specifier, from| resolver.resolve(specifier, from));
+            // A pnpm workspace package name resolves through the workspace
+            // map, as it does for every other import-following analysis.
+            imported_sql::project(files, |specifier, from| {
+                resolver.resolve(specifier, from).or_else(|| {
+                    workspace.resolve_specifier_from_file_visible(specifier, from, &visible)
+                })
+            });
         }
         if annotation {
             crate::perf_trace::trace("postgres.annotation.project", || {

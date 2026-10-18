@@ -1,5 +1,5 @@
 use super::super::super::expired_timeout_from;
-use super::super::offset::{decode_instant, encode_instant, epoch};
+use super::super::offset::{encode_instant, epoch};
 use super::*;
 use std::cell::Cell;
 
@@ -16,28 +16,40 @@ fn image(at: Instant) -> Encoded {
 }
 
 #[test]
-fn signed_expiry_matches_full_decoder_before_and_after_epoch() {
+fn signed_expiry_orders_against_the_original_instant() {
+    // `now >= decode_instant(...)` restates `expired_at` and cannot fail.
+    // Order against the Instant that was encoded, including equality and ±1ns.
     let center = epoch();
     let span = Duration::from_nanos(i64::MAX as u64);
-    let mut instants = vec![center];
+    let step = Duration::from_nanos(1);
+    let mut deadlines = vec![center];
     for distance in [
         Duration::from_nanos(1),
         Duration::from_secs(1),
         span,
         span + Duration::from_secs(1),
     ] {
-        instants.extend(center.checked_add(distance));
-        instants.extend(center.checked_sub(distance));
+        deadlines.extend(center.checked_add(distance));
+        deadlines.extend(center.checked_sub(distance));
     }
-    for &expires in &instants {
-        let encoded = image(expires);
-        for &now in &instants {
-            assert_eq!(
-                encoded.expired_at(now),
-                now >= decode_instant(encoded.expires_secs, encoded.expires_nanos)
-            );
+    for &deadline in &deadlines {
+        let encoded = image(deadline);
+        assert_orders_like_original(&encoded, deadline, deadline);
+        if let Some(before) = deadline.checked_sub(step) {
+            assert_orders_like_original(&encoded, before, deadline);
+        }
+        if let Some(after) = deadline.checked_add(step) {
+            assert_orders_like_original(&encoded, after, deadline);
         }
     }
+}
+
+fn assert_orders_like_original(encoded: &Encoded, now: Instant, deadline: Instant) {
+    assert_eq!(
+        encoded.expired_at(now),
+        now >= deadline,
+        "expiry must follow the original Instant"
+    );
 }
 
 #[test]

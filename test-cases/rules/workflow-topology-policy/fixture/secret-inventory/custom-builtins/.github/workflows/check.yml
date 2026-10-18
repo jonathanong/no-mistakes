@@ -1,0 +1,9 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      configured: '${{ secrets.CUSTOM_token }}'
+      replaced_default: '${{ secrets.GITHUB_TOKEN }}'
+    steps:
+      - run: echo ready

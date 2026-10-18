@@ -75,6 +75,7 @@ impl PreparedScopePlan {
             import_usages: self.import_usages,
             server,
             check: self.check,
+            ci_topology: self.ci_topology,
             check_uses_traversal_graph: check_shares_traversal_graph_universe,
             playwright: self.playwright,
             queue_reports: std::sync::Mutex::new(HashMap::new()),

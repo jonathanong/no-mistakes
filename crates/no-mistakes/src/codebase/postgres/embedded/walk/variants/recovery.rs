@@ -6,12 +6,29 @@ impl ScopeVisitor<'_> {
         &self,
         expression: &oxc_ast::ast::Expression<'_>,
     ) -> Option<Vec<Recovered>> {
+        self.recover_over_paths(|path| expression::recover(self, expression, 8, path))
+    }
+    /// Alternatives of an executor call whose argument is ``${b.text}`` of a
+    /// fully recovered builder (see `template::builder_text`).
+    pub(in crate::codebase::postgres::embedded::walk) fn recover_builder_text(
+        &self,
+        call: &oxc_ast::ast::CallExpression<'_>,
+    ) -> Option<Vec<Recovered>> {
+        let (template, builder) = super::template::builder_text::shape(call)?;
+        self.recover_over_paths(|path| {
+            super::template::builder_text::recover(self, template, builder, 8, path)
+        })
+    }
+    fn recover_over_paths(
+        &self,
+        recover: impl Fn(&[(u64, u32)]) -> Option<Vec<Recovered>>,
+    ) -> Option<Vec<Recovered>> {
         if self.loop_depth > 0 {
             return None;
         }
         let mut recovered = Vec::new();
         for path in &self.variant_paths {
-            let values = expression::recover(self, expression, 8, path)?;
+            let values = recover(path)?;
             recovered.extend(values.into_iter().map(|mut value| {
                 for choice in path {
                     if !value.choices.contains(choice) {

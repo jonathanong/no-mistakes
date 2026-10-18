@@ -1,0 +1,4 @@
+effects:
+  receiver:
+    targets:
+      - { module: '@vendor/exported-value', export: shared.get }

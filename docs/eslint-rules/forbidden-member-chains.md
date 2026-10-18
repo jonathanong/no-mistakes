@@ -16,6 +16,12 @@ records.entry();
 other.panel.open;
 other.panel['open']();
 new other.drawer.toggle();
+const { open } = other.panel;
+const { open: show } = other.panel;
+const { panel: { open } } = other;
+function f(records) {
+  return records.entry;
+}
 ```
 
 ## Allowed
@@ -27,6 +33,13 @@ other.panel.close;
 const label = 'other.panel.open';
 // other.panel.open
 other.panel[method];
+const { close } = other.panel;
+const { open } = panel;
+const { [name]: open } = other.panel;
+const { ['open']: show } = other.panel;
+function f(records) {
+  return records.entries;
+}
 <Panel.Open />;
 ```
 
@@ -41,8 +54,14 @@ glob option.
 `receiver: "*"`, means any receiver followed by the remaining segments. A named
 `receiver` is the explicit root and cancels a leading `*`. Array segments are
 literal property names, so a dot inside one segment is not a separator. At most
-16 segments are proven. Longer paths, empty segments, and a `*` that is not the
-receiver are ignored.
+16 segments are allowed. A named receiver counts as one, and it replaces a
+leading `*` instead of adding another segment. A leading `*` that stays a
+wildcard still counts toward the 16, so `*.` plus 15 segments is the longest
+path of that shape. `receiver: "*"` does not add a segment and may be followed
+by 16. The schema rejects an empty segment (`records..entry`), a `*` that is
+not the receiver (`records.*.entry`, a lone `*`, or a `*` later in an array),
+and a longer path. ESLint and oxlint report a configuration error instead of
+dropping the chain. A sibling chain in the same list does not run.
 
 ```js
 {
@@ -82,10 +101,27 @@ not guessed. Strings, comments, and JSX member names are not member chains.
 Unrelated paths do not match. The walk proves at most 32 member segments;
 deeper chains are unproven.
 
+Object destructuring is the same access. `const { open } = other.panel`, a
+rename `const { open: show } = other.panel`, and a nested pattern
+`const { panel: { open } } = other` match `*.panel.open`. So does a default on
+a parameter, `function f({ open } = other.panel) {}`. The finding is the
+property whose key completes the chain. A repeated suffix inside one pattern
+reports once. Computed pattern keys stay unproven and are not reported,
+including a literal computed key such as `{ ["open"]: show }`. A non-computed
+key may be an identifier or a string or numeric literal. A static tail on the
+receiver can still match a wildcard after a dynamic member
+(`const { open } = other[name].panel`).
+
+Named roots are file-local spellings, not resolved bindings. The rule does not
+build a scope and ignores lexical shadowing, so a parameter or local does not
+hide a chain. `function f(records) { return records.entry }` is reported for
+`records.entry`.
+
 ## Fix
 
 Replace the access with the API named in `message`, or stop reading that chain.
-There is no automatic fix. The rule does not execute the member path.
+That includes an object destructure of the banned segment. There is no
+automatic fix. The rule does not execute the member path.
 
 ## Suppression
 

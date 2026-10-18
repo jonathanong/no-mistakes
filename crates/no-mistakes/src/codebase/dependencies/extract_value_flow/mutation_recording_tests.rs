@@ -76,10 +76,22 @@ fn saved_nested_histories_keep_start_completion_dynamic_and_context_projections(
     let outer = &root.members["outer"];
     let direct = &outer.members["client"];
     let client = &histories["client"];
-    for history in [root, outer, direct, client] {
+    for (history, terminal) in [
+        (root.as_ref(), false),
+        (outer, false),
+        (direct, false),
+        (client.as_ref(), true),
+    ] {
         let summary = history.summary.as_ref().unwrap();
         assert_eq!(summary.offset, first_start);
-        assert_eq!(summary.contexts, [None, Some(other)].into_iter().collect());
+        // Deferred module-provider writes remain guarded instead of poisoning
+        // the unconditional summary before the caller phase is known.
+        let expected = if terminal {
+            vec![None]
+        } else {
+            vec![None, Some(other)]
+        };
+        assert_eq!(summary.contexts, expected.into_iter().collect());
         assert!(!history.has_unassigned);
     }
     assert!(root.has_assignments);
@@ -114,15 +126,29 @@ fn saved_nested_histories_keep_start_completion_dynamic_and_context_projections(
         .propagated
         .as_ref()
         .unwrap();
-    assert_eq!(propagated.aggregate().members["get"], exact);
+    assert_eq!(propagated.aggregate().members["get"].offset, exact.offset);
+    assert_eq!(
+        propagated.aggregate().members["get"].writer,
+        ValueAssignedWriter::Module
+    );
     assert_eq!(
         propagated.context(None).unwrap().members["get"].offset,
         first_end
     );
-    assert_eq!(
-        propagated.context(Some(other)).unwrap().members["get"].offset,
-        other_end
-    );
+    assert!(propagated.context(Some(other)).is_none());
+    let guarded = client
+        .assigned
+        .as_ref()
+        .unwrap()
+        .module
+        .as_ref()
+        .unwrap()
+        .active_summary(|_, _| true);
+    let guarded = guarded.propagated.as_ref().unwrap();
+    let callable = guarded.context(Some(other)).unwrap().members["get"];
+    assert_eq!(callable.offset, other_end);
+    assert_eq!(callable.writer, ValueAssignedWriter::Callable(other));
+    assert_eq!(guarded.aggregate().members["get"], callable);
 }
 
 #[path = "mutation_capture_tests.rs"]

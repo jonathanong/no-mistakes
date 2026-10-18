@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 include!("context/check_types.rs");
+include!("context/ci_topology.rs");
+include!("context/prepare_playwright_files.rs");
 include!("context/check_prepare.rs");
 include!("context/check_run.rs");
 include!("context/scope_types.rs");

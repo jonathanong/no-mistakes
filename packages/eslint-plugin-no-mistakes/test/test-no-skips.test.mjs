@@ -24,6 +24,18 @@ describe(rule, () => {
     assert.equal(messages(code("globals"), rule, undefined, "suite.test.ts").length, 4);
     assert.equal(messages(code("namespace"), rule, undefined, "suite.test.ts").length, 4);
   });
+  it("handles statically resolved CommonJS and dynamic module bindings", () => {
+    const findings = lint(
+      code("module-bindings"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.equal(findings.length, 6);
+    assert.deepEqual(
+      findings.map((item) => item.line),
+      [2, 3, 5, 8, 11, 14],
+    );
+  });
   it("allows named modifiers including runtime context skip", () => {
     assert.equal(
       messages(code("modifiers"), rule, { allow: ["todo"] }, "suite.test.ts").length,

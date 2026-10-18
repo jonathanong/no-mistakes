@@ -15,13 +15,12 @@ const {
   command,
   hashFile,
   packageManifest,
-  sampleFiles,
   CHECK_ARGS,
-  DEADLINE_SECONDS,
+  COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
-  formatSummary,
+  summarize,
 } = require("./hosted-check-metrics.cjs");
 
 function measure(fixture, artifact, output, sampleNumber, expectedTree) {
@@ -44,12 +43,16 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   const baseline = join(output, "published-no-mistakes");
   copyFileSync(native, baseline);
   const configBefore = hashFile(join(fixture, ".no-mistakes.yml"));
+  const jobs = process.env.HOSTED_CHECK_JOBS || "auto";
+  if (!["1", "4", "auto"].includes(jobs)) throw new Error(`Invalid jobs: ${jobs}`);
+  const checkArgs = jobs === "auto" ? CHECK_ARGS : [...CHECK_ARGS, "--jobs", jobs];
   const metadata = {
+    jobs,
     fixtureCommit,
     fixtureTree,
     configSha256: configBefore,
-    command: ["pnpm", ...CHECK_ARGS],
-    deadlineSeconds: DEADLINE_SECONDS,
+    command: ["pnpm", ...checkArgs],
+    deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
     sampleNumber,
     imageOS: process.env.ImageOS,
     imageVersion: process.env.ImageVersion,
@@ -61,10 +64,16 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
     nproc: command("nproc", [], fixture),
     rayonEnvironment: process.env.RAYON_NUM_THREADS || null,
     numCpus: Number(command(join(artifact, "cpu-probe"), [], fixture)),
-    rayonJobs: process.env.RAYON_NUM_THREADS
-      ? Number(process.env.RAYON_NUM_THREADS)
-      : Number(command(join(artifact, "cpu-probe"), [], fixture)),
-    rayonPolicy: "automatic (--jobs omitted; exact source-built num_cpus::get probe)",
+    rayonJobs:
+      jobs !== "auto"
+        ? Number(jobs)
+        : process.env.RAYON_NUM_THREADS
+          ? Number(process.env.RAYON_NUM_THREADS)
+          : Number(command(join(artifact, "cpu-probe"), [], fixture)),
+    rayonPolicy:
+      jobs === "auto"
+        ? "automatic (--jobs omitted; exact source-built num_cpus::get probe)"
+        : "explicit --jobs",
     node: process.version,
     pnpm: command("pnpm", ["--version"], fixture),
     baselineNpm: JSON.parse(
@@ -96,9 +105,9 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
             "timeout",
             "--signal=TERM",
             "--kill-after=5s",
-            `${DEADLINE_SECONDS}s`,
+            `${COLLECTION_DEADLINE_SECONDS}s`,
             "pnpm",
-            ...CHECK_ARGS,
+            ...checkArgs,
           ],
           { cwd: fixture, stdio: ["ignore", stdout, stderr] },
         );
@@ -110,6 +119,8 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
       const sample = {
         ...parseTime(readFileSync(`${prefix}.time`, "utf8"), result.status),
         variant,
+        jobs,
+        candidateCommit: metadata.currentBuild.commit,
         order,
         sampleNumber,
         fixtureCommit,
@@ -118,7 +129,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         binaryVersion: command(native, ["--version"], fixture),
         signal: result.signal,
         processExit: result.status,
-        deadlineSeconds: DEADLINE_SECONDS,
+        deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
       };
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
       console.log(JSON.stringify(sample));
@@ -131,36 +142,9 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
     throw new Error("Consumer config changed");
   command("git", ["diff", "--exit-code", "HEAD"], fixture);
   if (failed)
-    throw new Error("Current check did not exit successfully before the 180-second deadline");
-}
-
-function summarize(directory) {
-  const samples = sampleFiles(directory).map((path) => JSON.parse(readFileSync(path, "utf8")));
-  const groups = new Map();
-  for (const sample of samples) {
-    const key = `${sample.fixtureCommit}/${sample.variant}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(sample);
-  }
-  const rows = [...groups].sort().map(([key, values]) => ({ key, ...aggregate(values) }));
-  const table = formatSummary(rows);
-  writeFileSync(join(directory, "summary.json"), JSON.stringify(rows, null, 2));
-  writeFileSync(join(directory, "summary.md"), table);
-  if (process.env.GITHUB_STEP_SUMMARY) writeFileSync(process.env.GITHUB_STEP_SUMMARY, table);
-  console.log(table);
-  const expected = [
-    "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
-    "92d0a2061bde8d260aa0b86a2d71110ece1a43ca",
-  ];
-  for (const commit of expected) {
-    for (const variant of ["published", "current"]) {
-      const values = groups.get(`${commit}/${variant}`) || [];
-      if (values.length !== 6 || new Set(values.map((sample) => sample.sampleNumber)).size !== 6)
-        throw new Error(`Incomplete samples: ${commit}/${variant}`);
-      if (variant === "current" && !values.every(successful))
-        throw new Error(`Current check failed: ${commit}`);
-    }
-  }
+    throw new Error(
+      `Current check did not exit successfully within the ${COLLECTION_DEADLINE_SECONDS}-second collection cap`,
+    );
 }
 
 if (require.main === module) {
@@ -184,4 +168,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { CHECK_ARGS, DEADLINE_SECONDS, parseTime, successful, aggregate };
+module.exports = { CHECK_ARGS, COLLECTION_DEADLINE_SECONDS, parseTime, successful, aggregate };

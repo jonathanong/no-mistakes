@@ -62,8 +62,14 @@ pub use dml::{
     GeneratedTableColumns,
 };
 pub(crate) use embedded::helpers::{
-    splice::splice as splice_imported_sql, HelperSummary, PendingImportedSql,
+    program::{
+        exec::{run as run_helper_program, Callee, Callees, Outcome, Ret, MAX_CALL_DEPTH},
+        Program as HelperProgram,
+    },
+    splice::splice as splice_imported_sql,
+    ImportedSite, PendingImportedSql, SiteArg,
 };
+pub(crate) use embedded::walk::resolve::functions::provenance::RecoveredSql;
 pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,

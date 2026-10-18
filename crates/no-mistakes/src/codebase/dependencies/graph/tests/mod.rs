@@ -1,5 +1,7 @@
 use crate::codebase::ts_resolver::ImportResolver;
 use crate::codebase::ts_source::facts::collect_ts_facts_with_context;
+mod foreign_receiver_declaration_order;
+mod module_receiver_providers;
 
 fn package_name_from_spec(spec: &str) -> &str {
     if spec.starts_with('@') {
@@ -152,6 +154,8 @@ mod nested_receiver_cutoffs;
 #[path = "receiver_evaluation_order.rs"]
 mod receiver_evaluation_order;
 
+mod exported_value_receivers;
+mod forward_receiver_aliases;
 #[path = "module_scope_receiver_reads.rs"]
 mod module_scope_receiver_reads;
 mod namespace_executor_shadows;
@@ -170,3 +174,6 @@ mod scalar_refinement;
 
 #[cfg(feature = "test-instrumentation")]
 mod opaque_entry_preparation;
+
+#[path = "lexical_member_replacements.rs"]
+mod lexical_member_replacements;

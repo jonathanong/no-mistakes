@@ -1,0 +1,28 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/require-options-on-imported-call": [
+      "error",
+      {
+        "targets": [
+          {
+            "globalNamePatterns": ["createResponse"],
+            "optionsPosition": 1,
+            "requiredProperties": ["signal"]
+          },
+          {
+            "calleeNamePatterns": ["create"],
+            "receiverPatterns": ["*.responses"],
+            "optionsPosition": 1,
+            "requiredProperties": ["signal"]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "@fixture/app",
+  "type": "module",
+  "dependencies": { "@fixture/visibility": "workspace:^" }
+}

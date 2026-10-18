@@ -9,13 +9,13 @@ const statement = sql`SELECT id FROM users`;
 const alias = statement;
 const unrelated = sql`SELECT id FROM accounts`;
 query(choose(statement) ? statement : sql`SELECT 1`); // opaque
-query(statement); // opaque
+query(statement); // opaque known-prefix
 query(alias); // opaque
 query(gate ? unrelated : sql`SELECT 2`); // finite
 query(unrelated); // unchanged builder
 const guarded = sql`SELECT id FROM guarded_users`;
-if (choose(guarded)) query(guarded); // opaque
-query(guarded); // opaque
+if (choose(guarded)) query(guarded); // opaque known-prefix
+query(guarded); // opaque known-prefix
 const imported = sql`SELECT id FROM imported_users`;
 externalHelper(imported);
 query(gate ? imported : sql`SELECT 3`); // opaque

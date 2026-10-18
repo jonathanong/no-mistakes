@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      secretInventory:
+        repository:
+          - UNUSED # no-mistakes-disable-line workflow-topology-policy
+        reportUnused: true

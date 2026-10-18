@@ -101,10 +101,13 @@ fn root_possible_fullfacts_and_foreign_prefix_oracle() {
             assert_eq!(old, new, "full ImportFacts {name}, demand={demand}");
             if name == "mutable-root-range-sparse.mts" && demand {
                 eprintln!("ACTUAL_POSSIBLE_SPARSE {counts:?}");
+                // Module providers now use shared interval preparation instead
+                // of replaying the acquisition's foreign-origin prefix.
                 assert!(
-                    counts[3] > 0 && counts[5] > 0 && counts[6] > 0 && counts[7] > 0,
-                    "sparse promotion and actual foreign prefix required: {counts:?}"
+                    counts[3] > 0 && counts[5..] == [0, 0, 0],
+                    "sparse promotion retained while module-prefix replay stays cold: {counts:?}"
                 );
+                assert_eq!(new.value_flow.module_provider_work, [1, 3, 1]);
             }
             eprintln!("POSSIBLE_FACTS_PARITY {name} demand={demand}");
         }

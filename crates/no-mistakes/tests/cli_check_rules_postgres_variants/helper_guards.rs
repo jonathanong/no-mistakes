@@ -47,3 +47,27 @@ fn mutable_captured_sql_is_opaque_while_immutable_and_local_sql_stays_finite() {
         .collect::<Vec<_>>();
     assert_eq!(opaque, [6, 12], "{failed}");
 }
+
+#[test]
+fn helper_closures_spreads_and_aliased_builders_never_look_clean_for_offset() {
+    // Line 11 is the spread alternative that appends `OFFSET`; the hoisted
+    // nested functions (30, 47) and the builder passed twice (61) stay opaque.
+    let failed = check("postgres-no-offset", "helper-closure-safety-fail");
+    let rows = failed["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| (f["line"].as_u64().unwrap(), f["target"].as_str().unwrap()))
+        .collect::<Vec<_>>();
+    assert_eq!(rows[0].0, 11, "{failed}");
+    assert!(rows[0].1.starts_with("offset"), "{failed}");
+    assert_eq!(
+        rows[1..],
+        [
+            (30, "unanalyzable"),
+            (47, "unanalyzable"),
+            (61, "unanalyzable")
+        ],
+        "{failed}"
+    );
+}

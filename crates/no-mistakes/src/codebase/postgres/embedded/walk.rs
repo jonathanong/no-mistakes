@@ -1,8 +1,4 @@
-use super::EmbeddedSqlKind;
-use oxc_ast::ast::{
-    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType,
-    Program, ReturnStatement,
-};
+use oxc_ast::ast::{self, AssignmentTarget, CallExpression};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 mod assignments;
@@ -19,7 +15,7 @@ mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
-    fn visit_program(&mut self, program: &Program<'a>) {
+    fn visit_program(&mut self, program: &ast::Program<'a>) {
         self.push_scope();
         resolve::hoist_vars(&program.body, self);
         resolve::record_statements(&program.body, self);
@@ -27,7 +23,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
-    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
+    fn visit_block_statement(&mut self, block: &ast::BlockStatement<'a>) {
         self.push_scope();
         resolve::record_statements(&block.body, self);
         walk::walk_block_statement(self, block);
@@ -43,13 +39,13 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
-    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+    fn visit_function(&mut self, function: &ast::Function<'a>, flags: ScopeFlags) {
         self.push_scope();
         self.record_params(&function.params);
         // A named function expression shadows outer helpers only in its own
         // body. LocalFunctions does not resolve through this self-reference,
         // so record a shadow marker in the scope just pushed.
-        if function.r#type == FunctionType::FunctionExpression {
+        if function.r#type == ast::FunctionType::FunctionExpression {
             if let Some(id) = &function.id {
                 self.bind_self_name(id.name.as_str());
             }
@@ -60,7 +56,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
-    fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
+    fn visit_function_body(&mut self, body: &ast::FunctionBody<'a>) {
         resolve::hoist_vars(&body.statements, self);
         resolve::record_statements(&body.statements, self);
         walk::walk_function_body(self, body);
@@ -160,11 +156,16 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         }
     }
 
+    fn visit_expression_statement(&mut self, statement: &oxc_ast::ast::ExpressionStatement<'a>) {
+        self.note_statement_call(statement);
+        walk::walk_expression_statement(self, statement);
+    }
+
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.visit_sql_call(call);
     }
 
-    fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
+    fn visit_return_statement(&mut self, statement: &ast::ReturnStatement<'a>) {
         flow::returned(self, statement);
     }
     fn visit_throw_statement(&mut self, statement: &oxc_ast::ast::ThrowStatement<'a>) {

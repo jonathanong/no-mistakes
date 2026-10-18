@@ -99,11 +99,28 @@ known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
 
+Mutable receiver roots include possible replacements from foreign callable bodies
+regardless of declaration order. If execution order is uncertain, affected live
+member calls remain unresolved. Saved container identities, copied methods,
+sibling members, and unrelated receivers retain their supported precision.
+
+Deferred writers also use module receiver replacements at invocation: after
+`box = { client: replica }; write();`, a write through `box.client.get` makes
+`replica.get` unresolved. Reversing those two statements preserves the untouched
+`replica.get` target. Closed uncalled writers leave the original methods unchanged;
+uncertain invocation and reordered pattern execution remain conservative.
+
 Transparent aliases of default receiver parameters preserve the eventual member
 read. For example, `const alias = client; alias.get()` retains the original
 `get` target after only a sibling `set` write. Matching and dynamic writes still
 invalidate live members. A copied method such as `const get = alias.get` keeps
 its acquisition snapshot; copying a container keeps descendant members live.
+Writers declared before later receiver aliases reuse the aliases' initializer
+facts while preserving copied methods and untouched members. Unknown execution
+and unavailable receivers remain conservative.
+Immutable repository aliases and named re-export barrels retain external receiver
+identity. Repeated foreign reads of replaced methods become unknown while earlier
+method copies and unrelated members retain their effects.
 For a direct, module-level arrow invocation executed once, a copied method
 also keeps its original target when that same body writes the member afterward.
 This includes an IIFE evaluated in `export default`, directly or as an object

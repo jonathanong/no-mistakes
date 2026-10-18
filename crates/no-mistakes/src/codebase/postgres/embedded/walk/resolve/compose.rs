@@ -9,7 +9,7 @@ use oxc_ast::ast::{BinaryOperator, Expression};
 mod builder;
 mod parameter_positions;
 pub(in crate::codebase::postgres::embedded::walk) use builder::{
-    appended_builder_fragment, builder_fragment, is_builder_append,
+    appended_builder_fragment, builder_binding_recovered, builder_fragment, is_builder_append,
 };
 pub(in crate::codebase::postgres::embedded::walk) use parameter_positions::contains_parameter_helper;
 pub(super) use parameter_positions::parameter_source_positions;
@@ -23,7 +23,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn helper_provenance(
             Expression::CallExpression(call) => match unwrap_ts_wrappers(&call.callee) {
                 Expression::Identifier(name) => {
                     visitor.functions.has_static_helper(name.name.as_str())
-                        || visitor.is_imported_helper(name.name.as_str())
+                        || visitor.is_hole_helper(name.name.as_str())
                 }
                 Expression::StaticMemberExpression(member) if member.property.name == "append" => {
                     contains_helper(&member.object, visitor)
@@ -135,12 +135,14 @@ fn resolve_chain_recovered(
         visitor.functions.get_call_recovered(call, name, visitor)
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
+    let mut idents = |name: &str| builder_binding_recovered(name, visitor);
     chain::resolve_expr(
         expr,
         visitor.source,
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,
         &mut is_shadowed,
+        &mut idents,
         visitor.functions.imported_sql_tags(),
     )
 }
@@ -157,12 +159,14 @@ fn resolve_dynamic_chain_prefix(
         visitor.functions.get_call_recovered(call, name, visitor)
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
+    let mut idents = |name: &str| builder_binding_recovered(name, visitor);
     chain::resolve_dynamic_prefix(
         expr,
         visitor.source,
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,
         &mut is_shadowed,
+        &mut idents,
         visitor.functions.imported_sql_tags(),
     )
     .map(|value| value.sql)

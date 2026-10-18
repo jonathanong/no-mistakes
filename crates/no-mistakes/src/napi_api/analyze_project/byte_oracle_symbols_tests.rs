@@ -36,25 +36,27 @@ fn assert_symbols_branch(root: &str, report: Value) -> Value {
         runs_before + 1,
         "the raw symbols branch must execute the original Value serializer"
     );
-    // Verified configuration: default features, including serde_json/preserve_order.
-    // Writer order starts at roots; this build does not sort these object keys.
+    // CI runs these tests with `--all-features`. That set includes
+    // mermaid-validation, which enables serde_json/preserve_order, so writer
+    // order starts at roots and these object keys are not sorted.
     assert!(
         direct.get().starts_with("{\"roots\":"),
-        "verified configuration is default features with serde_json/preserve_order; symbols keys are not sorted: {}",
+        "CI configuration is --all-features, which enables serde_json/preserve_order; symbols keys are not sorted: {}",
         direct.get()
     );
     serde_json::from_str(direct.get()).unwrap()
 }
 
 #[test]
-fn default_features_include_serde_json_preserve_order() {
-    // Verified configuration: default features, including serde_json/preserve_order.
+fn all_features_include_serde_json_preserve_order() {
+    // CI runs these tests with `--all-features`, including mermaid-validation,
+    // which enables serde_json/preserve_order.
     let raw = r#"{"z":1,"a":2}"#;
     let value: Value = serde_json::from_str(raw).unwrap();
     assert_eq!(
         value.to_string(),
         raw,
-        "verified configuration is default features, including serde_json/preserve_order; object keys are not sorted"
+        "CI configuration is --all-features, which enables serde_json/preserve_order; object keys are not sorted"
     );
 }
 
@@ -116,4 +118,32 @@ fn symbols_byte_oracle_rejects_value_equal_slash_escape() {
     );
     assert_ne!(bytes.raw_old, bytes.raw_new);
     assert_ne!(bytes.outer_old, bytes.outer_new);
+    // Different bytes are not enough: weakening the assert to a parsed-value
+    // comparison would still see equal values and would not panic.
+    let panicked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        super::assert_literal_report_bytes(
+            "symbols",
+            &Some("negative-control".to_string()),
+            &left_raw,
+            &right_raw,
+        );
+    }));
+    let message = panic_message(panicked.expect_err("byte oracle must reject the slash escape"));
+    assert!(
+        message.contains("typed serializer raw bytes")
+            || message.contains("complete outer response bytes"),
+        "byte assert must reject the slash escape, got {message}"
+    );
+}
+
+fn panic_message(payload: Box<dyn std::any::Any + Send>) -> String {
+    payload
+        .downcast_ref::<String>()
+        .cloned()
+        .or_else(|| {
+            payload
+                .downcast_ref::<&str>()
+                .map(|message| (*message).to_string())
+        })
+        .unwrap_or_else(|| "<non-string panic>".to_string())
 }

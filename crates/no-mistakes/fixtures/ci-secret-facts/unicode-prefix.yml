@@ -1,0 +1,7 @@
+name: unicode prefix
+jobs:
+  build:
+    env:
+      value: >-
+        before 😀 café
+        ${{ secrets.UNICODE }}

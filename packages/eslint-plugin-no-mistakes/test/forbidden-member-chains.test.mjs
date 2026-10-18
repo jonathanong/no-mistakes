@@ -1,66 +1,20 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { Linter } from "eslint";
 import { describe, it } from "vitest";
-import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
-
-const id = "forbidden-member-chains";
-const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
-// Keep this list identical to .oxlintrc.json.
-const chains = [
-  { path: "records.entry", message: "Use the entry helper." },
-  { path: "*.panel.open", message: "Open the panel through the helper." },
-  { receiver: "*", path: ["drawer", "toggle"], message: "Toggle the drawer through the helper." },
-  { path: "matrix.1", message: "Do not read the numeric slot." },
-  { path: "*.#slot", message: "Do not read the private slot." },
-];
-const entry = "Use the entry helper.";
-const panel = "Open the panel through the helper.";
-const drawer = "Toggle the drawer through the helper.";
-const slot = "Do not read the numeric slot.";
-const priv = "Do not read the private slot.";
-function check(name, options = { chains }) {
-  return lint(
-    fixture(`${id}/${name}`),
-    { [`no-mistakes/${id}`]: ["error", options] },
-    resolve(fixtureRoot, name),
-  );
-}
-function hits(messages) {
-  return messages.map((message) => [
-    message.line,
-    message.column,
-    message.endColumn,
-    message.message,
-  ]);
-}
-function oxlintFiles(names, config = ".oxlintrc.json") {
-  const result = spawnSync(
-    process.execPath,
-    [
-      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-      "--config",
-      resolve(fixtureRoot, config),
-      "--format",
-      "json",
-      ...names.map((name) => resolve(fixtureRoot, name)),
-    ],
-    { encoding: "utf8" },
-  );
-  assert.equal(result.error, undefined, result.stderr);
-  const report = JSON.parse(result.stdout || "{}");
-  // Oxlint's default correctness rules warn on these expression-statement fixtures.
-  // Parity is the configured member-chain rule, same as the other jsPlugins tests.
-  const grouped = new Map(names.map((name) => [name, []]));
-  for (const diagnostic of report.diagnostics || []) {
-    if (!diagnostic.code?.includes(id)) continue;
-    const name = diagnostic.filename?.split(/[\\/]/).pop();
-    assert.ok(grouped.has(name), diagnostic.filename);
-    grouped.get(name).push(diagnostic);
-  }
-  return grouped;
-}
+import { fixture, lint, plugin } from "./helpers.mjs";
+import {
+  check,
+  drawer,
+  entry,
+  fixtureRoot,
+  hits,
+  id,
+  oxlintFiles,
+  panel,
+  priv,
+  slot,
+} from "./forbidden-member-chains-helpers.mjs";
 describe(id, () => {
   it("matches reads, calls, literal keys, optionals, and static roots", () => {
     assert.deepEqual(
@@ -151,7 +105,7 @@ describe(id, () => {
     assert.equal(hits(check("wrappers.ts"))[8][2], 32);
   });
 
-  it("supports receiver forms, literal segments, and ignored chains", () => {
+  it("supports receiver forms and literal segments", () => {
     assert.deepEqual(
       hits(
         check("named.mjs", {
@@ -189,21 +143,6 @@ describe(id, () => {
         }),
       ),
       [[2, 1, 17, "Any."]],
-    );
-    assert.deepEqual(
-      hits(
-        check("named.mjs", {
-          chains: [
-            { path: "*", message: "star" },
-            { path: "records..entry", message: "gap" },
-            { path: "records.*.entry", message: "middle" },
-            { path: "a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q", message: "long" },
-            { receiver: "root", path: "a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p", message: "prepended" },
-            { path: "records.entry", message: entry },
-          ],
-        }),
-      ).map(([line]) => line),
-      [1, 3],
     );
     assert.deepEqual(check("named.mjs", { chains: [] }), []);
     assert.deepEqual(

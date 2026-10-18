@@ -1,4 +1,5 @@
-use super::{resolve, BindingState, EmbeddedSqlKind, ScopeVisitor};
+use super::super::EmbeddedSqlKind;
+use super::{resolve, BindingState, ScopeVisitor};
 use oxc_ast::ast::{BindingPattern, FormalParameters, TSType, TSTypeName};
 use std::collections::HashMap;
 

@@ -49,7 +49,9 @@ fn signed_offset(before_epoch: bool, duration: Duration) -> (i64, u32) {
 fn positive_offset(duration: Duration) -> (i64, u32) {
     match i64::try_from(duration.as_secs()) {
         Ok(secs) => (secs, duration.subsec_nanos()),
-        // One nanosecond short of `2^63` seconds, the largest `i64` magnitude.
+        // Largest `i64` magnitude, one nanosecond short of `2^63` seconds.
+        // When `shift` cannot add that clamp it returns the process epoch, so
+        // the deadline is already expired. Saturation used to stay far ahead.
         Err(_) => (i64::MAX, NANOS_PER_SEC - 1),
     }
 }
@@ -61,6 +63,7 @@ fn negative_offset(duration: Duration) -> (i64, u32) {
         (secs, 0)
     } else {
         let Some(magnitude) = secs.checked_add(1) else {
+            // Same epoch fallback as a positive clamp: already expired.
             return (i64::MIN, 0);
         };
         (magnitude, NANOS_PER_SEC - nanos)
@@ -70,6 +73,8 @@ fn negative_offset(duration: Duration) -> (i64, u32) {
     } else if magnitude == I64_MAGNITUDE_LIMIT {
         (i64::MIN, subsec_nanos)
     } else {
+        // Wider than `i64`. Decode falls back to the epoch when `Instant`
+        // cannot hold it, so the deadline is already expired.
         (i64::MIN, 0)
     }
 }
@@ -83,6 +88,9 @@ fn duration_before(secs: i64, subsec_nanos: u32) -> Duration {
 }
 
 /// Offsets `Instant` cannot hold clamp toward the process epoch.
+///
+/// A normal check then sees `now >= epoch`, so the deadline is already
+/// expired. This does not restore the old far-future saturation.
 fn shift(base: Instant, duration: Duration, forward: bool) -> Instant {
     let shifted = if forward {
         base.checked_add(duration)

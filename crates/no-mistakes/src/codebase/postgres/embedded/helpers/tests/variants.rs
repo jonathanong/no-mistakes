@@ -26,7 +26,7 @@ fn filled(facts: &EmbeddedSqlFileFacts, index: usize, hole_text: &str) -> Embedd
                 path: Some(PathBuf::from("/helper.ts")),
                 origin: 1000,
             };
-            (*site, plain(hole_text.to_string(), marker))
+            (*site, vec![plain(hole_text.to_string(), marker)])
         })
         .collect::<FxHashMap<_, _>>();
     super::super::splice::splice(&pending.template, &holes).expect("spliced")

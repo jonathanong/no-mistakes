@@ -7,6 +7,7 @@
 //! No module here reads a file, parses, or resolves an import.
 
 pub(crate) mod finalize;
+pub(crate) mod program;
 pub(crate) mod returns;
 pub(crate) mod sentinel;
 mod sites;

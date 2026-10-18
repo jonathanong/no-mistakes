@@ -147,6 +147,7 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
     let site = |args: Vec<SiteArg>| ImportedSite {
         local: "helper".into(),
         args,
+        value_used: false,
         line: 1,
     };
     let fixed = HelperSummary::Static(plain(
@@ -198,7 +199,7 @@ fn splicing_fills_every_hole_and_renumbers_the_generated_binds() {
         },
     );
     let mut holes = crate::fx::FxHashMap::default();
-    holes.insert(0, hole);
+    holes.insert(0, vec![hole]);
     let call = super::splice::splice(&template, &holes).expect("complete");
     assert_eq!(
         call.sql_text.as_deref(),

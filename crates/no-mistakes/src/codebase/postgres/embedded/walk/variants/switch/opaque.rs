@@ -79,7 +79,7 @@ fn changed(before: &BindingState, after: &BindingState) -> bool {
 fn make_opaque(binding: &mut BindingState) {
     // Direct entry and fallthrough may see different statements, even different
     // leading DML kinds. Neither path supplies one shared, verified SQL prefix.
-    binding.kind = super::super::super::EmbeddedSqlKind::Dynamic;
+    binding.kind = super::super::super::super::EmbeddedSqlKind::Dynamic;
     binding.sql = None;
     binding.sql_source_positions.clear();
     binding.variants = None;

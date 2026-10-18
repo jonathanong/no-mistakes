@@ -4,8 +4,8 @@ Declarative GitHub Actions topology assertions over the graph produced by
 `ciTopology()` / `createWorkflowTopologyIndex()`. Configure inventory,
 required and forbidden jobs and `needs` edges, artifact edges, exact
 fan-in, reusable-workflow callers, step order, unlocked-workflow
-reasons, the intended behavior of each `concurrency:` block, and shared
-concurrency groups.
+reasons, secret-name declarations, the intended behavior of each
+`concurrency:` block, and shared concurrency groups.
 
 ```yaml
 rules:
@@ -20,6 +20,10 @@ rules:
         - jobId: ".github/workflows/ci.yml#lint"
           steps:
             - uses: actions/checkout@v4
+      secretInventory:
+        repository: [DEPLOY_TOKEN]
+        environments:
+          production: [RELEASE_KEY]
       unlockedWorkflowReasons:
         .github/workflows/ci.yml: "single-job lint has no overlapping work"
 ```
@@ -51,13 +55,13 @@ part of the delivery contract and should be checked as a graph.
 ## What it catches/requires
 
 Configured inventory and assertions must match workflow topology: required or
-forbidden edges, exact fan-in, artifacts, callers, step order, documented
-unlocked workflows, declared concurrency intent, and shared concurrency
-groups.
+forbidden edges, exact fan-in, artifacts, callers, step order, declared secret
+names, documented unlocked workflows, concurrency intent, and shared groups.
 
 ## Options and defaults
 
-All collections default to empty, so omitted assertions impose no requirement:
+Topology assertion collections default to empty, so omitted assertions impose
+no requirement. `secretInventory` is separately opt-in:
 
 - `jobInventory`: workflow path to the exact expected job IDs.
 - `requiredJobs` / `forbiddenJobs`: job IDs that must exist or must not exist.
@@ -70,10 +74,11 @@ All collections default to empty, so omitted assertions impose no requirement:
 - `exactFanIns`: job ID to the complete sorted list of direct upstream jobs.
 - `exactCallerJobs`, `stepOrders`, and `unlockedWorkflowReasons`: reusable
   caller, ordered-step, and documented-unlocked-workflow policies.
+- `secretInventory`: optional repository and environment secret-name
+  declarations. Omit it or set it to `null` to disable this check; `{}` enables
+  strict empty declarations. See [secret inventory configuration](../configuration/workflow-topology-policy.md).
 - `concurrencyPolicy`: owner id to the intended pending, cancellation, and
-  scope behavior of that lock. `{}` checks nothing. An owner id is a workflow
-  path or a job id `<path>#<key>`. Quote job ids in YAML, because `#` starts a
-  comment.
+  scope behavior of that lock. See [concurrency configuration](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 - `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs
   that share one concurrency group. `false` reports nothing.
 
@@ -85,64 +90,8 @@ are independent.
 
 ### `concurrencyPolicy`
 
-Checked only when the map is non-empty. Every workflow or job whose
-`concurrency` is present needs a row, and every row needs an owner that still
-has a lock.
-
-| Field | Values | Meaning |
-| --- | --- | --- |
-| `pending` | `coalesce-latest`, `fifo` | `queue: max` is `fifo`. Any other queue, including the default, is `coalesce-latest`. |
-| `cancellation` | `cancel-running`, `retain-running`, `conditional` | `cancel-in-progress: true` is `cancel-running`, `false` is `retain-running`, and an expression string is `conditional`. |
-| `scope` | non-empty list | `pull-request`, `ref`, `sha`, `run`, `event`, `input-resource`, `fixed-resource`. |
-
-Unknown names, a missing field, an empty `scope`, a duplicate scope entry, or
-`fixed-resource` combined with another scope is a config error:
-`workflow-topology-policy option concurrencyPolicy: ...`.
-
-`cancel-in-progress` expressions must be one complete `${{ ... }}` value after
-trimming. Anything else, such as `github.ref == main`, reports
-`conditional cancel-in-progress expression invalid: <id>: <value>`.
-
-Scope is read from `concurrency.effective.group`. Each `github.*` or `inputs.*`
-reference is classified below. References are de-duplicated and ordered
-`pull-request`, `ref`, `sha`, `run`, `event`, `input-resource`.
-`github.workflow` and `github.run_attempt` are ignored. `fixed-resource` means
-the group has no `github.*` or `inputs.*` reference. Any other reference is
-`unsupported:<reference>` and cannot match a declared scope.
-
-| Scope | References |
-| --- | --- |
-| `pull-request` | `github.event.pull_request.number`, `github.event.workflow_run.pull_requests` |
-| `sha` | `github.sha`, `github.event.pull_request.head.sha`, `github.event.workflow_run.head_sha` |
-| `ref` | `github.ref`, `github.ref_name`, `github.event.workflow_run.head_branch` |
-| `run` | `github.run_id` |
-| `input-resource` | `inputs.*`, `github.event.inputs`, `github.event.inputs.*` |
-| `event` | `github.event_name`, `github.event.action`, `github.event.label.name`, `github.event.issue.number`, `github.event.schedule`, `github.event.workflow_run.event`, `github.event.workflow_run.id`, `github.event.workflow_run.workflow_id` |
-
-The most specific table entry wins, so
-`github.event.workflow_run.head_branch` is `ref` and
-`github.event.workflow_run.head_sha` is `sha`. A reference the table does not
-list, such as `github.actor`, is reported rather than guessed.
-
-```text
-concurrency intent missing: <id>
-concurrency intent stale: <id>
-concurrency pending mismatch: <id>: expected <declared>, got <actual>
-concurrency cancellation mismatch: <id>: expected <declared>, got <actual>
-concurrency scope mismatch: <id>: expected <a, b>, got <c, d>
-conditional cancel-in-progress expression invalid: <id>: <value>
-```
-
-Quote `group` and `cancel-in-progress` values that contain `{`, and quote job-id
-keys. With `cancellation: conditional` and `scope: [pull-request, sha]`
-declared for `.github/workflows/ci.yml`:
-
-```yaml
-concurrency:
-  group: "ci-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
-  cancel-in-progress: true
-# concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running
-```
+For required fields, scope classification, and validation messages, see the
+[concurrency configuration reference](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 
 ### `forbidConcurrencyGroupCollisions`
 
@@ -194,35 +143,33 @@ jobs:
     steps: [{run: pnpm test}]
 ```
 
+For secret names, this use is undeclared unless `DEPLOY_TOKEN` is listed in the
+repository inventory or the job's literal environment inventory:
+
+```yaml
+env:
+  DEPLOY_TOKEN: "${{ secrets.DEPLOY_TOKEN }}"
+```
+
 ## Fix
 
 Add the missing topology edge or ordered step, or update the policy with the
 intended graph and a reason for an intentionally unlocked workflow. For a
-concurrency group collision, give each owner its own group.
+concurrency group collision, give each owner its own group. For an undeclared
+secret, add its name at the repository or matching environment scope, remove the
+reference, or pass a composite action value through an input. Findings point to
+the source file and line; incomplete inputs cannot prove names unused. See the
+[inventory guide](../configuration/workflow-topology-policy.md).
 
 ## Suppression
 
-Prefer an `unlockedWorkflowReasons` entry for a deliberate exception. Use a
-file directive only when the workflow is owned by an external generator.
+Prefer an `unlockedWorkflowReasons` entry for a deliberate exception. Suppress
+one source finding with `no-mistakes-disable-line workflow-topology-policy` or
+`no-mistakes-disable-next-line workflow-topology-policy`; use
+`no-mistakes-disable-file workflow-topology-policy` only for a whole-file
+exception such as a generated workflow.
 
 ## Related rules
 
 [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks typecheck gates;
 [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md) checks test path filters.
-
-Fix: add the `needs` edge and ordered steps the policy names, or update
-the YAML options to match the intended graph.
-
-```yaml
-jobs:
-  lint:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: actions/checkout@v4
-      - run: pnpm lint
-  test:
-    needs: lint
-    runs-on: ubuntu-slim
-    steps:
-      - run: pnpm test
-```

@@ -1,0 +1,14 @@
+on: push
+jobs:
+  get-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - id: load-secrets
+        run: echo "x=value" >> "$GITHUB_OUTPUT"
+      # A step id ending in secrets is not the secrets context.
+      - run: echo "${{ steps.load-secrets.outputs.x }}"
+      - uses: ./actions/local
+  after:
+    needs: get-secrets
+    if: needs.get-secrets.result == 'success'
+    uses: ./.github/workflows/reusable.yml
