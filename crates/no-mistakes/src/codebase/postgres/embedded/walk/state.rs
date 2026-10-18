@@ -1,6 +1,6 @@
 use super::super::bindings::sql_statement_type_bindings;
 use super::super::helpers;
-use super::super::options::TrustedSqlTag;
+use super::super::options::EmbeddedSqlOptions;
 use super::super::relative::{PendingRelativeCall, PendingRelativeSpan};
 use super::super::scoped_bindings::ScopedExecutors;
 use super::imported;
@@ -37,6 +37,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
     pub(crate) relative_proofs: Vec<HashMap<String, u32>>,
     pub(crate) namespace_proofs: Vec<HashSet<String>>,
+    pub(crate) imported_namespace_names: HashSet<String>,
     pub(crate) namespace_query_invalidated: bool,
     pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(super) argument_effects: Vec<super::executor_arguments::ArgumentEffect>,
@@ -91,23 +92,25 @@ pub(crate) fn collect_calls<'a>(
     bindings: &'a HashSet<String>,
     scoped: &'a ScopedExecutors,
     provisional: &'a [PendingRelativeSpan],
-    configured_module: &str,
-    query_members: bool,
-    query_binding: bool,
-    trusted_sql_tags: &[TrustedSqlTag],
+    options: &EmbeddedSqlOptions,
 ) -> CollectedCalls {
     let track_order = !provisional.is_empty();
+    let imported_namespace_names =
+        super::namespace_imports::configured_namespaces(program, options);
     let mut visitor = ScopeVisitor {
         source,
-        configured_module: configured_module.to_string(),
-        query_members,
-        query_binding,
+        configured_module: options.import_specifier.clone(),
+        query_members: !options.import_specifier.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
+        query_binding: options.executor_names.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
         bindings,
         scoped,
         provisional,
         scopes: Vec::new(),
         relative_proofs: Vec::new(),
         namespace_proofs: Vec::new(),
+        imported_namespace_names,
         namespace_query_invalidated: false,
         builder_aliases: crate::fx::FxHashMap::default(),
         argument_effects: Vec::new(),
@@ -134,7 +137,7 @@ pub(crate) fn collect_calls<'a>(
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program, source, trusted_sql_tags),
+        functions: resolve::LocalFunctions::collect(program, source, &options.trusted_sql_tags),
         sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);

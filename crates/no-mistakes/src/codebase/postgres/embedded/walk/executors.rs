@@ -41,7 +41,9 @@ impl ScopeVisitor<'_> {
                 let name = identifier.name.as_str();
                 match self.scopes.iter().rev().find_map(|scope| scope.get(name)) {
                     Some(binding) => binding.executor_alias == Some(true),
-                    None => self.bindings.contains(name),
+                    None => {
+                        self.bindings.contains(name) || self.imported_namespace_names.contains(name)
+                    }
                 }
             }
             Expression::ConditionalExpression(conditional) => {

@@ -62,3 +62,11 @@ fn unmutated_commonjs_subpath_remains_proven() {
     assert_eq!(facts.calls[0].line, 3);
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 11"));
 }
+
+#[test]
+fn empty_options_do_not_promote_namespace_destructuring() {
+    let path = fixture("unconfigured-namespace-query.ts");
+    let source = std::fs::read_to_string(&path).expect("saved unconfigured namespace fixture");
+    let facts = extract_embedded_sql_from_source(&path, &source, &EmbeddedSqlOptions::default());
+    assert!(facts.calls.is_empty());
+}

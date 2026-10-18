@@ -9,6 +9,7 @@ mod executors;
 mod flow;
 mod iife;
 mod imported;
+mod namespace_imports;
 mod reference_escapes;
 pub(crate) mod resolve;
 mod scope;

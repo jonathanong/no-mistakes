@@ -8,16 +8,22 @@ impl ScopeVisitor<'_> {
         expression: &Expression<'_>,
     ) -> bool {
         match unwrap_ts_wrappers(expression) {
-            Expression::Identifier(identifier) => self
-                .scopes
-                .iter()
-                .enumerate()
-                .rev()
-                .find(|(_, scope)| scope.contains_key(identifier.name.as_str()))
-                .is_some_and(|(index, scope)| {
-                    scope[identifier.name.as_str()].executor_alias == Some(true)
-                        && self.namespace_proofs[index].contains(identifier.name.as_str())
-                }),
+            Expression::Identifier(identifier) => {
+                let name = identifier.name.as_str();
+                match self
+                    .scopes
+                    .iter()
+                    .enumerate()
+                    .rev()
+                    .find(|(_, scope)| scope.contains_key(name))
+                {
+                    Some((index, scope)) => {
+                        scope[name].executor_alias == Some(true)
+                            && self.namespace_proofs[index].contains(name)
+                    }
+                    None => self.imported_namespace_names.contains(name),
+                }
+            }
             Expression::CallExpression(call) => self.configured_require(call),
             Expression::ConditionalExpression(conditional) => {
                 self.namespace_expression(&conditional.consequent)

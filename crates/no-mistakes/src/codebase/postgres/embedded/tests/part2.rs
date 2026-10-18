@@ -22,15 +22,12 @@ fn custom_specifier_and_executor_names() {
 }
 
 #[test]
-fn default_and_namespace_imports_are_ignored() {
-    let source = "import db, * as all from '@example/db'\ndb('x')\nall.query('y')\n";
-    let facts = extract_embedded_sql_from_source(
-        Path::new("ns.ts"),
-        source,
-        &EmbeddedSqlOptions::configured("@example/db", &[]),
-    );
+fn configured_namespace_query_is_proven_but_default_import_is_not() {
+    let facts = extract("namespace-default-import.ts");
     assert!(facts.executor_bindings.is_empty());
-    assert!(facts.calls.is_empty());
+    assert_eq!(facts.calls.len(), 1);
+    assert_eq!(facts.calls[0].line, 4);
+    assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 2"));
 }
 
 #[test]

@@ -64,12 +64,7 @@ pub fn extract_embedded_sql_from_program(
         &bindings,
         &scoped.executors,
         &scoped.spans,
-        &options.import_specifier,
-        !options.import_specifier.is_empty()
-            || options.executor_names.iter().any(|name| name == "query"),
-        options.executor_names.is_empty()
-            || options.executor_names.iter().any(|name| name == "query"),
-        &options.trusted_sql_tags,
+        options,
     );
     let mut fragments = collected.fragments;
     for fragment in &mut fragments {
