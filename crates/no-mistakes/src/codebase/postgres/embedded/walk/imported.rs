@@ -6,15 +6,15 @@
 
 use super::super::helpers::split::{compose, plain, Marker};
 use super::super::helpers::{sentinel, ImportedSite, SiteArg};
-use super::resolve::compose::static_fragment;
 use super::resolve::functions::provenance::RecoveredSql;
 use super::ScopeVisitor;
-use crate::codebase::postgres::embedded::{unpublished_sql_text, EmbeddedSqlKind};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{
     CallExpression, Expression, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
 };
+mod args;
+use args::classify;
 
 /// Local names of named and default value imports. Namespace imports are
 /// excluded: `ns.helper()` is a member call, which stays unrecovered.
@@ -45,12 +45,20 @@ pub(super) fn value_import_names(program: &Program<'_>) -> FxHashSet<String> {
 }
 
 impl ScopeVisitor<'_> {
-    /// Whether `name` currently refers to a value import rather than a local.
-    pub(super) fn is_imported_helper(&self, name: &str) -> bool {
+    /// Whether a call to `name` becomes a hole the projection fills: a value
+    /// import, or a same-file helper that only a lowered program can recover
+    /// (the established same-file machinery keeps precedence).
+    pub(super) fn is_hole_helper(&self, name: &str) -> bool {
+        if self.shadowed_locally(name) {
+            return false;
+        }
         // The SQL tag itself is an import too, but it is never a helper.
-        self.imported_names.contains(name)
-            && !self.shadowed_locally(name)
-            && !self.functions.imported_sql_tags().contains(name)
+        if self.imported_names.contains(name) {
+            return !self.functions.imported_sql_tags().contains(name);
+        }
+        self.functions.has_program(name)
+            && !self.functions.has_static_helper(name)
+            && !self.functions.is_parameter_builder(name)
     }
 }
 
@@ -67,11 +75,12 @@ pub(in crate::codebase::postgres::embedded::walk) fn recover_call(
     call: &CallExpression<'_>,
     name: &str,
 ) -> Option<RecoveredSql> {
-    if call.optional || !visitor.is_imported_helper(name) {
+    if call.optional || !visitor.is_hole_helper(name) {
         return None;
     }
     let (args, builder) = classify(visitor, call)?;
-    let hole = site_hole(visitor, call, name, args);
+    builders_accepted(visitor, name, &args)?;
+    let hole = site_hole(visitor, call, name, args, true);
     let Some(argument) = builder else {
         return Some(hole);
     };
@@ -96,17 +105,46 @@ pub(in crate::codebase::postgres::embedded::walk) fn builder_statement(
     };
     let name = callee.name.as_str();
     // An executor is an import too, but it consumes the builder rather than extending it.
-    if call.optional || !visitor.is_imported_helper(name) || visitor.bindings.contains(name) {
+    if call.optional || !visitor.is_hole_helper(name) || visitor.bindings.contains(name) {
         return None;
     }
     let (args, builder) = classify(visitor, call)?;
+    builders_accepted(visitor, name, &args)?;
     let Expression::Identifier(receiver) = unwrap_ts_wrappers(builder?) else {
         return None;
     };
+    // A same-file helper keeps the established per-call effect analysis unless
+    // the call is straight-line in the builder's own function.
+    let straight_line = visitor.control_depth == 0
+        && visitor.loop_depth == 0
+        && !visitor.append_crosses_function(receiver.name.as_str());
+    if !visitor.imported_names.contains(name) && !straight_line {
+        return None;
+    }
     Some((
         receiver.name.to_string(),
-        site_hole(visitor, call, name, args),
+        site_hole(
+            visitor,
+            call,
+            name,
+            args,
+            !visitor.statement_calls.contains(&call.span.start),
+        ),
     ))
+}
+
+/// A same-file helper takes a caller's builder only at a `SQLStatement`
+/// parameter; an imported one is checked where its program runs.
+fn builders_accepted(visitor: &ScopeVisitor<'_>, name: &str, args: &[SiteArg]) -> Option<()> {
+    if visitor.imported_names.contains(name) {
+        return Some(());
+    }
+    args.iter()
+        .enumerate()
+        .all(|(index, arg)| {
+            *arg != SiteArg::Builder || visitor.functions.program_takes_builder(name, index)
+        })
+        .then_some(())
 }
 
 fn site_hole(
@@ -114,6 +152,7 @@ fn site_hole(
     call: &CallExpression<'_>,
     name: &str,
     args: Vec<SiteArg>,
+    value_used: bool,
 ) -> RecoveredSql {
     let line = byte_offset_to_line(visitor.source, call.span.start as usize);
     let index = visitor.imported_sites.borrow_mut().intern(
@@ -121,6 +160,7 @@ fn site_hole(
         ImportedSite {
             local: name.to_string(),
             args,
+            value_used,
             line,
         },
     );
@@ -132,50 +172,4 @@ fn site_hole(
             origin: call.span.start,
         },
     )
-}
-
-/// Every argument must be a value the projection can reason about; at most one
-/// may be a SQL builder.
-fn classify<'a>(
-    visitor: &ScopeVisitor<'_>,
-    call: &'a CallExpression<'a>,
-) -> Option<(Vec<SiteArg>, Option<&'a Expression<'a>>)> {
-    let mut args = Vec::with_capacity(call.arguments.len());
-    let mut builder = None;
-    for argument in &call.arguments {
-        let expression = argument.as_expression()?;
-        let arg = match unwrap_ts_wrappers(expression) {
-            Expression::StringLiteral(literal) => SiteArg::Literal(literal.value.to_string()),
-            Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-                SiteArg::Literal(unpublished_sql_text(expression)?)
-            }
-            Expression::NumericLiteral(_)
-            | Expression::BooleanLiteral(_)
-            | Expression::NullLiteral(_) => SiteArg::Scalar,
-            Expression::Identifier(ident) => {
-                let known = visitor.lookup(ident.name.as_str());
-                if known.is_some_and(|binding| {
-                    // A builder with finite alternatives still has a known value.
-                    binding.sql_builder
-                        && (binding.sql.is_some() && binding.kind != EmbeddedSqlKind::Dynamic
-                            || binding.variants.is_some())
-                }) {
-                    SiteArg::Builder
-                } else {
-                    SiteArg::Scalar
-                }
-            }
-            Expression::TaggedTemplateExpression(_)
-                if static_fragment(expression, visitor).is_some() =>
-            {
-                SiteArg::Builder
-            }
-            _ => return None,
-        };
-        if arg == SiteArg::Builder && builder.replace(expression).is_some() {
-            return None;
-        }
-        args.push(arg);
-    }
-    Some((args, builder))
 }

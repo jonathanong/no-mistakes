@@ -221,8 +221,6 @@ fn unproven_links_leave_every_call_dynamic() {
         "imported-barrel-past-depth-cap",
         "imported-unresolved",
         "imported-nonliteral-arg",
-        "imported-control-flow",
-        "imported-param-outside-interpolation",
     ] {
         let calls = caller_calls(&run(name));
         assert!(!calls.is_empty(), "{name}");

@@ -22,6 +22,7 @@ pub(super) fn resolve_expr(
     depth: u8,
     lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
+    idents: &mut impl FnMut(&str) -> Option<RecoveredSql>,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<RecoveredSql> {
     let depth = depth.checked_sub(1)?;
@@ -46,6 +47,7 @@ pub(super) fn resolve_expr(
                 depth,
                 lookup,
                 is_shadowed,
+                idents,
                 imported_sql_tags,
             )?;
             left.append(resolve_expr(
@@ -54,13 +56,21 @@ pub(super) fn resolve_expr(
                 depth,
                 lookup,
                 is_shadowed,
+                idents,
                 imported_sql_tags,
             )?);
             Some(left)
         }
-        Expression::CallExpression(call) => {
-            resolve_call(call, source, depth, lookup, is_shadowed, imported_sql_tags)
-        }
+        Expression::CallExpression(call) => resolve_call(
+            call,
+            source,
+            depth,
+            lookup,
+            is_shadowed,
+            idents,
+            imported_sql_tags,
+        ),
+        Expression::Identifier(ident) => idents(ident.name.as_str()),
         _ => None,
     }
 }
@@ -87,6 +97,7 @@ pub(super) fn resolve_dynamic_prefix(
     depth: u8,
     lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
+    idents: &mut impl FnMut(&str) -> Option<RecoveredSql>,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<RecoveredSql> {
     let depth = depth.checked_sub(1)?;
@@ -96,7 +107,7 @@ pub(super) fn resolve_dynamic_prefix(
     let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
         return None;
     };
-    if member.property.name != "append" {
+    if member.property.name != "append" || is_identifier(&member.object) {
         return None;
     }
     let base = resolve_expr(
@@ -105,6 +116,7 @@ pub(super) fn resolve_dynamic_prefix(
         depth,
         lookup,
         is_shadowed,
+        idents,
         imported_sql_tags,
     )
     .or_else(|| {
@@ -114,6 +126,7 @@ pub(super) fn resolve_dynamic_prefix(
             depth,
             lookup,
             is_shadowed,
+            idents,
             imported_sql_tags,
         )
     })?;
@@ -126,16 +139,20 @@ fn resolve_call(
     depth: u8,
     lookup: &mut impl FnMut(&CallExpression<'_>, &str, u8) -> Option<RecoveredSql>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
+    idents: &mut impl FnMut(&str) -> Option<RecoveredSql>,
     imported_sql_tags: &SqlTagNames,
 ) -> Option<RecoveredSql> {
     match unwrap_ts_wrappers(&call.callee) {
-        Expression::StaticMemberExpression(member) if member.property.name == "append" => {
+        Expression::StaticMemberExpression(member)
+            if member.property.name == "append" && !is_identifier(&member.object) =>
+        {
             let mut base = resolve_expr(
                 &member.object,
                 source,
                 depth,
                 lookup,
                 is_shadowed,
+                idents,
                 imported_sql_tags,
             )?;
             let appended = resolve_expr(
@@ -144,6 +161,7 @@ fn resolve_call(
                 depth,
                 lookup,
                 is_shadowed,
+                idents,
                 imported_sql_tags,
             )?;
             base.append(appended);
@@ -159,4 +177,10 @@ fn append_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a
         Argument::SpreadElement(_) => None,
         other => other.as_expression(),
     }
+}
+
+/// `name.append(..)` mutates the builder `name` in place and returns it, so a
+/// bare name is never a copy to resolve as the chain's base.
+fn is_identifier(expr: &Expression<'_>) -> bool {
+    matches!(unwrap_ts_wrappers(expr), Expression::Identifier(_))
 }

@@ -9,7 +9,7 @@ fn same_file_helper_alias_appends_report_original_clause_lines() {
     let findings = check_with_files(&root, &config_with_options("{}"), &[path]).unwrap();
     assert_eq!(
         findings.iter().map(|f| f.line).collect::<Vec<_>>(),
-        [7, 14, 22, 51, 52, 53],
+        [7, 14, 22, 36, 51, 53],
         "{findings:#?}"
     );
     assert_eq!(
@@ -21,7 +21,8 @@ fn same_file_helper_alias_appends_report_original_clause_lines() {
             Some("offset"),
             Some("offset#2"),
             Some("offset#3"),
-            Some("unanalyzable"),
+            // `branched(true)` decides the helper's `if`, so its OFFSET is real.
+            Some("offset#4"),
             Some("unanalyzable"),
             Some("unanalyzable"),
         ]

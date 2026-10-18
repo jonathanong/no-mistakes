@@ -36,6 +36,10 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(super) argument_effects: Vec<super::executor_arguments::ArgumentEffect>,
     pub(super) argument_frames: usize,
+    /// Inner links of a fluent append chain already applied by its outer call.
+    pub(super) consumed_links: crate::fx::FxHashSet<u32>,
+    /// Calls that are a whole expression statement: their value is discarded.
+    pub(super) statement_calls: crate::fx::FxHashSet<u32>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Local names bound by value imports; a call to one is an imported helper.
@@ -64,6 +68,8 @@ pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
     pub(crate) exported_helpers: crate::fx::FxHashMap<String, helpers::HelperSummary>,
+    pub(crate) exported_programs:
+        crate::fx::FxHashMap<String, std::sync::Arc<helpers::program::Program>>,
     pub(crate) pending_imported: Vec<helpers::PendingImportedSql>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
@@ -93,6 +99,8 @@ pub(crate) fn collect_calls<'a>(
         builder_aliases: crate::fx::FxHashMap::default(),
         argument_effects: Vec::new(),
         argument_frames: 0,
+        consumed_links: Default::default(),
+        statement_calls: Default::default(),
         calls: Vec::new(),
         call_spans: Vec::new(),
         imported_names: imported::value_import_names(program),
@@ -132,6 +140,7 @@ pub(crate) fn collect_calls<'a>(
         calls: visitor.calls,
         call_spans: visitor.call_spans,
         exported_helpers: visitor.functions.exported_helpers(),
+        exported_programs: visitor.functions.take_programs(),
         pending_imported,
         pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,

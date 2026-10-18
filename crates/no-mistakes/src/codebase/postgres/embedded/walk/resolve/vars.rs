@@ -1,5 +1,6 @@
+use super::super::super::EmbeddedSqlKind;
 use super::compose::classify_init;
-use super::{for_each_bound_name, BindingState, EmbeddedSqlKind, ScopeVisitor};
+use super::{for_each_bound_name, BindingState, ScopeVisitor};
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, Class, Function, Statement, VariableDeclaration,
     VariableDeclarationKind, VariableDeclarator,

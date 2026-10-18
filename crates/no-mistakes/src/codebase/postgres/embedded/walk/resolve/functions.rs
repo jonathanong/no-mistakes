@@ -4,6 +4,7 @@ mod collect;
 mod exports;
 mod parameter;
 mod positions;
+mod programs;
 pub(crate) mod provenance;
 pub(crate) mod reassigned;
 mod shadows;
@@ -42,6 +43,7 @@ pub(crate) struct LocalFunctions {
     templates: FxHashMap<String, TemplateHelper>,
     parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
+    programs: FxHashMap<String, std::sync::Arc<super::super::super::helpers::program::Program>>,
 }
 
 /// A same-file helper's params and body, however it was declared
@@ -76,6 +78,14 @@ impl LocalFunctions {
             super::super::super::bindings::sql_statement_type_bindings(program);
         let tag_shadows = TagShadows::collect(program, trusted_sql_tags, &sql_statement_types);
         let templates = template_helpers(program, source, &reassigned);
+        let programs = programs::lower_all(
+            program,
+            source,
+            &raw,
+            &tag_shadows,
+            &reassigned,
+            &sql_statement_types,
+        );
         let mut resolved = FxHashMap::default();
         let mut parameter_builders = HashMap::new();
         for name in raw.keys().copied() {
@@ -108,6 +118,7 @@ impl LocalFunctions {
             templates,
             parameter_builders,
             tag_shadows,
+            programs,
         }
     }
 

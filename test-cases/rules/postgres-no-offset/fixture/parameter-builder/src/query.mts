@@ -38,3 +38,5 @@ const base = sql`/* alias */ SELECT`;
 const result = extend(base);
 base.append(sql` OFFSET 2`);
 write(result); // The returned builder aliases base, so this stays opaque.
+declare const dynamicTail: string;
+write(opaque(sql`/* dynamic */ SELECT`, dynamicTail)); // The appended text is not a literal, so this stays opaque.

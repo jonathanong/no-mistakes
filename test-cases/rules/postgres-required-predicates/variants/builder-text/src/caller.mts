@@ -47,3 +47,37 @@ export async function partialBuilder(tier: string, extra: string) {
   builder.append(extra);
   return read(`WITH picked AS (${builder.text}) SELECT * FROM picked`, builder.values);
 }
+
+// The executor call must be exactly the template and the builder's own values.
+
+export async function missingValues(tier: string) {
+  const builder = sql`SELECT p.id FROM view_active_plans p WHERE p.tier = ${tier}`;
+  return read(`WITH picked AS (${builder.text}) SELECT * FROM picked`);
+}
+
+export async function extraArgument(tier: string) {
+  const builder = sql`SELECT p.id FROM view_active_plans p WHERE p.tier = ${tier}`;
+  return read(`WITH picked AS (${builder.text}) SELECT * FROM picked`, builder.values, {});
+}
+
+export async function textUsedTwice(tier: string) {
+  const builder = sql`SELECT p.id FROM view_active_plans p WHERE p.tier = ${tier}`;
+  return read(`WITH a AS (${builder.text}), b AS (${builder.text}) SELECT 1`, builder.values);
+}
+
+export async function computedMember(tier: string) {
+  const builder = sql`SELECT p.id FROM view_active_plans p WHERE p.tier = ${tier}`;
+  return read(`WITH picked AS (${builder["text"]}) SELECT * FROM picked`, builder.values);
+}
+
+export async function wrappedValues(tier: string) {
+  const builder = sql`SELECT p.id FROM view_active_plans p WHERE p.tier = ${tier}`;
+  return read(`WITH picked AS (${builder.text}) SELECT * FROM picked`, [builder.values]);
+}
+
+export async function insideLoop(tiers: string[]) {
+  const builder = sql`SELECT p.id FROM view_active_plans p WHERE p.tier = 'a'`;
+  for (const tier of tiers) {
+    await read(`WITH picked AS (${builder.text}) SELECT ${tier}`, builder.values);
+  }
+}

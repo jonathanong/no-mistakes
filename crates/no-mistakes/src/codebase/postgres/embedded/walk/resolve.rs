@@ -13,7 +13,7 @@ pub(super) use vars::{hoist_vars, initialize_vars};
 
 pub(crate) use super::scope::has_known_leading_statement;
 pub(crate) use super::variants::origins::rewrite as rewrite_origins;
-pub(super) use append::{apply_append, apply_hole_append};
+pub(super) use append::{apply_append, apply_append_to, apply_hole_append};
 pub(in crate::codebase::postgres::embedded::walk) use compose::{
     appended_builder_fragment, builder_fragment, is_builder_append,
 };

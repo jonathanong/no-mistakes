@@ -4,7 +4,7 @@ use super::*;
 fn append_mutations_do_not_reuse_stale_builder_alias_variants() {
     let calls = calls("variants-append-aliases.ts");
     assert_eq!(calls.len(), 18);
-    for index in [0, 2, 3, 4, 5, 8, 10, 11, 16] {
+    for index in [0, 2, 3, 4, 8, 10, 11, 16] {
         assert!(
             calls[index].is_unanalyzable(),
             "call {index}: {:#?}",
@@ -18,6 +18,11 @@ fn append_mutations_do_not_reuse_stale_builder_alias_variants() {
     ] {
         assert_eq!(texts(&calls[index]), [statement, alternate], "call {index}");
     }
+    // A fluent chain applies every link to the tracked root, in order.
+    assert_eq!(
+        texts(&calls[5]),
+        ["SELECT id FROM users WHERE id = 1 OFFSET 9", "SELECT 6"]
+    );
     assert_eq!(texts(&calls[6]), ["SELECT id FROM users", "SELECT 7"]);
     assert_eq!(texts(&calls[12]), ["SELECT id FROM users", "SELECT 14"]);
     assert_eq!(

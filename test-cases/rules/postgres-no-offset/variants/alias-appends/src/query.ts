@@ -13,9 +13,9 @@ query(gate ? computedAlias : sql`SELECT 3`); // findings: unanalyzable
 query(gate ? computed : sql`SELECT 4`); // findings: unanalyzable
 const fluent = sql`SELECT id FROM users`;
 const fluentAlias = fluent;
-fluent.append(sql` WHERE id = 1`).append(sql` OFFSET 9`);
+fluent.append(sql` WHERE id = 1`).append(sql` OFFSET 9`); // findings: offset
 query(gate ? fluentAlias : sql`SELECT 5`); // findings: unanalyzable
-query(gate ? fluent : sql`SELECT 6`); // findings: unanalyzable
+query(gate ? fluent : sql`SELECT 6`);
 let replaced = sql`SELECT id FROM users`;
 const previous = replaced;
 replaced = sql`SELECT id FROM accounts`;

@@ -57,6 +57,7 @@ pub(super) fn append(
         super::super::MAX_RESOLVE_DEPTH,
         &mut |_, _, _| None,
         &mut |tag| names.contains(tag) || aliases.contains(tag) || shadows.contains(tag),
+        &mut |_| None,
         shadows.imported_tags(),
     )?
     .sql;

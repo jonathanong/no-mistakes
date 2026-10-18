@@ -1,0 +1,6 @@
+{
+  "name": "@fixture/visibility",
+  "type": "module",
+  "main": "index.mts",
+  "exports": { ".": { "import": "./index.mts" }, "./*": { "import": "./*.mts" } }
+}
