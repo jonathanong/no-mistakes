@@ -1,19 +1,18 @@
 use super::super::bindings::sql_statement_type_bindings;
 use super::super::helpers;
-use super::super::options::TrustedSqlTag;
+use super::super::options::EmbeddedSqlOptions;
 use super::super::relative::{PendingRelativeCall, PendingRelativeSpan};
 use super::super::scoped_bindings::ScopedExecutors;
+use super::executors::MemberQueryProof;
 use super::imported;
 use super::resolve;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 use std::collections::{BTreeMap, HashMap, HashSet};
-
+mod fragment;
 #[derive(Clone)]
 pub(crate) struct BindingState {
-    // None: ineligible; Some(false): const awaiting its initializer; Some(true): proven.
-    pub(super) executor_alias: Option<bool>,
     pub(super) builder_identity: Option<u32>,
     pub(super) builder_effect_revision: u64,
     pub(super) condition_key: Option<(u64, u32)>,
@@ -21,6 +20,8 @@ pub(crate) struct BindingState {
     pub(crate) sql: Option<String>,
     pub(crate) kind: EmbeddedSqlKind,
     pub(crate) line: u32,
+    // None: ineligible; Some(false): awaiting or pending proof; Some(true): proven.
+    pub(super) executor_alias: Option<bool>,
     pub(crate) initialized: bool,
     pub(crate) sql_builder: bool,
     pub(crate) sql_source_positions: Vec<super::super::EmbeddedSqlSourcePosition>,
@@ -28,11 +29,18 @@ pub(crate) struct BindingState {
 
 pub(crate) struct ScopeVisitor<'a> {
     pub(crate) source: &'a str,
+    pub(crate) configured_module: String,
     pub(crate) query_members: bool,
+    pub(crate) query_binding: bool,
     pub(crate) bindings: &'a HashSet<String>,
     pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
+    pub(crate) relative_proofs: Vec<HashMap<String, u32>>,
+    pub(crate) namespace_proofs: Vec<HashSet<String>>,
+    pub(crate) imported_namespace_names: HashMap<String, String>,
+    pub(crate) imported_value_origins: HashMap<String, (String, String)>,
+    pub(crate) member_query_proof: MemberQueryProof,
     pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(super) argument_effects: Vec<super::executor_arguments::ArgumentEffect>,
     pub(super) argument_frames: usize,
@@ -77,6 +85,7 @@ pub(crate) struct CollectedCalls {
     pub(crate) fragment_sites: Vec<Option<u32>>,
     pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
+    pub(crate) diagnostic_member_sequences: Vec<u32>,
     pub(crate) confirmed_order: Vec<u32>,
 }
 
@@ -86,17 +95,29 @@ pub(crate) fn collect_calls<'a>(
     bindings: &'a HashSet<String>,
     scoped: &'a ScopedExecutors,
     provisional: &'a [PendingRelativeSpan],
-    query_members: bool,
-    trusted_sql_tags: &[TrustedSqlTag],
+    options: &EmbeddedSqlOptions,
 ) -> CollectedCalls {
     let track_order = !provisional.is_empty();
+    let imported_namespace_names =
+        super::namespace_imports::configured_namespaces(program, options);
+    let imported_value_origins =
+        super::namespace_imports::configured_values(program, options, bindings);
     let mut visitor = ScopeVisitor {
         source,
-        query_members,
+        configured_module: options.import_specifier.clone(),
+        query_members: !options.import_specifier.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
+        query_binding: options.executor_names.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
         bindings,
         scoped,
         provisional,
         scopes: Vec::new(),
+        relative_proofs: Vec::new(),
+        namespace_proofs: Vec::new(),
+        imported_namespace_names,
+        imported_value_origins,
+        member_query_proof: MemberQueryProof::default(),
         builder_aliases: crate::fx::FxHashMap::default(),
         argument_effects: Vec::new(),
         argument_frames: 0,
@@ -122,10 +143,11 @@ pub(crate) fn collect_calls<'a>(
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program, source, trusted_sql_tags),
+        functions: resolve::LocalFunctions::collect(program, source, &options.trusted_sql_tags),
         sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);
+    visitor.downgrade_escaped_member_calls();
     let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
     let pending_imported = helpers::finalize::finalize(
         helpers::finalize::Walked {
@@ -138,6 +160,20 @@ pub(crate) fn collect_calls<'a>(
         },
         &sites,
     );
+    let diagnostic_member_sequences = crate::diagnostics::current()
+        .filter(|observer| observer.verbose())
+        .map(|_| {
+            visitor
+                .member_query_proof
+                .calls
+                .iter()
+                .filter(|call| {
+                    call.sql_looking && visitor.pending_spans.contains_key(&call.sequence)
+                })
+                .map(|call| call.sequence)
+                .collect()
+        })
+        .unwrap_or_default();
     CollectedCalls {
         calls: visitor.calls,
         call_spans: visitor.call_spans,
@@ -149,35 +185,7 @@ pub(crate) fn collect_calls<'a>(
         fragment_variants: visitor.fragment_variants,
         fragment_sites: visitor.fragment_sites,
         pending_calls: visitor.pending_calls,
+        diagnostic_member_sequences,
         confirmed_order: visitor.confirmed_order,
-    }
-}
-
-impl ScopeVisitor<'_> {
-    pub(super) fn push_fragment(
-        &mut self,
-        line: u32,
-        sql_text: Option<String>,
-        expression: Option<&oxc_ast::ast::Expression<'_>>,
-        append_site: Option<u32>,
-    ) {
-        let variants = expression
-            .and_then(|expression| self.recover_variants(expression))
-            .filter(|values| {
-                values
-                    .iter()
-                    .all(|value| value.value == super::variants::ValueKind::Sql)
-            })
-            .unwrap_or_default()
-            .into_iter()
-            .map(|value| value.publish())
-            .collect();
-        self.fragment_variants.push(variants);
-        self.fragment_sites.push(append_site);
-        self.fragments.push(EmbeddedSqlFragment {
-            line,
-            sql_text,
-            recovered_placeholder_positions: Vec::new(),
-        });
     }
 }

@@ -1,6 +1,8 @@
 use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
 use std::path::PathBuf;
 
+mod commonjs;
+
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded")
@@ -48,6 +50,33 @@ fn factory_member_query_follows_member_query_option() {
     let options = EmbeddedSqlOptions::configured("", &["other".into()])
         .with_scoped_executors(&["openTransaction".into()], &[]);
     assert!(scan("scoped-factory-member-query.ts", &options).is_empty());
+}
+
+#[test]
+fn member_query_requires_executor_receiver_provenance() {
+    let path = fixture("executor-provenance.ts");
+    let source = std::fs::read_to_string(&path).expect("fixture");
+    let options = EmbeddedSqlOptions::configured("@example/db", &["connection".into()])
+        .with_scoped_executors(&["openTransaction".into()], &["TxExecutor".into()]);
+    let facts = extract_embedded_sql_from_source(&path, &source, &options);
+    assert_eq!(facts.calls.len(), 4);
+    assert!(facts
+        .calls
+        .iter()
+        .all(super::EmbeddedSqlCall::is_unanalyzable));
+    assert_eq!(
+        facts.calls.iter().map(|call| call.line).collect::<Vec<_>>(),
+        [5, 10, 14, 19]
+    );
+
+    // An unscoped explicit query selector deliberately scans all member calls.
+    let broad = EmbeddedSqlOptions::configured("", &["query".into()]);
+    assert_eq!(
+        extract_embedded_sql_from_source(&path, &source, &broad)
+            .calls
+            .len(),
+        9
+    );
 }
 
 #[test]

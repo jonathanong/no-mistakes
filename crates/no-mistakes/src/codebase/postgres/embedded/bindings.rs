@@ -60,8 +60,8 @@ pub fn executor_bindings(program: &Program<'_>, options: &EmbeddedSqlOptions) ->
 }
 
 fn member_query_enabled(options: &EmbeddedSqlOptions) -> bool {
-    !options.import_specifier.is_empty()
-        || options
+    options.import_specifier.is_empty()
+        && options
             .executor_names
             .iter()
             .any(|name| name == QUERY_PROPERTY)
@@ -110,9 +110,24 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
     name.name().as_str().to_string()
 }
 
-/// True when `call` is a bound executor or an opted-in `.query` member call.
+/// True when `call` is a bound direct executor or an explicitly broad `.query`
+/// call. Receiver provenance needs the full extractor's lexical scopes.
 pub fn is_database_call(call: &CallExpression<'_>, bindings: &HashSet<String>) -> bool {
     callee_name(call, bindings, &ScopedExecutors::default()).is_some()
+}
+
+pub(super) fn member_query_receiver<'a>(
+    call: &'a CallExpression<'a>,
+) -> Option<&'a Expression<'a>> {
+    match unwrap_ts_wrappers(&call.callee) {
+        Expression::StaticMemberExpression(member) if member.property.name == QUERY_PROPERTY => {
+            Some(&member.object)
+        }
+        Expression::ComputedMemberExpression(member) if static_query_key(&member.expression) => {
+            Some(&member.object)
+        }
+        _ => None,
+    }
 }
 
 pub(super) fn callee_name(

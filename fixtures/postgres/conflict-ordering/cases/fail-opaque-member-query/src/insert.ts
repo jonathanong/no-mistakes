@@ -1,4 +1,5 @@
 declare function assembleWriter(): string;
-declare const client: { query(sql: string): unknown };
+// The configured CommonJS module proves this receiver is a SQL executor.
+const client = require('@example/db');
 
 client.query(assembleWriter());

@@ -44,8 +44,12 @@ existing behavior. See the
 
 Omitting both options is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
+A configured module scans `.query` only when its receiver is a configured import,
+a configured factory result or typed parameter, or an immutable alias of one.
+An unrelated HTTP `request.get('/users').query({ name })` is outside SQL scope.
+With no `importSpecifier`, an explicit `executorNames: [query]` opts into broad
+member matching. A configured module also recognizes its transaction helpers.
+Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
 
 See [mutable SQL builder recovery](../postgres-builder-mutations.md) for

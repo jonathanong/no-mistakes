@@ -2,6 +2,7 @@ use super::super::EmbeddedSqlFileFacts;
 use super::package::path_inside;
 use super::types::PendingRelativeCall;
 use std::path::{Path, PathBuf};
+mod diagnostic;
 
 /// Keep relative candidates whose resolved file is inside `package_root`.
 ///
@@ -17,6 +18,7 @@ pub(crate) fn project_relative_scoped_facts(
     }
     let pending = std::mem::take(&mut facts.pending_relative);
     let Some(root) = package_root else {
+        diagnostic::count_unproven(&pending, &[]);
         return;
     };
     let mut kept = vec![false; pending.candidates.len()];
@@ -46,6 +48,7 @@ pub(crate) fn project_relative_scoped_facts(
         sort_dedup(&mut facts.matched_factory_names);
         sort_dedup(&mut facts.matched_type_names);
     }
+    diagnostic::count_unproven(&pending, &kept);
     let promoted = pending
         .calls
         .into_iter()

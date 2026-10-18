@@ -2,71 +2,15 @@ use super::super::super::EmbeddedSqlKind;
 use super::compose::classify_init;
 use super::{for_each_bound_name, BindingState, ScopeVisitor};
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BindingPattern, Class, Function, Statement, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    BindingPattern, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
-use oxc_ast_visit::{walk, Visit};
-use oxc_syntax::scope::ScopeFlags;
-use std::collections::HashMap;
+use oxc_span::GetSpan;
 
-/// Reserve var names before visiting statements: a later declaration shadows
-/// outer SQL bindings, and names never cross a function boundary.
-pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
-    statements: &[Statement<'_>],
-    visitor: &mut ScopeVisitor<'_>,
-) {
-    let names = hoisted_names(statements);
-    let source = visitor.source;
-    if let Some(scope) = visitor.current_scope() {
-        for (name, position) in names {
-            scope.entry(name).or_insert_with(|| BindingState {
-                executor_alias: None,
-                builder_identity: None,
-                builder_effect_revision: 0,
-                condition_key: None,
-                variants: None,
-                sql: None,
-                kind: EmbeddedSqlKind::Dynamic,
-                line: crate::codebase::ts_source::byte_offset_to_line(source, position as usize),
-                initialized: false,
-                sql_builder: false,
-                sql_source_positions: Vec::new(),
-            });
-        }
-    }
-}
-
-pub(crate) fn hoisted_names(statements: &[Statement<'_>]) -> HashMap<String, u32> {
-    let mut collector = VarNames::default();
-    for statement in statements {
-        collector.visit_statement(statement);
-    }
-    collector.names
-}
-
-#[derive(Default)]
-struct VarNames {
-    names: HashMap<String, u32>,
-}
-
-impl<'a> Visit<'a> for VarNames {
-    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
-        if declaration.kind == VariableDeclarationKind::Var {
-            for declarator in &declaration.declarations {
-                for_each_bound_name(&declarator.id, &mut |name| {
-                    self.names
-                        .entry(name.to_string())
-                        .or_insert(declarator.span.start);
-                });
-            }
-        }
-        walk::walk_variable_declaration(self, declaration);
-    }
-
-    fn visit_function(&mut self, _: &Function<'a>, _: ScopeFlags) {}
-    fn visit_arrow_function_expression(&mut self, _: &ArrowFunctionExpression<'a>) {}
-    fn visit_class(&mut self, _: &Class<'a>) {}
-}
+mod hoist;
+mod namespace;
+pub(in crate::codebase::postgres::embedded::walk) use hoist::hoist_vars;
+pub(crate) use hoist::hoisted_names;
+pub(in crate::codebase::postgres::embedded::walk) use namespace::bind_query_property;
 
 pub(in crate::codebase::postgres::embedded::walk) fn initialize_vars(
     declaration: &VariableDeclaration<'_>,
@@ -124,6 +68,14 @@ pub(super) fn record_declarator(
             )
         });
     let builder_identity = visitor.builder_identity_for_init(init);
+    let namespace_executor = is_const && visitor.namespace_expression(init);
+    let relative_executor_proof = visitor
+        .relative_declaration_proof(ident.name.as_str(), declarator.id.span().start)
+        .or_else(|| {
+            is_const
+                .then(|| visitor.relative_executor_proof(init))
+                .flatten()
+        });
     let condition_key = is_const.then(|| visitor.declaration_choice_key(init, ident.span.start));
     let scope_index = if is_var {
         var_scope(visitor, ident.name.as_str())
@@ -144,7 +96,16 @@ pub(super) fn record_declarator(
         scope.insert(
             ident.name.to_string(),
             BindingState {
-                executor_alias: is_const.then_some(false),
+                executor_alias: if visitor
+                    .scoped
+                    .contains_declaration(ident.name.as_str(), declarator.id.span().start)
+                {
+                    Some(true)
+                } else {
+                    relative_executor_proof
+                        .map(|_| false)
+                        .or(is_const.then_some(false))
+                },
                 builder_identity,
                 builder_effect_revision: 0,
                 condition_key,
@@ -165,6 +126,12 @@ pub(super) fn record_declarator(
                 sql_source_positions,
             },
         );
+    }
+    if let Some(index) = relative_executor_proof {
+        visitor.relative_proofs[scope_index].insert(ident.name.to_string(), index);
+    }
+    if namespace_executor {
+        visitor.namespace_proofs[scope_index].insert(ident.name.to_string());
     }
 }
 

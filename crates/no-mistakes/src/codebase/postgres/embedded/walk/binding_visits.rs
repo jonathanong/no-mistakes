@@ -1,8 +1,40 @@
-use super::{assignments, resolve, ScopeVisitor};
-use oxc_ast::ast::{self, AssignmentTarget};
-use oxc_ast_visit::{walk, Visit};
+use super::{resolve, ScopeVisitor};
+use oxc_ast::ast;
+use oxc_ast_visit::walk;
 
 impl<'a> ScopeVisitor<'a> {
+    pub(super) fn walk_variable_declaration_bindings(
+        &mut self,
+        declaration: &oxc_ast::ast::VariableDeclaration<'a>,
+    ) {
+        for declarator in &declaration.declarations {
+            if let Some(init) = &declarator.init {
+                // A mutable alias or mixed const result can expose `.query`.
+                let tracked_alias =
+                    matches!(declarator.id, ast::BindingPattern::BindingIdentifier(_))
+                        && matches!(
+                            crate::codebase::ts_source::unwrap_ts_wrappers(init),
+                            ast::Expression::Identifier(_)
+                        )
+                        && !self.receiver_origins(init).is_empty();
+                if (!tracked_alias && declaration.kind != ast::VariableDeclarationKind::Const)
+                    || (self.stable_executor_category(init).is_none()
+                        && self.relative_executor_proof(init).is_none()
+                        && !tracked_alias)
+                {
+                    self.revoke_query_receiver(init);
+                }
+            }
+        }
+        resolve::initialize_vars(declaration, self);
+        walk::walk_variable_declaration(self, declaration);
+        if declaration.kind == ast::VariableDeclarationKind::Const {
+            for declarator in &declaration.declarations {
+                resolve::bind_query_property(declarator, true, self);
+            }
+        }
+    }
+
     pub(super) fn walk_assignment_target_reference(
         &mut self,
         target: &ast::SimpleAssignmentTarget<'a>,
@@ -39,6 +71,19 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     fn walk_builder_write_member(&mut self, member: &ast::MemberExpression<'a>) {
+        match member {
+            ast::MemberExpression::StaticMemberExpression(value)
+                if value.property.name == "query" =>
+            {
+                self.revoke_query_receiver(&value.object);
+            }
+            ast::MemberExpression::ComputedMemberExpression(value)
+                if query_key::may_write_query(&value.expression) =>
+            {
+                self.revoke_query_receiver(&value.object);
+            }
+            _ => {}
+        }
         // The ordinary .text read projection must not exempt a write/delete
         // receiver. Walk each receiver/key once, including computed effects.
         match member {
@@ -62,6 +107,10 @@ impl<'a> ScopeVisitor<'a> {
             .init
             .as_ref()
             .is_some_and(|init| self.proven_executor(init));
+        let namespace = declaration
+            .init
+            .as_ref()
+            .is_some_and(|init| self.namespace_expression(init));
         self.refresh_builder_identity(declaration);
         let variants = declaration
             .init
@@ -77,41 +126,15 @@ impl<'a> ScopeVisitor<'a> {
         walk::walk_variable_declarator(self, declaration);
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
-        self.initialize_executor_alias(declaration, executor);
+        self.initialize_executor_alias(declaration, executor, namespace);
+        if let (ast::BindingPattern::BindingIdentifier(name), Some(init)) =
+            (&declaration.id, &declaration.init)
+        {
+            self.bind_receiver_alias(name.name.as_str(), init);
+        }
         self.leave_iife(&declaration.id, outer);
     }
-
-    pub(super) fn walk_assignment_expression_bindings(
-        &mut self,
-        assign: &oxc_ast::ast::AssignmentExpression<'a>,
-    ) {
-        let identity = self.assignment_builder_identity(assign);
-        let variants = self.assigned_variants(assign);
-        if matches!(
-            assign.left,
-            AssignmentTarget::ArrayAssignmentTarget(_)
-                | AssignmentTarget::ObjectAssignmentTarget(_)
-        ) {
-            self.visit_expression(&assign.right);
-            assignments::visit_target(self, &assign.left);
-            return;
-        }
-        let exemptions = self.builder_reference_exemptions.len();
-        if matches!(assign.left, AssignmentTarget::AssignmentTargetIdentifier(_))
-            && assign.operator == ast::AssignmentOperator::Assign
-        {
-            self.allow_builder_value(&assign.right);
-        }
-        walk::walk_assignment_expression(self, assign);
-        self.builder_reference_exemptions.truncate(exemptions);
-        if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
-            self.mark_dynamic(ident.name.as_str());
-            self.set_variants(ident.name.as_str(), variants);
-            self.set_builder_identity(ident.name.as_str(), identity);
-        } else {
-            resolve::functions::reassigned::for_each_assigned_name(&assign.left, &mut |name| {
-                self.mark_dynamic(name);
-            });
-        }
-    }
 }
+
+mod assignment_walk;
+mod query_key;

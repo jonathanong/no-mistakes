@@ -65,8 +65,10 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
   of it, a relative path that resolves into that package, or any module when it
   is empty) that return an executor. A local declared with
   `const`, `let`, `using`, or `await using` whose initializer calls the factory,
-  with or without `await`, is an executor. Calls `tx(sql)` and, when `.query`
-  members are enabled, `tx.query(sql)` are scanned.
+  with or without `await`, is an executor. Calls `tx(sql)` and `tx.query(sql)`
+  are scanned when the configured module enables member queries. Bind the result
+  before calling `query`; an inline `openTransaction().query(sql)` chain does not
+  establish a scoped executor.
 - `executorTypeNames` lists type names imported from `importSpecifier`, a
   subpath of it, a relative path that resolves into that package, or any module
   when it is empty, through `import type`, an inline `type` specifier, or
@@ -77,6 +79,41 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
   (parameters). A same-named identifier in a sibling function or outside the
   block is not scanned. A same-named import from outside that package does not
   match.
+
+For a configured module, `.query(sql)` requires a receiver proven to be a
+configured import, factory result, typed parameter, or immutable alias. A
+same-named nested local does not inherit that proof. An HTTP request's `.query`
+parameters therefore do not become SQL candidates merely because the file uses
+PostgreSQL elsewhere. Without `importSpecifier`, explicit
+`executorNames: [query]` opts into broad member matching.
+
+### Release note: member-query selection
+
+This is a breaking change: `importSpecifier` alone no longer treats every
+`.query(...)` in a scanned file as SQL. Add `executorFactoryNames` or
+`executorTypeNames` for database receivers, or bind a configured import to a
+local before calling it. The broad `executorNames: [query]` selector requires
+an empty `importSpecifier` and also admits unrelated `.query` calls.
+
+For a configured factory, bind the result first:
+`const tx = openTransaction(); tx.query(sql)`. Inline chains such as
+`openTransaction().query(sql)` do not yet establish receiver provenance,
+whether the factory came from a package or a relative import. `this.db.query`
+and class-field receivers, `pool.connect().query` clients, and untyped
+transaction-callback parameters also lack receiver proof. Binding a pool
+result alone does not suffice: `const client = await pool.connect();
+client.query(sql)` still needs a configured imported type or factory proof.
+Type wrappers such as `NonNullable<QueryOptions['query']>` do not by themselves
+establish a configured executor parameter.
+Use a locally bound configured factory result or an explicitly typed
+`TxExecutor` parameter where possible.
+
+Escaping a proven receiver can change its `.query` property. Subsequent calls
+on that receiver remain executor sites but are unanalyzable; configure
+`unanalyzableSql` to choose their policy. With `--verbose-timings`, the
+`postgres.unproven_member_query_sql` work counter records SQL-looking
+unproven `.query` calls outside confirmed executor sites. Review that count
+when migrating provider or callback APIs.
 
 Neither option counts as executor selection: a rule configured with only these
 options still needs `importSpecifier` or `executorNames` (for example

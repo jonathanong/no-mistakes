@@ -66,6 +66,10 @@ fn invalidate_exception_state(
     }
 }
 pub(super) fn returned<'a>(visitor: &mut ScopeVisitor<'a>, statement: &ReturnStatement<'a>) {
+    if let Some(argument) = &statement.argument {
+        // A returned executor can be mutated outside this lexical scope.
+        visitor.revoke_query_receiver(argument);
+    }
     // Returning a builder is treated as an escape below; an IIFE's result
     // needs the state it had just before that.
     visitor.capture_iife(statement);

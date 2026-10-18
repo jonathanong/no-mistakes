@@ -110,6 +110,8 @@ impl<'a> ScopeVisitor<'a> {
         }
         self.apply_call_builder_effect(helper_effect);
         self.apply_append_alias_effect(append_effect);
+        // An unknown helper can replace a module namespace's `.query` export.
+        self.revoke_namespace_arguments(call);
     }
 }
 

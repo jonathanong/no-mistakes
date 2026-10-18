@@ -1,4 +1,4 @@
-use super::super::super::bindings::callee_name;
+use super::super::super::bindings::{callee_name, member_query_receiver, MEMBER_QUERY_OPT_IN};
 use super::super::super::relative::PendingRelativeCall;
 use super::super::ScopeVisitor;
 use super::executor_call;
@@ -18,9 +18,50 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         );
         return;
     }
+    if let Some(receiver) = member_query_receiver(call) {
+        if !visitor.query_members {
+            return;
+        }
+        let namespace = visitor.namespace_expression(receiver);
+        let broad = visitor.bindings.contains(MEMBER_QUERY_OPT_IN);
+        if broad || (visitor.proven_executor(receiver) && (!namespace || visitor.query_binding)) {
+            let sequence = push_confirmed(visitor, call, "query".to_string());
+            if !broad {
+                visitor.note_member_call(sequence, call, receiver);
+            }
+        } else {
+            let owners = visitor.relative_executor_owners(receiver);
+            // Rejected member queries never enter SQL candidates. Verbose
+            // diagnostics count only calls with no pending relative proof.
+            if let Some(observer) = crate::diagnostics::current()
+                .filter(|observer| observer.verbose() && owners.is_empty())
+            {
+                let recovered = executor_call(visitor, call, "query".to_string());
+                let known = recovered
+                    .sql_text
+                    .as_deref()
+                    .is_some_and(super::super::scope::has_diagnostic_leading_statement)
+                    || recovered.variants.iter().any(|variant| {
+                        super::super::scope::has_diagnostic_leading_statement(&variant.sql_text)
+                    });
+                if known {
+                    observer.increment("postgres.unproven_member_query_sql", 1);
+                }
+            }
+            let sequence = visitor.next_seq;
+            push_pending(visitor, call, "query", owners);
+            if visitor.next_seq != sequence {
+                visitor.note_member_call(sequence, call, receiver);
+            }
+        }
+        return;
+    }
     let member = unwrap_ts_wrappers(&call.callee).is_member_expression();
     if let Some(callee) = callee_name(call, visitor.bindings, visitor.scoped) {
-        if visitor.query_members || !member {
+        if !member
+            && visitor.proven_executor(&call.callee)
+            && !visitor.namespace_expression(&call.callee)
+        {
             push_confirmed(visitor, call, callee);
         }
         return;
@@ -31,7 +72,16 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     let Expression::Identifier(ident) = unwrap_ts_wrappers(&call.callee) else {
         return;
     };
-    let owners = owners_at(visitor, ident.name.as_str(), call.span.start);
+    let owners = visitor.relative_executor_owners(&call.callee);
+    push_pending(visitor, call, ident.name.as_str(), owners);
+}
+
+fn push_pending(
+    visitor: &mut ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    callee: &str,
+    owners: Vec<u32>,
+) {
     if owners.is_empty() {
         return;
     }
@@ -43,11 +93,15 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     visitor.pending_calls.push(PendingRelativeCall {
         seq,
         owners,
-        call: executor_call(visitor, call, ident.name.to_string()),
+        call: executor_call(visitor, call, callee.to_string()),
     });
 }
 
-fn push_confirmed(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>, callee: String) {
+fn push_confirmed(
+    visitor: &mut ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    callee: String,
+) -> u32 {
     let seq = visitor.next_seq;
     visitor.next_seq += 1;
     if visitor.track_order {
@@ -55,19 +109,5 @@ fn push_confirmed(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>, cal
     }
     visitor.calls.push(executor_call(visitor, call, callee));
     visitor.call_spans.push((call.span.start, call.span.end));
-}
-
-fn owners_at(visitor: &ScopeVisitor<'_>, name: &str, start: u32) -> Vec<u32> {
-    let mut owners = Vec::new();
-    for span in visitor.provisional {
-        if span.name != name || start < span.start || start >= span.end {
-            continue;
-        }
-        for owner in &span.owners {
-            if !owners.contains(owner) {
-                owners.push(*owner);
-            }
-        }
-    }
-    owners
+    seq
 }
