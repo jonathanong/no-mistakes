@@ -545,6 +545,22 @@ changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths
 plus both sides of detected renames and copies.
 
+When a changed package manifest or lockfile has no baseline
+(`package-manifest-no-baseline` / `lockfile-no-baseline`), `testsPlan()` also
+returns `incomplete`: an array of `TestPlanIncompleteness` (`kind:
+"dependency-baseline-missing"`, `files` listing those root-relative inputs).
+The field is omitted when dependency baselines are present. Pass `base` (the
+pre-change revision) when changed files include dependency manifests or
+lockfiles. `fallbackTriggered` is not a substitute: a dynamic Vitest
+`setupFiles` fallback can still select only its owning project. In the saved
+pnpm example, changed `package.json`, `tooling/package.json`, and
+`pnpm-lock.yaml` bump `fixture-analyzer` with no source edits. Without `base`,
+`incomplete` lists those files and the plan keeps the `app` setup fallback.
+With `base` pointing at the pre-upgrade revision, the marker is absent and
+both `tooling/direct.test.ts` and `tooling/indirect.test.ts` are selected.
+Import `TestPlanIncompleteness` and `TestPlanIncompletenessKind` instead of
+indexing `TestPlan['incomplete']`.
+
 Ordinary `testsPlan()` configured `direct` groups select changed tests and
 tests one reverse import-family or same-directory `TestOf` edge away from a
 changed file. That 1-hop set is selected before `dependencies` and therefore

@@ -101,6 +101,18 @@ export interface TestsTargetsOptions {
   files: string[];
 }
 
+/**
+ * Why dependency coverage in a plan is unfinished.
+ * `fallbackTriggered` is not a substitute for this marker.
+ */
+export type TestPlanIncompletenessKind = "dependency-baseline-missing";
+
+export interface TestPlanIncompleteness {
+  kind: TestPlanIncompletenessKind;
+  /** Root-relative manifests or lockfiles that had no comparison baseline. */
+  files: string[];
+}
+
 export interface TestPlan {
   /** Complete deterministic changed-file inventory, relative to the request root. */
   changedFiles: string[];
@@ -109,6 +121,11 @@ export interface TestPlan {
   warnings: TestPlanWarning[];
   fallbackTriggered: boolean;
   fallbackReason?: string | null;
+  /**
+   * Present when dependency coverage is unfinished. A scoped fallback can
+   * still set `fallbackTriggered` without covering these files.
+   */
+  incomplete?: TestPlanIncompleteness[];
   executionTargets?: GroupedExecutionTarget[];
   comment?: string | null;
 }

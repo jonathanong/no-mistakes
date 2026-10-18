@@ -21,7 +21,7 @@ keep a database. Static literals produce edges; dynamic values are skipped.
 | Recreate an export grep found in one file | `unique-exports`, `dead-exports`, `symbols` |
 | Run every Vitest or Playwright suite | `tests plan`, `playwright related` |
 | Ship an App Router page with no test | `playwright check` |
-| Treat an empty plan as complete | inspect `warnings` and `fallback_triggered` |
+| Treat an empty plan as complete | inspect `warnings`, `incomplete`, and `fallback_triggered` |
 | Dynamic fetch URLs or test IDs | keep literals; `nextjs-static-fetch-url`, `playwright-literals` |
 | Miss callers behind aliases | `dependents` (omit `--tsconfig` in monorepos) |
 | Move a file and leave broken imports | `resolve-check` |

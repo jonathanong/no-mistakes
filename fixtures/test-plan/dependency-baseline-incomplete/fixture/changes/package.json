@@ -1,0 +1,7 @@
+{
+  "name": "dependency-baseline-workspace",
+  "private": true,
+  "dependencies": {
+    "fixture-analyzer": "^2.0.0"
+  }
+}

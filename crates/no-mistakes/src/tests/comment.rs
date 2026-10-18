@@ -42,6 +42,24 @@ pub fn render_markdown_plan(plan: &TestPlan) -> String {
         out.push('\n');
     }
 
+    if !plan.incomplete.is_empty() {
+        out.push_str(
+            "⚠️ **Incomplete dependency coverage**: `fallback_triggered` does not mean this plan is complete.\n",
+        );
+        for gap in &plan.incomplete {
+            let files = gap
+                .files
+                .iter()
+                .map(|file| format!("`{file}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            out.push_str(&format!("- **{}**: {files}\n", gap.kind));
+        }
+        out.push_str(
+            "Pass `--base <pre-change revision>` when changed files include dependency manifests or lockfiles.\n\n",
+        );
+    }
+
     out.push_str(&format!(
         "## Selected Tests (Total: {})\n\n",
         plan.selected_tests.len()

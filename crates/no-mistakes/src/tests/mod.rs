@@ -45,6 +45,11 @@ pub struct TestPlan {
     pub warnings: Vec<Warning>,
     pub fallback_triggered: bool,
     pub fallback_reason: Option<String>,
+    /// Dependency coverage this plan could not finish. `fallback_triggered` is
+    /// not a completeness guarantee: a scoped setup fallback can still be true
+    /// while manifest or lockfile baselines are missing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub incomplete: Vec<PlanIncompleteness>,
     /// Selected tests grouped by runner/config/project for CI command assembly.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub execution_targets: Vec<GroupedExecutionTarget>,
@@ -150,6 +155,15 @@ impl PartialOrd for ResourceCallSite {
         Some(self.cmp(other))
     }
 }
+
+/// One reason a plan's dependency coverage is not complete.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct PlanIncompleteness {
+    pub kind: String,
+    pub files: Vec<String>,
+}
+
+pub(crate) const DEPENDENCY_BASELINE_MISSING: &str = "dependency-baseline-missing";
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Warning {

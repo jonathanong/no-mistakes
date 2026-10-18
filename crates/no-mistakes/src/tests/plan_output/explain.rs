@@ -17,6 +17,16 @@ pub(super) fn render(plan: &TestPlan, output: &mut String) -> Result<()> {
     } else {
         writeln!(output, "Fallback: not triggered")?;
     }
+    if !plan.incomplete.is_empty() {
+        writeln!(output, "Incomplete dependency coverage:")?;
+        for gap in &plan.incomplete {
+            writeln!(output, "- {} ({})", gap.kind, gap.files.join(", "))?;
+        }
+        writeln!(
+            output,
+            "Pass --base <pre-change revision> before treating dependency coverage as complete."
+        )?;
+    }
 
     let mut changed_files = plan.changed_files.iter().collect::<Vec<_>>();
     changed_files.sort();

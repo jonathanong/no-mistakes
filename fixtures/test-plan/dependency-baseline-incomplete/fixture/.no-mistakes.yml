@@ -1,0 +1,9 @@
+tests:
+  vitest: {}
+testPlan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: dependencies
+rules: []

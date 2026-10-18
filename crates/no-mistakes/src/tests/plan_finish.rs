@@ -1,4 +1,4 @@
-use super::{GroupedExecutionTarget, TestPlan};
+use super::{GroupedExecutionTarget, PlanIncompleteness, TestPlan, DEPENDENCY_BASELINE_MISSING};
 use no_mistakes::codebase::test_discovery::TestExecutionTarget;
 use std::collections::BTreeMap;
 
@@ -19,10 +19,31 @@ impl TestPlan {
                 }
             }
         }
+        self.incomplete = dependency_baseline_incomplete(&self.warnings);
         self.execution_targets = grouped_execution_targets(&self.selected_tests, prefixes);
         if include_comment {
             self.comment = Some(super::comment::render_markdown_plan(self));
         }
+    }
+}
+
+fn dependency_baseline_incomplete(warnings: &[super::Warning]) -> Vec<PlanIncompleteness> {
+    let mut files = std::collections::BTreeSet::new();
+    for warning in warnings {
+        if matches!(
+            warning.r#type.as_str(),
+            "lockfile-no-baseline" | "package-manifest-no-baseline"
+        ) {
+            files.insert(warning.file.clone());
+        }
+    }
+    if files.is_empty() {
+        Vec::new()
+    } else {
+        vec![PlanIncompleteness {
+            kind: DEPENDENCY_BASELINE_MISSING.to_string(),
+            files: files.into_iter().collect(),
+        }]
     }
 }
 

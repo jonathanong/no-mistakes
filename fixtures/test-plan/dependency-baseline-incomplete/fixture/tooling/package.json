@@ -1,0 +1,7 @@
+{
+  "name": "dependency-baseline-tooling",
+  "private": true,
+  "dependencies": {
+    "fixture-analyzer": "^1.0.0"
+  }
+}

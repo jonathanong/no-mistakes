@@ -119,6 +119,44 @@ fn explain_renders_empty_fallback_and_resource_without_call_sites() {
     );
 }
 
+#[test]
+fn explain_and_markdown_render_missing_dependency_baselines() {
+    let plan = TestPlan {
+        changed_files: vec!["package.json".to_string(), "pnpm-lock.yaml".to_string()],
+        selected_tests: Vec::new(),
+        groups: Vec::new(),
+        warnings: vec![Warning {
+            r#type: "lockfile-no-baseline".to_string(),
+            message: "no baseline".to_string(),
+            file: "pnpm-lock.yaml".to_string(),
+            line: None,
+        }],
+        fallback_triggered: true,
+        fallback_reason: Some(
+            "Vitest setup dependencies could not be resolved statically; selected owning project tests"
+                .to_string(),
+        ),
+        incomplete: vec![crate::tests::PlanIncompleteness {
+            kind: crate::tests::DEPENDENCY_BASELINE_MISSING.to_string(),
+            files: vec!["package.json".to_string(), "pnpm-lock.yaml".to_string()],
+        }],
+        ..Default::default()
+    };
+
+    let explained = super::super::render(&plan, PlanFormat::Explain, "tests plan").unwrap();
+    assert!(explained.contains("Fallback: triggered"));
+    assert!(explained.contains(
+        "Incomplete dependency coverage:\n- dependency-baseline-missing (package.json, pnpm-lock.yaml)\nPass --base <pre-change revision>"
+    ));
+    assert!(explained.contains("- lockfile-no-baseline (pnpm-lock.yaml): no baseline"));
+
+    let markdown = super::super::render(&plan, PlanFormat::Markdown, "tests plan").unwrap();
+    assert!(markdown.contains("**Incomplete dependency coverage**"));
+    assert!(markdown.contains("**dependency-baseline-missing**: `package.json`, `pnpm-lock.yaml`"));
+    assert!(markdown.contains("`--base <pre-change revision>`"));
+    assert!(markdown.contains("**Fallback Triggered**"));
+}
+
 fn selected(
     test_file: &str,
     confidence: Confidence,

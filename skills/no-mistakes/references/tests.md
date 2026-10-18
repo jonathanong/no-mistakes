@@ -65,6 +65,20 @@ Key flags:
 - `--changed-file <FILE>` — explicit changed file path; repeatable.
 - `--changed-files <FILE>` — path to a file containing one changed path per line.
 - `--base <REF>` / `--head <REF>` — compute changed files from a git diff.
+  Also required as `--base <pre-change revision>` when changed files include
+  dependency manifests or lockfiles. Without it, the plan does not invent old
+  package versions. JSON then includes
+  `incomplete: [{ kind: "dependency-baseline-missing", files: [...] }]`
+  (`incomplete` on `testsPlan()`; import `TestPlanIncompleteness`).
+  `fallback_triggered: true` is not completeness. A dynamic Vitest
+  `setupFiles` fallback can still select only that project's tests.
+  Example: only `package.json`, `tooling/package.json`, and `pnpm-lock.yaml`
+  change, bumping `fixture-analyzer`. `app` has a dynamic setup, so the plan
+  selects `app/app.test.ts` and marks those three files incomplete. The same
+  command with `--base` at the committed pre-upgrade revision drops the marker
+  and also selects `tooling/direct.test.ts` (package → test) and
+  `tooling/indirect.test.ts` (package → `tooling/helper.ts` → test). Do not
+  infer a base, and do not expect the missing baseline to select the full suite.
 - `--from-git-diff <BASE...HEAD>` — single-argument sugar for `--base`/`--head`;
   desugars to the same `git diff --relative --name-status <base>...<head>` lookup
   (three-dot only — bare `<base>` and `<base>...` both default head to `HEAD`;

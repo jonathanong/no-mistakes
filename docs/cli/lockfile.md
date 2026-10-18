@@ -58,7 +58,11 @@ uses this diff logic to identify impacted packages and traces them to affected t
 via `EdgeKind::PackageDependency` edges (from `package.json` → module node).
 
 Without `--base`, providing a lockfile as `--changed-file` with `--global-config-fallback=true`
-triggers a full test suite run with a `lockfile-no-baseline` warning.
+triggers a full test suite run with a `lockfile-no-baseline` warning. The plan
+also reports `incomplete: [{ kind: "dependency-baseline-missing", files }]`.
+That marker is present even when global fallback is off, so a scoped
+`fallback_triggered` is not complete dependency coverage. Pass
+`--base <pre-change revision>` to compare the lockfile.
 
 ## Examples
 

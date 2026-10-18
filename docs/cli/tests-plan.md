@@ -80,6 +80,58 @@ Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`,
 `--include-comment`, `--include-glob`, `--format`, and `--json`.
 
+## Dependency manifests and lockfiles
+
+Pass `--base <pre-change revision>` when the changed files include a package
+manifest or lockfile (`package.json`, `pnpm-lock.yaml`, `package-lock.json`,
+`yarn.lock`, `bun.lock`, and the other supported dependency inputs). Without
+that baseline, the classifiers do not invent the previous versions. They keep
+the existing `package-manifest-no-baseline` and `lockfile-no-baseline`
+warnings and add a structured marker. `fallback_triggered: true` is not
+completeness: a scoped Vitest setup fallback can still select only its owning
+project.
+
+```json
+"incomplete": [
+  {
+    "kind": "dependency-baseline-missing",
+    "files": ["package.json", "pnpm-lock.yaml", "tooling/package.json"]
+  }
+]
+```
+
+`--format explain` and markdown output print the same marker and the
+`--base` requirement. The Node `testsPlan()` field is `incomplete`
+(`TestPlanIncompleteness`); the name is already camelCase.
+
+Example: a pnpm workspace changes only the root manifest, `tooling/package.json`,
+and `pnpm-lock.yaml`, bumping the fake package `fixture-analyzer`. No source
+file changes. The `app` Vitest project has a dynamic `setupFiles` value. A
+separate `tooling` project has `tooling/direct.test.ts` importing
+`fixture-analyzer` directly and `tooling/indirect.test.ts` importing it
+through `tooling/helper.ts`.
+
+```sh
+no-mistakes tests plan vitest \
+  --changed-file package.json \
+  --changed-file tooling/package.json \
+  --changed-file pnpm-lock.yaml \
+  --format json
+```
+
+That plan reports `incomplete` for those three files, keeps the setup
+fallback (`selected owning project tests`, here `app/app.test.ts`), and does
+not select the tooling importers. The same arguments with
+`--base <pre-change revision>` — the committed tree before the version bump —
+omit the marker and select both tooling tests. The direct reason is
+`fixture-analyzer` → `tooling/direct.test.ts`. The transitive reason is
+`fixture-analyzer` → `tooling/helper.ts` → `tooling/indirect.test.ts`. The
+setup fallback can remain; it does not replace the baseline comparison.
+
+Do not infer a base from a branch name. A missing baseline does not select
+the full suite. Full-suite selection stays an explicit
+`--global-config-fallback` opt-in.
+
 `--format explain` renders a deterministic, human-readable plan: the normalized
 changed-file inventory (including files that selected no tests), selected test
 confidence, edge kinds, edge provenance when available, fallback state, and
