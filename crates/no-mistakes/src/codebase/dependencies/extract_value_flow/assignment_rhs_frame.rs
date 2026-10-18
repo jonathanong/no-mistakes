@@ -73,25 +73,28 @@ impl ImportCollector {
         let (path, reads, root_read) = source;
         let version = root_read.and_then(|read| self.mutable_receiver_version(key, read));
         let root_identity = version.map(mutable_origins::RootVersion::identity);
-        if path.iter().any(Option::is_none) {
-            return false;
-        }
         let component = self
             .prior_member_mutations
             .assigned_destination_component(key);
-        let Some((Some(member), _)) = assigned else {
+        let Some((member, _)) = assigned else {
             return false;
         };
         let path = path
             .iter()
             .cloned()
-            .chain(std::iter::once(Some(member.clone())))
+            .chain(std::iter::once(member.clone()))
             .collect::<Vec<_>>();
         let reads = reads
             .iter()
             .copied()
             .chain(std::iter::once(Some((metadata.offset, metadata.context))))
             .collect::<Vec<_>>();
+        let exact = path.iter().all(Option::is_some);
+        // Wildcard summaries are only needed for callable provider bodies.
+        // Module stores retain their previous bounded exact-destination path.
+        if !exact && metadata.context.is_none() {
+            return false;
+        }
         let parent_identities = self.assignment_rhs_parent_identities(key, &path, &reads, version);
         let frame = self
             .assignment_rhs_frame
@@ -106,7 +109,8 @@ impl ImportCollector {
             path,
             reads,
         });
-        true
+        // Wildcards supply possible foreign receivers, never exact RHS proofs.
+        exact
     }
     pub(in super::super) fn finish_assignment_rhs(
         &mut self,
@@ -128,6 +132,7 @@ impl ImportCollector {
         }
         let stable_alias = self.assignment_rhs_stable_alias(&value);
         for destination in frame.destinations {
+            let complete = complete && destination.path.iter().all(Option::is_some);
             let capture = identity_metadata::FreshCapture {
                 origin: Some((frame.offset, frame.owner)),
                 reads: self

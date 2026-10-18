@@ -1,6 +1,8 @@
 use super::*;
 use mutation_metadata::MutationMetadata;
 use mutation_projection::MutationInfo;
+#[path = "mutable_foreign_arguments.rs"]
+mod arguments;
 
 type WriteKey = (
     (usize, String),
@@ -16,6 +18,8 @@ struct ForeignWrite {
 
 /// A callable can observe origins from bodies visited later in the same pass.
 /// Repeated writes share one demand; no writer retains a copy of root history.
+/// Declarations remain conservative summaries because escaped/aliased calls need
+/// not appear in the closed direct-call evidence used for exact module captures.
 #[derive(Default)]
 pub(in super::super::super) struct ForeignReceiverWrites {
     writes: FxHashMap<WriteKey, ForeignWrite>,
@@ -49,6 +53,9 @@ impl ImportCollector {
         // Module captures keep their saved object. A callable capture can see
         // foreign providers even when a nested closure owns the eventual write.
         if self.foreign_receiver_writes_finishing() {
+            return;
+        }
+        if arguments::forwarded_alias(self, key) {
             return;
         }
         #[cfg(feature = "test-instrumentation")]
@@ -97,20 +104,36 @@ impl ImportCollector {
         #[cfg(feature = "test-instrumentation")]
         count(1, pending.len());
         let mut providers = fx_map();
+        let empty_origins = ReceiverBindingOrigins::default();
+        let mut arguments = None;
         let mut aliases = None;
         for ((key, path, (owner, acquired), assigned, has_assignment), mut write) in pending {
             let index = providers
                 .entry((key.clone(), path.clone()))
                 .or_insert_with(|| {
+                    let mut members = self
+                        .prior_member_mutations
+                        .foreign_member_provider_references(&key, &path);
+                    if members.iter().any(|((receiver, _, _), _, _)| {
+                        self.value_parameter_indexes
+                            .get(&receiver.0 .0)
+                            .is_some_and(|names| names.contains_key(&receiver.0 .1))
+                    }) {
+                        arguments
+                            .get_or_insert_with(|| arguments::MemberArguments::new(self))
+                            .expand(&mut members);
+                    }
                     self.receiver_only_bindings
-                        .as_ref()
-                        .map_or_else(Default::default, |origins| {
-                            origins.foreign_provider_index(&key, &path)
-                        })
+                        .as_deref()
+                        .unwrap_or(&empty_origins)
+                        .foreign_provider_index(&key, &path, members)
                 });
-            // Same-owner snapshots belong to the acquisition, while timing and
-            // invalidation below still belong to the physical writing closure.
-            let references = index.references(acquired, write.metadata.foreign_before);
+            // A direct writer may acquire its own later provider on another call.
+            // A nested closure retains its enclosing owner's saved acquisition.
+            let references = index.references(
+                (owner != acquired).then_some(acquired),
+                write.metadata.foreign_before,
+            );
             // The declaration order cannot establish an exact replacement or
             // a fresh-object certificate. Preserve the writer, member and scope.
             write.metadata.fresh = false;

@@ -69,6 +69,7 @@ impl ImportCollector {
             let root_read = (acquired_at, self.current_function_id());
             let receiver = ((scope, base.to_string()), parts);
             if self.receiver_only_bindings.is_none() {
+                self.retain_foreign_receiver_write(&receiver.0, &receiver.1, root_read, info);
                 debug_assert!(self.deferred_mutable_writes.is_none());
                 let pending = mutation_projection::PendingQueue::new((
                     (receiver, reads, ()),

@@ -36,7 +36,12 @@ impl ImportCollector {
                 );
             }
             if self.defer_forward_receiver_write(
-                &key, &path, &reads, root_read.read(), info, propagated,
+                &key,
+                &path,
+                &reads,
+                root_read.read(),
+                info,
+                propagated,
             ) {
                 affected.insert_owned(key.0, key.1);
                 continue;
@@ -151,8 +156,10 @@ impl ImportCollector {
                     nested::write_receiver_references(value, &path, &reads, &mut references);
                 }
             }
-            if let (Some(read), Some(version)) = (root_read.read(), version) {
+            if let Some(read) = root_read.read() {
                 self.retain_foreign_receiver_write(&key, &path, read, info);
+            }
+            if let (Some(read), Some(version)) = (root_read.read(), version) {
                 if !self.defer_mutable_projection(
                     &key,
                     (&path, &reads, read),

@@ -148,8 +148,10 @@ impl ImportCollector {
                     nested::write_receiver_references(value, &path, &reads, &mut references);
                 }
             }
-            if let (Some(read), Some(version)) = (root_read.read(), version) {
+            if let Some(read) = root_read.read() {
                 self.retain_foreign_receiver_write(&key, &path, read, info);
+            }
+            if let (Some(read), Some(version)) = (root_read.read(), version) {
                 if !self.defer_mutable_projection(
                     &key,
                     (&path, &reads, read),
