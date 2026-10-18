@@ -1,0 +1,25 @@
+version: 2
+filesystem:
+  skipDirectories: [fixtures, test-cases, crates, skills, docs, .github]
+projects:
+  node-api:
+    type: library
+    root: packages/no-mistakes
+    include:
+      - packages/no-mistakes/**
+    queues:
+      enqueues: [packages/no-mistakes/**]
+      workers: [packages/no-mistakes/**]
+queues:
+  factories: [createQueue]
+tests:
+  vitest:
+    projects:
+      unit:
+        include: [packages/no-mistakes/**/*.test.js]
+        integration_suites:
+          unit: [aws]
+rules:
+  - rule: unique-exports
+    projects: [node-api]
+    include: [packages/no-mistakes/**]

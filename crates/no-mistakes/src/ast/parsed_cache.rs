@@ -52,6 +52,7 @@ pub(crate) struct ParsedProgramCache {
 pub(super) mod tests;
 
 mod intern;
+mod modes;
 mod parse;
 use parse::parse_program;
 
@@ -86,9 +87,21 @@ impl ParsedProgramCache {
 
     pub(crate) fn remove_path(&self, path: &Path) {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        self.entries
+        let Some((path, ())) = self
+            .interned_paths
             .borrow_mut()
-            .retain(|(cached, _), _| cached.as_ref() != path.as_path());
+            .remove_entry(path.as_path())
+        else {
+            return;
+        };
+        let mut entries = self.entries.borrow_mut();
+        for mode in [
+            ParseMode::Standard,
+            ParseMode::TypeScriptFallback,
+            ParseMode::LegacySymbols,
+        ] {
+            entries.remove(&(Arc::clone(&path), mode));
+        }
     }
 
     pub(crate) fn entry_count(&self) -> usize {
@@ -120,65 +133,6 @@ impl ParsedProgramCache {
         }
     }
 
-    /// Exposes OXC's recovered program, diagnostic, and fatal-panic status.
-    pub(crate) fn with_recovered_program_status_observed<T>(
-        &self,
-        path: &Path,
-        source: Arc<str>,
-        on_parse: impl FnOnce(),
-        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
-    ) -> Result<T, String> {
-        let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
-        Ok(cached.with_dependent(|owner, parsed| {
-            analyze(
-                &parsed.program,
-                owner.source.as_ref(),
-                parsed.diagnostic_error.clone(),
-                parsed.panic_error.is_some(),
-            )
-        }))
-    }
-
-    pub(crate) fn with_recovered_typescript_program_observed<T>(
-        &self,
-        path: &Path,
-        source: Arc<str>,
-        on_parse: impl FnOnce(),
-        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
-    ) -> Result<T, String> {
-        let cached = self.cached_program(path, source, ParseMode::TypeScriptFallback, on_parse)?;
-        Ok(cached.with_dependent(|owner, parsed| {
-            analyze(
-                &parsed.program,
-                owner.source.as_ref(),
-                parsed.diagnostic_error.clone(),
-            )
-        }))
-    }
-
-    pub(crate) fn with_legacy_symbols_program_observed<T>(
-        &self,
-        path: &Path,
-        source: Arc<str>,
-        on_parse: impl FnOnce(),
-        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
-    ) -> Result<T, String> {
-        let mode = if legacy_symbols_share_standard_parse(path) {
-            ParseMode::Standard
-        } else {
-            ParseMode::LegacySymbols
-        };
-        let cached = self.cached_program(path, source, mode, on_parse)?;
-        cached.with_dependent(|owner, parsed| match &parsed.panic_error {
-            Some(error) => Err(error.clone()),
-            None => Ok(analyze(
-                &parsed.program,
-                owner.source.as_ref(),
-                parsed.diagnostic_error.clone(),
-            )),
-        })
-    }
-
     fn cached_program(
         &self,
         path: &Path,
@@ -208,3 +162,6 @@ pub(crate) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
         && !source_type.is_typescript_definition()
         && source_type.is_unambiguous()
 }
+
+#[cfg(test)]
+mod eviction_tests;
