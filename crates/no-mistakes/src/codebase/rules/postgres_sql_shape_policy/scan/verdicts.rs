@@ -15,12 +15,14 @@ pub(super) fn record(
 ) -> anyhow::Result<()> {
     let checks = enabled_shapes(opts);
     record_sql_policy_verdicts(
-        facts,
+        crate::codebase::postgres::SqlPolicyVerdictContext {
+            facts,
+            embedded,
+            statements: facts.postgres_statements(&embedded.path, Some(&opts.embedded))?,
+        },
         RULE_ID,
         &relative_slash_path(root, &embedded.path),
         &opts.embedded,
-        embedded,
-        facts.postgres_statements(&embedded.path, Some(&opts.embedded))?,
         &checks,
         opts.advise_unanalyzable,
         |check, _, statement| judge(check, statement, opts),
@@ -42,7 +44,8 @@ fn enabled_shapes(opts: &CompiledOptions) -> Vec<String> {
         (shapes.banned_function_call, "banned-function-call"),
     ]
     .into_iter()
-    .filter_map(|(enabled, name)| enabled.then(|| name.to_string()))
+    .filter(|(enabled, _)| *enabled)
+    .map(|(_, name)| name.to_string())
     .collect()
 }
 

@@ -193,4 +193,3 @@ not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.
 Nested fragments are spliced SQL, so an opaque fragment is never accepted as a bind.
 `unanalyzableSql: ignore` skips those statements instead, as it does for the sibling
 rules; every statement that can be analyzed is still judged.
-

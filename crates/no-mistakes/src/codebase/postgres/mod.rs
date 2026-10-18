@@ -138,7 +138,7 @@ pub use types::{
 pub(crate) use verdict::sql_evidence_for_call;
 pub use verdict::{
     combine_sql_verdicts, record_sql_policy_verdicts, SqlBranchJudgment, SqlEvidenceKind,
-    SqlObligationVerdict, SqlRuleApplication, SqlVerdictStatus,
+    SqlObligationVerdict, SqlPolicyVerdictContext, SqlRuleApplication, SqlVerdictStatus,
 };
 
 #[cfg(test)]

@@ -22,12 +22,14 @@ pub(super) fn record(
         .collect::<Vec<_>>();
     for file in embedded {
         record_sql_policy_verdicts(
-            facts,
+            crate::codebase::postgres::SqlPolicyVerdictContext {
+                facts,
+                embedded: file,
+                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
+            },
             RULE_ID,
             &relative_slash_path(root, &file.path),
             &opts.embedded,
-            file,
-            facts.postgres_statements(&file.path, Some(&opts.embedded))?,
             &checks,
             opts.advise_unanalyzable,
             |check, _, statement| judge(check, statement, opts, catalog),

@@ -189,4 +189,3 @@ fn profiles_reject_invalid_shared_option_shapes() {
         .expect_err("a scalar executorNames value must be rejected");
     assert!(error.to_string().contains("executorNames"));
 }
-

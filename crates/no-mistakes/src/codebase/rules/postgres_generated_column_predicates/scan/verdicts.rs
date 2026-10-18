@@ -23,16 +23,19 @@ pub(super) fn record(
         (opts.order_clause, "order-by"),
     ]
     .into_iter()
-    .filter_map(|(enabled, name)| enabled.then(|| name.to_string()))
+    .filter(|(enabled, _)| *enabled)
+    .map(|(_, name)| name.to_string())
     .collect::<Vec<_>>();
     for file in embedded.iter().filter(|file| queries.contains(&file.path)) {
         record_sql_policy_verdicts(
-            facts,
+            crate::codebase::postgres::SqlPolicyVerdictContext {
+                facts,
+                embedded: file,
+                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
+            },
             RULE_ID,
             &relative_slash_path(root, &file.path),
             &opts.embedded,
-            file,
-            facts.postgres_statements(&file.path, Some(&opts.embedded))?,
             &checks,
             opts.advise_unanalyzable,
             |check, _, statement| judge(check, statement, tracked, columns),

@@ -107,4 +107,3 @@ temporary namesake becomes visible to later reads, including after `RESET search
 Complete evidence that earlier schemas lack the name instead makes the drop reach
 the temporary relation. With incomplete evidence, the rule does not use catalog
 unique keys from a possibly temporary source to bound a joined table.
-

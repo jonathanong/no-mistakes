@@ -101,4 +101,3 @@ Omitting both options is a configuration error. Set `executorNames: []` without
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
 their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
-

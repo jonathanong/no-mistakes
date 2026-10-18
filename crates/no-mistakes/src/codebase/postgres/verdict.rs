@@ -2,7 +2,7 @@
 use super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlOptions};
 use serde::Serialize;
 mod record;
-pub use record::{record_sql_policy_verdicts, SqlBranchJudgment};
+pub use record::{record_sql_policy_verdicts, SqlBranchJudgment, SqlPolicyVerdictContext};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "kebab-case")]

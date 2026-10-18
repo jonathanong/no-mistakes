@@ -67,14 +67,16 @@ pub(super) fn scan(
             if let Some(profile) = profile.filter(|_| facts.wants_sql_verdicts()) {
                 let embedded = facts.embedded_sql(path, profile)?;
                 verdicts::record(
+                    crate::codebase::postgres::SqlPolicyVerdictContext {
+                        facts,
+                        embedded,
+                        statements,
+                    },
                     &rel,
                     profile,
-                    embedded,
-                    statements,
                     &lookup,
                     !opts.trigger_maintained_columns.is_empty(),
                     opts.advise_unanalyzable,
-                    facts,
                 );
             }
             let source = crate::codebase::rules::read_source(sources, path);

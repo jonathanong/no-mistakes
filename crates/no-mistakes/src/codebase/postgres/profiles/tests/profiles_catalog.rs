@@ -147,4 +147,3 @@ fn rule_config(rule: &str) -> NoMistakesConfig {
         ..Default::default()
     }
 }
-

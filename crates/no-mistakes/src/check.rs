@@ -59,14 +59,24 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     );
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
-    let results = check_runner::run_all_with_sql_verdicts(
-        root,
-        args.config,
-        args.tsconfig,
-        args.include_suppressed,
-        args.include_runner_config_deadlines,
-        args.include_sql_verdicts,
-    );
+    let results = if args.include_sql_verdicts {
+        check_runner::run_all_with_sql_verdicts(
+            root,
+            args.config,
+            args.tsconfig,
+            args.include_suppressed,
+            args.include_runner_config_deadlines,
+            true,
+        )
+    } else {
+        check_runner::run_all_with_evidence(
+            root,
+            args.config,
+            args.tsconfig,
+            args.include_suppressed,
+            args.include_runner_config_deadlines,
+        )
+    };
     let results = results?;
     record_missing_check_timings(&results);
     no_mistakes::invocation::commit_timeout()?;

@@ -45,7 +45,7 @@ pub(super) fn scan(
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if prepared.wants_sql_verdicts() {
-        verdicts::record(root, opts, &embedded, catalog.as_deref(), prepared)?;
+        verdicts::record(root, opts, &embedded, catalog, prepared)?;
     }
     if let Some(catalog) = &catalog {
         if opts.partition_keys {

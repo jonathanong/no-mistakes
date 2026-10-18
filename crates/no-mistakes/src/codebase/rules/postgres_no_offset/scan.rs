@@ -33,12 +33,14 @@ pub(super) fn scan(
             .transpose()?;
         if let Some(embedded) = embedded.filter(|_| facts.wants_sql_verdicts()) {
             crate::codebase::postgres::record_sql_policy_verdicts(
-                facts,
+                crate::codebase::postgres::SqlPolicyVerdictContext {
+                    facts,
+                    embedded,
+                    statements,
+                },
                 RULE_ID,
                 &rel,
                 &opts.embedded,
-                embedded,
-                statements,
                 &["offset".to_string()],
                 opts.advise_unanalyzable,
                 |_, _, statement| {

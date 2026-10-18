@@ -55,12 +55,14 @@ pub(super) fn scan(
                 .collect::<Vec<_>>();
             checks.sort();
             crate::codebase::postgres::record_sql_policy_verdicts(
-                facts,
+                crate::codebase::postgres::SqlPolicyVerdictContext {
+                    facts,
+                    embedded,
+                    statements,
+                },
                 RULE_ID,
                 &rel,
                 &opts.embedded,
-                embedded,
-                statements,
                 &checks,
                 opts.advise_unanalyzable,
                 |check, _, statement| {

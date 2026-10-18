@@ -36,4 +36,3 @@ export type {
   SignatureImpactTest,
   SignatureImpactWarning,
 } from "./signature-impact-types";
-

@@ -118,4 +118,3 @@ catalog. Instead of the key-prefix message, the rule reports a distinct
 findings: the safe directive comment, `no-mistakes-disable-next-line`, or writing
 the relation name literally. The rule does not resolve `const` tuples or string
 unions into their members.
-

@@ -53,4 +53,3 @@ the qualified select expression `input.order_id` when exactly one relation in `F
 it: the only relation, or the only one that declares the name in its alias column list
 (`unnest(...) AS input(order_id)`). A name that two relations declare, or that a plain table
 might supply, stays unmatched and is reported.
-

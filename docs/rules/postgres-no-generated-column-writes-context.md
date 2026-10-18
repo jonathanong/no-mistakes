@@ -85,4 +85,3 @@ write(`UPDATE items SET note = $1`);
 Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
 one-off exception, or `no-mistakes-disable-file` when a whole file is an
 intentional migration of generated values.
-

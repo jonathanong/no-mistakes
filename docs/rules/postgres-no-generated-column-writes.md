@@ -33,7 +33,7 @@ rules:
 ```
 
 The configured `importSpecifier` limits executor calls to proven receivers from
-that module. There are no direct
+that module; `executorNames` selects calls on those receivers. There are no direct
 `schema` or `embedded` options.
 
 `unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.

@@ -45,19 +45,29 @@ enum Branch<'a> {
     Parsed(Cow<'a, EmbeddedSqlCall>, &'a SqlStatementFileFacts),
 }
 
+/// Prepared inputs shared by the owning rule's per-subcheck judgments.
+pub struct SqlPolicyVerdictContext<'a> {
+    pub facts: &'a CheckFactMap,
+    pub embedded: &'a EmbeddedSqlFileFacts,
+    pub statements: &'a [SqlStatementFileFacts],
+}
+
 /// Attach per-obligation proof to the same prepared call/statement projection
 /// the rule already consumes. `checks` contains only enabled subchecks.
 pub fn record_sql_policy_verdicts(
-    facts: &CheckFactMap,
+    context: SqlPolicyVerdictContext<'_>,
     rule: &str,
     file: &str,
     profile: &EmbeddedSqlOptions,
-    embedded: &EmbeddedSqlFileFacts,
-    statements: &[SqlStatementFileFacts],
     checks: &[String],
     advisory: bool,
     judge: impl Fn(&str, &EmbeddedSqlCall, &SqlStatementFileFacts) -> SqlBranchJudgment,
 ) {
+    let SqlPolicyVerdictContext {
+        facts,
+        embedded,
+        statements,
+    } = context;
     if !facts.wants_sql_verdicts() || checks.is_empty() {
         return;
     }

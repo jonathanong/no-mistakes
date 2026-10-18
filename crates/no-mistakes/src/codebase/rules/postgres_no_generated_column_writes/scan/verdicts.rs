@@ -1,32 +1,27 @@
 use super::history::Catalogs;
-use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::dml::writes::positional_insert_hits;
 use crate::codebase::postgres::{
-    record_sql_policy_verdicts, EmbeddedSqlFileFacts, EmbeddedSqlOptions, SqlBranchJudgment,
+    record_sql_policy_verdicts, EmbeddedSqlOptions, SqlBranchJudgment, SqlPolicyVerdictContext,
     SqlStatementFileFacts, SqlWriteColumns,
 };
 
 pub(super) fn record<'a>(
+    context: SqlPolicyVerdictContext<'_>,
     file: &str,
     profile: &EmbeddedSqlOptions,
-    embedded: &EmbeddedSqlFileFacts,
-    statements: &[SqlStatementFileFacts],
     lookup: &dyn Fn(usize) -> &'a Catalogs,
     include_trigger: bool,
     advisory: bool,
-    facts: &CheckFactMap,
 ) {
     let mut checks = vec!["generated-write".to_string()];
     if include_trigger {
         checks.push("trigger-maintained-write".to_string());
     }
     record_sql_policy_verdicts(
-        facts,
+        context,
         super::super::RULE_ID,
         file,
         profile,
-        embedded,
-        statements,
         &checks,
         advisory,
         |check, _, statement| judge(check, statement, lookup),

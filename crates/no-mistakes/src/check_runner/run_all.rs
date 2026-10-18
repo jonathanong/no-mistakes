@@ -9,7 +9,6 @@ use std::path::PathBuf;
 mod playwright;
 mod setup;
 
-#[cfg(any(test, feature = "test-instrumentation"))]
 pub(crate) fn run_all_with_evidence(
     root: PathBuf,
     config_path: Option<PathBuf>,
