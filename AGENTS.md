@@ -23,11 +23,11 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Fully parallel, deterministic output — independent file analysis and domain
   checks should use rayon/concurrent data structures, then sort/merge before
   rendering results.
-- No hardcoded domain conventions — route roots, HTTP prefixes, queue factories,
-  workers, and similar project-specific locations must come from configuration.
-- Full-suite, repository-wide, and global fallback behavior must be explicit
-  opt-in. Do not add default-on global behavior or infer project conventions
-  when a scoped configuration knob can make the behavior intentional.
+- Narrow by configuration: analyze only configured locations (project roots,
+  `include`) and targets (executor imports, factories, tags), not every file,
+  call, or string that looks like one. Declare a scope once and share it. No
+  hardcoded conventions; repo-wide or full-suite fallback is explicit opt-in.
+  See [narrowing](docs/why.md#narrowing).
 - Change the code, not the analyzer: rules ban hard-to-parse code (indirection,
   dynamism, runtime mutation) and name a static rewrite. Rules judge only what
   they can soundly judge; see [why](docs/why.md).
@@ -35,50 +35,23 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Allow custom error messages for agents
 - Automatically fix when possible
 - If a rule is file-specific, make it an eslint/oxlint rule
-- Aim for 100% test coverage; enforce the repository's configured coverage floors
-- Test fixture-based — can't be perfect, but add more tests to improve coverage
-- Heuristics — can't be perfect, but we'll try our best
 
 ## Prepared analysis ownership
 
-- A public CLI, N-API entrypoint, or integration runner creates exactly one
-  request-scoped analysis session. It owns the visible-file inventory,
-  `SourceStore`, requested TS facts, and canonical relationship data for that
-  request. Lower layers borrow those prepared inputs; they do not create a
-  competing session, inventory, store, fact pass, or equivalent graph.
-- Semantically distinct resolver/catalog projections may coexist inside that
-  ownership boundary when one request needs them (for example, ordinary
-  codebase resolution plus broader test-runner project resolution). They must
-  share the request inventory, sources, and union fact pass, and each output
-  field must use the projection whose scope defines its public semantics.
-- Declare the complete fact and relationship demand at the boundary before
-  collection. Domain checks and graph edge producers consume the prepared
-  `TsFactLookup`/fact map, including failure entries, instead of collecting
-  domain facts or parsing a second time.
-- The session is also the ownership boundary for source text. Every source
-  consumer reads through its session-provided `SourceStore`, so a successful
-  read and an I/O failure both have one request-wide identity and accounting
-  path. A helper that accepts a path but not prepared sources is a design smell
-  for any TS/JS source consumer.
-- Relationship analyzers emit typed relationships once into the canonical
-  dependency graph (or its prepared symbol/reverse projection). Commands,
-  checks, and reports project/filter those relationships; they must not each
-  rebuild an equivalent reverse index or a private graph shape.
-- Treat the resolver catalog, candidate-file universe, configuration fallback,
-  and relationship filters as part of a prepared analysis's semantics, not just
-  implementation details. Reuse a prepared graph or reverse projection only
-  when those inputs are equivalent for the fields being produced; a broader
-  runner/project catalog must not answer an ordinary codebase query.
-- Additive CLI flags must not change pre-existing report fields. For example,
-  requesting test impact may add `testImpact`, but it must not change ordinary
-  `directImporters` or `dependentsCount`. When an additive analysis uses broader
-  resolver scope, add a fixture-backed parity test that compares the baseline
-  fields with the flag both off and on.
-- Keep bindings declarative per layer: extract syntactic imports, exports, and
-  domain occurrences into facts; resolve paths and ownership in the prepared
-  resolver/catalog layer; then project graph/query relationships. Do not blend
-  file reads, parsing, resolution, and output-specific traversal in a command
-  handler just because it is convenient locally.
+One request-scoped session per CLI/N-API/runner call owns the file inventory,
+`SourceStore`, declared facts, resolver projections, and canonical graph. Lower
+layers borrow them and never re-read, re-parse, re-resolve, or build a private
+graph. Details:
+[crates/AGENTS.md](crates/AGENTS.md#prepared-analysis-source-session-ownership-and-relationship-projection).
+
+- Distinct resolver/catalog projections (e.g. codebase vs test-runner
+  resolution) may coexist but share the inventory, sources, and fact pass. Each
+  output field uses the projection that defines its semantics; catalog, file
+  universe, config fallback, and filters are part of that semantics, so a
+  broader runner/project catalog never answers an ordinary codebase query.
+- Additive CLI flags must not change existing report fields (`testImpact` must
+  not change `directImporters`). When one widens resolver scope, add a fixture
+  parity test with the flag off and on.
 
 ## Context Management
 
@@ -87,8 +60,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 
 ## Development
 
-- Use latest stable Rust everywhere; run `rustup update stable` before validation.
-
+- Run `rustup update stable` before validation (`rust-toolchain.toml` pins stable).
 - When finding an error, always create a regression test
 - Continuously add test fixtures for cases you find. Which tree (`test-cases/` or `fixtures/`) a suite loads is in [Contributing](README.md#contributing); add to the tree its loader reads.
 - Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to that fixture tree and reference them via the per-crate / per-package fixture helper.
@@ -106,23 +78,14 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   branches.
 - When rejecting an automated review suggestion, add the rationale to the PR's
   Shepherd Journal before resolving the thread.
-- Rule suppression must work consistently for every `no-mistakes` rule. Use `no-mistakes` suppression directives, never `guardrails`, and support top-of-file opt-outs (`no-mistakes-disable-file`) plus line-specific opt-outs (`no-mistakes-disable-line` and `no-mistakes-disable-next-line`) where findings have line numbers.
-- All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
-- After `cargo build`, `cargo test`, or `cargo bench` in a worktree, delete
-  that worktree's workspace-root `target/` with `rm -rf <workspace-root>/target`
-  (Cargo writes artifacts at the workspace root even from `crates/no-mistakes`).
-  Do not use `cargo clean` unless you have confirmed it will not follow
-  `CARGO_TARGET_DIR` / `target-dir` into the main checkout or a shared cache.
-  If a local Criterion `--save-baseline` / `--baseline` comparison is in
-  progress, wait until that comparison finishes — the first run stores
-  measurements under `target/`. Do not keep build artifacts in throwaway
-  worktrees afterward. Never delete the main workspace `target/` unless this
-  worktree is the main workspace.
-- Local Criterion is the source of truth only with matching machine, toolchain,
-  build flags, mode, threads, and fixtures. CI uses `ubuntu-24.04-arm`; CodSpeed
-  comparisons require that runner and the expected base. x86_64/fallback bases
-  are noise and must not change code. Meet the regression gates and measurement
-  rules in [core performance guidance](crates/no-mistakes/AGENTS.md).
+- Every `no-mistakes` rule supports `no-mistakes-disable-file` (never
+  `guardrails`), plus
+  `-disable-line` / `-disable-next-line` where findings have lines.
+- After cargo builds in a throwaway worktree, `rm -rf <workspace-root>/target`
+  (not `cargo clean`, which may follow `CARGO_TARGET_DIR`), after any Criterion
+  baseline comparison finishes. Never delete the main workspace `target/`.
+- Performance measurement rules and gates:
+  [core performance guidance](crates/no-mistakes/AGENTS.md).
 
 ### Public surface checklist
 
@@ -184,10 +147,6 @@ in that PR.
 
 ## Coverage
 
-- Coverage gates must enforce 98% line, function, and region coverage by default.
-  Change `RUST_COVERAGE_FAIL_UNDER_LINES`,
-  `RUST_COVERAGE_FAIL_UNDER_FUNCTIONS`, and `RUST_COVERAGE_FAIL_UNDER_REGIONS`
-  in `.github/workflows/ci.yml`, and keep Codecov rust `target` values in
-  `codecov.yml` in sync.
-- **Never** use `cargo llvm-cov --ignore-filename-regex` to suppress uncovered source files. The only files exempt from coverage are test files (`tests/`, sibling `tests.rs`) and test fixtures (`fixtures/`), which `cargo llvm-cov` already excludes by default.
-- If a file cannot be brought to the configured gate, refactor it (extract logic to a lib, thin the entry point) — do not add an exception.
+- CI enforces the coverage floors (`RUST_COVERAGE_FAIL_UNDER_*` in `ci.yml`).
+- **Never** use `cargo llvm-cov --ignore-filename-regex`. If a file cannot meet
+  the gate, refactor it (extract logic, thin the entry point); no exceptions.
