@@ -1,0 +1,9 @@
+# Direct calls named by postgres-no-executor-adapter. Each OFFSET must be a judged
+# offset, not unanalyzable and not absent. `run(read, account)` is not a named form.
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [openTransaction]
+      executorTypeNames: [TxExecutor]

@@ -120,8 +120,8 @@ options still needs `importSpecifier` or `executorNames` (for example
 `executorNames: []`) to avoid the missing-selection configuration error.
 
 Every PostgreSQL rule that scans executor calls and the ESLint runtime rules
-`postgres-no-manual-transaction` and `postgres-no-unbounded-query-fanout` accept
-both options.
+`postgres-no-executor-adapter`, `postgres-no-manual-transaction`, and
+`postgres-no-unbounded-query-fanout` accept both options.
 
 ### Reporting unmatched names
 
