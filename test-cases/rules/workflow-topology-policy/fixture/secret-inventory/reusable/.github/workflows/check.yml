@@ -1,0 +1,6 @@
+on: push
+jobs:
+  call:
+    uses: ./.github/workflows/reusable.yml
+    secrets:
+      ALIAS: '${{ secrets.REPO_SOURCE }}'

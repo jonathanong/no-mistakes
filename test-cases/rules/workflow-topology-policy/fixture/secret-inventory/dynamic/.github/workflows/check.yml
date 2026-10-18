@@ -1,0 +1,16 @@
+on: push
+jobs:
+  selectors:
+    runs-on: ubuntu-latest
+    env:
+      selected: '${{ secrets[inputs.secret] }}'
+      everything: '${{ toJSON(secrets) }}'
+    steps:
+      - run: echo ready
+  dynamic_environment:
+    runs-on: ubuntu-latest
+    environment: '${{ inputs.environment }}'
+    env:
+      selected: '${{ secrets.KNOWN }}'
+    steps:
+      - run: echo ready

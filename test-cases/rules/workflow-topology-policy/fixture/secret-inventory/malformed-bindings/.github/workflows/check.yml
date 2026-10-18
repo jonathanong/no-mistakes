@@ -1,0 +1,19 @@
+on: push
+jobs:
+  scalar:
+    uses: ./.github/workflows/reusable.yml
+    secrets: not-inherit
+  sequence:
+    uses: ./.github/workflows/reusable.yml
+    secrets: [TOKEN]
+  nested:
+    uses: ./.github/workflows/reusable.yml
+    secrets:
+      TOKEN: {invalid: value}
+  nonstring_key:
+    uses: ./.github/workflows/reusable.yml
+    secrets: {1: value}
+  nested_sequence:
+    uses: ./.github/workflows/reusable.yml
+    secrets:
+      TOKEN: [value]

@@ -123,6 +123,7 @@ groups, limits, diffs, and deleted-file behavior.
   facts, partial diagnostics, and dependency completeness.
 - [impact-recipes.md](references/impact-recipes.md): selector, API shape,
   package-entrypoint, workflow, test-deletion, and queue recipes.
+- [workflow-secret-inventory.md](references/workflow-secret-inventory.md): configure and interpret opt-in workflow secret-name checks.
 - [monorepo-resolution.md](references/monorepo-resolution.md): workspace
   aliases and resolver ownership.
 - [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported

@@ -1,0 +1,5 @@
+name: yaml source
+jobs:
+  check:
+    steps:
+      - run: echo ok

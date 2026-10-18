@@ -44,5 +44,7 @@ the legacy fields do not change shared frontend-app resolution.
 - [Test plan](test-plan.md)
 - [Filesystem](filesystem.md)
 - [CI workflow analysis](ci.md)
+- [Workflow secret inventory](workflow-topology-policy.md)
+- [Workflow topology concurrency](workflow-topology-policy-concurrency.md)
 - [Changed-file checks](checks.md)
 - [Infrastructure (Terraform/OpenTofu)](infra.md)

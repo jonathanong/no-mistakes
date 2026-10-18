@@ -1,0 +1,13 @@
+on: push
+env:
+  shared: "${{ secrets.ROOT_USED }}"
+jobs:
+  before:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ready
+  after:
+    needs: before
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo done

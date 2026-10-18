@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      secretInventory:
+        repository:
+          - USED
+          - UNUSED_REPO
+        environments:
+          Stage:
+            - UNUSED_ENV
+        reportUnused: true

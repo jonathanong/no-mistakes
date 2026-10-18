@@ -1,0 +1,3 @@
+name: escaped selector
+env:
+  value: "${{ secrets['FOO\nBAR'] }}"

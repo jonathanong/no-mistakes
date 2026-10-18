@@ -1,0 +1,8 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./actions/example
+        with:
+          token: '${{ secrets.DIRECT }}'

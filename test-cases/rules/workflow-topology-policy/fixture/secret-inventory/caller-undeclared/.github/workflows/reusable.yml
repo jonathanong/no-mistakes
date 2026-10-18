@@ -1,0 +1,9 @@
+on:
+  workflow_call:
+    secrets:
+      ALIAS: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ secrets.ALIAS }}'

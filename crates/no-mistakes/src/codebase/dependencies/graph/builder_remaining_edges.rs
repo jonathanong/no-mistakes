@@ -1,3 +1,5 @@
+include!("builder_workflow_topology.rs");
+
 fn with_observer_and_timing<T>(
     observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
     kind: crate::diagnostics::TimingKind,
@@ -51,7 +53,14 @@ fn collect_remaining_edges(
         .map(|options| &options.ci)
         .unwrap_or(&default_ci);
     let parsed_workflows = (plan.ci || plan.workflow_topology).then(|| {
-        parsed_workflows_for_graph(root, graph_files.all(), ci, edge_inputs.workflow_documents)
+        parsed_workflows_for_graph(
+            root,
+            graph_files.all(),
+            ci,
+            edge_inputs
+                .workflow_documents
+                .map(|prepared| prepared.documents()),
+        )
     });
 
     crate::invocation::check_timeout()?;
@@ -81,12 +90,8 @@ fn collect_remaining_edges(
             let parsed = parsed_workflows
                 .as_ref()
                 .expect("workflow topology graph plan prepares parsed workflows");
-            let topology = crate::codebase::workflow_topology::load_workflow_topology_from_parsed(
-                root,
-                ci,
-                parsed,
-                &[],
-            );
+            let topology =
+                workflow_topology_for_graph(root, ci, parsed, edge_inputs.workflow_documents);
             merge_edges(
                 forward,
                 reverse,

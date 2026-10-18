@@ -57,7 +57,29 @@ pub(super) fn spawn<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'a>)
         });
     }
     if rule_enabled(config, VITEST_CI_PATH_COVERAGE) {
-        scope.spawn(move |_| { let result = super::trace_rule(sources, VITEST_CI_PATH_COVERAGE, || vitest_ci_path_coverage::check_with_files_from_snapshot_catalog_sources_and_workflows(root, config, candidates.candidates(VITEST_CI_PATH_COVERAGE), snapshot, vitest_catalog, sources, workflow_documents)); acc.lock().expect("mutex poisoned").push((VITEST_CI_PATH_COVERAGE, result)); });
+        scope.spawn(move |_| { let result = super::trace_rule(sources, VITEST_CI_PATH_COVERAGE, || vitest_ci_path_coverage::check_with_files_from_snapshot_catalog_sources_and_workflows(root, config, candidates.candidates(VITEST_CI_PATH_COVERAGE), snapshot, vitest_catalog, sources, workflow_documents.map(|inputs| inputs.workflow_documents.as_ref()))); acc.lock().expect("mutex poisoned").push((VITEST_CI_PATH_COVERAGE, result)); });
+    }
+    if rule_enabled(config, WORKFLOW_TOPOLOGY_POLICY) {
+        scope.spawn(move |_| {
+            let result = super::trace_rule(sources, WORKFLOW_TOPOLOGY_POLICY, || {
+                let inputs = workflow_documents.ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "prepared workflow documents are required for {WORKFLOW_TOPOLOGY_POLICY}"
+                    )
+                })?;
+                workflow_topology_policy::check_prepared(
+                    root,
+                    config,
+                    candidates.candidates(WORKFLOW_TOPOLOGY_POLICY),
+                    sources,
+                    inputs,
+                    config_path,
+                )
+            });
+            acc.lock()
+                .expect("mutex poisoned")
+                .push((WORKFLOW_TOPOLOGY_POLICY, result));
+        });
     }
     if rule_enabled(config, TSCONFIG_GATE_COVERAGE) {
         scope.spawn(move |_| {

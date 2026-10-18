@@ -106,17 +106,16 @@ impl ParsedWorkflowSet {
             .map(|absolute| {
                 let path = relative_slash(root, &absolute);
                 let value = sources
-                    .read_path(&absolute)
+                    .parse_yaml_path(&absolute)
                     .map_err(|error| WorkflowDocumentError {
-                        kind: WorkflowDocumentErrorKind::Read,
+                        kind: if error.is_io() {
+                            WorkflowDocumentErrorKind::Read
+                        } else {
+                            WorkflowDocumentErrorKind::Parse
+                        },
                         message: error.to_string(),
                     })
-                    .and_then(|source| {
-                        serde_yaml::from_str(&source).map_err(|error| WorkflowDocumentError {
-                            kind: WorkflowDocumentErrorKind::Parse,
-                            message: error.to_string(),
-                        })
-                    });
+                    .map(|value| value.as_ref().clone());
                 ParsedWorkflowDocument { path, value }
             })
             .collect::<Vec<_>>();

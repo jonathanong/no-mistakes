@@ -10,8 +10,9 @@ pub(super) struct PreparedInputs<'a> {
     pub(super) codebase_config: &'a no_mistakes::codebase::config::Config,
     pub(super) tsconfig: &'a TsConfig,
     pub(super) visible_paths: &'a VisiblePathSnapshot,
-    pub(super) workflow_documents:
-        Option<&'a std::sync::Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
+    pub(super) workflow_documents: Option<
+        &'a std::sync::Arc<no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
+    >,
 }
 
 pub(super) fn prepare(
@@ -36,7 +37,7 @@ pub(super) fn prepare(
         })
         .transpose()?;
     if let Some(prepared) = prepared_graph.as_mut() {
-        prepared.set_workflow_documents(inputs.workflow_documents.cloned());
+        prepared.set_workflow_inputs(inputs.workflow_documents.cloned());
     }
     if let Some(graph_playwright) = prepared_graph
         .as_ref()

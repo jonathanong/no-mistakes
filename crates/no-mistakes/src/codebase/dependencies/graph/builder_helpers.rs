@@ -35,16 +35,11 @@ struct GraphEdgeBuildInputs<'a> {
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
     import_resolution_cache: Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
-    workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    workflow_documents: Option<crate::codebase::ci_workflows::PreparedWorkflowDocuments<'a>>,
     interner: Arc<PathInterner>,
 }
 
-fn require_playwright_route_snapshot(
-    snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
-) -> Result<&crate::playwright::fsutil::VisiblePathSnapshot> {
-    snapshot
-        .ok_or_else(|| anyhow::anyhow!("Playwright graph plan requires a visible-path snapshot"))
-}
+include!("builder_snapshot_requirement.rs");
 
 fn parsed_imports_for_plan<'a>(
     plan: GraphBuildPlan,

@@ -3,6 +3,7 @@ const { fork } = require("node:child_process");
 const { once } = require("node:events");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
+require("../../packages/no-mistakes/scripts/workflow-secret-inventory-api.test.js");
 const fixture = join(__dirname, "../../fixtures/napi/worker-invocation-lock/worker.js");
 const linux = process.platform === "linux";
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");

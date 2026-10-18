@@ -1,0 +1,10 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo '${{ secrets.REPEATED }}'
+          echo '${{ secrets.REPEATED }}'
+          echo '${{ secrets.OTHER }}'
+          echo '${{ secrets.REPEATED }}'

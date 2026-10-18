@@ -12,6 +12,9 @@ mod evaluate_collisions;
 mod evaluate_concurrency;
 mod evaluate_graph;
 mod evaluate_steps;
+#[cfg(test)]
+mod prepare;
+mod secret_inventory;
 
 pub const RULE_ID: &str = "workflow-topology-policy";
 
@@ -32,6 +35,7 @@ pub(crate) struct Options {
     pub(crate) step_orders: Vec<StepOrderRule>,
     pub(crate) concurrency_policy: BTreeMap<String, concurrency_compile::ConcurrencyIntent>,
     pub(crate) forbid_concurrency_group_collisions: bool,
+    pub(crate) secret_inventory: Option<secret_inventory::SecretInventory>,
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -59,28 +63,33 @@ pub(crate) struct StepSelector {
     pub(crate) name: Option<String>,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_prepared(
     root: &Path,
     config: &NoMistakesConfig,
     _all_files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
+    inputs: &crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs,
+    config_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
-        let topology =
-            crate::codebase::workflow_topology::load_workflow_topology(root, &config.ci, &[]);
-        findings.extend(evaluate::lint(&topology, &opts, &concurrency));
+        let inventory = opts
+            .secret_inventory
+            .as_ref()
+            .map(|options| options.compile())
+            .transpose()?;
+        findings.extend(evaluate::lint(inputs.topology(), &opts, &concurrency));
+        if let Some(inventory) = inventory {
+            findings.extend(secret_inventory::lint(
+                root,
+                inputs,
+                sources,
+                &inventory,
+                config_path,
+            ));
+        }
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -99,3 +108,6 @@ pub(super) fn finding(message: String) -> RuleFinding {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod secret_inventory_tests;

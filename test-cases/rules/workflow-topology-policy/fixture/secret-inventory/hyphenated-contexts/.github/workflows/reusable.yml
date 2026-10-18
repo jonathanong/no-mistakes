@@ -1,0 +1,14 @@
+on: workflow_call
+jobs:
+  get-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - id: load-secrets
+        run: echo "x=value" >> "$GITHUB_OUTPUT"
+      - run: echo "${{ steps.load-secrets.outputs.x }}"
+  after:
+    needs: get-secrets
+    if: needs.get-secrets.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo complete

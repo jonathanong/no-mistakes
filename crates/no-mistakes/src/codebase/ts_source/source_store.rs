@@ -9,6 +9,8 @@ use std::sync::{Arc, OnceLock};
 
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
+mod yaml;
+pub use yaml::YamlParseOutcome;
 mod optional;
 mod read;
 mod regular_paths;
@@ -20,6 +22,7 @@ use validation::ValidatedPathCache;
 pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
 
 type JsonParseSlots = DashMap<PathBuf, Arc<OnceLock<JsonParseOutcome>>>;
+type YamlParseSlots = DashMap<PathBuf, Arc<OnceLock<YamlParseOutcome>>>;
 type SupplementalReadSlots = DashMap<PathBuf, Arc<OnceLock<SourceReadOutcome>>>;
 
 /// Lazy request-scoped source storage for a frozen file inventory.
@@ -32,11 +35,13 @@ pub struct SourceStore {
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     reads: Vec<OnceLock<SourceReadOutcome>>,
     json_parses: JsonParseSlots,
+    yaml_parses: OnceLock<YamlParseSlots>,
     supplemental_reads: SupplementalReadSlots,
     validated_regular_paths: ValidatedPathCache,
     trusted_regular_paths: DashSet<PathBuf>,
     physical_reads: AtomicUsize,
     json_parse_count: AtomicUsize,
+    yaml_parse_count: AtomicUsize,
 }
 
 impl SourceStore {
@@ -56,11 +61,13 @@ impl SourceStore {
             observer,
             reads,
             json_parses: DashMap::new(),
+            yaml_parses: OnceLock::new(),
             supplemental_reads: DashMap::new(),
             validated_regular_paths: DashMap::new(),
             trusted_regular_paths: DashSet::new(),
             physical_reads: AtomicUsize::new(0),
             json_parse_count: AtomicUsize::new(0),
+            yaml_parse_count: AtomicUsize::new(0),
         }
     }
 

@@ -1,0 +1,9 @@
+on: push
+env:
+  declared: '${{ secrets.WORKFLOW_SOURCE }}'
+  missing: '${{ secrets.WORKFLOW_MISSING }}'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ready
