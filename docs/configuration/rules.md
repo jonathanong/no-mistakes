@@ -38,3 +38,9 @@ For [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md),
 job timeout below the sum of at least two steps' supported literal timeout
 bounds; missing or unsupported step bounds make the sum unprovable and skip
 that check. This option is independent of caps and `allow` entries.
+
+For [`github-actions-script-expressions`](../rules/github-actions-script-expressions.md),
+`options.constantContexts` defaults to the constant GitHub, runner, and quoted
+service-port patterns documented on that page. Omitting the option keeps that
+default. An explicit list, including `[]`, replaces it. The rule stays off
+until a configuration lists it.

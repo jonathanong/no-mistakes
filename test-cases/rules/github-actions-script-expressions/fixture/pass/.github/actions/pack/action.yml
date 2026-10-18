@@ -1,0 +1,15 @@
+# `pack`, not `build`: `build` is a skipped directory name.
+name: Build
+description: Pass inputs through the environment.
+inputs:
+  name:
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        NAME: ${{ inputs.name }}
+      run: echo "$NAME"
+    - shell: bash
+      run: echo "${{ github.repository }}"

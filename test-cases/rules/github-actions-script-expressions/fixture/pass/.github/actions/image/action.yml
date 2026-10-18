@@ -1,0 +1,8 @@
+# Docker args are not a script body, so this expression is out of scope.
+name: Image
+description: Package a container.
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ github.ref }}

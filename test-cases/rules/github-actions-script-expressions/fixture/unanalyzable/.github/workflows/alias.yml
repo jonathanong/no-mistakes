@@ -1,0 +1,9 @@
+# Alias reuse expands in YAML. The rule will not guess the copied script.
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: &cmd echo "${{ github.ref }}"
+      - run: *cmd

@@ -1,0 +1,14 @@
+# `pack`, not `build`: `build` is a skipped directory name.
+name: Build
+description: Composite script bodies.
+inputs:
+  name:
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo "${{ inputs.name }}"
+    - uses: actions/github-script@v7
+      with:
+        script: console.log(`${{ github.actor }}`)

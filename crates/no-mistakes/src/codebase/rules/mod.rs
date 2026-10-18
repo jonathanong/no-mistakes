@@ -17,6 +17,7 @@ pub mod github_actions_action_timeout_pair;
 pub mod github_actions_composite_step_schema;
 pub mod github_actions_job_timeouts;
 pub mod github_actions_pinned_hash;
+pub mod github_actions_script_expressions;
 pub mod github_actions_step_timeouts;
 pub mod github_actions_test_timeout_literals;
 mod ids;

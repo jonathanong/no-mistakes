@@ -94,6 +94,39 @@ fn github_actions_pinned_hash_passes_for_local_actions() {
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
+// ── github-actions-script-expressions ────────────────────────────────────────
+
+#[test]
+fn github_actions_script_expressions_flags_run_and_script_bodies() {
+    let root = fixture("github-actions-script-expressions", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("github-actions-script-expressions"), "{body}");
+    assert!(body.contains("github.ref"), "{body}");
+    assert!(body.contains("ci.yml"), "{body}");
+    assert!(body.contains("action.yml"), "{body}");
+}
+
+#[test]
+fn github_actions_script_expressions_passes_for_env_and_constants() {
+    let root = fixture("github-actions-script-expressions", "pass");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn github_actions_script_expressions_cli_fails_for_inline_expressions() {
+    let root = fixture("github-actions-script-expressions", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("github-actions-script-expressions"), "{body}");
+    assert!(body.contains("github.actor"), "{body}");
+}
+
 #[test]
 fn generic_filesystem_rules_run_through_public_dispatch() {
     let config_paths = filesystem_findings(
