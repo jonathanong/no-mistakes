@@ -111,6 +111,10 @@ describe(`${id} schema`, () => {
         process.execPath,
         [
           resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          // CI sets GITHUB_ACTIONS. That formatter drops the JS plugin error text,
+          // so pin the default report that names the bad segment.
+          "--format",
+          "default",
           "--config",
           resolve(fixtureRoot, config),
           resolve(fixtureRoot, "safe.mjs"),
