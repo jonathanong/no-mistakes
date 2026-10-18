@@ -15,11 +15,12 @@ fn content_fingerprint_collisions_still_require_exact_membership() {
         root.join("utils.mts")
     ])));
     let session = AnalysisSession::disabled();
+    assert!(session.visible_scopes().first.set(wrong.clone()).is_ok());
     // Force a collision bucket, without depending on the hasher's current bits.
     session
         .visible_scopes()
-        .scopes
-        .insert(visible_fingerprint(&visible), vec![wrong.clone()]);
+        .buckets()
+        .insert(registry::visible_fingerprint(&visible), vec![wrong.clone()]);
     let prepared = session.prepared_visible(&visible);
     assert!(!Arc::ptr_eq(&prepared, &wrong));
     assert!(prepared.contains_visible(&root.join("consumer.mts")));
@@ -76,10 +77,49 @@ fn ordinary_paths_retain_no_duplicate_canonical_text_and_unused_requests_stay_la
         crate::fx::PathSet::from_iter([root.join("consumer.mts"), root.join("utils.mts")]);
     let prepared = session.normalized_visible(&visible);
     assert!(prepared.contains_visible(&root.join("utils.mts")));
+    assert!(session.visible_scopes().scopes.get().is_none());
     assert_eq!(session.visible_scopes().canonical.len(), 2);
     assert!(session
         .visible_scopes()
         .canonical
         .iter()
         .all(|entry| entry.value().is_none()));
+}
+
+#[test]
+fn inventory_canonical_keys_borrow_frozen_text_and_match_explicit_path_keys() {
+    let root = fixture_root();
+    let session = AnalysisSession::disabled();
+    session.visible_paths(&root);
+    let inventory = session
+        .existing_sources_for(&root)
+        .unwrap()
+        .inventory()
+        .paths();
+    let target = root.join("utils.mts");
+    let visible = crate::fx::PathSet::from_iter([target.clone()]);
+    session.normalized_visible(&visible);
+    let canonical = &session.visible_scopes().canonical;
+    assert!(canonical.iter().all(|entry| matches!(
+        entry.key(), canonical::CanonicalPath::Inventory(paths, _) if Arc::ptr_eq(paths, &inventory)
+    )));
+    // Explicit-path and inventory keys must find the same lexical failure/success entry.
+    canonical
+        .entry(canonical::CanonicalPath::Owned(target))
+        .or_insert(None);
+    assert_eq!(canonical.len(), 1);
+}
+
+#[test]
+fn lexical_parent_components_keep_the_raw_and_normalized_projections_separate() {
+    let root = fixture_root();
+    let lexical = root.join("../signature-impact/utils.mts");
+    let visible = crate::fx::PathSet::from_iter([lexical.clone()]);
+    let session = AnalysisSession::disabled();
+    let raw = session.prepared_visible(&visible);
+    let normalized = session.normalized_visible(&visible);
+    assert!(raw.contains_visible(&lexical));
+    assert!(!raw.contains_visible(&root.join("utils.mts")));
+    assert!(normalized.contains_visible(&root.join("utils.mts")));
+    assert!(!normalized.contains_visible(&lexical));
 }

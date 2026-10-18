@@ -1,14 +1,17 @@
 use super::AnalysisSession;
 use crate::codebase::ts_resolver::{normalize_path, VisiblePathLookup, VisibleScopeIdentity};
 use dashmap::DashMap;
-use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+mod canonical;
+mod registry;
+
 #[derive(Default)]
 pub(super) struct VisibleScopes {
-    scopes: DashMap<(usize, u64), Vec<Arc<PreparedVisible>>, rustc_hash::FxBuildHasher>,
-    canonical: DashMap<PathBuf, Option<Arc<Path>>, rustc_hash::FxBuildHasher>,
+    first: OnceLock<Arc<PreparedVisible>>,
+    scopes: OnceLock<registry::ScopeBuckets>,
+    canonical: DashMap<canonical::CanonicalPath, Option<Arc<Path>>, rustc_hash::FxBuildHasher>,
 }
 
 /// Exact frozen projection. The registry retains its identity until the request
@@ -78,30 +81,6 @@ impl AnalysisSession {
         self.visible_scopes.get_or_init(Default::default)
     }
 
-    pub(crate) fn prepared_visible(&self, visible: &dyn VisiblePathLookup) -> Arc<PreparedVisible> {
-        let mut bucket = self
-            .visible_scopes()
-            .scopes
-            .entry(visible_fingerprint(visible))
-            .or_default();
-        for scope in bucket.iter() {
-            let mut equal = true;
-            visible.visit_visible(&mut |path| equal &= scope.paths.contains(path));
-            if equal {
-                return Arc::clone(scope);
-            }
-        }
-        // The fingerprint selects a bucket only. Compare full membership above
-        // so even a hash collision cannot return a wrong known target.
-        let mut paths = crate::fx::PathSet::default();
-        visible.visit_visible(&mut |path| {
-            paths.insert(path.to_path_buf());
-        });
-        let scope = Arc::new(PreparedVisible::new(paths));
-        bucket.push(Arc::clone(&scope));
-        scope
-    }
-
     pub(crate) fn normalized_visible(
         &self,
         visible: &dyn VisiblePathLookup,
@@ -110,15 +89,17 @@ impl AnalysisSession {
         let registry = self.visible_scopes();
         let normalized = scope.normalized.get_or_init(|| {
             self.increment("resolver.visible_normalizations", 1);
-            let mut paths = crate::fx::PathSet::default();
+            let inventories = canonical::inventories(self);
+            let mut rewrites = Vec::new();
+            let mut aliases = Vec::new();
             for path in scope.paths.iter() {
                 let normalized = normalize_path(path);
-                let canonical = if let Some(cached) = registry.canonical.get(path) {
+                let canonical = if let Some(cached) = registry.canonical.get(path.as_path()) {
                     cached.value().clone()
                 } else {
                     registry
                         .canonical
-                        .entry(path.clone())
+                        .entry(canonical::CanonicalPath::new(path, &inventories))
                         .or_insert_with(|| {
                             self.increment("resolver.visible_canonicalize_calls", 1);
                             // Identity spellings and failures both need no extra
@@ -132,18 +113,28 @@ impl AnalysisSession {
                         .value()
                         .clone()
                 };
-                paths.insert(normalized);
+                if normalized != *path {
+                    rewrites.push((path.clone(), normalized));
+                }
                 if let Some(path) = canonical {
-                    paths.insert(path.as_ref().to_path_buf());
+                    if !scope.paths.contains(path.as_ref()) {
+                        aliases.push(path.as_ref().to_path_buf());
+                    }
                 }
             }
-            if paths == *scope.paths {
+            if rewrites.is_empty() && aliases.is_empty() {
                 Arc::clone(&scope.paths)
             } else {
+                let mut paths = scope.paths.as_ref().clone();
+                for (original, normalized) in rewrites {
+                    paths.remove(&original);
+                    paths.insert(normalized);
+                }
+                paths.extend(aliases);
                 Arc::new(paths)
             }
         });
-        if normalized.as_ref() == scope.paths.as_ref() {
+        if Arc::ptr_eq(normalized, &scope.paths) {
             return scope;
         }
         let prepared = self.prepared_visible(normalized);
@@ -152,16 +143,6 @@ impl AnalysisSession {
         let _ = prepared.normalized.set(Arc::clone(&prepared.paths));
         prepared
     }
-}
-
-fn visible_fingerprint(visible: &dyn VisiblePathLookup) -> (usize, u64) {
-    let mut fingerprint = 0u64;
-    visible.visit_visible(&mut |path| {
-        let mut hash = rustc_hash::FxHasher::default();
-        path.hash(&mut hash);
-        fingerprint = fingerprint.wrapping_add(hash.finish());
-    });
-    (visible.visible_len(), fingerprint)
 }
 
 #[cfg(test)]
