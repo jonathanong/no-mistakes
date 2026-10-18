@@ -115,9 +115,9 @@ fn every_global_export_takes_all_without_traversal() {
             executors: Default::default(),
         },
     )]);
-    let mut evaluator = evaluator(&files);
+    let mut all_evaluator = evaluator(&files);
     visits::reset();
-    evaluator.run(&path);
+    all_evaluator.run(&path);
     assert_eq!(
         visits::count(),
         0,
