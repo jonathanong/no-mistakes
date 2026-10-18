@@ -32,6 +32,34 @@ such as an exact value, a finite union, or a known statement shape, and
 abstains on the rest. An abstention is reported as unanalyzable, never as a
 pass or a guessed finding.
 
+## Narrowing
+
+Analysis runs where the configuration says the behavior lives, not wherever a
+pattern happens to match.
+
+- **Locations.** A repository already knows where code of a given kind may
+  live. For example, an import-boundary rule (dependency-cruiser, or
+  [`forbidden-dependencies`](rules/forbidden-dependencies.md)) may allow only `backend/services`, `backend/data-stores`,
+  and `backend/test-helpers` to import the database module. Rules then scan
+  only those directories (project `root`, `include`, `sqlInclude`). Repository-
+  wide scanning is an explicit opt-in, not the default.
+- **Targets.** Inside those locations, a rule checks only calls it can tie to
+  configuration: the database module's imports, configured executor factories
+  and types, trusted SQL tags, queue factories, route roots. A string that
+  merely looks like SQL, or a method that is merely named `query`, is not an
+  executor.
+- **Declare once.** One project-level declaration of a domain's locations and
+  targets is shared by every rule and command that needs it. Repeating the same
+  `include` and executor list in each rule lets the copies drift apart.
+- **No inferred conventions.** No hardcoded `src/`, `backend/`, or framework
+  folklore. Full-suite, repository-wide, and global fallbacks need an explicit
+  flag or configuration knob.
+
+Narrowing does not trade away recall inside the declared scope: there, the
+rules above about soundness and unanalyzable reporting still apply. It keeps
+noise from code that cannot be the thing being checked, and it keeps runs fast
+on large repositories.
+
 ## Three jobs
 
 1. **Scope the change.** Callers, routes, queues, workflows, and named
