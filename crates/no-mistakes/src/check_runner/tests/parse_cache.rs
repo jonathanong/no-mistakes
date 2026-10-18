@@ -75,3 +75,42 @@ fn postgres_offset_rule_reuses_the_requested_prepared_projection() {
         "the prepared SQL projection parses its host exactly once: {work:#?}"
     );
 }
+
+#[test]
+fn supplemental_call_sources_share_one_fact_collection_and_graph() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let results = {
+        let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+        run_all(root, None, None).unwrap()
+    };
+    let work = observer.snapshot().work;
+    assert_eq!(work.get("check.fact_collections"), Some(&1), "{work:#?}");
+    assert_eq!(work.get("graph.builds"), Some(&1), "{work:#?}");
+    assert!(results
+        .rules
+        .iter()
+        .any(|finding| { finding.rule == no_mistakes::codebase::rules::FINITE_SET_CONSISTENCY }));
+
+    // The alternate saved config makes the skipped call source supplemental.
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let result = {
+        let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+        run_all(
+            fixture.path().canonicalize().unwrap(),
+            Some(fixture.path().join(".no-mistakes-supplemental.yml")),
+            None,
+        )
+        .unwrap()
+    };
+    let work = observer.snapshot().work;
+    assert_eq!(work.get("check.fact_collections"), Some(&1), "{work:#?}");
+    assert!(work.get("graph.builds").is_none(), "{work:#?}");
+    assert!(result
+        .rules
+        .iter()
+        .any(|finding| { finding.rule == no_mistakes::codebase::rules::FINITE_SET_CONSISTENCY }));
+}

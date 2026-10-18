@@ -75,6 +75,47 @@ pub fn collect_check_facts_with_graph_files_playwright_sources_and_session(
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
+    collect_check_facts_with_supplemental_call_sites(
+        session,
+        root,
+        file_scope,
+        Vec::new(),
+        plan,
+        playwright,
+        sources,
+    )
+}
+
+/// Collect call sites outside the ordinary file and graph scopes in the same
+/// request fact pass. Their paths remain addressable without widening either scope.
+#[doc(hidden)]
+pub fn collect_check_facts_with_supplemental_call_sites(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    root: &Path,
+    file_scope: (Vec<PathBuf>, Vec<PathBuf>),
+    supplemental_call_sites: Vec<PathBuf>,
+    plan: CheckFactPlan,
+    playwright: Option<PlaywrightFactPlan>,
+    sources: Arc<crate::codebase::ts_source::SourceStore>,
+) -> CheckFactMap {
+    let supplemental = if supplemental_call_sites.is_empty() {
+        crate::codebase::ts_source::FileIdMap::with_inventory(Arc::clone(sources.inventory()))
+    } else {
+        super::collect_fact_map_with_sources(
+            session,
+            root,
+            &supplemental_call_sites,
+            &CheckFactPlan {
+                graph: crate::codebase::ts_source::facts::TsFactPlan {
+                    call_sites: true,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            None,
+            &sources,
+        )
+    };
     collect_with_scope(
         session,
         root,
@@ -82,7 +123,7 @@ pub fn collect_check_facts_with_graph_files_playwright_sources_and_session(
         plan,
         playwright,
         sources,
-        Default::default(),
+        supplemental,
     )
 }
 
@@ -175,6 +216,7 @@ fn collect_with_scope(
     sources: Arc<crate::codebase::ts_source::SourceStore>,
     precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
 ) -> CheckFactMap {
+    session.record_work("check.fact_collections", 1);
     let (files, graph_files, graph_files_complete) = file_scope;
     let files = plan.with_production_files(files);
     if plan.graph_context.visible_files.is_none() {

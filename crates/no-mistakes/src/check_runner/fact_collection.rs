@@ -45,34 +45,16 @@ pub(crate) fn collect(
                 let fact_files = fact_demand.primary_files(discovered);
                 let supplemental_call_site_files =
                     fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
-                let facts = collect_check_facts(
+                let facts = no_mistakes::codebase::check_facts::collect_check_facts_with_supplemental_call_sites(
                     session,
                     root,
                     (fact_files, graph_files),
-                    plan.clone(),
+                    supplemental_call_site_files,
+                    plan,
                     playwright_fact_plan,
                     Arc::clone(&sources),
                 );
-                // Keep out-of-scope finite-set call facts addressable without
-                // widening the primary filesystem or graph universes.
-                let supplemental = collect_check_facts(
-                    session,
-                    root,
-                    (supplemental_call_site_files, Vec::new()),
-                    CheckFactPlan {
-                        graph: no_mistakes::codebase::ts_source::facts::TsFactPlan {
-                            call_sites: true,
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    },
-                    None,
-                    Arc::clone(&sources),
-                );
-                (
-                    filesystem_files,
-                    facts.fact_view_with_supplemental(&supplemental),
-                )
+                (filesystem_files, facts)
             } else {
                 (discovered, Default::default())
             }
@@ -98,22 +80,4 @@ pub(crate) fn release_extract_programs(
         observer.increment("parse.files_after_extract", parse_files);
     }
     no_mistakes::ast::clear_request_parse_cache();
-}
-
-fn collect_check_facts(
-    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
-    root: &Path,
-    file_scope: (Vec<PathBuf>, Vec<PathBuf>),
-    plan: CheckFactPlan,
-    playwright_fact_plan: Option<PlaywrightFactPlan>,
-    sources: Arc<SourceStore>,
-) -> CheckFactMap {
-    no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_sources_and_session(
-        session,
-        root,
-        file_scope,
-        plan,
-        playwright_fact_plan,
-        sources,
-    )
 }

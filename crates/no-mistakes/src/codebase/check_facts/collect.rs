@@ -22,6 +22,7 @@ pub use entrypoints::{
     collect_check_facts_with_graph_files_playwright_and_sources,
     collect_check_facts_with_graph_files_playwright_sources_and_session,
     collect_check_facts_with_playwright, collect_check_facts_with_playwright_and_session,
+    collect_check_facts_with_supplemental_call_sites,
 };
 
 fn collect_check_facts_inner(

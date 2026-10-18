@@ -61,51 +61,85 @@ pub(crate) fn prepare_from_shared(
     workspace: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
 ) -> Result<PreparedCheckInputs> {
     let root_paths = visible_paths.paths_for(root);
-    let inferred_roots =
-        no_mistakes::codebase::config::InferredRoots::from_visible(root, root_paths.as_ref());
-    let codebase_config =
-        no_mistakes::codebase::config::config_from_loaded_v2(root, config_path, &config);
     let sources = visible_paths.source_store_for(root);
     if config.rule_configured(no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES) {
         no_mistakes::codebase::rules::require_storybook_stories::authorize_configured_sources(
             root, &config, &sources,
         );
     }
-    let tsconfig_catalog = Arc::new(if let Some(path) = tsconfig_path {
-        let path = if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            root.join(path)
-        };
-        no_mistakes::codebase::ts_resolver::TsConfigCatalog::forced(
-            root,
-            tsconfig.clone(),
-            Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
-        )
-    } else {
-        let mut candidate_roots = vec![root.to_path_buf()];
-        candidate_roots.extend(
-            no_mistakes::integration_tests::configured_runner_config_dirs_from_visible(
+    let (
+        tsconfig_catalog,
+        (inferred_roots, codebase_config, react, workflow_documents, tsconfig_gate_project_inputs),
+    ) = rayon::join(
+        || {
+            let catalog = if let Some(path) = tsconfig_path {
+                let path = if path.is_absolute() {
+                    path.to_path_buf()
+                } else {
+                    root.join(path)
+                };
+                no_mistakes::codebase::ts_resolver::TsConfigCatalog::forced(
+                    root,
+                    tsconfig.clone(),
+                    Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
+                )
+            } else {
+                let mut candidate_roots = vec![root.to_path_buf()];
+                candidate_roots.extend(
+                    no_mistakes::integration_tests::configured_runner_config_dirs_from_visible(
+                        root,
+                        &config,
+                        root_paths.as_ref(),
+                    ),
+                );
+                candidate_roots.extend(
+                    no_mistakes::codebase::rules::require_storybook_stories::configured_project_roots(
+                        root, &config,
+                    ),
+                );
+                no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources_with_workspace(
+                    root,
+                    &candidate_roots,
+                    root_paths.as_ref(),
+                    &sources,
+                    workspace
+                        .as_deref()
+                        .expect("automatic tsconfig catalog requires a workspace projection"),
+                )
+            };
+            Arc::new(catalog)
+        },
+        || {
+            let inferred_roots = no_mistakes::codebase::config::InferredRoots::from_visible(
                 root,
-                &config,
                 root_paths.as_ref(),
-            ),
-        );
-        candidate_roots.extend(
-            no_mistakes::codebase::rules::require_storybook_stories::configured_project_roots(
-                root, &config,
-            ),
-        );
-        no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources_with_workspace(
-            root,
-            &candidate_roots,
-            root_paths.as_ref(),
-            &sources,
-            workspace
-                .as_deref()
-                .expect("automatic tsconfig catalog requires a workspace projection"),
-        )
-    });
+            );
+            let codebase_config =
+                no_mistakes::codebase::config::config_from_loaded_v2(root, config_path, &config);
+            let react = no_mistakes::react_traits::prepare_check_from_loaded_config(&config, false);
+            let workflow_documents =
+                no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs::for_config(
+                    root,
+                    &config,
+                    visible_paths.as_ref(),
+                    &sources,
+                )
+                .map(Arc::new);
+            let tsconfig_gate_project_inputs = config
+                .rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
+                .then(|| no_mistakes::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
+                    root, root_paths.as_ref(), &sources,
+                    workspace.as_deref().expect("tsconfig gate coverage requires a workspace projection"),
+                ));
+            (
+                inferred_roots,
+                codebase_config,
+                react,
+                workflow_documents,
+                tsconfig_gate_project_inputs,
+            )
+        },
+    );
     let playwright = no_mistakes::playwright::rules::configured(&config)
         .then(|| {
             no_mistakes::playwright::rules::prepare_from_snapshot_with_catalog(
@@ -125,7 +159,6 @@ pub(crate) fn prepare_from_shared(
         })
         .transpose()?
         .flatten();
-    let react = no_mistakes::react_traits::prepare_check_from_loaded_config(&config, false);
     let vitest_projects = (config
         .rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
         || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
@@ -146,26 +179,6 @@ pub(crate) fn prepare_from_shared(
                 &config,
                 visible_paths.as_ref(),
                 &tsconfig_catalog,
-            )
-        });
-    let workflow_documents =
-        no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs::for_config(
-            root,
-            &config,
-            visible_paths.as_ref(),
-            &sources,
-        )
-        .map(Arc::new);
-    let tsconfig_gate_project_inputs = config
-        .rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
-        .then(|| {
-            no_mistakes::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
-                root,
-                root_paths.as_ref(),
-                &sources,
-                workspace
-                    .as_deref()
-                    .expect("tsconfig gate coverage requires a workspace projection"),
             )
         });
     Ok(PreparedCheckInputs {
