@@ -1,0 +1,8 @@
+# The explicit list replaces the default, so github.sha is no longer constant.
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ github.ref }} ${{ github.sha }}"

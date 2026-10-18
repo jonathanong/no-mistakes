@@ -1,0 +1,8 @@
+# Flow-style steps must be rewritten as block-style run bodies.
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - { run: "echo ${{ github.ref }}" }

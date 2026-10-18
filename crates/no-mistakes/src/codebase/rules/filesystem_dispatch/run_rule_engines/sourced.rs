@@ -68,6 +68,11 @@ pub(super) fn run(
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }
+        GITHUB_ACTIONS_SCRIPT_EXPRESSIONS => {
+            github_actions_script_expressions::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         TSCONFIG_FILE_COVERAGE => {
             tsconfig_file_coverage::check_with_files_and_sources(root, config, files, sources)
         }

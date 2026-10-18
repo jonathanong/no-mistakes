@@ -13,6 +13,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::GITHUB_ACTIONS_STEP_TIMEOUTS,
     rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
     rules::github_actions_pinned_hash::RULE_ID,
+    rules::github_actions_script_expressions::RULE_ID,
     rules::VERSION_PIN_CONSISTENCY,
     rules::BANNED_RENAMED_FILES,
     rules::CONFIG_PATH_REFERENCES,

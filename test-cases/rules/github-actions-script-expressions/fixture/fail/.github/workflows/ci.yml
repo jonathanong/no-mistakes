@@ -1,0 +1,22 @@
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ github.ref }}"
+      - run: echo "${{ github.actor }} ${{ github.sha }}"
+      - run: echo "${{ github.event.head_commit.message }}"
+      - run: |
+          echo "${{ secrets.TOKEN }}"
+          echo "${{ inputs.name }}"
+          echo "${{ vars.FOO }}"
+          echo "${{ env.FOO }}"
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            return "${{ github.event.issue.title }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo "${{ steps.id.outputs.value }}"
+      - run: echo "${{ github.sha || 'unknown' }}"
+      - run: echo "${{ job.services.redis.ports[6379] }}"

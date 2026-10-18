@@ -1,0 +1,9 @@
+# no-mistakes-disable-file github-actions-script-expressions: whole file is out of scope
+name: skipped
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ github.ref }}"
+      - run: echo "${{ secrets.TOKEN }}"
