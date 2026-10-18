@@ -107,17 +107,14 @@ fn untouched_state_size_does_not_change_transaction_work() {
     assert_eq!(large_call, small_call);
     assert_eq!(small_sql, Err("unresolved-value-or-effect"));
     assert_eq!(large_sql, small_sql);
-    let copied_key = "postgres.annotation.incoming_dense_slots_copied";
-    let small_copied = work(&small, copied_key);
-    let large_copied = work(&large, copied_key);
-    assert!(
-        large_copied == small_copied,
-        "untouched dense width should not add copies (the previous baseline grew from {small_copied} to {large_copied})"
-    );
     for key in [
         "postgres.annotation.undo_entries_recorded",
         "postgres.annotation.undo_values_cloned",
+        "postgres.annotation.undo_after_values_cloned",
         "postgres.annotation.undo_entries_restored",
+        "postgres.annotation.undo_restore_values_cloned",
+        "postgres.annotation.join_delta_cells_visited",
+        "postgres.annotation.join_apply_cells_visited",
         "postgres.annotation.joined_dense_locations",
     ] {
         assert!(

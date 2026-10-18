@@ -99,3 +99,56 @@ fn duplicate_module_completion_does_not_add_a_second_pin_lifetime() {
     assert_eq!(evaluator.finish_alternative_module_snapshot().len(), 1);
     assert!(!evaluator.identity_is_pinned(first));
 }
+
+#[test]
+fn promotion_rebases_old_target_pins_to_the_initialized_builder_and_counts_its_walk() {
+    let files = FxHashMap::default();
+    let mut evaluator = evaluator(&files);
+    let fixture = fixture();
+    cycle(&mut evaluator, &fixture);
+    let first = fixture.argument_objects[0].id;
+    let second = fixture.argument_objects[1].id;
+    evaluator.scopes[0].insert(fixture.slot_name.clone(), Value::Arguments(first));
+    evaluator.initialize_reference_index_for_tests();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _observer = crate::diagnostics::InvocationGuard::install(observer.clone());
+
+    let base = evaluator.scopes.checkpoint();
+    evaluator.begin_alternative_module_snapshot(base);
+    let checkpoint = evaluator.begin_transaction();
+    let module = evaluator.environment(FxHashMap::from_iter([(
+        fixture.module_binding.clone(),
+        Value::Arguments(first),
+    )]));
+    let path = PathBuf::from(&fixture.module_path);
+    evaluator.save_cell(Cell::Module(path.clone()));
+    evaluator.modules.insert(path.clone(), module);
+    let initialized = Value::Prefix(
+        fixture.builder_prefix.clone(),
+        true,
+        Some(fixture.builder_id),
+    );
+    evaluator.write_dense_slot(first, 0, initialized.clone());
+    assert!(evaluator.identity_is_pinned(second));
+    evaluator.record_alternative_module_initial(&path, module);
+    // A completed initial replaces the old before-image, including its pins.
+    assert!(!evaluator.identity_is_pinned(second));
+    assert!(evaluator.identity_is_pinned(fixture.builder_id));
+    evaluator.reclaim_dead_state();
+    assert!(!evaluator.argument_objects.contains_key(&second));
+
+    let delta = evaluator.finish_transaction(checkpoint);
+    assert!(evaluator.argument_objects[&first][0] == initialized);
+    assert_eq!(evaluator.modules.get(&path), Some(&module));
+    evaluator.release_delta_pins(delta.pins);
+    assert_eq!(evaluator.finish_alternative_module_snapshot().len(), 1);
+    assert!(!evaluator.identity_is_pinned(first));
+    assert!(!evaluator.identity_is_pinned(fixture.builder_id));
+    let work = observer.snapshot().work;
+    assert_eq!(work["postgres.annotation.module_initial_promotions"], 1);
+    assert_eq!(work["postgres.annotation.full_frame_visits"], 1);
+    assert_eq!(
+        work["postgres.annotation.module_initial_new_frame_visits"],
+        1
+    );
+}

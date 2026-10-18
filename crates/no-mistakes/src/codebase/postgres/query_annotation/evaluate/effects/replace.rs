@@ -20,7 +20,23 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let Some(id) = identity(replacement) else {
             return;
         };
-        self.write_builder(id, replacement.clone());
+        fn needs_replacement(value: &Value, id: u64, replacement: &Value) -> bool {
+            match value {
+                Value::Prefix(_, _, Some(other)) if *other == id => value != replacement,
+                Value::Promise(value) | Value::Evaluated(value, _) => {
+                    needs_replacement(value, id, replacement)
+                }
+                Value::Aggregate(values)
+                | Value::References(values)
+                | Value::Object(values)
+                | Value::Record(values, _)
+                | Value::Joined(values)
+                | Value::Possible(values) => values
+                    .iter()
+                    .any(|value| needs_replacement(value, id, replacement)),
+                _ => false,
+            }
+        }
         fn replace(value: &mut Value, id: u64, replacement: &Value) {
             if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
                 *value = replacement.clone();
@@ -44,15 +60,23 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         let ids = FxHashSet::from_iter([id]);
-        for cell in self.builder_locations(&ids) {
-            if let super::super::transactions::Saved::Value(Some(mut value)) = self.read_cell(&cell)
+        let locations = self.builder_locations(&ids);
+        let mut changed = false;
+        for cell in &locations {
+            if let super::super::transactions::Saved::Value(Some(mut value)) = self.read_cell(cell)
             {
+                if !needs_replacement(&value, id, replacement) {
+                    continue;
+                }
+                changed = true;
                 replace(&mut value, id, replacement);
-                self.apply_cell(
-                    &cell,
-                    &super::super::transactions::Saved::Value(Some(value)),
-                );
+                self.apply_cell(cell, &super::super::transactions::Saved::Value(Some(value)));
             }
+        }
+        // An unchanged append has no new canonical state. Inserting one would
+        // make an untouched sibling look missing instead of preserving its SQL.
+        if changed || locations.is_empty() || self.builder_updates.contains_key(&id) {
+            self.write_builder(id, replacement.clone());
         }
     }
 }

@@ -15,13 +15,8 @@ fn function_body_include_is_an_explicit_fragment_not_a_standalone_rust_unit() {
     );
     assert!(syn::parse_str::<syn::Expr>(&fragment).is_ok());
     assert!(!super::rust_sources(fixture.path()).contains(&fixture.path().join("body.inc")));
-
-    let source = root.join("crates/no-mistakes/src");
-    let directory = source.join("codebase/postgres/query_annotation/evaluate/alternatives");
-    let included = directory.join("run_finish.inc");
-    assert!(included.is_file() && !directory.join("run_finish.rs").exists());
-    let caller = std::fs::read_to_string(directory.join("run.rs")).unwrap();
-    assert!(caller.contains("include!(\"run_finish.inc\")"));
-    assert!(syn::parse_str::<syn::Expr>(&std::fs::read_to_string(&included).unwrap()).is_ok());
-    assert!(!super::rust_sources(&source).contains(&included));
+    let caller_path = fixture.path().join("main.rs");
+    let caller = std::fs::read_to_string(&caller_path).unwrap();
+    assert!(caller.contains("include!(\"body.inc\")"));
+    assert!(super::rust_sources(fixture.path()).contains(&caller_path));
 }
