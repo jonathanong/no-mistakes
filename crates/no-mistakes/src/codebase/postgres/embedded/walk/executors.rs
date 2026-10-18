@@ -48,19 +48,50 @@ impl ScopeVisitor<'_> {
                 self.proven_executor(&conditional.consequent)
                     && self.proven_executor(&conditional.alternate)
             }
+            Expression::CallExpression(call) => self.configured_require(call),
             _ => false,
         }
     }
 
-    pub(super) fn executor_alias_callee(&self, expression: &Expression<'_>) -> bool {
-        match unwrap_ts_wrappers(expression) {
-            Expression::Identifier(identifier) => self
+    fn configured_require(&self, call: &oxc_ast::ast::CallExpression<'_>) -> bool {
+        if self.configured_module.is_empty()
+            || call.arguments.len() != 1
+            || self
                 .scopes
                 .iter()
-                .rev()
-                .find_map(|scope| scope.get(identifier.name.as_str()))
-                .is_some_and(|binding| binding.executor_alias == Some(true)),
-            Expression::ConditionalExpression(_) => self.proven_executor(expression),
+                .any(|scope| scope.contains_key("require"))
+        {
+            return false;
+        }
+        let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
+            return false;
+        };
+        let Some(Expression::StringLiteral(module)) =
+            call.arguments.first().and_then(|arg| arg.as_expression())
+        else {
+            return false;
+        };
+        callee.name == "require"
+            && super::super::scoped_bindings::from_configured_module(
+                module.value.as_str(),
+                &self.configured_module,
+            )
+    }
+
+    pub(super) fn executor_alias_callee(&self, expression: &Expression<'_>) -> bool {
+        match unwrap_ts_wrappers(expression) {
+            Expression::Identifier(identifier) => {
+                self.proven_executor(expression)
+                    && !self.namespace_expression(expression)
+                    && self
+                        .scopes
+                        .iter()
+                        .rev()
+                        .any(|scope| scope.contains_key(identifier.name.as_str()))
+            }
+            Expression::ConditionalExpression(_) => {
+                self.proven_executor(expression) && !self.namespace_expression(expression)
+            }
             _ => false,
         }
     }
@@ -69,6 +100,7 @@ impl ScopeVisitor<'_> {
         &mut self,
         declaration: &VariableDeclarator<'_>,
         proven: bool,
+        namespace: bool,
     ) {
         let BindingPattern::BindingIdentifier(identifier) = &declaration.id else {
             return;
@@ -84,9 +116,17 @@ impl ScopeVisitor<'_> {
         // visit can promote an immutable binding, never a mutable declaration.
         if binding.executor_alias == Some(false) && proven {
             binding.executor_alias = Some(true);
+            if namespace {
+                self.namespace_proofs
+                    .last_mut()
+                    .expect("declaration scope")
+                    .insert(identifier.name.to_string());
+            }
         }
     }
 }
+
+mod namespace;
 
 #[cfg(test)]
 mod tests;

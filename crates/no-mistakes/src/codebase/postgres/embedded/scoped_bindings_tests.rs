@@ -1,6 +1,8 @@
 use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
 use std::path::PathBuf;
 
+mod commonjs;
+
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded")

@@ -24,7 +24,6 @@ mod tags;
 pub(crate) use scoped_bindings::from_configured_module;
 pub(crate) use tags::matches_trusted_sql_import;
 pub(crate) mod walk;
-
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
@@ -33,7 +32,6 @@ pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
-
 /// Parse `source` and extract executor SQL call sites.
 pub fn extract_embedded_sql_from_source(
     path: &Path,
@@ -45,7 +43,6 @@ pub fn extract_embedded_sql_from_source(
     let parsed = crate::ast::parse(path, &allocator, source, source_type);
     extract_embedded_sql_from_program(path, &parsed.program, source, options)
 }
-
 /// Extract executor SQL call sites from an already-parsed program.
 pub fn extract_embedded_sql_from_program(
     path: &Path,
@@ -67,7 +64,10 @@ pub fn extract_embedded_sql_from_program(
         &bindings,
         &scoped.executors,
         &scoped.spans,
+        &options.import_specifier,
         !options.import_specifier.is_empty()
+            || options.executor_names.iter().any(|name| name == "query"),
+        options.executor_names.is_empty()
             || options.executor_names.iter().any(|name| name == "query"),
         &options.trusted_sql_tags,
     );

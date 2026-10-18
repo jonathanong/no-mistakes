@@ -22,7 +22,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         if !visitor.query_members {
             return;
         }
-        if visitor.bindings.contains(MEMBER_QUERY_OPT_IN) || visitor.proven_executor(receiver) {
+        let namespace = visitor.namespace_expression(receiver);
+        if visitor.bindings.contains(MEMBER_QUERY_OPT_IN)
+            || (visitor.proven_executor(receiver)
+                && (!namespace || visitor.namespace_query_valid()))
+        {
             push_confirmed(visitor, call, "query".to_string());
         } else {
             let owners = visitor.relative_executor_owners(receiver);
@@ -32,7 +36,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     }
     let member = unwrap_ts_wrappers(&call.callee).is_member_expression();
     if let Some(callee) = callee_name(call, visitor.bindings, visitor.scoped) {
-        if !member && visitor.proven_executor(&call.callee) {
+        if !member
+            && visitor.proven_executor(&call.callee)
+            && !visitor.namespace_expression(&call.callee)
+        {
             push_confirmed(visitor, call, callee);
         }
         return;

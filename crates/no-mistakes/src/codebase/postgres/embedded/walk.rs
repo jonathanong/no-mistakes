@@ -58,6 +58,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
         resolve::initialize_vars(declaration, self);
         walk::walk_variable_declaration(self, declaration);
+        if declaration.kind == ast::VariableDeclarationKind::Const {
+            for declarator in &declaration.declarations {
+                resolve::bind_query_property(declarator, true, self);
+            }
+        }
     }
 
     fn visit_arrow_function_expression(

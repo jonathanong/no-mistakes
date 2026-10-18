@@ -8,11 +8,13 @@ impl ScopeVisitor<'_> {
     pub(super) fn push_scope(&mut self) {
         self.scopes.push(HashMap::new());
         self.relative_proofs.push(HashMap::new());
+        self.namespace_proofs.push(Default::default());
     }
 
     pub(super) fn pop_scope(&mut self) {
         self.scopes.pop();
         self.relative_proofs.pop();
+        self.namespace_proofs.pop();
     }
 
     pub(super) fn current_scope(&mut self) -> Option<&mut HashMap<String, BindingState>> {

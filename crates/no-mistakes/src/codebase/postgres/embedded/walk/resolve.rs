@@ -9,7 +9,7 @@ pub(super) mod compose;
 pub(crate) mod functions;
 mod loops;
 pub(crate) mod vars;
-pub(super) use vars::{hoist_vars, initialize_vars};
+pub(super) use vars::{bind_query_property, hoist_vars, initialize_vars};
 
 pub(crate) use super::scope::has_known_leading_statement;
 pub(crate) use super::variants::origins::rewrite as rewrite_origins;

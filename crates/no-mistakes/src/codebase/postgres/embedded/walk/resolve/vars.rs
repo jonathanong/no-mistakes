@@ -7,8 +7,10 @@ use oxc_ast::ast::{
 use oxc_span::GetSpan;
 
 mod hoist;
+mod namespace;
 pub(in crate::codebase::postgres::embedded::walk) use hoist::hoist_vars;
 pub(crate) use hoist::hoisted_names;
+pub(in crate::codebase::postgres::embedded::walk) use namespace::bind_query_property;
 
 pub(in crate::codebase::postgres::embedded::walk) fn initialize_vars(
     declaration: &VariableDeclaration<'_>,
@@ -66,6 +68,7 @@ pub(super) fn record_declarator(
             )
         });
     let builder_identity = visitor.builder_identity_for_init(init);
+    let namespace_executor = is_const && visitor.namespace_expression(init);
     let relative_executor_proof = visitor
         .relative_declaration_proof(ident.name.as_str(), declarator.id.span().start)
         .or_else(|| {
@@ -126,6 +129,9 @@ pub(super) fn record_declarator(
     }
     if let Some(index) = relative_executor_proof {
         visitor.relative_proofs[scope_index].insert(ident.name.to_string(), index);
+    }
+    if namespace_executor {
+        visitor.namespace_proofs[scope_index].insert(ident.name.to_string());
     }
 }
 

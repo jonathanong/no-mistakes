@@ -39,6 +39,18 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     fn walk_builder_write_member(&mut self, member: &ast::MemberExpression<'a>) {
+        match member {
+            ast::MemberExpression::StaticMemberExpression(value)
+                if value.property.name == "query" =>
+            {
+                self.revoke_query_receiver(&value.object);
+            }
+            ast::MemberExpression::ComputedMemberExpression(value) if !matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&value.expression), ast::Expression::StringLiteral(key) if key.value != "query") =>
+            {
+                self.revoke_query_receiver(&value.object);
+            }
+            _ => {}
+        }
         // The ordinary .text read projection must not exempt a write/delete
         // receiver. Walk each receiver/key once, including computed effects.
         match member {
@@ -62,6 +74,10 @@ impl<'a> ScopeVisitor<'a> {
             .init
             .as_ref()
             .is_some_and(|init| self.proven_executor(init));
+        let namespace = declaration
+            .init
+            .as_ref()
+            .is_some_and(|init| self.namespace_expression(init));
         self.refresh_builder_identity(declaration);
         let variants = declaration
             .init
@@ -77,7 +93,7 @@ impl<'a> ScopeVisitor<'a> {
         walk::walk_variable_declarator(self, declaration);
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
-        self.initialize_executor_alias(declaration, executor);
+        self.initialize_executor_alias(declaration, executor, namespace);
         self.leave_iife(&declaration.id, outer);
     }
 
