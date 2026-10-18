@@ -58,6 +58,8 @@ mod cli_check_rules_postgres_unmatched_executors;
 mod cli_check_rules_postgres_variants;
 #[path = "cli_postgres_catalog.rs"]
 mod cli_postgres_catalog;
+#[path = "cli_postgres_configured_helper_provenance.rs"]
+mod cli_postgres_configured_helper_provenance;
 #[path = "executed_postgres_boolean_api.rs"]
 mod executed_postgres_boolean_api;
 #[path = "executed_postgres_branch_regressions_api.rs"]

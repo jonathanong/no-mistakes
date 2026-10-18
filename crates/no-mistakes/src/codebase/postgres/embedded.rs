@@ -99,6 +99,7 @@ pub fn extract_embedded_sql_from_program(
             candidates: scoped.candidates,
             spans: scoped.spans,
             calls: std::mem::take(&mut collected.pending_calls),
+            diagnostic_member_sequences: collected.diagnostic_member_sequences,
             confirmed_order: std::mem::take(&mut collected.confirmed_order),
             call_spans: collected.pending_spans,
         },

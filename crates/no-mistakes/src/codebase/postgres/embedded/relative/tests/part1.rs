@@ -119,6 +119,7 @@ fn a_file_outside_the_package_or_equal_to_the_root_is_not_kept() {
                     call: call("relative"),
                 }],
                 confirmed_order: vec![1],
+                diagnostic_member_sequences: Vec::new(),
                 call_spans: Default::default(),
                 spans: vec![PendingRelativeSpan {
                     owners: vec![0],

@@ -10,7 +10,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn bind_query_property(
     else {
         return;
     };
-    if !is_const || !visitor.namespace_expression(init) || !visitor.namespace_query_valid() {
+    if !is_const || !visitor.namespace_expression(init) || !visitor.namespace_query_valid(init) {
         return;
     }
     for property in &object.properties {

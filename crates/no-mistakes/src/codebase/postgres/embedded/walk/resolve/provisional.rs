@@ -24,24 +24,34 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         }
         let namespace = visitor.namespace_expression(receiver);
         let broad = visitor.bindings.contains(MEMBER_QUERY_OPT_IN);
-        if broad
-            || (visitor.proven_executor(receiver)
-                && if namespace {
-                    visitor.namespace_query_valid()
-                } else {
-                    visitor.receiver_query_valid()
-                })
-        {
+        if broad || (visitor.proven_executor(receiver) && (!namespace || visitor.query_binding)) {
             let sequence = push_confirmed(visitor, call, "query".to_string());
             if !broad {
-                visitor.note_member_call(sequence, call, namespace);
+                visitor.note_member_call(sequence, call, receiver);
             }
         } else {
             let owners = visitor.relative_executor_owners(receiver);
+            // Rejected member queries never enter SQL candidates. Verbose
+            // diagnostics count only calls with no pending relative proof.
+            if let Some(observer) = crate::diagnostics::current()
+                .filter(|observer| observer.verbose() && owners.is_empty())
+            {
+                let recovered = executor_call(visitor, call, "query".to_string());
+                let known = recovered
+                    .sql_text
+                    .as_deref()
+                    .is_some_and(super::super::scope::has_known_leading_statement)
+                    || recovered.variants.iter().any(|variant| {
+                        super::super::scope::has_known_leading_statement(&variant.sql_text)
+                    });
+                if known {
+                    observer.increment("postgres.unproven_member_query_sql", 1);
+                }
+            }
             let sequence = visitor.next_seq;
             push_pending(visitor, call, "query", owners);
             if visitor.next_seq != sequence {
-                visitor.note_member_call(sequence, call, false);
+                visitor.note_member_call(sequence, call, receiver);
             }
         }
         return;

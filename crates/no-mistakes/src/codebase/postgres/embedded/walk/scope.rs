@@ -6,12 +6,17 @@ use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
     pub(super) fn push_scope(&mut self) {
+        self.member_query_proof.next_scope_id += 1;
+        self.member_query_proof
+            .scope_ids
+            .push(self.member_query_proof.next_scope_id);
         self.scopes.push(HashMap::new());
         self.relative_proofs.push(HashMap::new());
         self.namespace_proofs.push(Default::default());
     }
 
     pub(super) fn pop_scope(&mut self) {
+        self.member_query_proof.scope_ids.pop();
         self.scopes.pop();
         self.relative_proofs.pop();
         self.namespace_proofs.pop();
@@ -109,6 +114,7 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn mark_dynamic(&mut self, name: &str) {
+        self.forget_receiver_alias(name);
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
                 binding.executor_alias = None;
@@ -156,11 +162,16 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn enter_function(&mut self) {
+        self.member_query_proof.next_function_id += 1;
+        self.member_query_proof
+            .function_ids
+            .push(self.member_query_proof.next_function_id);
         self.function_scopes
             .push(self.scopes.len().saturating_sub(1));
     }
 
     pub(super) fn leave_function(&mut self) {
+        self.member_query_proof.function_ids.pop();
         self.function_scopes.pop();
     }
 
@@ -169,23 +180,9 @@ impl ScopeVisitor<'_> {
         walk(self);
         self.loop_depth = self.loop_depth.saturating_sub(1);
     }
-
-    /// True when `name` is an outer function's binding mutated from a nested
-    /// function. Walking a nested declaration is not executing it, so those
-    /// appends must not rewrite the outer SQL.
-    pub(super) fn append_crosses_function(&self, name: &str) -> bool {
-        let Some(&fn_start) = self.function_scopes.last() else {
-            return false;
-        };
-        self.scopes
-            .iter()
-            .enumerate()
-            .rev()
-            .find_map(|(index, scope)| scope.contains_key(name).then_some(index))
-            .is_some_and(|index| index < fn_start)
-    }
 }
 
+mod function;
 mod known_statement;
 mod params;
 pub(crate) use known_statement::has_known_leading_statement;

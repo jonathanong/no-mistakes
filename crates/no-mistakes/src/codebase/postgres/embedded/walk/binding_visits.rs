@@ -1,6 +1,6 @@
-use super::{assignments, resolve, ScopeVisitor};
-use oxc_ast::ast::{self, AssignmentTarget};
-use oxc_ast_visit::{walk, Visit};
+use super::{resolve, ScopeVisitor};
+use oxc_ast::ast;
+use oxc_ast_visit::walk;
 
 impl<'a> ScopeVisitor<'a> {
     pub(super) fn walk_variable_declaration_bindings(
@@ -10,9 +10,17 @@ impl<'a> ScopeVisitor<'a> {
         for declarator in &declaration.declarations {
             if let Some(init) = &declarator.init {
                 // A mutable alias or mixed const result can expose `.query`.
-                if declaration.kind != ast::VariableDeclarationKind::Const
+                let tracked_alias =
+                    matches!(declarator.id, ast::BindingPattern::BindingIdentifier(_))
+                        && matches!(
+                            crate::codebase::ts_source::unwrap_ts_wrappers(init),
+                            ast::Expression::Identifier(_)
+                        )
+                        && !self.receiver_origins(init).is_empty();
+                if (!tracked_alias && declaration.kind != ast::VariableDeclarationKind::Const)
                     || (self.stable_executor_category(init).is_none()
-                        && self.relative_executor_proof(init).is_none())
+                        && self.relative_executor_proof(init).is_none()
+                        && !tracked_alias)
                 {
                     self.revoke_query_receiver(init);
                 }
@@ -69,7 +77,8 @@ impl<'a> ScopeVisitor<'a> {
             {
                 self.revoke_query_receiver(&value.object);
             }
-            ast::MemberExpression::ComputedMemberExpression(value) if !matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&value.expression), ast::Expression::StringLiteral(key) if key.value != "query") =>
+            ast::MemberExpression::ComputedMemberExpression(value)
+                if query_key::may_write_query(&value.expression) =>
             {
                 self.revoke_query_receiver(&value.object);
             }
@@ -118,42 +127,14 @@ impl<'a> ScopeVisitor<'a> {
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor, namespace);
+        if let (ast::BindingPattern::BindingIdentifier(name), Some(init)) =
+            (&declaration.id, &declaration.init)
+        {
+            self.bind_receiver_alias(name.name.as_str(), init);
+        }
         self.leave_iife(&declaration.id, outer);
     }
-
-    pub(super) fn walk_assignment_expression_bindings(
-        &mut self,
-        assign: &oxc_ast::ast::AssignmentExpression<'a>,
-    ) {
-        // Any assigned executor value may be rebound through its new owner.
-        self.revoke_query_receiver(&assign.right);
-        let identity = self.assignment_builder_identity(assign);
-        let variants = self.assigned_variants(assign);
-        if matches!(
-            assign.left,
-            AssignmentTarget::ArrayAssignmentTarget(_)
-                | AssignmentTarget::ObjectAssignmentTarget(_)
-        ) {
-            self.visit_expression(&assign.right);
-            assignments::visit_target(self, &assign.left);
-            return;
-        }
-        let exemptions = self.builder_reference_exemptions.len();
-        if matches!(assign.left, AssignmentTarget::AssignmentTargetIdentifier(_))
-            && assign.operator == ast::AssignmentOperator::Assign
-        {
-            self.allow_builder_value(&assign.right);
-        }
-        walk::walk_assignment_expression(self, assign);
-        self.builder_reference_exemptions.truncate(exemptions);
-        if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
-            self.mark_dynamic(ident.name.as_str());
-            self.set_variants(ident.name.as_str(), variants);
-            self.set_builder_identity(ident.name.as_str(), identity);
-        } else {
-            resolve::functions::reassigned::for_each_assigned_name(&assign.left, &mut |name| {
-                self.mark_dynamic(name);
-            });
-        }
-    }
 }
+
+mod assignment_walk;
+mod query_key;

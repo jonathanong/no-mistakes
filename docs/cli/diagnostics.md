@@ -67,6 +67,14 @@ identify lock waiting and gaps between deeper phases.
 [work] source.reads: 42
 ```
 
+PostgreSQL embedded-SQL checks can also emit
+`[work] postgres.unproven_member_query_sql: N`: SQL-looking `.query` calls
+whose receiver has no configured proof after relative-import resolution.
+They remain outside the SQL candidate set. The counter is collected only with
+`--verbose-timings`. Its leading-statement heuristic recognizes `SELECT`,
+`INSERT`, `UPDATE`, `DELETE`, and `MERGE`; other SQL statements may be missed.
+A non-SQL HTTP `.query({ resource: ... })` does not add to it.
+
 Parallel phase durations can overlap their enclosing phase and siblings. Never
 add lines marked `parallel; non-additive` to estimate total time; use `total`
 for wall time.

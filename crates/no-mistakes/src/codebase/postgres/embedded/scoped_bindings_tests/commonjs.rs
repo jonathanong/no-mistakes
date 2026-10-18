@@ -38,27 +38,39 @@ fn namespace_mutation_revokes_member_proof_but_not_captured_query_function() {
     let source = std::fs::read_to_string(&path).expect("saved CommonJS mutation fixture");
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
-    assert_eq!(facts.calls.len(), 1);
-    assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 3"));
+    assert_eq!(facts.calls.len(), 9);
+    let captured = facts
+        .calls
+        .iter()
+        .filter(|call| call.sql_text.as_deref() == Some("SELECT 3"))
+        .count();
+    assert_eq!(captured, 1);
+    assert_eq!(
+        facts
+            .calls
+            .iter()
+            .filter(|call| call.is_unanalyzable())
+            .count(),
+        8
+    );
 }
 
 #[test]
-fn later_declared_mutators_revoke_earlier_member_sites() {
+fn later_declared_mutators_make_captured_member_sites_uncertain() {
     let options = EmbeddedSqlOptions::configured("@example/db", &[])
         .with_scoped_executors(&["beginTransaction".into()], &[]);
     let namespace = fixture("namespace-late-mutator.cjs");
     let source = std::fs::read_to_string(&namespace).unwrap();
-    assert!(
-        extract_embedded_sql_from_source(&namespace, &source, &options)
-            .calls
-            .is_empty()
-    );
+    let calls = extract_embedded_sql_from_source(&namespace, &source, &options).calls;
+    assert_eq!(calls.len(), 1);
+    assert!(calls[0].is_unanalyzable());
     let factory = fixture("factory-late-mutator.ts");
     let source = std::fs::read_to_string(&factory).unwrap();
     let facts = extract_embedded_sql_from_source(&factory, &source, &options);
-    assert_eq!(facts.calls.len(), 1);
+    assert_eq!(facts.calls.len(), 2);
+    assert!(facts.calls[0].is_unanalyzable());
     assert_eq!(
-        facts.calls[0].sql_text.as_deref(),
+        facts.calls[1].sql_text.as_deref(),
         Some("SELECT direct late")
     );
 }
@@ -75,12 +87,13 @@ fn commonjs_namespace_shadow_does_not_inherit_imported_callable_name() {
 }
 
 #[test]
-fn commonjs_cache_invalidation_revokes_configured_subpaths() {
+fn commonjs_exact_module_identity_preserves_distinct_subpaths() {
     let path = fixture("commonjs-subpath-cache.cjs");
     let source = std::fs::read_to_string(&path).expect("saved CommonJS subpath fixture");
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
-    assert!(facts.calls.is_empty());
+    assert_eq!(facts.calls.len(), 1);
+    assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 10"));
 }
 
 #[test]
@@ -114,72 +127,4 @@ fn unrelated_member_write_preserves_factory_executor_call() {
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 12"));
 }
 
-#[test]
-fn factory_member_mutations_keep_only_callable_executor_proof() {
-    let options = EmbeddedSqlOptions::configured("@example/db", &[])
-        .with_scoped_executors(&["beginTransaction".into()], &[]);
-    let mut failures = Vec::new();
-    for (name, sql) in [
-        (
-            "factory-member-query-assignment.ts",
-            "SELECT direct assignment",
-        ),
-        ("factory-member-query-delete.ts", "SELECT direct delete"),
-        ("factory-member-query-computed.ts", "SELECT direct computed"),
-        ("factory-member-query-escape.ts", "SELECT direct escape"),
-        ("factory-mutable-alias.ts", "SELECT direct mutable alias"),
-        (
-            "factory-container-escape.ts",
-            "SELECT direct container escape",
-        ),
-        (
-            "factory-late-mutable-alias.ts",
-            "SELECT direct late mutable",
-        ),
-        (
-            "factory-conditional-alias.ts",
-            "SELECT direct conditional alias",
-        ),
-        (
-            "factory-conditional-container.ts",
-            "SELECT direct conditional container",
-        ),
-        ("factory-return-escape.ts", "SELECT direct return escape"),
-        (
-            "factory-conditional-argument.ts",
-            "SELECT direct conditional argument",
-        ),
-        (
-            "factory-arrow-return-escape.ts",
-            "SELECT direct arrow escape",
-        ),
-        (
-            "factory-sequence-escape.ts",
-            "SELECT direct sequence escape",
-        ),
-        (
-            "factory-const-conditional-alias.ts",
-            "SELECT direct const conditional",
-        ),
-        (
-            "factory-const-logical-alias.ts",
-            "SELECT direct const logical",
-        ),
-        (
-            "factory-const-sequence-alias.ts",
-            "SELECT direct const sequence",
-        ),
-        (
-            "factory-const-mixed-namespace-alias.ts",
-            "SELECT direct const mixed namespace",
-        ),
-    ] {
-        let path = fixture(name);
-        let source = std::fs::read_to_string(&path).expect("saved factory mutation fixture");
-        let facts = extract_embedded_sql_from_source(&path, &source, &options);
-        if facts.calls.len() != 1 || facts.calls[0].sql_text.as_deref() != Some(sql) {
-            failures.push((name, facts.calls));
-        }
-    }
-    assert!(failures.is_empty(), "{failures:#?}");
-}
+mod mutations;

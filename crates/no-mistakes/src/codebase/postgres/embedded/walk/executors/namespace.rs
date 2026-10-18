@@ -1,41 +1,43 @@
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{CallExpression, Expression, ObjectPropertyKind};
-use std::collections::{BTreeMap, HashSet};
+use oxc_ast::ast::{CallExpression, Expression};
+use std::collections::HashMap;
+
+mod aggregate;
+mod identity;
+mod proof;
+use identity::Origin;
+
+#[derive(Clone)]
+pub(in crate::codebase::postgres::embedded::walk) struct MemberCall {
+    pub(in crate::codebase::postgres::embedded::walk) sequence: u32,
+    pub(super) span: (u32, u32),
+    pub(super) origins: Vec<Origin>,
+    pub(super) owner: u32,
+    pub(super) event: u32,
+    pub(in crate::codebase::postgres::embedded::walk) sql_looking: bool,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct Escape {
+    pub(super) owner: u32,
+    pub(super) event: u32,
+    pub(super) in_loop: bool,
+}
 
 #[derive(Default)]
 pub(crate) struct MemberQueryProof {
-    namespace_invalidated: bool,
-    receiver_invalidated: bool,
-    calls: BTreeMap<u32, (u32, u32, bool)>,
+    pub(in crate::codebase::postgres::embedded::walk) scope_ids: Vec<u32>,
+    pub(in crate::codebase::postgres::embedded::walk) next_scope_id: u32,
+    pub(in crate::codebase::postgres::embedded::walk) function_ids: Vec<u32>,
+    pub(in crate::codebase::postgres::embedded::walk) next_function_id: u32,
+    pub(super) next_event: u32,
+    pub(super) aliases: HashMap<(u32, String), Vec<Origin>>,
+    pub(super) escapes: HashMap<Origin, Vec<Escape>>,
+    pub(in crate::codebase::postgres::embedded::walk) calls: Vec<MemberCall>,
 }
 
 impl ScopeVisitor<'_> {
-    pub(in crate::codebase::postgres::embedded::walk) fn revoke_aggregate_values(
-        &mut self,
-        expression: &Expression<'_>,
-    ) {
-        match expression {
-            Expression::ObjectExpression(object) => {
-                for property in &object.properties {
-                    let value = match property {
-                        ObjectPropertyKind::ObjectProperty(value) => &value.value,
-                        ObjectPropertyKind::SpreadProperty(value) => &value.argument,
-                    };
-                    self.revoke_query_receiver(value);
-                }
-            }
-            Expression::ArrayExpression(array) => {
-                for value in &array.elements {
-                    if let Some(value) = value.as_expression() {
-                        self.revoke_query_receiver(value);
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-
     pub(in crate::codebase::postgres::embedded::walk) fn namespace_expression(
         &self,
         expression: &Expression<'_>,
@@ -54,35 +56,74 @@ impl ScopeVisitor<'_> {
                         scope[name].executor_alias == Some(true)
                             && self.namespace_proofs[index].contains(name)
                     }
-                    None => self.imported_namespace_names.contains(name),
+                    None => self.imported_namespace_names.contains_key(name),
                 }
             }
             Expression::CallExpression(call) => self.configured_require(call),
-            Expression::ConditionalExpression(conditional) => {
-                self.namespace_expression(&conditional.consequent)
-                    || self.namespace_expression(&conditional.alternate)
+            Expression::ConditionalExpression(value) => {
+                self.namespace_expression(&value.consequent)
+                    || self.namespace_expression(&value.alternate)
             }
             _ => false,
         }
     }
 
-    pub(in crate::codebase::postgres::embedded::walk) fn namespace_query_valid(&self) -> bool {
-        self.query_binding && !self.member_query_proof.namespace_invalidated
+    pub(in crate::codebase::postgres::embedded::walk) fn namespace_query_valid(
+        &self,
+        receiver: &Expression<'_>,
+    ) -> bool {
+        self.query_binding && self.receiver_query_valid(receiver)
     }
 
-    pub(in crate::codebase::postgres::embedded::walk) fn receiver_query_valid(&self) -> bool {
-        !self.member_query_proof.receiver_invalidated
+    pub(in crate::codebase::postgres::embedded::walk) fn receiver_query_valid(
+        &self,
+        receiver: &Expression<'_>,
+    ) -> bool {
+        !self
+            .receiver_origins(receiver)
+            .iter()
+            .any(|origin| self.member_query_proof.escapes.contains_key(origin))
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_member_call(
         &mut self,
         sequence: u32,
         call: &CallExpression<'_>,
-        namespace: bool,
+        receiver: &Expression<'_>,
     ) {
-        self.member_query_proof
-            .calls
-            .insert(sequence, (call.span.start, call.span.end, namespace));
+        let origins = self.receiver_origins(receiver);
+        let owner = self
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        let event = self.member_query_proof.next_event;
+        self.member_query_proof.next_event += 1;
+        let sql_looking = crate::diagnostics::current().is_some_and(|observer| observer.verbose())
+            && self
+                .pending_calls
+                .iter()
+                .rev()
+                .find(|pending| pending.seq == sequence)
+                .is_some_and(|pending| {
+                    pending
+                        .call
+                        .sql_text
+                        .as_deref()
+                        .is_some_and(super::super::scope::has_known_leading_statement)
+                        || pending.call.variants.iter().any(|variant| {
+                            super::super::scope::has_known_leading_statement(&variant.sql_text)
+                        })
+                });
+        self.member_query_proof.calls.push(MemberCall {
+            sequence,
+            span: (call.span.start, call.span.end),
+            origins,
+            owner,
+            event,
+            sql_looking,
+        });
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn revoke_query_receiver(
@@ -101,25 +142,32 @@ impl ScopeVisitor<'_> {
                 return;
             }
             Expression::SequenceExpression(value) => {
-                if let Some(result) = value.expressions.last() {
-                    self.revoke_query_receiver(result);
+                if let Some(last) = value.expressions.last() {
+                    self.revoke_query_receiver(last);
                 }
                 return;
             }
             _ => {}
         }
-        if self.namespace_expression(receiver) {
-            self.member_query_proof.namespace_invalidated = true;
-            for (scope, proofs) in self.scopes.iter_mut().zip(&self.namespace_proofs) {
-                for (name, binding) in scope {
-                    if proofs.contains(name) {
-                        binding.executor_alias = None;
-                    }
-                }
-            }
-        } else if self.proven_executor(receiver) || self.relative_executor_proof(receiver).is_some()
-        {
-            self.member_query_proof.receiver_invalidated = true;
+        let origins = self.receiver_origins(receiver);
+        let owner = self
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        let event = self.member_query_proof.next_event;
+        self.member_query_proof.next_event += 1;
+        for origin in origins {
+            self.member_query_proof
+                .escapes
+                .entry(origin)
+                .or_default()
+                .push(Escape {
+                    owner,
+                    event,
+                    in_loop: self.loop_depth > 0,
+                });
         }
     }
 
@@ -132,45 +180,5 @@ impl ScopeVisitor<'_> {
                 self.revoke_query_receiver(expression);
             }
         }
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn drop_invalidated_member_calls(&mut self) {
-        let blocked = self
-            .member_query_proof
-            .calls
-            .iter()
-            .filter_map(|(sequence, (start, end, namespace))| {
-                let invalidated = if *namespace {
-                    self.member_query_proof.namespace_invalidated
-                } else {
-                    self.member_query_proof.receiver_invalidated
-                };
-                invalidated.then_some((*sequence, (*start, *end)))
-            })
-            .collect::<Vec<_>>();
-        if blocked.is_empty() {
-            return;
-        }
-        let sequences = blocked
-            .iter()
-            .map(|(sequence, _)| *sequence)
-            .collect::<HashSet<_>>();
-        let spans = blocked
-            .iter()
-            .map(|(_, span)| *span)
-            .collect::<HashSet<_>>();
-        let (calls, call_spans) = std::mem::take(&mut self.calls)
-            .into_iter()
-            .zip(std::mem::take(&mut self.call_spans))
-            .filter(|(_, span)| !spans.contains(span))
-            .unzip();
-        self.calls = calls;
-        self.call_spans = call_spans;
-        self.confirmed_order
-            .retain(|sequence| !sequences.contains(sequence));
-        self.pending_calls
-            .retain(|call| !sequences.contains(&call.seq));
-        self.pending_spans
-            .retain(|sequence, _| !sequences.contains(sequence));
     }
 }

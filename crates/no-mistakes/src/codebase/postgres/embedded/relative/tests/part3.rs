@@ -46,11 +46,14 @@ fn relative_imports_stay_unresolved_until_projection() {
 }
 
 #[test]
-fn relative_member_escapes_drop_pending_calls_before_projection() {
+fn relative_member_escapes_retain_unanalyzable_pending_calls() {
     let mut pending = extract("relative-member-escape.ts", &scoped("@example/db"));
-    assert_eq!(pending.pending_relative.calls.len(), 1);
+    assert_eq!(pending.pending_relative.calls.len(), 3);
+    assert!(pending.pending_relative.calls[..2]
+        .iter()
+        .all(|call| call.call.is_unanalyzable()));
     assert_eq!(
-        pending.pending_relative.calls[0].call.sql_text.as_deref(),
+        pending.pending_relative.calls[2].call.sql_text.as_deref(),
         Some("SELECT direct relative")
     );
     let root = PathBuf::from("/virtual/db");
@@ -59,6 +62,7 @@ fn relative_member_escapes_drop_pending_calls_before_projection() {
         Some(root.join("src/transaction.ts"))
     });
     assert_eq!(bodies(&pending), ["SELECT direct relative"]);
+    assert_eq!(pending.calls.len(), 3);
 }
 
 #[test]

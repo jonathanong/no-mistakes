@@ -33,6 +33,8 @@ pub(crate) struct PendingRelativeScope {
     pub(crate) candidates: Vec<RelativeScopedCandidate>,
     pub(crate) spans: Vec<PendingRelativeSpan>,
     pub(crate) calls: Vec<PendingRelativeCall>,
+    /// Originally SQL-looking member queries, retained only for verbose diagnostics.
+    pub(crate) diagnostic_member_sequences: Vec<u32>,
     /// Sequence numbers parallel to confirmed `calls`, set only when provisional spans exist.
     pub(crate) confirmed_order: Vec<u32>,
     pub(crate) call_spans: std::collections::BTreeMap<u32, (u32, u32)>,

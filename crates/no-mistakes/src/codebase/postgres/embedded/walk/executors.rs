@@ -55,7 +55,8 @@ impl ScopeVisitor<'_> {
                 match self.scopes.iter().rev().find_map(|scope| scope.get(name)) {
                     Some(binding) => binding.executor_alias == Some(true),
                     None => {
-                        self.bindings.contains(name) || self.imported_namespace_names.contains(name)
+                        self.bindings.contains(name)
+                            || self.imported_namespace_names.contains_key(name)
                     }
                 }
             }
