@@ -93,7 +93,13 @@ impl<'a> ScopeVisitor<'a> {
         let arguments = self.begin_executor_arguments(call, before);
         self.record_argument_append_effects(&append_effect, call.span.start);
         let invocation = self.begin_argument_invocation(call);
+        let exemptions = self.begin_safe_builder_arguments(
+            call,
+            &helper_effect.0,
+            statement_append.as_ref().map(|(name, _)| name.as_str()),
+        );
         walk::walk_call_expression(self, call);
+        self.builder_reference_exemptions.truncate(exemptions);
         self.finish_argument_invocation(invocation);
         self.record_argument_helper_effects(&helper_effect.0, call.span.start);
         if let Some(arguments) = arguments {

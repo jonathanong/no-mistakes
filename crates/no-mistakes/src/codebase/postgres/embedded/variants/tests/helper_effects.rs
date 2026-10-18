@@ -25,7 +25,8 @@ fn direct_helper_mutations_invalidate_captured_builder_aliases_after_argument_ev
     );
     assert_eq!(texts(&calls[4]), ["SELECT id FROM accounts", "SELECT 3"]);
     assert!(calls[5].is_unanalyzable());
-    assert_eq!(calls[6].kind, EmbeddedSqlKind::ImmutableLocal);
+    // The locally shadowed helper has no verified mutation summary.
+    assert_eq!(calls[6].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(calls[6].sql_text.as_deref(), Some("SELECT id FROM orders"));
     assert!(calls[7].is_unanalyzable());
     assert_eq!(texts(&calls[9]), ["SELECT id FROM new_users", "SELECT 5"]);

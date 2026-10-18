@@ -166,3 +166,5 @@ fn postgres_no_offset_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+#[path = "cli_check_rules_postgres_offset/builder_mutation_escapes.rs"]
+mod builder_mutation_escapes;

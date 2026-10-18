@@ -46,9 +46,10 @@ fn confirmed_consumers_preserve_variants_while_pending_consumers_preserve_their_
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
     assert_eq!(facts.calls.len(), 7, "{facts:#?}");
     for (index, call) in facts.calls.iter().enumerate() {
-        if [2, 4].contains(&index) {
-            // These reads follow an unconfirmed relative invocation. Its
-            // pending capture stays intact, but later finite reuse is opaque.
+        if [2, 3, 4].contains(&index) {
+            // These reads follow an unconfirmed relative invocation.
+            // Pending captures stay intact; later legacy and finite reuse
+            // both become opaque, including the confirmed client.query call.
             assert!(call.is_unanalyzable(), "{call:#?}");
         } else if [1, 6].contains(&index) {
             assert_eq!(call.variants.len(), 2, "{call:#?}");

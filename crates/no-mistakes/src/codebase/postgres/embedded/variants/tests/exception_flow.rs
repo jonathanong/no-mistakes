@@ -30,8 +30,8 @@ fn handlers_and_finalizers_never_read_only_the_preceding_phases_end_snapshot() {
                 assert_eq!(call.sql_text.as_deref(), Some("SELECT 18"));
                 assert!(call.variants.is_empty());
             }
-            "legacy builder" => {
-                assert_eq!(call.kind, EmbeddedSqlKind::ImmutableLocal);
+            "opaque legacy builder" => {
+                assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
                 assert_eq!(call.sql_text.as_deref(), Some("SELECT 25"));
                 assert!(call.variants.is_empty());
             }

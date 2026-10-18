@@ -18,7 +18,7 @@ the unanalyzable behavior below.
 An opaque falsy result from `condition && sqlFragment` followed by `??` stays
 dynamic because the extractor cannot prove whether the fallback executes.
 Passing a mutable SQL builder to an ordinary helper call without a verified
-summary clears finite alternatives across tracked aliases and preserves legacy
+summary invalidates complete SQL across tracked aliases, including legacy
 SQL fields. The same call evaluated in an `if` test, conditional test, or logical
 left operand also clears the affected SQL prefix. Calls that remain dynamic use
 the configured `unanalyzableSql` behavior.
@@ -102,83 +102,8 @@ asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 ### Unanalyzable SQL
 
-**Behavior change:** this rule previously dropped dynamic executor SQL unless
-its recovered text already proved an `OFFSET`. With the default
-`unanalyzableSql: fail`, a dynamic executor call without complete alternatives is reported with target
-`unanalyzable` at the executor call when OFFSET pagination cannot be ruled out:
-
-- no SQL text was recovered (an opaque `query(sql)` argument or a
-  `query(cond ? a : b)` choice whose arms cannot all be recovered), or
-- the recovered text contains `SELECT`, including a CTE or query inside DML,
-  or its leading statement is unknown or incomplete, and it has no OFFSET of
-  its own. An interpolation or opaque appended tail could add `OFFSET`.
-
-Recovered keyword checks ignore quoted text, nested PostgreSQL block comments,
-and keyword text within identifiers, including `$` and Unicode continuations.
-
-Switch case labels can also change scalar guards before a later case or default
-executes. Assignments, updates, destructuring, and directly invoked closure writes
-in a label make branching executor SQL inside that switch unanalyzable. The
-default `fail` reports the executor line; `ignore` skips that uncertain call.
-Literal SQL inside the switch still produces ordinary `offset` findings, and
-callbacks that are merely created or passed are not executed by this heuristic.
-Literal function or arrow closures invoked via `.call(...)` or `.apply(...)`
-also follow this boundary, including TypeScript wrappers and literal computed
-property names. Arguments are evaluated before the invoked body. Referencing
-`.call` without invoking it, using `.bind(...)`, or passing a callback keeps
-that callback body inert.
-Creating an unused generator iterator also leaves its body unexecuted, so body
-writes alone do not make the query unanalyzable, including literal `.call(...)`
-and `.apply(...)` invocations. Arguments and parameter defaults still execute.
-Advancing or consuming an iterator (for example, `.next()`,
-`for...of`, spread, tagged template interpolation, or `yield*`), storing it, or
-passing it to an unknown consumer retains conservative body checks, including
-parameter and destructuring defaults.
-Stored iterators may remain unanalyzable even when their body is never advanced;
-the heuristic does not trace iterator aliases.
-An earlier body may be skipped by direct entry or executed by fallthrough, so
-its SQL assignments cannot supply a later case's complete statement. Bindings
-it changes become opaque for later cases. The default `fail` reports those
-calls as `unanalyzable`; `ignore` skips them. Fresh literal and constant SQL
-inside a case still receive ordinary checks.
-
-```ts
-let gate = false;
-switch (2) {
-  case (gate = true, 1): break;
-  case 2: query(gate ? "SELECT 1 OFFSET 1" : "SELECT 1"); // unanalyzable
-}
-
-let unchanged = false;
-switch (2) {
-  case (function* () { unchanged = true; })(): break;
-  case 2: query(unchanged ? "SELECT 1 OFFSET 1" : "SELECT 1"); // passes
-}
-```
-
-Dynamic DML without a recovered query is not reported, and a
-dynamic call whose recovered text already contains `OFFSET` keeps only its
-ordinary `offset` finding. See the
-[migration note](../migrations/postgres-unanalyzable-sql.md).
-
-```ts
-import { query } from "@example/db";
-
-// Counterexample: both calls are reported as unanalyzable by default.
-export function run(sql: string) {
-  return query(sql);
-}
-
-export function sorted(column: string) {
-  return query(`SELECT id FROM posts ORDER BY ${column}`);
-}
-```
-
-Fix: pass a SQL literal or a configured trusted tagged template, pass values
-such as page sizes as `$n` binds instead of untagged `${...}` interpolations,
-keep pagination clauses in the recovered SQL, suppress the executor line with
-`no-mistakes-disable-next-line postgres-no-offset`, or set
-`unanalyzableSql: ignore` to restore the earlier skip.
+See [Unanalyzable SQL](postgres-no-offset-dynamic.md) and
+[mutable SQL builder recovery](../postgres-builder-mutations.md).
 
 ## Options and defaults
 
@@ -194,51 +119,8 @@ message.
 
 ### Executor configuration
 
-Omitting both `importSpecifier` and `executorNames` is a configuration error.
-Set `importSpecifier` to your database module or list `executorNames` explicitly.
-Use `executorNames: []` without a module to select no executor calls and retain
-SQL-file/native-SQL analysis where supported. See the
-[executor migration](../migrations/explicit-postgres-executors.md).
-
-| Option            | Default                                                      | Behavior                                                                            |
-| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
-| `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-| `executorFactoryNames` | Empty | Named imports (from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty) whose call result bound with `const`, `let`, `using`, or `await using` is an executor inside the declaring block. |
-| `executorTypeNames` | Empty | Imported type names (`import type` or inline `type` specifiers) from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty, whose annotated parameters, including optional and inline-destructured ones, are executors inside the declaring function. |
-| `trustedSqlTags` | Empty | Named imports of `name` from `module`, or a subpath of `module`, are parameterized SQL tags. A renamed local binding is trusted. A default import is not. A shadowed or rebound local fails closed. The same name from another module, or a sibling prefix such as `@example/dbx`, stays untrusted. |
-| `reportUnmatchedExecutorNames` | `false` | Opt in to one finding per `executorFactoryNames` / `executorTypeNames` entry that none of the files this rule scans imports from `importSpecifier`, its subpaths, or a relative path that resolves into that package (a typo or a wrong module silently disables checking). Reported against the config file, so line suppression does not apply; remove the entry or leave this off to silence it. Rust rule only. See [Reporting unmatched names](../migrations/explicit-postgres-executors.md#reporting-unmatched-names). |
-
-`executorFactoryNames` and `executorTypeNames` add scoped executors: `tx` in
-`await using tx = await openTransaction()` or `run` in `run: TxExecutor` is scanned
-only inside the block or function that declares it, and a same-named identifier
-elsewhere is not. Matching is by configuration only, both default to empty, and
-neither counts as executor selection: still set `importSpecifier` or `executorNames`.
-With `importSpecifier` set, these two options also match imports from its subpaths
-(`@example/db/types` for `@example/db`) but not sibling packages such as
-`@example/dbx`. A relative import (`../transaction`) matches only when the resolved
-file is inside the package `importSpecifier` resolves to; a same-named import outside
-that package does not. If the package root cannot be determined, relative imports do
-not match. `executorNames` still requires the exact module.
-
-Relative factory/type candidates capture their own SQL before invocation, but
-their package owner is confirmed only in prepared resolver projection. A
-mutable builder passed to one loses finite alternatives for subsequent reuse,
-including aliases, even if the owner is later accepted. Subsequent branching
-calls therefore report `unanalyzable` under the default `unanalyzableSql: fail`,
-or are skipped with `ignore`; the analyzer does not invent an OFFSET clause.
-The original pending call still checks proven SQL from later argument appends,
-including OFFSET, if its owner is accepted; `ignore` does not skip this concrete
-SQL.
-Primitive SQL copies and already-confirmed direct executors retain their
-existing behavior. See the
-[finite SQL model](../postgres-facts.md#finite-sql-alternatives).
-
-Omitting both options is a configuration error. Set `executorNames: []` without
-`importSpecifier` to explicitly skip executor calls (including `.query`).
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
-their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+See [Executor configuration](postgres-no-offset-executors.md) and
+[mutable SQL builder recovery](../postgres-builder-mutations.md).
 
 ## Valid example
 
@@ -289,45 +171,4 @@ keeps executed SQL identifiable in logs.
 
 ## Statement coverage and locations
 
-The shared SQL pass records every OFFSET in source order, including INSERT,
-UPDATE, DELETE, COPY queries, CREATE TABLE AS, views, CTEs, RETURNING, ON CONFLICT,
-and subqueries inside CASE, arrays, functions, predicates, and ordering. Routine
-declarations and non-analyzing EXPLAIN plans are skipped; EXPLAIN ANALYZE queries
-are executed and checked, including the parenthesized ANALYZE option.
-COPY FROM STDIN payload rows are data; queries after
-its `\.` terminator are still checked. Nested comments, escaped E strings,
-dollar quotes, and Unicode identifiers retain their SQL meaning.
-
-Each finding points to the OFFSET keyword. Shared SQL constants point to their
-declaration lines, and embedded multiline queries retain line-specific
-suppression. Multiple offsets on the same line remain separate findings.
-The first occurrence in a file keeps target `offset`; later occurrences use
-`offset#2`, `offset#3`, and so on. The Rust statement-fact contract exposes these
-occurrences as `SqlStatementFileFacts.offset_uses`, with line, column, and
-`OffsetUse` kind. `sql_offset_uses` and `sql_file_offset_uses` use this same AST
-visitor and preserve source order. Bare `*.sql` patterns match SQL basenames;
-`sqlInclude: []` continues to opt out of SQL file scanning.
-
-Recovered literals and template quasis retain a compact physical-line map in
-`EmbeddedSqlCall.sql_source_positions` (`EmbeddedSqlSourcePosition`). Cooked
-newline escapes, line continuations, multiline interpolations, and initializers
-that begin below their declaration preserve the actual OFFSET source line.
-Static `.append()` composition retains each appended literal or bound fragment's
-physical position, including placeholder renumbering. A straight-line same-file helper that receives and returns a typed
-`SQLStatement` parameter contributes its static appends to this rule, so an
-appended `OFFSET` is checked normally. Unknown builder arguments and dynamic
-appends retain the strict `unanalyzableSql` behavior. In a straight-line same-file helper,
-local aliases of a SQL statement share its mutable value: an `.append()` through
-the original name or any alias is included when another alias is returned.
-Reassignment, branching, and unknown escapes remain unanalyzable. Put line
-suppression on the physical clause being suppressed. Existing directives on an executor call
-also suppress that call's recovered clauses through the common suppression pass.
-A directive on one executor call does not suppress another call that reuses
-the same SQL constant or fragment. Repeated unsuppressed executions report the
-shared OFFSET once; a directive on the shared OFFSET's physical line suppresses
-that clause wherever it is used.
-Prepared source failures retain their I/O kind; dispatch uses that captured
-outcome without checking filesystem state again.
-Source positions mark changes to the source-versus-SQL line offset. Between
-positions, map a SQL line with `source_line + sql_line - position.sql_line`;
-an empty position list retains the ordinary call/declaration line mapping.
+See [statement coverage and locations](postgres-no-offset-coverage.md).

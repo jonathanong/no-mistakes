@@ -79,7 +79,7 @@ query(reset ? escaped : sql`SELECT 24`); // finite
 const repeated = sql`SELECT 25`;
 const repeatedAlias = repeated;
 external(repeatedAlias);
-query(repeated); // legacy builder
+query(repeated); // opaque legacy builder
 try {
   external(repeated);
 } catch {

@@ -1,6 +1,8 @@
 import { query, sql } from "@example/db";
 
 const inner = sql`SELECT 1`; // missing: the finite guarded version exposes this token.
+// Keep a genuine finite execution before later containers retain the builder.
+query(sql`${cond && inner}`); // missing: the false guard executes empty SQL.
 // Plain strings, booleans, numbers, and objects stay binds, even through aliases.
 query(sql`${String.raw`SELECT 1`}`); // missing
 const raw = String.raw`SELECT 1`;
@@ -19,7 +21,9 @@ query(sql`${object}`); // missing
 query(sql`${cond ? inner : 1}`); // unknown
 const possible = cond ? inner : 1;
 query(sql`${possible}`); // unknown
-query(sql`${cond && inner}`); // missing: the false guard executes empty SQL.
+const unescaped = sql`SELECT 1`; // missing: this fragment has not escaped.
+query(sql`${cond && unescaped}`); // missing: the fresh false guard executes empty SQL.
+query(sql`${cond && inner}`); // unknown: earlier reference escapes made this builder opaque.
 const logical = cond || inner;
 query(sql`${logical}`); // unknown
 query(sql`${[inner]}`); // unknown

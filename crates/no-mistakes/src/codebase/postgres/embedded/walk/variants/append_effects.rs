@@ -70,8 +70,8 @@ impl ScopeVisitor<'_> {
         effects: Vec<Effect>,
     ) {
         for (name, identity, preserved_scope) in effects {
-            // Ordinary append invalidates retained variant snapshots only;
-            // legacy nonbranching fields keep their existing public behavior.
+            // The direct receiver has its newly composed SQL. Other aliases
+            // hold stale snapshots in both legacy and finite representations.
             self.apply_builder_effect(name, identity, preserved_scope, true, false, 0);
         }
     }
