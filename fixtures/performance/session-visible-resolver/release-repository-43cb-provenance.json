@@ -1,0 +1,50 @@
+{
+  "_spelling": "cspell:ignore rustc RUSTC codegen CODEGEN RUSTFLAGS ",
+  "baseline": {
+    "revision": "9579d3184b5a6d7a07cafb2e6778784ad4616bc4",
+    "dirty": false,
+    "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "flags": "release default-features LTO=true codegen-units=1 release-debug0 CARGO_INCREMENTAL=0 RUSTC_WRAPPER= jobs2",
+    "environmentOverrides": {
+      "RUSTFLAGS": null,
+      "CARGO_ENCODED_RUSTFLAGS": null,
+      "CARGO_PROFILE_RELEASE_LTO": null,
+      "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": null,
+      "RUSTC_WORKSPACE_WRAPPER": null
+    },
+    "sha256": "3f6458cda725f2d4563771313ad4a5e8048302a77f2cc520ae6348a3de4dafe9",
+    "buildLog": "/tmp/nm-2117-evidence/release-baseline-current-main-build.log",
+    "fullProvenanceSha256": "3986c4eb296af1a9d5dcc645c8f2beae632f2c09097c67bc76b3cf351c3c46bd"
+  },
+  "candidate": {
+    "revision": "43cb40d9621e2a691726de90cad0a36032b58021",
+    "productionSourceRevision": "fe8f1562e46953eec1e166a5ea759d77a07dbe78",
+    "base": "9579d3184b5a6d7a07cafb2e6778784ad4616bc4",
+    "dirty": false,
+    "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "flags": "release default-features LTO=true codegen-units=1 release-debug0 CARGO_INCREMENTAL=0 RUSTC_WRAPPER= jobs2",
+    "environmentOverrides": {
+      "RUSTFLAGS": null,
+      "CARGO_ENCODED_RUSTFLAGS": null,
+      "CARGO_PROFILE_RELEASE_LTO": null,
+      "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": null,
+      "RUSTC_WORKSPACE_WRAPPER": null
+    },
+    "sha256": "342610cfc3eaf9ad08d9c52d73267a602e86aa7d21459cc08be6163b137179c6",
+    "buildLog": "/tmp/nm-2117-evidence/release-candidate-build.log",
+    "fullProvenanceSha256": "5f1a3b807da06f8b8d5bf865d652dcfbbfbf9fe54fb0eb77bfbb2f785ba37f4f"
+  },
+  "status": "performance-validation-pending",
+  "samples": 104,
+  "order": "baseline/candidate/candidate/baseline then adjacent reverse; control off/jobs1 repeated separately",
+  "root": "/tmp/nm-2117-worktree",
+  "inputManifestSha256": "155ed7bb22abfcf6173d0b84e6b96c94228fc221af7932cf5922d7c73eeb7038",
+  "inputsUnchangedAfterMeasurement": true,
+  "timing": "/usr/bin/time raw wall,user,system,peak RSS; no subtraction",
+  "cpuAffinity": "unrestricted; host has hybrid CPU classes",
+  "hashParity": "report,exit,non-diagnostic stderr match within every cell",
+  "configs": [
+    "fixtures/performance/session-visible-resolver/consuming.yml",
+    "fixtures/performance/session-visible-resolver/control.yml"
+  ]
+}
