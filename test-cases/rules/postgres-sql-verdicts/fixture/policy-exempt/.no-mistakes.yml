@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: advise
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      unanalyzableSql: advise

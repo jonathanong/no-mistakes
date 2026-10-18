@@ -1,0 +1,11 @@
+[
+  {"prefix":"/* known */ SELECT ","status":"proven-clear"},
+  {"prefix":"SELECT ","status":"violation"},
+  {"prefix":"S","status":"violation"},
+  {"prefix":" ","status":"abstain"},
+  {"prefix":"/* pending","status":"abstain"},
+  {"prefix":"BEG","status":"abstain"},
+  {"prefix":"BEGIN ","status":"abstain"},
+  {"prefix":"COMMIT","status":"abstain"},
+  {"prefix":"ROLLBACK","status":"abstain"}
+]

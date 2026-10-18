@@ -7,11 +7,8 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-
 mod scan;
-
 pub const RULE_ID: &str = "postgres-idempotent-insert";
-
 fn default_true() -> bool {
     true
 }
@@ -77,6 +74,7 @@ pub(crate) struct CompiledOptions {
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
     scan_embedded: bool,
     check_convergence: bool,
     check_volatility: bool,
@@ -109,8 +107,28 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_optional_facts(root, config, all_files, sources, None)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_optional_facts(root, config, all_files, sources, Some(facts))
+}
+
+fn check_with_files_sources_and_optional_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = super::PostgresFindings::default();
-    for rule in config.rule_applications(RULE_ID) {
+    for (index, rule) in config.rule_applications(RULE_ID).into_iter().enumerate() {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts)?;
         let target_roots = super::target_roots(root, config, rule);
@@ -125,7 +143,19 @@ pub(crate) fn check_with_files_and_sources(
             .into_iter()
             .filter(|path| compiled.includes(&relative_slash_path(root, path)))
             .collect();
-        findings.extend(scan::scan(root, &compiled, &files, sources)?);
+        findings.extend(match facts {
+            Some(facts) => {
+                let view = facts.for_sql_application(index, rule.name.as_deref());
+                scan::prepared(
+                    root,
+                    &compiled,
+                    &files,
+                    sources,
+                    view.as_ref().unwrap_or(facts),
+                )?
+            }
+            None => scan::scan(root, &compiled, &files, sources)?,
+        });
     }
     Ok(findings.finish())
 }
@@ -149,6 +179,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
         scan_embedded: opts.scan_embedded,
         check_convergence: opts.check_convergence,
         check_volatility: opts.check_volatility,

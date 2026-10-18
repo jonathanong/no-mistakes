@@ -29,6 +29,8 @@ pub(crate) struct FinalizeInput<'a> {
     pub(crate) completed: CompletedDomainChecks,
     pub(crate) include_suppressed: bool,
     pub(crate) unproven_member_query_sql: u32,
+    pub(crate) sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
+    pub(crate) include_sql_verdicts: bool,
 }
 
 pub(crate) struct CheckResults {
@@ -41,6 +43,8 @@ pub(crate) struct CheckResults {
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
     pub(crate) advisories: Vec<RuleFinding>,
+    pub(crate) sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
+    pub(crate) include_sql_verdicts: bool,
     pub(crate) suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
     pub(crate) include_suppressed: bool,
     pub(crate) timings: Vec<(&'static str, Duration)>,
@@ -84,6 +88,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         completed,
         include_suppressed,
         unproven_member_query_sql,
+        sql_verdicts,
+        include_sql_verdicts,
     } = input;
     let mut react = completed.react;
     let react_suppression_targets = react.react_suppression_targets.as_slice();
@@ -102,6 +108,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         sources,
     );
     let mut advisories = advisories?;
+    advisories::merge_sql(&mut advisories, root, sources, &sql_verdicts);
     let warnings = [
         react_warning,
         react.warning,
@@ -157,6 +164,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             .collect(),
         warnings,
         advisories,
+        sql_verdicts,
+        include_sql_verdicts,
         suppressed: if include_suppressed {
             suppressed
         } else {
@@ -178,6 +187,8 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         codebase: Vec::new(),
         warnings,
         advisories: Vec::new(),
+        sql_verdicts: Vec::new(),
+        include_sql_verdicts: false,
         suppressed: Vec::new(),
         include_suppressed: false,
         unproven_member_query_sql: 0,

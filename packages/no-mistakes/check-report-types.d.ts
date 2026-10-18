@@ -16,8 +16,39 @@ export interface CheckReport {
    */
   unprovenMemberQuerySql?: number;
   advisories: RuleFinding[];
+  /** Present only when `includeSqlVerdicts` is requested, including an empty array. */
+  sqlVerdicts?: SqlObligationVerdict[];
   /** Present when `includeSuppressed` is requested; empty when no directives matched. */
   suppressed?: SuppressedFinding[];
+}
+
+export type SqlVerdictStatus = "violation" | "proven-clear" | "abstain";
+export type SqlEvidenceKind = "exact" | "exhaustive-union" | "verified-prefix" | "policy-exemption";
+export interface SqlExecutorProfile {
+  importSpecifier: string;
+  executorNames: string[];
+  executorFactoryNames: string[];
+  executorTypeNames: string[];
+  trustedSqlTags: { module: string; name: string }[];
+}
+/** Zero-based ordinal among enabled applications of the same rule in config order. */
+export interface SqlRuleApplication {
+  index: number;
+  name?: string;
+}
+export interface SqlObligationVerdict {
+  profile: SqlExecutorProfile;
+  rule: string;
+  application?: SqlRuleApplication;
+  subcheck: string;
+  file: string;
+  span: [number, number];
+  status: SqlVerdictStatus;
+  advisory: boolean;
+  evidence?: SqlEvidenceKind;
+  knownPrefix?: string;
+  helperLines?: number[];
+  residualReasons?: string[];
 }
 
 export interface SuppressedFinding {

@@ -31,6 +31,25 @@ pub(super) fn scan(
         let embedded = profile
             .map(|profile| facts.embedded_sql(path, profile))
             .transpose()?;
+        if let Some(embedded) = embedded.filter(|_| facts.wants_sql_verdicts()) {
+            crate::codebase::postgres::record_sql_policy_verdicts(
+                facts,
+                RULE_ID,
+                &rel,
+                &opts.embedded,
+                embedded,
+                statements,
+                &["offset".to_string()],
+                opts.advise_unanalyzable,
+                |_, _, statement| {
+                    if !statement.offset_uses.is_empty() {
+                        crate::codebase::postgres::SqlBranchJudgment::violation(true)
+                    } else {
+                        crate::codebase::postgres::SqlBranchJudgment::clear()
+                    }
+                },
+            );
+        }
         let all_calls = embedded
             .into_iter()
             .flat_map(|file| file.calls.iter().enumerate())

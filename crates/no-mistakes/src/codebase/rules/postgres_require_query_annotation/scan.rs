@@ -4,6 +4,7 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+mod verdicts;
 
 pub(super) fn scan_with_sources(
     root: &Path,
@@ -31,6 +32,15 @@ pub(super) fn scan_with_sources(
             .transpose()?
             .map(crate::codebase::rules::index_sql_variants)
             .unwrap_or_default();
+        if facts.wants_sql_verdicts() {
+            verdicts::record(
+                &rel,
+                file,
+                &opts.embedded,
+                opts.unanalyzable_sql == super::UnanalyzableSql::Advise,
+                facts,
+            );
+        }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
             if !call.variants.is_empty() {
                 for (variant_index, version) in call.statement_calls().enumerate() {

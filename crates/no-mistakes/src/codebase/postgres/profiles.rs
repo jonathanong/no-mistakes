@@ -9,6 +9,7 @@ use std::sync::Arc;
 /// the request boundary before TS/JS fact collection begins.
 #[doc(hidden)]
 pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
+    "postgres-idempotent-insert",
     "postgres-conflict-ordering",
     "postgres-lock-ordering",
     "postgres-required-predicates",

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 const DEFAULT_EXECUTOR_NAMES: &[&str] = &["query", "read", "write"];
 
@@ -6,7 +6,7 @@ const DEFAULT_EXECUTOR_NAMES: &[&str] = &["query", "read", "write"];
 ///
 /// Matching is syntactic: `name` imported from `module` or a subpath of it.
 /// Empty `module` or `name` matches nothing.
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrustedSqlTag {
     pub module: String,
@@ -14,7 +14,8 @@ pub struct TrustedSqlTag {
 }
 
 /// Configurable executor import matching. Empty defaults select no executors.
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EmbeddedSqlOptions {
     pub import_specifier: String,
     pub executor_names: Vec<String>,

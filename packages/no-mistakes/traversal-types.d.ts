@@ -143,44 +143,17 @@ export type SymbolsSignatureImpactOptions = SymbolsOptions & {
   symbol: string;
 };
 
-export interface SymbolExport {
-  name: string;
-  kind: string;
-  line: number;
-  reExport?: {
-    source: string;
-    imported: string;
-    resolved?: string;
-  };
-}
-
-export interface SymbolImport {
-  source: string;
-  imported: string;
-  local: string;
-  line: number;
-  typeOnly: boolean;
-  resolved?: string;
-}
-
-export interface SymbolFile {
-  path: string;
-  exports?: SymbolExport[];
-  imports?: SymbolImport[];
-}
-
-export interface SymbolsResult {
-  roots: string[];
-  files: SymbolFile[];
-}
-
 export type {
+  SymbolExport,
+  SymbolImport,
+  SymbolFile,
+  SymbolsResult,
   SignatureImpactCaller,
   SignatureImpactLocation,
   SignatureImpactResult,
   SignatureImpactTest,
   SignatureImpactWarning,
-} from "./signature-impact-types";
+} from "./symbol-traversal-types";
 
 export interface ProjectOptions {
   /** Project root. Defaults to the current working directory. */
@@ -207,4 +180,6 @@ export interface CheckOptions extends ProjectOptions {
   includeSuppressed?: boolean;
   /** Add declared config evidence; absent slots never imply SDK defaults. */
   includeRunnerConfigDeadlines?: boolean;
+  /** Include per-obligation SQL proof and residual uncertainty in the check report. */
+  includeSqlVerdicts?: boolean;
 }

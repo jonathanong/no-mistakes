@@ -1,0 +1,11 @@
+[
+  {"branches": ["proven-clear"], "exhaustive": true, "positiveSurvivesUnknown": false, "expected": "proven-clear"},
+  {"branches": ["proven-clear", "proven-clear"], "exhaustive": true, "positiveSurvivesUnknown": false, "expected": "proven-clear"},
+  {"branches": ["proven-clear", "abstain"], "exhaustive": true, "positiveSurvivesUnknown": false, "expected": "abstain"},
+  {"branches": ["proven-clear"], "exhaustive": false, "positiveSurvivesUnknown": false, "expected": "abstain"},
+  {"branches": [], "exhaustive": false, "positiveSurvivesUnknown": false, "expected": "abstain"},
+  {"branches": ["violation", "proven-clear"], "exhaustive": true, "positiveSurvivesUnknown": false, "expected": "violation"},
+  {"branches": ["violation", "abstain"], "exhaustive": true, "positiveSurvivesUnknown": false, "expected": "violation"},
+  {"branches": ["violation"], "exhaustive": false, "positiveSurvivesUnknown": false, "expected": "abstain"},
+  {"branches": ["violation"], "exhaustive": false, "positiveSurvivesUnknown": true, "expected": "violation"}
+]

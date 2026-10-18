@@ -65,9 +65,9 @@ fn unanalyzable_option_defaults_to_fail_and_rejects_unknown_modes() {
     };
     let error = compile_options(&invalid).err().unwrap();
     assert!(
-        error
-            .to_string()
-            .contains("postgres-lock-ordering: unanalyzableSql must be `fail` or `ignore`"),
+        error.to_string().contains(
+            "postgres-lock-ordering: unanalyzableSql must be `fail`, `ignore`, or `advise`"
+        ),
         "{error}"
     );
 }

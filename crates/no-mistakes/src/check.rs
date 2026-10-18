@@ -36,6 +36,9 @@ pub(crate) struct CheckArgs {
     /// Include declared runner config deadlines; absence is not an SDK default.
     #[arg(long, global = true)]
     include_runner_config_deadlines: bool,
+    /// Include per-obligation proof and residual SQL coverage in structured output.
+    #[arg(long, global = true)]
+    pub(crate) include_sql_verdicts: bool,
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
     timings: bool,
@@ -56,12 +59,13 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     );
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
-    let results = check_runner::run_all_with_evidence(
+    let results = check_runner::run_all_with_sql_verdicts(
         root,
         args.config,
         args.tsconfig,
         args.include_suppressed,
         args.include_runner_config_deadlines,
+        args.include_sql_verdicts,
     );
     let results = results?;
     record_missing_check_timings(&results);

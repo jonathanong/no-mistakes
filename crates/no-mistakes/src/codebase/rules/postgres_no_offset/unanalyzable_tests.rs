@@ -100,7 +100,7 @@ fn unknown_unanalyzable_mode_is_a_config_error() {
     assert!(
         error
             .to_string()
-            .contains("postgres-no-offset: unanalyzableSql must be `fail` or `ignore`"),
+            .contains("postgres-no-offset: unanalyzableSql must be `fail`, `ignore`, or `advise`"),
         "{error}"
     );
 }

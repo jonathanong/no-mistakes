@@ -34,6 +34,7 @@ pub(crate) struct CompiledOptions {
     pub(crate) schema: crate::codebase::postgres::PostgresSchemaOptions,
     pub(crate) embedded: EmbeddedSqlOptions,
     pub(crate) fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
 }
 
 impl CompiledOptions {
@@ -62,7 +63,8 @@ pub(crate) fn check_with_files_sources_and_facts(
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .map(|rule| -> Result<super::PostgresFindings> {
+        .enumerate()
+        .map(|(index, rule)| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
@@ -75,7 +77,14 @@ pub(crate) fn check_with_files_sources_and_facts(
                     compiled.includes(&relative_slash_path(root, path), sql.contains(path))
                 })
                 .collect();
-            scan(root, &compiled, &files, facts, sources)
+            let view = facts.for_sql_application(index, rule.name.as_deref());
+            scan(
+                root,
+                &compiled,
+                &files,
+                view.as_ref().unwrap_or(facts),
+                sources,
+            )
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
@@ -96,6 +105,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
         fail_unanalyzable: fail_unanalyzable_sql(RULE_ID, &opts.unanalyzable_sql)?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
     })
 }
 
@@ -110,3 +120,5 @@ mod followup_tests;
 mod review_tests;
 #[cfg(test)]
 mod unanalyzable_tests;
+#[cfg(test)]
+mod verdict_tests;

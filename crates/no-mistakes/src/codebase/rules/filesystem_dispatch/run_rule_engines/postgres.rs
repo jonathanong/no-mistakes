@@ -132,9 +132,14 @@ fn run_naming_and_query_rules(
             status_lifecycle(root, config, files, sources, facts)
         }
         POSTGRES_TABLE_SHAPE => table_shape(root, config, files, sources, facts),
-        POSTGRES_IDEMPOTENT_INSERT => {
-            postgres_idempotent_insert::check_with_files_and_sources(root, config, files, sources)
-        }
+        POSTGRES_IDEMPOTENT_INSERT => match facts {
+            Some(facts) => postgres_idempotent_insert::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_idempotent_insert::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         _ => return None,
     })
 }

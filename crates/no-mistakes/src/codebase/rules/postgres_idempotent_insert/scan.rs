@@ -6,6 +6,8 @@ use crate::codebase::postgres::{
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
+mod prepared;
+pub(super) use prepared::scan as prepared;
 
 pub(super) fn scan(
     root: &Path,

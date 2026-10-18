@@ -43,6 +43,7 @@ struct CompiledOptions {
     settings: HashSet<String>,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
 }
 
 pub(crate) fn check_with_files(
@@ -78,7 +79,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = super::PostgresFindings::default();
-    for rule in config.rule_applications(RULE_ID) {
+    for (index, rule) in config.rule_applications(RULE_ID).into_iter().enumerate() {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts)?;
         let target_roots = super::target_roots(root, config, rule);
@@ -89,7 +90,14 @@ pub(crate) fn check_with_files_sources_and_facts(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &compiled, &files, sources, facts)?);
+        let view = facts.for_sql_application(index, rule.name.as_deref());
+        findings.extend(scan::scan(
+            root,
+            &compiled,
+            &files,
+            sources,
+            view.as_ref().unwrap_or(facts),
+        )?);
     }
     Ok(findings.finish())
 }
@@ -139,6 +147,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
     })
 }
 

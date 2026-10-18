@@ -6,6 +6,7 @@ use anyhow::Context;
 use std::path::{Path, PathBuf};
 mod diagnostic;
 mod fragments;
+mod verdicts;
 pub(super) use diagnostic::finding;
 
 pub(super) fn scan(
@@ -25,6 +26,9 @@ pub(super) fn scan(
         let file = facts
             .embedded_sql(path, &opts.embedded)
             .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+        if facts.wants_sql_verdicts() {
+            verdicts::record(root, opts, file, facts)?;
+        }
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
             if opts.fail_unanalyzable && call.is_unanalyzable() {

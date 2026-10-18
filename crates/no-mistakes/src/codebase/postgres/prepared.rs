@@ -63,10 +63,11 @@ pub(crate) fn prepare(
                 }
                 let entry = file
                     .map(|file| {
-                        Arc::new(super::collect::dml::embedded_call_facts(
+                        Arc::new(super::collect::dml::embedded_call_facts_with_locations(
                             file,
                             plan.postgres_bounds,
                             !plan.postgres_dml,
+                            plan.postgres_exact_locations,
                         ))
                     })
                     .map_err(|error| {

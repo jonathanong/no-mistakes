@@ -118,6 +118,10 @@ pub struct AllowList {
 }
 
 impl AllowList {
+    pub(crate) fn contains(&self, object: &str) -> bool {
+        self.entries.iter().any(|entry| entry.object == object)
+    }
+
     pub fn compile(rule_id: &str, entries: Vec<AllowEntry>) -> Result<Self> {
         let mut seen = BTreeSet::new();
         for entry in &entries {

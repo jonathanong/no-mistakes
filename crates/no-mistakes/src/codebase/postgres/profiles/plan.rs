@@ -40,7 +40,13 @@ pub fn configure_prepared_postgres_plan(
     ]
     .iter()
     .any(|id| !config.rule_applications(id).is_empty());
+    let ordering = ["postgres-lock-ordering", "postgres-conflict-ordering"]
+        .iter()
+        .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_dml |= ordering;
+    plan.postgres_exact_locations |= ordering;
     let dml_rules = [
+        "postgres-idempotent-insert",
         "postgres-required-predicates",
         "postgres-no-offset",
         "postgres-generated-column-predicates",
@@ -60,6 +66,7 @@ pub fn configure_prepared_postgres_plan(
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();
     let schema_rules = [
+        "postgres-idempotent-insert",
         "postgres-generated-column-predicates",
         "postgres-no-generated-column-writes",
         "postgres-identifier-length",

@@ -3,9 +3,11 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
-use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+mod included_rule;
+pub(crate) use included_rule::run_included_postgres_rule;
 
 /// Prepare the standalone rule's schema catalog using the request's source store.
 pub(crate) fn prepare_schema_rule_facts(
@@ -162,41 +164,4 @@ pub(crate) fn schema_options(
     crate::codebase::postgres::PostgresSchemaOptions {
         sql_include: crate::codebase::postgres::effective_sql_include(sql_include, locked),
     }
-}
-
-pub(crate) fn run_included_postgres_rule<C>(
-    context: super::PreparedRuleContext<'_>,
-    rule_id: &str,
-    compile: impl Fn(&RuleDef) -> Result<C> + Sync,
-    includes: impl Fn(&C, &str) -> bool + Sync,
-    scan: impl Fn(&Path, &C, &[PathBuf], &SourceStore, &CheckFactMap) -> Result<super::PostgresFindings>
-        + Sync,
-) -> Result<Vec<RuleFinding>> {
-    let super::PreparedRuleContext {
-        root,
-        config,
-        all_files,
-        sources,
-        facts,
-    } = context;
-    let all: Result<Vec<super::PostgresFindings>> = config
-        .rule_applications(rule_id)
-        .into_par_iter()
-        .map(|rule| {
-            let compiled = compile(rule)?;
-            let files = super::selected_rule_files(root, config, rule, all_files)?;
-            let files: Vec<PathBuf> = files
-                .into_iter()
-                .filter(|path| {
-                    includes(
-                        &compiled,
-                        &crate::codebase::ts_source::relative_slash_path(root, path),
-                    )
-                })
-                .collect();
-            scan(root, &compiled, &files, sources, facts)
-        })
-        .collect();
-    let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
-    Ok(findings.finish())
 }

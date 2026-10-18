@@ -17,7 +17,7 @@ executor call is checked independently, up to 16 versions. Choosing between
 `ON CONFLICT DO NOTHING` and a bare INSERT still reports the bare INSERT; a
 replay-safe path does not cover an unsafe sibling. Findings retain branch
 locations for suppressions. Opaque or over-cap embedded SQL fails closed unless
-`unanalyzableSql` is `ignore`.
+`unanalyzableSql` is `ignore` or `advise`.
 
 ```yaml
 rules:
@@ -39,7 +39,7 @@ rules:
 `sqlInclude` defaults to `**/*.sql`. `scanEmbedded` and every `check*` flag
 default to `true`. `replaySafeTriggerFunctions` defaults to `[]`.
 `triggerWrittenColumns` defaults to `{}`. `unanalyzableSql` defaults to `fail`
-(`fail` or `ignore`; other values are a configuration error).
+(`fail`, `ignore`, or `advise`; other values are a configuration error).
 `importSpecifier` has no default; `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 Counterexample: a bare insert.
@@ -109,13 +109,15 @@ safety.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports non-failing residual advisories; `--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `scanEmbedded` defaults to `true`.
 `checkConvergence`, `checkVolatility`, `checkArbiter`, `checkTriggers`, and
 `checkGenerated` default to `true`. `replaySafeTriggerFunctions` defaults to
 `[]`. `triggerWrittenColumns` maps function names to columns those functions
-write (default `{}`). `unanalyzableSql` defaults to `fail` (`fail` or
-`ignore`; other values are a configuration error).
+write (default `{}`). `unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or
+`advise`; other values are a configuration error).
 `importSpecifier` has no default. `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 ### Executor configuration

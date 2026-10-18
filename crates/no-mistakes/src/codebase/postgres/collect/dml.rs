@@ -41,6 +41,15 @@ pub(crate) fn embedded_call_facts(
     collect_bounds: bool,
     variants_only: bool,
 ) -> Vec<SqlStatementFileFacts> {
+    embedded_call_facts_with_locations(file, collect_bounds, variants_only, false)
+}
+
+pub(crate) fn embedded_call_facts_with_locations(
+    file: &EmbeddedSqlFileFacts,
+    collect_bounds: bool,
+    variants_only: bool,
+    exact_locations: bool,
+) -> Vec<SqlStatementFileFacts> {
     file.calls
         .iter()
         .enumerate()
@@ -59,7 +68,7 @@ pub(crate) fn embedded_call_facts(
         })
         .filter_map(|(call, variant, call_index, variant_index)| {
             let sql = call.sql_text.as_deref()?;
-            let extract = if variant || !call.sql_source_positions.is_empty() {
+            let extract = if variant || exact_locations || !call.sql_source_positions.is_empty() {
                 extract_sql_variant_statement_facts
             } else {
                 extract_sql_statement_facts_with_recovered_placeholders
@@ -67,10 +76,17 @@ pub(crate) fn embedded_call_facts(
             let mut facts = extract(sql, collect_bounds, &call.recovered_placeholder_positions);
             if call.kind == EmbeddedSqlKind::Dynamic {
                 // Recovered interpolation text can prove OFFSET syntax and write
-                // targets. Other rules keep their existing dynamic-SQL failure policy.
+                // targets. Ordering also needs the one prepared parse's locations
+                // to preserve its existing prefix diagnostics without reparsing.
+                let locations = exact_locations
+                    .then(|| facts.variant_locations.take())
+                    .flatten();
+                let parse_failed = exact_locations && facts.parse_failed;
                 facts = SqlStatementFileFacts {
                     offset_uses: facts.offset_uses,
                     writes: facts.writes,
+                    variant_locations: locations,
+                    parse_failed,
                     ..Default::default()
                 };
             }

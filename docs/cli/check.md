@@ -25,6 +25,15 @@ Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.
+`--include-sql-verdicts` is opt-in and adds `sqlVerdicts` to JSON/YAML output.
+Each entry names the configured executor profile, source file and byte span,
+rule subcheck, proof status (`violation`, `proven-clear`, or `abstain`), and any
+remaining uncertainty reasons. This diagnostic field does not change findings
+or the check exit code.
+For a PostgreSQL rule application, `unanalyzableSql: advise` reports residual
+uncertainty in non-failing `advisories`, including its reason, known SQL prefix,
+and helper lines when available. Existing `fail`/`ignore` behavior and defaults
+stay unchanged. See [SQL verdicts](../postgres-sql-verdicts.md).
 The root-global `--timings` and `--verbose-timings` flags work here and on every
 other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright
 sub-phases and work counts, and marks overlapping check-domain spans as
@@ -48,7 +57,8 @@ Invalid rule option values are configuration errors, not implicit defaults.
 continue to use that rule's documented defaults.
 
 Node API: `check({ includeSuppressed: true })` exposes the same optional
-`suppressed` accounting.
+`suppressed` accounting. `check({ includeSqlVerdicts: true })` and check reports
+inside `analyzeProject()` expose the same optional `sqlVerdicts` field.
 
 Swift and C# source rules scan executable code only. Comments and string
 literals, including raw and multiline forms, do not create findings; code in a

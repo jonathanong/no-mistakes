@@ -1,7 +1,7 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
-use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_source::{relative_slash_path, TS_JS_EXTENSIONS};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use rayon::prelude::*;
@@ -14,8 +14,6 @@ mod validate;
 pub const RULE_ID: &str = "postgres-generated-column-predicates";
 
 pub(crate) use check_with_files as check;
-
-use crate::codebase::ts_source::TS_JS_EXTENSIONS;
 
 #[derive(Deserialize, Default, Clone)]
 #[serde(default, rename_all = "camelCase")]
@@ -49,6 +47,7 @@ pub(crate) struct CompiledOptions {
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
     functions: Vec<String>,
     require_primary_key: bool,
     where_clause: bool,
@@ -102,7 +101,8 @@ fn check_applications(
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .map(|rule| -> Result<super::PostgresFindings> {
+        .enumerate()
+        .map(|(index, rule)| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
             let target_roots = super::target_roots(root, config, rule);
@@ -130,7 +130,15 @@ fn check_applications(
                 .into_iter()
                 .filter(|path| query_set.contains(path) || schema_set.contains(path))
                 .collect();
-            scan::scan(root, &compiled, &files, &query_files, sources, facts)
+            let view = facts.for_sql_application(index, rule.name.as_deref());
+            scan::scan(
+                root,
+                &compiled,
+                &files,
+                &query_files,
+                sources,
+                view.as_ref().unwrap_or(facts),
+            )
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
@@ -172,6 +180,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
         functions,
         require_primary_key: opts.require_argument_is_primary_key.unwrap_or(true),
         where_clause,
@@ -182,12 +191,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 }
 
 #[cfg(test)]
+mod followup_tests;
+#[cfg(test)]
+mod history_tests;
+#[cfg(test)]
 mod options_tests;
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-mod followup_tests;
-
-#[cfg(test)]
-mod history_tests;

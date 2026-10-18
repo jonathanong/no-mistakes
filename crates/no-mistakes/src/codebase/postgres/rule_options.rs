@@ -1,13 +1,56 @@
 use anyhow::Result;
 
-/// Parse `unanalyzableSql`: empty/`fail` fail closed, `ignore` does not.
-pub fn fail_unanalyzable_sql(rule: &str, value: &str) -> Result<bool> {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum UnanalyzableSqlMode {
+    Fail,
+    Ignore,
+    Advise,
+}
+
+pub fn unanalyzable_sql_mode(rule: &str, value: &str) -> Result<UnanalyzableSqlMode> {
     match value.trim() {
-        "" => Ok(true),
-        other if other.eq_ignore_ascii_case("fail") => Ok(true),
-        other if other.eq_ignore_ascii_case("ignore") => Ok(false),
-        other => anyhow::bail!("{rule}: unanalyzableSql must be `fail` or `ignore`, got `{other}`"),
+        "" => Ok(UnanalyzableSqlMode::Fail),
+        other if other.eq_ignore_ascii_case("fail") => Ok(UnanalyzableSqlMode::Fail),
+        other if other.eq_ignore_ascii_case("ignore") => Ok(UnanalyzableSqlMode::Ignore),
+        other if other.eq_ignore_ascii_case("advise") => Ok(UnanalyzableSqlMode::Advise),
+        other => anyhow::bail!(
+            "{rule}: unanalyzableSql must be `fail`, `ignore`, or `advise`, got `{other}`"
+        ),
     }
+}
+
+/// Parse `unanalyzableSql`: empty/`fail` fail closed, `ignore`/`advise` do not.
+pub fn fail_unanalyzable_sql(rule: &str, value: &str) -> Result<bool> {
+    Ok(unanalyzable_sql_mode(rule, value)? == UnanalyzableSqlMode::Fail)
+}
+
+/// The request needs a report-local proof sink when any effective SQL rule
+/// application asks for non-failing residual diagnostics.
+pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    const RULES: &[&str] = &[
+        "postgres-bounded-statements",
+        "postgres-conflict-ordering",
+        "postgres-explicit-columns",
+        "postgres-generated-column-predicates",
+        "postgres-idempotent-insert",
+        "postgres-lock-ordering",
+        "postgres-no-generated-column-writes",
+        "postgres-no-offset",
+        "postgres-require-query-annotation",
+        "postgres-required-predicates",
+        "postgres-sql-shape-policy",
+        "postgres-sql-statement-policy",
+    ];
+    let key = serde_yaml::Value::String("unanalyzableSql".to_string());
+    RULES.iter().any(|id| {
+        config.rule_applications(id).iter().any(|rule| {
+            rule.options
+                .as_mapping()
+                .and_then(|options| options.get(&key))
+                .and_then(serde_yaml::Value::as_str)
+                .is_some_and(|mode| mode.trim().eq_ignore_ascii_case("advise"))
+        })
+    })
 }
 
 #[cfg(test)]

@@ -1,5 +1,7 @@
 mod analysis;
+mod exact;
 mod substitute;
+mod verdicts;
 
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::postgres::{
@@ -38,14 +40,12 @@ pub(super) fn scan_with_sources(
         })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        let statements = file
-            .calls
-            .iter()
-            .any(|call| !call.variants.is_empty())
-            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
-            .transpose()?
-            .map(crate::codebase::rules::index_sql_variants)
-            .unwrap_or_default();
+        let statements = crate::codebase::rules::index_sql_variants(
+            facts.postgres_statements(path, Some(&opts.embedded))?,
+        );
+        if facts.wants_sql_verdicts() {
+            verdicts::record(&rel, &source, file, opts, catalog, &statements, facts);
+        }
         for (call_index, variant_index, original, call) in
             file.calls
                 .iter()
@@ -92,11 +92,15 @@ pub(super) fn scan_with_sources(
                 continue;
             }
             if original.variants.is_empty() {
-                findings.extend(analysis::findings_for_sql_with_binds(
+                let statement = statements
+                    .get(&(call_index, variant_index))
+                    .copied()
+                    .ok_or_else(|| anyhow::anyhow!("prepared SQL facts are missing"))?;
+                findings.extend(exact::findings(
                     &rel,
                     call.line as usize,
                     sql,
-                    &call.recovered_placeholder_positions,
+                    statement,
                     catalog,
                     opts.fail_unanalyzable,
                 ));

@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      relations:
+        - table: orders
+          requireColumns: [tenant_id]
+      unanalyzableSql: advise

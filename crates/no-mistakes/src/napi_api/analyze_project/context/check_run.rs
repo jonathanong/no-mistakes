@@ -58,6 +58,7 @@ impl SharedCheckContext {
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
         include_suppressed: bool,
         include_runner_config_deadlines: bool,
+        include_sql_verdicts: bool,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
         let runner_config_deadlines = include_runner_config_deadlines
@@ -71,13 +72,19 @@ impl SharedCheckContext {
         {
             let mut results = crate::check_runner::empty_results([None]);
             results.include_suppressed = include_suppressed;
+            results.include_sql_verdicts = include_sql_verdicts;
             results.runner_config_deadlines = runner_config_deadlines;
             return Ok(results);
         }
         let scoped_facts = self
             .graph_plan
             .map(|_| facts.with_graph_file_universe(self.graph_files.clone()));
-        let facts = scoped_facts.as_ref().unwrap_or(facts);
+        let needs_sql_verdicts = include_sql_verdicts
+            || crate::codebase::postgres::has_sql_advice(&self.prepared.config);
+        let isolated_facts = needs_sql_verdicts.then(|| {
+            scoped_facts.as_ref().unwrap_or(facts).with_fresh_sql_verdicts()
+        });
+        let facts = isolated_facts.as_ref().or(scoped_facts.as_ref()).unwrap_or(facts);
         let config = &self.prepared.config;
         let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
@@ -137,6 +144,8 @@ impl SharedCheckContext {
                 completed,
                 include_suppressed,
                 unproven_member_query_sql: facts.unproven_member_query_sql,
+                sql_verdicts: facts.sql_verdicts(),
+                include_sql_verdicts,
             },
         )
     }

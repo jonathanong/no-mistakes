@@ -69,7 +69,7 @@ fn config_errors_name_the_option() {
         ),
         (
             "schemaCatalogPath: db/schema.json\nunanalyzableSql: sideways\n",
-            "unanalyzableSql must be `fail` or `ignore`",
+            "unanalyzableSql must be `fail`, `ignore`, or `advise`",
         ),
     ];
     for (yaml, expected) in cases {

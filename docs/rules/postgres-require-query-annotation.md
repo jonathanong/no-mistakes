@@ -81,7 +81,11 @@ immutable aliases. Local shadows and unproven alternatives do not establish an
 executor binding; mutable executor aliases are not inferred. SQL classification
 remains independent of executor selection.
 
-`importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
+`importSpecifier` has no default. With a configured module, `executorNames`
+defaults to `query`, `read`, and `write`, but a member such as `db.query`
+requires a receiver proven to come from that module, a configured factory or
+type, or an immutable executor alias. Explicit unscoped
+`executorNames: [query]` remains the broad opt-in for matching `.query` calls.
 
 Counterexample: `query(\`SELECT id FROM posts\`)`.
 
@@ -113,102 +117,19 @@ need a stable operation name rather than an opaque SQL string.
 Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
 `COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
 
+
 ## Options and defaults
 
-`include` and `exclude` select source files. `importSpecifier` has no default, and `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
+`include` and `exclude` select files. `importSpecifier` has no default;
+`executorNames` defaults to `[query, read, write]` only with a configured module.
+`unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
+`advise` puts its reason, known prefix, and helper lines in non-failing
+`advisories`. Proven missing annotations remain findings in every mode.
 
-### Executor configuration
-
-Omitting both `importSpecifier` and `executorNames` is a configuration error.
-Set `importSpecifier` to your database module or list `executorNames` explicitly.
-Use `executorNames: []` without a module to select no executor calls and retain
-SQL-file/native-SQL analysis where supported. See the
-[executor migration](../migrations/explicit-postgres-executors.md).
-
-| Option            | Default                                                      | Behavior                                                                            |
-| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `importSpecifier` | Empty                                                        | Set explicitly to your database module to match its named imports.                  |
-| `executorNames`   | Empty without a module; `[query, read, write]` with a module | Without a module, only explicitly listed names match named imports from any module. |
-| `executorFactoryNames` | Empty | Named imports (from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty) whose call result bound with `const`, `let`, `using`, or `await using` is an executor inside the declaring block. |
-| `executorTypeNames` | Empty | Imported type names (`import type` or inline `type` specifiers) from `importSpecifier`, a relative path that resolves into that package, or any module when it is empty, whose annotated parameters, including optional and inline-destructured ones, are executors inside the declaring function. |
-| `trustedSqlTags` | Empty | Named imports of `name` from `module`, or a subpath of `module`, are parameterized SQL tags. A renamed local binding is trusted. A default import is not. A shadowed or rebound local fails closed. The same name from another module, or a sibling prefix such as `@example/dbx`, stays untrusted. |
-| `unanalyzableSql` | `report` | Report configured executor arguments whose leading SQL cannot be verified. Set `ignore` explicitly to retain the earlier behavior of skipping opaque arguments. |
-
-### SQL helpers and callbacks
-
-Straight-line same-file and imported helpers can return SQL assembled from strings,
-templates, nested SQL builders, and `.append()` calls. Empty fragments are skipped
-in composition order. Literal arguments can establish interpolated template text;
-unknown text before the first stable prefix remains unanalyzable. A same-file helper can also append static
-fragments to a typed `SQLStatement` parameter and return it when the caller's
-builder is statically recoverable. Its leading annotation is preserved through
-that composition; opaque inputs and dynamic appends remain unanalyzable. A leading
-`/* name */` stays valid when a later appended fragment is opaque:
-
-```ts
-function ordersSql(select: string) {
-  return sql``.append(`SELECT ${select} FROM orders`);
-}
-write(ordersSql("id")); // Missing annotation.
-write(sql`/* orders/list */ `.append(ordersSql("id"))); // Valid.
-```
-
-Named and default imports, plus named and star re-exports, can resolve helper
-functions. Namespace imports remain unanalyzable. Captured local bindings use the
-value available when the helper runs; calling before initialization remains opaque.
-Imported helpers share their module bindings during tracing, so an opaque mutator
-invalidates a module builder before a later helper reads it.
-Existing local `sql` template-tag implementations retain their previous behavior
-and can forward annotation prefixes through imported helpers. Unary and sequence
-expressions are traversed for nested executor calls without treating those
-wrappers as SQL values.
-Await an async helper before passing its returned SQL to an executor; a promise passed
-without awaiting it remains unanalyzable. Template substitutions are traversed for nested
-executor calls. Unknown calls or untrusted template tags that receive a mutable
-SQL builder invalidate its previous prefix, including aliases to that builder.
-Calling a method on an executor's returned value preserves the annotation of
-the exact executor call. Chained `catch`, `then`, and `finally` callbacks can
-still contain separate executor calls that require their own annotations.
-
-Callback forwarding through a straight-line helper substitutes the statement and
-callback arguments at each analyzable callsite. Findings point to the executor
-inside the callback. Every callsite must pass; one annotated invocation cannot
-hide an unannotated or opaque invocation of the same callback.
-
-```ts
-async function runSql(statement, run) { return run(statement); }
-runSql(ordersSql("id"), statement => write(statement)); // Executor needs an annotation.
-```
-
-Tracing is bounded and conservative. Cycles, unrecoverable reassignment, unsupported control
-flow, unresolved imports, arbitrary external calls, and unknown leading fragments
-produce an unanalyzable finding by default. Make the leading fragment static,
-prepend a named block comment at the caller, suppress an intentional exception,
-or explicitly configure `unanalyzableSql: ignore`. This default also applies to
-opaque executor arguments that earlier versions silently skipped. Include/exclude
-filters select reported files; an imported helper outside that selection can still
-be traced through the prepared project facts. Prefix evidence is used only by this
-annotation rule and does not make opaque dynamic SQL complete for other PostgreSQL rules.
-An incomplete transaction prefix such as `BE` plus unknown text remains
-unanalyzable because it could complete an exempt `BEGIN` statement.
-
-`executorFactoryNames` and `executorTypeNames` add scoped executors: `tx` in
-`await using tx = await openTransaction()` or `run` in `run: TxExecutor` is scanned
-only inside the block or function that declares it, and a same-named identifier
-elsewhere is not. Matching is by configuration only, both default to empty, and
-neither counts as executor selection: still set `importSpecifier` or `executorNames`.
-With `importSpecifier` set, these two options also match imports from its subpaths
-(`@example/db/types` for `@example/db`) but not sibling packages such as
-`@example/dbx`. A relative import (`../transaction`) matches only when the resolved
-file is inside the package `importSpecifier` resolves to; a same-named import outside
-that package does not. If the package root cannot be determined, relative imports do
-not match. `executorNames` still requires the exact module.
-
-Omitting both options is a configuration error. Set `executorNames: []` without
-`importSpecifier` to explicitly skip executor calls (including `.query`).
-A configured module or explicit `query` enables `.query` members. A configured module also recognizes
-its transaction helpers. Native SQL and recovered SQL-builder fragments retain
-their existing scopes. See [the migration notes](../migrations/explicit-postgres-executors.md).
+Configuration, SQL helper behavior, and callback forwarding are described in
+[options and helpers](../postgres-query-annotation/options-and-helpers.md).
+Use `check --include-sql-verdicts` for per-call proof and residual evidence;
+see [SQL verdicts](../postgres-sql-verdicts.md).
 
 ## Valid example
 
@@ -235,102 +156,11 @@ administrative script.
 
 SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
+
+Detailed mutation and invocation behavior is described in
+[advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).
+
 ## Related rules
 
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
-[`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row
-locks.
-
-Speculative function entrypoints use isolated initialized module state. Actual helper and callback call chains retain shared builder state. Bare `var` redeclarations preserve existing parameters and hoisted functions. Logical and conditional expressions contribute every syntactically possible helper invocation; helper calls in unsupported syntax remain conservative rather than allowing a favorable modeled call to hide unknown arguments. Diamond star re-exports of the same original binding resolve to that binding.
-
-Opaque mutations invalidate previously proven prefixes of mutable builders, including method receivers, spread arguments, nested containers, property writes/deletes, and constructor inputs. Replacing or deleting `String.raw` revokes built-in tag trust; writes to a lexically shadowed `String` leave the global built-in unaffected. Spread arguments remain conservative for positional helper and callback substitution.
-
-Conditional and logical arms use independent mutable state. An unchanged leading
-annotation remains provable, while a possible opaque mutation makes the SQL
-unanalyzable. Unsupported control flow containing potentially mutating calls
-cannot restore an earlier prefix through legacy recovery. A hoisted local `var`
-shadows a captured binding, including when it has no initializer.
-
-An initialized `var` redeclaration assigns when its initializer executes, preserving
-a parameter value used earlier. Regular helpers own an `arguments` object; arrows
-inherit it from their enclosing helper, so opaque mutations through that object
-retain the same builder identity. Later arguments can update builder aliases
-already evaluated for the same call. Nested callbacks retain live inherited
-bindings, so a later initialized `var` assignment updates their captured value.
-Binding updates use an index of their actual readers rather than scanning unrelated
-invocation frames.
-Unreachable invocation objects and frames are removed before speculative entrypoint
-snapshots, including calls interleaved with imported helper initialization.
-Static numeric and canonical numeric-string
-indices select the corresponding argument; dynamic indices remain conservative.
-In sloppy functions with simple parameters, assigning a parameter updates its
-mapped argument slot; opaque slot mutations make mapped parameters unknown. Reading
-an immutable parameter through opaque syntax preserves its value; unsupported
-binding writes remain conservative, including rebinding `arguments`. Replacing a
-known argument slot preserves the builder formerly referenced by that slot and
-other indexed arguments; prior opaque escapes remain uncertain. An unescaped
-invocation object's `length` is a primitive and does not expose its slot values.
-Static writes beyond the original argument count use sparse slots rather than
-resizing the invocation object; storing a reference does not mutate its builder.
-Unsupported assignments evaluate their RHS before invalidating written bindings.
-Destructuring targets are bindings, while computed keys, defaults, and member
-targets retain their evaluation effects. Conditional callbacks retain imported
-module state initialized in their possible arms, while sibling arms start from
-the same pristine state. Rebinding one variable leaves
-other aliases to its former builder intact. Opaque callback traversal also follows
-possible returned callbacks and newly installed argument-slot callbacks within
-the existing bound. Assigning a callback into a live or recreated slot does not invoke it unless
-the argument object already escaped. Reentrant callback traversal shares an
-invocation set within one opaque consumer; separate consumers remain independent.
-Conditional branches start from the same invocation state, so analyzing one branch
-does not suppress a callback in another branch. A callback is considered consumed
-after the join only if every possible branch invoked it.
-A stateful callback may be revisited when its observed captured inputs change,
-within the same depth bound and with a guard against reentrant execution.
-Observed inputs include imported helpers' captured module state; shared read
-projections are reused within one callback traversal.
-Writes through a still-mapped formal also expose a newly installed callback when
-its argument object previously escaped. A known unannotated scalar slot value
-remains a violation alongside an unknown mapping possibility, even in ignore mode;
-an annotated possibility does not prove that every possible value is safe.
-Differing dense or sparse values of one argument slot across branches stay
-possible candidates, so an unannotated arm remains a violation when
-`unanalyzableSql` is `ignore`.
-Deletion preserves known slot possibilities before disconnecting a formal. A
-dynamic deletion may disconnect a formal, so later slot writes retain both its
-previous value and the assigned value as possibilities.
-Static indexed assignments also follow argument-object aliases; assignments to
-other receiver values remain conservative.
-Strict functions keep separate bindings. A later definite parameter assignment establishes
-its new value until another escape of the argument object makes it uncertain.
-Deleting a known slot disconnects its mapping
-only when every possible branch deletes it. A later property write makes that
-index readable again without reconnecting the formal parameter, including when
-the deletion itself happened on only one branch. The recreated property is the
-assigned value; a dynamic deletion of an unwritten index stays uncertain. Deletion after an opaque escape
-preserves earlier uncertainty instead of restoring the original parameter value.
-Spread calls have unknown argument positions. Passing the complete argument object
-to opaque code makes its slots unknown, while an already copied immutable value
-retains its value. Escaped slots still retain possible callback effects, without
-proving their SQL value. Argument aliases share one invocation object; reading its
-primitive `length` does not expose its slots. Appending a builder refreshes its aliases inside argument
-objects and promises. Deleting an argument slot makes the slot unknown while
-preserving other slots and the builder that the slot referenced. Deleting a known
-non-index property leaves indexed slots intact; dynamic keys remain conservative. Computed-key
-effects still run, including inside a `void` wrapper. Comma expressions expose only
-their last value. Pure unary numeric indices such as `+0` and `-0` address slot zero.
-Non-coercive `void`, `typeof`, and `!` expressions discard
-callback values while evaluating operand effects. An ordinary property read
-inside one of those wrappers can still run a getter, so captured builders do
-not stay proven. Reads of a proven argument object's numeric slots and
-`length`, including an alias, stay data reads. A named property of that object,
-such as `arguments.trigger`, can be an accessor. A further property on one of
-those slots can still run a getter. Numeric `+`, `-`, and `~`
-coercion remains conservative because conversion hooks can mutate operands. A non-arrow function called through a member or index receives that base as
-`this`. An arrow keeps its lexical `this` and ignores the call receiver. A bare
-call does not reuse a captured `this`. Named function self-bindings are shadowed by
-invocation parameters and the ordinary `arguments` binding.
-Untrusted local tags can mutate captured
-builders even when their own bodies use supported straight-line syntax. They can
-also invoke interpolated callbacks, including callbacks from conditional or logical
-arms, invalidating captured builder prefixes.
+[`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row locks.

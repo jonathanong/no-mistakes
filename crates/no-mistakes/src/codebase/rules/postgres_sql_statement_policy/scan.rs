@@ -45,6 +45,49 @@ pub(super) fn scan(
     {
         let embedded = facts.embedded_sql(path, &opts.embedded)?;
         let rel = sql_rel(root, path);
+        let statements = facts.postgres_statements(path, Some(&opts.embedded))?;
+        if facts.wants_sql_verdicts() {
+            let mut checks = opts
+                .banned
+                .iter()
+                .map(|kind| format!("statement:{kind}"))
+                .chain(opts.settings.iter().map(|name| format!("setting:{name}")))
+                .collect::<Vec<_>>();
+            checks.sort();
+            crate::codebase::postgres::record_sql_policy_verdicts(
+                facts,
+                RULE_ID,
+                &rel,
+                &opts.embedded,
+                embedded,
+                statements,
+                &checks,
+                opts.advise_unanalyzable,
+                |check, _, statement| {
+                    let violates = check.strip_prefix("statement:").map_or_else(
+                        || {
+                            check.strip_prefix("setting:").is_some_and(|name| {
+                                statement
+                                    .setting_uses
+                                    .iter()
+                                    .any(|setting| setting.name == name)
+                            })
+                        },
+                        |kind| {
+                            statement
+                                .statement_kinds
+                                .iter()
+                                .any(|item| item.kind == kind)
+                        },
+                    );
+                    if violates {
+                        crate::codebase::postgres::SqlBranchJudgment::violation(true)
+                    } else {
+                        crate::codebase::postgres::SqlBranchJudgment::clear()
+                    }
+                },
+            );
+        }
         if opts.fail_unanalyzable {
             for call in &embedded.calls {
                 if call.is_unanalyzable() {
@@ -53,7 +96,7 @@ pub(super) fn scan(
             }
         }
         let source = crate::codebase::rules::read_source(sources, path);
-        for file in facts.postgres_statements(path, Some(&opts.embedded))? {
+        for file in statements {
             if file.parse_failed && opts.fail_unanalyzable {
                 dedup.push(
                     &mut findings,

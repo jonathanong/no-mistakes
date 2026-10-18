@@ -1,6 +1,15 @@
 use super::*;
 use clap::{error::ErrorKind, CommandFactory};
 
+#[test]
+fn check_sql_verdict_flag_is_explicit_opt_in() {
+    let default = Cli::try_parse_from(["no-mistakes", "check"]).unwrap();
+    let requested =
+        Cli::try_parse_from(["no-mistakes", "check", "--include-sql-verdicts"]).unwrap();
+    assert!(matches!(default.command, Command::Check(args) if !args.include_sql_verdicts));
+    assert!(matches!(requested.command, Command::Check(args) if args.include_sql_verdicts));
+}
+
 fn leaf_paths(command: &clap::Command) -> Vec<Vec<String>> {
     fn visit(command: &clap::Command, prefix: &mut Vec<String>, out: &mut Vec<Vec<String>>) {
         let subcommands = command.get_subcommands().collect::<Vec<_>>();

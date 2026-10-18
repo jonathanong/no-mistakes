@@ -7,8 +7,9 @@ pub(super) fn findings(
     original: &EmbeddedSqlCall,
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
+    prepared: Option<&crate::codebase::postgres::SqlStatementFileFacts>,
 ) -> Vec<RuleFinding> {
-    super::findings_for_call_with_catalog(file, source, original, opts, catalog)
+    super::findings_for_prepared_call(file, source, original, opts, catalog, prepared)
 }
 
 pub(super) fn prepared_findings(
@@ -73,16 +74,18 @@ pub(super) fn findings_for_file(
     embedded: &crate::codebase::postgres::EmbeddedSqlFileFacts,
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
-    statements: Option<&[crate::codebase::postgres::SqlStatementFileFacts]>,
+    statements: &[crate::codebase::postgres::SqlStatementFileFacts],
     dedup: &mut crate::codebase::rules::VariantFindingDedup,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let mut output = crate::codebase::rules::PostgresFindings::default();
-    let statements = statements
-        .map(crate::codebase::rules::index_sql_variants)
-        .unwrap_or_default();
+    let statements = crate::codebase::rules::index_sql_variants(statements);
     for (call_index, original) in embedded.calls.iter().enumerate() {
         if original.variants.is_empty() {
-            output.extend(findings(file, source, original, opts, catalog));
+            let prepared = statements.get(&(call_index, 0)).copied();
+            if original.sql_text.is_some() && prepared.is_none() {
+                return Err(anyhow::anyhow!("prepared SQL facts are missing"));
+            }
+            output.extend(findings(file, source, original, opts, catalog, prepared));
             continue;
         }
         for (variant_index, call) in original.statement_calls().enumerate() {

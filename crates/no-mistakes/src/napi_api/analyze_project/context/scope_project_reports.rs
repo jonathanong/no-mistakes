@@ -33,6 +33,7 @@ impl PreparedScope {
                         self.traversal.session_arc(),
                         parsed.include_suppressed,
                         parsed.include_runner_config_deadlines,
+                        parsed.include_sql_verdicts,
                     )?,
                 )))
             }

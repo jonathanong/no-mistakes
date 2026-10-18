@@ -53,6 +53,8 @@ pub struct CheckFactPlan {
     pub postgres_dml: bool,
     /// Demand concrete alternatives for rules that retain legacy direct SQL handling.
     pub postgres_variants: bool,
+    /// Exact executor SQL needs source-aware lock/conflict metadata in the shared parse.
+    pub postgres_exact_locations: bool,
     /// Opted-in row-bound projection within the shared SQL statement fact pass.
     pub postgres_bounds: bool,
     /// Opted-in builder-fragment statement facts for shape-policy consumers.
@@ -163,6 +165,7 @@ impl CheckFactPlan {
         self.postgres_schema_catalog_paths.dedup();
         self.postgres_dml |= other.postgres_dml;
         self.postgres_variants |= other.postgres_variants;
+        self.postgres_exact_locations |= other.postgres_exact_locations;
         self.postgres_bounds |= other.postgres_bounds;
         self.postgres_fragments |= other.postgres_fragments;
         self.postgres_write_sql_include

@@ -145,6 +145,9 @@ inside supported PL/pgSQL bodies and static `EXECUTE` strings.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
 `sqlInclude` defaults to `**/*.sql`. `bannedStatements` defaults to `CREATE
 TABLE`, `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
 and `DROP VIEW`; `CREATE UNIQUE INDEX` and materialized views map to those

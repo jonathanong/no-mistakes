@@ -59,6 +59,9 @@ calls retain `unanalyzableSql` behavior.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
 `include`, `exclude`, `sqlInclude`, `importSpecifier`, `executorNames`, and
 `unanalyzableSql` match `postgres-no-generated-column-writes`. `sqlInclude`
 defaults to `**/*.sql`. `unanalyzableSql` defaults to `fail`.

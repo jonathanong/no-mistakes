@@ -43,14 +43,9 @@ pub(crate) fn prepare_rule_sql_facts(
                     )
                 }),
                 postgres_dml: !profiles.is_empty()
-                    && dml_ids.iter().any(|id| {
-                        !matches!(
-                            *id,
-                            "postgres-require-query-annotation"
-                                | "postgres-lock-ordering"
-                                | "postgres-conflict-ordering"
-                        )
-                    }),
+                    && dml_ids
+                        .iter()
+                        .any(|id| !matches!(*id, "postgres-require-query-annotation")),
                 postgres_variants: dml_ids.iter().any(|id| {
                     matches!(
                         *id,
@@ -58,6 +53,9 @@ pub(crate) fn prepare_rule_sql_facts(
                             | "postgres-conflict-ordering"
                             | "postgres-require-query-annotation"
                     )
+                }),
+                postgres_exact_locations: rule_ids.iter().any(|id| {
+                    matches!(*id, "postgres-lock-ordering" | "postgres-conflict-ordering")
                 }),
                 postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),

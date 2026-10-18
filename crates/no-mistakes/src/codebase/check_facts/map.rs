@@ -4,6 +4,7 @@ mod views;
 mod fragments;
 mod postgres_catalog;
 mod postgres_readable;
+mod sql_verdicts;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
@@ -18,7 +19,7 @@ use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use dashmap::DashMap;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub(crate) type PlaywrightTestFilesByProject = Arc<
     Vec<(
@@ -40,6 +41,9 @@ type RouteReachableFilesCache = Arc<
 
 #[derive(Default)]
 pub struct CheckFactMap {
+    pub(crate) sql_application: Option<crate::codebase::postgres::SqlRuleApplication>,
+    pub(crate) sql_verdicts:
+        Option<Arc<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
     pub(crate) companion_import_plans: Arc<
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
     >,
@@ -200,7 +204,6 @@ impl CheckFactMap {
     pub fn fact_view_with_supplemental(&self, supplemental: &Self) -> Self {
         self.view_with_supplemental(supplemental, self.graph_files.clone())
     }
-
     pub(crate) fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
         self.view_with_supplemental(&Self::default(), graph_files)
     }

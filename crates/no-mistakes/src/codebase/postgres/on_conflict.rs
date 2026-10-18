@@ -4,7 +4,9 @@ mod arbiter;
 mod convergence;
 mod generated;
 mod trigger;
+mod verdicts;
 mod where_noop;
+pub(crate) use verdicts::judge_subcheck;
 
 #[cfg(test)]
 mod coverage_more_tests;

@@ -1,0 +1,15 @@
+rules:
+  - rule: postgres-explicit-columns
+    name: strict
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      maxColumns: 0
+  - rule: postgres-explicit-columns
+    name: permissive
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      maxColumns: 100

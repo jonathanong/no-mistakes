@@ -53,7 +53,7 @@ fn unknown_unanalyzable_mode_is_a_config_error() {
     .to_string();
     assert!(
         error.contains(
-            "postgres-no-generated-column-writes: unanalyzableSql must be `fail` or `ignore`"
+            "postgres-no-generated-column-writes: unanalyzableSql must be `fail`, `ignore`, or `advise`"
         ),
         "{error}"
     );

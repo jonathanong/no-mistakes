@@ -6,6 +6,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
 mod source;
+mod verdicts;
 use source::physical_source;
 
 pub(super) fn scan(
@@ -28,6 +29,9 @@ pub(super) fn scan(
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
+    if let Some(prepared) = prepared.filter(|facts| facts.wants_sql_verdicts()) {
+        verdicts::record(root, opts, &embedded, catalog, prepared)?;
+    }
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
