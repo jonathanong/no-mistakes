@@ -1,5 +1,6 @@
 "use strict";
 
+const { ruleSuppression } = require("../rule-suppression");
 const { rule } = require("../helpers");
 const { createTargetMatcher } = require("./async-targets");
 const {
@@ -11,6 +12,32 @@ const {
   staticPropertyName,
   visiblePropertyNames,
 } = require("./imported-call-options");
+const { shouldCheckOptionsFile } = require("./required-call-selector-compile");
+const { createCallSelectors } = require("./required-call-selectors");
+
+function reportMissing(context, node, target, resolved, suppressed, fallback, reported) {
+  if (suppressed(node) || reported?.has(node)) return;
+  if (hasRequiredOptions(node.arguments[target.optionsPosition - 1], target, context.sourceCode)) {
+    return;
+  }
+  reported?.add(node);
+  const custom = target.message || fallback;
+  if (custom) {
+    context.report({ node, messageId: "customOptions", data: { message: custom } });
+    return;
+  }
+  context.report({
+    node,
+    messageId: "missingOptions",
+    data: {
+      source: resolved.source,
+      calleeName: resolved.calleeName,
+      optionsPosition: String(target.optionsPosition),
+      propertyMatch: target.propertyMatch,
+      requiredProperties: target.requiredProperties.join(", "),
+    },
+  });
+}
 
 module.exports = Object.assign(
   rule(
@@ -18,50 +45,56 @@ module.exports = Object.assign(
       type: "problem",
       docs: {
         description:
-          "require a statically visible options object on calls resolved from configured imports",
+          "require a statically visible options object on configured imported, global, or receiver-shaped calls",
         recommended: false,
       },
       schema: importedCallOptionsSchema,
       messages: {
         missingOptions:
           "Call '{{calleeName}}' from '{{source}}' must pass a statically visible options object at argument {{optionsPosition}} containing {{propertyMatch}} of: {{requiredProperties}}.",
+        customOptions: "{{message}}",
       },
     },
     (context) => {
-      const matcher = createTargetMatcher(context);
-      const optionTargets = compileImportedCallTargets(context.options?.[0] || {});
-      if (!matcher.hasTargets || optionTargets.length === 0) return {};
+      const options = context.options?.[0] || {};
+      if (!shouldCheckOptionsFile(context.filename, options)) return {};
+      const optionTargets = compileImportedCallTargets(options);
+      const selectors = createCallSelectors(context, options);
+      if (optionTargets.length === 0 && !selectors.hasTargets) return {};
+      const matcher = optionTargets.length > 0 ? createTargetMatcher(context) : null;
+      const suppressed = ruleSuppression(context, "require-options-on-imported-call");
+      const fallback = typeof options.message === "string" ? options.message : "";
+      const reported = new WeakSet();
 
       return {
-        ...matcher.visitors,
+        ...(matcher ? matcher.visitors : {}),
+        Program(node) {
+          matcher?.visitors.Program(node);
+          selectors.record(node);
+        },
         CallExpression(node) {
-          const resolved = matcher.resolveCallTarget(node);
-          if (!resolved) return;
-          for (const target of matchingTargets(
-            optionTargets,
-            resolved.source,
-            resolved.calleeName,
-          )) {
-            if (
-              hasRequiredOptions(
-                node.arguments[target.optionsPosition - 1],
-                target,
-                context.sourceCode,
-              )
-            ) {
-              continue;
+          if (matcher) {
+            const resolved = matcher.resolveCallTarget(node);
+            if (resolved) {
+              for (const target of matchingTargets(
+                optionTargets,
+                resolved.source,
+                resolved.calleeName,
+              )) {
+                reportMissing(context, node, target, resolved, suppressed, fallback, null);
+              }
             }
-            context.report({
+          }
+          for (const match of selectors.matches(node)) {
+            reportMissing(
+              context,
               node,
-              messageId: "missingOptions",
-              data: {
-                source: resolved.source,
-                calleeName: resolved.calleeName,
-                optionsPosition: String(target.optionsPosition),
-                propertyMatch: target.propertyMatch,
-                requiredProperties: target.requiredProperties.join(", "),
-              },
-            });
+              match.target,
+              match.resolved,
+              suppressed,
+              fallback,
+              reported,
+            );
           }
         },
       };

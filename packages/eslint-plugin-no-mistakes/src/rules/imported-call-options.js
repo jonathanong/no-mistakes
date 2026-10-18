@@ -5,43 +5,88 @@ const { compileTargets, matchingTargets } = require("./async-patterns");
 const { isDefinitelyUndefinedValue } = require("./imported-call-undefined");
 const { propertyName, literalString } = require("./module-mock-helpers");
 
+const pathPatternList = { type: "array", items: { type: "string" } };
+// Slash-wrapped values are regexes. An unclosed class such as `/[/` must fail
+// here, before the rule can drop the target and match nothing.
+const selectorPattern = {
+  type: "string",
+  minLength: 1,
+  pattern: "^(?:[^/].*|/(?:[^/\\\\\\[\\]]|\\\\.|\\[[^\\]\\\\]*(?:\\\\.[^\\]\\\\]*)*\\])*/)$",
+};
+const selectorPatterns = { type: "array", minItems: 1, items: selectorPattern };
+const targetOptions = {
+  optionsPosition: { type: "integer", minimum: 1 },
+  requiredProperties: { type: "array", items: { type: "string" }, minItems: 1 },
+  propertyMatch: { type: "string", enum: ["any", "all"] },
+  message: { type: "string", minLength: 1 },
+};
+
+function targetKind(required, properties) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: [...required, "optionsPosition", "requiredProperties"],
+    properties: { ...properties, ...targetOptions },
+  };
+}
+
 const importedCallOptionsSchema = [
   {
     type: "object",
+    additionalProperties: false,
     properties: {
       targets: {
         type: "array",
         items: {
-          type: "object",
-          properties: {
-            sourceSpecifierPatterns: { type: "array", items: { type: "string" } },
-            calleeNamePatterns: { type: "array", items: { type: "string" } },
-            optionsPosition: { type: "integer", minimum: 1 },
-            requiredProperties: { type: "array", items: { type: "string" }, minItems: 1 },
-            propertyMatch: { type: "string", enum: ["any", "all"] },
-          },
-          required: [
-            "sourceSpecifierPatterns",
-            "calleeNamePatterns",
-            "optionsPosition",
-            "requiredProperties",
+          oneOf: [
+            targetKind(["sourceSpecifierPatterns", "calleeNamePatterns"], {
+              sourceSpecifierPatterns: selectorPatterns,
+              calleeNamePatterns: selectorPatterns,
+            }),
+            targetKind(["globalNamePatterns"], { globalNamePatterns: selectorPatterns }),
+            targetKind(["receiverPatterns", "calleeNamePatterns"], {
+              receiverPatterns: selectorPatterns,
+              calleeNamePatterns: selectorPatterns,
+            }),
           ],
-          additionalProperties: false,
         },
       },
+      message: { type: "string", minLength: 1 },
+      checkedPathPatterns: pathPatternList,
+      allowedPathPatterns: pathPatternList,
     },
-    additionalProperties: false,
   },
 ];
+
+function normalizeRequiredProperties(value) {
+  return Array.isArray(value)
+    ? [...new Set(value.filter((name) => typeof name === "string" && name))]
+    : [];
+}
+
+// Slash-wrapped patterns are regexes. `/(/` and `/*/` pass the schema, and
+// `compileTargets` would drop them so the rule loads and checks nothing.
+function assertCompilableSelectorPatterns(patterns) {
+  if (!Array.isArray(patterns)) return;
+  for (const pattern of patterns) {
+    if (typeof pattern !== "string" || pattern.length < 3) continue;
+    if (!pattern.startsWith("/") || !pattern.endsWith("/")) continue;
+    try {
+      RegExp(pattern.slice(1, -1));
+    } catch (error) {
+      throw new Error(`Invalid selector pattern ${pattern}: ${error.message}`);
+    }
+  }
+}
 
 function compileImportedCallTargets(options) {
   const compiled = [];
   for (const target of options.targets || []) {
+    assertCompilableSelectorPatterns(target.sourceSpecifierPatterns);
+    assertCompilableSelectorPatterns(target.calleeNamePatterns);
     const [matched] = compileTargets({ targets: [target] }, "targets");
     const optionsPosition = target.optionsPosition;
-    const requiredProperties = Array.isArray(target.requiredProperties)
-      ? [...new Set(target.requiredProperties.filter((name) => typeof name === "string" && name))]
-      : [];
+    const requiredProperties = normalizeRequiredProperties(target.requiredProperties);
     if (
       !matched ||
       !Number.isInteger(optionsPosition) ||
@@ -50,12 +95,15 @@ function compileImportedCallTargets(options) {
     ) {
       continue;
     }
-    compiled.push({
+    const next = {
       ...matched,
       optionsPosition,
       requiredProperties,
       propertyMatch: target.propertyMatch === "all" ? "all" : "any",
-    });
+    };
+    // Per-target text stays off the object unless set, so older compiled shapes stay stable.
+    if (typeof target.message === "string" && target.message) next.message = target.message;
+    compiled.push(next);
   }
   return compiled;
 }
@@ -66,6 +114,7 @@ function staticPropertyName(property) {
   return propertyName(property.key);
 }
 
+// Later static keys replace earlier ones. A spread neither adds nor erases a key.
 function visiblePropertyValues(node) {
   const values = new Map();
   if (node?.type !== "ObjectExpression") return values;
@@ -104,6 +153,7 @@ module.exports = {
   importedCallOptionsSchema,
   isDefinitelyUndefinedValue,
   matchingTargets,
+  normalizeRequiredProperties,
   staticPropertyName,
   visiblePropertyNames,
 };

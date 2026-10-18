@@ -84,5 +84,5 @@ suppression remains available when running ESLint.
 ## Related rules
 
 - [`require-options-on-imported-call`](require-options-on-imported-call.md)
-  checks configured imported calls for visible options properties.
+  checks configured calls for visible options properties.
 - [`async-call-disposition`](async-call-disposition.md) checks promise handling.

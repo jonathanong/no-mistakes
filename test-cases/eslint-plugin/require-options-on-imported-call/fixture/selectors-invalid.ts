@@ -1,0 +1,41 @@
+declare const input: string;
+declare const opts: object;
+declare const key: string;
+declare const client: { responses: { create: (options?: object) => void } };
+declare const agent: { responses: { create: (options?: object) => void } };
+
+export function rejected() {
+  const missing = undefined;
+  createResponse();
+  createResponse?.(input);
+  createResponse(input);
+  createResponse("nope");
+  createResponse(null);
+  createResponse(opts);
+  createResponse([]);
+  createResponse(...opts);
+  createResponse({});
+  createResponse({ ...opts });
+  createResponse({ other: 1 });
+  createResponse({ [key]: 1 });
+  createResponse({ signal: undefined });
+  createResponse({ ["signal"]: undefined });
+  createResponse({ signal: void 0 });
+  createResponse({ signal: undefined as string | undefined });
+  createResponse({ signal: missing });
+  createResponse!(input);
+  (createResponse as Function)(input);
+  globalThis.createResponse();
+  window.createResponse(input);
+  self.createResponse();
+  global.createResponse();
+  globalThis?.createResponse?.(input);
+  client.responses.create();
+  client.responses.create(input);
+  client.responses.create({});
+  client.responses.create({ ...opts });
+  client?.responses?.create?.(input);
+  agent.responses.create({ other: true });
+  client.responses?.create();
+  (client as Client).responses.create();
+}
