@@ -1,7 +1,7 @@
 "use strict";
 
 const { ruleSuppression } = require("../rule-suppression");
-const { schema, compile } = require("./forbidden-member-chains-schema");
+const { schema, compile, assertChains } = require("./forbidden-member-chains-schema");
 const {
   matches,
   computeChain,
@@ -20,6 +20,7 @@ module.exports = {
   create(context) {
     const compiled = [];
     const entries = context.options[0]?.chains;
+    assertChains(entries);
     if (Array.isArray(entries)) {
       for (const entry of entries) compiled.push(compile(entry));
     }

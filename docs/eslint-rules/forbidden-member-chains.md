@@ -104,7 +104,8 @@ deeper chains are unproven.
 Object destructuring is the same access. `const { open } = other.panel`, a
 rename `const { open: show } = other.panel`, and a nested pattern
 `const { panel: { open } } = other` match `*.panel.open`. So does a default on
-a parameter, `function f({ open } = other.panel) {}`. The finding is the
+a parameter, `function f({ open } = other.panel) {}`, and a default at any
+nesting depth, `const { x: { open } = other.panel } = {}`. The finding is the
 property whose key completes the chain. A repeated suffix inside one pattern
 reports once. Computed pattern keys stay unproven and are not reported,
 including a literal computed key such as `{ ["open"]: show }`. A non-computed

@@ -47,6 +47,20 @@ describe("forbidden-member-chains destructure", () => {
     ]);
   });
 
+  it("matches a nested default at any depth", () => {
+    assert.deepEqual(lineMessages(check("destructure-nested-default.mjs")), [
+      [3, panel],
+      [6, panel],
+      [8, panel],
+    ]);
+    assert.deepEqual(
+      oxlintFiles(["destructure-nested-default.mjs"])
+        .get("destructure-nested-default.mjs")
+        .map((diagnostic) => diagnostic.message),
+      check("destructure-nested-default.mjs").map((message) => message.message),
+    );
+  });
+
   it("matches a call receiver and a shadowed named root", () => {
     assert.deepEqual(
       lineMessages(

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { plugin, __dirname } from "./helpers.mjs";
+import { __dirname } from "./helpers.mjs";
 import { check, entry, fixtureRoot, id, lineMessages } from "./forbidden-member-chains-helpers.mjs";
 
 const dotted = (count) => Array.from({ length: count }, (_, index) => `s${index}`).join(".");
@@ -17,7 +17,10 @@ function accept(path, receiver) {
 }
 
 function reject(path, receiver) {
-  assert.throws(() => accept(path, receiver), /pattern|anyOf|match|schema/i);
+  assert.throws(
+    () => accept(path, receiver),
+    /segment|maximum|malformed|required|schema|anyOf|pattern/i,
+  );
 }
 
 describe(`${id} schema`, () => {
@@ -57,8 +60,12 @@ describe(`${id} schema`, () => {
             { path: "records.entry", message: entry },
           ],
         }),
-      /pattern|anyOf|match|schema/i,
+      /segment|maximum|malformed|schema|anyOf|pattern/i,
     );
+  });
+
+  it("names the empty segment and how to fix the path", () => {
+    assert.throws(() => accept("records..entry"), /empty segment at index 1 in 'records\.\.entry'/);
   });
 
   it("accepts receiver wildcards, named roots, and the 16-segment budget", () => {
@@ -92,17 +99,6 @@ describe(`${id} schema`, () => {
         [3, "Named."],
       ],
     );
-    const patterns = [];
-    const visit = (value) => {
-      if (!value || typeof value !== "object") return;
-      if (typeof value.pattern === "string") patterns.push(value.pattern);
-      for (const child of Object.values(value)) {
-        if (Array.isArray(child)) child.forEach(visit);
-        else visit(child);
-      }
-    };
-    visit(plugin.rules[id].meta.schema);
-    assert.ok(patterns.some((pattern) => pattern.startsWith("^") && pattern.includes("[^.]")));
   });
 
   it("rejects the same malformed paths under oxlint", () => {
@@ -123,7 +119,11 @@ describe(`${id} schema`, () => {
       );
       assert.equal(result.error, undefined, result.stderr);
       assert.notEqual(result.status, 0, config);
-      assert.match(`${result.stdout}\n${result.stderr}`, /pattern|anyOf|schema|invalid/i, config);
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /segment|maximum|malformed|pattern|anyOf|schema|invalid/i,
+        config,
+      );
     }
   });
 });

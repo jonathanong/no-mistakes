@@ -63,8 +63,11 @@ function destructureVisitors({ compiled, context, suppressed, info }) {
       const pattern = objectPattern(node.left);
       if (pattern) check(pattern, node.right);
     },
+    // A default is a receiver at any depth, not only on a function parameter.
+    // `const { x: { open } = other.panel } = {}` reports `*.panel.open`.
     AssignmentPattern(node) {
-      if (!PARAM_PARENTS.has(node.parent?.type)) return;
+      const parent = node.parent?.type;
+      if (parent !== "Property" && !PARAM_PARENTS.has(parent)) return;
       const pattern = objectPattern(node.left);
       if (pattern) check(pattern, node.right);
     },
