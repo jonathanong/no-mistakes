@@ -1,0 +1,7 @@
+# no-mistakes-disable-file workflow-topology-policy
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ secrets.FILE_DISABLED }}'

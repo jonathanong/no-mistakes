@@ -1,0 +1,11 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # no-mistakes-disable-next-line workflow-topology-policy
+      one: '${{ secrets.ONE }}'
+      two: '${{ secrets.TWO }}' # no-mistakes-disable-line workflow-topology-policy
+      three: '${{ secrets.THREE }}'
+    steps:
+      - run: echo ready

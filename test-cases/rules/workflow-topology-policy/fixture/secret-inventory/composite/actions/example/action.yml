@@ -1,0 +1,11 @@
+inputs:
+  token:
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: echo '${{ secrets.DIRECT }}'
+      shell: bash
+    - if: secrets[inputs.selector] != ''
+      run: echo ready
+      shell: bash

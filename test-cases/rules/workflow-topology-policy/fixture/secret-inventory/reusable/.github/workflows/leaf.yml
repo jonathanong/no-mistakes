@@ -1,0 +1,10 @@
+on:
+  workflow_call:
+    secrets:
+      LEAF:
+        required: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ secrets.LEAF }}'

@@ -13,6 +13,8 @@ struct PreparedScope {
     import_usages: HashMap<String, crate::codebase::import_usages::PreparedImportUsages>,
     server: Option<crate::server_routes::PreparedServerAnalysis>,
     check: Option<SharedCheckContext>,
+    ci_topology:
+        Option<std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
     check_uses_traversal_graph: bool,
     playwright: HashMap<String, PreparedPlaywrightView>,
     queue_reports: ReportCache<crate::queue::ProjectReport>,
@@ -47,6 +49,8 @@ struct PreparedScopePlan {
     configs: std::collections::HashSet<PathBuf>,
     import_usages: HashMap<String, crate::codebase::import_usages::PreparedImportUsages>,
     check: Option<SharedCheckContext>,
+    ci_topology:
+        Option<std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
     playwright: HashMap<String, PreparedPlaywrightView>,
     queue_traversal_keys: std::collections::HashSet<String>,
     server_traversal_keys: std::collections::HashSet<String>,

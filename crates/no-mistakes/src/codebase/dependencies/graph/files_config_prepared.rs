@@ -4,8 +4,9 @@ pub struct PreparedGraphConfig {
     options: Option<GraphConfigOptions>,
     playwright_settings: Vec<crate::playwright::config::Settings>,
     workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
-    workflow_documents:
-        Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
+    workflow_documents: Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
+    workflow_inputs:
+        Option<std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
 }
 
 impl PreparedGraphConfig {
@@ -47,8 +48,27 @@ impl PreparedGraphConfig {
 
     pub(crate) fn workflow_documents(
         &self,
-    ) -> Option<&crate::codebase::ci_workflows::ParsedWorkflowSet> {
-        self.workflow_documents.as_deref()
+    ) -> Option<crate::codebase::ci_workflows::PreparedWorkflowDocuments<'_>> {
+        use crate::codebase::ci_workflows::PreparedWorkflowDocuments;
+        self.workflow_inputs
+            .as_deref()
+            .map(PreparedWorkflowDocuments::Topology)
+            .or_else(|| {
+                self.workflow_documents
+                    .as_deref()
+                    .map(PreparedWorkflowDocuments::Documents)
+            })
+    }
+
+    #[doc(hidden)]
+    pub fn set_workflow_inputs(
+        &mut self,
+        inputs: Option<
+            std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
+        >,
+    ) {
+        self.workflow_documents = None;
+        self.workflow_inputs = inputs;
     }
 
     /// Supply request-prepared workflow documents for graph projections.
@@ -57,61 +77,12 @@ impl PreparedGraphConfig {
         &mut self,
         documents: Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
     ) {
+        self.workflow_inputs = None;
         self.workflow_documents = documents;
     }
-
 }
 
-#[doc(hidden)]
-pub fn prepare_graph_config(
-    root: &Path,
-    plan: GraphBuildPlan,
-    codebase_config: &crate::codebase::config::Config,
-    config: &crate::config::v2::NoMistakesConfig,
-    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-) -> anyhow::Result<PreparedGraphConfig> {
-    prepare_graph_config_inner(root, plan, codebase_config, config, visible_paths, None, None)
-}
-
-#[doc(hidden)]
-pub fn prepare_graph_config_with_test_filter(
-    root: &Path,
-    plan: GraphBuildPlan,
-    codebase_config: &crate::codebase::config::Config,
-    config: &crate::config::v2::NoMistakesConfig,
-    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    test_filter: crate::codebase::test_filter::TestFileFilter,
-) -> anyhow::Result<PreparedGraphConfig> {
-    prepare_graph_config_inner(
-        root,
-        plan,
-        codebase_config,
-        config,
-        visible_paths,
-        Some(test_filter),
-        None,
-    )
-}
-pub(crate) fn prepare_graph_config_with_test_filter_and_workspace(
-    root: &Path,
-    plan: GraphBuildPlan,
-    codebase_config: &crate::codebase::config::Config,
-    config: &crate::config::v2::NoMistakesConfig,
-    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    test_filter: crate::codebase::test_filter::TestFileFilter,
-    workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
-) -> anyhow::Result<PreparedGraphConfig> {
-    prepare_graph_config_inner(
-        root,
-        plan,
-        codebase_config,
-        config,
-        visible_paths,
-        Some(test_filter),
-        Some(workspace),
-    )
-}
-
+include!("files_config_prepared/constructors.rs");
 
 fn prepare_graph_config_inner(
     root: &Path,
@@ -189,6 +160,7 @@ fn prepare_graph_config_inner(
             )
         }),
         workflow_documents: None,
+        workflow_inputs: None,
     })
 }
 

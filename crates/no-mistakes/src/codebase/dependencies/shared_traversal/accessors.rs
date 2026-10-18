@@ -53,6 +53,15 @@ impl SharedTraversalContext {
         self.build_plan
     }
 
+    pub(crate) fn set_workflow_inputs(
+        &mut self,
+        inputs: Option<
+            std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
+        >,
+    ) {
+        self.prepared_graph.set_workflow_inputs(inputs);
+    }
+
     pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
         &self.prepared_graph
     }

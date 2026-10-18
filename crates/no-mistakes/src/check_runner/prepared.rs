@@ -18,7 +18,7 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) playwright_projects:
         Option<no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
     pub(crate) workflow_documents:
-        Option<Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
+        Option<Arc<no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
     pub(crate) tsconfig_gate_project_inputs:
         Option<no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
 }
@@ -148,20 +148,14 @@ pub(crate) fn prepare_from_shared(
                 &tsconfig_catalog,
             )
         });
-    let workflow_documents = (config
-        .rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
-        || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
-        || config.rule_configured(no_mistakes::codebase::rules::FORBIDDEN_DEPENDENCIES))
-    .then(|| {
-        Arc::new(
-            no_mistakes::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
-                root,
-                &config.ci,
-                visible_paths.as_ref(),
-                &sources,
-            ),
+    let workflow_documents =
+        no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs::for_config(
+            root,
+            &config,
+            visible_paths.as_ref(),
+            &sources,
         )
-    });
+        .map(Arc::new);
     let tsconfig_gate_project_inputs = config
         .rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
         .then(|| {

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      secretInventory:
+        repository: [GITHUB_TOKEN]
+        builtInExemptions: [CUSTOM_TOKEN, GITHUB_TOKEN]
+        reportUnused: true

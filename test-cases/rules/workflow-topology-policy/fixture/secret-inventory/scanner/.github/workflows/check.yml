@@ -1,0 +1,12 @@
+# ${{ secrets.COMMENT_ONLY }} must remain YAML comment text.
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      quoted_noise: "${{ format('secrets.QUOTED }}', secrets.REAL) }}"
+      utf8: "é ${{ secrets['BRACKET'] }}"
+      unrelated: "${{ notsecrets.IGNORED }} ${{ inputs.secrets.IGNORED }}"
+    steps:
+      - if: secrets . BARE != ''
+        run: echo ready

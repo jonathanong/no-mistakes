@@ -128,12 +128,9 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let sources = snapshot.source_store_for(&root);
     let facts = prepare_call_site_facts(&root, config, files, &sources)?;
-    let workflows =
-        rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE).then(|| {
-            crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
-                &root, &config.ci, snapshot, &sources,
-            )
-        });
+    let workflows = crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs::for_config(
+        &root, config, snapshot, &sources,
+    );
     let project_inputs = rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE)
         .then(|| {
             let workspace =

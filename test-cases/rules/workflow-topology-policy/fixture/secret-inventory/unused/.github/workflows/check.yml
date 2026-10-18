@@ -1,0 +1,7 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: Stage
+    steps:
+      - run: echo '${{ secrets.USED }}'

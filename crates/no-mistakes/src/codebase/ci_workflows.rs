@@ -1,7 +1,10 @@
 use anyhow::Result;
 
 mod cargo;
+mod prepared;
+pub(crate) mod secret_facts;
 mod workflow_set;
+pub use prepared::{PreparedWorkflowDocuments, PreparedWorkflowTopologyInputs};
 
 pub use cargo::{
     extract_binary_names, extract_cargo_targets, parse_cargo_bins, parse_cargo_package_name,

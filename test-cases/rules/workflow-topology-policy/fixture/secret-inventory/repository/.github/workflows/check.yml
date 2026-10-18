@@ -1,0 +1,13 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      declared: "${{ secrets.allowed }}"
+      builtin: "${{ secrets.GITHUB_TOKEN }}"
+      missing: "${{ secrets.MISSING }}"
+    steps:
+      - if: secrets.BARE != ''
+        run: echo '${{ secrets["BRACKET"] }}'
+      - run: |
+          echo "${{ secrets.MULTILINE }}"

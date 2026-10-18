@@ -1,0 +1,26 @@
+name: scanner
+env:
+  top: ${{ secrets.TOP }}
+  literal: "text secrets.LITERAL"
+  quoted: "${{ 'secrets.QUOTED' }}"
+  doubled: "${{ contains('it''s secrets.ESCAPED', secrets.REAL) }}"
+  qualified: "${{ github.secrets.QUALIFIED }}"
+  prefix: "${{ othersecrets.PREFIX }}"
+  dot: "${{ secrets . DOT }}"
+  bracket: "${{ secrets [ 'BRACKET' ] }}"
+  whole: "${{ toJSON(secrets) }}"
+  dynamic: "${{ secrets[inputs.name] }}"
+  sequence:
+    - "${{ secrets.SEQ_ONE }}"
+    - "${{ secrets['SEQ_TWO'] }}"
+  tagged: !secret "${{ secrets.TAGGED }}"
+  anchor: &secret "${{ secrets.ANCHOR }}"
+  alias: *secret
+jobs:
+  build:
+    if: secrets.IF_BARE
+    environment: production
+    env:
+      repeated: >-
+        ${{ secrets.REPEAT }}
+        ${{ secrets.REPEAT }}

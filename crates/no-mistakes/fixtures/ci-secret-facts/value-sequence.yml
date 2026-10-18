@@ -1,0 +1,6 @@
+jobs:
+  build:
+    env:
+      mismatch:
+        - ${{ secrets.SEQUENCE }}
+      conflict: "${{ secrets[inputs.name] }}"

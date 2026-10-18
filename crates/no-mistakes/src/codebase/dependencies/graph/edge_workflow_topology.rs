@@ -30,7 +30,6 @@ fn parsed_workflows_for_graph(
         None => crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(&root, paths),
     }
 }
-
 fn collect_workflow_topology_edges(
     root: &Path,
     all_files: &[PathBuf],
@@ -55,7 +54,6 @@ fn collect_workflow_topology_edges(
     let mut edges = Vec::new();
     let mut jobs = HashMap::new();
     let mut steps = HashMap::new();
-
     for job in &topology.jobs {
         let workflow_file =
             crate::codebase::ts_resolver::normalize_path(&root.join(&job.workflow_id));
@@ -129,14 +127,7 @@ fn collect_workflow_topology_edges(
     all_files.sort();
     let bins = collect_cargo_bins(&root, &all_files, sources);
     let mut resolver = WorkflowRunResolver::new(&root, &universe, &bins, sources);
-    add_workflow_run_edges(
-        parsed,
-        &jobs,
-        &steps,
-        &mut edges,
-        interner,
-        &mut resolver,
-    );
+    add_workflow_run_edges(parsed, &jobs, &steps, &mut edges, interner, &mut resolver);
     edges.sort();
     edges.dedup();
     edges

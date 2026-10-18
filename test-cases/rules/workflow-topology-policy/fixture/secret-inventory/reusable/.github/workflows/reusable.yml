@@ -1,0 +1,10 @@
+on:
+  workflow_call:
+    secrets:
+      ALIAS:
+        required: true
+jobs:
+  leaf:
+    uses: ./.github/workflows/leaf.yml
+    secrets:
+      LEAF: '${{ secrets.ALIAS }}'

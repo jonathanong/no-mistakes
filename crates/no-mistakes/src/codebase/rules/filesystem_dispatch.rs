@@ -110,6 +110,7 @@ macro_rules! define_filesystem_rule_ids {
             VITEST_PROJECT_MAPPING,
             VITEST_CI_PATH_COVERAGE,
             TSCONFIG_GATE_COVERAGE,
+            WORKFLOW_TOPOLOGY_POLICY,
         ];
     };
 }

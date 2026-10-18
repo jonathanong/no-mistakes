@@ -1,0 +1,5 @@
+on: push
+jobs:
+  call:
+    uses: owner/repo/.github/workflows/reusable.yml@v1
+    secrets: {}

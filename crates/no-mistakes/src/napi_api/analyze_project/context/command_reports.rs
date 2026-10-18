@@ -13,6 +13,9 @@ impl AnalyzeProjectContext {
         options: &AnalyzeProjectOptions,
     ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
+        if request.report_type == "ciTopology" {
+            return scope.ci_topology_report(request, &scope.options);
+        }
         if request.report_type == "callSites" {
             return scope.call_sites_report(request, &scope.options);
         }
@@ -44,17 +47,18 @@ fn run_command_report(
         "lockfileDiff" => napi_raw(crate::napi_api::lockfile_diff_json_impl(json)),
         "ciImpact" => napi_raw(crate::napi_api::ci_impact_json_impl(json)),
         "ciEnv" => napi_raw(crate::napi_api::ci_env_json_impl(json)),
-        "ciTopology" => napi_raw(crate::napi_api::ci_topology_json_impl(json)),
         "impactedChecks" => napi_raw(crate::napi_api::impacted_checks_json_impl(json)),
-        "infraResourceRefs" => {
-            napi_raw(crate::napi_api::infra_swift::infra_resource_refs_json_impl(json))
-        }
+        "infraResourceRefs" => napi_raw(
+            crate::napi_api::infra_swift::infra_resource_refs_json_impl(json),
+        ),
         "infraOutputs" => napi_raw(crate::napi_api::infra_swift::infra_outputs_json_impl(json)),
         "infraTestFor" => napi_raw(crate::napi_api::infra_swift::infra_test_for_json_impl(json)),
-        "swiftImporters" => napi_raw(crate::napi_api::infra_swift::swift_importers_json_impl(json)),
-        "swiftTestTargets" => {
-            napi_raw(crate::napi_api::infra_swift::swift_test_targets_json_impl(json))
-        }
+        "swiftImporters" => napi_raw(crate::napi_api::infra_swift::swift_importers_json_impl(
+            json,
+        )),
+        "swiftTestTargets" => napi_raw(crate::napi_api::infra_swift::swift_test_targets_json_impl(
+            json,
+        )),
         "validateMermaidMarkdown" => mermaid_report(json),
         other => bail!("unknown analyzeProject report type: {other}"),
     }

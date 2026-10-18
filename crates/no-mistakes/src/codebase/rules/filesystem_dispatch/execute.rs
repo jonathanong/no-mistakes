@@ -2,9 +2,7 @@ use super::*;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-
 mod special;
-
 pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 pub(super) struct RuleRunInputs<'a> {
@@ -15,7 +13,7 @@ pub(super) struct RuleRunInputs<'a> {
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
-    workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    workflow_documents: Option<&'a crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
     tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     config_path: Option<&'a Path>,
     candidates: &'a candidate_index::RuleCandidateIndex,
@@ -29,7 +27,8 @@ pub struct PreparedFilesystemRuleInputs<'a> {
     pub snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     pub sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-    pub workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    pub workflow_documents:
+        Option<&'a crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
     pub tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     pub config_path: Option<&'a Path>,
 }

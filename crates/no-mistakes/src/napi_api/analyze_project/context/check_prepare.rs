@@ -1,3 +1,5 @@
+include!("check_prepare_graph.rs");
+
 impl SharedCheckContext {
     fn prepare(
         root: &Path,
@@ -13,13 +15,11 @@ impl SharedCheckContext {
         use crate::check_tasks::{
             filesystem_rules_configured, queues_configured, unique_exports_configured,
         };
-
         let SharedCheckPreparationOptions {
             config_path,
             tsconfig_path,
             deadlines,
         } = options;
-
         // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
         let prepared = crate::check_runner::prepared::prepare_from_shared(
@@ -90,22 +90,7 @@ impl SharedCheckContext {
                 prepared.visible_paths.source_store_for(&root),
             )));
         }
-        let mut prepared_graph = graph_plan
-            .map(|graph_plan| {
-                let test_filter = crate::codebase::test_filter::TestFileFilter::new(&root, config);
-                crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
-                    &root,
-                    graph_plan,
-                    &prepared.codebase_config,
-                    config,
-                    prepared.visible_paths.as_ref(),
-                    test_filter,
-                )
-            })
-            .transpose()?;
-        if let Some(graph) = prepared_graph.as_mut() {
-            graph.set_workflow_documents(prepared.workflow_documents.clone());
-        }
+        let prepared_graph = prepare_shared_graph(&root, config, &prepared, graph_plan)?;
         if let Some(graph_playwright) = prepared_graph
             .as_ref()
             .map(|graph| {
@@ -135,7 +120,8 @@ impl SharedCheckContext {
         }
         plan.graph.per_item_calls |=
             config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM);
-        plan.graph.call_arguments |= crate::codebase::rules::forbidden_calls::argument_facts_required(config);
+        plan.graph.call_arguments |=
+            crate::codebase::rules::forbidden_calls::argument_facts_required(config);
         let mut fact_demand = crate::check_runner::finite_set_plan::prepare(
             &root,
             config,
