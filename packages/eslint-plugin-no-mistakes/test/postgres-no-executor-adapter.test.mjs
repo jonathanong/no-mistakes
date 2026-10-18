@@ -67,7 +67,7 @@ describe("postgres-no-executor-adapter", () => {
     assert.match(mapped.messages[0], /items\.map\(read\)/);
 
     const zero = check(`${IMPORT}run(() => read());`);
-    assert.deepEqual(zero.ids, ["forward"]);
+    assert.deepEqual(zero.ids, []);
     assert.equal(zero.output, `${IMPORT}run(() => read());`);
 
     const pair = check(`${IMPORT}run((statement, values) => read(statement, values), account);`);
@@ -339,16 +339,151 @@ describe("postgres-no-executor-adapter", () => {
     assert.deepEqual(ids(`${IMPORT}run(read?.(statement), account);`), []);
     assert.deepEqual(ids(`${IMPORT}run(flag ? (client?.query as Executor) : read, account);`), []);
     assert.deepEqual(ids(`${IMPORT}run((statement) => flag && read(statement), account);`), []);
-    assert.deepEqual(ids(`${IMPORT}run(read, account);`), []);
-    assert.deepEqual(ids(`${IMPORT}run(client.query, account);`), []);
     assert.deepEqual(ids(`${IMPORT}(flag ? read : write)("SELECT 1");`), []);
-    assert.deepEqual(ids(`${IMPORT}const exec = flag ? read : write;\nrun(exec, account);`), []);
     assert.deepEqual(
       ids(`${IMPORT}run((statement) => { if (flag) return read(statement); }, account);`),
       [],
     );
     assert.deepEqual(ids(`${IMPORT}run((statement) => { return; }, account);`), []);
     assert.deepEqual(ids(`${IMPORT}run(() => { }, account);`), []);
+  });
+
+  it("reports an executor passed as a value and a const adapter that closes over one", () => {
+    const passed = check(`${IMPORT}run(read, account);`);
+    assert.deepEqual(passed.ids, ["passed"]);
+    assert.equal(passed.output, `${IMPORT}run(read, account);`);
+    assert.match(passed.messages[0], /passes read into a helper/);
+    assert.match(passed.messages[0], /read\(sql`…`\)/);
+    assert.match(passed.messages[0], /const exec = read; exec\(sql`…`\)/);
+    assert.match(passed.messages[0], /instead of passing it/);
+    assert.match(passed.messages[0], /not a judged rewrite/);
+    assert.doesNotMatch(passed.messages[0], /run\(read, account\)/);
+
+    const query = check(`${IMPORT}run(client.query, account);`);
+    assert.deepEqual(query.ids, ["passed"]);
+    assert.match(query.messages[0], /client\.query\(sql`…`\)/);
+    assert.doesNotMatch(query.messages[0], /const exec = client\.query/);
+    assert.equal(query.output, `${IMPORT}run(client.query, account);`);
+
+    const computed = check(`${IMPORT}run(client["query"], account);`);
+    assert.deepEqual(computed.ids, ["passed"]);
+    assert.match(computed.messages[0], /client\["query"\]\(sql`…`\)/);
+
+    const mixed = check(`${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`);
+    assert.deepEqual(mixed.ids, ["passed"]);
+    assert.match(mixed.messages[0], /client\.query\(sql`…`\) or read\(sql`…`\)/);
+    assert.doesNotMatch(mixed.messages[0], /\(flag \? client\.query : read\)/);
+
+    const selected = check(`${IMPORT}const exec = flag ? read : write;\nrun(exec, account);`);
+    assert.deepEqual(selected.ids, ["passed"]);
+    assert.match(
+      selected.messages[0],
+      /read\(sql`…`\) or write\(sql`…`\) or \(flag \? read : write\)\(sql`…`\)/,
+    );
+    assert.doesNotMatch(selected.messages[0], /const exec = read/);
+    assert.match(selected.output, /run\(exec, account\)/);
+
+    const alias = check(`${IMPORT}const exec = read;\nrun(exec, account);`);
+    assert.deepEqual(alias.ids, ["passed"]);
+    assert.match(alias.messages[0], /read\(sql`…`\)/);
+    assert.match(alias.messages[0], /const exec = read; exec\(sql`…`\)/);
+
+    const nestedAlias = check(
+      `${IMPORT}const reader = read;\nconst exec = flag ? reader : write;\nrun(exec, account);`,
+    );
+    assert.deepEqual(nestedAlias.ids, ["passed"]);
+    assert.match(nestedAlias.messages[0], /read\(sql`…`\) or write\(sql`…`\)/);
+    assert.doesNotMatch(nestedAlias.messages[0], /\(flag \? reader : write\)/);
+
+    const asserted = check(`${IMPORT}run(read as Executor, account);`);
+    assert.deepEqual(asserted.ids, ["passed"]);
+    assert.match(asserted.messages[0], /read\(sql`…`\)/);
+    assert.equal(asserted.output, `${IMPORT}run(read as Executor, account);`);
+
+    const adapter = check(
+      `${IMPORT}const adapter = (statement) => read(statement);\nrun(adapter, account);`,
+    );
+    assert.deepEqual(adapter.ids, ["forward"]);
+    assert.match(adapter.messages[0], /read\(sql\)/);
+    assert.match(adapter.messages[0], /run\(read, account\)/);
+    assert.match(adapter.output, /run\(adapter, account\)/);
+
+    const functionAdapter = check(
+      `${IMPORT}const adapter = function (statement) { return read(statement); };\nrun(adapter, account);`,
+    );
+    assert.deepEqual(functionAdapter.ids, ["forward"]);
+    assert.match(functionAdapter.messages[0], /read\(sql\)/);
+
+    const memberAdapter = check(
+      `${IMPORT}const adapter = (statement) => client.query(statement);\nrun(adapter, account);`,
+    );
+    assert.deepEqual(memberAdapter.ids, ["blocked"]);
+    assert.match(memberAdapter.messages[0], /receiver or this/);
+    assert.match(memberAdapter.messages[0], /client\.query\(sql\)/);
+
+    const asyncAdapter = check(
+      `${IMPORT}const adapter = async (statement) => read(statement);\nrun(adapter as Executor, account);`,
+    );
+    assert.deepEqual(asyncAdapter.ids, ["blocked"]);
+    assert.match(asyncAdapter.messages[0], /async/);
+
+    const exactWrapped = check(
+      `${IMPORT}const adapter = (statement) => read(statement);\nrun(adapter as Executor, account);`,
+    );
+    assert.deepEqual(exactWrapped.ids, ["blocked"]);
+    assert.match(exactWrapped.messages[0], /type assertion/);
+
+    assert.deepEqual(ids(`${IMPORT}let exec = read;\nrun(exec, account);`), []);
+    assert.deepEqual(ids(`${IMPORT}var exec = read;\nvar exec = write;\nrun(exec, account);`), []);
+    assert.deepEqual(ids(`${IMPORT}const { read: exec } = { read };\nrun(exec, account);`), []);
+    assert.deepEqual(
+      ids(`${IMPORT}const left = right;\nconst right = left;\nrun(left, account);`),
+      [],
+    );
+    assert.deepEqual(ids(`${IMPORT}const exec = flag ? read : other;\nrun(exec, account);`), []);
+    assert.deepEqual(ids(`${IMPORT}const exec = other();\nrun(exec, account);`), []);
+    assert.deepEqual(ids(`${IMPORT}const exec = client?.query;\nrun(exec, account);`), []);
+    assert.deepEqual(ids(`${IMPORT}for (const exec of [read]) {\n  run(exec, account);\n}\n`), []);
+    assert.deepEqual(
+      ids(
+        `${IMPORT}const adapter = (statement) => read(normalize(statement));\nrun(adapter, account);`,
+      ),
+      [],
+    );
+    assert.deepEqual(ids(`${IMPORT}const adapter = () => read();\nrun(adapter);`), []);
+    // Not a local const binding, so the adapter is not followed.
+    assert.deepEqual(ids(`${IMPORT}new Runner((statement) => read(statement));`), []);
+    assert.deepEqual(
+      ids(
+        `${IMPORT}const options = { exec: (statement) => read(statement) };\nrun(options.exec, account);`,
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `${IMPORT}function load(read: (sql: string) => unknown, account: string) {\n  return run(read, account);\n}\n`,
+      ),
+      [],
+    );
+    assert.deepEqual(ids(`import { read } from "@other/db";\nrun(read, account);`), []);
+
+    const renamed = check(`import { write as save } from "@example/db";\nrun(save, account);`);
+    assert.deepEqual(renamed.ids, ["passed"]);
+    assert.match(renamed.messages[0], /save\(sql`…`\)/);
+    assert.match(renamed.messages[0], /const exec = save; exec\(sql`…`\)/);
+
+    const namesOnly = { executorNames: ["read"] };
+    assert.deepEqual(ids(`import { read } from "@example/db";\nrun(read, account);`, namesOnly), [
+      "passed",
+    ]);
+    assert.deepEqual(ids(`run(client.query, account);`, namesOnly), []);
+    assert.deepEqual(
+      ids(`${IMPORT}run(client.query, account);`, {
+        importSpecifier: "@example/db",
+        executorNames: ["read"],
+      }),
+      ["passed"],
+    );
   });
 
   it("matches renamed imports and configured names without a module", () => {
@@ -387,6 +522,15 @@ describe("postgres-no-executor-adapter", () => {
       executorFactoryNames: ["openTx"],
       executorTypeNames: ["Tx"],
     };
+    const typedPassed = check(
+      `import type { Tx } from "@example/db";\nfunction load(tx: Tx, account: string) {\n  return run(tx, account);\n}\n`,
+      option,
+    );
+    assert.deepEqual(typedPassed.ids, ["passed"]);
+    assert.match(typedPassed.messages[0], /tx\(sql`…`\)/);
+    assert.doesNotMatch(typedPassed.messages[0], /const exec = tx/);
+    assert.match(typedPassed.output, /run\(tx, account\)/);
+
     const typed = check(
       `import type { Tx } from "@example/db";\nfunction load(tx: Tx, account: string) {\n  return run((statement) => tx(statement), account);\n}\n`,
       option,
@@ -399,6 +543,21 @@ describe("postgres-no-executor-adapter", () => {
       `import type { Tx } from "@example/db";\nfunction load(tx: Tx, account: string) {\n  return run((statement) => tx(statement), account);\n}\n`,
     );
 
+    const factoryPassed = check(
+      `import { openTx } from "@example/db";\n{\n  let tx = openTx();\n  run(tx, account);\n}\n`,
+      option,
+    );
+    assert.deepEqual(factoryPassed.ids, ["passed"]);
+    assert.match(factoryPassed.messages[0], /tx\(sql`…`\)/);
+    assert.doesNotMatch(factoryPassed.messages[0], /const exec = tx/);
+
+    const aliasedFactory = check(
+      `import { openTx } from "@example/db";\n{\n  const tx = openTx();\n  const alias = tx;\n  run(alias, account);\n}\n`,
+      option,
+    );
+    assert.deepEqual(aliasedFactory.ids, ["passed"]);
+    assert.match(aliasedFactory.messages[0], /tx\(sql`…`\)/);
+
     const factory = check(
       `import { openTx } from "@example/db";\n{\n  let tx = openTx();\n  run((statement) => tx(statement), account);\n}\n`,
       option,
@@ -408,6 +567,13 @@ describe("postgres-no-executor-adapter", () => {
     assert.doesNotMatch(factory.messages[0], /const exec = tx/);
     assert.match(factory.output, /run\(\(statement\) => tx\(statement\), account\)/);
 
+    assert.deepEqual(
+      ids(
+        `import { openTx } from "@example/db";\n{\n  var tx = openTx();\n  run(tx, account);\n}\n`,
+        option,
+      ),
+      [],
+    );
     assert.deepEqual(
       ids(
         `import { openTx } from "@example/db";\n{\n  var tx = openTx();\n  run((statement) => tx(statement), account);\n}\n`,
@@ -452,6 +618,12 @@ describe("postgres-no-executor-adapter", () => {
     assert.deepEqual(
       ids(
         `${IMPORT}// eslint-disable-next-line no-mistakes/postgres-no-executor-adapter\nrun((statement) => read(statement), account);`,
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `${IMPORT}// no-mistakes-disable-next-line postgres-no-executor-adapter\nrun(read, account);`,
       ),
       [],
     );

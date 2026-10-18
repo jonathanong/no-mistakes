@@ -1,7 +1,7 @@
 import { openTransaction, read, write, type TxExecutor } from "@example/db";
 
 // Judged calls named by the executor-adapter rule. `run(read, account)` is not
-// here: passing the executor as a value produces no finding.
+// here: passing the executor as a value is not a judged offset.
 export function list(
   flag: boolean,
   other: boolean,

@@ -151,6 +151,19 @@ function unwrapArgument(node) {
   return { node: current, assertion };
 }
 
+// One const initializer, or null when the binding can change or is not a simple name.
+function constInitializer(identifier, context, seen) {
+  const variable = resolveVariable(identifier, context);
+  const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
+  // eslint-scope puts `const` on the VariableDeclaration parent, not on the def.
+  if (!def || def.type !== "Variable" || def.parent.kind !== "const" || seen.has(def.node)) {
+    return null;
+  }
+  if (def.node?.id?.type !== "Identifier" || !def.node.init) return null;
+  seen.add(def.node);
+  return def.node.init;
+}
+
 function matchForward(params, args) {
   const shape = parameterShape(params);
   if (!shape) return "unrelated";
@@ -166,9 +179,8 @@ function matchForward(params, args) {
   const forwarded = parts.some(
     (part) => part.node?.type === "Identifier" && known.has(part.node.name),
   );
-  if (!forwarded && !(parts.length === 0 && shape.names.length === 0 && !shape.rest)) {
-    return "unrelated";
-  }
+  // `() => read()` matches no parameter, so it is not an exact forwarder.
+  if (!forwarded) return "unrelated";
   const positional =
     parts.length === shape.names.length &&
     parts.every(
@@ -183,6 +195,7 @@ function matchForward(params, args) {
 
 module.exports = {
   TS_ASSERTIONS,
+  constInitializer,
   containsThis,
   executorLeaves,
   matchForward,

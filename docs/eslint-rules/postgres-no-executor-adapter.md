@@ -6,10 +6,18 @@ A callback that only forwards its arguments to a trusted SQL executor hides
 that call from static analysis. `run((statement) => read(statement), account)`
 builds the statement inside `run` and reaches `read` only through the lambda
 parameter, so the executor call is unanalyzable. Passing the function value,
-`run(read, account)`, is not a repair: analysis does not connect an executor
-argument to the statement inside the helper, and the check stays silent.
+`run(read, account)`, is the same blind spot: analysis does not connect an
+executor argument to the statement inside the helper.
 
-Call the executor on the SQL text instead. These forms are judged:
+Name the executor on the SQL text inside the helper. That shape is judged:
+
+```ts
+function run(account: string) {
+  return read(sql`SELECT id FROM orders WHERE account_id = ${account}`);
+}
+```
+
+These call shapes are also judged:
 
 ```ts
 read(sql);
@@ -32,22 +40,37 @@ import { read, write } from "@example/db";
 
 declare function run(exec: (statement: string) => unknown, account: string): unknown;
 
-export function list(account: string, flag: boolean) {
+export function list(account: string, flag: boolean, client: { query: (sql: string) => unknown }) {
   run((statement) => read(statement), account);
   run(flag ? read : write, account);
+  run(read, account);
+  run(client.query, account);
+  const selected = flag ? read : write;
+  run(selected, account);
+  const adapter = (statement: string) => read(statement);
+  run(adapter, account);
 }
 ```
 
-Conditional executor selection is reported and not rewritten. The message names
-`read(sql)` or `write(sql)`, and `(flag ? read : write)(sql)` when every branch
-is an identifier executor. It also names `run(read, account)` and says that
-passing the function is not a judged rewrite. The same report, still without a
-rewrite, covers a different receiver or `this`, an arity or rest change, a side
-effect, an async or generator wrapper, and a type assertion.
+Passing an executor value is reported and not rewritten. The message names the
+executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead of
+passing it. A `const` bound to a conditional of executors also names
+``(flag ? read : write)(sql`…`)`` when every branch is an identifier executor.
+`run(read, account)` is not a judged rewrite.
+
+Conditional executor selection written at the call is reported the same way,
+still without a rewrite. The message names `read(sql)` or `write(sql)`, and
+`(flag ? read : write)(sql)` when every branch is an identifier executor. It
+also names `run(read, account)` and says that passing the function is not a
+judged rewrite. The same report, still without a rewrite, covers a different
+receiver or `this`, an arity or rest change, a side effect, an async or
+generator wrapper, and a type assertion. A `const` whose initializer is that
+kind of callback is reported too.
 
 ## Allowed
 
 ```ts
+import sql from "sql-template-strings";
 import { read, write } from "@example/db";
 
 declare function run(exec: (statement: string) => unknown, account: string): unknown;
@@ -58,11 +81,17 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
   exec("SELECT id FROM orders WHERE account_id = $1");
   (flag ? read : write)("SELECT id FROM orders WHERE account_id = $1");
   client.query("SELECT id FROM orders WHERE account_id = $1");
-  // Not an adapter. Also not analyzed: the statement inside `run` stays hidden.
-  run(read, account);
+  function load(account: string) {
+    return read(sql`SELECT id FROM orders WHERE account_id = ${account}`);
+  }
+  // A zero-argument thunk forwards nothing.
+  run(() => read());
   // A shadowed name, another module, or a callback that changes the argument
   // is not an unchanged forwarder.
   client.execute((statement: string) => statement.trim());
+  // A constructor argument and an object property are not a local const binding.
+  new Runner((statement: string) => read(statement));
+  const options = { exec: (statement: string) => read(statement) };
 }
 ```
 
@@ -97,10 +126,23 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
 
 ## Fix
 
-This rule does not autofix. Replacing the adapter with `run(read, account)`
-drops the unanalyzable `read(statement)` call and leaves the statement inside
-`run` unchecked. Write the SQL as an argument of the executor (or of a `const`
-alias of an imported executor):
+This rule does not autofix and does not offer a suggestion. Replacing the
+adapter with `run(read, account)` is not a judged rewrite: analysis does not
+follow an executor passed as a value, so the statement inside `run` stays
+unchecked. Name the executor inside the helper instead:
+
+```ts
+function run(account: string) {
+  return read(sql`SELECT id FROM orders WHERE account_id = ${account}`);
+}
+```
+
+The message for a passed executor names that shape (``read(sql`…`)``, and
+``const exec = read; exec(sql`…`)`` when the executor is an imported identifier).
+It does not rewrite the call.
+
+A callback can also be replaced by a direct executor call. Write the SQL as an
+argument of the executor (or of a `const` alias of an imported executor):
 
 ```ts
 read("SELECT id FROM orders WHERE account_id = $1");

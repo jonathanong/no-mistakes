@@ -14,6 +14,11 @@ const {
   directCall,
   judgedDirect,
 } = require("./postgres-no-executor-adapter-forward");
+const {
+  passedAlias,
+  passedDirect,
+  resolvePassed,
+} = require("./postgres-no-executor-adapter-passed");
 
 const RULE_ID = "postgres-no-executor-adapter";
 
@@ -30,6 +35,8 @@ module.exports = rule(
         "This callback only forwards to {{executor}}. Call that executor on the SQL text (`{{direct}}`{{alias}}). Passing the function into a helper (`{{rejected}}`) does not connect the statement to the executor, so analysis cannot see it.",
       blocked:
         "This adapter hides {{executor}} from SQL analysis ({{reason}}). Call the executor on the SQL text (`{{direct}}`{{alias}}). `{{rejected}}` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+      passed:
+        "This call passes {{executor}} into a helper. Name the executor inside the helper (`{{direct}}`{{alias}}) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
     },
   },
   (context) => {
@@ -52,6 +59,20 @@ module.exports = rule(
           alias: aliasHint(names, leaves),
           rejected,
           reason: adapter.reason ?? "the selector contract changed",
+        },
+      });
+    }
+
+    function reportPassed(node, passed) {
+      if (suppressed(node)) return;
+      const names = [...new Set(passed.leaves.map((leaf) => leaf.name))];
+      context.report({
+        node,
+        messageId: "passed",
+        data: {
+          executor: names.join(" or "),
+          direct: passedDirect(names, passed.leaves, passed.conditionalText),
+          alias: passedAlias(names, passed.leaves),
         },
       });
     }
@@ -81,11 +102,21 @@ module.exports = rule(
         );
         return;
       }
-      if (expr.type !== "ArrowFunctionExpression" && expr.type !== "FunctionExpression") return;
-      const adapter = classifyFunction(expr, context, bindings, options);
-      if (!adapter) return;
-      if (wrapped && !adapter.reason) adapter.reason = "type assertion";
-      reportAdapter(argument, adapter, call, index);
+      if (expr.type === "ArrowFunctionExpression" || expr.type === "FunctionExpression") {
+        const adapter = classifyFunction(expr, context, bindings, options);
+        if (!adapter) return;
+        if (wrapped && !adapter.reason) adapter.reason = "type assertion";
+        reportAdapter(argument, adapter, call, index);
+        return;
+      }
+      const passed = resolvePassed(expr, context, bindings, options, new Set());
+      if (!passed) return;
+      if (passed.adapter) {
+        if (wrapped && !passed.adapter.reason) passed.adapter.reason = "type assertion";
+        reportAdapter(argument, passed.adapter, call, index);
+        return;
+      }
+      reportPassed(argument, passed);
     }
 
     return {

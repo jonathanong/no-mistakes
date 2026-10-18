@@ -4,8 +4,8 @@ use super::*;
 fn direct_executor_reference_offset_is_fully_judged() {
     // Forms named by `postgres-no-executor-adapter`: `read(sql)`, a const alias of that
     // import, an identifier conditional callee, `.query(sql)`, and a scoped executor call.
-    // `run(read, account)` is intentionally absent. That rewrite is silent, so the rule
-    // must not suggest it. An empty report, or `unanalyzable`, means a named form is not judged.
+    // `run(read, account)` is intentionally absent. That form is not judged; see
+    // `passed-executor-value`. An empty report, or `unanalyzable`, means a named form is not judged.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-no-offset/variants/direct-executor-reference");
     let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
