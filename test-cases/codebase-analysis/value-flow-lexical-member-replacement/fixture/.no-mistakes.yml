@@ -1,0 +1,15 @@
+effects:
+  cache:
+    targets:
+      - module: "@vendor/receiver"
+        export: primary.get
+      - module: "@vendor/receiver"
+        export: replica.get
+      - module: "@vendor/receiver"
+        export: untouched.get
+      - module: "@vendor/receiver"
+        export: dynamic.get
+      - module: "@vendor/receiver"
+        export: opaque.get
+      - module: "@vendor/receiver"
+        export: primary.info
