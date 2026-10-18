@@ -490,6 +490,16 @@ Each call runs the model against the call site's arguments:
 - **Bounded loops.** `for (const x of list)` is unrolled when the call site
   passes an array literal of at most 16 known elements (or the parameter's
   default is one). A loop over anything else fails the call.
+- **Spreads.** In an object literal, a spread of an unknown or open value makes
+  every property written before it unknown; properties written after it stay
+  known. With `{ offset: false, ...opts }`, `o.offset` is unknown, so both
+  branches are checked.
+- **Nested functions.** A helper whose body declares any nested function, even
+  inside a block, is not run and the call stays `Dynamic`. This covers local
+  helpers hoisted above their declaration and locals that shadow a
+  module-level helper.
+- **Duplicate builders.** A nested helper call that passes the same builder to
+  two `SQLStatement` parameters stays `Dynamic`.
 
 Calls recover in the same places a fixed helper does: as an `.append(...)`
 argument, as a statement that extends a builder, as an executor argument, bound
