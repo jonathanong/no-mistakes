@@ -29,11 +29,16 @@ pub(super) fn record(
             match (call.kind, call.sql_text.as_deref()) {
                 (EmbeddedSqlKind::Dynamic, Some(prefix)) => {
                     let status = prefix_status(prefix);
+                    // A complete leading annotation cannot be changed by an opaque tail.
+                    let residual = (status != SqlVerdictStatus::ProvenClear)
+                        .then(|| "opaque-sql-tail".to_string())
+                        .into_iter()
+                        .collect();
                     (
                         status,
                         (status != SqlVerdictStatus::Abstain)
                             .then_some(SqlEvidenceKind::VerifiedPrefix),
-                        vec!["opaque-sql-tail".to_string()],
+                        residual,
                     )
                 }
                 (EmbeddedSqlKind::Dynamic, None) => (

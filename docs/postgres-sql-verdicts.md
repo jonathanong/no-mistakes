@@ -14,7 +14,8 @@ same call and reach different verdicts.
 
 - `violation`: a policy violation is proven for at least one complete SQL
   alternative, or a verified prefix proves it independently of an opaque tail.
-- `proven-clear`: every exhaustive alternative satisfies that subcheck.
+- `proven-clear`: every exhaustive alternative satisfies that subcheck, or a
+  verified prefix settles a prefix-only obligation such as a leading annotation.
 - `abstain`: missing SQL, incomplete alternatives, parse failure, or catalog
   uncertainty prevents either conclusion.
 

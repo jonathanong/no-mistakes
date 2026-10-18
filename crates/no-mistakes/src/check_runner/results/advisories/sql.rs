@@ -10,10 +10,11 @@ pub(crate) fn merge_sql(
     verdicts: &[SqlObligationVerdict],
 ) {
     let mut added = false;
-    for verdict in verdicts
-        .iter()
-        .filter(|verdict| verdict.advisory && !verdict.residual_reasons.is_empty())
-    {
+    for verdict in verdicts.iter().filter(|verdict| {
+        verdict.advisory
+            && verdict.status != SqlVerdictStatus::ProvenClear
+            && !verdict.residual_reasons.is_empty()
+    }) {
         added = true;
         let line = sources
             .read_path(&root.join(&verdict.file))

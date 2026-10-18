@@ -17,13 +17,15 @@ fn advise_records_only_proven_executor_candidates() {
         check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
     let verdicts = facts.sql_verdicts();
-    assert_eq!(verdicts.len(), 2, "{verdicts:?}");
+    assert_eq!(verdicts.len(), 3, "{verdicts:?}");
     assert_eq!(verdicts[0].status, SqlVerdictStatus::ProvenClear);
     assert_eq!(verdicts[1].status, SqlVerdictStatus::Abstain);
     assert!(verdicts[1].advisory);
     assert!(verdicts[1]
         .residual_reasons
         .contains(&"unresolved-leading-sql".into()));
+    assert_eq!(verdicts[2].status, SqlVerdictStatus::ProvenClear);
+    assert!(verdicts[2].residual_reasons.is_empty());
 }
 
 #[test]

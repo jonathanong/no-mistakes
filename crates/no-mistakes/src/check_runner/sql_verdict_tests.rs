@@ -41,7 +41,7 @@ fn annotation_fail_ignore_and_advise_keep_proven_findings_and_residuals_distinct
     assert_eq!(evidence.advisories, advise.advisories);
     assert_eq!(
         evidence.sql_verdicts.len(),
-        4,
+        5,
         "{:?}",
         evidence.sql_verdicts
     );
@@ -50,7 +50,7 @@ fn annotation_fail_ignore_and_advise_keep_proven_findings_and_residuals_distinct
             .as_array()
             .unwrap()
             .len(),
-        4
+        5
     );
     assert_eq!(
         evidence
