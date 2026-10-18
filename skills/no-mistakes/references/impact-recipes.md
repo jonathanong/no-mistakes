@@ -317,7 +317,10 @@ config), or any path matched by the repo's configured
 `fallback_triggered` with a `fallback_reason` and selects the framework's full
 discovered test set instead of a narrow dependency path. Report that as the
 correct, conservative answer — do not treat `fallback_triggered: true` as a
-tracing failure to work around.
+tracing failure to work around. Also read `incomplete`: a missing dependency
+baseline (`dependency-baseline-missing`) means manifest or lockfile coverage
+is unfinished even when a scoped fallback already selected some tests. Pass
+`--base <pre-change revision>` instead of treating that plan as complete.
 
 ## Before deleting a test
 

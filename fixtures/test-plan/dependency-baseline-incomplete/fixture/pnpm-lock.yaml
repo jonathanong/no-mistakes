@@ -1,0 +1,16 @@
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      fixture-analyzer:
+        specifier: ^1.0.0
+        version: 1.0.0
+  tooling:
+    dependencies:
+      fixture-analyzer:
+        specifier: ^1.0.0
+        version: 1.0.0
+packages:
+  fixture-analyzer@1.0.0:
+    resolution:
+      integrity: sha512-old

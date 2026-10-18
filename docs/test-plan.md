@@ -143,7 +143,11 @@ Full-suite fallback fires only for:
 
 This requires `--base` (or another mechanism to supply the old lockfile content).
 Without `--base`, a `lockfile-no-baseline` warning is emitted and `--global-config-fallback=true`
-triggers a full suite run.
+triggers a full suite run. The plan also sets `incomplete` to
+`dependency-baseline-missing` for that lockfile (and for package manifests
+with `package-manifest-no-baseline`). That marker means dependency coverage is
+unfinished; `fallback_triggered` alone does not. See
+[tests plan](cli/tests-plan.md#dependency-manifests-and-lockfiles).
 
 Binary lockfiles (`bun.lockb`) cannot be parsed and always trigger a warning. Full-suite
 selection still requires explicit global fallback opt-in.

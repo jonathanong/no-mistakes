@@ -1145,6 +1145,13 @@ test("test plan declarations require current results but accept saved legacy pla
   assert.match(declarations, /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/);
   assert.match(declarations, /limitPercent\?: never;[\s\S]*limitFiles\?: never;/);
   assert.match(declarations, /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/);
+  assert.match(declarations, /export interface TestPlanIncompleteness \{/);
+  assert.match(
+    declarations,
+    /export type TestPlanIncompletenessKind = "dependency-baseline-missing";/,
+  );
+  assert.match(declarations, /incomplete\?: TestPlanIncompleteness\[\];/);
+  assert.doesNotMatch(declarations, /TestPlan\["incomplete"\]/);
 });
 
 test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {

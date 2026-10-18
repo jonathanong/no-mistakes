@@ -1,6 +1,8 @@
 use super::grouped_execution_targets;
 use crate::codebase::test_discovery::TestExecutionTarget;
-use crate::tests::{Confidence, SelectedTest};
+use crate::tests::{
+    Confidence, PlanIncompleteness, SelectedTest, TestPlan, Warning, DEPENDENCY_BASELINE_MISSING,
+};
 
 fn target(runner: &str, project: Option<&str>, base: &[&str]) -> TestExecutionTarget {
     TestExecutionTarget {
@@ -11,6 +13,77 @@ fn target(runner: &str, project: Option<&str>, base: &[&str]) -> TestExecutionTa
         base_command: base.iter().map(|s| (*s).to_string()).collect(),
         runner_args: Vec::new(),
     }
+}
+
+fn warning(kind: &str, file: &str) -> Warning {
+    Warning {
+        r#type: kind.to_string(),
+        message: format!("{kind} for {file}"),
+        file: file.to_string(),
+        line: None,
+    }
+}
+
+#[test]
+fn finish_marks_missing_dependency_baselines_once_and_keeps_other_warnings() {
+    let mut plan = TestPlan {
+        warnings: vec![
+            warning("package-manifest-no-baseline", "tooling/package.json"),
+            warning("lockfile-no-baseline", "pnpm-lock.yaml"),
+            warning("package-manifest-no-baseline", "package.json"),
+            warning("package-manifest-no-baseline", "package.json"),
+            warning("dynamic-import", "app/app.test.ts"),
+        ],
+        ..Default::default()
+    };
+    plan.finish(true, &[]);
+
+    assert_eq!(
+        plan.incomplete,
+        vec![PlanIncompleteness {
+            kind: DEPENDENCY_BASELINE_MISSING.to_string(),
+            files: vec![
+                "package.json".to_string(),
+                "pnpm-lock.yaml".to_string(),
+                "tooling/package.json".to_string(),
+            ],
+        }]
+    );
+    assert_eq!(plan.warnings.len(), 5);
+    let comment = plan.comment.as_deref().expect("comment");
+    assert!(comment.contains("dependency-baseline-missing"));
+    assert!(comment.contains("`package.json`"));
+    assert!(comment.contains("`--base <pre-change revision>`"));
+    let json = serde_json::to_value(&plan).unwrap();
+    assert_eq!(json["incomplete"][0]["kind"], "dependency-baseline-missing");
+    assert_eq!(
+        json["fallback_triggered"], false,
+        "the marker must not flip fallback"
+    );
+
+    plan.finish(false, &[]);
+    assert_eq!(plan.incomplete.len(), 1);
+    // `finish(false)` does not regenerate or clear a comment from an earlier pass.
+    assert!(plan
+        .comment
+        .as_deref()
+        .is_some_and(|comment| { comment.contains("dependency-baseline-missing") }));
+}
+
+#[test]
+fn finish_clears_a_stale_incomplete_marker_when_baselines_are_present() {
+    let mut plan = TestPlan {
+        incomplete: vec![PlanIncompleteness {
+            kind: DEPENDENCY_BASELINE_MISSING.to_string(),
+            files: vec!["package.json".to_string()],
+        }],
+        warnings: vec![warning("package-dependency-untraceable", "package.json")],
+        ..Default::default()
+    };
+    plan.finish(false, &[]);
+    assert!(plan.incomplete.is_empty(), "{plan:#?}");
+    let json = serde_json::to_value(&plan).unwrap();
+    assert!(json.get("incomplete").is_none(), "{json}");
 }
 
 fn selected(file: &str, targets: Vec<TestExecutionTarget>) -> SelectedTest {

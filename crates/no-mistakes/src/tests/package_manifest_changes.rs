@@ -144,5 +144,9 @@ mod pnpm_installation_sections_tests;
 mod pnpm_traceability_tests;
 
 #[cfg(test)]
+#[path = "package_manifest_changes/dependency_baseline_incomplete_tests.rs"]
+mod dependency_baseline_incomplete_tests;
+
+#[cfg(test)]
 #[path = "package_manifest_changes_tests.rs"]
 mod tests;
