@@ -172,3 +172,6 @@ fn join_work_tracks_written_bindings_instead_of_untouched_state() {
 
 #[path = "checkpoint_work_tests/scaling.rs"]
 mod scaling;
+
+#[path = "checkpoint_work_tests/shape.rs"]
+mod shape;

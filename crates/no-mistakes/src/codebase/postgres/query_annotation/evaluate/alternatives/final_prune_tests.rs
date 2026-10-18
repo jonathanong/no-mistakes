@@ -4,8 +4,14 @@ use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
+#[path = "final_prune_tests/callback_cleanup.rs"]
+mod callback_cleanup;
 #[path = "final_prune_tests/lifecycle.rs"]
 mod lifecycle;
+#[path = "final_prune_tests/module_domains.rs"]
+mod module_domains;
+#[path = "final_prune_tests/returned_roots.rs"]
+mod returned_roots;
 
 fn resolve(_: &str, _: &Path) -> Option<PathBuf> {
     None

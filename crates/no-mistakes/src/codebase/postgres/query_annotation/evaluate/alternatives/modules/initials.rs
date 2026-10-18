@@ -93,6 +93,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.pin_module_identities(&pins);
         self.promote_module_initial(
             path,
+            env,
             &promoted_frames.into_iter().collect::<Vec<_>>(),
             &live.arguments.into_iter().collect::<Vec<_>>(),
             &live.identities.into_iter().collect::<Vec<_>>(),

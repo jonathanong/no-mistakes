@@ -1,5 +1,7 @@
 # Annotation branch-state transactions
 
+<!-- cspell:ignore BAAB -->
+
 Issue #2113 replaces whole-state branch snapshots with a first-write undo trail.
 A checkpoint stores the original value of each changed location once. Restore
 replays those locations and repairs their derived indexes after restoring the

@@ -19,6 +19,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn promote_module_initial(
         &mut self,
         path: &Path,
+        module: Environment,
         frames: &[Environment],
         arguments: &[u64],
         identities: &[u64],
@@ -32,7 +33,13 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .copied()
             .collect::<crate::fx::FxHashSet<_>>();
         for index in 0..self.transactions.frames.len() {
-            if self.transactions.frames[index].root {
+            if self.transactions.frames[index].root
+                || self
+                    .scopes
+                    .is_before(module, self.transactions.frames[index].scopes)
+            {
+                // Completion only promotes modules first reserved inside this
+                // checkpoint; an older partial module keeps its own before-image.
                 continue;
             }
             let frames = frames
