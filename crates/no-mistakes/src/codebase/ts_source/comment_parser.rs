@@ -18,6 +18,8 @@ struct LineCommentScanState {
     in_block_comment: bool,
     quote: Option<char>,
     template_braces: Vec<usize>,
+    /// Off for Markdown prose so an apostrophe cannot hide a later HTML disable-line.
+    track_quotes: bool,
 }
 
 fn line_comment_start(line: &str, state: &mut LineCommentScanState) -> Option<(usize, usize)> {

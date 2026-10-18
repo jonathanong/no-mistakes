@@ -82,8 +82,9 @@ suppress a pin that still belongs in the living document.
 
 Use a line directive for one text finding, a next-line directive for the
 following line, and a file directive only for generated documentation. Markdown
-accepts the same directives inside an HTML comment. `//`, `#`, and `--`
-comments still work.
+accepts the same directives inside an HTML comment. An apostrophe in the
+prose, on an earlier line or on the same line, does not cancel that HTML line
+directive. `//`, `#`, and `--` comments still work.
 
 ```markdown
 <!-- no-mistakes-disable-file doc-consistency: generated catalog -->

@@ -27,6 +27,9 @@ fn keys(findings: &[RuleFinding]) -> Vec<(String, usize, String)> {
 
 fn expected_raw() -> Vec<(&'static str, usize, &'static str)> {
     vec![
+        ("docs/apostrophe-disabled.md", 2, PIN),
+        ("docs/apostrophe-disabled.md", 3, PIN),
+        ("docs/apostrophe-disabled.md", 4, PIN),
         ("docs/crlf.md", 3, PIN),
         ("docs/crlf.md", 5, PIN),
         ("docs/dash-disabled.md", 2, PIN),
@@ -96,6 +99,18 @@ fn runner_suppresses_html_and_existing_comment_directives() {
     let (root, _) = patterns_config();
     let config_path = root.join(".no-mistakes.yml");
     let hidden = [
+        (
+            "docs/apostrophe-disabled.md",
+            2,
+            SuppressionDirectiveKind::Line,
+            2,
+        ),
+        (
+            "docs/apostrophe-disabled.md",
+            3,
+            SuppressionDirectiveKind::Line,
+            3,
+        ),
         (
             "docs/dash-disabled.md",
             2,

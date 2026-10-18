@@ -106,7 +106,7 @@ fn scan_code_char(
             *depth -= 1;
         }
     }
-    if matches!(ch, '\'' | '"' | '`') {
+    if mode.line_state.track_quotes && matches!(ch, '\'' | '"' | '`') {
         mode.line_state.quote = Some(ch);
         return Some(CodeCharAction::Consumed);
     }
