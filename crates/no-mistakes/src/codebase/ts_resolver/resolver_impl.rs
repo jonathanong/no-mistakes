@@ -76,9 +76,7 @@ impl<'a> ImportResolver<'a> {
 
     // Preserve the standalone queue analyzer's historical resolution policy.
     pub(crate) fn with_queue_compatibility(mut self, root: &'a Path) -> Self {
-        self.cache.clear();
-        self.shared_cache = None;
-        self.session_exact_visibility = false;
+        self.detach_scope_cache();
         self.alias_order = (0..self.tsconfig().paths.len()).collect();
         self.policy = ImportResolutionPolicy::QueueCompatibility { root };
         self

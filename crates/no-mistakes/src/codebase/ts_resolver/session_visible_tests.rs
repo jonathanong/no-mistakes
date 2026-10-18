@@ -122,12 +122,21 @@ fn queue_scopes_share_results_only_with_the_same_policy_and_root() {
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
     let standard = ScopedImportResolver::new_in_session(&catalog, &visible, &session);
     assert_eq!(standard.resolve("queues/email", &importer), None);
+    let graph_cache = ImportResolutionCache::default();
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
     for _ in 0..2 {
         let queue = ScopedImportResolver::new_in_session(&catalog, &visible, &session)
             .with_queue_compatibility(&root);
         assert_eq!(
             queue.resolve("queues/email", &importer),
             Some(target.clone())
+        );
+        let graph = queue.with_shared_cache(&graph_cache);
+        assert_eq!(
+            graph
+                .classify_import("queues/email", &importer, &workspace, &visible)
+                .resolver_path(),
+            Some(target.as_path())
         );
     }
     let other_root = root.join("queues");
@@ -139,4 +148,5 @@ fn queue_scopes_share_results_only_with_the_same_policy_and_root() {
     assert_eq!(work["resolver.scope_constructions"], 3);
     assert_eq!(work["resolver.computations"], 3);
     assert_eq!(work["resolver.visible_normalizations"], 1);
+    assert_eq!(graph_cache.classification_count(), 1);
 }

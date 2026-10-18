@@ -1,12 +1,6 @@
 impl<'a> ScopedImportResolver<'a> {
     pub(crate) fn with_queue_compatibility(mut self, root: &'a ScopedPath) -> Self {
-        self.fixed_resolver = self.fixed_resolver.take().map(|mut resolver| {
-            // A fixed automatic resolver may currently point at the
-            // session's standard-policy cache. Queue compatibility has
-            // different relative/bare semantics, so detach before its
-            // policy setter clears the cache.
-            resolver.cache = ScopedArc::new(DashMap::with_hasher(rustc_hash::FxBuildHasher));
-            resolver.shared_cache = None;
+        self.fixed_resolver = self.fixed_resolver.take().map(|resolver| {
             let mut resolver = resolver.with_queue_compatibility(root);
             if let Some(session) = self.session {
                 let key = ResolverCacheScopeKey::for_lookup(
@@ -17,6 +11,8 @@ impl<'a> ScopedImportResolver<'a> {
                 )
                 .with_queue_root(Some(root));
                 resolver.cache = session.resolver_cache_for_scope(key);
+                resolver.session_scoped = true;
+                resolver.session_exact_visibility = resolver.visible.is_some();
             }
             resolver
         });

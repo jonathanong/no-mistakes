@@ -7,9 +7,7 @@ impl<'a> ImportResolver<'a> {
         // Any entries cached before this call were resolved under different
         // visibility (real filesystem, or an earlier `visible` set) and would
         // otherwise leak stale answers into the new scope.
-        self.cache.clear();
-        self.shared_cache = None;
-        self.session_exact_visibility = false;
+        self.detach_scope_cache();
         self.visible = Some(ResolverVisible::Borrowed(visible));
         self
     }
@@ -25,9 +23,7 @@ impl<'a> ImportResolver<'a> {
         mut self,
         visible: std::sync::Arc<dyn VisiblePathLookup>,
     ) -> Self {
-        self.cache.clear();
-        self.shared_cache = None;
-        self.session_exact_visibility = false;
+        self.detach_scope_cache();
         self.visible = Some(ResolverVisible::Owned(visible));
         self
     }
@@ -55,5 +51,18 @@ impl<'a> ImportResolver<'a> {
 
     pub(crate) fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
         self.visible.as_ref().map(ResolverVisible::lookup)
+    }
+
+    fn detach_scope_cache(&mut self) {
+        if self.session_scoped {
+            // Other facades still own this exact scope. Changing this facade's
+            // semantics must neither clear their entries nor write into them.
+            self.cache = Arc::new(ResolverResultCache::default());
+        } else {
+            self.cache.clear();
+        }
+        self.shared_cache = None;
+        self.session_scoped = false;
+        self.session_exact_visibility = false;
     }
 }

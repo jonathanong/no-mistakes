@@ -59,3 +59,7 @@ mod session_visible_projection_tests;
 #[cfg(test)]
 #[path = "ts_resolver/session_graph_cache_tests.rs"]
 mod session_graph_cache_tests;
+
+#[cfg(test)]
+#[path = "ts_resolver/session_builder_tests.rs"]
+mod session_builder_tests;

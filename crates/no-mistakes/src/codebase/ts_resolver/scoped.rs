@@ -121,14 +121,14 @@ impl<'a> ScopedImportResolver<'a> {
         if let Some(session) = self.session {
             resolver.interner = Some(session.interner_arc());
         }
+        if let Some(root) = self.queue_root {
+            resolver = resolver.with_queue_compatibility(root);
+        }
         if let Some(shared_cache) = self.shared_cache {
             if self.session.is_none() {
                 return resolver.with_shared_cache(shared_cache);
             }
             resolver.shared_cache = Some(shared_cache);
-        }
-        if let Some(root) = self.queue_root {
-            resolver = resolver.with_queue_compatibility(root);
         }
         let selection = ScopedResolverSelectionKey::new(config, module_resolution, identity);
         let cache = self
