@@ -24,14 +24,27 @@ impl ImportCollector {
             .into_iter()
             .map(|(_, value)| value.clone())
             .collect();
-        if values.is_empty() {
+        if !values
+            .iter()
+            .any(|value| self.assigned_rhs_has_receiver(value))
+        {
             return;
         }
-        // Each literal element can become the loop binding on a later pass.
+        let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
+            return;
+        };
+        // Receiver histories traverse both Default branches as alternatives.
+        // Ordinary bindings interpret Default as fallback, so keep loop values
+        // in receiver-only history even when the array has one element.
         let mut value = values.pop().expect("nonempty literal array");
         for next in values {
             value = ValueExpression::Default(std::sync::Arc::new(value), std::sync::Arc::new(next));
         }
-        self.record_value_pattern(&declarator.id, value, declarator.span.start);
+        let name = identifier.name.as_str();
+        let scope = self
+            .callee_binding_scope(name)
+            .unwrap_or(self.current_lexical_scope_id());
+        self.capture_mutable_root_phase((scope, name), identifier.span.start, &value, false);
+        self.retain_receiver_origin(scope, name, value, declarator.span.end, false);
     }
 }
