@@ -1406,6 +1406,7 @@ dependencies = [
  "pulldown-cmark",
  "rayon",
  "regex",
+ "regex-syntax",
  "rustc-hash",
  "self_cell",
  "serde",

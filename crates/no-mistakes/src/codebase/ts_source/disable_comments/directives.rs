@@ -69,10 +69,10 @@ fn line_comment_directive_matches(
         if line_number != stmt_line {
             continue;
         }
-        let Some((comment_start, prefix_len)) = comment else {
+        let Some((comment_start, kind)) = comment else {
             return false;
         };
-        let rest = super::comment_body(line, comment_start, prefix_len);
+        let rest = super::comment_body(line, comment_start, kind);
         let Some(after_directive) = rest.strip_prefix(directive) else {
             return false;
         };

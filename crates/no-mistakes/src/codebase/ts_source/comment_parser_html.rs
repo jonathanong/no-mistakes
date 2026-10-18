@@ -1,3 +1,27 @@
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum CommentKind {
+    /// `<!-- ... -->`. Kind, not prefix length, so a future 4-byte prefix cannot collide.
+    Html,
+    Line {
+        prefix_len: usize,
+    },
+}
+
+impl CommentKind {
+    fn line(prefix: &str) -> Self {
+        Self::Line {
+            prefix_len: prefix.len(),
+        }
+    }
+
+    fn prefix_len(self) -> usize {
+        match self {
+            CommentKind::Html => "<!--".len(),
+            CommentKind::Line { prefix_len } => prefix_len,
+        }
+    }
+}
+
 fn html_leading_comment_body(line: &str) -> Option<&str> {
     let rest = line.strip_prefix("<!--")?;
     let end = rest.find("-->")?;
@@ -20,11 +44,13 @@ fn html_directive_comment(line: &str, idx: usize) -> bool {
     rest[..end].trim().starts_with("no-mistakes-disable-")
 }
 
-fn comment_body(line: &str, start: usize, prefix_len: usize) -> &str {
-    let rest = line[start + prefix_len..].trim();
-    if prefix_len == 4 {
-        let end = rest.find("-->").unwrap_or(rest.len());
-        return rest[..end].trim();
+fn comment_body(line: &str, start: usize, kind: CommentKind) -> &str {
+    let rest = line[start + kind.prefix_len()..].trim();
+    match kind {
+        CommentKind::Html => {
+            let end = rest.find("-->").unwrap_or(rest.len());
+            rest[..end].trim()
+        }
+        CommentKind::Line { .. } => rest,
     }
-    rest
 }

@@ -3,13 +3,17 @@ use super::options::BannedPattern;
 use super::RULE_ID;
 use crate::codebase::ts_source::byte_offset_to_line;
 use anyhow::{bail, Result};
-use regex::Regex;
+use regex::{Regex, RegexBuilder};
 
 pub(super) struct CompiledPattern {
     regex: Regex,
     globs: super::super::path_filter::GlobMatcher,
     message: String,
 }
+
+/// Same 10 MiB ceiling as `Regex::new`. Set explicitly so an oversized pattern
+/// is `CompiledTooBig` instead of a generic invalid-regex error.
+const BANNED_PATTERN_SIZE_LIMIT: usize = 10 * (1 << 20);
 
 /// Compile every pattern once. An empty list does not build a regex or a glob.
 pub(super) fn compile(patterns: &[BannedPattern]) -> Result<Vec<CompiledPattern>> {
@@ -42,11 +46,7 @@ fn compile_one(index: usize, pattern: &BannedPattern) -> Result<CompiledPattern>
     if message.is_empty() {
         bail!("doc-consistency bannedPatterns[{index}].message must not be empty");
     }
-    let regex = Regex::new(&pattern.pattern).map_err(|error| {
-        anyhow::anyhow!(
-            "doc-consistency bannedPatterns[{index}].pattern is an invalid regex: {error}"
-        )
-    })?;
+    let regex = compile_pattern(index, &pattern.pattern)?;
     let globs = super::super::path_filter::GlobMatcher::new(
         &globs,
         &format!("doc-consistency bannedPatterns[{index}].files"),
@@ -56,6 +56,32 @@ fn compile_one(index: usize, pattern: &BannedPattern) -> Result<CompiledPattern>
         globs,
         message: message.to_string(),
     })
+}
+
+/// `find_iter` is leftmost-first, so an alternative that matches "" hides a
+/// later alternative at that position. Reject that at config load.
+fn pattern_can_match_empty(pattern: &str) -> bool {
+    regex_syntax::parse(pattern).is_ok_and(|hir| hir.properties().minimum_len() == Some(0))
+}
+
+fn compile_pattern(index: usize, pattern: &str) -> Result<Regex> {
+    if pattern_can_match_empty(pattern) {
+        bail!("doc-consistency bannedPatterns[{index}].pattern can match the empty string");
+    }
+    RegexBuilder::new(pattern)
+        .size_limit(BANNED_PATTERN_SIZE_LIMIT)
+        .build()
+        .map_err(|error| pattern_regex_error(index, error))
+}
+
+fn pattern_regex_error(index: usize, error: regex::Error) -> anyhow::Error {
+    if matches!(error, regex::Error::CompiledTooBig(_)) {
+        anyhow::anyhow!("doc-consistency bannedPatterns[{index}].pattern is a pattern too large")
+    } else {
+        anyhow::anyhow!(
+            "doc-consistency bannedPatterns[{index}].pattern is an invalid regex: {error}"
+        )
+    }
 }
 
 pub(super) fn findings_in_file(
@@ -82,10 +108,9 @@ pub(super) fn findings_in_file(
     findings
 }
 
-// `find_iter` is leftmost-first and non-overlapping. Empty matches are not
-// findings; the iterator still advances one Unicode scalar after each empty
-// match, so a leading empty alternative can hide a later alternative there.
-fn match_start_lines(regex: &Regex, text: &str) -> Vec<usize> {
+/// Patterns that can match "" are rejected at compile time. This skip remains
+/// so a zero-width engine match is still not reported as a finding.
+pub(super) fn match_start_lines(regex: &Regex, text: &str) -> Vec<usize> {
     let mut lines = Vec::new();
     for found in regex.find_iter(text) {
         if found.start() == found.end() {

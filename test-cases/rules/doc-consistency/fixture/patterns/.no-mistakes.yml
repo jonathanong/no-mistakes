@@ -15,13 +15,6 @@ rules:
         - files: ["docs/**/*.md"]
           pattern: ZZ
           message: "repeated token"
-        # a* matches every letter a, so this pair stays on the file that contains only QQ.
-        - files: ["docs/zero-alt.md"]
-          pattern: 'a*|QQ'
-          message: "zero-width alternative is not a finding"
-        - files: ["docs/zero-alt.md"]
-          pattern: 'QQ|a*'
-          message: "non-empty alternative is a finding"
-        - files: ["docs/**/*.md"]
-          pattern: '(?m)^'
-          message: "line-start anchor is not a finding"
+        - files: ["docs/**/*.markdown", "docs/**/*.mdx"]
+          pattern: 'PIN-[0-9]{3}'
+          message: "Move this pin to versions.md."

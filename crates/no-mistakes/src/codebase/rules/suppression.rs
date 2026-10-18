@@ -106,11 +106,13 @@ fn source_path_for_candidate(canonical_root: &Path, candidate: PathBuf) -> Optio
 }
 
 fn markdown_prose(file: &str) -> bool {
-    // `.md` is prose. `.mdx` keeps JavaScript quote tracking.
+    // `.md` and `.markdown` are prose. `.mdx` keeps JavaScript quote tracking.
     Path::new(file)
         .extension()
         .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        .is_some_and(|extension| {
+            extension.eq_ignore_ascii_case("md") || extension.eq_ignore_ascii_case("markdown")
+        })
 }
 
 fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {

@@ -22,7 +22,10 @@ struct LineCommentScanState {
     track_quotes: bool,
 }
 
-fn line_comment_start(line: &str, state: &mut LineCommentScanState) -> Option<(usize, usize)> {
+fn line_comment_start(
+    line: &str,
+    state: &mut LineCommentScanState,
+) -> Option<(usize, CommentKind)> {
     let mut escaped = false;
     let mut in_regex = false;
     let mut in_regex_char_class = false;
@@ -56,7 +59,7 @@ fn line_comment_start(line: &str, state: &mut LineCommentScanState) -> Option<(u
             chars.peek().map(|(_, next)| *next),
             &mut mode,
         ) {
-            Some(CodeCharAction::Comment(prefix_len)) => return Some((idx, prefix_len)),
+            Some(CodeCharAction::Comment(kind)) => return Some((idx, kind)),
             Some(CodeCharAction::Consumed) => continue,
             None => {}
         }

@@ -9,7 +9,6 @@ use std::path::Path;
 const PIN: &str = "Move this pin to versions.md.";
 const SECRET: &str = "Move this secret block to versions.md.";
 const REPEATED: &str = "repeated token";
-const NONEMPTY: &str = "non-empty alternative is a finding";
 
 fn patterns_config() -> (std::path::PathBuf, NoMistakesConfig) {
     let root = fixture_root("patterns");
@@ -27,9 +26,15 @@ fn keys(findings: &[RuleFinding]) -> Vec<(String, usize, String)> {
 
 fn expected_raw() -> Vec<(&'static str, usize, &'static str)> {
     vec![
+        ("docs/apostrophe-disabled.markdown", 3, PIN),
+        ("docs/apostrophe-disabled.markdown", 4, PIN),
+        ("docs/apostrophe-disabled.markdown", 5, PIN),
         ("docs/apostrophe-disabled.md", 2, PIN),
         ("docs/apostrophe-disabled.md", 3, PIN),
         ("docs/apostrophe-disabled.md", 4, PIN),
+        ("docs/apostrophe-tracked.mdx", 1, PIN),
+        ("docs/apostrophe-tracked.mdx", 3, PIN),
+        ("docs/apostrophe-tracked.mdx", 5, PIN),
         ("docs/crlf.md", 3, PIN),
         ("docs/crlf.md", 5, PIN),
         ("docs/dash-disabled.md", 2, PIN),
@@ -54,7 +59,6 @@ fn expected_raw() -> Vec<(&'static str, usize, &'static str)> {
         ("docs/overlap.md", 2, REPEATED),
         ("docs/slash-disabled.md", 2, PIN),
         ("docs/slash-disabled.md", 3, PIN),
-        ("docs/zero-alt.md", 1, NONEMPTY),
     ]
 }
 
@@ -110,6 +114,30 @@ fn runner_suppresses_html_and_existing_comment_directives() {
             3,
             SuppressionDirectiveKind::Line,
             3,
+        ),
+        (
+            "docs/apostrophe-disabled.markdown",
+            3,
+            SuppressionDirectiveKind::NextLine,
+            2,
+        ),
+        (
+            "docs/apostrophe-disabled.markdown",
+            4,
+            SuppressionDirectiveKind::Line,
+            4,
+        ),
+        (
+            "docs/apostrophe-tracked.mdx",
+            1,
+            SuppressionDirectiveKind::Line,
+            1,
+        ),
+        (
+            "docs/apostrophe-tracked.mdx",
+            5,
+            SuppressionDirectiveKind::NextLine,
+            4,
         ),
         (
             "docs/dash-disabled.md",
