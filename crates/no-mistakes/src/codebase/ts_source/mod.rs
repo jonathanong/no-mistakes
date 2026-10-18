@@ -47,9 +47,12 @@ include!("discovery_preserve.rs");
 include!("visible_snapshot.rs");
 include!("disable_comments.rs");
 include!("comment_parser.rs");
+include!("comment_parser_html.rs");
 include!("comment_parser_modes.rs");
 include!("syntax_helpers.rs");
 
+#[cfg(test)]
+mod comment_parser_markdown_tests;
 #[cfg(test)]
 mod comment_parser_template_tests;
 #[cfg(test)]

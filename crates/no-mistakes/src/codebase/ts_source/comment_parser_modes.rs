@@ -106,13 +106,16 @@ fn scan_code_char(
             *depth -= 1;
         }
     }
-    if matches!(ch, '\'' | '"' | '`') {
+    if mode.line_state.track_quotes && matches!(ch, '\'' | '"' | '`') {
         mode.line_state.quote = Some(ch);
         return Some(CodeCharAction::Consumed);
     }
     if ch == '/' && next == Some('*') && block_comment_can_start(line, idx) {
         mode.line_state.in_block_comment = true;
         return Some(CodeCharAction::Consumed);
+    }
+    if ch == '<' && html_directive_comment(line, idx) {
+        return Some(CodeCharAction::Comment(4));
     }
     if ch == '/' && next == Some('/') {
         return Some(CodeCharAction::Comment(2));

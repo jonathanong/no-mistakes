@@ -40,10 +40,7 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
 /// - `// no-mistakes-disable-line <rule_id>: <reason>`
 /// - `// no-mistakes-disable-line <rule_id> <reason>`
 pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool {
-    if stmt_line == 0 {
-        return false;
-    }
-    line_comment_directive_matches(source, stmt_line, "no-mistakes-disable-line ", rule_id)
+    directives::has_disable_line_comment_tracking(source, stmt_line, rule_id, true)
 }
 
 /// Returns `true` if a leading comment disables `rule_id` for the whole file.
@@ -114,34 +111,6 @@ fn hash_attribute_comment_line(line: &str) -> bool {
             .is_some_and(is_word_char)
 }
 
-fn line_comment_directive_matches(
-    source: &str,
-    stmt_line: u32,
-    directive: &str,
-    rule_id: &str,
-) -> bool {
-    let mut state = LineCommentScanState::default();
-    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
-        let line_number = (index + 1) as u32;
-        let comment = line_comment_start(line, &mut state);
-
-        if line_number != stmt_line {
-            continue;
-        }
-
-        let Some((comment_start, prefix_len)) = comment else {
-            return false;
-        };
-        let rest = line[comment_start + prefix_len..].trim();
-        let Some(after_directive) = rest.strip_prefix(directive) else {
-            return false;
-        };
-        return rule_part_matches(after_directive.trim(), rule_id);
-    }
-
-    false
-}
-
 fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
     rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
         suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
@@ -149,6 +118,9 @@ fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
 }
 #[path = "disable_comments/directives.rs"]
 mod directives;
+pub(crate) use directives::{
+    has_disable_line_comment_tracking, matching_disable_directive_tracking,
+};
 pub use directives::{matching_disable_directive, DisableDirective};
 
 /// Index line suppressions in one lexical pass. Next-line directives deliberately
@@ -169,7 +141,10 @@ fn disabled_statement_lines_with_scan_observer(
     {
         return Vec::new();
     }
-    let mut state = LineCommentScanState::default();
+    let mut state = LineCommentScanState {
+        track_quotes: true,
+        ..LineCommentScanState::default()
+    };
     let mut next_disabled = false;
     let mut line_count = 0;
     let mut disabled = Vec::new();
@@ -177,7 +152,9 @@ fn disabled_statement_lines_with_scan_observer(
         line_count = index + 1;
         scanned_line();
         let inline_disabled = line_comment_start(line, &mut state)
-            .and_then(|(start, len)| line[start + len..].trim().strip_prefix("no-mistakes-disable-line "))
+            .and_then(|(start, len)| {
+                comment_body(line, start, len).strip_prefix("no-mistakes-disable-line ")
+            })
             .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
         if next_disabled || inline_disabled {
             disabled.push((index + 1) as u32);

@@ -28,6 +28,7 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &str, refs: &mut Vec<Ref
         "doc-consistency" => {
             paths_at(value, "requiredFiles", field, Kind::File, refs);
             object_paths_at(value, "requiredSubstrings", "file", field, Kind::File, refs);
+            banned_pattern_globs(value, field, refs);
         }
         "file-extension-policy" => {
             paths_at(value, "allowlist", field, Kind::File, refs);
@@ -78,6 +79,25 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &str, refs: &mut Vec<Ref
             object_paths_at(value, "auxiliaryConfigs", "path", field, Kind::File, refs);
         }
         _ => {}
+    }
+}
+
+fn banned_pattern_globs(value: &Value, field: &str, refs: &mut Vec<Ref>) {
+    let Some(patterns) = value.get("bannedPatterns").and_then(Value::as_sequence) else {
+        return;
+    };
+    for (index, item) in patterns.iter().enumerate() {
+        let Some(files) = item.get("files") else {
+            continue;
+        };
+        for (file_index, path) in string_values(files).into_iter().enumerate() {
+            push_path(
+                refs,
+                format!("{field}.bannedPatterns[{index}].files[{file_index}]"),
+                Kind::Glob,
+                path,
+            );
+        }
     }
 }
 

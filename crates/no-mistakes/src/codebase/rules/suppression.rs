@@ -105,12 +105,25 @@ fn source_path_for_candidate(canonical_root: &Path, candidate: PathBuf) -> Optio
     (canonical_candidate.starts_with(canonical_root) && metadata.is_file()).then_some(candidate)
 }
 
+fn markdown_prose(file: &str) -> bool {
+    // `.md` is prose. `.mdx` keeps JavaScript quote tracking.
+    Path::new(file)
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+}
+
 fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
     let line = finding.line.try_into().ok();
     crate::codebase::ts_source::has_disable_file_comment(source, &finding.rule)
         || line.is_some_and(|line| {
             crate::codebase::ts_source::has_disable_comment(source, line, &finding.rule)
-                || crate::codebase::ts_source::has_disable_line_comment(source, line, &finding.rule)
+                || crate::codebase::ts_source::has_disable_line_comment_tracking(
+                    source,
+                    line,
+                    &finding.rule,
+                    !markdown_prose(&finding.file),
+                )
         })
 }
 
@@ -118,13 +131,15 @@ fn matching_directive(
     source: &str,
     rule: &str,
     line: Option<usize>,
+    file: &str,
 ) -> Option<SuppressionDirective> {
     use crate::codebase::ts_source::DisableDirective;
 
-    match crate::codebase::ts_source::matching_disable_directive(
+    match crate::codebase::ts_source::matching_disable_directive_tracking(
         source,
         line.and_then(|line| u32::try_from(line).ok()),
         rule,
+        !markdown_prose(file),
     )? {
         DisableDirective::File { line } => Some(SuppressionDirective {
             kind: SuppressionDirectiveKind::File,

@@ -108,7 +108,7 @@ pub fn suppress_domain_findings_with_source_locations<T>(
             });
         let Some(directive) = source
             .as_deref()
-            .and_then(|source| matching_directive(source, target.rule, source_line))
+            .and_then(|source| matching_directive(source, target.rule, source_line, source_file))
         else {
             return true;
         };
