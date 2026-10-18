@@ -20,16 +20,24 @@ rules:
 Environment names and secret names match without ASCII case sensitivity. A
 literal job environment selects its environment inventory, then falls back to
 repository declarations; environment entries shadow a same-named repository
-secret. Reusable workflow secret aliases are contracts, so inventory the
-caller's actual source name. The built-in `GITHUB_TOKEN` exemption applies
-unless `builtInExemptions: []` is configured.
+secret. List organization secrets and Dependabot secrets under `repository`.
+Workflow-level `env` is checked only against `repository`: GitHub reads
+organization and repository secrets when a workflow run is queued, and reads
+environment secrets when a job referencing the environment starts. Reusable
+workflow secret aliases are contracts, so inventory the caller's actual source
+name. A static `secrets:` map on `owner/repo/...@ref` is fully known for
+undeclared names. The built-in `GITHUB_TOKEN` exemption applies unless
+`builtInExemptions: []` is configured.
 
 Use `no-mistakes check --root <repo> --format json` to inspect findings. Dynamic
-selectors, inherited secrets, expression-valued environments, unresolved
-reusable calls, and workflow load failures make unused-name analysis incomplete.
+selectors (including double-quoted `secrets["NAME"]`), inherited secrets,
+expression-valued environments, unresolved reusable calls, and workflow load
+failures make unused-name analysis incomplete. Incomplete findings are emitted
+only when `reportUnused` is true; they do not hide a static undeclared name.
 Do not treat an incomplete run as proof that a declared name is unused.
 Composite actions cannot access `secrets.*` directly; pass the value through an
-input or environment variable.
+input or environment variable. Only actions referenced by `uses: ./...` are
+scanned. Job and step `if:` keys are bare expressions; `with.if` is not.
 
 See the [full configuration guide](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/workflow-topology-policy.md)
 and the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).

@@ -1,3 +1,4 @@
+# An explicit secrets map passes nothing else, so UNUSED is proven unused.
 on: push
 jobs:
   call:

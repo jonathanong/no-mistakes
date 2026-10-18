@@ -101,6 +101,76 @@ fn exempt_names_that_are_explicitly_declared_still_count_as_used() {
 }
 
 #[test]
+fn job_environment_does_not_apply_to_workflow_level_env() {
+    let findings = run("queued-env", ".no-mistakes.yml").unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings[0].file, ".github/workflows/check.yml");
+    assert_eq!(findings[0].line, 6);
+    assert!(findings[0].message.contains("undeclared secret ENV_ONLY"));
+    assert_eq!(findings[1].file, ".no-mistakes.yml");
+    assert_eq!(findings[1].line, 10);
+    assert!(findings[1]
+        .message
+        .contains("unused declared secret ENV_ONLY in prod"));
+}
+
+#[test]
+fn with_input_named_if_is_not_a_bare_conditional() {
+    let findings = run("with-input-if", ".no-mistakes.yml").unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings[0].file, ".github/workflows/check.yml");
+    assert_eq!(findings[0].line, 10);
+    assert!(findings[0].message.contains("undeclared secret BARE"));
+    assert_eq!(findings[1].file, ".no-mistakes.yml");
+    assert!(findings[1]
+        .message
+        .contains("unused declared secret UNUSED in repository"));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.message.contains("incomplete")));
+}
+
+#[test]
+fn double_quoted_index_is_not_a_static_secret_name() {
+    let findings = run("quoted-index", ".no-mistakes.yml").unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [8, 9]
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file == ".github/workflows/check.yml"));
+    assert!(findings[0].message.contains("undeclared secret FOO"));
+    assert!(findings[1]
+        .message
+        .contains("dynamic selector or whole secrets context"));
+    assert!(!findings[1].message.contains("undeclared secret FOO"));
+}
+
+#[test]
+fn unreferenced_action_descriptors_are_not_scanned() {
+    let findings = run("unreferenced-action", ".no-mistakes.yml").unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<Vec<_>>(),
+        ["actions/inner/action.yml", "actions/outer/action.yml"]
+    );
+    assert!(findings.iter().all(|finding| {
+        finding
+            .message
+            .contains("composite actions cannot access the secrets context directly")
+    }));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file.contains("vendor") || finding.message.contains("VENDOR")));
+}
+
+#[test]
 fn workflow_level_environment_references_resolve_repository_inventory() {
     let findings = run("workflow-environment", ".no-mistakes.yml").unwrap();
     assert_eq!(findings.len(), 2, "{findings:?}");

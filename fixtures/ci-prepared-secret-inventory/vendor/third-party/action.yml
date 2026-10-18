@@ -1,0 +1,6 @@
+# Unreferenced vendored action. Prepared secret inventory must not read it.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo '${{ secrets.VENDOR }}'

@@ -1,0 +1,17 @@
+# Workflow-level env is read when the run is queued, before any job starts.
+# Applying environment: prod here would hide a real undeclared reference and
+# a real unused prod secret.
+on: push
+env:
+  K: ${{ secrets.ENV_ONLY }}
+jobs:
+  one:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - run: echo one
+  two:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - run: echo two

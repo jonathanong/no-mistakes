@@ -1,0 +1,12 @@
+on: push
+if: secrets.ROOT
+jobs:
+  check:
+    if: secrets.JOB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: example/action@v1
+        with:
+          if: secrets.INPUT
+      - if: secrets.STEP
+        run: echo ready

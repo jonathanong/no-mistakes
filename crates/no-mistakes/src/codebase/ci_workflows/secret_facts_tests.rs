@@ -17,6 +17,10 @@ fn references(fixture: &str) -> Vec<Reference> {
         "escaped-selector.yml" => {
             include_str!("../../../fixtures/ci-secret-facts/escaped-selector.yml")
         }
+        "quotes.yml" => include_str!("../../../fixtures/ci-secret-facts/quotes.yml"),
+        "conditional-if.yml" => {
+            include_str!("../../../fixtures/ci-secret-facts/conditional-if.yml")
+        }
         _ => unreachable!("known saved fixture"),
     };
     let value: Value = serde_yaml::from_str(source).unwrap();
@@ -83,6 +87,22 @@ fn unicode_before_multiline_reference_preserves_authored_line() {
     assert_eq!(
         sorted(&references("unicode-prefix.yml")),
         [(7, Some("UNICODE"))]
+    );
+}
+
+#[test]
+fn double_quoted_index_is_dynamic_and_single_quotes_stay_static() {
+    assert_eq!(
+        sorted(&references("quotes.yml")),
+        [(2, Some("FOO")), (3, None)]
+    );
+}
+
+#[test]
+fn bare_if_is_limited_to_job_and_step_conditionals() {
+    assert_eq!(
+        sorted(&references("conditional-if.yml")),
+        [(5, Some("JOB")), (11, Some("STEP"))]
     );
 }
 

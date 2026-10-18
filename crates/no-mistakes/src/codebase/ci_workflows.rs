@@ -1,9 +1,11 @@
 use anyhow::Result;
 
 mod cargo;
+mod local_actions;
 mod prepared;
 pub(crate) mod secret_facts;
 mod workflow_set;
+pub(crate) use local_actions::referenced_local_action_paths;
 pub use prepared::{PreparedWorkflowDocuments, PreparedWorkflowTopologyInputs};
 
 pub use cargo::{

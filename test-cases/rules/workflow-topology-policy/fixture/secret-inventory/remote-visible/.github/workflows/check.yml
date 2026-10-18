@@ -1,0 +1,15 @@
+# A static secrets map on owner/repo/...@ref is checked for undeclared names.
+# secrets: inherit only affects the unused proof and must not fail this run.
+on: push
+jobs:
+  remote:
+    uses: owner/repo/.github/workflows/reusable.yml@v1
+    secrets:
+      TOKEN: ${{ secrets.MISSING }}
+  inherited:
+    uses: other/repo/.github/workflows/reusable.yml@main
+    secrets: inherit
+  local:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ secrets.ALSO_MISSING }}'

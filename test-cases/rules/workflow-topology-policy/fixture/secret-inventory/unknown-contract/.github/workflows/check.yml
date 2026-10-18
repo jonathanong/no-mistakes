@@ -1,6 +1,14 @@
-on: workflow_call
+on:
+  workflow_call:
+    secrets:
+      ALIAS: {}
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - run: echo '${{ secrets.REPO_NAME }}'
+  dynamic:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    steps:
+      - run: echo '${{ secrets.ALIAS }} ${{ secrets.OTHER }}'

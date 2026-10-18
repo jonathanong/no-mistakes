@@ -1,0 +1,12 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./actions/outer/action.yml
+      - uses: ./actions/outer/action.yml
+      - uses: ./actions/missing
+      - uses: ./actions/plain
+      # Not a local action path. Must not select vendor/third-party/action.yml.
+      - uses: ./
+      - uses: ./../vendor/third-party

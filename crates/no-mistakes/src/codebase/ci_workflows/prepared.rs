@@ -51,16 +51,18 @@ impl PreparedWorkflowTopologyInputs {
                         .get("secretInventory")
                         .is_some_and(|value| !value.is_null())
                 });
+            // Only actions reached by `uses: ./...` from a workflow (or from
+            // an action already reached that way). Unreferenced vendored and
+            // fixture `action.yml` files are not part of the secret scan.
             let actions = if actions_requested {
                 ParsedWorkflowSet::from_paths_and_sources(
                     root,
-                    inventory
-                        .iter()
-                        .filter(|path| {
-                            path.file_name()
-                                .is_some_and(|name| name == "action.yml" || name == "action.yaml")
-                        })
-                        .cloned(),
+                    super::referenced_local_action_paths(
+                        root,
+                        &workflows,
+                        inventory.iter().cloned(),
+                        sources,
+                    ),
                     sources,
                 )
             } else {

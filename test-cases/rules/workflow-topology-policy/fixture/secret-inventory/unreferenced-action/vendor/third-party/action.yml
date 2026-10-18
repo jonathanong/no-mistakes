@@ -1,0 +1,6 @@
+# Vendored and unreferenced. Secret inventory must not read this file.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo '${{ secrets.VENDOR }}'

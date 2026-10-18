@@ -1,0 +1,10 @@
+# GitHub expression strings are single-quoted. Double quotes throw.
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          single: "${{ secrets['FOO'] }}"
+          double: '${{ secrets["FOO"] }}'
+        run: echo ready

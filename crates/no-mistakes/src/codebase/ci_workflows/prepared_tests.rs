@@ -45,6 +45,15 @@ fn prepared_documents_topology_and_failures_survive_removing_the_sources() {
     let configured = config(root, "inventory.yml");
     let prepared =
         PreparedWorkflowTopologyInputs::for_config(root, &configured, &snapshot, &sources).unwrap();
+    assert_eq!(
+        prepared
+            .actions
+            .documents
+            .iter()
+            .map(|document| document.path.as_str())
+            .collect::<Vec<_>>(),
+        ["actions/invalid/action.yaml", "actions/valid/action.yml"]
+    );
     assert_eq!(prepared.actions.documents.len(), 2);
     assert_eq!(
         prepared

@@ -6,18 +6,13 @@ fn dynamic_selectors_whole_context_and_dynamic_environments_are_explicitly_incom
     assert_eq!(
         findings
             .iter()
-            .map(|finding| finding.line)
+            .map(|finding| (finding.line, finding.message.contains("undeclared")))
             .collect::<Vec<_>>(),
-        [6, 7, 12]
+        [(6, false), (7, false), (12, false), (15, true)]
     );
     assert!(findings
         .iter()
         .all(|finding| finding.file == ".github/workflows/check.yml"));
-    assert!(findings.iter().all(|finding| {
-        finding
-            .message
-            .starts_with("secret inventory analysis incomplete:")
-    }));
     assert!(findings[0]
         .message
         .contains("dynamic selector or whole secrets context"));
@@ -27,6 +22,14 @@ fn dynamic_selectors_whole_context_and_dynamic_environments_are_explicitly_incom
     assert!(findings[2]
         .message
         .contains("environment is not a literal name"));
+    assert!(findings[3].message.contains("undeclared secret NOT_LISTED"));
+    assert!(!findings.iter().any(|finding| {
+        finding.message.contains("ENV_ONLY")
+            || finding.message.contains("GITHUB_TOKEN")
+            || finding.message.contains("EXTRA")
+            || finding.message.contains("KNOWN")
+            || finding.message.starts_with("unused declared")
+    }));
 }
 
 #[test]

@@ -75,8 +75,10 @@ no requirement. `secretInventory` is separately opt-in:
 - `exactCallerJobs`, `stepOrders`, and `unlockedWorkflowReasons`: reusable
   caller, ordered-step, and documented-unlocked-workflow policies.
 - `secretInventory`: optional repository and environment secret-name
-  declarations. Omit it or set it to `null` to disable this check; `{}` enables
-  strict empty declarations. See [secret inventory configuration](../configuration/workflow-topology-policy.md).
+  declarations. Organization secrets and Dependabot secrets belong under
+  `repository`, not under an environment. Omit it or set it to `null` to
+  disable this check; `{}` enables strict empty declarations. See
+  [secret inventory configuration](../configuration/workflow-topology-policy.md).
 - `concurrencyPolicy`: owner id to the intended pending, cancellation, and
   scope behavior of that lock. See [concurrency configuration](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 - `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs
@@ -143,8 +145,13 @@ jobs:
     steps: [{run: pnpm test}]
 ```
 
-For secret names, this use is undeclared unless `DEPLOY_TOKEN` is listed in the
-repository inventory or the job's literal environment inventory:
+For secret names, this workflow-level use is undeclared unless `DEPLOY_TOKEN`
+is listed in the repository inventory. Top-level `env` is not a job, so a job
+`environment:` does not supply environment secrets there. The
+[secrets reference](https://docs.github.com/en/actions/reference/secrets-reference)
+states: "Organization and repository secrets are read when a workflow run is
+queued, and environment secrets are read when a job referencing the environment
+starts."
 
 ```yaml
 env:
@@ -156,9 +163,12 @@ env:
 Add the missing topology edge or ordered step, or update the policy with the
 intended graph and a reason for an intentionally unlocked workflow. For a
 concurrency group collision, give each owner its own group. For an undeclared
-secret, add its name at the repository or matching environment scope, remove the
+secret, add its name at the repository or matching environment scope. List
+organization secrets and Dependabot secrets under `repository`. Remove the
 reference, or pass a composite action value through an input. Findings point to
-the source file and line; incomplete inputs cannot prove names unused. See the
+the source file and line. Incomplete analysis is reported only when
+`reportUnused` is on; it blocks the unused proof and does not hide a static
+undeclared name. See the
 [inventory guide](../configuration/workflow-topology-policy.md).
 
 ## Suppression

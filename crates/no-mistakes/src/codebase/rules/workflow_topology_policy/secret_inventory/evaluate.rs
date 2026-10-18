@@ -25,11 +25,18 @@ pub(in super::super) fn lint(
     let mut findings = Vec::new();
     let mut used = BTreeSet::new();
     let mut complete = true;
+    let report_unused = inventory.report_unused;
     for (path, document) in &documents.workflows {
         for (line, reason) in &document.incomplete {
-            incomplete(&mut findings, path, *line, reason);
+            block_unused(
+                &mut findings,
+                report_unused,
+                &mut complete,
+                path,
+                *line,
+                reason,
+            );
         }
-        complete &= document.incomplete.is_empty();
         let workflow = workflows.get(path.as_str());
         let aliases: BTreeSet<_> = workflow
             .and_then(|node| node.workflow_call.as_ref())
@@ -50,9 +57,10 @@ pub(in super::super) fn lint(
                     .any(|trigger| trigger.event != "workflow_call")
             })
         {
-            complete = false;
-            incomplete(
+            block_unused(
                 &mut findings,
+                report_unused,
+                &mut complete,
                 path,
                 1,
                 "reusable contract also has direct triggers; secret sources depend on the trigger",
@@ -63,6 +71,15 @@ pub(in super::super) fn lint(
             used: &mut used,
             findings: &mut findings,
         };
+        // Workflow-level `env` is evaluated once when the run is queued, not
+        // once per job. Environment secrets are unavailable there even when
+        // every job sets `environment:`. The workflow `env` key is separate
+        // from `jobs.<job_id>.env` and is not re-evaluated per job
+        // (https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability).
+        // https://docs.github.com/en/actions/reference/secrets-reference
+        // "Organization and repository secrets are read when a workflow run is
+        // queued, and environment secrets are read when a job referencing the
+        // environment starts."
         for reference in &document.references {
             complete &= resolver.reference(
                 path,
@@ -98,10 +115,18 @@ pub(in super::super) fn lint(
                 .as_deref()
                 .is_none_or(|target| workflows.get(target).is_none_or(|node| !node.callable));
         let inherited = matches!(call.bindings.secrets, WorkflowCallSecretsBinding::Inherit);
+        // Cross-repo `owner/repo/...@ref` with an explicit `secrets:` map passes
+        // only those values. The mapping expressions are checked above, so the
+        // call is fully known for undeclared names and does not block unused
+        // proof. `secrets: inherit` can still read any caller secret.
+        if !call.local && !inherited {
+            continue;
+        }
         if unresolved || inherited {
-            complete = false;
-            incomplete(
+            block_unused(
                 &mut findings,
+                report_unused,
+                &mut complete,
                 path,
                 line,
                 if inherited {
@@ -116,9 +141,10 @@ pub(in super::super) fn lint(
         if diagnostic.code
             == crate::codebase::workflow_topology::model::DiagnosticCode::WorkflowCallCycle
         {
-            complete = false;
-            incomplete(
+            block_unused(
                 &mut findings,
+                report_unused,
+                &mut complete,
                 &diagnostic.workflow_path,
                 1,
                 "reusable call cycle",
@@ -127,9 +153,15 @@ pub(in super::super) fn lint(
     }
     for (path, document) in &documents.actions {
         for (line, reason) in &document.incomplete {
-            incomplete(&mut findings, path, *line, reason);
+            block_unused(
+                &mut findings,
+                report_unused,
+                &mut complete,
+                path,
+                *line,
+                reason,
+            );
         }
-        complete &= document.incomplete.is_empty();
         if document.composite {
             for reference in &document.references {
                 findings.push(finding(path, reference.line, "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env".into()));
@@ -149,4 +181,18 @@ pub(in super::super) fn lint(
         );
     }
     findings
+}
+
+fn block_unused(
+    findings: &mut Vec<RuleFinding>,
+    report_unused: bool,
+    complete: &mut bool,
+    path: &str,
+    line: usize,
+    reason: &str,
+) {
+    *complete = false;
+    if report_unused {
+        incomplete(findings, path, line, reason);
+    }
 }

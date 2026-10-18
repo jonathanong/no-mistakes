@@ -12,5 +12,9 @@ jobs:
     environment: '${{ inputs.environment }}'
     env:
       selected: '${{ secrets.KNOWN }}'
+      missing: '${{ secrets.NOT_LISTED }}'
+      maybe: '${{ secrets.ENV_ONLY }}'
+      token: '${{ secrets.GITHUB_TOKEN }}'
+      extra: '${{ secrets.EXTRA }}'
     steps:
       - run: echo ready

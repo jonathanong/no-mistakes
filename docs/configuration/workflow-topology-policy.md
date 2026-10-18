@@ -23,14 +23,16 @@ rules:
         reportUnused: true
 ```
 
-`repository` lists repository secret names. `environments` maps literal
-environment names to names available in that environment. Secret and
-environment-name matching is ASCII case-insensitive. Duplicate names within a
-scope and duplicate environment keys after case folding are configuration
-errors. Names must start with an ASCII letter or underscore and contain only
-ASCII letters, digits, or underscores. A name may be declared at repository
-and environment scope: for a job in that environment, the environment
-declaration shadows the same repository name.
+`repository` lists secret names that are not environment secrets. That includes
+repository secrets, organization secrets, and Dependabot secrets. Do not put
+those names under `environments`. `environments` maps literal environment names
+to names available in that environment. Secret and environment-name matching is
+ASCII case-insensitive. Duplicate names within a scope and duplicate
+environment keys after case folding are configuration errors. Names must start
+with an ASCII letter or underscore and contain only ASCII letters, digits, or
+underscores. A name may be declared at repository and environment scope: for a
+job in that environment, the environment declaration shadows the same
+repository name.
 
 `secretInventory` omitted or set to `null` disables inventory checking. An
 empty object enables a strict empty inventory while retaining the default
@@ -46,6 +48,17 @@ checked against its scope. Jobs without an environment use repository names.
 For a job with a literal environment, that environment's declaration takes
 precedence for a same-named secret and a missing environment name falls back to
 the repository inventory.
+
+Workflow-level `env` is evaluated once when the run is queued, before any job
+starts. It is checked only against `repository`. A job `environment:` does not
+apply to that map, even when every job uses the same environment. The
+[secrets reference](https://docs.github.com/en/actions/reference/secrets-reference)
+states: "Organization and repository secrets are read when a workflow run is
+queued, and environment secrets are read when a job referencing the environment
+starts." The workflow `env` key is separate from `jobs.<job_id>.env` in the
+[context availability](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability)
+table and is not re-evaluated per job. Environment secrets are only available
+to workflow jobs that reference the environment.
 
 Reusable workflow contracts define aliases, not inventory entries. If a caller
 maps `DEPLOY_KEY: ${{ secrets.CI_DEPLOY_TOKEN }}`, the caller's source name is
@@ -68,19 +81,45 @@ statically.
 
 ## Incomplete analysis
 
-Dynamic secret selectors, expression-valued environments, `secrets: inherit`,
-unresolved reusable workflow calls, and workflow read or parse failures make
-the affected analysis explicitly incomplete. Known static names can still be
-checked, but incomplete analysis cannot establish that declarations are
-unused; `reportUnused` findings are withheld when that proof is unavailable.
-Declarations also need a unique source location in the effective config file.
-Inherited or ambiguous declaration locations produce incomplete analysis rather
-than an unused finding at a guessed location.
+Incomplete analysis only affects the unused proof. Incomplete findings are
+emitted only when `reportUnused` is `true`. With the default
+`reportUnused: false`, those inputs do not fail the check by themselves. An
+incomplete result never hides a static undeclared `secrets.NAME` reference.
+
+These inputs make unused-name analysis incomplete:
+
+- a dynamic secret selector, or the whole `secrets` context. `secrets['NAME']`
+  is static. `secrets["NAME"]` is not: GitHub expressions require single
+  quotes, and wrapping a string in double quotes throws
+- an expression-valued job `environment:`
+- `secrets: inherit`, a reusable call that cannot be resolved locally, or a
+  reusable call cycle
+- a workflow or referenced composite action that cannot be read or parsed
+- a non-literal `environment:` whose name is declared only on some environment
+  and not in `repository` (that name is not proven used or unused)
+
+A call to `owner/repo/...@ref` with a static `secrets:` mapping is fully known
+for undeclared checks. The mapping expressions are checked, and the call itself
+is not incomplete. An explicit empty mapping passes no secrets.
+
+A non-literal `environment:` still sees repository names. A name absent from
+`repository` and from every configured environment inventory is undeclared.
+
+Known static names are still checked. `reportUnused` findings are withheld
+when that proof is unavailable. Declarations also need a unique source location
+in the effective config file. Inherited or ambiguous declaration locations
+produce incomplete analysis rather than an unused finding at a guessed
+location.
 
 Composite actions cannot read the `secrets` context directly, even when that
 name appears in the inventory. Pass a value from the calling workflow through
 an action input or environment variable instead. Inventory declarations do
-not make direct composite-action access valid.
+not make direct composite-action access valid. Only composite actions reached
+by `uses: ./...` from a workflow, or from an action already reached that way,
+are scanned. An unreferenced vendored or fixture `action.yml` is ignored.
+
+Bare `if` expressions are scanned only for real job-level and step-level `if:`
+keys. An action input named `if` under `with:` is ordinary text.
 
 Findings use the source file and line of the reference when available. Suppress
 an intentional one-line exception with the standard
