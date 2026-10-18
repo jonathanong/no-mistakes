@@ -94,6 +94,14 @@ fn every_global_export_takes_all_without_traversal() {
         );
     }
 
+    // One local export is the positive control. Filtering after the move would
+    // not be able to rebuild this seed.
+    let limited: Vec<_> = exported_bindings
+        .iter()
+        .filter(|binding| binding.specifier.is_none() && binding.local == "left")
+        .cloned()
+        .collect();
+    assert_eq!(limited.len(), 1, "the positive control seeds only left");
     facts.precise_records = true;
     let ts = TsFileFacts {
         exported_bindings,
@@ -114,6 +122,27 @@ fn every_global_export_takes_all_without_traversal() {
         visits::count(),
         0,
         "Evaluator::run must take All instead of walking each export"
+    );
+    // The zero above would also pass if run returned before the walk. The same
+    // evaluator with only `left` exported has to visit.
+    let limited_ts = TsFileFacts {
+        exported_bindings: limited,
+        ..TsFileFacts::default()
+    };
+    let limited_files = FxHashMap::from_iter([(
+        path.clone(),
+        File {
+            facts: &facts,
+            module: Arc::new(Module::new(Arc::new(limited_ts))),
+            executors: Default::default(),
+        },
+    )]);
+    let mut limited_evaluator = evaluator(&limited_files);
+    visits::reset();
+    limited_evaluator.run(&path);
+    assert!(
+        visits::count() > 0,
+        "limiting exports to left must walk; visits stay 0 if run returns early"
     );
 }
 
