@@ -50,6 +50,8 @@ jobs:
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: stable
       - name: Restore release compilation cache
         timeout-minutes: 5
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
