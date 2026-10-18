@@ -73,6 +73,16 @@ fn workflow_level_references_consume_repository_inventory_with_dependency_edges(
     assert!(run("top-level", ".no-mistakes.yml").unwrap().is_empty());
 }
 
+#[test]
+fn hyphenated_ids_do_not_reference_secrets_or_block_unused_reporting() {
+    let findings = run("hyphenated-contexts", ".no-mistakes.yml").unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
+    assert!(findings[0]
+        .message
+        .contains("unused declared secret UNUSED in repository"));
+}
+
 #[path = "secret_inventory_environments_tests.rs"]
 mod environments;
 

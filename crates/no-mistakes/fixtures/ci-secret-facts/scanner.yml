@@ -24,3 +24,5 @@ jobs:
       repeated: >-
         ${{ secrets.REPEAT }}
         ${{ secrets.REPEAT }}
+      step_output: "${{ steps.load-secrets.outputs.x }}"
+      need_result: "${{ needs.get-secrets.result }}"

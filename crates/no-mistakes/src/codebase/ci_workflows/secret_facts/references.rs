@@ -57,7 +57,10 @@ fn scan(text: &str, line: usize, found: &mut Vec<Reference>) {
             .is_some_and(|part| part.eq_ignore_ascii_case(b"secrets"))
             || at
                 .checked_sub(1)
-                .is_some_and(|before| identifier(bytes[before]) || bytes[before] == b'.')
+                // Step/job ids such as `load-secrets` contain hyphens.
+                .is_some_and(|before| {
+                    identifier(bytes[before]) || matches!(bytes[before], b'.' | b'-')
+                })
             || bytes.get(at + 7).is_some_and(|byte| identifier(*byte))
         {
             at += 1;

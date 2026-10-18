@@ -1,0 +1,8 @@
+runs:
+  using: composite
+  steps:
+    - id: load-secrets
+      shell: bash
+      run: echo "x=value" >> "$GITHUB_OUTPUT"
+    - shell: bash
+      run: echo "${{ steps.load-secrets.outputs.x }}"
