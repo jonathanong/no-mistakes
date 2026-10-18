@@ -1,0 +1,11 @@
+version: 2
+tests:
+  vitest:
+    configs: [vitest.a.mts, vitest.b.mts]
+    projects:
+      unit-a:
+        integration_suites:
+          smoke: [aws]
+      unit-b:
+        integration_suites:
+          smoke: [aws]

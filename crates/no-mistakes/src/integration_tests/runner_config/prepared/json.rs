@@ -13,7 +13,8 @@ impl PreparedIntegrationRunnerConfigs {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
             &self.tsconfig_catalog,
             &self.visible_files,
-        );
+        )
+        .with_shared_cache(self.visible_files.resolver_cache());
         let results = specs
             .into_iter()
             .map(|spec| ProjectResult {

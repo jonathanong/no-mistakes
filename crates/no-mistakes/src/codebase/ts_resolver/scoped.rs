@@ -1,8 +1,8 @@
-use dashmap::DashMap as ScopedDashMap;
 use dashmap::mapref::entry::Entry as ScopedEntry;
+use dashmap::DashMap as ScopedDashMap;
 use std::path::{Path as ScopedPath, PathBuf as ScopedPathBuf};
-use std::sync::Arc as ScopedArc;
 use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
+use std::sync::Arc as ScopedArc;
 
 #[path = "scoped_facade.rs"]
 mod facade;
@@ -10,12 +10,9 @@ pub(crate) use facade::{ImportResolution, ImportResolverFacade, WorkspaceFallbac
 
 /// Identity of one selected catalog resolver scope within this facade.
 ///
-/// `ResolverCacheScopeKey` deliberately owns a sorted copy of the complete
-/// visible universe so it can safely cross session boundaries. Rebuilding that
-/// value for every importer made standalone scoped resolution quadratic in the
-/// number of importers and visible files. The catalog is immutable for this
-/// resolver's lifetime, so addresses into it are a stable, request-local way
-/// to memoize the already-complete cache key per selected configuration.
+/// The immutable catalog provides stable addresses for selected configurations.
+/// Session cache keys retain exact visible identities; standalone scopes retain
+/// full path keys. Both are constructed once per selected configuration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 struct ScopedResolverSelectionKey {
     config: usize,
@@ -63,22 +60,6 @@ impl<'a> ScopedImportResolver<'a> {
             resolver.shared_cache = Some(cache);
         }
         self.shared_cache = Some(cache);
-        self
-    }
-
-    pub(crate) fn with_queue_compatibility(mut self, root: &'a ScopedPath) -> Self {
-        self.fixed_resolver = self.fixed_resolver.take().map(|mut resolver| {
-            // A fixed automatic resolver may currently point at the
-            // session's standard-policy cache. Queue compatibility has
-            // different relative/bare semantics, so detach before its
-            // policy setter clears the cache.
-            resolver.cache = ScopedArc::new(DashMap::with_hasher(rustc_hash::FxBuildHasher));
-            resolver.shared_cache = None;
-            resolver.with_queue_compatibility(root)
-        });
-        self.automatic_fixed_roots = None;
-        self.shared_cache = None;
-        self.queue_root = Some(root);
         self
     }
 
@@ -131,7 +112,7 @@ impl<'a> ScopedImportResolver<'a> {
         let (config, module_resolution, identity) = self.catalog.resolver_scope_at(selection);
         let observer = match self.session {
             Some(session) => session.observer().cloned(),
-            None => None,
+            None => crate::diagnostics::current(),
         };
         let mut resolver = ImportResolver::new_observed(config, observer);
         if let Some(visible) = self.visible.as_ref() {
@@ -141,7 +122,10 @@ impl<'a> ScopedImportResolver<'a> {
             resolver.interner = Some(session.interner_arc());
         }
         if let Some(shared_cache) = self.shared_cache {
-            return resolver.with_shared_cache(shared_cache);
+            if self.session.is_none() {
+                return resolver.with_shared_cache(shared_cache);
+            }
+            resolver.shared_cache = Some(shared_cache);
         }
         if let Some(root) = self.queue_root {
             resolver = resolver.with_queue_compatibility(root);
@@ -152,21 +136,21 @@ impl<'a> ScopedImportResolver<'a> {
             .entry(selection)
             .or_insert_with(|| {
                 self.scope_key_builds.fetch_add(1, ScopedOrdering::Relaxed);
-                let visible_paths = self.visible.as_ref().map(ResolverVisible::cache_paths);
-                let key = ResolverCacheScopeKey::new(
+                let key = ResolverCacheScopeKey::for_lookup(
                     config,
-                    visible_paths.as_deref(),
+                    self.visible.as_ref().map(ResolverVisible::lookup),
                     module_resolution,
                     identity,
-                );
+                )
+                .with_queue_root(self.queue_root);
                 // The exact, owned key reaches the registry only once per
                 // selected scope. Repeated importers clone this Arc directly,
                 // avoiding both a full visible-set clone and its hash.
                 self.scope_cache_lookups
                     .fetch_add(1, ScopedOrdering::Relaxed);
-                match (self.session, self.queue_root.is_some()) {
-                    (Some(session), false) => session.resolver_cache_for_scope(key),
-                    _ => match self.caches.entry(key) {
+                match self.session {
+                    Some(session) => session.resolver_cache_for_scope(key),
+                    None => match self.caches.entry(key) {
                         ScopedEntry::Occupied(entry) => ScopedArc::clone(entry.get()),
                         ScopedEntry::Vacant(entry) => {
                             let cache =
@@ -180,47 +164,7 @@ impl<'a> ScopedImportResolver<'a> {
             .clone();
         resolver.cache = cache;
         resolver.session_scoped = true;
+        resolver.session_exact_visibility = self.session.is_some() && self.visible.is_some();
         resolver
-    }
-
-    fn importer_selection(&self, importing_file: &ScopedPath) -> Option<usize> {
-        if let Some(selection) = self.importer_selections.selections.get(importing_file) {
-            return *selection;
-        }
-        let importing_file = normalize_path(importing_file);
-        match self
-            .importer_selections
-            .selections
-            .entry(importing_file.clone())
-        {
-            ScopedEntry::Occupied(entry) => *entry.get(),
-            ScopedEntry::Vacant(entry) => {
-                self.importer_selections
-                    .builds
-                    .fetch_add(1, ScopedOrdering::Relaxed);
-                let selection = self.catalog.resolver_scope_index_for(&importing_file);
-                entry.insert(selection);
-                selection
-            }
-        }
-    }
-
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    pub(crate) fn importer_selection_build_count(&self) -> usize {
-        self.importer_selections
-            .builds
-            .load(ScopedOrdering::Relaxed)
-    }
-
-    fn fixed_resolver_for(&self, importing_file: &ScopedPath) -> Option<&ImportResolver<'a>> {
-        let resolver = self.fixed_resolver.as_ref()?;
-        let Some((root, config_dir)) = &self.automatic_fixed_roots else {
-            return Some(resolver);
-        };
-        let importer = match importing_file.canonicalize() {
-            Ok(path) => normalize_path(&path),
-            Err(_) => normalize_path(importing_file),
-        };
-        (importer.starts_with(root) || importer.starts_with(config_dir)).then_some(resolver)
     }
 }

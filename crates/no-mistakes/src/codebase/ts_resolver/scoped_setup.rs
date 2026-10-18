@@ -27,7 +27,7 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(visible.normalized_visible())),
+            Some(ResolverVisible::Owned(session.normalized_visible(visible))),
             Some(session),
         )
     }
@@ -39,7 +39,10 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(visible.normalized_visible())),
+            Some(ResolverVisible::Owned(match session {
+                Some(session) => session.normalized_visible(visible),
+                None => visible.normalized_visible(),
+            })),
             session,
         )
     }
@@ -84,16 +87,17 @@ impl<'a> ScopedImportResolver<'a> {
         let config = catalog.fixed_config()?;
         let observer = match session {
             Some(session) => session.observer().cloned(),
-            None => None,
+            None => crate::diagnostics::current(),
         };
         let mut resolver = ImportResolver::new_observed(config, observer);
         resolver.visible = visible.cloned();
         if let Some(session) = session {
-            let visible_paths = visible.map(ResolverVisible::cache_paths);
-            resolver.cache = session.resolver_cache(config, visible_paths.as_deref());
+            resolver.cache =
+                session.resolver_cache_for_visible(config, visible.map(ResolverVisible::lookup));
             resolver.interner = Some(session.interner_arc());
         }
         resolver.session_scoped = session.is_some();
+        resolver.session_exact_visibility = session.is_some() && visible.is_some();
         Some(resolver)
     }
 }

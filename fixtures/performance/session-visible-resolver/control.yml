@@ -1,0 +1,15 @@
+version: 2
+filesystem:
+  skipDirectories: [fixtures, test-cases, crates, skills, docs, .github]
+projects:
+  node-api:
+    type: library
+    root: packages/no-mistakes
+    include:
+      - packages/no-mistakes/**
+rules:
+  - rule: forbidden-dependencies
+    projects: [node-api]
+    options:
+      roots: [packages/no-mistakes/index.js]
+      forbiddenFiles: [packages/no-mistakes/test-types.d.ts]
