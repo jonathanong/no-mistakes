@@ -1,0 +1,44 @@
+const { spawnSync } = require("node:child_process");
+const { createHash } = require("node:crypto");
+const { readFileSync } = require("node:fs");
+const { dirname, join } = require("node:path");
+
+const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "0", "check"];
+// Collection safety cap; regression limits come from reviewed measured budgets.
+const COLLECTION_DEADLINE_SECONDS = 600;
+
+function successful(sample) {
+  const deadline = sample.deadlineSeconds ?? COLLECTION_DEADLINE_SECONDS;
+  return (
+    sample.exit === 0 &&
+    Number.isFinite(deadline) &&
+    deadline > 0 &&
+    sample.elapsed < deadline &&
+    !sample.signal
+  );
+}
+function command(executable, args, cwd) {
+  const result = spawnSync(executable, args, { cwd, encoding: "utf8" });
+  if (result.error || result.status !== 0) {
+    throw new Error(`${executable} ${args.join(" ")}: ${result.error || result.stderr}`);
+  }
+  return result.stdout.trim();
+}
+
+function hashFile(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+function packageManifest(resolvePackage, name) {
+  // The public package exports its entrypoint, but keeps package.json private.
+  return join(dirname(resolvePackage(name)), "package.json");
+}
+
+module.exports = {
+  command,
+  hashFile,
+  packageManifest,
+  CHECK_ARGS,
+  COLLECTION_DEADLINE_SECONDS,
+  successful,
+};

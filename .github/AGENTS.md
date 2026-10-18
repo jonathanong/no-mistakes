@@ -5,7 +5,10 @@
   commit and the distinct passing/failing tree pinned in that issue.
 - Preserve the consumer's configuration, default features (including Mermaid),
   and exact public check command. Install/build/tool preparation is outside the
-  180-second command deadline. A timeout or nonzero check exit remains a failure.
+  600-second collection cap. This is a safety bound, not a runtime target;
+  enforce reviewed measured wall/RSS budgets separately. A timeout or nonzero
+  candidate check exit remains a failure. Preserve each historical sample's
+  recorded collection cap and censored outcomes.
 - Record source/binary provenance, compiler/flags, runner image/CPU, available
   CPUs, automatic Rayon jobs, elapsed/user/system time, RSS, exit, and raw logs.
   Report sample count with max/p95; a small hosted sample cannot establish a
@@ -19,5 +22,6 @@
   report eligible counts and unavailable maxima, retaining completed nonzero exits.
 - Verify candidateRef against the built artifact's source and hash before using
   a workflow as performance proof; automatic triggers may pin a historical build.
-- Before changing a deadline, profile the exact consumer and measure viable
-  fixes. Report observed tail/resources and censored failures with sample limits.
+- Review collection-cap changes separately from regression-budget changes.
+  Collect uncensored samples before calibrating budgets; report observed
+  tail/resources and preserve censored failures with sample limits.
