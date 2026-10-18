@@ -24,6 +24,17 @@ describe(rule, () => {
     assert.equal(messages(code("globals"), rule, undefined, "suite.test.ts").length, 4);
     assert.equal(messages(code("namespace"), rule, undefined, "suite.test.ts").length, 4);
   });
+  it("follows destructuring defaults and nested object patterns", () => {
+    const findings = lint(
+      code("pattern-bindings"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.deepEqual(
+      findings.map((item) => item.line),
+      [7, 10, 13, 16, 19, 22, 39],
+    );
+  });
   it("handles statically resolved CommonJS and dynamic module bindings", () => {
     const findings = lint(
       code("module-bindings"),

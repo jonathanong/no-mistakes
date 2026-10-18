@@ -78,6 +78,11 @@ client.chat.responses.create({ signal });
   its kind, or uses a slash-wrapped pattern that does not compile (`/[/`,
   `/(/`, `/*/`) fails at config load in ESLint and Oxlint. It does not load
   and then match nothing.
+  A value that starts with `/` is a wrapped regex, not a glob, for imported
+  targets as well as global and receiver targets. The body cannot contain an
+  unescaped `/`. `/^@acme/http$/` and `/abs/**` fail at config load. Write a
+  package path as a glob that does not start with `/` (`@acme/http` or
+  `@acme/**`), or escape the slash (`/^@acme\/http$/`).
   Each group also sets:
   - `optionsPosition`: one-based argument index of the options object.
   - `requiredProperties`: property names that must be statically present with a
@@ -141,6 +146,16 @@ injected members such as `deps.validateUrl()`. Computed CommonJS members and
 destructuring keys must be string literals or expression-free template literals;
 numeric keys are not coerced into export names. Top-level script `var`
 bindings mutated through `globalThis` are unsupported.
+
+A call is reported once per distinct requirement. That requirement is
+`optionsPosition`, `propertyMatch`, the set of `requiredProperties`, and the
+message (the target `message`, otherwise the top-level `message`). An imported
+target and a receiver target that share it produce one finding. For example,
+`import * as client from "agent"` followed by `client.create()` configured as
+both `{ agent, create }` and receiver `client` is reported once. The default
+message names the first match: imported targets in configuration order, then
+global targets, then receiver targets. A second target is still reported when
+its properties, `propertyMatch`, `optionsPosition`, or message differ.
 
 ## Fix
 

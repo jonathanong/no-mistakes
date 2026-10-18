@@ -13,14 +13,29 @@ By default, the rule reports Vitest and Playwright test modifiers `skip`,
 `skipIf`, `runIf`, `only`, `todo`, and `fixme`. It recognizes named, aliased,
 and namespace imports from `vitest` and `@playwright/test`, statically named
 `const` bindings from CommonJS `require()` and awaited dynamic `import()` calls,
-plus the unbound `it`, `test`, and `describe` globals in files selected by
-ESLint. Member chains
+including defaults and nested object patterns, plus the unbound `it`, `test`,
+and `describe` globals in files selected by ESLint. Member chains
 such as `test.skip.each(cases)(...)`, `test.concurrent.only(...)`, and
 `test.only.for(cases)(...)` are checked, as are Playwright forms such as
 `test.describe.fixme(...)`. In Vitest callbacks, a call to the actual callback
 context's `skip()` is also reported. A `.each` callback receives row data,
 while `.for` receives its test context as the second callback parameter; only
 the latter is treated as a context `skip()`.
+
+`const` destructuring follows a default and a nested object pattern when the
+key that introduces the identifier is `it`, `test`, or `describe`:
+
+```ts
+const { test: t = fallback } = require("vitest");
+const { runner: { test: nested } = fallback } = require("@playwright/test");
+
+t.skip("defaulted rename", () => {});
+nested.fixme("nested default", () => {});
+```
+
+A rest element, an array element, a `let` binding, and a computed key that is
+not a string literal are not test bindings. A nested key such as `skip` is the
+modifier function, not `test`.
 
 ```ts
 import { test as check, describe } from "vitest";
