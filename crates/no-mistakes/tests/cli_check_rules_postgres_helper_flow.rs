@@ -208,3 +208,20 @@ fn hole_alternatives_multiply_up_to_the_cap() {
         ])
     );
 }
+
+#[test]
+fn helper_closures_spreads_and_aliased_builders_never_look_clean() {
+    // Line 11 is the spread's alternative (`gated` may be overridden by the
+    // unknown options). Hoisted nested functions (reads at 30 and 47) and one
+    // builder passed at two parameters (61) cannot be followed, so they stay
+    // unanalyzable instead of being skipped.
+    assert_eq!(
+        required("helper-closure-safety"),
+        expect(&[
+            ("src/query.mts", 11, VIEW),
+            ("src/query.mts", 30, UNANALYZABLE),
+            ("src/query.mts", 47, UNANALYZABLE),
+            ("src/query.mts", 61, UNANALYZABLE),
+        ])
+    );
+}

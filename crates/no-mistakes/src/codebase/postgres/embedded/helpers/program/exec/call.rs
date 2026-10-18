@@ -54,6 +54,9 @@ impl Machine<'_> {
         let exprs: Vec<&Expr> = args.iter().collect();
         let mut out = Vec::new();
         for (path, values) in self.eval_all(&exprs, path)? {
+            if repeats_builder(&values) {
+                return None;
+            }
             let site = values.iter().map(site_arg).collect::<Option<Vec<_>>>()?;
             match self.callees.call(name, &site) {
                 Callee::Failed => return None,
@@ -72,6 +75,18 @@ impl Machine<'_> {
         }
         Some(out)
     }
+}
+
+/// The same builder at two parameters: the callee's appends would alias.
+fn repeats_builder(values: &[Val]) -> bool {
+    let ids: Vec<usize> = values
+        .iter()
+        .filter_map(|value| match value {
+            Val::Sql(id) => Some(*id),
+            _ => None,
+        })
+        .collect();
+    ids.iter().enumerate().any(|(i, id)| ids[..i].contains(id))
 }
 
 /// A value a callee cannot use to reach the caller's SQL state.

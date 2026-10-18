@@ -148,17 +148,29 @@ impl Machine<'_> {
                 match (entry, value) {
                     (Entry::Prop(key, _), value) => object.props.push((key.clone(), value)),
                     (Entry::Spread(_), Val::Obj(inner)) => {
+                        if inner.open {
+                            unknown_props(&mut object);
+                        }
                         object.props.extend(inner.props);
                         object.open |= inner.open;
                     }
                     (Entry::Spread(_), Val::Null | Val::Undef) => {}
-                    (Entry::Spread(_), Val::Unknown) => object.open = true,
+                    (Entry::Spread(_), Val::Unknown) => unknown_props(&mut object),
                     (Entry::Spread(_), _) => return None,
                 }
             }
             out.push((path, Val::Obj(object)));
         }
         Some(out)
+    }
+}
+
+/// A spread of unknown keys may override any earlier prop, so none of them
+/// stays known; props written after the spread are unaffected.
+fn unknown_props(object: &mut Obj) {
+    object.open = true;
+    for (_, value) in &mut object.props {
+        *value = Val::Unknown;
     }
 }
 

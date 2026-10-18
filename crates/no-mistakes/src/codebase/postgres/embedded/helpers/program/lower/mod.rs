@@ -36,6 +36,8 @@ pub(super) struct Scope<'c, 'a> {
     pub(super) params: Vec<String>,
     /// Names declared so far in the function (parameters and locals).
     pub(super) declared: Vec<String>,
+    /// A nested function declaration was seen; see `Program::body`.
+    pub(super) hoisted: bool,
 }
 
 impl Scope<'_, '_> {
@@ -66,6 +68,7 @@ pub(crate) fn lower(
         ctx,
         params: Vec::new(),
         declared: Vec::new(),
+        hoisted: false,
     };
     for param in &params.items {
         let BindingPattern::BindingIdentifier(ident) = &param.pattern else {
@@ -91,7 +94,7 @@ pub(crate) fn lower(
             default,
         });
     }
-    let body = match body {
+    let mut body = match body {
         Body::Statements(body) => stmt::block(&mut scope, &body.statements)?,
         Body::Expression(expression) => {
             let mark = scope.mark(expression.span());
@@ -101,6 +104,10 @@ pub(crate) fn lower(
             )]
         }
     };
+    if scope.hoisted {
+        // Runs first, so a hoisted function is never silently skipped.
+        body.insert(0, Stmt::Opaque);
+    }
     Some(Program {
         params: lowered,
         body,

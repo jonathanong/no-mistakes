@@ -14,24 +14,24 @@ impl Machine<'_> {
             | Expr::Undefined
             | Expr::Num
             | Expr::Ident(_) => return self.eval_leaf(expr, path),
-            Expr::Template(pieces, holes) => self.eval_template(pieces, holes, path)?,
-            Expr::Sql(pieces, holes) => self.eval_sql(pieces, holes, path)?,
-            Expr::Append(target, arg, mark) => self.eval_append(target, arg, *mark, path)?,
-            Expr::Call(name, args) => self.call(name, args, path, false)?,
-            Expr::Member(object, property) => self.eval_member(object, property, path)?,
-            Expr::Object(entries) => self.eval_object(entries, path)?,
-            Expr::Array(elements) => self.eval_array(elements, path)?,
-            Expr::Cond(test, then, otherwise) => self.eval_cond(test, then, otherwise, path)?,
-            Expr::And(left, right) => self.eval_logic(left, right, false, path)?,
-            Expr::Or(left, right) => self.eval_logic(left, right, true, path)?,
-            Expr::Nullish(left, right) => self.eval_nullish(left, right, path)?,
-            Expr::Not(inner) => self.eval_not(inner, path)?,
+            Expr::Template(pieces, holes) => self.eval_template(pieces, holes, path),
+            Expr::Sql(pieces, holes) => self.eval_sql(pieces, holes, path),
+            Expr::Append(target, arg, mark) => self.eval_append(target, arg, *mark, path),
+            Expr::Call(name, args) => self.call(name, args, path, false),
+            Expr::Member(object, property) => self.eval_member(object, property, path),
+            Expr::Object(entries) => self.eval_object(entries, path),
+            Expr::Array(elements) => self.eval_array(elements, path),
+            Expr::Cond(test, then, otherwise) => self.eval_cond(test, then, otherwise, path),
+            Expr::And(left, right) => self.eval_logic(left, right, false, path),
+            Expr::Or(left, right) => self.eval_logic(left, right, true, path),
+            Expr::Nullish(left, right) => self.eval_nullish(left, right, path),
+            Expr::Not(inner) => self.eval_not(inner, path),
             Expr::Eq(left, right, strict, negate) => {
-                self.eval_eq(left, right, *strict, *negate, path)?
+                self.eval_eq(left, right, *strict, *negate, path)
             }
-            Expr::Add(left, right) => self.eval_add(left, right, path)?,
+            Expr::Add(left, right) => self.eval_add(left, right, path),
             Expr::Opaque => return None,
-        };
+        }?;
         (forks.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(forks)
     }
 

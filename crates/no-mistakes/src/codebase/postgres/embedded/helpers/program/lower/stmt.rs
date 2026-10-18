@@ -49,6 +49,12 @@ fn one(scope: &mut Scope<'_, '_>, statement: &Statement<'_>) -> Option<Vec<Stmt>
             vec![Stmt::Return(argument, mark)]
         }
         Statement::ThrowStatement(_) => vec![Stmt::Throw],
+        // Hoisted: a call can reach it before (or without) this statement
+        // running, so the whole body must fail rather than skip the name.
+        Statement::FunctionDeclaration(_) => {
+            scope.hoisted = true;
+            vec![Stmt::Opaque]
+        }
         Statement::ForOfStatement(statement) => vec![for_of(scope, statement)?],
         _ => vec![Stmt::Opaque],
     })
