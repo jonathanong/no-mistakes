@@ -129,6 +129,7 @@ impl ScopeVisitor<'_> {
 }
 
 mod namespace;
+pub(super) use namespace::MemberQueryProof;
 
 #[cfg(test)]
 mod tests;

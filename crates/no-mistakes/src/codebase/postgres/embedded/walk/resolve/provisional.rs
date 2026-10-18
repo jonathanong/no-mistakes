@@ -23,14 +23,26 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
             return;
         }
         let namespace = visitor.namespace_expression(receiver);
-        if visitor.bindings.contains(MEMBER_QUERY_OPT_IN)
+        let broad = visitor.bindings.contains(MEMBER_QUERY_OPT_IN);
+        if broad
             || (visitor.proven_executor(receiver)
-                && (!namespace || visitor.namespace_query_valid()))
+                && if namespace {
+                    visitor.namespace_query_valid()
+                } else {
+                    visitor.receiver_query_valid()
+                })
         {
-            push_confirmed(visitor, call, "query".to_string());
+            let sequence = push_confirmed(visitor, call, "query".to_string());
+            if !broad {
+                visitor.note_member_call(sequence, call, namespace);
+            }
         } else {
             let owners = visitor.relative_executor_owners(receiver);
+            let sequence = visitor.next_seq;
             push_pending(visitor, call, "query", owners);
+            if visitor.next_seq != sequence {
+                visitor.note_member_call(sequence, call, false);
+            }
         }
         return;
     }
@@ -75,7 +87,11 @@ fn push_pending(
     });
 }
 
-fn push_confirmed(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>, callee: String) {
+fn push_confirmed(
+    visitor: &mut ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    callee: String,
+) -> u32 {
     let seq = visitor.next_seq;
     visitor.next_seq += 1;
     if visitor.track_order {
@@ -83,4 +99,5 @@ fn push_confirmed(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>, cal
     }
     visitor.calls.push(executor_call(visitor, call, callee));
     visitor.call_spans.push((call.span.start, call.span.end));
+    seq
 }

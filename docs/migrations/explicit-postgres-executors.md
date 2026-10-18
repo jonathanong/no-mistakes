@@ -66,7 +66,9 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
   is empty) that return an executor. A local declared with
   `const`, `let`, `using`, or `await using` whose initializer calls the factory,
   with or without `await`, is an executor. Calls `tx(sql)` and `tx.query(sql)`
-  are scanned when the configured module enables member queries.
+  are scanned when the configured module enables member queries. Bind the result
+  before calling `query`; an inline `openTransaction().query(sql)` chain does not
+  establish a scoped executor.
 - `executorTypeNames` lists type names imported from `importSpecifier`, a
   subpath of it, a relative path that resolves into that package, or any module
   when it is empty, through `import type`, an inline `type` specifier, or

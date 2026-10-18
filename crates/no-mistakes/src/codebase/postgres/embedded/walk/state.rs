@@ -3,13 +3,13 @@ use super::super::helpers;
 use super::super::options::EmbeddedSqlOptions;
 use super::super::relative::{PendingRelativeCall, PendingRelativeSpan};
 use super::super::scoped_bindings::ScopedExecutors;
+use super::executors::MemberQueryProof;
 use super::imported;
 use super::resolve;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 use std::collections::{BTreeMap, HashMap, HashSet};
-
 #[derive(Clone)]
 pub(crate) struct BindingState {
     pub(super) builder_identity: Option<u32>,
@@ -38,7 +38,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) relative_proofs: Vec<HashMap<String, u32>>,
     pub(crate) namespace_proofs: Vec<HashSet<String>>,
     pub(crate) imported_namespace_names: HashSet<String>,
-    pub(crate) namespace_query_invalidated: bool,
+    pub(crate) member_query_proof: MemberQueryProof,
     pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(super) argument_effects: Vec<super::executor_arguments::ArgumentEffect>,
     pub(super) argument_frames: usize,
@@ -111,7 +111,7 @@ pub(crate) fn collect_calls<'a>(
         relative_proofs: Vec::new(),
         namespace_proofs: Vec::new(),
         imported_namespace_names,
-        namespace_query_invalidated: false,
+        member_query_proof: MemberQueryProof::default(),
         builder_aliases: crate::fx::FxHashMap::default(),
         argument_effects: Vec::new(),
         argument_frames: 0,
@@ -141,6 +141,7 @@ pub(crate) fn collect_calls<'a>(
         sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);
+    visitor.drop_invalidated_member_calls();
     let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
     let pending_imported = helpers::finalize::finalize(
         helpers::finalize::Walked {

@@ -61,9 +61,10 @@ accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requ
 `psql` and keeps connection secrets in the named environment variable. The caller
 writes the returned object to disk. See [`postgres catalog`](../cli/postgres.md) for
 what a catalog holds, what it leaves out, and its limitations.
-Both catalog types expose optional `currentDatabase`, the exact connected
-database name; older catalogs omit it and preserve conservative analysis. The
-optional `currentDatabase` option, like the CLI's `--current-database`, records a
+Both catalog types expose optional `currentDatabase`, the database name
+recorded in the catalog; older catalogs omit it and preserve conservative
+analysis. The optional `currentDatabase` option, like the CLI's
+`--current-database`, records a
 fixed non-empty name instead, so regeneration does not depend on the generating
 database's name.
 
