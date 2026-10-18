@@ -10,6 +10,9 @@ pub(crate) struct SnapshotResolutionVisible<'a> {
     universe: &'a GraphFiles,
     snapshot: &'a VisiblePathSnapshot,
     root: &'a Path,
+    // Both sets are borrowed and immutable for this overlay, so the union
+    // length is fixed at construction instead of rescanning on every lookup.
+    visible_len: usize,
 }
 
 impl<'a> SnapshotResolutionVisible<'a> {
@@ -19,11 +22,20 @@ impl<'a> SnapshotResolutionVisible<'a> {
         snapshot: &'a VisiblePathSnapshot,
         root: &'a Path,
     ) -> Self {
+        // `visit_visible` walks universe ∪ graph files. Explicit roots outside
+        // the universe must count, or this projection never matches its own scope.
+        let mut visible_len = universe.visible_len();
+        for path in graph_files.iter_visible() {
+            if !universe.contains_visible(path) {
+                visible_len += 1;
+            }
+        }
         Self {
             graph_files,
             universe,
             snapshot,
             root,
+            visible_len,
         }
     }
 
@@ -40,7 +52,7 @@ impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
     }
 
     fn visible_len(&self) -> usize {
-        self.universe.visible_len()
+        self.visible_len
     }
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {

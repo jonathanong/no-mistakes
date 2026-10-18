@@ -21,10 +21,7 @@ fn snapshot_overlay_exposes_escaped_universe_paths() {
     let escaped = root.join("packages/ui/src/button.ts");
     let snapshot_only = root.join("web/lib/unrelated.test.ts");
     let graph_files = GraphFiles::from_files(vec![root.join("web/app/page.tsx")]);
-    let universe = GraphFiles::from_files(vec![
-        root.join("web/app/page.tsx"),
-        escaped.clone(),
-    ]);
+    let universe = GraphFiles::from_files(vec![root.join("web/app/page.tsx"), escaped.clone()]);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let overlay = SnapshotResolutionVisible::new(&graph_files, &universe, &snapshot, &root);
     assert!(overlay.contains_visible(&escaped));
@@ -33,17 +30,30 @@ fn snapshot_overlay_exposes_escaped_universe_paths() {
     assert!(!overlay.contains_visible(&root.join("does-not-exist.ts")));
     assert!(!overlay.contains_visible(&root.join("packages/ui")));
     assert_eq!(
-        overlay.visible_alias(&root.join("web/app/page.tsx")).as_deref(),
+        overlay
+            .visible_alias(&root.join("web/app/page.tsx"))
+            .as_deref(),
         Some(root.join("web/app/page.tsx").as_path())
     );
-    assert_eq!(overlay.visible_alias(&escaped).as_deref(), Some(escaped.as_path()));
+    assert_eq!(
+        overlay.visible_alias(&escaped).as_deref(),
+        Some(escaped.as_path())
+    );
     assert_eq!(overlay.visible_len(), universe.visible_len());
+    let empty = GraphFiles::from_files(vec![]);
+    let empty_overlay = SnapshotResolutionVisible::new(&empty, &universe, &snapshot, &root);
+    assert_eq!(empty_overlay.visible_len(), universe.visible_len());
     assert!(overlay.visible_cache_key().contains(&escaped));
     assert!(!overlay.visible_cache_key().contains(&snapshot_only));
     let ghost = PathBuf::from("/not-in-snapshot/ghost.ts");
     let graph_files = GraphFiles::from_files(vec![ghost.clone()]);
     let overlay = SnapshotResolutionVisible::new(&graph_files, &universe, &snapshot, &root);
     assert!(overlay.visible_cache_key().contains(&ghost));
+    // An explicit root outside the universe is part of the visited projection.
+    let mut visited = 0usize;
+    overlay.visit_visible(&mut |_| visited += 1);
+    assert_eq!(overlay.visible_len(), universe.visible_len() + 1);
+    assert_eq!(overlay.visible_len(), visited);
     assert_eq!(
         visible_or_escaped_path(&graph_files, Some(&overlay), &escaped),
         Some(escaped)

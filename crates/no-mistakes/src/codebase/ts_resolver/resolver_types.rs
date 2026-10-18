@@ -34,7 +34,7 @@ impl ImportClassification {
 #[derive(Default)]
 pub(crate) struct ImportResolutionCache {
     raw_entries: DashMap<ResolveKey, Option<PathBuf>, rustc_hash::FxBuildHasher>,
-    final_entries: DashMap<ResolveKey, ImportClassification, rustc_hash::FxBuildHasher>,
+    final_entries: DashMap<ClassificationKey, ImportClassification, rustc_hash::FxBuildHasher>,
     classifications: std::sync::atomic::AtomicUsize,
     requests: std::sync::atomic::AtomicUsize,
 }

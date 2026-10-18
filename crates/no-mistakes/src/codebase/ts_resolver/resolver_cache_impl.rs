@@ -6,7 +6,7 @@ impl<'a> ImportResolver<'a> {
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
         visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> ImportClassification {
-        let key = self.resolve_key(specifier, importing_file);
+        let key = self.classification_key(specifier, importing_file);
         let classify = || {
             let resolver_target = self.resolve(specifier, importing_file);
             let workspace_target = workspace.resolve_specifier_from_file_visible(
@@ -77,6 +77,27 @@ impl<'a> ImportResolver<'a> {
         ResolveKey {
             importing_file,
             specifier,
+        }
+    }
+
+    fn classification_key(&self, specifier: &str, importing_file: &Path) -> ClassificationKey {
+        let ResolveKey {
+            importing_file,
+            specifier,
+        } = self.resolve_key(specifier, importing_file);
+        let policy = match self.policy {
+            ImportResolutionPolicy::Standard => ClassificationPolicy::Standard,
+            ImportResolutionPolicy::QueueCompatibility { root } => ClassificationPolicy::Queue {
+                root: match &self.interner {
+                    Some(interner) => interner.intern_path(root),
+                    None => Arc::from(normalize_path(root)),
+                },
+            },
+        };
+        ClassificationKey {
+            importing_file,
+            specifier,
+            policy,
         }
     }
 

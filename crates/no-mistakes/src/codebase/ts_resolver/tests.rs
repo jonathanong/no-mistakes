@@ -25,8 +25,13 @@ fn import_resolution_cache_clear_removes_raw_and_classified_entries() {
         specifier: Arc::from("@runtime/value"),
     };
     cache.raw_entries.insert(key.clone(), Some(target.clone()));
+    let classification_key = ClassificationKey {
+        importing_file: Arc::clone(&key.importing_file),
+        specifier: Arc::clone(&key.specifier),
+        policy: ClassificationPolicy::Standard,
+    };
     cache.final_entries.insert(
-        key.clone(),
+        classification_key.clone(),
         ImportClassification {
             resolver_target: Some(target),
             workspace_target: None,
@@ -37,7 +42,7 @@ fn import_resolution_cache_clear_removes_raw_and_classified_entries() {
     cache.clear();
 
     assert!(cache.raw_entries.get(&key).is_none());
-    assert!(cache.final_entries.get(&key).is_none());
+    assert!(cache.final_entries.get(&classification_key).is_none());
 }
 
 #[test]
