@@ -1,0 +1,10 @@
+# A job write grant on workflow_call is still the caller's ceiling, not proof.
+name: callable
+on: workflow_call
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

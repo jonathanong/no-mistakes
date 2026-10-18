@@ -64,19 +64,21 @@ pub(super) fn triggers_workflow_call(doc: &Mapping) -> bool {
 }
 
 pub(super) fn job_proof(job: &Mapping, workflow: Option<&Value>, callable: bool) -> Proof {
-    if let Some(permissions) = mapping_get(job, "permissions") {
-        return proof_of(permissions, Origin::Job);
+    let proof = if let Some(permissions) = mapping_get(job, "permissions") {
+        proof_of(permissions, Origin::Job)
+    } else if let Some(permissions) = workflow {
+        proof_of(permissions, Origin::Workflow)
+    } else {
+        // Missing permissions are not GitHub's default. Do not guess.
+        Proof::Unknown
+    };
+    // A called workflow can only keep or lower the caller token. A write
+    // grant in this file does not prove the token that actually runs.
+    if callable && matches!(proof, Proof::Write(_)) {
+        Proof::Unknown
+    } else {
+        proof
     }
-    if let Some(permissions) = workflow {
-        return proof_of(permissions, Origin::Workflow);
-    }
-    if callable {
-        return Proof::Write(
-            "reusable workflow_call sets no permissions and inherits the caller token".to_string(),
-        );
-    }
-    // Missing permissions are not GitHub's default. Do not guess.
-    Proof::Unknown
 }
 
 fn proof_of(value: &Value, origin: Origin) -> Proof {

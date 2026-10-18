@@ -13,17 +13,20 @@ and action files that cannot grant a token are not findings.
 
 ## What it catches
 
-The rule scans `jobs.*.steps` in `.github/workflows/*.{yml,yaml}`. Composite
-and other action files under `.github/actions/**/action.{yml,yaml}` are read
-and then skipped: those files have no job permissions of their own, and a
-pasted `permissions` or `workflow_call` key is not applied by GitHub.
+The rule scans `jobs.*.steps` in `.github/workflows/*.{yml,yaml}`. A file in
+a subdirectory of `.github/workflows/` is not a workflow GitHub runs, so it
+is ignored. Composite and other action files under
+`.github/actions/**/action.{yml,yaml}` are read and then skipped: those files
+have no job permissions of their own, and a pasted `permissions` or
+`workflow_call` key is not applied by GitHub.
 
 It flags an `actions/checkout` step when both of these are true:
 
-- `with.persist-credentials` is omitted, null, or a literal true (`true` or
-  the string `true` in any letter case). YAML treats `true` and `false` (any
-  letter case) as booleans. The strings `yes`, `no`, `on`, and `off` are not
-  booleans here, so they are not proof of false.
+- `with.persist-credentials` is omitted or a literal true (`true` or the
+  string `true` in any letter case). A null value is not judged, so it is
+  not a finding. YAML treats `true` and `false` (any letter case) as
+  booleans. The strings `yes`, `no`, `on`, and `off` are not booleans here,
+  so they are not proof of false.
 - The job `GITHUB_TOKEN` is proven to be able to write.
 
 Write access is the job `permissions` block when that key is present. A job
@@ -40,10 +43,11 @@ does not count. `vulnerability-alerts: write` is not a valid grant.
 Unrecognized scope names are not proof, and they do not hide a known write
 next to them. The finding names the first proven write scope in source order.
 
-A reusable workflow (`on` includes `workflow_call`, alone or with other
-events) that has no `permissions` key inherits the caller token and counts as
-write-capable. A present `permissions` key, including a null or empty value,
-is not that exception. Empty permissions are not write.
+A file whose `on` includes `workflow_call`, alone or with other events,
+cannot prove a write token. The caller can only pass the same or a more
+restrictive `GITHUB_TOKEN`, and this rule does not read the caller. A write
+grant in that file, including a missing `permissions` key, is not a finding.
+Empty permissions are not write. A null `permissions` value stays unknown.
 
 If `permissions` is absent and the workflow is not `workflow_call`, the rule
 does not guess GitHub's default token, including for `pull_request_target`.

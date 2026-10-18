@@ -49,9 +49,6 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/workflows/empty-job.yml",
             ".github/workflows/inherited.yml",
             ".github/workflows/job-overrides-read.yml",
-            ".github/workflows/reusable-list.yml",
-            ".github/workflows/reusable-push.yml",
-            ".github/workflows/reusable.yml",
             ".github/workflows/scopes.yml",
             ".no-mistakes.yml",
         ],
@@ -67,12 +64,18 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/actions/local/action.yml",
             ".github/actions/node/action.yaml",
             ".github/workflows/broken.yml",
+            ".github/workflows/callable-job-write.yml",
+            ".github/workflows/callable-write.yml",
             ".github/workflows/ci.yml",
             ".github/workflows/job-expression.yml",
             ".github/workflows/mapping-on.yml",
+            ".github/workflows/nested/old.yml",
             ".github/workflows/null-permissions-call.yml",
             ".github/workflows/null-permissions.yml",
             ".github/workflows/pull-request-target.yml",
+            ".github/workflows/reusable-list.yml",
+            ".github/workflows/reusable-push.yml",
+            ".github/workflows/reusable.yml",
             ".github/workflows/text.yml",
             ".no-mistakes.yml",
         ],
@@ -130,7 +133,8 @@ fn yaml_booleans_are_only_true_and_false() {
 #[test]
 fn kinds_and_missing_sources_are_skipped() {
     assert_eq!(gha_kind(".github/workflows/ci.yml"), Some(false));
-    assert_eq!(gha_kind(".github/workflows/nested/ci.yaml"), Some(false));
+    // GitHub does not run workflow files in subdirectories.
+    assert!(gha_kind(".github/workflows/nested/ci.yaml").is_none());
     assert_eq!(gha_kind(ACTION), Some(true));
     assert_eq!(gha_kind(".github/actions/node/action.yaml"), Some(true));
     assert!(gha_kind(".github/workflows/ci.json").is_none());
@@ -319,9 +323,6 @@ fn saved_fixtures_flag_only_proven_persisted_write_tokens() {
     }
     for (file, target) in [
         ("inherited.yml", "build"),
-        ("reusable.yml", "build"),
-        ("reusable-push.yml", "build"),
-        ("reusable-list.yml", "build"),
         ("job-overrides-read.yml", "build"),
         ("edges.yml", "9"),
         ("edges.yml", "true"),
@@ -348,9 +349,6 @@ fn saved_fixtures_flag_only_proven_persisted_write_tokens() {
     assert!(
         message("inherited.yml", "build").contains("workflow permissions grant contents: write")
     );
-    assert!(message("reusable.yml", "build").contains("inherits the caller token"));
-    assert!(message("reusable-push.yml", "build").contains("inherits the caller token"));
-    assert!(message("reusable-list.yml", "build").contains("inherits the caller token"));
     assert!(message("job-overrides-read.yml", "build")
         .contains("job permissions grant contents: write"));
     let empty = findings

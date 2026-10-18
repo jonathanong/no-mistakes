@@ -52,8 +52,12 @@ pub(super) fn gha_kind(rel: &str) -> Option<bool> {
     if !yaml {
         return None;
     }
-    if rel.starts_with(".github/workflows/") {
-        return Some(false);
+    // GitHub only runs a workflow file directly under `.github/workflows/`.
+    if let Some(name) = rel.strip_prefix(".github/workflows/") {
+        if !name.is_empty() && !name.contains('/') {
+            return Some(false);
+        }
+        return None;
     }
     if rel.starts_with(".github/actions/")
         && (rel.ends_with("/action.yml") || rel.ends_with("/action.yaml"))

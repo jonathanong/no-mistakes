@@ -1,3 +1,4 @@
+# Missing permissions on workflow_call do not prove the caller token can write.
 name: reusable
 on: workflow_call
 jobs:
