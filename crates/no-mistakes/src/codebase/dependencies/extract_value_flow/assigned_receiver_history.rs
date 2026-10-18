@@ -1,6 +1,20 @@
 use super::*;
 
 impl ReceiverHistories {
+    pub(in super::super) fn foreign_member_provider_references(
+        &self,
+        key: &(usize, String),
+        path: &[Option<String>],
+    ) -> Vec<(nested::ReceiverWrite, CallableId)> {
+        let Some(origins) = &self.assigned_origins else {
+            return Vec::new();
+        };
+        let Some(id) = self.names.get(&key.0).and_then(|names| names.get(&key.1)) else {
+            return Vec::new();
+        };
+        origins.foreign_references(self.root(*id), path)
+    }
+
     pub(in super::super) fn has_rhs_reference_demand(&self, scope: usize, name: &str) -> bool {
         self.names
             .get(&scope)

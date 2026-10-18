@@ -109,3 +109,6 @@ fn foreign_receiver_origins_do_not_follow_callable_declaration_order() {
         );
     }
 }
+
+#[path = "receiver_writer_edges.rs"]
+mod writer_edges;

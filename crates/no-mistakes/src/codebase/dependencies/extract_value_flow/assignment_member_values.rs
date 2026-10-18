@@ -31,7 +31,7 @@ impl ImportCollector {
             return None;
         }
         let (name, path, _) = write_targets::targets(&assignment.left).pop()?;
-        if path.last().is_some_and(Option::is_none) {
+        if path.last().is_some_and(Option::is_none) && self.current_function_id().is_none() {
             return None;
         }
         let base = name.split('.').next().expect("receiver binding");

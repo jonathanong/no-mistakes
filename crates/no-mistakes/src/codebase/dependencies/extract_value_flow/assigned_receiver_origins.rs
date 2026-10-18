@@ -1,5 +1,7 @@
 use super::*;
 
+#[path = "assigned_foreign_providers.rs"]
+mod foreign_providers;
 #[path = "assigned_receiver_record.rs"]
 mod record;
 #[path = "assigned_receiver_timeline.rs"]

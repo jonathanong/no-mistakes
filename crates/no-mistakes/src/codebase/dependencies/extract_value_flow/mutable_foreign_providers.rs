@@ -36,12 +36,19 @@ pub(super) struct ForeignProviderIndex {
 impl ForeignProviderIndex {
     pub(super) fn references(
         &self,
-        writer: CallableId,
+        writer: Option<CallableId>,
         before: usize,
     ) -> Vec<nested::ReceiverWrite> {
         self.references
             .iter()
-            .filter(|(_, providers)| providers.after(writer, before))
+            .filter(|(_, providers)| {
+                // Member summaries (MAX) mutate the acquired object itself;
+                // only root rebindings exclude a saved acquisition's owner.
+                providers.newest.0 == usize::MAX
+                    || writer.map_or(providers.newest.0 >= before, |writer| {
+                        providers.after(writer, before)
+                    })
+            })
             .map(|(reference, _)| reference.clone())
             .collect()
     }
@@ -52,13 +59,27 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         path: &[Option<String>],
+        member_references: Vec<(nested::ReceiverWrite, CallableId)>,
     ) -> ForeignProviderIndex {
-        let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {
-            return ForeignProviderIndex::default();
-        };
+        let root = self.roots.get(&key.0).and_then(|names| names.get(&key.1));
         let reads = vec![None; path.len()];
         let mut indexed = fx_map();
-        for (owner, states) in &root.owners {
+        let mut insert = |(receiver, mut reads, mut read): nested::ReceiverWrite, id, owner| {
+            // Immutable imported roots need one conservative identity.
+            // Mutable roots keep their distinct acquisition coordinates.
+            if !self.contains(receiver.0 .0, &receiver.0 .1) {
+                reads.fill(None);
+                read = (0, None);
+            }
+            indexed
+                .entry((receiver, reads, read))
+                .and_modify(|providers: &mut Providers| providers.insert(id, owner))
+                .or_insert(Providers {
+                    newest: (id, owner),
+                    other: None,
+                });
+        };
+        for (owner, states) in root.into_iter().flat_map(|root| &root.owners) {
             let Some(owner) = owner else { continue };
             for id in states.possible.before(usize::MAX) {
                 #[cfg(feature = "test-instrumentation")]
@@ -73,22 +94,14 @@ impl ReceiverBindingOrigins {
                     }
                     Origin::Either(..) => unreachable!("possible origins contain leaves only"),
                 }
-                for (receiver, mut reads, mut read) in references {
-                    // Immutable imported roots need one conservative identity.
-                    // Mutable roots keep their distinct acquisition coordinates.
-                    if !self.contains(receiver.0 .0, &receiver.0 .1) {
-                        reads.fill(None);
-                        read = (0, None);
-                    }
-                    indexed
-                        .entry((receiver, reads, read))
-                        .and_modify(|providers: &mut Providers| providers.insert(id, *owner))
-                        .or_insert(Providers {
-                            newest: (id, *owner),
-                            other: None,
-                        });
+                for reference in references {
+                    insert(reference, id, *owner);
                 }
             }
+        }
+        // Member RHS stores are callable summaries, independent of visitation order.
+        for (reference, owner) in member_references {
+            insert(reference, usize::MAX, owner);
         }
         let mut references: Vec<_> = indexed.into_iter().collect();
         references.sort_by(|(left, _), (right, _)| left.cmp(right));
