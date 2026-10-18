@@ -12,7 +12,7 @@ macro_rules! eviction_probe {
 }
 
 #[test]
-fn eviction_releases_the_interned_path_and_every_mode_only_for_that_file() {
+fn eviction_releases_the_path_key_and_every_mode_only_for_that_file() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-facts/bounded-session-memory");
     let first = root.join("source.ts");
@@ -27,16 +27,16 @@ fn eviction_releases_the_interned_path_and_every_mode_only_for_that_file() {
             .unwrap();
     }
     assert_eq!(cache.entry_count(), 4);
-    assert_eq!(cache.interned_paths.borrow().len(), 2);
+    assert_eq!(cache.entries.borrow().paths.len(), 2);
     cache.remove_path(&root.join("./source.ts"));
     assert_eq!(cache.entry_count(), 2);
     assert!(cache.contains_path(&second));
     assert!(!cache.contains_path(&first));
-    assert_eq!(cache.interned_paths.borrow().len(), 1);
+    assert_eq!(cache.entries.borrow().paths.len(), 1);
     cache.remove_path(&first);
     cache.remove_path(&second);
     assert_eq!(cache.entry_count(), 0);
-    assert!(cache.interned_paths.borrow().is_empty());
+    assert!(cache.entries.borrow().paths.is_empty());
 }
 
 fn saved_source(name: &str) -> (std::path::PathBuf, Arc<str>) {
@@ -57,11 +57,11 @@ fn one_entry_eviction_examines_one_entry() {
     cache.remove_path(&path);
     assert_eq!(EVICTION_PROBES.get(), 1);
     assert_eq!(cache.entry_count(), 0);
-    assert!(cache.interned_paths.borrow().is_empty());
+    assert!(cache.entries.borrow().paths.is_empty());
 }
 
 #[test]
-fn bounded_scan_preserves_the_other_path() {
+fn path_eviction_preserves_the_other_path() {
     EVICTION_PROBES.set(0);
     let cache = ParsedProgramCache::default();
     let (first, first_source) = saved_source("source.ts");
@@ -70,17 +70,16 @@ fn bounded_scan_preserves_the_other_path() {
     cache
         .with_program(&second, second_source, |_, _| ())
         .unwrap();
-    assert!(cache.entries.borrow().capacity() <= 3);
     cache.remove_path(&first);
-    assert_eq!(EVICTION_PROBES.get(), 2);
+    assert_eq!(EVICTION_PROBES.get(), 1);
     assert_eq!(cache.entry_count(), 1);
     assert!(cache.contains_path(&second));
     assert!(!cache.contains_path(&first));
-    assert_eq!(cache.interned_paths.borrow().len(), 1);
+    assert_eq!(cache.entries.borrow().paths.len(), 1);
 }
 
 #[test]
-fn bounded_scan_evicts_a_fallback_only_entry_without_a_standard_error() {
+fn path_eviction_handles_a_fallback_only_entry_without_a_standard_error() {
     EVICTION_PROBES.set(0);
     let cache = ParsedProgramCache::default();
     let (path, source) = saved_source("source.ts");
@@ -93,11 +92,11 @@ fn bounded_scan_evicts_a_fallback_only_entry_without_a_standard_error() {
     cache.remove_path(&path);
     assert_eq!(EVICTION_PROBES.get(), 1);
     assert_eq!(cache.entry_count(), 0);
-    assert!(cache.interned_paths.borrow().is_empty());
+    assert!(cache.entries.borrow().paths.is_empty());
 }
 
 #[test]
-fn larger_capacity_keeps_indexed_eviction_after_its_length_shrinks() {
+fn path_eviction_stays_constant_after_the_program_count_shrinks() {
     EVICTION_PROBES.set(0);
     let cache = ParsedProgramCache::default();
     let (first, first_source) = saved_source("source.ts");
@@ -109,20 +108,61 @@ fn larger_capacity_keeps_indexed_eviction_after_its_length_shrinks() {
             .unwrap();
     }
     assert_eq!(cache.entry_count(), 4);
-    assert!(cache.entries.borrow().capacity() > 3);
     cache.remove_path(&first);
-    assert_eq!(EVICTION_PROBES.get(), 3);
+    assert_eq!(EVICTION_PROBES.get(), 1);
     assert_eq!(cache.entry_count(), 2);
     assert!(cache.contains_path(&second));
-    assert_eq!(cache.interned_paths.borrow().len(), 1);
-    // Retain scans capacity, so a previously grown table must stay indexed
-    // even when only two live entries remain.
-    assert!(cache.entries.borrow().capacity() > 3);
+    assert_eq!(cache.entries.borrow().paths.len(), 1);
+    // Evicting modes must not turn subsequent eviction into a table scan.
     EVICTION_PROBES.set(0);
     cache.remove_path(&first);
-    assert_eq!(EVICTION_PROBES.get(), 0);
+    assert_eq!(EVICTION_PROBES.get(), 1);
+    EVICTION_PROBES.set(0);
     cache.remove_path(&second);
-    assert_eq!(EVICTION_PROBES.get(), 3);
+    assert_eq!(EVICTION_PROBES.get(), 1);
     assert_eq!(cache.entry_count(), 0);
-    assert!(cache.interned_paths.borrow().is_empty());
+    assert!(cache.entries.borrow().paths.is_empty());
+}
+
+#[test]
+fn every_mode_is_evicted_with_one_path_lookup() {
+    EVICTION_PROBES.set(0);
+    let cache = ParsedProgramCache::default();
+    let (first, first_source) = saved_source("source.ts");
+    let (second, second_source) = saved_source("outer.ts");
+    for (path, source) in [(&first, first_source), (&second, second_source)] {
+        cache.with_program(path, source.clone(), |_, _| ()).unwrap();
+        cache
+            .with_recovered_typescript_program_observed(path, source, || {}, |_, _, _| ())
+            .unwrap();
+    }
+    assert_eq!(cache.entry_count(), 4);
+    cache.remove_path(&first);
+    assert_eq!(EVICTION_PROBES.get(), 1);
+    assert_eq!(cache.entry_count(), 2);
+    assert!(cache.contains_path(&second));
+    assert!(!cache.contains_path(&first));
+}
+
+#[test]
+fn reentrant_observation_keeps_the_program_count_exact() {
+    let cache = ParsedProgramCache::default();
+    let (path, source) = saved_source("source.ts");
+    cache
+        .with_program_observed(
+            &path,
+            source.clone(),
+            || {
+                cache
+                    .with_program(&path, source.clone(), |_, _| ())
+                    .unwrap();
+            },
+            |_, _| (),
+        )
+        .unwrap();
+    assert_eq!(cache.entry_count(), 1);
+    assert_eq!(cache.entries.borrow().paths.len(), 1);
+    cache.remove_path(&path);
+    assert_eq!(cache.entry_count(), 0);
+    assert!(cache.entries.borrow().paths.is_empty());
 }

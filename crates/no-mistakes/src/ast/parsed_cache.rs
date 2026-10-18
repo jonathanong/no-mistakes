@@ -3,7 +3,7 @@ use oxc_ast::ast::Program;
 use oxc_span::SourceType;
 use self_cell::self_cell;
 use std::cell::RefCell;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -29,7 +29,15 @@ enum ParseMode {
     LegacySymbols,
 }
 
-type CachedPrograms = FxHashMap<(Arc<Path>, ParseMode), Result<Rc<CachedProgram>, String>>;
+// One owned path and one cache handle cover every supported parse mode.
+// Removing the path drops its whole bucket without scanning unrelated entries.
+type CachedModes = [Option<Rc<Result<CachedProgram, String>>>; 3];
+
+#[derive(Default)]
+struct CachedPrograms {
+    paths: FxHashMap<PathBuf, CachedModes>,
+    count: usize,
+}
 
 self_cell! {
     struct CachedProgram {
@@ -44,7 +52,6 @@ self_cell! {
 /// thread boundary; only owned facts derived from them may leave the scope.
 #[derive(Clone, Default)]
 pub(crate) struct ParsedProgramCache {
-    interned_paths: Rc<RefCell<FxHashMap<Arc<Path>, ()>>>,
     entries: Rc<RefCell<CachedPrograms>>,
 }
 
@@ -60,7 +67,6 @@ macro_rules! eviction_probe {
 #[macro_use]
 mod eviction_tests;
 
-mod intern;
 mod modes;
 mod parse;
 use parse::parse_program;
@@ -82,73 +88,66 @@ impl ParsedProgramCache {
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
     ) -> Result<T, String> {
-        let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
-        cached.with_dependent(|owner, parsed| match &parsed.strict_error {
-            Some(error) => Err(error.clone()),
-            None => Ok(analyze(&parsed.program, owner.source.as_ref())),
+        self.with_cached_program(path, source, ParseMode::Standard, on_parse, |cached| {
+            cached.with_dependent(|owner, parsed| match &parsed.strict_error {
+                Some(error) => Err(error.clone()),
+                None => Ok(analyze(&parsed.program, owner.source.as_ref())),
+            })
         })
     }
 
     pub(crate) fn clear(&self) {
-        self.entries.borrow_mut().clear();
-        self.interned_paths.borrow_mut().clear();
+        let mut entries = self.entries.borrow_mut();
+        entries.paths.clear();
+        entries.count = 0;
     }
 
     pub(crate) fn remove_path(&self, path: &Path) {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        let Some((path, ())) = self
-            .interned_paths
-            .borrow_mut()
-            .remove_entry(path.as_path())
-        else {
-            return;
-        };
         let mut entries = self.entries.borrow_mut();
-        // Retain scans capacity, not length. Only scan a bounded tiny table;
-        // previously grown caches keep indexed eviction even after shrinking.
-        if entries.capacity() <= 3 {
-            entries.retain(|(cached, _), _| {
-                eviction_probe!();
-                cached.as_ref() != path.as_ref()
-            });
-            return;
-        }
-        for mode in [
-            ParseMode::Standard,
-            ParseMode::TypeScriptFallback,
-            ParseMode::LegacySymbols,
-        ] {
-            eviction_probe!();
-            entries.remove(&(Arc::clone(&path), mode));
+        eviction_probe!();
+        if let Some(modes) = entries.paths.remove(path.as_path()) {
+            entries.count -= modes.iter().flatten().count();
         }
     }
 
     pub(crate) fn entry_count(&self) -> usize {
-        self.entries.borrow().len()
+        self.entries.borrow().count
     }
 
     /// Whether the preparing thread already parsed this native source mode,
     /// including a recovered program or cached parser failure.
     pub(crate) fn contains_path(&self, path: &Path) -> bool {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        self.interned_lookup(&path).is_some_and(|path| {
-            self.entries
-                .borrow()
-                .contains_key(&(path, ParseMode::Standard))
-        })
+        self.entries
+            .borrow()
+            .paths
+            .get(path.as_path())
+            .is_some_and(|modes| modes[ParseMode::Standard as usize].is_some())
     }
 
     pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        let interned = self.interned_lookup(&path)?;
-        let cached = self
-            .entries
-            .borrow()
-            .get(&(interned, ParseMode::Standard))?
-            .clone();
-        match cached {
+        let cached = self.entries.borrow().paths.get(path.as_path())?[ParseMode::Standard as usize]
+            .clone()?;
+        match cached.as_ref() {
             Ok(cached) => cached.with_dependent(|_, parsed| parsed.strict_error.clone()),
-            Err(error) => Some(error),
+            Err(error) => Some(error.clone()),
+        }
+    }
+
+    fn with_cached_program<T>(
+        &self,
+        path: &Path,
+        source: Arc<str>,
+        mode: ParseMode,
+        on_parse: impl FnOnce(),
+        analyze: impl FnOnce(&CachedProgram) -> Result<T, String>,
+    ) -> Result<T, String> {
+        let outcome = self.cached_program(path, source, mode, on_parse);
+        match outcome.as_ref() {
+            Ok(cached) => analyze(cached),
+            Err(error) => Err(error.clone()),
         }
     }
 
@@ -158,15 +157,23 @@ impl ParsedProgramCache {
         source: Arc<str>,
         mode: ParseMode,
         on_parse: impl FnOnce(),
-    ) -> Result<Rc<CachedProgram>, String> {
-        let path = self.intern_path(crate::codebase::ts_resolver::normalize_path(path));
-        let key = (Arc::clone(&path), mode);
-        if let Some(cached) = self.entries.borrow().get(&key) {
-            return cached.clone();
+    ) -> Rc<Result<CachedProgram, String>> {
+        let path = crate::codebase::ts_resolver::normalize_path(path);
+        if let Some(cached) = self
+            .entries
+            .borrow()
+            .paths
+            .get(path.as_path())
+            .and_then(|modes| modes[mode as usize].as_ref())
+        {
+            return Rc::clone(cached);
         }
         on_parse();
-        let cached = parse_program(&path, source, mode).map(Rc::new);
-        self.entries.borrow_mut().insert(key, cached.clone());
+        let cached = Rc::new(parse_program(&path, source, mode));
+        let mut entries = self.entries.borrow_mut();
+        let previous =
+            entries.paths.entry(path).or_default()[mode as usize].replace(Rc::clone(&cached));
+        entries.count += usize::from(previous.is_none());
         cached
     }
 }

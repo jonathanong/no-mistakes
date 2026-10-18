@@ -7,7 +7,7 @@ fn source(text: &str) -> Arc<str> {
 }
 
 pub(in crate::ast) fn len(cache: &ParsedProgramCache) -> usize {
-    cache.entries.borrow().len()
+    cache.entry_count()
 }
 
 #[test]
@@ -109,7 +109,7 @@ fn legacy_symbols_reuse_or_split_physical_cache_by_source_semantics() {
 
 #[test]
 fn remove_path_drops_every_parse_mode_for_the_normalized_path() {
-    // Keys are interned Arc<Path>; eviction must compare as Path, not PathBuf.
+    // All modes share one normalized path key, including equivalent spellings.
     let cache = ParsedProgramCache::default();
     let path = Path::new("source.js");
     cache

@@ -10,12 +10,10 @@ Those programs remain on the preparing thread, where all requested variants
 are projected from the existing AST. They cannot cross threads, and an owned
 worker cache must not force a second parse of these helpers.
 
-Evicting a file removes its interned path. When the parsed-program table's
-capacity is at most three, eviction scans that bounded table to drop every mode;
-after the table grows, it uses three indexed removals even if its length later
-shrinks. This keeps removal cost independent of other cached programs while
-avoiding redundant lookups for tiny caches. Other paths and parser failures
-retain their request identity.
+The cache stores one owned normalized path key with a fixed three-slot table
+for its parser modes. Eviction removes that one key and drops every cached mode
+without scanning unrelated paths. A separate count tracks occupied mode slots.
+Other paths and parser failures retain their request identity.
 
 Saved regressions in `fixtures/check-facts/bounded-session-memory` exercise a
 single-worker nested batch and path eviction. The nested batch previously left
@@ -29,6 +27,10 @@ Any future source release needs complete downstream source demand at the request
 boundary; repeated `Arc<str>` references already share the text allocation.
 
 ## Frozen local measurements
+
+These frozen measurements predate the path-index layout and do not validate its
+runtime or memory effects; the matched release comparison for that change is
+pending.
 
 The frozen development binaries were built with Rust 1.99.1, default features,
 `debug=0`, `CARGO_INCREMENTAL=0`, and two build jobs. The baseline source is
