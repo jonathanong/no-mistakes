@@ -18,7 +18,7 @@ their request identity.
 Saved regressions in `fixtures/check-facts/bounded-session-memory` exercise a
 single-worker nested batch and path eviction. The nested batch previously left
 two programs in the outer cache instead of one; eviction previously retained the
-removed path in the interner. Both tests also protect the unaffected outer path.
+removed path in the path table. Both tests also protect the unaffected outer path.
 The runner-helper regression separately asserts one physical parse per helper.
 
 Total peak RSS also includes retained facts, source snapshots, and evaluator
