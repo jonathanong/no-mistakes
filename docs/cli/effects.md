@@ -99,6 +99,11 @@ known factory invocation to call its result immediately; a stored result or
 opaque escape keeps receiver arguments unresolved. Async and generator helpers
 remain conservative because their receiver reads may occur after suspension.
 
+Mutable receiver roots include possible replacements from foreign callable bodies
+regardless of declaration order. If execution order is uncertain, affected live
+member calls remain unresolved. Saved container identities, copied methods,
+sibling members, and unrelated receivers retain their supported precision.
+
 Transparent aliases of default receiver parameters preserve the eventual member
 read. For example, `const alias = client; alias.get()` retains the original
 `get` target after only a sibling `set` write. Matching and dynamic writes still

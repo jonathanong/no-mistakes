@@ -13,9 +13,12 @@ impl ImportCollector {
         if !matches!(
             value,
             ValueExpression::Object(..) | ValueExpression::Array(..)
-        ) {
+        ) && !self.references_mutable_receiver(&value)
+        {
             return;
         }
+        // Mutable aliases of tracked roots need their own rebind history; const
+        // captures use the existing immutable binding path instead.
         let name = identifier.name.as_str();
         let scope = self
             .callee_binding_scope(name)
