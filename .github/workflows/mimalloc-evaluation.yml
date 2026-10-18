@@ -1,0 +1,140 @@
+name: Mimalloc native evaluation
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/mimalloc-evaluation.yml"
+      - "Cargo.lock"
+      - "crates/no-mistakes/Cargo.toml"
+      - "crates/no-mistakes/src/lib.rs"
+      - "crates/no-mistakes/examples/allocator_probe.rs"
+      - "scripts/performance/mimalloc-*"
+      - "docs/performance/mimalloc-evaluation.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    name: ${{ matrix.runner }} allocator comparison
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: macos-15
+            target: aarch64-apple-darwin
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@b9558c238e2c8b1b2b4b5f15c71d06a0f7d4d253 # stable
+
+      - name: Install repository Node dependencies
+        uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        with:
+          node-version: 26
+          package-manager-cache: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 11.24.0
+          package_json_file: package.json
+
+      - name: Install repository dependencies
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm run build:js
+          python3 scripts/performance/mimalloc-report-tests.py
+
+      - name: Check allocator registration and build both variants
+        env:
+          EVAL_OUT: ${{ runner.temp }}/mimalloc-evaluation
+          TARGET: ${{ matrix.target }}
+        run: |
+          mkdir -p "$EVAL_OUT"
+          bash scripts/performance/mimalloc-probe.sh "$EVAL_OUT/probe"
+          bash scripts/performance/mimalloc-build.sh system "$EVAL_OUT"
+          bash scripts/performance/mimalloc-build.sh mimalloc "$EVAL_OUT"
+
+      - name: Run native N-API parity tests for both variants
+        env:
+          EVAL_OUT: ${{ runner.temp }}/mimalloc-evaluation
+        run: |
+          set -euo pipefail
+          tests=(packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js)
+          for variant in system mimalloc; do
+            NO_MISTAKES_TEST_NAPI_ADDON_PATH="$EVAL_OUT/$variant/no-mistakes.node" \
+              ./node_modules/.bin/vitest run "${tests[@]}" --coverage=false
+          done
+
+      - name: Check out pinned Vouchington and hosted-check fixtures
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: vouchington/vouchington
+          ref: f38a048f5eeff0438fc59a15e9eb742def575a36
+          path: consumer
+          persist-credentials: false
+
+      - name: Check out hosted-check fixture trees
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: vouchington/vouchington
+          ref: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
+          path: hosted-acceptance
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: vouchington/vouchington
+          ref: 92d0a2061bde8d260aa0b86a2d71110ece1a43ca
+          path: hosted-passing-failing
+          persist-credentials: false
+
+      - name: Install pinned consumer Node and pnpm
+        uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        with:
+          node-version-file: consumer/.nvmrc
+          package-manager-cache: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: latest-12
+          package_json_file: consumer/package.json
+
+      - name: Initialize the pinned consumer monorepo
+        working-directory: consumer
+        run: SKIP_NVM_INSTALL=1 ./dev/initialize monorepo
+
+      - name: Install hosted-check fixture dependencies
+        run: |
+          pnpm --dir hosted-acceptance install --frozen-lockfile --loglevel=warn
+          pnpm --dir hosted-passing-failing install --frozen-lockfile --loglevel=warn
+
+      - name: Run balanced workload matrix and verify report parity
+        env:
+          EVAL_OUT: ${{ runner.temp }}/mimalloc-evaluation
+        run: |
+          python3 scripts/performance/mimalloc-measure.py \
+            --system "$EVAL_OUT/system/no-mistakes" --mimalloc "$EVAL_OUT/mimalloc/no-mistakes" \
+            --consumer "$GITHUB_WORKSPACE/consumer" \
+            --hosted-acceptance "$GITHUB_WORKSPACE/hosted-acceptance" \
+            --hosted-passing-failing "$GITHUB_WORKSPACE/hosted-passing-failing" \
+            --output "$EVAL_OUT/measurements"
+          python3 scripts/performance/mimalloc-report.py summarize "$EVAL_OUT/measurements"
+
+      - name: Upload binaries, provenance, probe, and measurements
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-${{ matrix.target }}
+          path: ${{ runner.temp }}/mimalloc-evaluation/
+          if-no-files-found: error

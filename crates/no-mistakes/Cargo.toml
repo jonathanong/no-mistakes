@@ -12,8 +12,9 @@ repository = "https://github.com/jonathanong/no-mistakes"
 crate-type = ["rlib"]
 
 [features]
-default = ["mermaid-validation"]
+default = ["mermaid-validation", "mimalloc"]
 mermaid-validation = ["dep:merman-analysis"]
+mimalloc = ["dep:mimalloc"]
 test-instrumentation = []
 
 [dependencies]
@@ -30,6 +31,7 @@ is-terminal = "0.4"
 jsonc-parser = { version = "0.34", features = ["serde", "serde_json"] }
 # Merman 0.8 requires explicit diagram selection; validation supports every family.
 merman-analysis = { version = "=0.9.0", optional = true, features = ["all-diagrams"] }
+mimalloc = { version = "=0.1.52", optional = true }
 napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = "3.5.6"
 num_cpus = "1.16"
@@ -79,6 +81,7 @@ windows-sys = { version = "0.61", features = [
 
 [dev-dependencies]
 assert_cmd = "2"
+libmimalloc-sys = { version = "=0.1.49", features = ["extended"] }
 criterion = { package = "codspeed-criterion-compat", version = "=5.0.1" }
 predicates = "3"
 

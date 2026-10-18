@@ -1,0 +1,108 @@
+name: Mimalloc release targets
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/mimalloc-release-targets.yml"
+      - "scripts/performance/mimalloc-release-build.sh"
+      - "crates/no-mistakes/Cargo.toml"
+      - "crates/no-mistakes/src/lib.rs"
+      - "Cargo.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mimalloc-release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native-release:
+    name: Mimalloc release (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-15
+            lto: thin
+            units: 16
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+            lto: fat
+            units: 1
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-22.04-arm
+            lto: fat
+            units: 1
+          - target: x86_64-pc-windows-msvc
+            os: windows-2025
+            lto: thin
+            units: 16
+    env:
+      # Set before rust-cache, matching the release profile's cache identity.
+      CARGO_PROFILE_RELEASE_LTO: ${{ matrix.lto }}
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.units }}
+      CARGO_PROFILE_RELEASE_DEBUG: "0"
+      CARGO_INCREMENTAL: "0"
+      NO_MISTAKES_BUILD_NAPI: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - name: Cache release compilation
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          prefix-key: mimalloc-release
+          key: ${{ matrix.target }}
+          cache-bin: "false"
+      - name: Install dependencies and build JavaScript
+        timeout-minutes: 5
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm run build:js
+      - name: Build release CLI and N-API addon
+        timeout-minutes: 24
+        env:
+          EXPECTED_TARGET: ${{ matrix.target }}
+        run: bash scripts/performance/mimalloc-release-build.sh "artifacts/${{ matrix.target }}"
+      - name: Test compiled release addon
+        timeout-minutes: 5
+        run: |
+          addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("artifacts", process.argv[1], "no-mistakes.node"))' '${{ matrix.target }}')"
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run \
+            packages/no-mistakes/scripts/real-napi-api.test.js \
+            packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js \
+            packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js \
+            tests/js/compiled-api-runtime.test.js --coverage=false
+      - name: Upload release artifacts and provenance
+        if: always()
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-release-${{ matrix.target }}
+          path: artifacts/${{ matrix.target }}
+          if-no-files-found: warn
+          retention-days: 7
