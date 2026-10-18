@@ -1,0 +1,14 @@
+name: dynamic
+on: push
+permissions: write-all
+jobs:
+  dynamic:
+    permissions: ${{ vars.PERMS }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  cleared:
+    permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

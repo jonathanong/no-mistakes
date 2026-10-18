@@ -540,3 +540,15 @@ fn finite_set_path_regex_matches_broken_symlink_path_existence() {
         "{body}"
     );
 }
+
+#[test]
+fn github_actions_checkout_credentials_cli_fails_for_a_write_token() {
+    let root = fixture("github-actions-checkout-credentials", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(
+        body.contains("github-actions-checkout-credentials"),
+        "{body}"
+    );
+}
