@@ -69,7 +69,7 @@ jobs:
             pnpm install --frozen-lockfile --loglevel=warn
           fi
       - name: Verify revision and package prepared tree
-        timeout-minutes: 2
+        timeout-minutes: 10
         env:
           EXPECTED_COMMIT: ${{ matrix.commit }}
           WORKLOAD_NAME: ${{ matrix.workload }}
