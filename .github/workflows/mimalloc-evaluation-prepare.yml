@@ -1,0 +1,131 @@
+name: Mimalloc evaluation workload preparation
+
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare ${{ matrix.platform }} pinned ${{ matrix.workload }} tree
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - workload: consumer
+            commit: f38a048f5eeff0438fc59a15e9eb742def575a36
+            platform: linux-arm64
+            runner: ubuntu-24.04-arm
+          - workload: hosted-acceptance
+            commit: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
+            platform: linux-arm64
+            runner: ubuntu-24.04-arm
+          - workload: hosted-passing-failing
+            commit: 92d0a2061bde8d260aa0b86a2d71110ece1a43ca
+            platform: linux-arm64
+            runner: ubuntu-24.04-arm
+          - workload: consumer
+            commit: f38a048f5eeff0438fc59a15e9eb742def575a36
+            platform: macos-arm64
+            runner: macos-15
+          - workload: hosted-acceptance
+            commit: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
+            platform: macos-arm64
+            runner: macos-15
+          - workload: hosted-passing-failing
+            commit: 92d0a2061bde8d260aa0b86a2d71110ece1a43ca
+            platform: macos-arm64
+            runner: macos-15
+    steps:
+      - name: Check out exact public workload tree
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: vouchington/vouchington
+          ref: ${{ matrix.commit }}
+          path: workload
+          persist-credentials: false
+      - name: Install pinned workload Node and pnpm
+        timeout-minutes: 5
+        uses: actions/setup-node@363be39a57dfa5801e05c6e0c549d622a376cf15 # v7
+        with:
+          node-version-file: workload/.nvmrc
+          package-manager-cache: false
+      - name: Install pinned workload pnpm
+        timeout-minutes: 5
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: latest-12
+          package_json_file: workload/package.json
+      - name: Initialize the exact consumer or install hosted fixture dependencies
+        timeout-minutes: 15
+        working-directory: workload
+        run: |
+          if [[ "${{ matrix.workload }}" == consumer ]]; then
+            SKIP_NVM_INSTALL=1 ./dev/initialize monorepo
+          else
+            pnpm install --frozen-lockfile --loglevel=warn
+          fi
+      - name: Verify revision and package prepared tree
+        timeout-minutes: 2
+        env:
+          EXPECTED_COMMIT: ${{ matrix.commit }}
+          WORKLOAD_NAME: ${{ matrix.workload }}
+          WORKLOAD_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          actual_commit="$(git -C workload rev-parse HEAD)"
+          test "$actual_commit" = "$EXPECTED_COMMIT"
+          test -d workload/.git
+          # Keep the index and safe core.* settings; omit remote, include, and auth config.
+          python3 - <<'PY'
+          import os, subprocess, tempfile
+          root = "workload"
+          config = os.path.join(root, ".git", "config")
+          records = subprocess.check_output(
+              ["git", "-C", root, "config", "--local", "--null", "--list"]
+          ).split(b"\0")
+          fd, sanitized = tempfile.mkstemp(dir=os.path.dirname(config))
+          os.close(fd)
+          try:
+              for record in records:
+                  if not record:
+                      continue
+                  key, value = record.split(b"\n", 1)
+                  name = key.decode("utf-8").lower()
+                  if name.startswith("core.") and name not in {"core.worktree", "core.hookspath"}:
+                      subprocess.run(["git", "config", "--file", sanitized, "--add", name, value.decode("utf-8")], check=True)
+              os.replace(sanitized, config)
+          finally:
+              if os.path.exists(sanitized):
+                  os.unlink(sanitized)
+          keys = subprocess.check_output(
+              ["git", "-C", root, "config", "--local", "--name-only", "--list"], text=True
+          ).splitlines()
+          if any(not key.lower().startswith("core.") for key in keys):
+              raise SystemExit("prepared workload Git config contains non-core settings")
+          PY
+          git -C workload ls-files -z --cached --others --exclude-standard >/dev/null
+          mkdir -p "$RUNNER_TEMP/prepared-workload"
+          tar -czf "$RUNNER_TEMP/prepared-workload/workload.tar.gz" workload
+          python3 - "$RUNNER_TEMP/prepared-workload/workload-provenance.json" "$WORKLOAD_NAME" "$WORKLOAD_PLATFORM" "$actual_commit" <<'PY'
+          import hashlib, json, pathlib, subprocess, sys
+          output, workload, platform, commit = sys.argv[1:]
+          tree = subprocess.check_output(["git", "-C", "workload", "rev-parse", "HEAD^{tree}"], text=True).strip()
+          archive = pathlib.Path(output).with_name("workload.tar.gz")
+          archive_sha256 = hashlib.sha256(archive.read_bytes()).hexdigest()
+          with open(output, "w") as handle:
+              json.dump({"workload": workload, "platform": platform, "commit": commit, "tree": tree,
+                         "archive_sha256": archive_sha256}, handle, indent=2)
+              handle.write("\n")
+          PY
+      - name: Upload prepared workload and provenance
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-workload-${{ matrix.platform }}-${{ matrix.workload }}
+          path: ${{ runner.temp }}/prepared-workload
+          if-no-files-found: error
+          retention-days: 7

@@ -40,19 +40,31 @@ features=()
 if [[ "$variant" == system ]]; then
   features=(--no-default-features --features mermaid-validation)
 fi
-cargo build --release --locked --target "$target" -p no-mistakes "${features[@]}"
+cargo build --release --locked --target "$target" -p no-mistakes --lib --bin no-mistakes --example allocator_probe "${features[@]}"
 binary="$CARGO_TARGET_DIR/$target/release/no-mistakes"
 cp "$binary" "$out/$variant/no-mistakes"
+cp "$CARGO_TARGET_DIR/$target/release/examples/allocator_probe" "$out/$variant/rayon-probe"
 cp "$CARGO_TARGET_DIR/$target/release/$addon" "$out/$variant/$addon"
 cp "$out/$variant/$addon" "$out/$variant/no-mistakes.node"
-sha256sum "$out/$variant/no-mistakes" "$out/$variant/no-mistakes.node" > "$out/$variant/SHA256SUMS"
+python3 - "$out/$variant" <<'PY'
+import hashlib, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+with (root / "SHA256SUMS").open("w") as sums:
+    for name in ("no-mistakes", "no-mistakes.node", "rayon-probe"):
+        digest = hashlib.sha256((root / name).read_bytes()).hexdigest()
+        sums.write(f"{digest}  {name}\n")
+PY
 python3 - "$root" "$out/$variant/provenance.json" "$variant" "$target" <<'PY'
 import hashlib, json, os, platform, subprocess, sys
 root, output, variant, target = sys.argv[1:]
 def run(*args): return subprocess.check_output(args, cwd=root, text=True).strip()
+def sha256(path):
+    with open(os.path.join(root, path), "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
 provenance = {
     "variant": variant, "source": run("git", "rev-parse", "HEAD"),
     "tree": run("git", "rev-parse", "HEAD^{tree}"), "target": target,
+    "lock": {"path": "Cargo.lock", "sha256": sha256("Cargo.lock")},
     "rustc": run("rustc", "-Vv"), "cargo": run("cargo", "-V"),
     "features": "default" if variant == "mimalloc" else "--no-default-features --features mermaid-validation",
     "lto": os.environ["CARGO_PROFILE_RELEASE_LTO"],
@@ -61,7 +73,7 @@ provenance = {
     "runnerOS": os.environ.get("RUNNER_OS"), "imageOS": os.environ.get("ImageOS"),
     "imageVersion": os.environ.get("ImageVersion"), "machine": platform.machine(),
 }
-for name in ("no-mistakes", "no-mistakes.node"):
+for name in ("no-mistakes", "no-mistakes.node", "rayon-probe"):
     provenance[name] = {"bytes": os.path.getsize(os.path.join(os.path.dirname(output), name)),
                         "sha256": hashlib.sha256(open(os.path.join(os.path.dirname(output), name), "rb").read()).hexdigest()}
 open(output, "w").write(json.dumps(provenance, indent=2) + "\n")

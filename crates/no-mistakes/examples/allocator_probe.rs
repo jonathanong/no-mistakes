@@ -13,5 +13,5 @@ fn main() {
         is_mimalloc_heap, expected,
         "global allocator wiring mismatch"
     );
-    println!("{{\"expected_mimalloc\":{expected},\"is_mimalloc_heap\":{is_mimalloc_heap}}}");
+    println!("{{\"expected_mimalloc\":{expected},\"is_mimalloc_heap\":{is_mimalloc_heap},\"default_rayon_jobs\":{}}}", num_cpus::get());
 }

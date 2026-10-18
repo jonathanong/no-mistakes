@@ -70,7 +70,8 @@ def measure(argv, cwd, output, sample, metadata, timeout):
     executable = Path(argv[0]).resolve()
     available = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count()
     row = {
-        "sample": sample, "metadata": metadata, "argv": argv, "cwd": str(Path(cwd).resolve()),
+        "sample": sample, "metadata": metadata, "host_id": metadata["host_id"], "argv": argv,
+        "cwd": str(Path(cwd).resolve()),
         "exit": child.returncode, "signal": -child.returncode if child.returncode < 0 else None,
         "timed_out": timed_out, "wall_seconds": time.perf_counter() - started,
         "user_seconds": usage.ru_utime, "system_seconds": usage.ru_stime,
@@ -80,6 +81,7 @@ def measure(argv, cwd, output, sample, metadata, timeout):
         "stderr_sha256": hashlib.sha256(stderr_path.read_bytes()).hexdigest(),
         "platform": platform.platform(), "machine": platform.machine(), "cpu_model": cpu_model(),
         "logical_cpus": os.cpu_count(), "available_cpus": available,
+        "rayon_environment": os.environ.get("RAYON_NUM_THREADS"),
         "executable": str(executable), "executable_sha256": hashlib.sha256(executable.read_bytes()).hexdigest(),
     }
     (output / f"{sample}.json").write_text(json.dumps(row, indent=2) + "\n")
@@ -90,11 +92,36 @@ def command(binary, workload, root, jobs, diagnostics):
     if workload.startswith("hosted-"):
         args += ["--timeout", "0", "--lock-timeout", "0"]
     args += ["check", "--root", root, "--format", "json"]
-    if jobs != "auto":
+    if jobs != "max":
         args += ["--jobs", jobs]
     if diagnostics:
         args += ["--progress", "--verbose-timings"]
     return args
+
+
+def verify_artifact(binary, variant, source, platform_name):
+    binary_path = Path(binary).resolve()
+    provenance_path = binary_path.parent / "provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    target, lto, units = {
+        "linux-arm64": ("aarch64-unknown-linux-gnu", "fat", 1),
+        "macos-arm64": ("aarch64-apple-darwin", "thin", 16),
+    }[platform_name]
+    expected = {"variant": variant, "source": source, "target": target, "lto": lto,
+                "codegenUnits": units}
+    for key, value in expected.items():
+        if provenance.get(key) != value:
+            raise ValueError(f"{variant} artifact {key}={provenance.get(key)!r}, expected {value!r}")
+    recorded = provenance.get("no-mistakes", {})
+    digest = hashlib.sha256(binary_path.read_bytes()).hexdigest()
+    if recorded.get("sha256") != digest:
+        raise ValueError(f"{variant} binary hash does not match its provenance")
+    probe_path = binary_path.parent / "rayon-probe"
+    probe_record = provenance.get("rayon-probe", {})
+    probe_digest = hashlib.sha256(probe_path.read_bytes()).hexdigest()
+    if probe_record.get("sha256") != probe_digest:
+        raise ValueError(f"{variant} Rayon probe hash does not match its provenance")
+    return provenance
 
 
 def main():
@@ -102,23 +129,60 @@ def main():
     for name in ("system", "mimalloc", "consumer", "hosted-acceptance", "hosted-passing-failing", "output"):
         parser.add_argument(f"--{name}", required=True)
     parser.add_argument("--timeout", type=int, default=600)
+    parser.add_argument("--workload", choices=("consumer", "hosted-acceptance", "hosted-passing-failing"), required=True)
+    parser.add_argument("--jobs", choices=("1", "4", "max"), required=True)
+    parser.add_argument("--diagnostics", choices=("on", "off"), required=True)
+    parser.add_argument("--pair", type=int, choices=range(4), required=True)
+    parser.add_argument("--host-id", required=True)
+    parser.add_argument("--platform", choices=("linux-arm64", "macos-arm64"), required=True)
+    parser.add_argument("--source", required=True)
+    parser.add_argument("--system-probe", required=True)
+    parser.add_argument("--mimalloc-probe", required=True)
+    parser.add_argument("--workload-commit", required=True)
+    parser.add_argument("--workload-tree", required=True)
     args = parser.parse_args()
-    workloads = [("consumer", args.consumer), ("hosted-acceptance", args.hosted_acceptance),
-                 ("hosted-passing-failing", args.hosted_passing_failing)]
-    # Adjacent ABBA then BAAB supplies four samples per variant with reversed order.
-    order = [("system", 0), ("mimalloc", 0), ("mimalloc", 1), ("system", 1),
-             ("mimalloc", 2), ("system", 2), ("system", 3), ("mimalloc", 3)]
-    for workload, root in workloads:
-        for diagnostics in (False, True):
-            for jobs in ("1", "4", "auto"):
-                cell = f"{workload}-diag{int(diagnostics)}-jobs{jobs}"
-                for variant, repetition in order:
-                    metadata = {"variant": variant, "workload": workload, "diagnostics": diagnostics,
-                                "jobs": jobs, "repetition": repetition, "timeout_seconds": args.timeout}
-                    sample = f"{cell}-{variant}-{repetition}"
-                    measure(command(getattr(args, variant), workload, root, jobs, diagnostics), root,
-                            args.output, sample, metadata, args.timeout)
-                    print(f"measured {sample}", flush=True)
+    workload = args.workload
+    root = getattr(args, workload.replace("-", "_"))
+    artifacts = {variant: verify_artifact(getattr(args, variant), variant, args.source, args.platform)
+                 for variant in ("system", "mimalloc")}
+    if artifacts["system"].get("lock") != artifacts["mimalloc"].get("lock"):
+        raise ValueError("system and mimalloc artifacts were built from different lockfiles")
+    probe_jobs = {}
+    for variant in ("system", "mimalloc"):
+        probe = Path(getattr(args, f"{variant}_probe")).resolve()
+        result = json.loads(subprocess.check_output([probe], text=True))
+        expected = variant == "mimalloc"
+        if result.get("expected_mimalloc") is not expected or result.get("is_mimalloc_heap") is not expected:
+            raise ValueError(f"{variant} allocator probe disagrees with the expected registration")
+        probe_jobs[variant] = result["default_rayon_jobs"]
+    if probe_jobs["system"] != probe_jobs["mimalloc"]:
+        raise ValueError("system and mimalloc variants report different automatic Rayon thread counts")
+    raw_rayon_override = os.environ.get("RAYON_NUM_THREADS")
+    try:
+        rayon_override = int(raw_rayon_override) if raw_rayon_override is not None else 0
+    except ValueError:
+        rayon_override = 0
+    automatic_jobs = rayon_override if rayon_override > 0 else probe_jobs["system"]
+    diagnostics = args.diagnostics == "on"
+    # Adjacent ABBA then BAAB is encoded as four matched pairs: AB, BA, BA, AB.
+    order = ("system", "mimalloc") if args.pair in (0, 3) else ("mimalloc", "system")
+    cell = f"{workload}-diag{int(diagnostics)}-jobs{args.jobs}"
+    for position, variant in enumerate(order):
+        metadata = {"variant": variant, "workload": workload, "platform": args.platform,
+                    "diagnostics": diagnostics,
+                    "jobs": args.jobs, "pair": args.pair, "order": "AB" if order[0] == "system" else "BA",
+                    "position": position, "host_id": args.host_id, "expected_exit": 0,
+                    "source": args.source, "lock": artifacts[variant]["lock"],
+                    "workload_commit": args.workload_commit, "workload_tree": args.workload_tree,
+                    "lto": artifacts[variant]["lto"], "codegenUnits": artifacts[variant]["codegenUnits"],
+                    "rayon_jobs": int(args.jobs) if args.jobs != "max" else automatic_jobs,
+                    "automatic_rayon_jobs": automatic_jobs, "num_cpus_default": probe_jobs[variant],
+                    "rayon_environment": raw_rayon_override,
+                    "timeout_seconds": args.timeout}
+        sample = f"{args.platform}-{cell}-pair{args.pair}-{variant}"
+        measure(command(getattr(args, variant), workload, root, args.jobs, diagnostics), root,
+                args.output, sample, metadata, args.timeout)
+        print(f"measured {sample}", flush=True)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,102 @@
+name: Mimalloc evaluation paired measurements
+
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: ${{ matrix.platform }} ${{ matrix.workload }} diag-${{ matrix.diagnostics }} jobs-${{ matrix.jobs }} pair-${{ matrix.pair }}
+    runs-on: ${{ matrix.platform == 'linux-arm64' && 'ubuntu-24.04-arm' || 'macos-15' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        platform: [linux-arm64, macos-arm64]
+        workload: [consumer, hosted-acceptance, hosted-passing-failing]
+        diagnostics: [off, on]
+        jobs: ["1", "4", max]
+        pair: [0, 1, 2, 3]
+    steps:
+      - name: Check out measurement harness
+        timeout-minutes: 1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Download prepared workload
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: mimalloc-workload-${{ matrix.platform }}-${{ matrix.workload }}
+          path: ${{ runner.temp }}/prepared
+      - name: Download both native CLI variants
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: mimalloc-${{ matrix.platform == 'linux-arm64' && 'aarch64-unknown-linux-gnu' || 'aarch64-apple-darwin' }}-*
+          path: ${{ runner.temp }}/binaries
+          merge-multiple: false
+      - name: Restore and verify exact workload snapshot
+        timeout-minutes: 1
+        env:
+          WORKLOAD_NAME: ${{ matrix.workload }}
+          WORKLOAD_PLATFORM: ${{ matrix.platform }}
+          EXPECTED_COMMIT: ${{ matrix.workload == 'consumer' && 'f38a048f5eeff0438fc59a15e9eb742def575a36' || matrix.workload == 'hosted-acceptance' && '22edf4bfe0a782ac0d030c916dedfd6f8acb499c' || '92d0a2061bde8d260aa0b86a2d71110ece1a43ca' }}
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/prepared/workload-provenance.json" "$WORKLOAD_NAME" "$WORKLOAD_PLATFORM" "$EXPECTED_COMMIT" <<'PY'
+          import hashlib, json, pathlib, sys
+          record = json.load(open(sys.argv[1]))
+          if (record.get("workload") != sys.argv[2] or record.get("platform") != sys.argv[3]
+                  or record.get("commit") != sys.argv[4]):
+              raise SystemExit("prepared workload provenance mismatch")
+          archive = pathlib.Path(sys.argv[1]).with_name("workload.tar.gz")
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          if record.get("archive_sha256") != digest:
+              raise SystemExit("prepared workload archive hash mismatch")
+          PY
+          tar -xzf "$RUNNER_TEMP/prepared/workload.tar.gz" -C "$GITHUB_WORKSPACE"
+          test -d workload
+      - name: Run one matched pair with a 600-second per-process cap
+        timeout-minutes: 21
+        env:
+          WORKLOAD: ${{ matrix.workload }}
+          JOBS: ${{ matrix.jobs }}
+          DIAGNOSTICS: ${{ matrix.diagnostics }}
+          PAIR: ${{ matrix.pair }}
+          PLATFORM: ${{ matrix.platform }}
+          SOURCE_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+          EXPECTED_WORKLOAD_COMMIT: ${{ matrix.workload == 'consumer' && 'f38a048f5eeff0438fc59a15e9eb742def575a36' || matrix.workload == 'hosted-acceptance' && '22edf4bfe0a782ac0d030c916dedfd6f8acb499c' || '92d0a2061bde8d260aa0b86a2d71110ece1a43ca' }}
+          WORKLOAD_TREE: ${{ runner.temp }}/prepared/workload-provenance.json
+          EVAL_OUT: ${{ runner.temp }}/mimalloc-results
+        run: |
+          set -euo pipefail
+          target="aarch64-unknown-linux-gnu"
+          [[ "$PLATFORM" == macos-arm64 ]] && target="aarch64-apple-darwin"
+          system="$RUNNER_TEMP/binaries/mimalloc-$target-system"
+          mimalloc="$RUNNER_TEMP/binaries/mimalloc-$target-mimalloc"
+          chmod +x "$system/no-mistakes" "$system/rayon-probe" \
+            "$mimalloc/no-mistakes" "$mimalloc/rayon-probe"
+          host_id="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${PLATFORM}-${WORKLOAD}-d${DIAGNOSTICS}-j${JOBS}-p${PAIR}"
+          workload_tree="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tree"])' "$WORKLOAD_TREE")"
+          python3 scripts/performance/mimalloc-measure.py \
+            --system "$system/no-mistakes" --mimalloc "$mimalloc/no-mistakes" \
+            --system-probe "$system/rayon-probe" --mimalloc-probe "$mimalloc/rayon-probe" \
+            --consumer "$GITHUB_WORKSPACE/workload" \
+            --hosted-acceptance "$GITHUB_WORKSPACE/workload" \
+            --hosted-passing-failing "$GITHUB_WORKSPACE/workload" \
+            --workload "$WORKLOAD" --jobs "$JOBS" --diagnostics "$DIAGNOSTICS" \
+            --pair "$PAIR" --host-id "$host_id" --platform "$PLATFORM" --source "$SOURCE_REF" \
+            --workload-commit "$EXPECTED_WORKLOAD_COMMIT" --workload-tree "$workload_tree" --output "$EVAL_OUT"
+      - name: Upload paired samples and raw logs
+        if: always()
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-sample-${{ matrix.platform }}-${{ matrix.workload }}-d${{ matrix.diagnostics }}-j${{ matrix.jobs }}-p${{ matrix.pair }}
+          path: ${{ runner.temp }}/mimalloc-results
+          if-no-files-found: warn
+          retention-days: 7

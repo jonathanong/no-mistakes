@@ -1,0 +1,73 @@
+name: Mimalloc evaluation allocator probe
+
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Allocator wiring ${{ matrix.platform }} (${{ matrix.state }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            state: feature-off
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            state: missing-registration
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            state: registered
+          - platform: macos-arm64
+            runner: macos-15
+            state: feature-off
+          - platform: macos-arm64
+            runner: macos-15
+            state: missing-registration
+          - platform: macos-arm64
+            runner: macos-15
+            state: registered
+    env:
+      CARGO_PROFILE_RELEASE_LTO: ${{ matrix.platform == 'linux-arm64' && 'fat' || 'thin' }}
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ matrix.platform == 'linux-arm64' && '1' || '16' }}
+      CARGO_PROFILE_RELEASE_DEBUG: "0"
+      CARGO_INCREMENTAL: "0"
+      CARGO_BUILD_JOBS: "2"
+      RUSTC_WRAPPER: ""
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+    steps:
+      - name: Check out candidate source
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@b9558c238e2c8b1b2b4b5f15c71d06a0f7d4d253 # stable
+      - name: Restore release compilation cache
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          prefix-key: mimalloc-evaluation
+          key: ${{ matrix.platform }}
+          cache-bin: "false"
+      - name: Run allocator registration probe
+        timeout-minutes: 24
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/target
+        run: bash scripts/performance/mimalloc-probe-state.sh "${{ matrix.state }}" "$RUNNER_TEMP/probe"
+      - name: Upload probe record
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-probe-${{ matrix.platform }}-${{ matrix.state }}
+          path: ${{ runner.temp }}/probe
+          if-no-files-found: warn
+          retention-days: 7
