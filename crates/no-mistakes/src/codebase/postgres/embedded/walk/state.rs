@@ -36,6 +36,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) builder_aliases: crate::fx::FxHashMap<String, Vec<String>>,
     pub(super) argument_effects: Vec<super::executor_arguments::ArgumentEffect>,
     pub(super) argument_frames: usize,
+    pub(super) builder_reference_exemptions: Vec<u32>,
     /// Inner links of a fluent append chain already applied by its outer call.
     pub(super) consumed_links: crate::fx::FxHashSet<u32>,
     /// Calls that are a whole expression statement: their value is discarded.
@@ -99,6 +100,7 @@ pub(crate) fn collect_calls<'a>(
         builder_aliases: crate::fx::FxHashMap::default(),
         argument_effects: Vec::new(),
         argument_frames: 0,
+        builder_reference_exemptions: Vec::new(),
         consumed_links: Default::default(),
         statement_calls: Default::default(),
         calls: Vec::new(),

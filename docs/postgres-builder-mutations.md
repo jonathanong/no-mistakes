@@ -18,10 +18,22 @@ summary. Passing a builder to a local untyped helper, or storing it through
 `bag.push(statement)`, therefore makes subsequent reads conservative. A later
 mutation through `bag[0]` cannot leave the original statement marked complete.
 This boundary applies even when the helper's body is visible in the same file.
+It also applies to apparently harmless unverified calls such as `console.log(q)`
+or `JSON.stringify(q)`. With `unanalyzableSql: fail`, these conservative escapes
+can introduce findings.
+
+Escapes also include references stored in object or array literals, destructuring
+sources, member assignments, spreads, and iteration sources. Returning or yielding
+a captured builder, or using it as a parameter default, can expose the same mutable
+object. Later reads cannot treat its earlier SQL as complete. This is a conservative
+reference boundary; an uncalled function containing such an escape can also lose
+precision. Simple aliases whose identity is already tracked remain supported.
 
 Supported same-file helpers with an imported `SQLStatement` parameter retain
 their established recovery. For example, executing the result of a verified
-helper that appends a fixed fragment still checks that final SQL. An unrelated
+helper that appends a fixed fragment still checks that final SQL. A local alias
+inside a typed helper can currently prevent a verified summary and make the
+result unanalyzable; recovering that precision is deferred. An unrelated
 builder, a replacement object with a distinct tracked identity, and primitive
 SQL strings copied by value retain their independent facts.
 

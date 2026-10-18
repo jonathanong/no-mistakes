@@ -21,6 +21,8 @@ fn builder_mutations_cannot_publish_stale_complete_sql() {
         "untyped-helper.ts",
         "container.ts",
         "controls.ts",
+        "literal-escapes.ts",
+        "reference-controls.ts",
     ] {
         let source = std::fs::read_to_string(root.join("src").join(file)).unwrap();
         for (index, line) in source.lines().enumerate() {

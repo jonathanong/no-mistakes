@@ -1,15 +1,18 @@
-use oxc_ast::ast::{self, AssignmentTarget, CallExpression};
+use oxc_ast::ast::{self, CallExpression};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 mod assignments;
+mod binding_visits;
 mod calls;
 mod executor_arguments;
 mod executors;
 mod flow;
 mod iife;
 mod imported;
+mod reference_escapes;
 pub(crate) mod resolve;
 mod scope;
+mod scope_visits;
 mod state;
 mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
@@ -31,29 +34,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
-        self.push_scope();
-        if let Some(param) = &clause.param {
-            self.bind_param(&param.pattern, false);
-        }
-        walk::walk_catch_clause(self, clause);
-        self.pop_scope();
+        self.walk_catch_clause_scope(clause);
     }
 
     fn visit_function(&mut self, function: &ast::Function<'a>, flags: ScopeFlags) {
-        self.push_scope();
-        self.record_params(&function.params);
-        // A named function expression shadows outer helpers only in its own
-        // body. LocalFunctions does not resolve through this self-reference,
-        // so record a shadow marker in the scope just pushed.
-        if function.r#type == ast::FunctionType::FunctionExpression {
-            if let Some(id) = &function.id {
-                self.bind_self_name(id.name.as_str());
-            }
-        }
-        self.enter_function();
-        walk::walk_function(self, function, flags);
-        self.leave_function();
-        self.pop_scope();
+        self.walk_function_scope(function, flags);
     }
 
     fn visit_function_body(&mut self, body: &ast::FunctionBody<'a>) {
@@ -63,30 +48,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
-        let private_name = (class.r#type == oxc_ast::ast::ClassType::ClassExpression)
-            .then_some(class.id.as_ref())
-            .flatten();
-        if let Some(name) = private_name {
-            self.push_scope();
-            self.bind_self_name(name.name.as_str());
-        }
-        // The private class name shadows outer bindings in heritage expressions,
-        // computed keys and method bodies; it must not escape the expression.
-        walk::walk_class(self, class);
-        if private_name.is_some() {
-            self.pop_scope();
-        }
+        self.walk_class_scope(class);
     }
 
     fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
-        // Class static blocks are also independent var ownership boundaries.
-        self.push_scope();
-        self.enter_function();
-        resolve::hoist_vars(&block.body, self);
-        resolve::record_statements(&block.body, self);
-        walk::walk_static_block(self, block);
-        self.leave_function();
-        self.pop_scope();
+        self.walk_static_block_scope(block);
     }
 
     fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
@@ -106,21 +72,8 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
-    fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
-        let executor = declaration
-            .init
-            .as_ref()
-            .is_some_and(|init| self.proven_executor(init));
-        self.refresh_builder_identity(declaration);
-        let variants = declaration
-            .init
-            .as_ref()
-            .and_then(|init| self.recover_variants(init));
-        let outer = self.enter_iife(declaration);
-        walk::walk_variable_declarator(self, declaration);
-        self.initialize_variants(declaration, variants);
-        self.initialize_executor_alias(declaration, executor);
-        self.leave_iife(&declaration.id, outer);
+    fn visit_variable_declarator(&mut self, declaration: &ast::VariableDeclarator<'a>) {
+        self.walk_variable_declarator_bindings(declaration);
     }
 
     fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {
@@ -132,28 +85,8 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         walk::walk_update_expression(self, expression);
     }
 
-    fn visit_assignment_expression(&mut self, assign: &oxc_ast::ast::AssignmentExpression<'a>) {
-        let identity = self.assignment_builder_identity(assign);
-        let variants = self.assigned_variants(assign);
-        if matches!(
-            assign.left,
-            AssignmentTarget::ArrayAssignmentTarget(_)
-                | AssignmentTarget::ObjectAssignmentTarget(_)
-        ) {
-            self.visit_expression(&assign.right);
-            assignments::visit_target(self, &assign.left);
-            return;
-        }
-        walk::walk_assignment_expression(self, assign);
-        if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
-            self.mark_dynamic(ident.name.as_str());
-            self.set_variants(ident.name.as_str(), variants);
-            self.set_builder_identity(ident.name.as_str(), identity);
-        } else {
-            resolve::functions::reassigned::for_each_assigned_name(&assign.left, &mut |name| {
-                self.mark_dynamic(name);
-            });
-        }
+    fn visit_assignment_expression(&mut self, assign: &ast::AssignmentExpression<'a>) {
+        self.walk_assignment_expression_bindings(assign);
     }
 
     fn visit_expression_statement(&mut self, statement: &oxc_ast::ast::ExpressionStatement<'a>) {
@@ -163,6 +96,29 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.visit_sql_call(call);
+    }
+
+    fn visit_simple_assignment_target(&mut self, target: &ast::SimpleAssignmentTarget<'a>) {
+        self.walk_assignment_target_reference(target);
+    }
+
+    fn visit_tagged_template_expression(&mut self, template: &ast::TaggedTemplateExpression<'a>) {
+        self.visit_builder_template(template);
+    }
+    // Erased types cannot retain a runtime builder reference.
+    fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
+    fn visit_identifier_reference(&mut self, id: &ast::IdentifierReference<'a>) {
+        self.escape_builder_reference(id);
+    }
+    fn visit_static_member_expression(&mut self, member: &ast::StaticMemberExpression<'a>) {
+        self.with_builder_receiver(&member.object, member.property.name == "text", |visitor| {
+            walk::walk_static_member_expression(visitor, member)
+        });
+    }
+    fn visit_computed_member_expression(&mut self, member: &ast::ComputedMemberExpression<'a>) {
+        self.with_builder_receiver(&member.object, matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression), ast::Expression::StringLiteral(name) if name.value == "text"), |visitor| {
+            walk::walk_computed_member_expression(visitor, member)
+        });
     }
 
     fn visit_return_statement(&mut self, statement: &ast::ReturnStatement<'a>) {
