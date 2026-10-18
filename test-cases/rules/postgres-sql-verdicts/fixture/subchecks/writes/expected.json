@@ -1,0 +1,10 @@
+[
+  {"span": [97, 141], "subcheck": "generated-write", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 141], "subcheck": "trigger-maintained-write", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [143, 187], "subcheck": "generated-write", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [143, 187], "subcheck": "trigger-maintained-write", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [189, 226], "subcheck": "generated-write", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [189, 226], "subcheck": "trigger-maintained-write", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [228, 272], "subcheck": "generated-write", "status": "abstain", "evidence": null, "residualReasons": ["unknown-relation-or-write-width"]},
+  {"span": [228, 272], "subcheck": "trigger-maintained-write", "status": "abstain", "evidence": null, "residualReasons": ["unknown-relation-or-write-width"]}
+]

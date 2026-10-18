@@ -1,0 +1,17 @@
+[
+  {"span": [97, 127], "subcheck": "partition-key", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 127], "subcheck": "relation:events:column:owner_id", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 127], "subcheck": "relation:events:predicate:kind = 1", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [129, 212], "subcheck": "partition-key", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [129, 212], "subcheck": "relation:events:column:owner_id", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [129, 212], "subcheck": "relation:events:predicate:kind = 1", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [214, 284], "subcheck": "partition-key", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [214, 284], "subcheck": "relation:events:column:owner_id", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [214, 284], "subcheck": "relation:events:predicate:kind = 1", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [286, 351], "subcheck": "partition-key", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [286, 351], "subcheck": "relation:events:column:owner_id", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [286, 351], "subcheck": "relation:events:predicate:kind = 1", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [353, 416], "subcheck": "partition-key", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [353, 416], "subcheck": "relation:events:column:owner_id", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [353, 416], "subcheck": "relation:events:predicate:kind = 1", "status": "proven-clear", "evidence": "exact", "residualReasons": []}
+]

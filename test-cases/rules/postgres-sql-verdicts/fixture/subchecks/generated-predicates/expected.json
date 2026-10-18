@@ -1,0 +1,17 @@
+[
+  {"span": [97, 151], "subcheck": "join", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 151], "subcheck": "order-by", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 151], "subcheck": "where", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [153, 230], "subcheck": "join", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [153, 230], "subcheck": "order-by", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [153, 230], "subcheck": "where", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [232, 281], "subcheck": "join", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [232, 281], "subcheck": "order-by", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [232, 281], "subcheck": "where", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [283, 326], "subcheck": "join", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [283, 326], "subcheck": "order-by", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [283, 326], "subcheck": "where", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [328, 384], "subcheck": "join", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [328, 384], "subcheck": "order-by", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [328, 384], "subcheck": "where", "status": "abstain", "evidence": null, "residualReasons": ["unresolved-column-owner"]}
+]

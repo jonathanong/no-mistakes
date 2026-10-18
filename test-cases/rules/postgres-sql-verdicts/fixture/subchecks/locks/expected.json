@@ -1,0 +1,10 @@
+[
+  {"span": [97, 161], "subcheck": "catalog-key-order", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 161], "subcheck": "row-lock-order", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [163, 241], "subcheck": "catalog-key-order", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [163, 241], "subcheck": "row-lock-order", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [243, 319], "subcheck": "catalog-key-order", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [243, 319], "subcheck": "row-lock-order", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [321, 384], "subcheck": "catalog-key-order", "status": "abstain", "evidence": null, "residualReasons": ["unknown-locked-relation"]},
+  {"span": [321, 384], "subcheck": "row-lock-order", "status": "abstain", "evidence": null, "residualReasons": ["unknown-locked-relation"]}
+]

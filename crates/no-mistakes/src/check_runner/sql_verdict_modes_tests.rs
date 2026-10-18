@@ -11,7 +11,6 @@ struct Case {
     known_span: (u32, u32),
     exact_span: (u32, u32),
     unknown_span: (u32, u32),
-    exact_span: (u32, u32),
     unknown_line: usize,
 }
 

@@ -1,0 +1,9 @@
+rules:
+- rule: postgres-explicit-columns
+  scope: repository
+  options:
+    importSpecifier: "@example/db"
+    unanalyzableSql: advise
+    schemaCatalogPath: schema.json
+    relations: [accounts]
+    checkReturning: true

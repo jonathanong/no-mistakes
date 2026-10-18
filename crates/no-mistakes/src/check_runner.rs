@@ -12,9 +12,13 @@ pub(crate) use run_all::run_all_with_evidence;
 pub(crate) use run_all::run_all_with_sql_verdicts;
 
 #[cfg(test)]
+mod sql_verdict_edge_tests;
+#[cfg(test)]
 mod sql_verdict_matrix_tests;
 #[cfg(test)]
 mod sql_verdict_modes_tests;
+#[cfg(test)]
+mod sql_verdict_subchecks_tests;
 #[cfg(test)]
 mod sql_verdict_tests;
 #[cfg(test)]
