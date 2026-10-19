@@ -60,9 +60,9 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | ----------------------------------------------------------------------------- | -------------------------------------------------- |
 | [`postgres-cursor-call-contract`](postgres-cursor-call-contract.md)           | Require direct annotated SQL for cursor executors. |
 | [`postgres-no-async-sql-builder`](postgres-no-async-sql-builder.md)           | Suggest removing `async` only when every return is judged SQL and the contract allows it. |
+| [`postgres-no-executor-adapter`](postgres-no-executor-adapter.md)             | Call a trusted executor on the SQL text instead of an adapter. |
 | [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md)         | Keep transaction lifecycle in a dedicated helper.  |
 | [`postgres-no-unbounded-query-fanout`](postgres-no-unbounded-query-fanout.md) | Bound concurrent mapped database queries.          |
-| [`postgres-no-executor-adapter`](postgres-no-executor-adapter.md)             | Call a trusted executor on the SQL text instead of an adapter. |
 
 ## React and tests
 

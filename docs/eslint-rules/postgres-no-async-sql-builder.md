@@ -56,10 +56,14 @@ export function loadOrders(id: string) {
 including the `${id}` value bind, with no incomplete reason. That file is
 `fixtures/postgres-facts/executed-source/same-file-sql-builder.ts`. The rule
 does not itself suggest `read(buildQuery(id))` when `read` is an unresolved
-import. An untyped, `Promise`-typed, `any`, `unknown`, `object`, or unresolved
-parameter makes the rule stay silent, because the synchronous call would throw
-if that parameter uses the value as a Promise. A `string` or `number` parameter
-does not. The same check applies to a bound local (`const query = build()`),
+import. An untyped, `Promise`-typed, `any`, `unknown`, `object`, unresolved, or
+Promise-compatible type-literal parameter makes the rule stay silent, because
+the synchronous call would throw if that parameter uses the value as a Promise.
+A `string` or `number` parameter does not. A callback result of `{}`, an alias
+of `{}`, `{ (): {} }`, or a literal whose members are only optional or named
+`then`, `catch`, or `finally` is the same kind of Promise-compatible type.
+`{ foo: string }` is not: that callback still allows the report. A direct
+`{}` argument and a property typed `{ f: () => {} }` stay silent. The same check applies to a bound local (`const query = build()`),
 including when that local is passed on, returned, or copied into another
 local. A use this file does not explicitly recognize, such as `instanceof` or
 a property, stays silent.
@@ -71,14 +75,16 @@ That includes any of these:
   of a configured callee, on every path (a `names` entry does not skip this
   check). A call such as `sql(id)` stays silent. A tag placeholder that is not
   an identifier, a literal, or already judged SQL, such as `${id.x}`, stays
-  silent
+  silent. A member read outside that placeholder, such as `id.x;`,
+  `const x = id.x`, or `id.x ? "a" : "b"`, also stays silent
 - `db.query(...)`, `Promise.resolve(...)`, `loadSql(...)`, or a method call
-  such as `` sql`...`.append(...) ``
-- `throw`, `new`, a loop, `switch`, `try`, or any call that is not a
-  configured callee or tag
+  such as ``sql`...`.append(...)``
+- `throw`, `new`, a loop, `switch`, `try`, a destructured parameter, a
+  parameter default, or any call that is not a configured callee or tag. The
+  callee of a judged tag, including `(db.sql)`, is not one of these reads
 - an exported builder, a return type or implemented interface it cannot
-  resolve, or an explicit `Promise<...>`, `any`, `unknown`, or `object` return
-  type
+  resolve, or an explicit `Promise<...>`, `any`, `unknown`, `object`, or
+  Promise-compatible type-literal return type
 - a builder passed to a same-file parameter whose type is a function returning
   a Promise, or whose result, directly or through a bound local, is passed to
   `.then`, `.catch`, or `.finally`
@@ -105,7 +111,7 @@ async function buildQuery(id: string) {
 - `callees` lists tagged templates that count as judged SQL when the function
   returns them directly, through a conditional or `const` / `let` binding that
   is not reassigned. A call of that name, such as `sql(id)`, is not judged
-  SQL. A chained call such as `` sql`...`.append(...) `` matches the builder,
+  SQL. A chained call such as ``sql`...`.append(...)`` matches the builder,
   but the rule stays silent because the returned call is not the configured
   tag. Placeholders must be identifiers, literals, or already judged SQL;
   `${id.x}` stays silent because it can throw after `async` is removed.
@@ -138,22 +144,28 @@ Removal is suggested only when every one of these is true:
   not qualify
 - the function has no `await`, `for await`, `await using`, or dynamic
   `import()` that it returns
-- the body has no `throw`, `new`, loop, `switch`, `try`, or call other than a
-  configured callee or tag
+- the body has no `throw`, `new`, loop, `switch`, `try`, member read other
+  than a judged tag callee, destructured parameter, parameter default, or
+  call other than a configured callee or tag
 - it is not an override or interface method required to return a Promise, a
   same-file base class or interface can be checked when one is declared, and
   no same-file subclass declares the same method
-- it has no explicit `Promise<...>`, `any`, `unknown`, or `object` return
-  type, including a same-file alias of `Promise` and `globalThis.Promise`
+- it has no explicit `Promise<...>`, `any`, `unknown`, `object`, or
+  Promise-compatible type-literal return type, including a same-file alias of
+  `Promise` and `globalThis.Promise`
 - it is not passed to a same-file parameter whose type is a function returning
   a Promise
 - callers in this file do not use the result, or a local that holds it, with
   `.then`, `.catch`, or `.finally`, and do not annotate that result as
-  `Promise<...>`, `any`, `unknown`, or `object`
+  `Promise<...>`, `any`, `unknown`, `object`, or a Promise-compatible type
+  literal. A use that only tests truthiness (`build() ? ...` or `build() || ...`)
+  stays silent. `await build()` and `const s = await build()` still allow the
+  report
 - a call that receives the result, directly or through a local, has a
   same-file parameter type that is not a Promise, `any`, `unknown`, `object`,
-  or unresolved; an untyped parameter abstains. A `string` or `number`
-  parameter still allows the report
+  a Promise-compatible type literal, or unresolved; an untyped parameter
+  abstains. A `string`, `number`, or `{ foo: string }` callback result still
+  allows the report. A direct `{}` parameter stays silent
 - a local that holds the result is only awaited, voided, passed, returned, or
   copied in ways this file can prove do not need a Promise. Any other use,
   including `instanceof`, a property, or an alias that later needs the
@@ -173,9 +185,10 @@ There is no autofix and no editor suggestion. When the rule reports, delete
 Removing `async` runs the body before the caller continues. A throw, a
 throwing call, or a getter then happens before later statements such as
 `const query = build(); other(); await query`. The rule abstains on `throw`,
-`new`, loops, `switch`, `try`, and calls that are not a configured SQL callee
-or tag. It does not model getters or other abrupt completions, so a silent
-result is not permission to delete `async`.
+`new`, loops, `switch`, `try`, calls that are not a configured SQL callee or
+tag, member reads other than a judged tag callee, destructured parameters,
+and parameter defaults. It does not model every other abrupt completion, so a
+silent result is not permission to delete `async`.
 
 ## Suppression
 

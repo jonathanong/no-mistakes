@@ -175,15 +175,6 @@ when set).
 `module` or a subpath of `module`, including a rename. A default import is not
 enough, and a shadowed or rebound local fails closed.
 
-### `postgres-no-executor-adapter`
-
-`importSpecifier?: string` (default empty),
-`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
-`executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
-scoped executors that also match imports from `importSpecifier` subpaths and relative imports that resolve into that package, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
-and `trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
-shared executor configuration validates; this rule does not read SQL text).
-
 ### `postgres-no-async-sql-builder`
 
 Opt-in and inert until configured. Not in `configs.recommended` or
@@ -196,8 +187,19 @@ remove `async` only when every return is a judged SQL string or configured tag
 (not a call such as `sql(id)`, and not a tag placeholder such as `${id.x}`)
 and the visible contract allows that synchronous return. Otherwise it
 abstains, including when a caller parameter or bound local is untyped,
-`Promise`-typed, `any`, `unknown`, `object`, or unresolved. See
+`Promise`-typed, `any`, `unknown`, `object`, a Promise-compatible type
+literal, or unresolved, and when the result is only tested for truthiness.
+See
 [the rule reference](eslint-rules/postgres-no-async-sql-builder.md).
+
+### `postgres-no-executor-adapter`
+
+`importSpecifier?: string` (default empty),
+`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
+`executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
+scoped executors that also match imports from `importSpecifier` subpaths and relative imports that resolve into that package, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
+and `trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
+shared executor configuration validates; this rule does not read SQL text).
 
 ### `postgres-no-manual-transaction`
 

@@ -45,6 +45,10 @@ function callResultContract(call, context, types, seen = new Set()) {
       parent.type === "LogicalExpression" ||
       parent.type === "SequenceExpression"
     ) {
+      // A Promise is always truthy, so the branch can change once async is
+      // removed, and the conditional throws the SQL away.
+      if (parent.type === "ConditionalExpression" && parent.test === current) return "unknown";
+      if (parent.type === "LogicalExpression" && parent.left === current) return "unknown";
       current = parent;
       continue;
     }

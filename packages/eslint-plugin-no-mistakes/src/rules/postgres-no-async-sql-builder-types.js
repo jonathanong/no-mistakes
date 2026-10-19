@@ -4,6 +4,8 @@ const { propertyName } = require("./module-mock-helpers");
 
 // `any`, `unknown`, and `object` are omitted. Each accepts a Promise, so a
 // parameter or return of those types is unknown rather than a non-Promise.
+// A type literal is handled separately: `{}` accepts a Promise the same way
+// `object` does, and a then/catch/finally member describes a thenable.
 const NON_PROMISE_TYPES = new Set([
   "TSArrayType",
   "TSBigIntKeyword",
@@ -19,10 +21,11 @@ const NON_PROMISE_TYPES = new Set([
   "TSSymbolKeyword",
   "TSThisType",
   "TSTupleType",
-  "TSTypeLiteral",
   "TSUndefinedKeyword",
   "TSVoidKeyword",
 ]);
+
+const THENABLE_MEMBERS = new Set(["then", "catch", "finally"]);
 
 const UNRESOLVED_TYPES = new Set([
   "TSConditionalType",
@@ -115,8 +118,25 @@ function unwrapType(node) {
   return current;
 }
 
+function typeLiteralPromiseFlag(type) {
+  // Non-Promise only with a required member other than then/catch/finally.
+  // Optional members and an empty literal still accept a Promise.
+  for (const member of type.members) {
+    if (
+      member.optional ||
+      (member.type !== "TSPropertySignature" && member.type !== "TSMethodSignature")
+    ) {
+      continue;
+    }
+    const name = staticKeyName(member);
+    if (name && !THENABLE_MEMBERS.has(name)) return "no";
+  }
+  return "unknown";
+}
+
 function typePromiseFlag(typeNode, types, seen) {
   const type = unwrapType(typeNode);
+  if (type.type === "TSTypeLiteral") return typeLiteralPromiseFlag(type);
   if (NON_PROMISE_TYPES.has(type.type)) return "no";
   if (UNRESOLVED_TYPES.has(type.type)) return "unknown";
   if (type.type === "TSUnionType" || type.type === "TSIntersectionType") {

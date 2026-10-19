@@ -5,6 +5,16 @@ const { calleeMatches, localInitializer } = require("./postgres-no-async-sql-bui
 
 // Loops, switch, and try can throw or skip a return. After `async` is removed
 // that exception happens before the caller continues.
+// Parentheses and assertions sit between a member callee and its tag.
+const TAG_WRAPPERS = new Set([
+  "ChainExpression",
+  "ParenthesizedExpression",
+  "TSAsExpression",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+  "TSTypeAssertion",
+]);
+
 const UNSAFE_STATEMENTS = new Set([
   "DoWhileStatement",
   "ForInStatement",
@@ -142,11 +152,41 @@ function returnsJudgedSql(context, func, builders) {
   return judged && seenReturn;
 }
 
+function parameterCanThrow(param) {
+  return (
+    param.type === "ObjectPattern" ||
+    param.type === "ArrayPattern" ||
+    param.type === "AssignmentPattern"
+  );
+}
+
+function isConfiguredTagMember(node, builders, context) {
+  let current = node;
+  // Climb the callee chain (`db.helper.sql`, `db.sql!`) and stop at the tag.
+  while (
+    current.parent.object === current ||
+    (current.parent.expression === current && TAG_WRAPPERS.has(current.parent.type))
+  ) {
+    current = current.parent;
+  }
+  const parent = current.parent;
+  return (
+    parent.type === "TaggedTemplateExpression" && isConfiguredSqlCall(parent, builders, context)
+  );
+}
+
 function bodyHasUnjudgedEffect(context, func, builders) {
+  // Patterns and defaults run before the body and can throw once async is gone.
+  if (func.params.some(parameterCanThrow)) return true;
   let unsafe = false;
   traverse(context, func.body, (node) => {
     if (unsafe) return;
     if (UNSAFE_STATEMENTS.has(node.type) || node.type === "NewExpression") {
+      unsafe = true;
+      return;
+    }
+    // A getter throws before later statements. The judged tag callee is the SQL.
+    if (node.type === "MemberExpression" && !isConfiguredTagMember(node, builders, context)) {
       unsafe = true;
       return;
     }
