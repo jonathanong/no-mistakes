@@ -65,8 +65,8 @@ function executorRef(node, context, bindings, options) {
   if (!current || current.type === "ChainExpression") return null;
   if (current.type === "Identifier") {
     const variable = resolveVariable(current, context);
-    // A const alias of an imported executor is judged. A const alias of a
-    // scoped factory or typed parameter is not, so only imports are aliasable.
+    // Only an imported executor gets an alias hint. Analysis judges a const alias
+    // of a scoped factory or typed parameter, but this rule does not suggest it.
     if (variableIsImportedExecutor(variable, options)) {
       return { name: current.name, kind: "identifier", aliasable: true };
     }

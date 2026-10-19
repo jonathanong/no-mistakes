@@ -28,11 +28,12 @@ tx(sql);
 tx.query(sql);
 ```
 
-`const` is required for that alias. A `let` binding, a const alias of a scoped
-factory or typed parameter, and `(flag ? client.query : read)(sql)` are not
-judged. Call the scoped executor itself (`tx(sql)` or `tx.query(sql)` on a
-typed or factory receiver). An untyped `client.query(sql)` has no receiver
-provenance, so it is not a judged offset.
+`const` is required for an imported-executor alias. A `let` binding and
+`(flag ? client.query : read)(sql)` are not judged. Analysis does judge a const
+alias of a scoped factory or typed parameter: `const t = tx; t(sql)` and
+`const t = tx; t.query(sql)` are offset. This rule does not suggest that alias;
+its message names `tx(sql)` or `tx.query(sql)`. An untyped `client.query(sql)`
+has no receiver provenance, so it is not a judged offset.
 
 This rule is opt-in. It is not part of `configs.recommended` or `configs.strict`.
 It does not ban ordinary object mutation; that is [issue #2219](https://github.com/jonathanong/no-mistakes/issues/2219).
@@ -49,6 +50,8 @@ export function list(account: string, flag: boolean, tx: Tx) {
   run(flag ? read : write, account);
   run(read, account);
   run(tx.query, account);
+  run(flag ? read : other, account);
+  run((statement) => (flag ? read(statement) : normalize(statement)), account);
   const selected = flag ? read : write;
   run(selected, account);
   const adapter = (statement: string) => read(statement);
@@ -61,6 +64,12 @@ executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead 
 passing it. A `const` bound to a conditional of executors also names
 ``(flag ? read : write)(sql`…`)`` when every branch is an identifier executor.
 `run(read, account)` is not a judged rewrite.
+
+A conditional reports when any branch is an executor. The message names only
+those branches (``read(sql`…`)`` for a passed value, `read(sql)` inside a
+callback), not the unknown branch (`other`, `normalize`, or an untyped
+`client.query`) and not ``(flag ? read : other)(sql`…`)``, which would claim that
+branch is an executor. Deleting the unknown branch is not a suggested rewrite.
 
 Conditional executor selection written at the call is reported the same way,
 still without a rewrite. The message names `read(sql)` or `write(sql)`, and
@@ -94,10 +103,16 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
   // A shadowed name, another module, or a callback that changes the argument
   // is not an unchanged forwarder.
   client.execute((statement: string) => statement.trim());
-  // A constructor argument and an object property are not a local const binding.
-  new Runner((statement: string) => read(statement));
-  const options = { exec: (statement: string) => read(statement) };
 }
+```
+
+Not followed, not safe: the rule does not follow a constructor argument or an
+object property. No report for these shapes is not a judgment that the adapter
+is safe.
+
+```ts
+new Runner((statement: string) => read(statement));
+const options = { exec: (statement: string) => read(statement) };
 ```
 
 ## Options

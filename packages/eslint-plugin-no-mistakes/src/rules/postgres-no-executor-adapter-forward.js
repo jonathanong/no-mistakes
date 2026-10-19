@@ -78,14 +78,16 @@ function classifyExpr(expr, fn, context, bindings, options, flags) {
     return inner;
   }
   if (expr.type === "ConditionalExpression") {
-    const consequent = classifyExpr(expr.consequent, fn, context, bindings, options, flags);
-    const alternate = classifyExpr(expr.alternate, fn, context, bindings, options, flags);
-    if (!consequent || !alternate) return null;
+    const branches = [expr.consequent, expr.alternate]
+      .map((branch) => classifyExpr(branch, fn, context, bindings, options, flags))
+      .filter((branch) => branch);
+    // An unknown branch is omitted. Naming it, or `(flag ? read : other)(sql)`, would
+    // claim it is an executor. Call branches are not an executor-valued callee.
+    if (branches.length === 0) return null;
     return {
-      names: [...new Set([...consequent.names, ...alternate.names])],
+      names: [...new Set(branches.flatMap((branch) => branch.names))],
       reason: "conditional selection",
-      leaves: [...consequent.leaves, ...alternate.leaves],
-      // Call branches are not an executor-valued callee, so there is no `(cond)(sql)` form.
+      leaves: branches.flatMap((branch) => branch.leaves),
       conditionalText: null,
     };
   }

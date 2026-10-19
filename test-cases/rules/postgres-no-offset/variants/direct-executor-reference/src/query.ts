@@ -13,6 +13,9 @@ export function list(
   exec("SELECT id FROM orders WHERE account_id = $1 OFFSET 2"); // findings: offset
   (flag ? read : write)("SELECT id FROM orders WHERE account_id = $1 OFFSET 3"); // findings: offset
   (flag ? read : (other ? write : read))("SELECT id FROM orders WHERE account_id = $1 OFFSET 4"); // findings: offset
+  read.query("SELECT id FROM orders WHERE account_id = $1 OFFSET 8"); // findings: offset
+  const q = read;
+  q.query("SELECT id FROM orders WHERE account_id = $1 OFFSET 9"); // findings: offset
   client.query("SELECT id FROM orders WHERE account_id = $1 OFFSET 5");
 }
 
@@ -24,4 +27,8 @@ export function typed(tx: TxExecutor) {
 export async function opened() {
   const tx = await openTransaction();
   return tx("SELECT id FROM orders WHERE account_id = $1 OFFSET 7"); // findings: offset
+}
+
+export function either(flag: boolean, tx: TxExecutor, u: TxExecutor) {
+  return (flag ? tx : u).query("SELECT id FROM orders WHERE account_id = $1 OFFSET 10"); // findings: offset
 }

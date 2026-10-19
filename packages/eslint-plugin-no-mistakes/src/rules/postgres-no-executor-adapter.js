@@ -88,19 +88,22 @@ module.exports = rule(
       if (!expr || expr.type === "ChainExpression") return;
       if (expr.type === "ConditionalExpression") {
         const leaves = executorLeaves(expr, context, bindings, options);
-        if (!leaves) return;
-        reportAdapter(
-          argument,
-          {
-            names: [...new Set(leaves.map((leaf) => leaf.name))],
-            reason: "conditional selection",
-            leaves,
-            conditionalText: source.getText(expr),
-          },
-          call,
-          index,
-        );
-        return;
+        // Every branch is an executor, so the conditional callee itself is judged.
+        // A partial conditional falls through and names only the proven branches.
+        if (leaves) {
+          reportAdapter(
+            argument,
+            {
+              names: [...new Set(leaves.map((leaf) => leaf.name))],
+              reason: "conditional selection",
+              leaves,
+              conditionalText: source.getText(expr),
+            },
+            call,
+            index,
+          );
+          return;
+        }
       }
       if (expr.type === "ArrowFunctionExpression" || expr.type === "FunctionExpression") {
         const adapter = classifyFunction(expr, context, bindings, options);

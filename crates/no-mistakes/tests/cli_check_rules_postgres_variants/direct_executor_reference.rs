@@ -3,8 +3,10 @@ use super::*;
 #[test]
 fn direct_executor_reference_offset_is_fully_judged() {
     // Forms named by `postgres-no-executor-adapter`: `read(sql)`, a const alias of that
-    // import, an identifier conditional callee, `tx.query(sql)` on a typed receiver,
-    // and a scoped executor call. An untyped `client.query` is not one of them.
+    // import, `read.query(sql)`, `q.query(sql)` when `const q = read`, an identifier
+    // conditional callee, `tx.query(sql)` on a typed receiver, `(flag ? tx : u).query(sql)`
+    // when both receivers have that type, and a scoped executor call. An untyped
+    // `client.query` is not one of them.
     // `run(read, account)` is intentionally absent. That form is not judged; see
     // `passed-executor-value`. An empty report, or `unanalyzable`, means a named form is not judged.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

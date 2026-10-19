@@ -27,6 +27,25 @@ function passedAlias(names, leaves) {
   return `, or \`const exec = ${names[0]}; exec(sql\`…\`)\``;
 }
 
+// Proven branches only. An unknown branch is omitted: naming it, or the whole
+// conditional, would claim it is an executor. Deleting it is not a rewrite.
+function combineConditional(consequent, alternate) {
+  const known = [consequent, alternate].filter((part) => part);
+  if (known.length === 0) return null;
+  const names = [
+    ...new Set(
+      known.flatMap((part) =>
+        part.adapter ? part.adapter.names : part.leaves.map((leaf) => leaf.name),
+      ),
+    ),
+  ];
+  const leaves = known.flatMap((part) => (part.adapter ? part.adapter.leaves : part.leaves));
+  if (!known.some((part) => part.adapter)) return { leaves, conditionalText: null };
+  return {
+    adapter: { names, reason: "conditional selection", leaves, conditionalText: null },
+  };
+}
+
 // An executor value, a const of those values, or a const adapter. Constructors
 // and object properties are not followed.
 function resolvePassed(node, context, bindings, options, seen) {
@@ -47,11 +66,11 @@ function resolvePassed(node, context, bindings, options, seen) {
     }
   }
   if (current.type === "ConditionalExpression") {
-    const consequent = resolvePassed(current.consequent, context, bindings, options, seen);
-    const alternate = resolvePassed(current.alternate, context, bindings, options, seen);
-    if (!consequent?.leaves || !alternate?.leaves) return null;
     // A const alias inside a branch is not the judged `(flag ? read : write)(sql)` callee.
-    return { leaves: [...consequent.leaves, ...alternate.leaves], conditionalText: null };
+    return combineConditional(
+      resolvePassed(current.consequent, context, bindings, options, seen),
+      resolvePassed(current.alternate, context, bindings, options, seen),
+    );
   }
   if (current.type === "Identifier") {
     const init = constInitializer(current, context, seen);

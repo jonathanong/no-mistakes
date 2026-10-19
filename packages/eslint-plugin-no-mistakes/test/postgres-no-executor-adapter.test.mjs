@@ -121,8 +121,13 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run((statement) => (flag ? read(statement) : write(statement)), account);`,
     );
 
-    // An untyped member is not an executor, so the conditional abstains.
-    assert.deepEqual(ids(`${IMPORT}run(flag ? client.query : read, account);`), []);
+    // An untyped member is not an executor. Name only `read`, not the member or the conditional.
+    const untypedMember = check(`${IMPORT}run(flag ? client.query : read, account);`);
+    assert.deepEqual(untypedMember.ids, ["passed"]);
+    assert.equal(untypedMember.output, `${IMPORT}run(flag ? client.query : read, account);`);
+    assert.match(untypedMember.messages[0], /read\(sql`…`\)/);
+    assert.doesNotMatch(untypedMember.messages[0], /client\.query/);
+    assert.doesNotMatch(untypedMember.messages[0], /flag \? client\.query : read/);
 
     const mixed = check(
       `${TX}function load(tx: Tx, flag: boolean, account: string) {\n  return run(flag ? tx.query : read, account);\n}\n`,
@@ -132,9 +137,69 @@ describe("postgres-no-executor-adapter", () => {
     assert.match(mixed.messages[0], /tx\.query\(sql\) or read\(sql\)/);
     assert.doesNotMatch(mixed.messages[0], /\(flag \? tx\.query : read\)\(sql\)/);
 
-    assert.deepEqual(ids(`${IMPORT}run(flag ? read : other, account);`), []);
+    const oneBranch = check(`${IMPORT}run(flag ? read : other, account);`);
+    assert.deepEqual(oneBranch.ids, ["passed"]);
+    assert.equal(oneBranch.output, `${IMPORT}run(flag ? read : other, account);`);
+    assert.match(oneBranch.messages[0], /read\(sql`…`\)/);
+    assert.match(oneBranch.messages[0], /const exec = read; exec\(sql`…`\)/);
+    assert.doesNotMatch(oneBranch.messages[0], /other/);
+    assert.doesNotMatch(oneBranch.messages[0], /flag \? read : other/);
+    assert.doesNotMatch(oneBranch.messages[0], /run\(read, account\)/);
+
+    const nestedPartial = check(`${IMPORT}run(flag ? read : (other ? write : unknown), account);`);
+    assert.deepEqual(nestedPartial.ids, ["passed"]);
+    assert.match(nestedPartial.messages[0], /read\(sql`…`\) or write\(sql`…`\)/);
+    assert.doesNotMatch(nestedPartial.messages[0], /unknown/);
+    assert.doesNotMatch(nestedPartial.messages[0], /flag \?/);
+
+    const lambda = check(
+      `${IMPORT}run((statement) => (flag ? read(statement) : normalize(statement)), account);`,
+    );
+    assert.deepEqual(lambda.ids, ["blocked"]);
+    assert.equal(
+      lambda.output,
+      `${IMPORT}run((statement) => (flag ? read(statement) : normalize(statement)), account);`,
+    );
+    assert.match(lambda.messages[0], /conditional selection/);
+    assert.match(lambda.messages[0], /read\(sql\)/);
+    assert.doesNotMatch(lambda.messages[0], /normalize/);
+    assert.doesNotMatch(lambda.messages[0], /flag \? read/);
+
+    const nestedLambda = check(
+      `${IMPORT}run((statement) => (flag ? read(statement) : (other ? write(statement) : normalize(statement))), account);`,
+    );
+    assert.deepEqual(nestedLambda.ids, ["blocked"]);
+    assert.match(nestedLambda.messages[0], /read\(sql\) or write\(sql\)/);
+    assert.doesNotMatch(nestedLambda.messages[0], /normalize/);
+
+    const valueAndAdapter = check(
+      `${IMPORT}run(flag ? read : ((statement) => write(statement)), account);`,
+    );
+    assert.deepEqual(valueAndAdapter.ids, ["blocked"]);
+    assert.match(valueAndAdapter.messages[0], /read\(sql\) or write\(sql\)/);
+    assert.doesNotMatch(valueAndAdapter.messages[0], /flag \? read :/);
+
+    const adapterAndUnknown = check(
+      `${IMPORT}run(flag ? ((statement) => read(statement)) : other, account);`,
+    );
+    assert.deepEqual(adapterAndUnknown.ids, ["blocked"]);
+    assert.match(adapterAndUnknown.messages[0], /conditional selection/);
+    assert.match(adapterAndUnknown.messages[0], /read\(sql\)/);
+    assert.doesNotMatch(adapterAndUnknown.messages[0], /other/);
+    assert.doesNotMatch(adapterAndUnknown.messages[0], /flag \?/);
+
+    const bothAdapters = check(
+      `${IMPORT}run(flag ? ((statement) => read(statement)) : ((statement) => write(statement)), account);`,
+    );
+    assert.deepEqual(bothAdapters.ids, ["blocked"]);
+    assert.match(bothAdapters.messages[0], /read\(sql\) or write\(sql\)/);
+    assert.doesNotMatch(bothAdapters.messages[0], /flag \?/);
+
+    assert.deepEqual(ids(`${IMPORT}run(flag ? other : another, account);`), []);
     assert.deepEqual(
-      ids(`${IMPORT}run((statement) => (flag ? read(statement) : normalize(statement)), account);`),
+      ids(
+        `${IMPORT}run((statement) => (flag ? normalize(statement) : other(statement)), account);`,
+      ),
       [],
     );
   });
@@ -356,7 +421,13 @@ describe("postgres-no-executor-adapter", () => {
     assert.deepEqual(ids(`${IMPORT}run((statement) => read?.(statement), account);`), []);
     assert.deepEqual(ids(`${IMPORT}run((statement) => read(statement?.trim()), account);`), []);
     assert.deepEqual(ids(`${IMPORT}run(read?.(statement), account);`), []);
-    assert.deepEqual(ids(`${IMPORT}run(flag ? (client?.query as Executor) : read, account);`), []);
+    const assertedMember = check(
+      `${IMPORT}run(flag ? (client?.query as Executor) : read, account);`,
+    );
+    assert.deepEqual(assertedMember.ids, ["passed"]);
+    assert.match(assertedMember.messages[0], /read\(sql`…`\)/);
+    assert.doesNotMatch(assertedMember.messages[0], /client\?\.query/);
+    assert.doesNotMatch(assertedMember.messages[0], /flag \?/);
     assert.deepEqual(ids(`${IMPORT}run((statement) => flag && read(statement), account);`), []);
     assert.deepEqual(ids(`${IMPORT}(flag ? read : write)("SELECT 1");`), []);
     assert.deepEqual(
@@ -384,6 +455,21 @@ describe("postgres-no-executor-adapter", () => {
     assert.match(query.messages[0], /tx\.query\(sql`…`\)/);
     assert.doesNotMatch(query.messages[0], /const exec = tx\.query/);
     assert.equal(query.output, queryCode);
+    const eitherQuery = check(
+      `${TX}function f(tx: Tx, u: Tx, flag: boolean, a: string) {\n  return run((flag ? tx : u).query, a);\n}\n`,
+      SCOPED,
+    );
+    assert.deepEqual(eitherQuery.ids, ["passed"]);
+    assert.match(eitherQuery.messages[0], /\(flag \? tx : u\)\.query\(sql`…`\)/);
+    assert.equal(eitherQuery.messages.length, 1);
+    // One unproven receiver keeps the member unproven. Naming it would claim that receiver.
+    assert.deepEqual(
+      ids(
+        `${TX}function f(tx: Tx, client: { query(sql: string): unknown }, flag: boolean, a: string) {\n  run((flag ? tx : client).query, a);\n  run((flag ? client : tx).query, a);\n}\n`,
+        SCOPED,
+      ),
+      [],
+    );
     assert.deepEqual(ids(`${IMPORT}run(client.query, account);`), []);
     assert.deepEqual(ids(`${IMPORT}run(client["query"], account);`), []);
 
@@ -394,10 +480,13 @@ describe("postgres-no-executor-adapter", () => {
     assert.deepEqual(computed.ids, ["passed"]);
     assert.match(computed.messages[0], /tx\["query"\]\(sql`…`\)/);
 
-    assert.deepEqual(
-      ids(`${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`),
-      [],
+    const untypedAlias = check(
+      `${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`,
     );
+    assert.deepEqual(untypedAlias.ids, ["passed"]);
+    assert.match(untypedAlias.messages[0], /read\(sql`…`\)/);
+    assert.doesNotMatch(untypedAlias.messages[0], /client\.query/);
+    assert.doesNotMatch(untypedAlias.messages[0], /flag \? client\.query : read/);
     const mixed = check(
       `${TX}function load(tx: Tx, flag: boolean, account: string) {\n  const exec = flag ? tx.query : read;\n  return run(exec, account);\n}\n`,
       SCOPED,
@@ -473,7 +562,12 @@ describe("postgres-no-executor-adapter", () => {
       ids(`${IMPORT}const left = right;\nconst right = left;\nrun(left, account);`),
       [],
     );
-    assert.deepEqual(ids(`${IMPORT}const exec = flag ? read : other;\nrun(exec, account);`), []);
+    const partialAlias = check(`${IMPORT}const exec = flag ? read : other;\nrun(exec, account);`);
+    assert.deepEqual(partialAlias.ids, ["passed"]);
+    assert.match(partialAlias.messages[0], /read\(sql`…`\)/);
+    assert.doesNotMatch(partialAlias.messages[0], /other/);
+    assert.doesNotMatch(partialAlias.messages[0], /flag \? read : other/);
+    assert.match(partialAlias.output, /run\(exec, account\)/);
     assert.deepEqual(ids(`${IMPORT}const exec = other();\nrun(exec, account);`), []);
     assert.deepEqual(ids(`${IMPORT}const exec = client?.query;\nrun(exec, account);`), []);
     assert.deepEqual(ids(`${IMPORT}for (const exec of [read]) {\n  run(exec, account);\n}\n`), []);
@@ -484,7 +578,7 @@ describe("postgres-no-executor-adapter", () => {
       [],
     );
     assert.deepEqual(ids(`${IMPORT}const adapter = () => read();\nrun(adapter);`), []);
-    // Not a local const binding, so the adapter is not followed.
+    // Not followed: a constructor argument and an object property are not tracked.
     assert.deepEqual(ids(`${IMPORT}new Runner((statement) => read(statement));`), []);
     assert.deepEqual(
       ids(
