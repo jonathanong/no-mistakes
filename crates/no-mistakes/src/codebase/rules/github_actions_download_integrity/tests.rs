@@ -52,6 +52,8 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/workflows/nested/old.yml",
             ".no-mistakes.yml",
         ],
+        "helpers" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
+        "empty-hosts" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
         other => panic!("unknown fixture scenario {other}"),
     }
 }
@@ -195,18 +197,28 @@ fn option_fixtures_replace_hosts_and_add_helpers() {
     let (root, config, files) = load_fixture("helpers");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("ci_download_to"), "{findings:?}");
-    assert!(findings[0].message.contains("example.invalid"), "{findings:?}");
+    assert!(
+        findings[0].message.contains("ci_download_to"),
+        "{findings:?}"
+    );
+    assert!(
+        findings[0].message.contains("example.invalid"),
+        "{findings:?}"
+    );
 
     let (root, config, files) = load_fixture("empty-hosts");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 2, "{findings:?}");
     assert!(
-        findings.iter().any(|finding| finding.message.contains("api.github.com")),
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("api.github.com")),
         "{findings:?}"
     );
     assert!(
-        findings.iter().any(|finding| finding.message.contains("127.0.0.1")),
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("127.0.0.1")),
         "{findings:?}"
     );
 }
