@@ -1,10 +1,12 @@
 "use strict";
 
 const { traverse, unwrapExpression } = require("./async-ast");
-const { calleeMatches, localInitializer } = require("./postgres-no-async-sql-builder-match");
+const {
+  calleeMatches,
+  localInitializer,
+  tagCalleeIsStable,
+} = require("./postgres-no-async-sql-builder-match");
 
-// Loops, switch, and try can throw or skip a return. After `async` is removed
-// that exception happens before the caller continues.
 // Parentheses and assertions sit between a member callee and its tag.
 const TAG_WRAPPERS = new Set([
   "ChainExpression",
@@ -15,6 +17,8 @@ const TAG_WRAPPERS = new Set([
   "TSTypeAssertion",
 ]);
 
+// Loops, switch, and try can throw or skip a return. After `async` is removed
+// that exception happens before the caller continues.
 const UNSAFE_STATEMENTS = new Set([
   "DoWhileStatement",
   "ForInStatement",
@@ -160,18 +164,20 @@ function parameterCanThrow(param) {
   );
 }
 
-function isConfiguredTagMember(node, builders, context) {
+function isConfiguredTagMember(node, builders, context, func) {
   let current = node;
   // Climb the callee chain (`db.helper.sql`, `db.sql!`) and stop at the tag.
   while (
-    current.parent.object === current ||
-    (current.parent.expression === current && TAG_WRAPPERS.has(current.parent.type))
+    current.parent?.object === current ||
+    (current.parent?.expression === current && TAG_WRAPPERS.has(current.parent.type))
   ) {
     current = current.parent;
   }
   const parent = current.parent;
   return (
-    parent.type === "TaggedTemplateExpression" && isConfiguredSqlCall(parent, builders, context)
+    parent?.type === "TaggedTemplateExpression" &&
+    isConfiguredSqlCall(parent, builders, context) &&
+    tagCalleeIsStable(parent.tag, context, func)
   );
 }
 
@@ -186,7 +192,7 @@ function bodyHasUnjudgedEffect(context, func, builders) {
       return;
     }
     // A getter throws before later statements. The judged tag callee is the SQL.
-    if (node.type === "MemberExpression" && !isConfiguredTagMember(node, builders, context)) {
+    if (node.type === "MemberExpression" && !isConfiguredTagMember(node, builders, context, func)) {
       unsafe = true;
       return;
     }

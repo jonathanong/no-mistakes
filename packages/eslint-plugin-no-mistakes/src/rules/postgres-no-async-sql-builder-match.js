@@ -169,9 +169,35 @@ function isConfiguredBuilder(func, builders, context) {
   });
 }
 
+function unwrapTagCallee(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "ParenthesizedExpression")
+    current = unwrapExpression(current.expression);
+  return current;
+}
+
+function identifierDeclaredOutside(identifier, context, func) {
+  const variable = resolveVariable(identifier, context);
+  if (!variable || variable.defs.length === 0) return true;
+  return variable.defs.every((definition) => definition.node && !isInside(definition.node, func));
+}
+
+// A parameter or local object (`id.sql`, `id.x.sql`) throws once async is gone.
+// A bare tag, or a member chain rooted outside the function, does not.
+function tagCalleeIsStable(tag, context, func) {
+  let current = unwrapTagCallee(tag);
+  if (current?.type === "Identifier") return true;
+  while (current?.type === "MemberExpression") {
+    if (current.computed) return false;
+    current = unwrapTagCallee(current.object);
+  }
+  return current?.type === "Identifier" && identifierDeclaredOutside(current, context, func);
+}
+
 module.exports = {
   calleeMatches,
   configuredBuilders,
   isConfiguredBuilder,
   localInitializer,
+  tagCalleeIsStable,
 };

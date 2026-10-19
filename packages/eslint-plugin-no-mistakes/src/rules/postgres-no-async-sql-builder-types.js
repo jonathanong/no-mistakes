@@ -5,7 +5,9 @@ const { propertyName } = require("./module-mock-helpers");
 // `any`, `unknown`, and `object` are omitted. Each accepts a Promise, so a
 // parameter or return of those types is unknown rather than a non-Promise.
 // A type literal is handled separately: `{}` accepts a Promise the same way
-// `object` does, and a then/catch/finally member describes a thenable.
+// `object` does. Only a required member a Promise does not already have
+// (not `then` / `catch` / `finally`, and not an `Object.prototype` member)
+// makes the literal a non-Promise.
 const NON_PROMISE_TYPES = new Set([
   "TSArrayType",
   "TSBigIntKeyword",
@@ -25,7 +27,18 @@ const NON_PROMISE_TYPES = new Set([
   "TSVoidKeyword",
 ]);
 
-const THENABLE_MEMBERS = new Set(["then", "catch", "finally"]);
+const PROMISE_MEMBERS = new Set([
+  "then",
+  "catch",
+  "finally",
+  "constructor",
+  "toString",
+  "toLocaleString",
+  "valueOf",
+  "hasOwnProperty",
+  "isPrototypeOf",
+  "propertyIsEnumerable",
+]);
 
 const UNRESOLVED_TYPES = new Set([
   "TSConditionalType",
@@ -129,7 +142,7 @@ function typeLiteralPromiseFlag(type) {
       continue;
     }
     const name = staticKeyName(member);
-    if (name && !THENABLE_MEMBERS.has(name)) return "no";
+    if (name && !PROMISE_MEMBERS.has(name)) return "no";
   }
   return "unknown";
 }

@@ -60,8 +60,9 @@ import. An untyped, `Promise`-typed, `any`, `unknown`, `object`, unresolved, or
 Promise-compatible type-literal parameter makes the rule stay silent, because
 the synchronous call would throw if that parameter uses the value as a Promise.
 A `string` or `number` parameter does not. A callback result of `{}`, an alias
-of `{}`, `{ (): {} }`, or a literal whose members are only optional or named
-`then`, `catch`, or `finally` is the same kind of Promise-compatible type.
+of `{}`, `{ (): {} }`, or a literal whose members are only optional or members
+every Promise has, such as `then` or `toString`, is the same kind of
+Promise-compatible type.
 `{ foo: string }` is not: that callback still allows the report. A direct
 `{}` argument and a property typed `{ f: () => {} }` stay silent. The same check applies to a bound local (`const query = build()`),
 including when that local is passed on, returned, or copied into another
@@ -81,7 +82,9 @@ That includes any of these:
   such as ``sql`...`.append(...)``
 - `throw`, `new`, a loop, `switch`, `try`, a destructured parameter, a
   parameter default, or any call that is not a configured callee or tag. The
-  callee of a judged tag, including `(db.sql)`, is not one of these reads
+  callee of a judged tag is not one of these reads when it is a bare identifier
+  or a member chain rooted outside the function, such as `(db.sql)`. A tag on
+  a parameter or local, such as ``id.sql`SELECT 1` ``, stays silent
 - an exported builder, a return type or implemented interface it cannot
   resolve, or an explicit `Promise<...>`, `any`, `unknown`, `object`, or
   Promise-compatible type-literal return type
@@ -145,8 +148,9 @@ Removal is suggested only when every one of these is true:
 - the function has no `await`, `for await`, `await using`, or dynamic
   `import()` that it returns
 - the body has no `throw`, `new`, loop, `switch`, `try`, member read other
-  than a judged tag callee, destructured parameter, parameter default, or
-  call other than a configured callee or tag
+  than a judged tag whose callee is a bare name or a member rooted outside
+  the function, destructured parameter, parameter default, or call other
+  than a configured callee or tag
 - it is not an override or interface method required to return a Promise, a
   same-file base class or interface can be checked when one is declared, and
   no same-file subclass declares the same method

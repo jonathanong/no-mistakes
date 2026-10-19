@@ -21,8 +21,14 @@ function callableReturnContract(typeNode, types, seen = new Set()) {
     return combine(type.types.map((part) => callableReturnContract(part, types, seen)));
   if (type.type === "TSFunctionType") return annotationContract(type.returnType, types);
   if (type.type === "TSTypeLiteral") {
-    const signature = type.members.find((member) => member.type === "TSCallSignatureDeclaration");
-    return signature ? annotationContract(signature.returnType, types) : "unknown";
+    const call = type.members.find((member) => member.type === "TSCallSignatureDeclaration");
+    if (call) return annotationContract(call.returnType, types);
+    // A construct signature is not a value the caller can treat as SQL.
+    // Any other literal is the value's own shape: `{}` stays unknown, and a
+    // required member a Promise does not have allows the report.
+    if (type.members.some((member) => member.type === "TSConstructSignatureDeclaration"))
+      return "unknown";
+    return annotationContract(typeNode, types);
   }
   if (type.type === "TSTypeReference") {
     const name = referenceName(type.typeName);
