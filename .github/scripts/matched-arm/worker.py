@@ -12,6 +12,22 @@ from common import CAP_SECONDS, digest
 DIAGNOSTICS = ('[progress] ', '[timing] ', '[work] ', '[memory] ')
 
 
+def rss_kib(pid):
+    try:
+        for line in Path(f'/proc/{pid}/status').read_text().splitlines():
+            if line.startswith('VmRSS:'):
+                return int(line.split()[1])
+    except (FileNotFoundError, ProcessLookupError):
+        return None
+    return None
+
+
+def diagnostic_tail(path):
+    with path.open('rb') as stream:
+        stream.seek(max(0, path.stat().st_size - 2048))
+        return stream.read().decode(errors='replace').splitlines()[-1:]
+
+
 def cpu_seconds(pid):
     try:
         fields = Path(f'/proc/{pid}/stat').read_text().rpartition(')')[2].split()
@@ -20,7 +36,8 @@ def cpu_seconds(pid):
         return None
 
 
-def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal):
+def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal,
+           heartbeat=False):
     tag = f'{ordinal}-{arm}'
     runtime = (output / ('runtime-' + tag)).resolve()
     runtime.mkdir(mode=0o700)
@@ -36,6 +53,8 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
     env.pop('RAYON_NUM_THREADS', None)
     stdout_path, stderr_path = output / (tag + '.json'), output / (tag + '.stderr')
     timeline, stop, deadline_hit = [], threading.Event(), threading.Event()
+    if heartbeat:
+        print(f'CAPACITY arm={arm} status=started capSeconds={CAP_SECONDS}', flush=True)
     with stdout_path.open('wb') as stdout, stderr_path.open('wb') as stderr:
         started = time.monotonic()
         process = subprocess.Popen(command, stdout=stdout, stderr=stderr, env=env,
@@ -48,10 +67,19 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
             raise
 
         def observe():
+            last_heartbeat = 0.0
             while not stop.wait(0.1):
+                elapsed = time.monotonic() - started
                 cpu = cpu_seconds(process.pid)
                 if cpu is not None:
-                    timeline.append([time.monotonic() - started, cpu])
+                    timeline.append([elapsed, cpu])
+                if heartbeat and elapsed - last_heartbeat >= 60:
+                    rss = rss_kib(process.pid)
+                    print(f'CAPACITY arm={arm} status=running elapsedSeconds={elapsed:.1f} '
+                          f'cpuSeconds={cpu if cpu is not None else "unknown"} '
+                          f'rssKiB={rss if rss is not None else "unknown"} '
+                          f'lastDiagnostic={json.dumps(diagnostic_tail(stderr_path))}', flush=True)
+                    last_heartbeat = elapsed
 
         def deadline():
             if not stop.wait(CAP_SECONDS):
@@ -69,10 +97,12 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
                    for target in (observe, deadline)]
         for thread in threads:
             thread.start()
-        leader_exited_at = None
+        leader_exited_at, wait_error = None, None
         try:
             os.waitid(os.P_PIDFD, pidfd, os.WEXITED | os.WNOWAIT)
             leader_exited_at = time.monotonic()
+        except BaseException as error:
+            wait_error = error
         finally:
             stop.set()
             descendants = []
@@ -110,6 +140,14 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
         json.loads(stdout_path.read_bytes())
     except (ValueError, UnicodeDecodeError):
         eligible = False
+    if heartbeat:
+        status = 'interrupted' if wait_error is not None else 'finished'
+        cpu = usage.ru_utime + usage.ru_stime
+        print(f'CAPACITY arm={arm} status={status} elapsedSeconds={elapsed:.1f} '
+              f'cpuSeconds={cpu:.1f} peakRssKiB={usage.ru_maxrss} '
+              f'exit={process.returncode} eligible={eligible}', flush=True)
+    if wait_error is not None:
+        raise wait_error
     return {'arm': arm, 'ordinal': ordinal, 'stdout': stdout_path.name,
             'command': command, 'exit': process.returncode,
             'orphanedDescendants': len(descendants), 'deadlineHit': deadline_hit.is_set(),

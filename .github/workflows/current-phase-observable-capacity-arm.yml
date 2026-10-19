@@ -1,0 +1,88 @@
+name: Current phase ARM observable capacity retry
+
+on:
+  push:
+    branches: [eval/2241-observable-capacity-arm]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: current-phase-observable-capacity-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    name: jobs1 full config diagnostics on observable capacity only
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 355
+    steps:
+      - name: Checkout isolated harness
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Download pinned fresh CLI pair
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 12204356184
+          run-id: 39282454396
+          github-token: ${{ github.token }}
+          path: cli
+      - name: Download audited installed consumer
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 12158768554
+          run-id: 39189171362
+          github-token: ${{ github.token }}
+          path: prepared
+      - name: Restore exact consumer fixture
+        timeout-minutes: 1
+        run: tar -xzf prepared/fixture.tar.gz
+      - name: Verify pinned source binaries and artifacts
+        id: verify
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B harness/.github/scripts/current-arm/retry.py verify
+      - name: Observe baseline capacity with progress and timings
+        id: base
+        if: ${{ always() && steps.verify.outcome == 'success' && !cancelled() }}
+        timeout-minutes: 169
+        env:
+          MATCHED_COLLECTION_CAP_SECONDS: '10000'
+        run: python3 -B harness/.github/scripts/current-arm/retry.py base
+      - name: Retain baseline raw output immediately
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: current-phase-capacity-retry-base-${{ github.run_id }}
+          path: results/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Observe candidate capacity with progress and timings
+        id: candidate
+        if: ${{ always() && steps.verify.outcome == 'success' && !cancelled() }}
+        timeout-minutes: 169
+        env:
+          MATCHED_COLLECTION_CAP_SECONDS: '10000'
+        run: python3 -B harness/.github/scripts/current-arm/retry.py candidate
+      - name: Validate same-VM report and diagnostic parity
+        id: validate
+        if: ${{ always() && steps.verify.outcome == 'success' && !cancelled() }}
+        timeout-minutes: 1
+        run: python3 -B harness/.github/scripts/current-arm/retry.py finalize
+      - name: Retain candidate, parity, and final outcomes
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: current-phase-capacity-retry-final-${{ github.run_id }}
+          path: results/
+          if-no-files-found: warn
+          retention-days: 7

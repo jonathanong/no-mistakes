@@ -42,5 +42,20 @@ Local validation:
 ```sh
 python3 -B -m unittest discover -s .github/scripts/current-arm -p 'test_*.py'
 python3 -B -m unittest discover -s .github/scripts/matched-arm -p 'test_*.py'
-actionlint .github/workflows/current-phase-feasibility-arm.yml
+actionlint .github/workflows/current-phase-feasibility-arm.yml \
+  .github/workflows/current-phase-observable-capacity-arm.yml
 ```
+
+## Observable capacity retry
+
+The separate `eval/2241-observable-capacity-arm` workflow reuses only the fresh
+CLI pair from run `39282454396` and the same pinned installed consumer artifact.
+It checks artifact origin/expiry/digest, exact source trees, build-helper hashes,
+release/default-feature/compiler metadata, and binary/probe hashes before use.
+The baseline step uploads its raw output before the candidate starts. Both arms
+use jobs1, the full original config, diagnostics enabled, and a 10000-second
+collection cap on one ARM VM. Minute heartbeats go to the Actions log; CLI JSON
+and stderr remain raw files. The workflow retains censored/error states, runs
+report and diagnostic parity after both arms, and always marks this observation
+ineligible for gate evidence. It does not alter the already-running feasibility
+workflow or build another CLI pair.

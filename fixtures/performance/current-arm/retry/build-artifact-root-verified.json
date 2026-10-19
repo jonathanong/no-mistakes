@@ -1,0 +1,39 @@
+{
+  "run": 39282454396,
+  "artifact": 12204356184,
+  "archiveSha256": "03b1795720e60ee507cb4923b633b93d7533dfe151d45fc8ceb8e15642c1b2e8",
+  "zipEntries": 12,
+  "sources": {
+    "base": "e377c2ba31c3f1a59f39054b67d3eafa7c2a850a",
+    "phases": "b2701498b16bd63cd08993283151c4f169275dbe"
+  },
+  "proof": "Source commits/trees/locks, fresh matching release builds, compiler/flags, ARM OS, binary/probe hashes verified. Capacity-only; no performance conclusion.",
+  "builds": {
+    "base": {
+      "binarySha256": "1f95a3378d607060e4d416ed2da73fbcb053cba9385dca7c646eb28224df1b1e",
+      "cpuProbeSha256": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "features": "default",
+      "profile": {
+        "lto": true,
+        "codegen-units": 1
+      },
+      "buildJobs": 2,
+      "incremental": false
+    },
+    "phases": {
+      "binarySha256": "16a7e512821f35a2643efe69ab8584ec128b2b846cc60c3e8a8fc4bbc803368d",
+      "cpuProbeSha256": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "features": "default",
+      "profile": {
+        "lto": true,
+        "codegen-units": 1
+      },
+      "buildJobs": 2,
+      "incremental": false
+    }
+  }
+}
