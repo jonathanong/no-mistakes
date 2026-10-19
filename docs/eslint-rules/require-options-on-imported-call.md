@@ -83,8 +83,6 @@ client.chat.responses.create({ signal });
   unescaped `/`. `/^@acme/http$/` and `/abs/**` fail at config load. Write a
   package path as a glob that does not start with `/` (`@acme/http` or
   `@acme/**`), or escape the slash (`/^@acme\/http$/`).
-  Rejecting slash-prefixed imported patterns at config load is a
-  user-visible tightening.
   Each group also sets:
   - `optionsPosition`: one-based argument index of the options object.
   - `requiredProperties`: property names that must be statically present with a
@@ -152,7 +150,9 @@ bindings mutated through `globalThis` are unsupported.
 A call is reported once per distinct requirement. That requirement is
 `optionsPosition`, `propertyMatch`, the set of `requiredProperties`, and the
 message (the target `message`, otherwise the top-level `message`). An imported
-target and a receiver target that share it produce one finding. For example,
+target and a receiver target that share it produce one finding. Two imported
+targets whose globs both match the call, such as `ssrf-guard/node` and
+`ssrf-guard/*`, also produce one finding. For example,
 `import * as client from "agent"` followed by `client.create()` configured as
 both `{ agent, create }` and receiver `client` is reported once. The default
 message names the first match: imported targets in configuration order, then
