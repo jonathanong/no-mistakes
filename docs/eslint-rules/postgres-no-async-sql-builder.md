@@ -65,8 +65,11 @@ every Promise has, such as `then` or `toString`, is the same kind of
 Promise-compatible type.
 `{ foo: string }` is not: that callback still allows the report. A builder
 passed where the parameter is a non-callable literal stays silent unless the
-literal has a required member a function does not have, such as `{ foo: string }`.
-`{ name: string }` and `{ call(t: any): any }` stay silent. A direct
+literal has a required member that neither a function nor a Promise has, such
+as `{ foo: string }`. `{ name: string }`, `{ call(t: any): any }`, and
+`{ then: any }` stay silent. A builder's call result passed to a parameter is
+judged as a Promise: `{ then(f: any): any }` stays silent and `{ name: string }`
+reports. An interface is judged the same way as the alias with that body. A direct
 `{}` argument and a property typed `{ f: () => {} }` stay silent. The same check applies to a bound local (`const query = build()`),
 including when that local is passed on, returned, or copied into another
 local. A use this file does not explicitly recognize, such as `instanceof` or

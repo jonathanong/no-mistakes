@@ -10,7 +10,7 @@ const {
   returnedPromiseContract,
 } = require("./postgres-no-async-sql-builder-bindings");
 const { callableReturnContract } = require("./postgres-no-async-sql-builder-property");
-const { combine } = require("./postgres-no-async-sql-builder-types");
+const { annotationContract, combine } = require("./postgres-no-async-sql-builder-types");
 
 function callResultContract(call, context, types, seen = new Set()) {
   let current = call;
@@ -30,7 +30,8 @@ function callResultContract(call, context, types, seen = new Set()) {
     if (parent.type === "ReturnStatement" && parent.argument === current)
       return returnedPromiseContract(parent, context, types);
     if (parent.type === "CallExpression" && parent.arguments.includes(current)) {
-      return argumentParameterContract(current, context, types);
+      // This value is the builder's Promise, not the builder function.
+      return argumentParameterContract(current, context, types, annotationContract);
     }
     if (
       parent.type === "UnaryExpression" &&
@@ -57,7 +58,7 @@ function callResultContract(call, context, types, seen = new Set()) {
   return "unknown";
 }
 
-function argumentParameterContract(argument, context, types) {
+function argumentParameterContract(argument, context, types, contractOf) {
   const call = argument.parent;
   const index = call.arguments.indexOf(argument);
   const callee = unwrapExpression(call.callee);
@@ -74,9 +75,10 @@ function argumentParameterContract(argument, context, types) {
   const parameter = target?.params?.[index];
   if (!parameter || parameter.type === "RestElement") return "unknown";
   const binding = parameter.type === "AssignmentPattern" ? parameter.left : parameter;
-  return binding?.type === "Identifier"
-    ? callableReturnContract(binding.typeAnnotation, types)
-    : "unknown";
+  // A missing annotation is not proof. `annotationContract` treats that as
+  // a non-Promise, which would suggest a rewrite the call may not survive.
+  if (binding?.type !== "Identifier" || !binding.typeAnnotation) return "unknown";
+  return contractOf(binding.typeAnnotation, types);
 }
 
 function referenceUseContract(identifier, context, types) {
@@ -85,7 +87,7 @@ function referenceUseContract(identifier, context, types) {
   if (parent.type === "CallExpression" && parent.callee === identifier)
     return callResultContract(parent, context, types);
   if (parent.type === "CallExpression" && parent.arguments.includes(identifier)) {
-    return argumentParameterContract(identifier, context, types);
+    return argumentParameterContract(identifier, context, types, callableReturnContract);
   }
   return "unknown";
 }
@@ -113,7 +115,7 @@ function directValueContract(func, context, types) {
     return "allows";
   }
   if (parent?.type === "CallExpression" && parent.arguments.includes(func)) {
-    return argumentParameterContract(func, context, types);
+    return argumentParameterContract(func, context, types, callableReturnContract);
   }
   return "unknown";
 }
