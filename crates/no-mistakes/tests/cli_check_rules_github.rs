@@ -253,3 +253,13 @@ fn github_actions_docker_host_ports_cli_fails_for_a_literal_host_port() {
     assert!(body.contains("github-actions-docker-host-ports"), "{body}");
     assert!(body.contains("5432"), "{body}");
 }
+
+#[test]
+fn github_actions_download_integrity_cli_fails_for_an_unverified_curl() {
+    let root = fixture("github-actions-download-integrity", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(body.contains("github-actions-download-integrity"), "{body}");
+    assert!(body.contains("example.invalid"), "{body}");
+}
