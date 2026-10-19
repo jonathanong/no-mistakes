@@ -11,11 +11,11 @@ fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/postgres/conflict-ordering")
 }
 
-fn fixture(scenario: &str) -> PathBuf {
+pub(super) fn fixture(scenario: &str) -> PathBuf {
     fixture_root().join("cases").join(scenario)
 }
 
-fn config() -> NoMistakesConfig {
+pub(super) fn config() -> NoMistakesConfig {
     config_with_options("schemaCatalogPath: schema.json")
 }
 

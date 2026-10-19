@@ -1,6 +1,7 @@
 use super::analysis;
 use crate::codebase::postgres::{SchemaCatalog, SqlStatementFileFacts};
 use crate::codebase::rules::RuleFinding;
+use anyhow::{Context, Result};
 
 /// Preserve the exact-call finding shape while reusing the request's one SQL
 /// parse and conflict projection.
@@ -11,11 +12,8 @@ pub(super) fn findings(
     statement: &SqlStatementFileFacts,
     catalog: &SchemaCatalog,
     fail_unanalyzable: bool,
-) -> Vec<RuleFinding> {
-    let locations = statement
-        .variant_locations
-        .as_ref()
-        .expect("conflict locations");
+) -> Result<Vec<RuleFinding>> {
+    let locations = locations(statement, file, line)?;
     let prepared = super::gate::prepared_conflicts(locations, statement.parse_failed);
     let mut findings = Vec::new();
     if prepared.unanalyzable && fail_unanalyzable && analysis::contains_insert_conflict(sql) {
@@ -31,5 +29,18 @@ pub(super) fn findings(
             .into_iter()
             .map(|(_, finding)| finding),
     );
-    findings
+    Ok(findings)
+}
+
+pub(super) fn locations<'a>(
+    statement: &'a SqlStatementFileFacts,
+    file: &str,
+    line: usize,
+) -> Result<&'a crate::codebase::postgres::statements::SqlVariantLocations> {
+    statement.variant_locations.as_ref().with_context(|| {
+        format!(
+            "{}: prepared SQL conflict locations are missing for {file}:{line}",
+            super::RULE_ID
+        )
+    })
 }

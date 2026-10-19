@@ -92,3 +92,28 @@ fn overlapping_parse_failure_abstains_after_reliable_conflicts() {
     assert_eq!(judgment.status, SqlVerdictStatus::Abstain);
     assert_eq!(judgment.reason, Some("invalid-sql"));
 }
+
+#[test]
+fn missing_prepared_conflict_locations_abstain() {
+    let sql = std::fs::read_to_string(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/postgres-facts/source/conflict-location-demand.sql"),
+    )
+    .unwrap();
+    let call = EmbeddedSqlCall {
+        sql_text: Some(sql.clone()),
+        kind: EmbeddedSqlKind::Inline,
+        ..Default::default()
+    };
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
+    let judgment = judge(
+        "query.ts",
+        "",
+        &call,
+        Some(&facts),
+        &options(),
+        &SchemaCatalog::default(),
+    );
+    assert_eq!(judgment.status, SqlVerdictStatus::Abstain);
+    assert_eq!(judgment.reason, Some("missing-prepared-sql-facts"));
+}

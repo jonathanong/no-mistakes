@@ -99,11 +99,12 @@ pub(super) fn scan_with_sources(
                 continue;
             }
             let statement = statement.ok_or_else(|| {
-                anyhow::anyhow!(if original.variants.is_empty() {
+                let missing = if original.variants.is_empty() {
                     "prepared SQL facts are missing"
                 } else {
                     "prepared SQL variant facts are missing"
-                })
+                };
+                anyhow::anyhow!("{RULE_ID}: {missing} for {rel}:{}", call.line)
             })?;
             if original.variants.is_empty() {
                 findings.extend(exact::findings(
@@ -113,13 +114,10 @@ pub(super) fn scan_with_sources(
                     statement,
                     catalog,
                     opts.fail_unanalyzable,
-                ));
+                )?);
                 continue;
             }
-            let locations = statement
-                .variant_locations
-                .as_ref()
-                .expect("conflict locations");
+            let locations = exact::locations(statement, &rel, call.line as usize)?;
             let prepared = gate::prepared_conflicts(locations, statement.parse_failed);
             if prepared.unanalyzable
                 && opts.fail_unanalyzable
@@ -168,3 +166,6 @@ pub(super) fn scan_with_sources(
 fn unanalyzable_sql(rel: &str, line: u32, message: &'static str) -> RuleFinding {
     analysis::finding(rel, line as usize, "unanalyzable-sql", message)
 }
+
+#[cfg(test)]
+mod tests;
