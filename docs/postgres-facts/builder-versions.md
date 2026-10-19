@@ -6,11 +6,16 @@ If any possible outcome is opaque, if there are more than 16 versions, or if
 recovery exceeds the depth limit of 8, no partial version set is published.
 Loops other than the bounded helper loops described [below](imported-and-literal-identifier-helpers.md#helper-control-flow-and-nested-composition),
 untagged `${...}` SQL-text interpolation other than the
-[literal-identifier helpers](imported-and-literal-identifier-helpers.md#imported-and-literal-identifier-helpers),
+[literal-identifier helpers](imported-and-literal-identifier-helpers.md#imported-and-literal-identifier-helpers)
+and a ternary whose every arm is a literal or a same-file immutable `const` of
+those literals (nested ternaries included),
 calls to imported helpers the request resolver cannot prove (see the same
 section for what it does resolve), `sql.raw(variable)`, and `sql.join` over
 non-literal input, spreads, or array holes remain `Dynamic` and retain the
 existing `unanalyzableSql` behavior.
+That ternary is one alternative per arm, under the same 16-version and depth-8
+caps. An unknown arm (a parameter, call, `let`, reassignment, or anything
+else) or a cap overflow publishes no alternative.
 An unknown falsy result from `condition && sqlFragment` cannot prove whether
 a following `??` takes its fallback, so that composed call remains `Dynamic`.
 Present and absent fragments inside trusted templates and recoverable `||`

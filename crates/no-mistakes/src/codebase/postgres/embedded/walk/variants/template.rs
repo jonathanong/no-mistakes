@@ -5,6 +5,7 @@ use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
 pub(super) mod builder_text;
+pub(super) mod clauses;
 mod effects;
 mod piece;
 
