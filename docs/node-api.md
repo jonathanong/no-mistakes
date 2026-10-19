@@ -545,11 +545,13 @@ changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths
 plus both sides of detected renames and copies.
 
-When a changed package manifest, lockfile, or .NET dependency input has no
-baseline (`package-manifest-no-baseline`, `lockfile-no-baseline`, or
-`dotnet-dependency-no-baseline`), `testsPlan()` also returns `incomplete`: an
-array of `TestPlanIncompleteness` (`kind: "dependency-baseline-missing"`,
-`files` listing those root-relative inputs). The .NET paths share that kind.
+When a changed package manifest, lockfile, .NET dependency input, or Swift
+dependency input has no baseline (`package-manifest-no-baseline`,
+`lockfile-no-baseline`, `dotnet-dependency-no-baseline`,
+`swift-manifest-no-baseline`, or `swift-resolved-no-baseline`), `testsPlan()`
+also returns `incomplete`: an array of `TestPlanIncompleteness`
+(`kind: "dependency-baseline-missing"`, `files` listing those root-relative
+inputs). The .NET and Swift paths share that kind.
 The field is omitted when dependency baselines are present. Pass `base` (the
 pre-change revision) when changed files include dependency manifests or
 lockfiles. `fallbackTriggered` is not a substitute: a dynamic Vitest

@@ -48,6 +48,46 @@ fn dotnet_missing_baseline_shares_one_kind_when_files_differ() {
         .any(|file| file == "broken.csproj"));
 }
 
+/// `Package.swift` and `Package.resolved` are different files and the same
+/// missing-baseline condition. An unsupported dynamic manifest stays out.
+#[test]
+fn swift_missing_baseline_shares_one_kind_when_files_differ() {
+    let mut plan = TestPlan {
+        warnings: vec![
+            warning("package-manifest-no-baseline", "package.json"),
+            warning("swift-manifest-no-baseline", "Package.swift"),
+            warning("swift-resolved-no-baseline", "Package.resolved"),
+            warning(
+                "swift-manifest-unsupported-dynamic",
+                "dynamic/Package.swift",
+            ),
+        ],
+        ..Default::default()
+    };
+    plan.finish(false, &[]);
+
+    assert_eq!(plan.incomplete.len(), 1);
+    assert_eq!(
+        plan.incomplete[0].kind,
+        PlanIncompletenessKind::DependencyBaselineMissing
+    );
+    assert_eq!(
+        plan.incomplete[0].files,
+        vec![
+            "Package.resolved".to_string(),
+            "Package.swift".to_string(),
+            "package.json".to_string(),
+        ]
+    );
+    let json = serde_json::to_value(&plan).unwrap();
+    assert_eq!(json["incomplete"][0]["kind"], "dependency-baseline-missing");
+    assert!(!json["incomplete"][0]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|file| file == "dynamic/Package.swift"));
+}
+
 #[test]
 fn incompleteness_kind_serializes_as_the_public_name() {
     let kind = PlanIncompletenessKind::DependencyBaselineMissing;

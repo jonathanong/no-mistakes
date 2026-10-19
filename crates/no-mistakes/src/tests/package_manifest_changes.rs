@@ -152,5 +152,9 @@ mod dependency_baseline_incomplete_tests;
 mod dependency_baseline_dotnet_tests;
 
 #[cfg(test)]
+#[path = "package_manifest_changes/dependency_baseline_swift_tests.rs"]
+mod dependency_baseline_swift_tests;
+
+#[cfg(test)]
 #[path = "package_manifest_changes_tests.rs"]
 mod tests;

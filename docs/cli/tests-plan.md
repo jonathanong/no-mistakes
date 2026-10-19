@@ -86,11 +86,12 @@ Pass `--base <pre-change revision>` when the changed files include a package
 manifest or lockfile (`package.json`, `pnpm-lock.yaml`, `package-lock.json`,
 `yarn.lock`, `bun.lock`, and the other supported dependency inputs). Without
 that baseline, the classifiers do not invent the previous versions. They keep
-the existing `package-manifest-no-baseline`, `lockfile-no-baseline`, and
-`dotnet-dependency-no-baseline` warnings and add one structured marker.
-`.csproj`, `Directory.Packages.props`, and NuGet lockfiles are different files
-with the same missing baseline, so they use `dependency-baseline-missing`
-rather than a second kind. `fallback_triggered: true` is not
+the existing `package-manifest-no-baseline`, `lockfile-no-baseline`,
+`dotnet-dependency-no-baseline`, `swift-manifest-no-baseline`, and
+`swift-resolved-no-baseline` warnings and add one structured marker.
+`.csproj`, `Directory.Packages.props`, NuGet lockfiles, `Package.swift`, and
+`Package.resolved` are different files with the same missing baseline, so they
+use `dependency-baseline-missing` rather than a second kind. `fallback_triggered: true` is not
 completeness: a scoped Vitest setup fallback can still select only its owning
 project.
 

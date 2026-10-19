@@ -27,8 +27,8 @@ impl TestPlan {
     }
 }
 
-/// Missing baselines share one incompleteness kind. `dotnet-dependency-no-baseline`
-/// names different files than package manifests and JavaScript lockfiles, but
+/// Missing baselines share one incompleteness kind. Swift and .NET warnings
+/// name different files than package manifests and JavaScript lockfiles, but
 /// the condition is the same, so those paths join this entry instead of a
 /// second kind.
 fn dependency_baseline_incomplete(warnings: &[super::Warning]) -> Vec<PlanIncompleteness> {
@@ -39,6 +39,8 @@ fn dependency_baseline_incomplete(warnings: &[super::Warning]) -> Vec<PlanIncomp
             "lockfile-no-baseline"
                 | "package-manifest-no-baseline"
                 | "dotnet-dependency-no-baseline"
+                | "swift-manifest-no-baseline"
+                | "swift-resolved-no-baseline"
         ) {
             files.insert(warning.file.clone());
         }
