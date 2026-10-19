@@ -1,3 +1,6 @@
+mod rule_scans;
+use rule_scans::merge_embedded_sql_rule_ids;
+
 use std::sync::Arc;
 use std::{collections::HashSet, path::PathBuf};
 
@@ -65,20 +68,6 @@ pub struct CheckFactPlan {
     pub postgres_sql_include: Vec<String>,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
-}
-
-fn merge_embedded_sql_rule_ids(
-    existing: &mut crate::codebase::postgres::EmbeddedSqlRuleScans,
-    additional: crate::codebase::postgres::EmbeddedSqlRuleScans,
-) {
-    for (options, scans) in additional {
-        let slot = existing.entry(options).or_default();
-        for scan in scans {
-            if !slot.iter().any(|existing| existing.same_application(&scan)) {
-                slot.push(scan);
-            }
-        }
-    }
 }
 
 impl CheckFactPlan {

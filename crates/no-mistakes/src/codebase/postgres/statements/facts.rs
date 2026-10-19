@@ -6,6 +6,7 @@ mod lifecycle;
 mod locations;
 mod parse;
 mod policy;
+mod sources;
 use crate::codebase::postgres::parse::PreparedSql;
 use collect::{collect_one, FactOut};
 pub(crate) use lifecycle::project_bounds;
@@ -16,28 +17,14 @@ pub(crate) use parse::{
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
 };
 use policy::table_keyword;
+pub(crate) use sources::StatementPolicySources;
+use sources::StatementSources;
 use sqlparser::ast::{Spanned, Statement};
-use sqlparser::tokenizer::TokenWithSpan;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 mod prepared;
 use prepared::PreparedStatements;
-
-#[derive(Default)]
-pub(crate) struct StatementPolicySources<'a> {
-    pub(crate) schema: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
-    pub(crate) functions: &'a [crate::codebase::postgres::SqlFunctionCallFact],
-}
-
-#[derive(Default)]
-struct StatementSources<'a> {
-    locations: bool,
-    tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
-    // `recovery` is parallel to statements after a failed strict parse.
-    policy: StatementPolicySources<'a>,
-    recovery: Option<&'a crate::codebase::postgres::conflict::ConflictChunks<'a>>,
-}
 
 fn extract_from_parsed_and_sources(
     sql: &str,
