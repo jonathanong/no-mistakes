@@ -145,7 +145,7 @@ queues:
     let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
     let mut roles = config.queues.factories.clone();
     let extra = roles.clone();
-    roles.merge(&extra);
+    roles.merge(&extra).unwrap();
     assert_eq!(roles.queue.len(), 2);
     assert_eq!(
         roles

@@ -17,7 +17,7 @@ when language packages are configured on a TypeScript-only tree.
 | --- | --- |
 | [`queues edges`](queues-edges.md) | Print queue dependency edges. |
 | [`queues related`](queues-related.md) | Print files/nodes related to queue files or jobs. |
-| [`queues check`](queues-check.md) | Fail on unmatched producers/workers. |
+| [`queues check`](queues-check.md) | Report unmatched producers and workers, cycles, self-dedup enqueues, and enqueue waits. |
 
 Shared options: `--root`, `--tsconfig`, repeatable `--filter`, `--depth`,
 `--format`, `--json`, and `--timings`.

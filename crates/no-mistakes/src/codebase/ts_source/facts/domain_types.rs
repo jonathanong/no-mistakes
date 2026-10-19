@@ -137,7 +137,7 @@ impl TsFactContext {
             .extend(other.queue_project_factory_names);
         self.queue_project_factory_names.sort();
         self.queue_project_factory_names.dedup();
-        self.queue_factory_roles.merge(&other.queue_factory_roles);
+        let _ = self.queue_factory_roles.merge(&other.queue_factory_roles);
         self.http_prefixes.extend(other.http_prefixes);
         self.http_prefixes.sort();
         self.http_prefixes.dedup();

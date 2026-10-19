@@ -26,7 +26,7 @@ pub(super) fn note_named_import(
     {
         visitor
             .enqueue_factories
-            .insert(local.to_string(), (spec.queue, spec.job));
+            .insert(local.to_string(), (spec.queue, spec.job, spec.options));
     }
     if let Some(spec) = visitor
         .roles
@@ -182,12 +182,9 @@ fn queue_name_index(visitor: &QueueVisitor<'_>, imported: &str) -> Option<usize>
 }
 
 pub(super) fn identifier_arg(arg: &Argument<'_>) -> Option<String> {
-    match arg {
-        Argument::Identifier(id) => Some(id.name.as_str().to_string()),
-        _ => match arg.as_expression() {
-            Some(Expression::Identifier(id)) => Some(id.name.as_str().to_string()),
-            _ => None,
-        },
+    match arg.as_expression() {
+        Some(Expression::Identifier(id)) => Some(id.name.as_str().to_string()),
+        _ => None,
     }
 }
 

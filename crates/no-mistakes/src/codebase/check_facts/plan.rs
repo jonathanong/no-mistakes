@@ -140,7 +140,7 @@ impl CheckFactPlan {
         self.queue_factory_names.extend(other.queue_factory_names);
         self.queue_factory_names.sort();
         self.queue_factory_names.dedup();
-        self.queue_factory_roles.merge(&other.queue_factory_roles);
+        let _ = self.queue_factory_roles.merge(&other.queue_factory_roles);
         self.integration |= other.integration;
         if self.integration_runner_configs.is_none() {
             self.integration_runner_configs = other.integration_runner_configs;

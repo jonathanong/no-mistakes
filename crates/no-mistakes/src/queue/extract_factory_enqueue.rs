@@ -13,6 +13,7 @@ pub(super) fn note_enqueue(
     call: &CallExpression<'_>,
     queue_index: usize,
     job_index: usize,
+    options: Option<usize>,
 ) {
     let Some(binding) = call
         .arguments
@@ -31,16 +32,22 @@ pub(super) fn note_enqueue(
         .map(|expr| literal_or_import(expr, &visitor.const_strings, &visitor.facts.string_imports))
         .unwrap_or((None, None));
     let raw_job = job_arg.map(|arg| crate::ast::span_text(visitor.source, arg.span()).to_string());
+    let recorded = visitor.facts.producers.len();
     visitor.facts.producers.push(ProducerSite {
         file: visitor.path.to_path_buf(),
         line: line_number(visitor.source, call.span.start),
         binding,
-        job,
+        job: job.clone(),
         job_import,
         raw_job,
         worker_index: visitor.worker_stack.last().copied(),
         self_dedup: false,
     });
+    if let Some(index) = options
+        && let Some(expr) = call.arguments.get(index).and_then(Argument::as_expression)
+    {
+        super::super::dedup::note_dedup_argument(visitor, call, expr, job, recorded);
+    }
 }
 
 pub(super) fn note_worker(

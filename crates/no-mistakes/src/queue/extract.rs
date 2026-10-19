@@ -28,7 +28,8 @@ pub(crate) fn extract_program_with_factories(
         queue_name_index: HashMap::new(),
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
-        in_job: 0,
+        job_frames: Vec::new(),
+        record_waits: waits_in_scope(path, &roles.wait_scopes),
         current_case: None,
         namespace_imports: HashMap::new(),
         processor_spans: Vec::new(),
@@ -40,4 +41,28 @@ pub(crate) fn extract_program_with_factories(
     jobs.dedup();
     visitor.facts.referenced_jobs = jobs;
     visitor.facts
+}
+
+pub(crate) fn waits_in_scope(path: &Path, scopes: &[String]) -> bool {
+    if scopes.is_empty() {
+        return true;
+    }
+    let mut builder = globset::GlobSetBuilder::new();
+    let mut added = false;
+    for scope in scopes {
+        for pattern in [scope.clone(), format!("**/{scope}")] {
+            let Ok(glob) = globset::GlobBuilder::new(&pattern)
+                .literal_separator(false)
+                .build()
+            else {
+                continue;
+            };
+            builder.add(glob);
+            added = true;
+        }
+    }
+    if !added {
+        return true;
+    }
+    builder.build().is_ok_and(|set| set.is_match(path))
 }

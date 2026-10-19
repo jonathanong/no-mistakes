@@ -132,6 +132,10 @@ pub struct QueueConfig {
     pub enqueues: Vec<String>,
     pub workers: Vec<String>,
     pub cluster: Option<String>,
+    /// Files whose `addAndWait` / `waitUntilFinished` calls are checked.
+    /// Empty means every scanned file.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub wait_scopes: Vec<String>,
 }
 
 include!("schema_trpc.rs");
