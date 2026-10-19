@@ -71,6 +71,35 @@ fn reduce_element_is_the_second_parameter() {
 }
 
 #[test]
+fn open_tail_after_an_unresolved_spread_reaches_later_parameters() {
+    let (built, root) = graph();
+    unknown_replica_on(&built, &root, "open-tail");
+    assert_export(&built, &root, "open-tail", "primary.get");
+}
+
+#[test]
+fn sequence_argument_keeps_the_last_operands() {
+    let (built, root) = graph();
+    unknown_replica_on(&built, &root, "sequence-arg");
+    assert_export(&built, &root, "sequence-arg", "primary.get");
+}
+
+#[test]
+fn reduce_on_an_unresolved_receiver_does_not_invent_an_accumulator() {
+    let (built, root) = graph();
+    for callee in ["replica.get", "primary.get", "unrelated.get"] {
+        assert_export(&built, &root, "reduce-unresolved", callee);
+    }
+}
+
+#[test]
+fn destructured_reduce_accumulator_still_passes_the_element() {
+    let (built, root) = graph();
+    unknown_replica_on(&built, &root, "reduce-pattern");
+    assert_export(&built, &root, "reduce-pattern", "primary.get");
+}
+
+#[test]
 fn unrelated_object_assign_field_drops_the_previous_callee() {
     let (built, root) = graph();
     assert_unknown(
