@@ -126,7 +126,8 @@ fn collect_file_facts_from_source(
                         format!("failed to parse {}: {parse_error}", path.display()),
                     )
                 });
-            let embedded_sql = program::prepared_embedded_sql(path, parsed_source, program, plan);
+            let embedded_sql =
+                program::prepared_embedded_sql(root, path, parsed_source, program, plan);
             return CheckFileFacts {
                 ts: Arc::new(ts),
                 source: stored_source,

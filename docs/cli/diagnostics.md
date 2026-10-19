@@ -70,10 +70,23 @@ identify lock waiting and gaps between deeper phases.
 PostgreSQL embedded-SQL checks can also emit
 `[work] postgres.unproven_member_query_sql: N`: SQL-looking `.query` calls
 whose receiver has no configured proof after relative-import resolution.
-They remain outside the SQL candidate set. The counter is collected only with
-`--verbose-timings`. Its advisory leading-statement heuristic includes common
-queries, transactions, and DDL; it does not prove executor ownership.
-A non-SQL HTTP `.query({ resource: ... })` does not add to it.
+They remain outside the SQL candidate set. The work counter is collected only
+with `--verbose-timings`. The same count is printed by default as one stderr
+warning, including when timings are off:
+
+```text
+warning: N member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md
+```
+
+JSON stdout omits the warning text. It includes optional
+`unprovenMemberQuerySql` when the deduped count is greater than zero and omits
+that field at zero. `check()` and `checkJson` return the same field and do not
+print the stderr line. A line suppressed for every PostgreSQL rule on that
+executor profile is not counted, and spans are deduplicated per file across option
+sets. Zero stays silent on stderr. The `--verbose-timings` work counter matches
+the deduped count. Its advisory leading-statement heuristic includes common
+queries, transactions, and DDL; it does not prove executor ownership. A
+non-SQL HTTP `.query({ resource: ... })` does not add to it.
 
 Parallel phase durations can overlap their enclosing phase and siblings. Never
 add lines marked `parallel; non-additive` to estimate total time; use `total`

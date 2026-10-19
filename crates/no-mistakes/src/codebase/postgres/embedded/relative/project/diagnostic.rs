@@ -1,17 +1,12 @@
 use super::super::PendingRelativeScope;
 use super::kept_owner;
 
-pub(super) fn count_unproven(pending: &PendingRelativeScope, kept: &[bool]) {
-    let Some(observer) = crate::diagnostics::current().filter(|observer| observer.verbose()) else {
-        return;
-    };
-    let count = pending
+pub(super) fn unproven_spans(pending: &PendingRelativeScope, kept: &[bool]) -> Vec<(u32, u32)> {
+    pending
         .calls
         .iter()
         .filter(|call| pending.diagnostic_member_sequences.contains(&call.seq))
         .filter(|call| !kept_owner(kept, &call.owners))
-        .count();
-    if count > 0 {
-        observer.increment("postgres.unproven_member_query_sql", count as u64);
-    }
+        .filter_map(|call| pending.call_spans.get(&call.seq).copied())
+        .collect()
 }

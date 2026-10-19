@@ -14,6 +14,10 @@ impl CheckFactMap {
         }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
+        let unproven_member_query_sql =
+            crate::codebase::check_facts::relative_scope::count_unproven_member_queries(
+                ts.values().map(|facts| facts.as_ref()),
+            );
         Self {
             companion_import_plans: crate::codebase::rules::required_companion_imports::merge_plans(
                 &self.companion_import_plans,
@@ -35,6 +39,7 @@ impl CheckFactMap {
             route_reachable_files_cache: Arc::clone(&self.route_reachable_files_cache),
             postgres_schema_catalogs: self.postgres_schema_catalogs.clone(),
             stats: self.stats,
+            unproven_member_query_sql,
         }
     }
 }

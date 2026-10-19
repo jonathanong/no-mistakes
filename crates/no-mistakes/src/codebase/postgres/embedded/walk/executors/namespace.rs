@@ -4,6 +4,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 use std::collections::HashMap;
 
 mod aggregate;
+mod arguments;
 mod identity;
 mod proof;
 use identity::Origin;
@@ -23,6 +24,7 @@ pub(super) struct Escape {
     pub(super) owner: u32,
     pub(super) event: u32,
     pub(super) in_loop: bool,
+    pub(super) mutates_member: bool,
 }
 
 #[derive(Default)]
@@ -34,6 +36,8 @@ pub(crate) struct MemberQueryProof {
     pub(super) next_event: u32,
     pub(super) aliases: HashMap<(u32, String), Vec<Origin>>,
     pub(super) escapes: HashMap<Origin, Vec<Escape>>,
+    captures: Vec<proof::QueryCapture>,
+    captured_calls: Vec<proof::CapturedCall>,
     pub(in crate::codebase::postgres::embedded::walk) calls: Vec<MemberCall>,
 }
 
@@ -70,19 +74,10 @@ impl ScopeVisitor<'_> {
 
     pub(in crate::codebase::postgres::embedded::walk) fn namespace_query_valid(
         &self,
-        receiver: &Expression<'_>,
+        _receiver: &Expression<'_>,
     ) -> bool {
-        self.query_binding && self.receiver_query_valid(receiver)
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn receiver_query_valid(
-        &self,
-        receiver: &Expression<'_>,
-    ) -> bool {
-        !self
-            .receiver_origins(receiver)
-            .iter()
-            .any(|origin| self.member_query_proof.escapes.contains_key(origin))
+        // An escape downgrades a recorded call. Rejecting here would drop it.
+        self.query_binding
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_member_call(
@@ -100,22 +95,21 @@ impl ScopeVisitor<'_> {
             .unwrap_or(0);
         let event = self.member_query_proof.next_event;
         self.member_query_proof.next_event += 1;
-        let sql_looking = crate::diagnostics::current().is_some_and(|observer| observer.verbose())
-            && self
-                .pending_calls
-                .iter()
-                .rev()
-                .find(|pending| pending.seq == sequence)
-                .is_some_and(|pending| {
-                    pending
-                        .call
-                        .sql_text
-                        .as_deref()
-                        .is_some_and(super::super::scope::has_diagnostic_leading_statement)
-                        || pending.call.variants.iter().any(|variant| {
-                            super::super::scope::has_diagnostic_leading_statement(&variant.sql_text)
-                        })
-                });
+        let sql_looking = self
+            .pending_calls
+            .iter()
+            .rev()
+            .find(|pending| pending.seq == sequence)
+            .is_some_and(|pending| {
+                pending
+                    .call
+                    .sql_text
+                    .as_deref()
+                    .is_some_and(super::super::scope::has_diagnostic_leading_statement)
+                    || pending.call.variants.iter().any(|variant| {
+                        super::super::scope::has_diagnostic_leading_statement(&variant.sql_text)
+                    })
+            });
         self.member_query_proof.calls.push(MemberCall {
             sequence,
             span: (call.span.start, call.span.end),
@@ -130,20 +124,37 @@ impl ScopeVisitor<'_> {
         &mut self,
         receiver: &Expression<'_>,
     ) {
+        // Holders, returns, and aliases can replace `.query` after the copy.
+        self.revoke_receiver(receiver, true);
+    }
+
+    /// Passing a binding into a function declared outside this file.
+    fn revoke_passed_argument(&mut self, receiver: &Expression<'_>) {
+        self.revoke_receiver(receiver, false);
+    }
+
+    pub(in crate::codebase::postgres::embedded::walk) fn revoke_mutated_query_member(
+        &mut self,
+        receiver: &Expression<'_>,
+    ) {
+        self.revoke_receiver(receiver, true);
+    }
+
+    fn revoke_receiver(&mut self, receiver: &Expression<'_>, mutates_member: bool) {
         match unwrap_ts_wrappers(receiver) {
             Expression::ConditionalExpression(value) => {
-                self.revoke_query_receiver(&value.consequent);
-                self.revoke_query_receiver(&value.alternate);
+                self.revoke_receiver(&value.consequent, mutates_member);
+                self.revoke_receiver(&value.alternate, mutates_member);
                 return;
             }
             Expression::LogicalExpression(value) => {
-                self.revoke_query_receiver(&value.left);
-                self.revoke_query_receiver(&value.right);
+                self.revoke_receiver(&value.left, mutates_member);
+                self.revoke_receiver(&value.right, mutates_member);
                 return;
             }
             Expression::SequenceExpression(value) => {
                 if let Some(last) = value.expressions.last() {
-                    self.revoke_query_receiver(last);
+                    self.revoke_receiver(last, mutates_member);
                 }
                 return;
             }
@@ -167,6 +178,7 @@ impl ScopeVisitor<'_> {
                     owner,
                     event,
                     in_loop: self.loop_depth > 0,
+                    mutates_member,
                 });
         }
     }
@@ -175,9 +187,13 @@ impl ScopeVisitor<'_> {
         &mut self,
         call: &CallExpression<'_>,
     ) {
-        for argument in &call.arguments {
+        for (index, argument) in call.arguments.iter().enumerate() {
             if let Some(expression) = argument.as_expression() {
-                self.revoke_query_receiver(expression);
+                if self.namespace_argument_mutates(call, index) {
+                    self.revoke_query_receiver(expression);
+                } else {
+                    self.revoke_passed_argument(expression);
+                }
             }
         }
     }

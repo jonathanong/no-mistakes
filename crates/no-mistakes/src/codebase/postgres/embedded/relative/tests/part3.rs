@@ -57,7 +57,7 @@ fn relative_member_escapes_retain_unanalyzable_pending_calls() {
         Some("SELECT direct relative")
     );
     let root = PathBuf::from("/virtual/db");
-    project_relative_scoped_facts(&mut pending, Some(&root), |specifier| {
+    project_relative_scoped_facts(&mut pending, "", Some(&root), |specifier| {
         assert_eq!(specifier, "../transaction");
         Some(root.join("src/transaction.ts"))
     });
@@ -69,7 +69,7 @@ fn relative_member_escapes_retain_unanalyzable_pending_calls() {
 fn projecting_a_saved_relative_import_keeps_only_files_inside_the_package() {
     let mut pending = extract("scoped-relative-pending.ts", &scoped("@example/db"));
     let root = PathBuf::from("/virtual/db");
-    project_relative_scoped_facts(&mut pending, Some(&root), |specifier| {
+    project_relative_scoped_facts(&mut pending, "", Some(&root), |specifier| {
         assert_eq!(specifier, "../transaction");
         Some(root.join("src/transaction.ts"))
     });

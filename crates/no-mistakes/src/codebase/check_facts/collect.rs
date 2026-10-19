@@ -93,7 +93,7 @@ fn collect_check_facts_inner(
         .values()
         .filter(|facts| facts.parse_error.is_some())
         .count();
-    super::relative_scope::project_relative_executor_scopes(
+    let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
         session,
         root,
         &sources,
@@ -127,6 +127,7 @@ fn collect_check_facts_inner(
         app_text_targets_cache: Arc::new(DashMap::new()),
         route_reachable_files_cache: Arc::new(DashMap::new()),
         postgres_schema_catalogs,
+        unproven_member_query_sql,
     };
     map.postgres =
         crate::codebase::postgres::prepared::prepare(root, &map.files, &sources, &plan, &map);

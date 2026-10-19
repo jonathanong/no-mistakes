@@ -108,12 +108,42 @@ establish a configured executor parameter.
 Use a locally bound configured factory result or an explicitly typed
 `TxExecutor` parameter where possible.
 
-Escaping a proven receiver can change its `.query` property. Subsequent calls
-on that receiver remain executor sites but are unanalyzable; configure
-`unanalyzableSql` to choose their policy. With `--verbose-timings`, the
-`postgres.unproven_member_query_sql` work counter records SQL-looking
-unproven `.query` calls outside confirmed executor sites. Review that count
-when migrating provider or callback APIs.
+Escaping a proven receiver can change its `.query` property. Those calls stay
+executor sites but are unanalyzable when the escape is in another function or
+in a loop, including calls that appear earlier in the file. A later escape in
+the same function, outside a loop, does not reach backward. Mutation evidence
+is a direct write or delete of `.query`, a mutator builtin (`Object.assign`,
+`Object.defineProperty`, `Object.defineProperties`, `Object.setPrototypeOf`,
+`Reflect.set`, `Reflect.defineProperty`, `Reflect.deleteProperty`, or
+`Reflect.setPrototypeOf`) applied to the binding, a write through an alias, a
+holder or a return, or a same-file helper that writes the parameter. A same-file
+alias, assignment, destructure, or parameter also counts. Only passing the
+binding to a function declared elsewhere is non-mutating. Passing
+the module object itself still can. `const { query } = ns` captures that
+function: an escape already in effect at the binding downgrades later calls
+through the local, and an escape after the binding does not rewrite them. A
+live alias such as `const db = ns` still uses call-time ordering. Configure
+`unanalyzableSql` to choose the policy for unanalyzable sites.
+
+`check` prints one non-failing stderr line when SQL-looking `.query` calls
+were not proven to be executors. The line is not a `warnings` entry, so the
+exit code stays 0 when it is the only notice:
+
+```text
+warning: N member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md
+```
+
+The line is the whole invocation, not a per-site list, and it is omitted when
+N is 0. A call is not counted when every PostgreSQL rule that shares its
+executor profile suppresses that line with `no-mistakes-disable-file`,
+`no-mistakes-disable-line`, or `no-mistakes-disable-next-line`. Spans are
+deduplicated per file across option sets, so two `postgres-required-predicates`
+applications that differ only by `executorNames` count one call once. JSON
+includes the same total as optional `unprovenMemberQuerySql` when it is
+greater than zero and omits the field when it is zero. `check()` and
+`checkJson` return that count and do not print the stderr line. With
+`--verbose-timings`, the work counter `postgres.unproven_member_query_sql`
+matches the deduped count. Review it when migrating provider or callback APIs.
 
 Neither option counts as executor selection: a rule configured with only these
 options still needs `importSpecifier` or `executorNames` (for example

@@ -39,6 +39,238 @@ fn mutable_alias_branches_unknown_rebind_and_identity_assignment_are_sound() {
 }
 
 #[test]
+fn object_assign_on_an_imported_executor_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p2".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-assign.ts",
+        &options,
+        &[site(
+            5,
+            "p2.query(\"SELECT id FROM users WHERE x = 2\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn define_property_on_an_imported_executor_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p6".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-define.ts",
+        &options,
+        &[site(
+            5,
+            "p6.query(\"SELECT id FROM users WHERE x = 6\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn same_file_helper_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p5".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-helper.ts",
+        &options,
+        &[site(
+            9,
+            "p5.query(\"SELECT id FROM users WHERE x = 5\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn holder_object_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-holder.ts",
+        &options,
+        &[site(
+            5,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn returned_import_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p2".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-getter.ts",
+        &options,
+        &[site(
+            9,
+            "p2.query(\"SELECT id FROM users WHERE x = 2\")",
+            None,
+        )],
+    );
+}
+
+fn dynamic_executor(file: &str, executor: &str, line: u32, expression: &'static str) {
+    let options = EmbeddedSqlOptions::configured("@example/db", &[executor.into()]);
+    assert_sites(file, &options, &[site(line, expression, None)]);
+}
+
+#[test]
+fn aliased_same_file_writer_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-fn-alias.ts",
+        "p2",
+        10,
+        "p2.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn assigned_same_file_writer_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-assigned-fn.ts",
+        "p3",
+        10,
+        "p3.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn destructured_assign_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-destructured-assign.ts",
+        "p4",
+        7,
+        "p4.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn parameter_callback_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-callback.ts",
+        "p5",
+        9,
+        "p5.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn overload_implementation_query_write_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-overload.ts",
+        "p6",
+        11,
+        "p6.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn same_file_function_hides_an_imported_name() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-shadow.ts",
+        "p7",
+        10,
+        "p7.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn passing_an_imported_executor_does_not_downgrade_its_calls() {
+    let options =
+        EmbeddedSqlOptions::configured("@example/db", &["pool".into(), "replacement".into()]);
+    assert_sites(
+        "review-imported-pool-pass.ts",
+        &options,
+        &[
+            site(
+                7,
+                "pool.query('SELECT id FROM kept')",
+                Some("SELECT id FROM kept"),
+            ),
+            site(15, "replacement.query('SELECT id FROM lost')", None),
+        ],
+    );
+}
+
+#[test]
+fn passing_an_imported_executor_to_an_imported_helper_stays_exact() {
+    let options =
+        EmbeddedSqlOptions::configured("@example/db", &["pool".into(), "replacement".into()]);
+    assert_sites(
+        "review-imported-pool-pass-import.ts",
+        &options,
+        &[
+            site(
+                17,
+                "pool.query('SELECT id FROM kept')",
+                Some("SELECT id FROM kept"),
+            ),
+            site(28, "replacement.query('SELECT id FROM lost')", None),
+        ],
+    );
+}
+
+#[test]
+fn namespace_alias_after_a_same_function_escape_stays_recorded() {
+    assert_sites(
+        "review-namespace-alias-ordered.ts",
+        &scoped_options(),
+        &[
+            site(
+                9,
+                "db.query('SELECT id FROM alias_ordered')",
+                Some("SELECT id FROM alias_ordered"),
+            ),
+            site(
+                11,
+                "query('SELECT id FROM destructure_ordered')",
+                Some("SELECT id FROM destructure_ordered"),
+            ),
+        ],
+    );
+}
+
+#[test]
+fn namespace_alias_in_another_function_is_downgraded_not_dropped() {
+    assert_sites(
+        "review-namespace-alias-escaped.ts",
+        &scoped_options(),
+        &[
+            site(13, "db.query('SELECT id FROM alias_escaped')", None),
+            site(15, "query('SELECT id FROM destructure_escaped')", None),
+        ],
+    );
+}
+
+#[test]
+fn namespace_alias_captured_before_a_later_escape_is_downgraded() {
+    assert_sites(
+        "review-namespace-alias-escaped-later.ts",
+        &scoped_options(),
+        &[
+            site(8, "db.query('SELECT id FROM alias_escaped_later')", None),
+            site(
+                10,
+                "query('SELECT id FROM destructure_escaped_later')",
+                None,
+            ),
+        ],
+    );
+}
+
+#[test]
+fn namespace_alias_captured_before_a_loop_escape_is_downgraded() {
+    assert_sites(
+        "review-namespace-alias-escaped-loop.ts",
+        &scoped_options(),
+        &[site(
+            8,
+            "query('SELECT id FROM destructure_escaped_loop')",
+            None,
+        )],
+    );
+}
+
+#[test]
 fn two_named_import_aliases_share_one_export_origin() {
     let options =
         EmbeddedSqlOptions::configured("@example/db", &["connection".into(), "query".into()]);
@@ -97,22 +329,22 @@ fn namespace_export_and_whole_namespace_transfer_have_distinct_reach() {
         &options,
         &[
             site(
-                7,
+                8,
                 "left.query('SELECT id FROM before_export_transfer')",
                 Some("SELECT id FROM before_export_transfer"),
             ),
             site(
-                9,
+                10,
                 "left.query('SELECT id FROM after_export_transfer')",
-                None,
+                Some("SELECT id FROM after_export_transfer"),
             ),
             site(
-                10,
+                11,
                 "other.query('SELECT id FROM other_export_before_namespace_transfer')",
                 Some("SELECT id FROM other_export_before_namespace_transfer"),
             ),
             site(
-                12,
+                13,
                 "other.query('SELECT id FROM other_export_after_namespace_transfer')",
                 None,
             ),

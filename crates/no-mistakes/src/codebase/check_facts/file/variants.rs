@@ -115,7 +115,7 @@ fn collect_variant(
     if let Some(parse_error) = parse_error {
         return recovered_error_facts(
             path,
-            variant.plan,
+            variant,
             source,
             program,
             parsed_source,
@@ -141,13 +141,14 @@ fn collect_variant(
 
 fn recovered_error_facts(
     path: &Path,
-    plan: &CheckFactPlan,
+    variant: &CheckFactVariant<'_>,
     source: &Arc<str>,
     program: &oxc_ast::ast::Program<'_>,
     parsed_source: &str,
     parse_error: String,
     recovery: VariantRecovery,
 ) -> CheckFileFacts {
+    let plan = variant.plan;
     let stored_source = should_store_source(plan).then(|| Arc::clone(source));
     let mut ts = super::super::file_parse_error::ts_facts(
         plan,
@@ -178,7 +179,13 @@ fn recovered_error_facts(
         symbols: symbols.clone(),
         legacy_symbols: symbols,
         integration_runner_config,
-        embedded_sql: super::program::prepared_embedded_sql(path, parsed_source, program, plan),
+        embedded_sql: super::program::prepared_embedded_sql(
+            variant.root,
+            path,
+            parsed_source,
+            program,
+            plan,
+        ),
         parse_error: Some(parse_error),
         parsed: true,
         server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),

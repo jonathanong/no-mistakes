@@ -3,7 +3,8 @@ import * as ns from '@example/db'
 
 declare function sendAway(value: unknown): void
 
-// A property transfer affects that export; a namespace transfer may affect all exports.
+// Passing one export is not a member write, so that export stays exact.
+// Passing the module object can still replace every export's `.query`.
 left.query('SELECT id FROM before_export_transfer')
 sendAway(ns.connection)
 left.query('SELECT id FROM after_export_transfer')

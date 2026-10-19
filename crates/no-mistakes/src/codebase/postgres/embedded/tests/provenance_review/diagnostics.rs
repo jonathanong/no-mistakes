@@ -69,15 +69,26 @@ fn unproven_sql_looking_member_is_counted_without_making_a_verdict() {
         )
     });
     assert!(facts.calls.is_empty());
+    assert_eq!(facts.unproven_member_query_spans.len(), 4);
     assert_eq!(
         observer
             .snapshot()
             .work
             .get("postgres.unproven_member_query_sql")
             .copied(),
-        Some(4),
-        "SQL-looking queries, including WITH and DDL, count; HTTP object query does not"
+        None,
+        "the walk records spans; the deduped counter is incremented after projection"
     );
+}
+
+#[test]
+fn unproven_sql_looking_member_is_counted_without_a_verbose_observer() {
+    let facts = extract_embedded_sql_from_source(
+        &fixture("review-unproven-sql.ts"),
+        &read_fixture("review-unproven-sql.ts"),
+        &scoped_options(),
+    );
+    assert_eq!(facts.unproven_member_query_spans.len(), 4);
 }
 
 #[test]
@@ -86,26 +97,24 @@ fn relative_member_counter_waits_for_resolution_even_after_escape() {
     use std::path::Path;
     let options = scoped_options();
     for (resolved, expected) in [
-        ("/virtual/db/transaction.ts", None),
-        ("/virtual/other/transaction.ts", Some(1)),
+        ("/virtual/db/transaction.ts", 0usize),
+        ("/virtual/other/transaction.ts", 1usize),
     ] {
-        let observer = crate::diagnostics::InvocationObserver::new(true);
-        crate::diagnostics::with_observer(Some(observer.clone()), || {
-            let mut facts = extract_embedded_sql_from_source(
-                &fixture("relative-member-escape.ts"),
-                &read_fixture("relative-member-escape.ts"),
-                &options,
-            );
-            project_relative_scoped_facts(&mut facts, Some(Path::new("/virtual/db")), |_| {
-                Some(PathBuf::from(resolved))
-            });
+        let source = read_fixture("relative-member-escape.ts");
+        let mut facts = extract_embedded_sql_from_source(
+            &fixture("relative-member-escape.ts"),
+            &source,
+            &options,
+        );
+        assert!(
+            facts.unproven_member_query_spans.is_empty(),
+            "a pending relative member is not unproven until projection"
+        );
+        project_relative_scoped_facts(&mut facts, &source, Some(Path::new("/virtual/db")), |_| {
+            Some(PathBuf::from(resolved))
         });
         assert_eq!(
-            observer
-                .snapshot()
-                .work
-                .get("postgres.unproven_member_query_sql")
-                .copied(),
+            facts.unproven_member_query_spans.len(),
             expected,
             "resolution at {resolved} must decide whether the pending member is unproven"
         );

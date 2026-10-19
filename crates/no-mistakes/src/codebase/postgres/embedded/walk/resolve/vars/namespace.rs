@@ -26,5 +26,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn bind_query_property(
         {
             binding.executor_alias = Some(true);
         }
+        visitor.note_query_capture(local.name.as_str(), init);
     }
 }

@@ -12,7 +12,7 @@ pub(crate) fn prepare_rule_sql_facts(
         .copied()
         .filter(|id| PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id))
         .collect();
-    let (profiles, annotation_profiles) =
+    let (profiles, annotation_profiles, embedded_sql_rule_ids) =
         configured_embedded_sql_options_with_annotation(config, &dml_ids)?;
     let patterns = sql_patterns(config, rule_ids)?;
     let selected = if profiles.is_empty() {
@@ -75,6 +75,7 @@ pub(crate) fn prepare_rule_sql_facts(
                     .then_some(annotation_profiles),
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
+                embedded_sql_rule_ids,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,
                 ..Default::default()
             },

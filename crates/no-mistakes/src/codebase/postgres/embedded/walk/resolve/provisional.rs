@@ -16,6 +16,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
             call,
             visitor.source[span.start as usize..span.end as usize].to_string(),
         );
+        visitor.note_imported_alias_call(call);
         return;
     }
     if let Some(receiver) = member_query_receiver(call) {
@@ -31,21 +32,12 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
             }
         } else {
             let owners = visitor.relative_executor_owners(receiver);
-            // Rejected member queries never enter SQL candidates. Verbose
-            // diagnostics count only calls with no pending relative proof.
-            if let Some(observer) = crate::diagnostics::current()
-                .filter(|observer| observer.verbose() && owners.is_empty())
-            {
+            if owners.is_empty() {
                 let recovered = executor_call(visitor, call, "query".to_string());
-                let known = recovered
-                    .sql_text
-                    .as_deref()
-                    .is_some_and(super::super::scope::has_diagnostic_leading_statement)
-                    || recovered.variants.iter().any(|variant| {
-                        super::super::scope::has_diagnostic_leading_statement(&variant.sql_text)
-                    });
-                if known {
-                    observer.increment("postgres.unproven_member_query_sql", 1);
+                if looks_like_statement(&recovered) {
+                    visitor
+                        .unproven_member_query_spans
+                        .push((call.span.start, call.span.end));
                 }
             }
             let sequence = visitor.next_seq;
@@ -74,6 +66,16 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     };
     let owners = visitor.relative_executor_owners(&call.callee);
     push_pending(visitor, call, ident.name.as_str(), owners);
+}
+
+fn looks_like_statement(call: &crate::codebase::postgres::embedded::EmbeddedSqlCall) -> bool {
+    call.sql_text
+        .as_deref()
+        .is_some_and(super::super::scope::has_diagnostic_leading_statement)
+        || call
+            .variants
+            .iter()
+            .any(|variant| super::super::scope::has_diagnostic_leading_statement(&variant.sql_text))
 }
 
 fn push_pending(

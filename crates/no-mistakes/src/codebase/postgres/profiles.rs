@@ -53,6 +53,8 @@ struct EmbeddedSqlRuleOptions {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
+    include: Vec<String>,
+    exclude: Vec<String>,
 }
 
 #[derive(Default, Deserialize)]
@@ -71,11 +73,17 @@ pub(crate) fn configured_embedded_sql_options(
     Ok(configured_embedded_sql_options_with_annotation(config, rule_ids)?.0)
 }
 
+type AnnotatedSqlProfiles = (
+    Vec<EmbeddedSqlOptions>,
+    Vec<EmbeddedSqlOptions>,
+    scans::EmbeddedSqlRuleScans,
+);
+
 fn configured_embedded_sql_options_with_annotation(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
-) -> Result<(Vec<EmbeddedSqlOptions>, Vec<EmbeddedSqlOptions>)> {
-    let mut profiles = Vec::new();
+) -> Result<AnnotatedSqlProfiles> {
+    let mut grouped = scans::EmbeddedSqlRuleScans::new();
     let mut annotation_profiles = Vec::new();
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
@@ -95,15 +103,14 @@ fn configured_embedded_sql_options_with_annotation(
                 if *rule_id == "postgres-require-query-annotation" {
                     annotation_profiles.push(profile.clone());
                 }
-                profiles.push(profile);
+                scans::record(&mut grouped, profile, rule_id, &options)?;
             }
         }
     }
-    profiles.sort();
-    profiles.dedup();
     annotation_profiles.sort();
     annotation_profiles.dedup();
-    Ok((profiles, annotation_profiles))
+    let profiles = grouped.keys().cloned().collect();
+    Ok((profiles, annotation_profiles, grouped))
 }
 
 pub fn configured_embedded_sql_options_for_checks(
@@ -210,6 +217,7 @@ fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<Stri
 }
 
 mod prepare;
+pub(crate) mod scans;
 pub(crate) use prepare::prepare_rule_sql_facts;
 mod plan;
-pub use plan::configure_prepared_postgres_plan;
+pub use plan::{assign_prepared_embedded_sql_options, configure_prepared_postgres_plan};

@@ -38,7 +38,9 @@ fn namespace_mutation_revokes_member_proof_but_not_captured_query_function() {
     let source = std::fs::read_to_string(&path).expect("saved CommonJS mutation fixture");
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
-    assert_eq!(facts.calls.len(), 9);
+    // `afterMutation` used to disappear once the namespace had escaped.
+    // It stays in the candidate set and is unanalyzable.
+    assert_eq!(facts.calls.len(), 10);
     let captured = facts
         .calls
         .iter()
@@ -51,7 +53,7 @@ fn namespace_mutation_revokes_member_proof_but_not_captured_query_function() {
             .iter()
             .filter(|call| call.is_unanalyzable())
             .count(),
-        8
+        9
     );
 }
 

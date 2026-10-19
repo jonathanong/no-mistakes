@@ -16,7 +16,9 @@ pub(crate) use placeholders::{
     count_placeholders, publish_placeholders_with_positions, renumber_placeholders,
     INTERNAL_PLACEHOLDER,
 };
-mod relative;
+pub(crate) mod relative;
+mod unproven;
+pub(crate) use unproven::retain_unproven_spans;
 mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
@@ -103,6 +105,9 @@ pub fn extract_embedded_sql_from_program(
             confirmed_order: std::mem::take(&mut collected.confirmed_order),
             call_spans: collected.pending_spans,
         },
+        unproven_member_query_spans: collected.unproven_member_query_spans,
+        postgres_rule_ids: Vec::new(),
+        record_unproven_spans: true,
     }
 }
 

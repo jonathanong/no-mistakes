@@ -69,6 +69,11 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     for warning in &results.warnings {
         no_mistakes::diagnostics::print_stderr(format_args!("{warning}"));
     }
+    if let Some(warning) = no_mistakes::codebase::check_facts::unproven_member_query_warning(
+        results.unproven_member_query_sql,
+    ) {
+        no_mistakes::diagnostics::print_stderr(format_args!("{warning}"));
+    }
 
     let has_failures = has_failures(&results);
     let format = if args.json { Format::Json } else { args.format };

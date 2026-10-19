@@ -10,6 +10,11 @@ export interface CheckReport {
   runnerConfigDeadlines?: RunnerConfigDeadlineEvidence[];
   codebase: UniqueExportFinding[];
   warnings: string[];
+  /**
+   * SQL-looking member `.query` calls that were not proven to be executors.
+   * Omitted when zero. Not a failure and not part of `warnings`.
+   */
+  unprovenMemberQuerySql?: number;
   advisories: RuleFinding[];
   /** Present when `includeSuppressed` is requested; empty when no directives matched. */
   suppressed?: SuppressedFinding[];

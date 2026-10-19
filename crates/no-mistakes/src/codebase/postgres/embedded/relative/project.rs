@@ -9,6 +9,7 @@ mod diagnostic;
 /// `package_root == None` drops every candidate. Confirmed calls are left in place.
 pub(crate) fn project_relative_scoped_facts(
     facts: &mut EmbeddedSqlFileFacts,
+    source: &str,
     package_root: Option<&Path>,
     mut resolve: impl FnMut(&str) -> Option<PathBuf>,
 ) {
@@ -18,7 +19,7 @@ pub(crate) fn project_relative_scoped_facts(
     }
     let pending = std::mem::take(&mut facts.pending_relative);
     let Some(root) = package_root else {
-        diagnostic::count_unproven(&pending, &[]);
+        add_unproven(facts, source, diagnostic::unproven_spans(&pending, &[]));
         return;
     };
     let mut kept = vec![false; pending.candidates.len()];
@@ -48,7 +49,7 @@ pub(crate) fn project_relative_scoped_facts(
         sort_dedup(&mut facts.matched_factory_names);
         sort_dedup(&mut facts.matched_type_names);
     }
-    diagnostic::count_unproven(&pending, &kept);
+    add_unproven(facts, source, diagnostic::unproven_spans(&pending, &kept));
     let promoted = pending
         .calls
         .into_iter()
@@ -73,6 +74,17 @@ pub(crate) fn project_relative_scoped_facts(
         &pending.confirmed_order,
         promoted,
     );
+}
+
+fn add_unproven(facts: &mut EmbeddedSqlFileFacts, source: &str, spans: Vec<(u32, u32)>) {
+    if !facts.record_unproven_spans {
+        return;
+    }
+    for span in spans {
+        if super::super::unproven::keep_unproven_span(source, span, &facts.postgres_rule_ids) {
+            facts.unproven_member_query_spans.push(span);
+        }
+    }
 }
 
 fn kept_owner(kept: &[bool], owners: &[u32]) -> bool {

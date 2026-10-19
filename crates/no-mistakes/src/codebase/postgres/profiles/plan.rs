@@ -1,5 +1,19 @@
 use super::*;
 
+/// Record the prepared executor profiles and the rules that selected each one.
+pub fn assign_prepared_embedded_sql_options(
+    config: &NoMistakesConfig,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) -> Result<()> {
+    let (options, _, rule_ids) = super::configured_embedded_sql_options_with_annotation(
+        config,
+        super::PREPARED_EMBEDDED_SQL_RULE_IDS,
+    )?;
+    plan.embedded_sql_options = options;
+    plan.embedded_sql_rule_ids = rule_ids;
+    Ok(())
+}
+
 /// Declare SQL projections before the shared request fact pass.
 pub fn configure_prepared_postgres_plan(
     config: &NoMistakesConfig,

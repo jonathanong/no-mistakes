@@ -62,6 +62,43 @@ fn explicit_annotation_profiles_union_and_deduplicate() {
 }
 
 #[test]
+fn embedded_sql_rule_ids_union_without_duplicating_a_rule() {
+    use crate::codebase::postgres::EmbeddedSqlRuleScan;
+    let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
+    let predicates = EmbeddedSqlRuleScan::new("postgres-required-predicates", &[], &[]).unwrap();
+    let columns = EmbeddedSqlRuleScan::new("postgres-explicit-columns", &[], &[]).unwrap();
+    let excluded = EmbeddedSqlRuleScan::new(
+        "postgres-required-predicates",
+        &[],
+        &["src/legacy/**".into()],
+    )
+    .unwrap();
+    let mut plan = CheckFactPlan {
+        embedded_sql_rule_ids: [(read.clone(), vec![predicates.clone()])].into(),
+        ..Default::default()
+    };
+    plan.include(CheckFactPlan {
+        embedded_sql_rule_ids: [(read.clone(), vec![predicates, columns, excluded])].into(),
+        ..Default::default()
+    });
+    let ids: Vec<_> = plan
+        .embedded_sql_rule_ids
+        .get(&read)
+        .unwrap()
+        .iter()
+        .map(|scan| scan.rule_id.as_str())
+        .collect();
+    assert_eq!(
+        ids,
+        [
+            "postgres-required-predicates",
+            "postgres-explicit-columns",
+            "postgres-required-predicates",
+        ]
+    );
+}
+
+#[test]
 fn inactive_plan_does_not_widen_explicit_annotation_demand() {
     let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
     let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);
