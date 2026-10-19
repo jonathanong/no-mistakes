@@ -108,6 +108,71 @@ fn returned_import_query_write_is_unanalyzable() {
     );
 }
 
+fn dynamic_executor(file: &str, executor: &str, line: u32, expression: &'static str) {
+    let options = EmbeddedSqlOptions::configured("@example/db", &[executor.into()]);
+    assert_sites(file, &options, &[site(line, expression, None)]);
+}
+
+#[test]
+fn aliased_same_file_writer_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-fn-alias.ts",
+        "p2",
+        10,
+        "p2.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn assigned_same_file_writer_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-assigned-fn.ts",
+        "p3",
+        10,
+        "p3.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn destructured_assign_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-destructured-assign.ts",
+        "p4",
+        7,
+        "p4.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn parameter_callback_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-callback.ts",
+        "p5",
+        9,
+        "p5.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn overload_implementation_query_write_is_unanalyzable() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-overload.ts",
+        "p6",
+        11,
+        "p6.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
+#[test]
+fn same_file_function_hides_an_imported_name() {
+    dynamic_executor(
+        "review-imported-pool-indirect-write-shadow.ts",
+        "p7",
+        10,
+        "p7.query(\"SELECT id FROM users WHERE x = 1\")",
+    );
+}
+
 #[test]
 fn passing_an_imported_executor_does_not_downgrade_its_calls() {
     let options =
@@ -122,6 +187,24 @@ fn passing_an_imported_executor_does_not_downgrade_its_calls() {
                 Some("SELECT id FROM kept"),
             ),
             site(15, "replacement.query('SELECT id FROM lost')", None),
+        ],
+    );
+}
+
+#[test]
+fn passing_an_imported_executor_to_an_imported_helper_stays_exact() {
+    let options =
+        EmbeddedSqlOptions::configured("@example/db", &["pool".into(), "replacement".into()]);
+    assert_sites(
+        "review-imported-pool-pass-import.ts",
+        &options,
+        &[
+            site(
+                17,
+                "pool.query('SELECT id FROM kept')",
+                Some("SELECT id FROM kept"),
+            ),
+            site(28, "replacement.query('SELECT id FROM lost')", None),
         ],
     );
 }

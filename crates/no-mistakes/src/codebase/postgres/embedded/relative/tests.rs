@@ -55,6 +55,7 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         pending_relative: pending,
         unproven_member_query_spans: Vec::new(),
         postgres_rule_ids: Vec::new(),
+        record_unproven_spans: true,
     }
 }
 
@@ -106,6 +107,28 @@ fn workspace(root: &Path) -> crate::codebase::workspaces::IndexedWorkspaceMap {
     let files = discover_visible_paths(root);
     let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&files)));
     load_indexed_from_source_store(root, &sources).expect("workspace")
+}
+
+#[test]
+fn excluded_profile_drops_relative_member_spans() {
+    let pending = PendingRelativeScope {
+        candidates: vec![candidate("./tx", "openTransaction", true, false)],
+        calls: vec![PendingRelativeCall {
+            seq: 1,
+            owners: vec![0],
+            call: call("SELECT id FROM users"),
+        }],
+        diagnostic_member_sequences: vec![1],
+        call_spans: std::collections::BTreeMap::from([(1, (4, 12))]),
+        ..PendingRelativeScope::default()
+    };
+    let mut kept = facts(Vec::new(), pending.clone());
+    project(&mut kept, None, None);
+    assert_eq!(kept.unproven_member_query_spans, vec![(4, 12)]);
+    let mut dropped = facts(Vec::new(), pending);
+    dropped.record_unproven_spans = false;
+    project(&mut dropped, None, None);
+    assert!(dropped.unproven_member_query_spans.is_empty());
 }
 
 mod part1;

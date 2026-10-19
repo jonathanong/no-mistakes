@@ -16,8 +16,8 @@ const MEMBER_MUTATORS: &[(&str, &str)] = &[
 impl ScopeVisitor<'_> {
     /// `true` when this argument can replace a receiver's `.query`.
     ///
-    /// An identifier callee is mutating only when this file declares its body.
-    /// A function declared elsewhere is the one non-mutating escape.
+    /// An identifier callee is non-mutating only when this file proves the
+    /// name is an import or ambient `declare function` with no other binding.
     pub(super) fn namespace_argument_mutates(
         &self,
         call: &CallExpression<'_>,
@@ -27,9 +27,7 @@ impl ScopeVisitor<'_> {
             return index == 0;
         }
         match unwrap_ts_wrappers(&call.callee) {
-            Expression::Identifier(name) => {
-                self.functions.declares_function_body(name.name.as_str())
-            }
+            Expression::Identifier(name) => !self.functions.declared_elsewhere(name.name.as_str()),
             _ => true,
         }
     }

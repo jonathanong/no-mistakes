@@ -49,6 +49,9 @@ pub struct EmbeddedSqlFileFacts {
     /// PostgreSQL rules that share this options profile. Empty means the
     /// extract has no check rule, so suppression does not apply.
     pub(crate) postgres_rule_ids: Vec<String>,
+    /// When false, a later relative projection must not add member spans.
+    /// Every configured rule for this profile excluded the file.
+    pub(crate) record_unproven_spans: bool,
 }
 
 // Fragment alternatives are internal provenance, so the legacy public debug

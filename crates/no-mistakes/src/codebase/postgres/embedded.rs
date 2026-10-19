@@ -107,6 +107,7 @@ pub fn extract_embedded_sql_from_program(
         },
         unproven_member_query_spans: collected.unproven_member_query_spans,
         postgres_rule_ids: Vec::new(),
+        record_unproven_spans: true,
     }
 }
 

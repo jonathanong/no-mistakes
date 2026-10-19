@@ -24,6 +24,7 @@ export, and codebase rules that are enabled in config.
 Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
+`unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.
 The root-global `--timings` and `--verbose-timings` flags work here and on every
 other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright
 sub-phases and work counts, and marks overlapping check-domain spans as

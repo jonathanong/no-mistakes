@@ -2,7 +2,6 @@ use super::{EmbeddedSqlOptions, TrustedSqlTag};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -54,6 +53,8 @@ struct EmbeddedSqlRuleOptions {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
+    include: Vec<String>,
+    exclude: Vec<String>,
 }
 
 #[derive(Default, Deserialize)]
@@ -75,14 +76,14 @@ pub(crate) fn configured_embedded_sql_options(
 type AnnotatedSqlProfiles = (
     Vec<EmbeddedSqlOptions>,
     Vec<EmbeddedSqlOptions>,
-    BTreeMap<EmbeddedSqlOptions, Vec<String>>,
+    scans::EmbeddedSqlRuleScans,
 );
 
 fn configured_embedded_sql_options_with_annotation(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
 ) -> Result<AnnotatedSqlProfiles> {
-    let mut grouped = BTreeMap::<EmbeddedSqlOptions, Vec<String>>::new();
+    let mut grouped = scans::EmbeddedSqlRuleScans::new();
     let mut annotation_profiles = Vec::new();
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
@@ -102,10 +103,7 @@ fn configured_embedded_sql_options_with_annotation(
                 if *rule_id == "postgres-require-query-annotation" {
                     annotation_profiles.push(profile.clone());
                 }
-                let ids = grouped.entry(profile).or_default();
-                if !ids.iter().any(|existing| existing == rule_id) {
-                    ids.push((*rule_id).to_string());
-                }
+                scans::record(&mut grouped, profile, rule_id, &options)?;
             }
         }
     }
@@ -219,6 +217,7 @@ fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<Stri
 }
 
 mod prepare;
+pub(crate) mod scans;
 pub(crate) use prepare::prepare_rule_sql_facts;
 mod plan;
 pub use plan::{assign_prepared_embedded_sql_options, configure_prepared_postgres_plan};

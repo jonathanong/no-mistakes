@@ -75,7 +75,7 @@ pub(crate) fn collect_file_facts_from_program(
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
-    let embedded_sql = prepared_embedded_sql(path, source, program, plan);
+    let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
     let query_annotation = if plan.query_annotation {
         let options = plan.query_annotation_options.clone().unwrap_or_else(|| {
             embedded_sql
@@ -125,6 +125,7 @@ pub(crate) fn collect_file_facts_from_program(
 }
 
 pub(super) fn prepared_embedded_sql(
+    root: &Path,
     path: &Path,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
@@ -139,19 +140,45 @@ pub(super) fn prepared_embedded_sql(
     }
     profiles.sort();
     profiles.dedup();
+    let rel = crate::codebase::ts_source::relative_slash_path(root, path);
     profiles
         .into_iter()
         .map(|options| {
             let mut facts = crate::codebase::postgres::extract_embedded_sql_from_program(
                 path, program, source, &options,
             );
-            facts.postgres_rule_ids = plan
-                .embedded_sql_rule_ids
-                .get(&options)
-                .cloned()
-                .unwrap_or_default();
-            crate::codebase::postgres::retain_unproven_spans(&mut facts, source);
+            assign_unproven_rules(
+                &mut facts,
+                plan.embedded_sql_rule_ids.get(&options).map(Vec::as_slice),
+                &rel,
+                source,
+            );
             (options, facts)
         })
         .collect()
+}
+
+fn assign_unproven_rules(
+    facts: &mut crate::codebase::postgres::EmbeddedSqlFileFacts,
+    scans: Option<&[crate::codebase::postgres::EmbeddedSqlRuleScan]>,
+    rel: &str,
+    source: &str,
+) {
+    let Some(scans) = scans else {
+        crate::codebase::postgres::retain_unproven_spans(facts, source);
+        return;
+    };
+    let mut ids = Vec::new();
+    for scan in scans {
+        if scan.paths.includes(rel) && !ids.contains(&scan.rule_id) {
+            ids.push(scan.rule_id.clone());
+        }
+    }
+    if ids.is_empty() {
+        facts.unproven_member_query_spans.clear();
+        facts.record_unproven_spans = false;
+        return;
+    }
+    facts.postgres_rule_ids = ids;
+    crate::codebase::postgres::retain_unproven_spans(facts, source);
 }

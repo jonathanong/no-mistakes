@@ -114,6 +114,7 @@ fn collect_variant(
 ) -> CheckFileFacts {
     if let Some(parse_error) = parse_error {
         return recovered_error_facts(
+            variant.root,
             path,
             variant.plan,
             source,
@@ -140,6 +141,7 @@ fn collect_variant(
 }
 
 fn recovered_error_facts(
+    root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
     source: &Arc<str>,
@@ -178,7 +180,13 @@ fn recovered_error_facts(
         symbols: symbols.clone(),
         legacy_symbols: symbols,
         integration_runner_config,
-        embedded_sql: super::program::prepared_embedded_sql(path, parsed_source, program, plan),
+        embedded_sql: super::program::prepared_embedded_sql(
+            root,
+            path,
+            parsed_source,
+            program,
+            plan,
+        ),
         parse_error: Some(parse_error),
         parsed: true,
         server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),

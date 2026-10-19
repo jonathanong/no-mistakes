@@ -138,6 +138,7 @@ fn files_without_relative_candidates_are_left_untouched() {
                     pending_relative: Default::default(),
                     unproven_member_query_spans: Vec::new(),
                     postgres_rule_ids: Vec::new(),
+                    record_unproven_spans: true,
                 },
             )],
             ..CheckFileFacts::default()
@@ -284,6 +285,7 @@ fn embedded_facts(path: &Path, spans: Vec<(u32, u32)>) -> EmbeddedSqlFileFacts {
         pending_relative: Default::default(),
         unproven_member_query_spans: spans,
         postgres_rule_ids: Vec::new(),
+        record_unproven_spans: true,
     }
 }
 

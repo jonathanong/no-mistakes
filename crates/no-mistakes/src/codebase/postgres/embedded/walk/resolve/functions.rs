@@ -45,9 +45,9 @@ pub(crate) struct LocalFunctions {
     parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
     programs: FxHashMap<String, std::sync::Arc<super::super::super::helpers::program::Program>>,
-    /// Names of functions this file declares with a body. Ambient and imported
-    /// helpers are absent, so passing a binding to them is not a mutation.
-    function_bodies: crate::fx::FxHashSet<String>,
+    /// Import and ambient `declare function` names with no other binding.
+    /// Passing a receiver to one of these is not a mutation.
+    declared_elsewhere: crate::fx::FxHashSet<String>,
 }
 
 /// A same-file helper's params and body, however it was declared
@@ -76,7 +76,7 @@ impl LocalFunctions {
         for statement in &program.body {
             collect_named_functions(statement, &mut raw);
         }
-        let function_bodies = bodies::collect(program);
+        let declared_elsewhere = bodies::collect(program);
         let reassigned = ReassignedNames::collect(program);
         raw.retain(|name, _| !reassigned.contains(name));
         let sql_statement_types =
@@ -124,7 +124,7 @@ impl LocalFunctions {
             parameter_builders,
             tag_shadows,
             programs,
-            function_bodies,
+            declared_elsewhere,
         }
     }
 

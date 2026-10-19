@@ -77,6 +77,9 @@ pub(crate) fn project_relative_scoped_facts(
 }
 
 fn add_unproven(facts: &mut EmbeddedSqlFileFacts, source: &str, spans: Vec<(u32, u32)>) {
+    if !facts.record_unproven_spans {
+        return;
+    }
     for span in spans {
         if super::super::unproven::keep_unproven_span(source, span, &facts.postgres_rule_ids) {
             facts.unproven_member_query_spans.push(span);

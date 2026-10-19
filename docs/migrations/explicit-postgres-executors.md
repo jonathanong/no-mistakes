@@ -116,8 +116,9 @@ is a direct write or delete of `.query`, a mutator builtin (`Object.assign`,
 `Object.defineProperty`, `Object.defineProperties`, `Object.setPrototypeOf`,
 `Reflect.set`, `Reflect.defineProperty`, `Reflect.deleteProperty`, or
 `Reflect.setPrototypeOf`) applied to the binding, a write through an alias, a
-holder or a return, or a same-file helper that writes the parameter. Only
-passing the binding to a function declared elsewhere is non-mutating. Passing
+holder or a return, or a same-file helper that writes the parameter. A same-file
+alias, assignment, destructure, or parameter also counts. Only passing the
+binding to a function declared elsewhere is non-mutating. Passing
 the module object itself still can. `const { query } = ns` captures that
 function: an escape already in effect at the binding downgrades later calls
 through the local, and an escape after the binding does not rewrite them. A

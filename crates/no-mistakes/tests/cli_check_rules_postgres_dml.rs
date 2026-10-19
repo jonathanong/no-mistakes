@@ -320,6 +320,37 @@ fn postgres_required_predicates_counts_one_unproven_member_across_profiles() {
 }
 
 #[test]
+fn postgres_required_predicates_ignores_unproven_member_queries_in_excluded_files() {
+    let root = fixture("postgres-required-predicates", "unproven-excluded");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    let err = stderr(&out);
+    assert!(out.status.success(), "{body}\n{err}");
+    assert!(!err.contains("weren't proven"), "{err}");
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(report.get("unprovenMemberQuerySql").is_none(), "{report}");
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+}
+
+#[test]
+fn postgres_required_predicates_counts_unproven_member_queries_inside_include() {
+    let root = fixture("postgres-required-predicates", "unproven-include");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    let err = stderr(&out);
+    assert!(out.status.success(), "{body}\n{err}");
+    assert!(
+        err.contains("warning: 1 member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md"),
+        "{err}"
+    );
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(report["unprovenMemberQuerySql"], 1, "{report}");
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert!(!body.contains("weren't proven"), "{body}");
+}
+
+#[test]
 fn postgres_idempotent_insert_recovered_expression_still_fails() {
     let root = fixture("postgres-idempotent-insert", "expression-arbiter-recovered");
     let out = check_json(&root);

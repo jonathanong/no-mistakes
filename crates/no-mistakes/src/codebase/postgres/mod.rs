@@ -101,6 +101,7 @@ pub use offset::{
 };
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
+pub use profiles::scans::{EmbeddedSqlRuleScan, EmbeddedSqlRuleScans};
 pub use profiles::{
     assign_prepared_embedded_sql_options, configure_prepared_postgres_plan,
     configured_embedded_sql_options_for_checks, configured_schema_catalog_paths,

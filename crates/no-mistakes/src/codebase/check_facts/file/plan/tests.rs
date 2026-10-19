@@ -151,3 +151,76 @@ fn collect_file_facts_from_program_fuses_check_only_walks() {
         "check-only extractors must not walk the program again"
     );
 }
+
+#[test]
+fn unproven_member_spans_follow_rule_path_filters() {
+    let source = "export function u(db: { query(text: string): unknown }) {\n  db.query(\"SELECT id FROM users WHERE x = 1\");\n}\n";
+    let allocator = oxc_allocator::Allocator::default();
+    let source_type = oxc_span::SourceType::from_path(Path::new("query.ts")).unwrap();
+    let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+    let root = Path::new("/repo");
+    let path = Path::new("/repo/src/legacy/old.ts");
+    let profile =
+        crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    let direct = super::super::program::prepared_embedded_sql(
+        root,
+        path,
+        source,
+        &parsed.program,
+        &CheckFactPlan {
+            embedded_sql_options: vec![profile.clone()],
+            ..Default::default()
+        },
+    );
+    assert_eq!(direct[0].1.unproven_member_query_spans.len(), 1);
+    assert!(direct[0].1.record_unproven_spans);
+    assert!(direct[0].1.postgres_rule_ids.is_empty());
+    let excluded = crate::codebase::postgres::EmbeddedSqlRuleScan::new(
+        "postgres-required-predicates",
+        &[],
+        &["src/legacy/**".into()],
+    )
+    .unwrap();
+    let dropped = super::super::program::prepared_embedded_sql(
+        root,
+        path,
+        source,
+        &parsed.program,
+        &CheckFactPlan {
+            embedded_sql_options: vec![profile.clone()],
+            embedded_sql_rule_ids: [(profile.clone(), vec![excluded])].into(),
+            ..Default::default()
+        },
+    );
+    assert!(dropped[0].1.unproven_member_query_spans.is_empty());
+    assert!(!dropped[0].1.record_unproven_spans);
+    let included = crate::codebase::postgres::EmbeddedSqlRuleScan::new(
+        "postgres-required-predicates",
+        &["src/legacy/**".into()],
+        &[],
+    )
+    .unwrap();
+    let again = crate::codebase::postgres::EmbeddedSqlRuleScan::new(
+        "postgres-required-predicates",
+        &[],
+        &[],
+    )
+    .unwrap();
+    let counted = super::super::program::prepared_embedded_sql(
+        root,
+        path,
+        source,
+        &parsed.program,
+        &CheckFactPlan {
+            embedded_sql_options: vec![profile.clone()],
+            embedded_sql_rule_ids: [(profile, vec![included, again])].into(),
+            ..Default::default()
+        },
+    );
+    assert_eq!(counted[0].1.unproven_member_query_spans.len(), 1);
+    assert!(counted[0].1.record_unproven_spans);
+    assert_eq!(
+        counted[0].1.postgres_rule_ids,
+        ["postgres-required-predicates".to_string()]
+    );
+}

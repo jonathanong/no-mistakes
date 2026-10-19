@@ -41,12 +41,12 @@ pub struct CheckFactPlan {
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
     pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
-    /// PostgreSQL rule ids that selected each embedded-SQL profile.
+    /// PostgreSQL rule applications that selected each embedded-SQL profile.
     ///
-    /// Empty for a direct extract. A site is omitted from the unproven count
-    /// only when every id in the profile suppresses that line.
-    pub embedded_sql_rule_ids:
-        std::collections::BTreeMap<crate::codebase::postgres::EmbeddedSqlOptions, Vec<String>>,
+    /// Empty for a direct extract. Each entry carries that application's
+    /// include and exclude. A site is omitted when no application scans the
+    /// file, or when every scanning id suppresses that line.
+    pub embedded_sql_rule_ids: crate::codebase::postgres::EmbeddedSqlRuleScans,
     /// Repository-relative schema snapshots loaded once at the request boundary.
     pub postgres_schema_catalog_paths: Vec<String>,
     pub postgres_dml: bool,
@@ -65,20 +65,14 @@ pub struct CheckFactPlan {
 }
 
 fn merge_embedded_sql_rule_ids(
-    existing: &mut std::collections::BTreeMap<
-        crate::codebase::postgres::EmbeddedSqlOptions,
-        Vec<String>,
-    >,
-    additional: std::collections::BTreeMap<
-        crate::codebase::postgres::EmbeddedSqlOptions,
-        Vec<String>,
-    >,
+    existing: &mut crate::codebase::postgres::EmbeddedSqlRuleScans,
+    additional: crate::codebase::postgres::EmbeddedSqlRuleScans,
 ) {
-    for (options, ids) in additional {
+    for (options, scans) in additional {
         let slot = existing.entry(options).or_default();
-        for id in ids {
-            if !slot.contains(&id) {
-                slot.push(id);
+        for scan in scans {
+            if !slot.iter().any(|existing| existing.same_application(&scan)) {
+                slot.push(scan);
             }
         }
     }
