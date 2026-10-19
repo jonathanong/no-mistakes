@@ -142,3 +142,6 @@ fn judge(
         SqlBranchJudgment::clear()
     }
 }
+
+#[cfg(test)]
+mod tests;

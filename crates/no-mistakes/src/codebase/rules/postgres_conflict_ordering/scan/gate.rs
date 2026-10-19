@@ -29,3 +29,6 @@ pub(super) fn prepared_conflicts(statement: &SqlStatementFileFacts) -> PreparedC
         unanalyzable: locations.conflict_failure_overlaps,
     }
 }
+
+#[cfg(test)]
+mod tests;

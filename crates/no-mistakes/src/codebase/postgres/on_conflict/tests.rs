@@ -1,9 +1,10 @@
-use super::{judge_file, Catalog};
+use super::{judge_file, judge_subcheck, Catalog};
 use crate::codebase::postgres::statement_facts::SqlTriggerFact;
 use crate::codebase::postgres::statements::extract_sql_statement_facts;
 use crate::codebase::postgres::types::{
     SqlColumnMetadata, SqlCreateTableMetadata, SqlSchemaFileFacts,
 };
+use crate::codebase::postgres::SqlVerdictStatus;
 
 fn catalog<'a>(
     schema: &'a [SqlSchemaFileFacts],
@@ -30,6 +31,16 @@ fn messages(sql: &str) -> Vec<String> {
         .into_iter()
         .map(|(_, message)| message)
         .collect()
+}
+
+#[test]
+fn patch_gap_unknown_enabled_subcheck_abstains() {
+    let file = extract_sql_statement_facts(
+        "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id;",
+    );
+    let judgment = judge_subcheck("not-a-subcheck", &file, &catalog(&[], &[], &[], &[]));
+    assert_eq!(judgment.status, SqlVerdictStatus::Abstain);
+    assert_eq!(judgment.reason, Some("unknown-enabled-subcheck"));
 }
 
 #[test]

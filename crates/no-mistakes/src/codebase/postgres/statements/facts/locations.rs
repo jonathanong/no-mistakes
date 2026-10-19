@@ -169,3 +169,6 @@ pub(super) fn finish(
     }
     projected
 }
+
+#[cfg(test)]
+mod tests;

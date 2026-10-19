@@ -41,3 +41,15 @@ fn saved_branch_proofs_preserve_implicit_unknown() {
         );
     }
 }
+
+#[test]
+fn patch_gap_dynamic_exact_call_is_a_verified_prefix() {
+    let call = EmbeddedSqlCall {
+        kind: EmbeddedSqlKind::Dynamic,
+        ..Default::default()
+    };
+    assert_eq!(
+        sql_evidence_for_call(&call, SqlVerdictStatus::ProvenClear),
+        Some(SqlEvidenceKind::VerifiedPrefix)
+    );
+}
