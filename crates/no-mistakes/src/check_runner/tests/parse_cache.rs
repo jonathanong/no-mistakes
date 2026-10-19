@@ -111,7 +111,7 @@ fn supplemental_call_sources_collect_facts_once() {
     let supplemental_root = fixture.path().canonicalize().unwrap();
     let result = {
         let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        super::super::run_all_with_session(
+        super::super::run_all::run_all_with_session(
             &session,
             supplemental_root.clone(),
             Some(fixture.path().join(".no-mistakes-supplemental.yml")),

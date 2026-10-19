@@ -9,8 +9,6 @@ mod run_all;
 pub(crate) use results::{complete_domain_checks, empty_results, json_value, CheckResults};
 pub(crate) use run_all::run_all_with_evidence;
 pub(crate) use run_all::run_all_with_sql_verdicts;
-#[cfg(test)]
-pub(crate) use run_all::run_all_with_session;
 
 #[cfg(test)]
 mod sql_verdict_annotation_tests;
