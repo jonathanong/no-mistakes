@@ -16,13 +16,12 @@ impl<'a> Tok<'a> {
             }
             self.index += 1;
         }
-        let closed = self.index < self.chars.len();
-        let body = self.slice(start, self.index);
-        if closed {
-            self.index += 1;
-        } else {
-            self.command.dynamic = true;
+        if self.index >= self.chars.len() {
+            // Unclosed: the word is already dynamic. Keep literals parsed before it.
+            return true;
         }
+        let body = self.slice(start, self.index);
+        self.index += 1;
         self.absorb(&body, start_line);
         true
     }
@@ -52,6 +51,9 @@ impl<'a> Tok<'a> {
             self.index += 3;
             return true;
         }
+        if self.arithmetic_shift() {
+            return false;
+        }
         // `cat<<EOF` is still a heredoc. The operator is not part of the word.
         self.flush_word();
         self.index += 2;
@@ -70,10 +72,18 @@ impl<'a> Tok<'a> {
         if self.skip_until_close() {
             let body = self.slice(start, self.index.saturating_sub(1));
             self.absorb(&body, start_line);
-        } else {
-            self.command.dynamic = true;
         }
         true
+    }
+
+    // `(( n << 1 ))` is arithmetic. A heredoc word never begins with `((`.
+    fn arithmetic_shift(&self) -> bool {
+        self.word.starts_with("((")
+            || self
+                .command
+                .words
+                .iter()
+                .any(|word| word.text.starts_with("(("))
     }
 
     fn mark_dynamic(&mut self) {

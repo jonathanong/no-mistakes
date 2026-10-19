@@ -421,6 +421,11 @@ fn parser_edges_cover_wrappers_hosts_and_yaml_shapes() {
     assert_eq!(hit("echo <(cat) >(tee)\ndocker run -p 1:2 img").len(), 1);
     assert!(hit("echo `unterminated").is_empty());
     assert!(hit("echo $(echo hi").is_empty());
+    assert_eq!(hit("docker run -p 1:2 $(echo").len(), 1);
+    assert_eq!(hit("docker run -p 1:2 `echo").len(), 1);
+    assert!(hit("docker run -p $(echo").is_empty());
+    assert_eq!(hit("(( n = 1 << 3 ))\ndocker run -p 1:2 img").len(), 1);
+    assert_eq!(hit("((n=1<<3))\ndocker run -p 1:2 img").len(), 1);
     let quoted = super::shell::commands("echo $(echo 'a)' \"b)\")\necho \"a\nb\" \"trail\\");
     assert!(quoted.len() >= 2);
     assert!(quoted.iter().any(|command| command.dynamic));
