@@ -1,0 +1,234 @@
+name: ci
+on: push
+jobs:
+  omitted:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  bool-true:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+  string-true:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: "true"
+  string-upper:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: "TRUE"
+  yaml-true:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: TRUE
+  write-all:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  spaced-write-all:
+    permissions: " write-all "
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  packages-first:
+    permissions:
+      packages: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  id-and-contents:
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  slash:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout/@v4
+  quoted:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@v4"
+  quoted-spaces:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: " actions/checkout@v4 "
+  quoted-hash:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@v4 # not a comment"
+  quoted-then-hash:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@v4" # pin
+  single-quoted:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v4'
+  single-hash:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v4 # kept'
+  commented:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # pin later
+  after-script:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - run: | # comment
+          echo uses: actions/checkout@v4
+
+          echo still in the block
+      - uses: actions/checkout@v4
+  folded:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - run: >
+          echo uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+  bare:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v4
+  pinned:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+  no-ref:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout
+  trailing-slash:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout/
+  sibling:
+    permissions:
+      metadata: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  numeric-key:
+    permissions:
+      1: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  spaced-access:
+    permissions:
+      contents: " write "
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  null-with:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+  empty-with:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {}
+  string-step:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - echo
+      - uses: actions/checkout@v4
+  uses-mapping:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses:
+          name: actions/checkout@v4
+      - uses: actions/checkout@v4
+  setup-then:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+  second-step:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+  two-flagged:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+  extra-indent:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      -   uses: actions/checkout@v4

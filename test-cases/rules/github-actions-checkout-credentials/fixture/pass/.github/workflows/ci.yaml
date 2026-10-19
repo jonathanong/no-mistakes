@@ -1,0 +1,81 @@
+name: pass
+on:
+  - push
+jobs:
+  read:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  read-all:
+    permissions: read-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  spaced-read-all:
+    permissions: " read-all "
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  id-token:
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  id-and-read:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  empty:
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  none:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  alerts-read:
+    permissions:
+      vulnerability-alerts: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  false-forms:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: "false"
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: "FALSE"
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: " false "
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: False
+      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/checkout
+      - uses: docker://actions/checkout@v4
+      - uses: actions/checkout/extra@v4
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          token: ${{ secrets.DEPLOY }}
+      - # note
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false

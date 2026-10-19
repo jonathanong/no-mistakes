@@ -1,0 +1,93 @@
+name: scopes
+on: push
+jobs:
+  actions:
+    permissions:
+      actions: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  artifact-metadata:
+    permissions:
+      artifact-metadata: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  attestations:
+    permissions:
+      attestations: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  checks:
+    permissions:
+      checks: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  code-quality:
+    permissions:
+      code-quality: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  contents:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  copilot-requests:
+    permissions:
+      copilot-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  deployments:
+    permissions:
+      deployments: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  discussions:
+    permissions:
+      discussions: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  issues:
+    permissions:
+      issues: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  packages:
+    permissions:
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  pages:
+    permissions:
+      pages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  pull-requests:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  security-events:
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  statuses:
+    permissions:
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

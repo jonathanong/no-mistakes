@@ -1,0 +1,152 @@
+name: abstain
+on:
+  - push
+jobs:
+  omitted-permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  expression-persist:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: ${{ inputs.persist }}
+  expression-permission:
+    permissions:
+      contents: ${{ vars.LEVEL }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  unknown-scope:
+    permissions:
+      metadata: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  number-persist:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: 1
+  null-persist:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials:
+  shorthand-expression:
+    permissions: ${{ vars.PERMS }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  alerts-write:
+    permissions:
+      vulnerability-alerts: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  string-with:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: "persist-credentials: false"
+  yaml-no:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: no
+  yaml-yes:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: yes
+  yaml-off:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: off
+  yaml-on:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: on
+  bool-permission:
+    permissions:
+      contents: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  number-permission:
+    permissions:
+      contents: 1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  list-permission:
+    permissions:
+      contents: [write]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  permissions-list:
+    permissions: [contents]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  permissions-bool:
+    permissions: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  permissions-number:
+    permissions: 1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  permissions-word:
+    permissions: contents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  numeric-only:
+    permissions:
+      1: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  custom-token:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY }}
+  uppercase-write:
+    permissions:
+      contents: WRITE
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

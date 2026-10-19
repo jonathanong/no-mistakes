@@ -1,0 +1,10 @@
+# no-mistakes-disable-file github-actions-checkout-credentials
+name: ci
+on: push
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

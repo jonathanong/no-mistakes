@@ -1,0 +1,8 @@
+# A workflow_call entry in the trigger list blocks a write finding.
+name: reusable
+on: [push, workflow_call]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

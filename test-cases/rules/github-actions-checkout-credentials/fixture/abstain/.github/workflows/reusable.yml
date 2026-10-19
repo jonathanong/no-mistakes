@@ -1,0 +1,8 @@
+# Missing permissions on workflow_call do not prove the caller token can write.
+name: reusable
+on: workflow_call
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

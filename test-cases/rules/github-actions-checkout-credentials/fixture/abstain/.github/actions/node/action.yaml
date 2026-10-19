@@ -1,0 +1,7 @@
+name: node
+description: synthetic node action
+runs:
+  using: node20
+  main: index.js
+  steps:
+    - uses: actions/checkout@v4

@@ -1,0 +1,26 @@
+name: shape
+on:
+  - push
+permissions:
+  contents: write
+jobs:
+  quoted-trap:
+    runs-on: ubuntu-latest
+    steps:
+      - run: "echo uses: actions/checkout@v4
+          more"
+      - uses: actions/checkout@v4
+  folded:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: >-
+          actions/checkout@v4
+  mixed:
+    runs-on: ubuntu-latest
+    steps:
+      - {uses: actions/checkout@v4}
+      - uses: actions/checkout@v4
+  capitalized:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Actions/Checkout@v4

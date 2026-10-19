@@ -1,0 +1,10 @@
+# push plus workflow_call still cannot prove a write token for every run.
+name: reusable
+on:
+  push:
+  workflow_call:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

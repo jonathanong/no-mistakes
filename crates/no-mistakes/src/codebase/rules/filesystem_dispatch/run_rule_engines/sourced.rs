@@ -73,6 +73,11 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
+        GITHUB_ACTIONS_CHECKOUT_CREDENTIALS => {
+            github_actions_checkout_credentials::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         TSCONFIG_FILE_COVERAGE => {
             tsconfig_file_coverage::check_with_files_and_sources(root, config, files, sources)
         }

@@ -1,0 +1,10 @@
+# workflow_call can only keep or lower the caller token, so this write is not proof.
+name: callable
+on: workflow_call
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

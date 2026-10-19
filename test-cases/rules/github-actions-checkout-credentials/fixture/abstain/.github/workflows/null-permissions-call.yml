@@ -1,0 +1,8 @@
+name: null-call
+on: workflow_call
+permissions:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

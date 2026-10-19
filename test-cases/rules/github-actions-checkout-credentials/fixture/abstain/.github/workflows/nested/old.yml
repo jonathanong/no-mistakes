@@ -1,0 +1,10 @@
+# A subdirectory is not a workflow GitHub runs, so this checkout is ignored.
+name: archived
+on: push
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
