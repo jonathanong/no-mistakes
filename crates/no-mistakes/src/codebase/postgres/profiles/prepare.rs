@@ -54,8 +54,11 @@ pub(crate) fn prepare_rule_sql_facts(
                             | "postgres-require-query-annotation"
                     )
                 }),
-                postgres_exact_locations: rule_ids.iter().any(|id| {
-                    matches!(*id, "postgres-lock-ordering" | "postgres-conflict-ordering")
+                postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering"),
+                postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
+                postgres_general_locations: rule_ids.iter().any(|id| {
+                    *id != "postgres-conflict-ordering"
+                        && super::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
                 }),
                 postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),

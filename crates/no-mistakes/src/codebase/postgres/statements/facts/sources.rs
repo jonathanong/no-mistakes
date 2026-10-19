@@ -9,7 +9,7 @@ pub(crate) struct StatementPolicySources<'a> {
 
 #[derive(Default)]
 pub(super) struct StatementSources<'a> {
-    pub(super) locations: bool,
+    pub(super) locations: crate::codebase::postgres::statement_facts::SqlLocationDemand,
     pub(super) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
     // `recovery` is parallel to statements after a failed strict parse.
     pub(super) policy: StatementPolicySources<'a>,

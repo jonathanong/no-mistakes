@@ -1,4 +1,12 @@
 use crate::fx::FxHashMap;
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) enum SqlLocationDemand {
+    #[default]
+    None,
+    Conflicts,
+    Full,
+}
+
 use std::path::PathBuf;
 
 /// Internal identity of an occurrence in one prepared SQL projection.

@@ -8,12 +8,14 @@ mod parse;
 mod policy;
 mod sources;
 use crate::codebase::postgres::parse::PreparedSql;
+use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use collect::{collect_one, FactOut};
 pub(crate) use lifecycle::project_bounds;
 use lifecycle::LifecycleBuilder;
 pub use parse::extract_sql_statement_facts;
 pub(crate) use parse::{
     extract_from_parsed_with_recovered_placeholders, extract_sql_statement_facts_with_bounds,
+    extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
 };
 use policy::table_keyword;
@@ -38,9 +40,9 @@ fn extract_from_parsed_and_sources(
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
     let mut writes = Vec::new();
-    let mut locations = sources
-        .locations
-        .then(|| locations::Locations::new(placeholder_positions.unwrap_or_default()));
+    let mut locations = (sources.locations != SqlLocationDemand::None).then(|| {
+        locations::Locations::new(placeholder_positions.unwrap_or_default(), sources.locations)
+    });
     let mut inserts = Vec::new();
     let (mut selects, mut updates) = (Vec::new(), Vec::new());
     let (mut deletes, mut triggers) = (Vec::new(), Vec::new());

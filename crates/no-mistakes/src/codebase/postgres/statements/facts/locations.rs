@@ -5,6 +5,7 @@ mod project;
 mod stars;
 mod writes;
 use super::super::{SqlColumnClause, SqlStatementFileFacts, SqlVariantLocations};
+use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use sqlparser::ast::{Expr, Query, Select, SetExpr, Statement, TableFactor, Visit, Visitor};
 use sqlparser::tokenizer::{Span, TokenWithSpan};
 use std::ops::ControlFlow;
@@ -37,6 +38,7 @@ struct Selection {
 }
 #[derive(Default)]
 pub(super) struct Locations {
+    demand: SqlLocationDemand,
     selections: Vec<Selection>,
     relations: Vec<Relation>,
     returning: Vec<(Star, Vec<Relation>)>,
@@ -50,13 +52,18 @@ pub(super) struct Locations {
     pub(super) binds: Vec<(u32, u32)>,
 }
 impl Locations {
-    pub(super) fn new(binds: &[(u32, u32)]) -> Self {
+    pub(super) fn new(binds: &[(u32, u32)], demand: SqlLocationDemand) -> Self {
         Self {
+            demand,
             binds: binds.to_vec(),
             ..Default::default()
         }
     }
     pub(super) fn collect(&mut self, statement: &Statement) {
+        if self.demand != SqlLocationDemand::Full {
+            return;
+        }
+        work::full_walk();
         self.locking
             .extend(crate::codebase::postgres::locking::collect_located(
                 statement,
@@ -69,7 +76,11 @@ impl Locations {
         facts: &SqlStatementFileFacts,
         tokens: &[TokenWithSpan],
     ) -> SqlVariantLocations {
-        project::collect(self, facts, tokens)
+        if self.demand == SqlLocationDemand::Full {
+            project::collect(self, facts, tokens)
+        } else {
+            project::conflicts(tokens)
+        }
     }
     fn selections(&mut self, body: &SetExpr, order: &[sqlparser::ast::OrderByExpr]) {
         match body {
@@ -167,3 +178,10 @@ pub(super) fn finish(
     }
     projected
 }
+
+#[cfg(test)]
+pub(crate) mod work;
+
+#[cfg(not(test))]
+#[path = "locations/no_work.rs"]
+pub(crate) mod work;

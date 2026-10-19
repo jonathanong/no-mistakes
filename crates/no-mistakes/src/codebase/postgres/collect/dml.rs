@@ -1,9 +1,9 @@
 use super::{compile_sql_include, matches_sql_include, read_source};
 use crate::codebase::postgres::embedded::{EmbeddedSqlFileFacts, EmbeddedSqlKind};
+use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use crate::codebase::postgres::statement_facts::SqlStatementFileFacts;
 use crate::codebase::postgres::statements::{
-    extract_sql_statement_facts_with_bounds,
-    extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
+    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_location_demand,
 };
 use crate::codebase::postgres::types::{PostgresFactError, PostgresSchemaOptions};
 use crate::codebase::ts_source::SourceStore;
@@ -50,6 +50,25 @@ pub(crate) fn embedded_call_facts_with_locations(
     variants_only: bool,
     exact_locations: bool,
 ) -> Vec<SqlStatementFileFacts> {
+    embedded_call_facts_with_demand(
+        file,
+        collect_bounds,
+        variants_only,
+        if exact_locations {
+            SqlLocationDemand::Full
+        } else {
+            SqlLocationDemand::None
+        },
+    )
+}
+
+pub(crate) fn embedded_call_facts_with_demand(
+    file: &EmbeddedSqlFileFacts,
+    collect_bounds: bool,
+    variants_only: bool,
+    demand: SqlLocationDemand,
+) -> Vec<SqlStatementFileFacts> {
+    let exact_locations = demand != SqlLocationDemand::None;
     file.calls
         .iter()
         .enumerate()
@@ -68,12 +87,18 @@ pub(crate) fn embedded_call_facts_with_locations(
         })
         .filter_map(|(call, variant, call_index, variant_index)| {
             let sql = call.sql_text.as_deref()?;
-            let extract = if variant || exact_locations || !call.sql_source_positions.is_empty() {
-                extract_sql_variant_statement_facts
+            // Variants and mapped SQL retain the pre-existing complete projection.
+            let projection = if variant || !call.sql_source_positions.is_empty() {
+                SqlLocationDemand::Full
             } else {
-                extract_sql_statement_facts_with_recovered_placeholders
+                demand
             };
-            let mut facts = extract(sql, collect_bounds, &call.recovered_placeholder_positions);
+            let mut facts = extract_sql_statement_facts_with_location_demand(
+                sql,
+                collect_bounds,
+                &call.recovered_placeholder_positions,
+                projection,
+            );
             if call.kind == EmbeddedSqlKind::Dynamic {
                 // Recovered interpolation text can prove OFFSET syntax and write
                 // targets. Ordering also needs the one prepared parse's locations

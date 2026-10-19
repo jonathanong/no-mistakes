@@ -135,3 +135,5 @@ fn conditional_lifecycle_bounds_follow_embedded_source_lines() {
             .collect::<Vec<_>>()
     );
 }
+
+mod location_demand;

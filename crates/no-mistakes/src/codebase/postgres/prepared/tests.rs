@@ -166,3 +166,5 @@ mod bind_column_uses;
 mod copy_recovery;
 
 mod conflict_functions;
+
+mod conflict_location_demand;

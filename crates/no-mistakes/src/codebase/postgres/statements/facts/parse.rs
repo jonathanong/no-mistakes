@@ -5,6 +5,7 @@ use crate::codebase::postgres::parse::{
     orphan_chunk_tokens, parse_postgres_sql_lenient_with_sources, partition_function_sources,
     PreparedSql,
 };
+use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::Statement;
 use sqlparser::tokenizer::TokenWithSpan;
@@ -20,7 +21,12 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
     sql: &str,
     collect_bounds: bool,
 ) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_placeholder_positions(sql, collect_bounds, None, false)
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        None,
+        SqlLocationDemand::None,
+    )
 }
 
 /// Extract facts while identifying the SQL-local positions of recovered interpolation markers.
@@ -33,7 +39,7 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         sql,
         collect_bounds,
         Some(recovered_placeholder_positions),
-        false,
+        SqlLocationDemand::None,
     )
 }
 
@@ -46,7 +52,21 @@ pub(crate) fn extract_sql_variant_statement_facts(
         sql,
         collect_bounds,
         Some(positions),
-        true,
+        SqlLocationDemand::Full,
+    )
+}
+
+pub(crate) fn extract_sql_statement_facts_with_location_demand(
+    sql: &str,
+    collect_bounds: bool,
+    positions: &[(u32, u32)],
+    demand: SqlLocationDemand,
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        Some(positions),
+        demand,
     )
 }
 
@@ -54,7 +74,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     sql: &str,
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
-    locations: bool,
+    locations: SqlLocationDemand,
 ) -> SqlStatementFileFacts {
     let prepared = PreparedSql::new(sql);
     let parsed = prepared.parse_policy();
@@ -126,7 +146,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         prepared,
         statements,
         super::StatementSources {
-            locations: false,
+            locations: SqlLocationDemand::None,
             tokens: None,
             recovery: None,
             policy,
@@ -136,3 +156,6 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         placeholder_positions,
     )
 }
+
+#[cfg(test)]
+mod location_demand_tests;

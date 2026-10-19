@@ -1,3 +1,4 @@
+mod location_demand;
 mod rule_scans;
 use rule_scans::merge_embedded_sql_rule_ids;
 
@@ -58,6 +59,10 @@ pub struct CheckFactPlan {
     pub postgres_variants: bool,
     /// Exact executor SQL needs source-aware lock/conflict metadata in the shared parse.
     pub postgres_exact_locations: bool,
+    /// Conflict-only exact SQL location projection, unless a broader consumer joins.
+    pub postgres_conflict_locations: bool,
+    /// General SQL consumers require Full when sharing conflict-location demand.
+    pub postgres_general_locations: bool,
     /// Opted-in row-bound projection within the shared SQL statement fact pass.
     pub postgres_bounds: bool,
     /// Opted-in builder-fragment statement facts for shape-policy consumers.
@@ -84,6 +89,7 @@ impl CheckFactPlan {
     }
 
     pub(crate) fn include(&mut self, other: Self) {
+        self.merge_location_demand(&other);
         self.imports |= other.imports;
         self.companion_import_plans =
             crate::codebase::rules::required_companion_imports::merge_plans(
@@ -155,6 +161,7 @@ impl CheckFactPlan {
         self.postgres_dml |= other.postgres_dml;
         self.postgres_variants |= other.postgres_variants;
         self.postgres_exact_locations |= other.postgres_exact_locations;
+        self.postgres_conflict_locations |= other.postgres_conflict_locations;
         self.postgres_bounds |= other.postgres_bounds;
         self.postgres_fragments |= other.postgres_fragments;
         self.postgres_write_sql_include
