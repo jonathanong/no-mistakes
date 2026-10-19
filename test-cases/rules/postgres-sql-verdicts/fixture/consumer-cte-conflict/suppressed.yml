@@ -1,0 +1,8 @@
+rules:
+- rule: postgres-conflict-ordering
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    include: ['src/suppressed.ts']
+    schemaCatalogPath: schema.json
+    unanalyzableSql: advise

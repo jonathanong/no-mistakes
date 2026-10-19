@@ -88,14 +88,23 @@ pub(super) fn scan_with_sources(
                 }
                 continue;
             };
-            if !recovered_sql_needs_insert_check(Some(sql)) {
+            let statement = statements.get(&(call_index, variant_index)).copied();
+            let has_prepared_conflict = statement
+                .and_then(|statement| statement.variant_locations.as_ref())
+                .is_some_and(|locations| !locations.conflicts.is_empty());
+            // A data-modifying CTE can execute INSERT while its outer statement
+            // is SELECT. Its prepared conflict facts still require this policy.
+            if !recovered_sql_needs_insert_check(Some(sql)) && !has_prepared_conflict {
                 continue;
             }
+            let statement = statement.ok_or_else(|| {
+                anyhow::anyhow!(if original.variants.is_empty() {
+                    "prepared SQL facts are missing"
+                } else {
+                    "prepared SQL variant facts are missing"
+                })
+            })?;
             if original.variants.is_empty() {
-                let statement = statements
-                    .get(&(call_index, variant_index))
-                    .copied()
-                    .ok_or_else(|| anyhow::anyhow!("prepared SQL facts are missing"))?;
                 findings.extend(exact::findings(
                     &rel,
                     call.line as usize,
@@ -106,16 +115,12 @@ pub(super) fn scan_with_sources(
                 ));
                 continue;
             }
-            let statement = statements
-                .get(&(call_index, variant_index))
-                .copied()
-                .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
             let locations = statement.variant_locations.as_ref().unwrap();
-            if locations.conflict_error.is_some()
-                && opts.fail_unanalyzable
-                && analysis::contains_insert_conflict(sql)
-            {
-                dedup.push(&mut findings, statement, crate::codebase::postgres::statements::SqlFactSite::Origin, Some(&source), analysis::finding(&rel, call.line as usize, "unanalyzable-sql", "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked"));
+            if statement.parse_failed || locations.conflict_error.is_some() {
+                if opts.fail_unanalyzable && analysis::contains_insert_conflict(sql) {
+                    dedup.push(&mut findings, statement, crate::codebase::postgres::statements::SqlFactSite::Origin, Some(&source), analysis::finding(&rel, call.line as usize, "unanalyzable-sql", "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked"));
+                }
+                continue;
             }
             for (index, finding) in analysis::findings_for_inserts(
                 &rel,
