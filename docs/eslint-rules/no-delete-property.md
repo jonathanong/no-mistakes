@@ -36,5 +36,6 @@ delete externalCache[key];
 
 ## Related rules
 
+- [`no-object-mutation`](no-object-mutation.md) reports other shared-object writes.
 - [`ts-preserve-null-option-defaults`](ts-preserve-null-option-defaults.md)
   preserves explicit null semantics.

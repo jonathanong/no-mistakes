@@ -47,6 +47,9 @@ See [options and examples](../../docs/eslint-rules/no-comment-phrases.md).
 `forbidden-member-chains` is an opt-in rule for configured static member-access chains.
 See [options and examples](../../docs/eslint-rules/forbidden-member-chains.md).
 
+`no-object-mutation` is an opt-in rule for shared object writes and mutating calls.
+See [options and examples](../../docs/eslint-rules/no-object-mutation.md).
+
 `require-options-on-imported-call` requires a static options object on configured
 imports, globals with no local binding, and terminal methods with a matching receiver shape.
 See [options and examples](../../docs/eslint-rules/require-options-on-imported-call.md).

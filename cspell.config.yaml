@@ -111,6 +111,7 @@ words:
   - sqlparser
   - quasis
   - unanalyzable
+  - unshift
   - unparseable
   - sgconfig
   - shellcheck

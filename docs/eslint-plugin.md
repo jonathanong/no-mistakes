@@ -104,6 +104,13 @@ including `.default()`.
 
 `checkedPathPatterns?: string[]` and `allowedPathPatterns?: string[]`.
 
+### `no-object-mutation`
+
+Opt-in. Not enabled by `configs.recommended` or `configs.strict`. `module`,
+`imported`, `parameters`, and `calls` default to `true`. `allowThis` defaults
+to `true` (class `this` writes are allowed). `allow` is a `string[]` of root
+names or dotted paths.
+
 ### `no-inline-noop-promise-catch`
 
 `checkedPathPatterns?: string[]` and `allowedPathPatterns?: string[]` scope

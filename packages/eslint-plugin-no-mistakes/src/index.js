@@ -17,6 +17,7 @@ const rules = {
   "no-banned-import-outside-allowed-paths": require("./rules/no-banned-import-outside-allowed-paths"),
   "no-global-fetch-outside-helper": require("./rules/no-global-fetch-outside-helper"),
   "no-delete-property": require("./rules/no-delete-property"),
+  "no-object-mutation": require("./rules/no-object-mutation"),
   "no-import-only-test-files": require("./rules/no-import-only-test-files"),
   "no-inline-noop-promise-catch": require("./rules/no-inline-noop-promise-catch"),
   "no-placeholder-never-type-exports": require("./rules/no-placeholder-never-type-exports"),

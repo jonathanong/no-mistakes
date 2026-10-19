@@ -83,6 +83,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | Rule                                                                        | Purpose                                        |
 | --------------------------------------------------------------------------- | ---------------------------------------------- |
 | [`no-delete-property`](no-delete-property.md)                               | Avoid in-place object-shape deletion.          |
+| [`no-object-mutation`](no-object-mutation.md)                               | Keep shared objects statically knowable.       |
 | [`no-placeholder-never-type-exports`](no-placeholder-never-type-exports.md) | Reject exported placeholder `never` aliases.   |
 | [`ts-no-const-aliases`](ts-no-const-aliases.md)                             | Reject differently named direct const aliases. |
 | [`ts-no-export-renaming`](ts-no-export-renaming.md)                         | Keep value-export identities direct.           |
