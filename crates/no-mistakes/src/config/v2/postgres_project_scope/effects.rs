@@ -38,8 +38,8 @@ pub(super) fn apply(config: &mut NoMistakesConfig) -> Result<bool> {
         );
     }
     let module = executors.import_specifier;
-    let factories = executors.factory_names;
-    let types = executors.type_names;
+    let factories = unique_preserve(executors.factory_names);
+    let types = unique_preserve(executors.type_names);
     let effect = config
         .effects
         .get_mut("postgres")
@@ -68,7 +68,7 @@ fn push_selector(
 ) -> Result<()> {
     if lists_selector(effect, module, export) {
         bail!(
-            "effects.postgres.project `{project}` repeats `{module}` export `{export}`; remove it from returnedExecutors and typedExecutors"
+            "effects.postgres.project `{project}` repeats `{module}` export `{export}` across factoryNames, typeNames, returnedExecutors, and typedExecutors"
         );
     }
     let selector = EffectTargetConfig {
@@ -81,6 +81,16 @@ fn push_selector(
         SelectorKind::Typed => effect.typed_executors.push(selector),
     }
     Ok(())
+}
+
+fn unique_preserve(values: Vec<String>) -> Vec<String> {
+    let mut out = Vec::new();
+    for value in values {
+        if !out.contains(&value) {
+            out.push(value);
+        }
+    }
+    out
 }
 
 fn lists_selector(effect: &EffectKindConfig, module: &str, export: &str) -> bool {

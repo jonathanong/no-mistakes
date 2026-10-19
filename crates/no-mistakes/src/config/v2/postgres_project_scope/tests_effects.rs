@@ -138,7 +138,7 @@ rules:
 
 #[test]
 fn catalog_rules_inherit_only_the_catalog_path() {
-    let config = parse(
+    let mut config = parse(
         r#"
 projects:
   db:
@@ -177,4 +177,12 @@ rules:
         config.rules[1].try_rule_options().unwrap();
     assert_eq!(keys.schema_catalog_path, "catalog.json");
     assert_eq!(keys.allowed_types, ["uuid"]);
+    assert!(config.postgres_project_scope_materialized);
+    super::materialize(&mut config).unwrap();
+    assert_eq!(
+        config.rules[0].options["schemaCatalogPath"].as_str(),
+        Some("catalog.json")
+    );
+    assert!(config.rules[0].options.get("sqlIncludeLocked").is_none());
+    assert!(config.rules[0].options.get("importSpecifier").is_none());
 }

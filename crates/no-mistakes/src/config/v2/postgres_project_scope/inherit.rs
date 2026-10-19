@@ -28,12 +28,15 @@ pub(super) fn apply(config: &mut NoMistakesConfig) -> Result<bool> {
             plans.push((index, plan));
         }
     }
+    // Catalog rules write schemaCatalogPath without sqlIncludeLocked. Any applied
+    // plan must set the materialize flag, or a second call treats that path as a restate.
+    let applied = !plans.is_empty();
     for (index, (scope, keep_rule_sql)) in plans {
         let rule_name = config.rules[index].rule.clone();
         let options = ensure_mapping(&mut config.rules[index].options, &rule_name)?;
         write_scope(&rule_name, options, &scope, keep_rule_sql);
     }
-    Ok(!config.rules.is_empty() && config.rules.iter().any(locked))
+    Ok(applied)
 }
 
 fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<(Scope, bool)>> {
@@ -193,12 +196,4 @@ fn validate_project_globs(config: &NoMistakesConfig) -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn locked(rule: &RuleDef) -> bool {
-    rule.options
-        .as_mapping()
-        .and_then(|map| map.get(Value::String("sqlIncludeLocked".to_string())))
-        .and_then(Value::as_bool)
-        == Some(true)
 }

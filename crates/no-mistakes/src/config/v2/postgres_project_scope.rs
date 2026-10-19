@@ -32,7 +32,7 @@ struct Scope {
 /// Inherit `projects.<name>.postgres` into postgres rules and `effects.postgres`.
 ///
 /// The first successful call sets `postgres_project_scope_materialized` when it
-/// writes `sqlIncludeLocked` or expands effect selectors. A second call sees
+/// applies an inheritance plan or expands effect selectors. A second call sees
 /// that flag and returns without duplicating selectors. User-supplied
 /// `sqlIncludeLocked` is rejected while the flag is still unset.
 pub(crate) fn materialize(config: &mut NoMistakesConfig) -> Result<()> {
