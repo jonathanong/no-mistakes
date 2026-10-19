@@ -1,0 +1,66 @@
+{
+  "syntheticFixture": true,
+  "proof": {
+    "source": "1111111111111111111111111111111111111111",
+    "tree": "2222222222222222222222222222222222222222",
+    "lockSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "rustc": "synthetic-rustc",
+    "cargo": "synthetic-cargo",
+    "features": "default",
+    "profile": {
+      "lto": true,
+      "codegen-units": 1
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--release"
+    ],
+    "buildJobs": 2,
+    "incremental": false,
+    "machine": {
+      "imageOS": "synthetic-ubuntu",
+      "imageVersion": "synthetic-other",
+      "uname": [
+        "Linux",
+        "fixture",
+        "release",
+        "version",
+        "aarch64"
+      ]
+    }
+  },
+  "expected": {
+    "source": "1111111111111111111111111111111111111111",
+    "tree": "2222222222222222222222222222222222222222",
+    "lockSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "rustc": "synthetic-rustc",
+    "cargo": "synthetic-cargo",
+    "features": "default",
+    "profile": {
+      "lto": true,
+      "codegen-units": 1
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--release"
+    ],
+    "buildJobs": 2,
+    "incremental": false,
+    "machine": {
+      "imageOS": "synthetic-ubuntu",
+      "imageVersion": "synthetic-1",
+      "uname": [
+        "Linux",
+        "fixture",
+        "release",
+        "version",
+        "aarch64"
+      ]
+    }
+  },
+  "binarySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "pinnedSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "accepted": false
+}

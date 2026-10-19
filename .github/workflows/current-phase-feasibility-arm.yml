@@ -1,0 +1,108 @@
+name: Current phase ARM capacity feasibility
+
+on:
+  push:
+    branches: [eval/2241-current-arm]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: current-phase-feasibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Fresh matched production CLI pair
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 75
+    steps:
+      - name: Checkout isolated harness
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Checkout exact PR merge base
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: e377c2ba31c3f1a59f39054b67d3eafa7c2a850a
+          path: source-base
+          persist-credentials: false
+      - name: Checkout exact candidate
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: b2701498b16bd63cd08993283151c4f169275dbe
+          path: source-phases
+          persist-credentials: false
+      - name: Update stable toolchain once for both builds
+        timeout-minutes: 5
+        run: rustup update stable && rustup default stable
+      - name: Test saved harness invariants
+        timeout-minutes: 2
+        run: python3 -B -m unittest discover -s harness/.github/scripts/current-arm -p 'test_*.py'
+      - name: Build both fresh binaries on this VM
+        timeout-minutes: 53
+        run: python3 -B harness/.github/scripts/current-arm/build.py
+      - name: Retain fresh executables and full provenance
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: current-phase-clis
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
+
+  feasibility:
+    name: jobs1 full config diagnostics ${{ matrix.diagnostics }} capacity only
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        diagnostics: ['off', 'on']
+    steps:
+      - name: Checkout isolated harness
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Download this run's fresh CLI pair
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: current-phase-clis
+          path: cli
+      - name: Download audited installed physical consumer
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 12158768554
+          run-id: 39189171362
+          github-token: ${{ github.token }}
+          path: prepared
+      - name: Restore identical installed consumer
+        timeout-minutes: 2
+        run: tar -xzf prepared/fixture.tar.gz
+      - name: Observe BC capacity only with 10000 seconds per arm
+        timeout-minutes: 338
+        env:
+          DIAGNOSTICS: ${{ matrix.diagnostics }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B harness/.github/scripts/current-arm/measure.py "$DIAGNOSTICS"
+      - name: Retain raw completed and censored feasibility outcomes
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: current-phase-capacity-${{ matrix.diagnostics }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 7

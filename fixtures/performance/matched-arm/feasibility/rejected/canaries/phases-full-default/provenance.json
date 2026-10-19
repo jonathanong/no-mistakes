@@ -1,0 +1,8 @@
+{
+  "case": "phases-full",
+  "jobs": "default",
+  "harnessCommit": "1111111111111111111111111111111111111111",
+  "order": "bc",
+  "diagnostics": "off",
+  "syntheticFixture": true
+}

@@ -1,0 +1,18 @@
+{
+  "syntheticFixture": true,
+  "advisories": [],
+  "codebase": [],
+  "integration": [],
+  "queues": [],
+  "react": [],
+  "rules": [
+    {
+      "file": "existing.ts",
+      "line": 1,
+      "rule": "synthetic-existing",
+      "target": "existing",
+      "message": "Saved synthetic existing finding"
+    }
+  ],
+  "warnings": []
+}

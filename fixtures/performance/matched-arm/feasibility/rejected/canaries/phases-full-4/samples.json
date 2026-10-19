@@ -1,0 +1,14 @@
+[
+  {
+    "arm": "b",
+    "eligible": true,
+    "wallSeconds": 100,
+    "syntheticFixture": true
+  },
+  {
+    "arm": "c",
+    "eligible": true,
+    "wallSeconds": 100,
+    "syntheticFixture": true
+  }
+]
