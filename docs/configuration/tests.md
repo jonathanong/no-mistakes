@@ -402,6 +402,26 @@ configured `Package.swift`, discovers `.testTarget(...)` targets under
 `Tests/<target>/**/*.swift`, and emits `swift test --package-path <package>
 --filter <test-target>` execution targets.
 
+`tests.swift.baseCommands` replaces that `swift test` argv for one declared
+package. The value is an argv array, copied literally: spaces and punctuation
+stay inside one argument, and the planner does not spawn the command. Keys
+must be entries of `tests.swift.packages` (a trailing slash matches the same
+package). An omitted package, or an omitted `baseCommands` map, keeps
+`["swift", "test"]`. Generated `--package-path` and `--filter` arguments stay
+on `runnerArgs`.
+
+```yaml
+tests:
+  swift:
+    packages:
+      - clients/android
+      - clients/core
+    baseCommands:
+      clients/android:
+        - /opt/swift-6.3/usr/bin/swift
+        - test
+```
+
 Use `tests.swift.projects` when a package needs named include/exclude policies.
 Project aliases affect discovery, while runnable Swift filters remain SwiftPM
 test targets derived from the selected test file.

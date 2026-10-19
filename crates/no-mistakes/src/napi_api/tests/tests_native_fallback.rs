@@ -168,6 +168,7 @@ fn tests_plan_json_scopes_swift_accounting_and_execution_targets_with_include_gl
             && target["config"] == "swift-clients/apps/android"
             && target["project"] == "ExampleAndroidTests"
             && target["name"] == "swift-clients/apps/android"
+            && target["base_command"] == json!(["swift", "test"])
             && target["runner_args"]
                 == json!([
                     "--package-path",
@@ -176,4 +177,59 @@ fn tests_plan_json_scopes_swift_accounting_and_execution_targets_with_include_gl
                     "ExampleAndroidTests",
                 ])
     }));
+}
+
+#[test]
+fn tests_plan_and_targets_json_use_declared_swift_base_commands() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/swift-native-topology/fixture"),
+    );
+    let config = root.join("runner-argv.no-mistakes.yml");
+    let plan_options = json!({
+        "framework": "swift",
+        "root": root,
+        "config": config,
+        "changedFiles": ["swift-clients/core/Sources/ExampleCore/APIClient.swift"],
+    })
+    .to_string();
+    let plan: serde_json::Value = serde_json::from_str(
+        &tests_plan_json_impl(crate::napi_api::options::test_json_arg(plan_options)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    let bases: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|test| test["targets"][0]["base_command"][0].as_str().unwrap())
+        .collect();
+    assert!(bases.contains(&"swift"));
+    assert!(bases.contains(&"host's swift"));
+    assert!(bases.contains(&"/opt/Swift 6.3/usr/bin/swift"));
+
+    let target_options = json!({
+        "framework": "swift",
+        "root": root,
+        "config": config,
+        "files": ["swift-clients/core/Tests/ExampleCoreTests/APIClientTests.swift"],
+    })
+    .to_string();
+    let targets: serde_json::Value = serde_json::from_str(
+        &tests_targets_json_impl(crate::napi_api::options::test_json_arg(target_options)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        targets["tests"][0]["targets"][0]["base_command"],
+        json!(["swift", "test"])
+    );
+    assert_eq!(
+        targets["tests"][0]["targets"][0]["runner_args"],
+        json!([
+            "--package-path",
+            "swift-clients/core",
+            "--filter",
+            "ExampleCoreTests"
+        ])
+    );
 }

@@ -1122,6 +1122,16 @@ test("Vitest project policy declarations expose repository-relative setup files"
   assert.match(declarations, /setup_files\?: string\[\];/);
 });
 
+test("Swift package base commands are an exported argv map", () => {
+  const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface SwiftPackageBaseCommands \{/);
+  assert.match(declarations, /\[packageRoot: string\]: string\[\];/);
+  assert.match(
+    declarations,
+    /Swift uses `SwiftPackageBaseCommands` or `\["swift", "test"\]`\./,
+  );
+});
+
 test("test plan declarations require current results but accept saved legacy plan documents", () => {
   const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
 

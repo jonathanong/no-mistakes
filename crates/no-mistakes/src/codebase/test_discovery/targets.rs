@@ -25,6 +25,17 @@ pub(super) fn target_for(
     project: Option<&str>,
     test_file: &str,
 ) -> TestExecutionTarget {
+    target_for_with_base(runner, config, workspace, project, test_file, None)
+}
+
+pub(super) fn target_for_with_base(
+    runner: TestRunner,
+    config: Option<&str>,
+    workspace: bool,
+    project: Option<&str>,
+    test_file: &str,
+    swift_base: Option<&[String]>,
+) -> TestExecutionTarget {
     assert_ne!(
         runner,
         TestRunner::Cargo,
@@ -34,7 +45,7 @@ pub(super) fn target_for(
         return dotnet_target_for(config, project, test_file);
     }
     if runner == TestRunner::Swift {
-        return swift_target_for(config, project, test_file);
+        return swift_target_for(config, project, test_file, swift_base);
     }
     if let Some(target) =
         super::lang_targets::language_target_for(runner, config, project, test_file)
@@ -98,6 +109,7 @@ fn swift_target_for(
     package: Option<&str>,
     project: Option<&str>,
     test_file: &str,
+    swift_base: Option<&[String]>,
 ) -> TestExecutionTarget {
     let mut runner_args = Vec::new();
     if let Some(package) = package {
@@ -116,9 +128,15 @@ fn swift_target_for(
         config: package.map(str::to_string),
         workspace: false,
         project: project.map(str::to_string),
-        base_command: vec!["swift".to_string(), "test".to_string()],
+        base_command: swift_base
+            .map(|argv| argv.to_vec())
+            .unwrap_or_else(default_swift_base),
         runner_args,
     }
+}
+
+fn default_swift_base() -> Vec<String> {
+    vec!["swift".to_string(), "test".to_string()]
 }
 
 fn is_false(value: &bool) -> bool {

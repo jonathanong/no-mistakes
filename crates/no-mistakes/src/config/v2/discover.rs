@@ -22,6 +22,7 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
 }
 
 mod check_commands;
+mod swift_commands;
 mod targeted_triggers;
 
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from
@@ -177,6 +178,7 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
     check_commands::validate(config)?;
+    swift_commands::validate(&config.tests.swift)?;
     for (name, project) in &config.tests.vitest.projects {
         project.validate_vitest_setup_files(name)?;
     }

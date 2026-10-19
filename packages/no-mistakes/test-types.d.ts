@@ -148,6 +148,15 @@ export interface SelectedTest {
   targets?: TestExecutionTarget[];
 }
 
+/**
+ * Literal per-package Swift runner argv from `tests.swift.baseCommands`.
+ * Keys are declared `tests.swift.packages` paths. Omitted packages use
+ * `["swift", "test"]`.
+ */
+export interface SwiftPackageBaseCommands {
+  [packageRoot: string]: string[];
+}
+
 export interface TestExecutionTarget {
   runner: TestPlanFramework;
   config?: string | null;
@@ -156,6 +165,7 @@ export interface TestExecutionTarget {
   project?: string | null;
   /** Path-prefix display name, such as a Swift package root. */
   name?: string;
+  /** Swift uses `SwiftPackageBaseCommands` or `["swift", "test"]`. */
   baseCommand: string[];
   runnerArgs: string[];
 }

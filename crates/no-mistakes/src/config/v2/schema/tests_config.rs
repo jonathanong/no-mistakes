@@ -117,6 +117,9 @@ pub struct VitestConfig {
 pub struct SwiftConfig {
     pub packages: Vec<String>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
+    /// Literal argv for one declared package. Omitted packages stay `swift test`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub base_commands: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

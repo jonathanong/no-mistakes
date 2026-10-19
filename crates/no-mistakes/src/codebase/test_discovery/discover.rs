@@ -77,12 +77,13 @@ fn discover_from_projects_from_files(
         let matched_targets: BTreeSet<TestExecutionTarget> = owning_projects(&matched)
             .into_iter()
             .map(|project| {
-                targets::target_for(
+                targets::target_for_with_base(
                     request.runner,
                     project.config.as_deref(),
                     project.workspace,
                     project.runner_project_arg.as_deref(),
                     &rel,
+                    swift_base(request.config, request.runner, project.config.as_deref()),
                 )
             })
             .collect();
@@ -164,6 +165,25 @@ fn discover_with_fallback(
         }
     }
     to_discovered(tests, targets_by_path, used_fallback)
+}
+
+fn swift_base<'a>(
+    config: &'a NoMistakesConfig,
+    runner: TestRunner,
+    package: Option<&str>,
+) -> Option<&'a [String]> {
+    if runner != TestRunner::Swift {
+        return None;
+    }
+    let package = package?;
+    let commands = &config.tests.swift.base_commands;
+    if let Some(argv) = commands.get(package) {
+        return Some(argv.as_slice());
+    }
+    commands
+        .iter()
+        .find(|(key, _)| key.trim_end_matches('/') == package)
+        .map(|(_, argv)| argv.as_slice())
 }
 
 fn to_discovered(
