@@ -107,5 +107,21 @@ pub(crate) fn apply_hole_append(visitor: &mut ScopeVisitor<'_>, name: &str, hole
 
 fn first_static_arg(call: &CallExpression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
     let expression = call.arguments.first()?.as_expression()?;
+    // `.append(fragment)` copies a tagged const's SQL. An untagged template
+    // would stringify that object, so that path stays in `static_fragment`.
+    if let Expression::Identifier(ident) = unwrap_ts_wrappers(expression) {
+        return recovered_fragment_sql(ident.name.as_str(), visitor);
+    }
     static_fragment(expression, visitor)
+}
+
+/// SQL of a binding passed to `.append`, including a `sql` tagged const.
+fn recovered_fragment_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<String> {
+    let binding = visitor.lookup(name)?;
+    match binding.kind {
+        EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed | EmbeddedSqlKind::Inline => {
+            binding.sql
+        }
+        EmbeddedSqlKind::Dynamic => None,
+    }
 }

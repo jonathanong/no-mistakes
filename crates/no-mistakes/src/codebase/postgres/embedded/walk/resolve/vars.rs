@@ -135,6 +135,7 @@ pub(super) fn record_declarator(
     }
     if is_const {
         visitor.note_const_object(init, scope_index, ident.name.as_str());
+        visitor.note_text_const(init, scope_index, ident.name.as_str());
     }
 }
 
