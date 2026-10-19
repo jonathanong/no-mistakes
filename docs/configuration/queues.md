@@ -9,8 +9,13 @@ A list of names is the queue-factory form. Each name is a call whose first
 argument is the queue name. Wrappers that hide the queue object, the job name,
 or the worker processor use
 the object form. Indexes are zero-based argument positions. Queue names may be
-string literals or imported string constants, and a later binding may alias a
-queue object (`export const adminImports = background`).
+string literals, no-substitution template literals, same-file constants, or
+imported string constants. A queue object may be aliased
+(`export const adminImports = background`), re-exported
+(`export { queue as alias } from "./queues"` or `export * from "./queues"`),
+or passed as a namespace member (`queues.email`). A producer whose job does
+not resolve abstains: [`queues check`](../cli/queues-check.md) does not report
+that queue's handlers as dead.
 
 ```yaml
 queues:

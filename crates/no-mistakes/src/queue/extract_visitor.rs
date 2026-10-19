@@ -1,5 +1,6 @@
 use crate::queue::extract_helpers::{
     binding_name, collect_jobs_from_args, export_name, is_queue_package, processor_specifier,
+    static_string,
 };
 use crate::queue::extract_model::{FileFacts, ImportBinding, WorkerSite};
 use crate::queue::extract_record::{record_enqueue, record_flow};
@@ -85,9 +86,10 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
             walk::walk_variable_declarator(self, decl);
             return;
         };
-        if let Some(Expression::StringLiteral(value)) = &decl.init {
-            self.const_strings
-                .insert(name.clone(), value.value.as_str().to_string());
+        if let Some(init) = &decl.init {
+            if let Some(value) = static_string(init) {
+                self.const_strings.insert(name.clone(), value);
+            }
         }
         if let Some(Expression::NewExpression(new_expr)) = &decl.init {
             if self.is_queue_constructor(&new_expr.callee) {
@@ -183,6 +185,16 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_export_named_declaration(&mut self, decl: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
         super::extract_factory::note_export(self, decl);
         walk::walk_export_named_declaration(self, decl);
+    }
+
+    fn visit_export_from_declaration(&mut self, decl: &oxc_ast::ast::ExportFromDeclaration<'a>) {
+        super::extract_factory::note_export_from(self, decl);
+        walk::walk_export_from_declaration(self, decl);
+    }
+
+    fn visit_export_all_declaration(&mut self, decl: &oxc_ast::ast::ExportAllDeclaration<'a>) {
+        super::extract_factory::note_export_all(self, decl);
+        walk::walk_export_all_declaration(self, decl);
     }
 
     fn visit_export_declaration(&mut self, decl: &oxc_ast::ast::ExportDeclaration<'a>) {

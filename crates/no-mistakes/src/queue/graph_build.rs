@@ -12,6 +12,9 @@ use crate::queue::types::{
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+#[path = "graph_checks.rs"]
+mod checks;
+
 pub(super) fn build_report(
     root: &Path,
     producers: Vec<InternalProducer>,
@@ -81,13 +84,12 @@ fn build_report_and_relationships(
         }
         add_matched_job(job, producers_for_job, &workers_for_job, &mut relationships);
     }
-    for worker in &workers {
-        for (job, _) in worker.job_keys() {
-            if !producer_index.contains_key(&job) {
-                check.push(worker.unmatched(root, &job));
-            }
-        }
-    }
+    check.extend(checks::unmatched_workers(
+        root,
+        &workers,
+        &producer_index,
+        &producers,
+    ));
     check.extend(local_checks(root, facts));
     check.extend(crate::queue::cycles::queue_cycles(
         root, &producers, &workers,
