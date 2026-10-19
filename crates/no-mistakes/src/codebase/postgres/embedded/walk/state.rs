@@ -73,6 +73,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) functions: resolve::LocalFunctions,
     pub(crate) sql_statement_types: HashSet<String>,
     pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
+    pub(super) literal_objects: super::const_literals::LiteralObjects,
 }
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
@@ -148,9 +149,11 @@ pub(crate) fn collect_calls<'a>(
         functions: resolve::LocalFunctions::collect(program, source, &options.trusted_sql_tags),
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),
+        literal_objects: super::const_literals::LiteralObjects::default(),
     };
     visitor.visit_program(program);
     visitor.downgrade_escaped_member_calls();
+    visitor.finish_const_splices();
     let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
     let pending_imported = helpers::finalize::finalize(
         helpers::finalize::Walked {

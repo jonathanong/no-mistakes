@@ -180,6 +180,8 @@ mod chain_tests;
 #[cfg(test)]
 mod compose_classification_tests;
 #[cfg(test)]
+mod const_splice_tests;
+#[cfg(test)]
 mod dml_kind_tests;
 #[cfg(test)]
 mod helper_body_tests;

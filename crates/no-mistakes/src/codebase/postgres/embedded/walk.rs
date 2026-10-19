@@ -4,6 +4,7 @@ use oxc_syntax::scope::ScopeFlags;
 mod assignments;
 mod binding_visits;
 mod calls;
+mod const_literals;
 mod executor_arguments;
 mod executors;
 mod flow;
@@ -99,6 +100,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        self.poison_literal_callee(call);
         self.visit_sql_call(call);
     }
 
@@ -116,6 +118,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     // Erased types cannot retain a runtime builder reference.
     fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
     fn visit_identifier_reference(&mut self, id: &ast::IdentifierReference<'a>) {
+        self.poison_literal_reference(id);
         self.escape_builder_reference(id);
     }
     fn visit_expression(&mut self, expression: &ast::Expression<'a>) {
@@ -123,9 +126,12 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         walk::walk_expression(self, expression);
     }
     fn visit_static_member_expression(&mut self, member: &ast::StaticMemberExpression<'a>) {
+        let reads = self.literal_objects.read_spans.len();
+        self.exempt_literal_read(&member.object);
         self.with_builder_receiver(&member.object, member.property.name == "text", |visitor| {
             walk::walk_static_member_expression(visitor, member)
         });
+        self.literal_objects.read_spans.truncate(reads);
     }
     fn visit_computed_member_expression(&mut self, member: &ast::ComputedMemberExpression<'a>) {
         self.with_builder_receiver(&member.object, matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression), ast::Expression::StringLiteral(name) if name.value == "text"), |visitor| {
