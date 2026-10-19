@@ -95,10 +95,7 @@ fn local_queues<R: ImportResolverFacade>(
                 map.insert(
                     import.local.clone(),
                     QueueKey {
-                        queue_file: definitions
-                            .get(queue_name)
-                            .cloned()
-                            .unwrap_or(resolved),
+                        queue_file: definitions.get(queue_name).cloned().unwrap_or(resolved),
                         queue_name: queue_name.clone(),
                     },
                 );
