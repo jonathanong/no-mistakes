@@ -28,6 +28,16 @@ the next placeholder. User-authored text that happens to contain the
 This is the lock-ordering `sqlText` contract. It is intentionally different
 from a runtime-query helper, which joins quasis with `?`.
 
+A same-file `const` string, no-substitution template, or `as const` scalar is
+spliced into that placeholder instead, including nested untagged templates up
+to depth 8. A constant object-literal member is spliced only when the binding
+is never referenced except as `X.member` reads, and is never exported or
+written (including a write after the read). A poisoned member keeps the proved
+SQL and substitutes `sql_placeholder_N` for that member. `let`, imported
+constants, spreads, computed keys or writes, nested members, numeric keys,
+getters, and methods stay unknown. `no-object-mutation` (#2219) keeps object
+members in this shape.
+
 A placeholder stands for a parameterized value. When a trusted tag's
 interpolation instead splices another SQL fragment, the fragment's SQL is
 inlined into each recoverable alternative; it is never treated as a bind value.
