@@ -54,6 +54,8 @@ function visitObject(state, node, scope, role) {
     }
     const value = api.visit(state, property.value, scope, "read");
     if (property.kind !== "init" || property.method) {
+      // Methods are not data fields, but they escape with the object.
+      fresh.items.push(value);
       remember(fresh, unknown());
       continue;
     }

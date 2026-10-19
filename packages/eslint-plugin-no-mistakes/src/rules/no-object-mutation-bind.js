@@ -3,13 +3,7 @@
 const api = require("./no-object-mutation-runtime");
 const { considerWrite } = require("./no-object-mutation-write");
 const { literalKey, memberKey, staticKey } = require("./no-object-mutation-syntax");
-const {
-  elementTag,
-  freshCopy,
-  lookup,
-  readMember,
-  shared,
-} = require("./no-object-mutation-values");
+const { elementTag, freshCopy, readMember, shared } = require("./no-object-mutation-values");
 
 function bindName(name, tag, scope, kind) {
   const target = kind === "var" ? scope.functionEnv : scope;
@@ -23,10 +17,25 @@ function bindName(name, tag, scope, kind) {
   target.cells.set(name, { kind, tag });
 }
 
-function assignBinding(name, tag, scope) {
-  const cell = lookup(scope, name);
+function bindingScope(scope, name) {
+  for (let cursor = scope; cursor; cursor = cursor.outer) {
+    if (cursor.cells.has(name)) {
+      return cursor;
+    }
+  }
+  return null;
+}
+
+function assignBinding(state, name, tag, scope) {
+  const owner = bindingScope(scope, name);
+  const cell = owner?.cells.get(name);
   if (!cell || cell.kind === "import") {
     return;
+  }
+  // A local `let` in this function can still be a builder. A cell in the
+  // module or another function can be read after this write.
+  if (owner.isModule || owner.functionEnv !== scope.functionEnv) {
+    api.releaseEscaping(state, tag);
   }
   if (cell.kind === "module") {
     cell.tag = tag?.type === "mapset" ? tag : shared("module");
@@ -47,7 +56,7 @@ function assignPattern(state, pattern, tag, scope) {
     return;
   }
   if (pattern.type === "Identifier") {
-    assignBinding(pattern.name, tag, scope);
+    assignBinding(state, pattern.name, tag, scope);
     return;
   }
   if (pattern.type === "AssignmentPattern") {

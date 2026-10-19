@@ -7,4 +7,4 @@ export function replicaClient(get) {
   return { client: { get } };
 }
 
-query("SELECT id FROM app.users WHERE active");
+query(`SELECT id FROM ${tables.users} WHERE active`);

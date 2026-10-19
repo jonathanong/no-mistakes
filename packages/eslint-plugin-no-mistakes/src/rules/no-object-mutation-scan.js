@@ -21,6 +21,7 @@ const { child, lookup, rootEnv, unknown } = require("./no-object-mutation-values
 // escapes, or at the end of that scope. Nested functions record writes to an
 // outer fresh object and decide them when that function is called or escapes.
 // Module, import, and parameter writes are reported while the body is walked.
+// Storing a value into the module or another function escapes it.
 
 function scanMutations(program, context, options) {
   const state = {

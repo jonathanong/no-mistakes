@@ -28,8 +28,8 @@ describe("no-object-mutation", () => {
       "no-mistakes/no-object-mutation": "error",
     });
     assert.match(message.message, /statically/);
-    assert.match(message.message, /spread/);
-    assert.match(message.message, /literal declared once/);
+    assert.doesNotMatch(message.message, /spread/);
+    assert.match(message.message, /Declare a literal once/);
   });
 
   it("reports module member writes, updates, and computed keys", () => {
@@ -152,6 +152,138 @@ describe("no-object-mutation", () => {
         }
       `),
       repeated(6),
+    );
+  });
+
+  it("reports a fresh object stored into an outer or module binding", () => {
+    assert.deepEqual(
+      ids(`
+        let g;
+        function intoModule() {
+          const b = {};
+          g = b;
+          b.a = 1;
+        }
+        function intoArray() {
+          const b = {};
+          g = [b];
+          b.a = 1;
+        }
+        function intoOuter() {
+          let h;
+          function inner() {
+            const b = {};
+            h = b;
+            b.a = 1;
+          }
+        }
+        function sameFunction() {
+          let h;
+          const b = {};
+          h = b;
+          b.a = 1;
+          return h;
+        }
+      `),
+      repeated(3),
+    );
+  });
+
+  it("reports a closure that escapes inside a value", () => {
+    assert.deepEqual(
+      ids(`
+        function method() {
+          const b = {};
+          return { set(v) { b.a = v; } };
+        }
+        function pair() {
+          const b = {};
+          const g = () => { b.a = 1; };
+          return [b, g];
+        }
+        function shorthand() {
+          const b = {};
+          const g = () => { b.a = 1; };
+          return { g };
+        }
+        function sunk(sink) {
+          const b = {};
+          const g = () => { b.a = 1; };
+          sink([g]);
+        }
+        let h;
+        function stored() {
+          const b = {};
+          const g = () => { b.a = 1; };
+          h = g;
+        }
+        function localCall() {
+          const b = {};
+          const g = () => { b.a = 1; };
+          g();
+          return b;
+        }
+        function localMethod() {
+          const b = {};
+          const obj = { set(v) { b.a = v; } };
+          obj;
+          return b;
+        }
+      `),
+      repeated(5),
+    );
+  });
+
+  it("reports a write into a value carried across loop iterations", () => {
+    assert.deepEqual(
+      ids(`
+        const x = {};
+        const cache = new Map();
+        function carried() {
+          let unused;
+          let y = {};
+          for (let i = 0; i < 2; i++) {
+            y.a = 1;
+            y = x;
+          }
+          let z = {};
+          while (x) {
+            z.a = 1;
+            z = x;
+          }
+          let a = {};
+          let b = {};
+          function nested() {}
+          for (let i = 0; i < 3; i++) {
+            a.p = 1;
+            a = b;
+            b = x;
+          }
+        }
+        function localOnly() {
+          let y = {};
+          for (let i = 0; i < 2; i++) {
+            y.a = 1;
+            y = {};
+            y = cache;
+            y = this;
+          }
+        }
+      `),
+      repeated(3),
+    );
+    // The escaped object is created inside the loop, so carried ranks stay
+    // put and only the escape counter asks for another pass.
+    assert.deepEqual(
+      ids(`
+        function innerEscape() {
+          for (let i = 0; i < 2; i++) {
+            const box = {};
+            return box;
+          }
+        }
+      `),
+      [],
     );
   });
 

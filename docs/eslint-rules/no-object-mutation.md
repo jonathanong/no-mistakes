@@ -78,8 +78,7 @@ unless the call passes the object out. `Map` and `Set` are allowed. Class
 ## Fix
 
 Declare the value once. A spread copy is not a known object, so it does not
-remove the blind spot. The message names spread as one way to build a new
-value; the shape the analyzer judges is a literal.
+remove the blind spot.
 
 ```ts
 export const tables = { users: "app.users", orders: "app.orders" } as const;
@@ -88,15 +87,31 @@ export function replicaClient(get) {
   return { client: { get } };
 }
 
-query("SELECT id FROM app.users WHERE active");
+query(`SELECT id FROM ${tables.users} WHERE active`);
+
+function listed(row) {
+  return [row];
+}
 ```
 
-That source is `test-cases/codebase-analysis/no-object-mutation-literal/fixture/literal-rewrite.mts`.
-`tables` stays a known object, `replicaClient` returns a known object, and the
-query string is static SQL.
+`literal-rewrite.mts` declares `tables` once, so the query resolves
+`app.users`, and `replicaClient` returns a known object. `rows-rewrite.mts`
+is the rewrite for `rows.push(row)`: the return is a known array.
+`literal-mutated.mts` assigns those fields afterward, invalidates the object,
+and leaves the query unanalyzable. `rows-mutated.mts` pushes into the import,
+so the return stays that name instead of a known array. Those files are under
+`test-cases/codebase-analysis/no-object-mutation-literal/fixture/`.
 
 There is no autofix. `Object.assign` onto an existing object is not the same
 call as a fresh literal, including across files.
+
+## Limits
+
+A declaration directly in module scope is shared immediately. The same
+declaration inside a nested block stays a local builder until the value
+escapes, because that block is not the module environment. Writes through
+`module.exports`, `exports`, `globalThis`, `window`, and `process.env` are
+not flagged.
 
 ## Suppression
 

@@ -125,6 +125,38 @@ function escapeFunction(state, tag) {
   }
 }
 
+function escapeNestedFunctions(state, tag, seen = new Set()) {
+  if (!tag || seen.has(tag)) {
+    return;
+  }
+  seen.add(tag);
+  if (tag.type === "fn") {
+    escapeFunction(state, tag);
+    return;
+  }
+  if (tag.type !== "fresh") {
+    return;
+  }
+  for (const field of tag.fields.values()) {
+    escapeNestedFunctions(state, field, seen);
+  }
+  for (const item of tag.items) {
+    escapeNestedFunctions(state, item, seen);
+  }
+  escapeNestedFunctions(state, tag.dynamic, seen);
+}
+
+function releaseEscaping(state, tag) {
+  if (tag?.type === "fn") {
+    escapeFunction(state, tag);
+    return;
+  }
+  markEscaped(state, tag);
+}
+
+api.escapeNestedFunctions = escapeNestedFunctions;
+api.releaseEscaping = releaseEscaping;
+
 module.exports = {
   callFunction,
   escapeFunction,

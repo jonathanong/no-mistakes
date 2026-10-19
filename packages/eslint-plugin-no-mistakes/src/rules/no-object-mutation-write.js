@@ -1,5 +1,6 @@
 "use strict";
 
+const api = require("./no-object-mutation-runtime");
 const { escapeFresh, remember, unknown } = require("./no-object-mutation-values");
 const { rootIdentifier, staticPath } = require("./no-object-mutation-syntax");
 
@@ -8,6 +9,7 @@ function markEscaped(state, tag, seen) {
   escapeFresh(tag, seen);
   if (!was && tag?.type === "fresh" && tag.escaped) {
     state.escapeEpoch += 1;
+    api.escapeNestedFunctions(state, tag);
   }
 }
 

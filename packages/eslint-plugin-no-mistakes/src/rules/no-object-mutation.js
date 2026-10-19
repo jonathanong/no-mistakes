@@ -4,7 +4,7 @@ const { ruleSuppression } = require("../rule-suppression");
 const { scanMutations } = require("./no-object-mutation-scan");
 
 const MESSAGE =
-  "This mutates a shared object, so its contents can't be determined statically. Build a new value (spread, or a literal declared once) instead of writing into this one.";
+  "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.";
 
 function normalizeOptions(option) {
   const value = option || {};
