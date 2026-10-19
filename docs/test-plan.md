@@ -145,8 +145,10 @@ This requires `--base` (or another mechanism to supply the old lockfile content)
 Without `--base`, a `lockfile-no-baseline` warning is emitted and `--global-config-fallback=true`
 triggers a full suite run. The plan also sets `incomplete` to
 `dependency-baseline-missing` for that lockfile, for package manifests with
-`package-manifest-no-baseline`, and for .NET dependency inputs with
-`dotnet-dependency-no-baseline`. Those inputs share one kind. That marker
+`package-manifest-no-baseline`, for .NET dependency inputs with
+`dotnet-dependency-no-baseline`, and for Swift `Package.swift` /
+`Package.resolved` inputs with `swift-manifest-no-baseline` and
+`swift-resolved-no-baseline`. Those inputs share one kind. That marker
 means dependency coverage is unfinished; `fallback_triggered` alone does not. See
 [tests plan](cli/tests-plan.md#dependency-manifests-and-lockfiles).
 

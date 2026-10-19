@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "pins": [
+    {
+      "identity": "fixture-support",
+      "location": "https://example.invalid/fixture-support.git",
+      "state": { "version": "1.0.0", "revision": "base", "checksum": "base" }
+    }
+  ]
+}

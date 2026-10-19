@@ -72,6 +72,8 @@ Key flags:
   (`incomplete` on `testsPlan()`; import `TestPlanIncompleteness`).
   `dotnet-dependency-no-baseline` uses that same kind for `.csproj`,
   `Directory.Packages.props`, and NuGet lockfiles.
+  `swift-manifest-no-baseline` and `swift-resolved-no-baseline` use it for
+  `Package.swift` and `Package.resolved`.
   `fallback_triggered: true` is not completeness. A dynamic Vitest
   `setupFiles` fallback can still select only that project's tests.
   Example: only `package.json`, `tooling/package.json`, and `pnpm-lock.yaml`

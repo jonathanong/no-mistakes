@@ -1,0 +1,14 @@
+tests:
+  swift:
+    # Empty `packages` does not scan the repo. Analysis only walks this list,
+    # and `.` is the package root that owns the two files next to this config.
+    packages:
+      - .
+testPlan:
+  swift:
+    environments:
+      pre-push:
+        groups:
+          - type: dependencies
+        globalConfigFallback: false
+rules: []
