@@ -7,9 +7,24 @@ use std::sync::Arc;
 fn missing_prepared_conflict_locations_return_contextual_errors() {
     let variant_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-conflict-ordering/variants/one-bad");
-    for (root, name, variants) in [
-        (fixture("pass-canonical-order"), "src/insert.ts", false),
-        (variant_root, "src/query.ts", true),
+    let cte_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict");
+    for (root, name, variants, missing_conflict) in [
+        (
+            fixture("pass-canonical-order"),
+            "src/insert.ts",
+            false,
+            true,
+        ),
+        (
+            fixture("pass-canonical-order"),
+            "src/select.ts",
+            false,
+            false,
+        ),
+        (variant_root, "src/query.ts", true, true),
+        // Missing locations must not hide an INSERT behind its outer SELECT.
+        (cte_root, "src/query.ts", false, true),
     ] {
         let root = crate::codebase::ts_resolver::normalize_path(&root);
         let query = root.join(name);
@@ -41,8 +56,13 @@ fn missing_prepared_conflict_locations_return_contextual_errors() {
             }
         }
         let reads = sources.physical_read_count();
-        let error = scan_with_sources(&root, &compiled, &[query], &sources, &facts)
-            .expect_err("missing locations must fail closed instead of panicking");
+        let result = scan_with_sources(&root, &compiled, &[query], &sources, &facts);
+        assert_eq!(sources.physical_read_count(), reads);
+        if !missing_conflict {
+            assert!(result.unwrap().0.is_empty());
+            continue;
+        }
+        let error = result.expect_err("missing locations must fail closed instead of panicking");
         let message = format!("{error:#}");
         assert!(
             message.contains(if variants {
@@ -53,7 +73,6 @@ fn missing_prepared_conflict_locations_return_contextual_errors() {
             "{message}"
         );
         assert!(message.contains(name), "{message}");
-        assert_eq!(sources.physical_read_count(), reads);
     }
 }
 

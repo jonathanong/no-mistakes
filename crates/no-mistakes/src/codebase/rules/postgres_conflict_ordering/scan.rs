@@ -95,7 +95,11 @@ pub(super) fn scan_with_sources(
                 .is_some_and(|locations| !locations.conflicts.is_empty());
             // A data-modifying CTE can execute INSERT while its outer statement
             // is SELECT. Its prepared conflict facts still require this policy.
-            if !recovered_sql_needs_insert_check(Some(sql)) && !has_prepared_conflict {
+            let missing_conflict = statement.is_none() && analysis::contains_insert_conflict(sql);
+            if !recovered_sql_needs_insert_check(Some(sql))
+                && !has_prepared_conflict
+                && !missing_conflict
+            {
                 continue;
             }
             let statement = statement.ok_or_else(|| {

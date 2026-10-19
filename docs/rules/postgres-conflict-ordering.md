@@ -169,7 +169,8 @@ Use `no-mistakes-disable-next-line postgres-conflict-ordering` or
 `no-mistakes-disable-line` for a one-off. Prefer repairing the writer or a
 specific `safeDirective` explanation over a file-level suppression.
 
-Prepared conflict locations are required inputs. If they are missing, finding
+Prepared conflict locations are required for conflict-bearing SQL, including
+`INSERT` inside a SELECT-rooted CTE. If they are missing, finding
 projection returns a contextual analysis error; the optional verdict ledger
 abstains with `missing-prepared-sql-facts`. Neither path parses SQL again or
 certifies the call as clear.
