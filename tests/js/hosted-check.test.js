@@ -213,6 +213,25 @@ test("calibrates wall/RSS headroom from six fresh samples and rejects slowed can
   );
 });
 
+// Identical samples have σ of 0, so the margin is the relative floor.
+test("widens a quiet cohort to the relative wall and RSS floors", () => {
+  const samples = Array.from({ length: 6 }, () => ({ elapsed: 100, rss_kib: 1000, exit: 0 }));
+  const budget = calibratedBudget(samples);
+  assert.equal(budget.wallSecondsStddev, 0);
+  assert.equal(budget.rssKiBStddev, 0);
+  assert.equal(budget.wallSecondsMargin, 10);
+  assert.equal(budget.rssKiBMargin, 20);
+  enforceBudget([{ ...samples[0], elapsed: 110, rss_kib: 1020 }], budget);
+  assert.throws(
+    () => enforceBudget([{ ...samples[0], elapsed: 110.01 }], budget),
+    /elapsed 110.01 exceeds calibrated limit 110/,
+  );
+  assert.throws(
+    () => enforceBudget([{ ...samples[0], rss_kib: 1020.01 }], budget),
+    /rss_kib 1020.01 exceeds calibrated limit 1020/,
+  );
+});
+
 // Synthetic saved samples exercise completion beyond the historical collection cap.
 // Increasing collection time must not silently widen an enforced regression budget.
 test("calibrates completed runs beyond 180 seconds while enforcing measured budgets", () => {
