@@ -136,6 +136,30 @@ fn rows_push_rewrite_is_a_known_array() {
     );
 
     let (_, mutated) = parsed_facts(&fixture("rows-mutated.mts"));
+    let push = mutated
+        .value_flow
+        .calls
+        .iter()
+        .find(|call| call.source_callee == "rows.push")
+        .expect("rows.push is recorded; a bare return of the import is not");
+    assert!(
+        matches!(
+            &push.callee,
+            ValueExpression::Member(object, method)
+                if method == "push"
+                    && matches!(object.as_ref(), ValueExpression::Named { name, .. } if name == "rows")
+        ),
+        "{:?}",
+        push.callee
+    );
+    assert!(
+        matches!(
+            push.arguments.first(),
+            Some(ValueExpression::Named { name, .. }) if name == "row"
+        ),
+        "{:?}",
+        push.arguments
+    );
     let returned = mutated
         .value_flow
         .returns
@@ -145,6 +169,6 @@ fn rows_push_rewrite_is_a_known_array() {
         .expect("add return");
     assert!(
         matches!(returned, ValueExpression::Named { name, .. } if name == "rows"),
-        "push leaves the import unresolved, got {returned:?}"
+        "the import name stays unresolved, got {returned:?}"
     );
 }

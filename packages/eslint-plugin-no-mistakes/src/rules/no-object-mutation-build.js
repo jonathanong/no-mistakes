@@ -1,7 +1,8 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
-const { assignPattern } = require("./no-object-mutation-bind");
+const { assignPattern, bindingEscapes } = require("./no-object-mutation-bind");
+const { readOnlyFresh } = require("./no-object-mutation-join");
 const { considerWrite, markEscaped } = require("./no-object-mutation-write");
 const { literalKey, memberKey, staticKey } = require("./no-object-mutation-syntax");
 const { createFresh, remember, unknown } = require("./no-object-mutation-values");
@@ -22,12 +23,7 @@ const SKIP_KEYS = new Set([
 function visitAssignment(state, node, scope) {
   if (node.left.type === "MemberExpression") {
     const target = api.visit(state, node.left.object, scope, "read");
-    const rhs = api.visit(
-      state,
-      node.right,
-      scope,
-      target?.type === "fresh" && !target.escaped ? "read" : "escape",
-    );
+    const rhs = api.visit(state, node.right, scope, readOnlyFresh(target) ? "read" : "escape");
     considerWrite(state, target, node, {
       viaCall: false,
       objectNode: node.left,
@@ -37,7 +33,8 @@ function visitAssignment(state, node, scope) {
     });
     return rhs;
   }
-  const rhs = api.visit(state, node.right, scope, "read");
+  const escapes = node.left.type === "Identifier" && bindingEscapes(scope, node.left.name);
+  const rhs = api.visit(state, node.right, scope, escapes ? "escape" : "read");
   assignPattern(state, node.left, rhs, scope);
   return rhs;
 }

@@ -3,8 +3,9 @@
 const api = require("./no-object-mutation-runtime");
 const { callFunction, escapeFunction } = require("./no-object-mutation-fn");
 const { mutationCall } = require("./no-object-mutation-syntax");
+const { readOnlyFresh } = require("./no-object-mutation-join");
 const { callable, lookup, unknown, unwrap } = require("./no-object-mutation-model");
-const { considerWrite, markEscaped } = require("./no-object-mutation-write");
+const { considerWrite } = require("./no-object-mutation-write");
 
 function visitArgument(state, argument, scope, role) {
   if (argument.type === "SpreadElement") {
@@ -35,7 +36,7 @@ function visitCall(state, node, scope) {
   const mutation = mutationCall(node, scope);
   if (mutation) {
     const target = api.visit(state, mutation.targetNode, scope, "read");
-    const argRole = target?.type === "fresh" && !target.escaped ? "read" : "escape";
+    const argRole = readOnlyFresh(target) ? "read" : "escape";
     const remembered = [];
     for (const argument of mutation.otherArgs) {
       remembered.push(visitArgument(state, argument, scope, argRole));
@@ -46,7 +47,7 @@ function visitCall(state, node, scope) {
       scope,
       remembered,
     });
-    if (target?.type === "fresh" && !target.escaped) {
+    if (readOnlyFresh(target)) {
       return target;
     }
     return unknown();
@@ -55,27 +56,51 @@ function visitCall(state, node, scope) {
   for (const argument of node.arguments) {
     visitArgument(state, argument, scope, "escape");
   }
-  const fn = callable(calleeTag);
+  invokeCallable(state, calleeTag);
+  return unknown();
+}
+
+function invokeCallable(state, tag) {
+  if (tag.type === "union") {
+    for (const member of tag.members) {
+      invokeCallable(state, member);
+    }
+    return;
+  }
+  const fn = callable(tag);
   if (fn) {
     callFunction(state, fn);
+  } else {
+    return;
   }
-  return unknown();
+}
+
+function captureOuter(scope, tag, seen) {
+  if (!tag || !scope.fnTag) {
+    return;
+  }
+  const local = seen || new Set();
+  if (local.has(tag)) {
+    return;
+  }
+  local.add(tag);
+  if (tag.type === "union") {
+    for (const member of tag.members) {
+      captureOuter(scope, member, local);
+    }
+    return;
+  }
+  if (tag.type === "fresh" && tag.ownerEnv !== scope.ownerEnv) {
+    scope.fnTag.captured.push(tag);
+  }
 }
 
 function visitIdentifier(state, node, scope, role) {
   const tag = lookup(scope, node.name)?.tag;
-  if (tag?.type === "fresh" && role === "escape") {
-    markEscaped(state, tag);
-  }
-  if (tag?.type === "fresh" && scope.fnTag && tag.ownerEnv !== scope.ownerEnv) {
-    scope.fnTag.captured.push(tag);
-  }
   if (role === "escape") {
-    const fn = callable(tag);
-    if (fn) {
-      escapeFunction(state, fn);
-    }
+    api.releaseEscaping(state, tag);
   }
+  captureOuter(scope, tag);
   if (tag) {
     return tag;
   }
@@ -86,6 +111,8 @@ function escapeExport(state, local, scope) {
   const fn = callable(lookup(scope, local.name)?.tag);
   if (fn) {
     escapeFunction(state, fn);
+  } else {
+    return;
   }
 }
 

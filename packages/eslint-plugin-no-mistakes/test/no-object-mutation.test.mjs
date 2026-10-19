@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, it } from "vitest";
+import { memberKey, mutationCall, staticKey } from "../src/rules/no-object-mutation-syntax.js";
 import { __dirname, lint, messages, plugin } from "./helpers.mjs";
 
 const RULE = "no-object-mutation";
@@ -21,6 +22,53 @@ describe("no-object-mutation", () => {
     assert.equal(plugin.rules[RULE].meta.docs.recommended, false);
     assert.equal(plugin.configs.recommended.rules[`no-mistakes/${RULE}`], undefined);
     assert.equal(plugin.configs.strict.rules[`no-mistakes/${RULE}`], undefined);
+  });
+
+  it("treats a non-member as an absent key", () => {
+    assert.equal(memberKey({ type: "Identifier" }), null);
+    assert.equal(
+      memberKey({
+        type: "MemberExpression",
+        computed: true,
+        property: { type: "Literal", value: "id" },
+      }),
+      "id",
+    );
+    assert.equal(
+      memberKey({
+        type: "MemberExpression",
+        computed: false,
+        property: { type: "Literal", value: "id" },
+      }),
+      null,
+    );
+    assert.equal(staticKey({ type: "Literal", value: "id" }), "id");
+    assert.equal(staticKey({ type: "Literal", value: true }), null);
+    const scope = { cells: new Map(), outer: null };
+    const objectAssign = {
+      type: "MemberExpression",
+      computed: false,
+      object: { type: "Identifier", name: "Object" },
+      property: { type: "Identifier", name: "assign" },
+    };
+    assert.equal(
+      mutationCall(
+        { callee: objectAssign, arguments: [{ type: "Identifier", name: "rows" }] },
+        scope,
+      )?.targetNode.type,
+      "Identifier",
+    );
+    assert.equal(mutationCall({ callee: objectAssign, arguments: [] }, scope), null);
+    assert.equal(
+      mutationCall(
+        {
+          callee: objectAssign,
+          arguments: [{ type: "SpreadElement", argument: { type: "Identifier", name: "rows" } }],
+        },
+        scope,
+      ),
+      null,
+    );
   });
 
   it("names the static rewrite in the report", () => {
@@ -401,7 +449,7 @@ describe("no-object-mutation", () => {
     );
   });
 
-  it("joins matching shared values and abstains on a mixed join", () => {
+  it("reports a shared value joined with another shared or fresh value", () => {
     assert.deepEqual(
       ids(`
         import { left, right } from "./mod";
@@ -412,6 +460,8 @@ describe("no-object-mutation", () => {
           same.a = 1;
           const mixed = flag ? param : {};
           mixed.a = 1;
+          const fromFresh = flag ? {} : param;
+          fromFresh.a = 1;
           const either = left && right;
           either.a = 1;
           const chain = flag ? left : right;
@@ -419,7 +469,247 @@ describe("no-object-mutation", () => {
           const bound = identity<string>;
         }
       `),
-      repeated(4),
+      repeated(6),
+    );
+    assert.deepEqual(
+      ids(
+        `
+          import { left } from "./mod";
+          function pick(flag, param) {
+            const both = flag ? param : left;
+            both.a = 1;
+          }
+        `,
+        { parameters: false },
+      ),
+      ["mutation"],
+    );
+  });
+
+  it("reports a shared or escaped object through ||, ??, &&, and ?:", () => {
+    assert.deepEqual(
+      ids(`
+        function reassign(opts) {
+          opts = opts || {};
+          opts.x = 1;
+          return opts;
+        }
+        function nullish(opts) {
+          const o = opts ?? {};
+          o.x = 1;
+          return o;
+        }
+        function grouped(p) {
+          (p || {}).x = 1;
+        }
+        function assigned(p) {
+          Object.assign(p || {}, { a: 1 });
+        }
+        const mod = {};
+        function choose(c) {
+          const x = c ? mod : {};
+          x.a = 1;
+        }
+        let g;
+        function storeConditional(c) {
+          const b = {};
+          g = c ? b : null;
+          b.a = 1;
+        }
+        function storeNullLeft(c) {
+          const b = {};
+          g = c ? null : b;
+          b.a = 1;
+        }
+        function storeOr(c) {
+          const b = {};
+          g = b || null;
+          b.a = 1;
+        }
+        function storeAnd(c) {
+          const b = {};
+          g = c && b;
+          b.a = 1;
+        }
+        function storeNullish(c) {
+          const b = {};
+          g = b ?? 0;
+          b.a = 1;
+        }
+        function storeArray(c) {
+          const b = {};
+          g = [c ? b : 0];
+          b.a = 1;
+        }
+        function sinkJoin(c, sink) {
+          const b = {};
+          const x = c ? b : null;
+          sink(x);
+          b.a = 1;
+        }
+        function sinkOr(c, sink) {
+          const b = {};
+          const x = b || {};
+          sink(x);
+          b.a = 1;
+        }
+        let h;
+        function storeClosure(c) {
+          const b = {};
+          const fn = () => {
+            b.a = 1;
+          };
+          h = c ? fn : null;
+          return b;
+        }
+        function callEither(c, sink) {
+          const b = {};
+          const left = () => {
+            b.a = 1;
+          };
+          const right = () => {
+            b.c = 2;
+          };
+          sink(b);
+          const fn = c ? left : right;
+          fn();
+        }
+        function fieldFns(c) {
+          const b = {};
+          const left = () => {
+            b.a = 1;
+          };
+          const right = () => {
+            b.c = 2;
+          };
+          const box = { slot: c ? left : right };
+          g = box;
+        }
+        function nestedFresh(c, sink) {
+          const b = {};
+          const other = {};
+          const box = {};
+          box.slot = c ? b : other;
+          sink(box);
+          b.a = 1;
+        }
+        function carried(c, sink) {
+          const b = {};
+          let y = {};
+          for (let i = 0; i < 2; i++) {
+            y.a = 1;
+            y = c ? y : b;
+            sink(b);
+          }
+        }
+        function readShared(c, param) {
+          const a = { client: param };
+          const b = { client: {} };
+          const o = c ? a : b;
+          o.client.id = 1;
+        }
+        function closureJoin(c) {
+          const b = {};
+          const other = {};
+          const o = c ? b : other;
+          return function inner() {
+            o.a = 1;
+          };
+        }
+        function outerSlot(c) {
+          let slot;
+          function inner() {
+            const b = {};
+            slot = c ? b : null;
+            b.a = 1;
+          }
+          return inner;
+        }
+      `),
+      repeated(23),
+    );
+  });
+
+  it("keeps an unescaped join of fresh objects quiet", () => {
+    assert.deepEqual(
+      ids(`
+        function local(c) {
+          const b = {};
+          const other = {};
+          const key = "id";
+          const peek = b[key];
+          const holder = { nested: {} };
+          const found = holder[key];
+          const pair = [c ? b : other];
+          void peek;
+          void found;
+          void pair;
+          const o = c ? b : {};
+          o.a = 1;
+          const dup = (c ? b : o) || b;
+          dup.a = 2;
+          const viaMap = c ? new Map() : b;
+          viaMap.a = 3;
+          return o;
+        }
+        function sameLet(c) {
+          let inner;
+          const b = {};
+          inner = c ? b : null;
+          b.a = 1;
+          const fn = () => {
+            b.c = 2;
+          };
+          inner = c ? fn : null;
+          return b;
+        }
+        function elements(c) {
+          const a = [{ id: 1 }];
+          const b = [{ id: 2 }];
+          const [item] = c ? a : b;
+          item.id = 3;
+        }
+        function members(c) {
+          const a = { client: {} };
+          const b = { client: {} };
+          const o = c ? a : b;
+          o.client.get = 1;
+        }
+        function quietCarry(c) {
+          let y = {};
+          const z = {};
+          for (let i = 0; i < 2; i++) {
+            y.a = 1;
+            y = c ? y : z;
+          }
+        }
+        let g;
+        function early(c) {
+          const b = {};
+          b.a = 1;
+          g = c ? b : null;
+        }
+        function captureDup(c, sink) {
+          const b = {};
+          const other = {};
+          const joined = (c ? b : other) || b;
+          return () => sink(joined);
+        }
+        class Box {
+          write(flag) {
+            const self = flag ? this : this;
+            self.a = 1;
+            const cache = new Map();
+            const viaThis = flag ? this : cache;
+            viaThis.a = 1;
+            const viaMap = flag ? cache : this;
+            viaMap.a = 1;
+            const literal = { "id": 1, 2: flag };
+            literal.extra = 2;
+          }
+        }
+      `),
+      [],
     );
   });
 
@@ -621,6 +911,9 @@ describe("no-object-mutation", () => {
           const inner = class Local {};
           function pushName(push, items) { items["push"](); }
           undefined = 1;
+          named = 1;
+          sink(notDeclared);
+          sink(walk);
         }
       `,
       undefined,

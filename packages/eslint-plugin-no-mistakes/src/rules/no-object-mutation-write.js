@@ -64,6 +64,12 @@ function shouldReport(state, target) {
 }
 
 function considerWrite(state, target, node, info) {
+  if (target?.type === "union") {
+    for (const member of target.members) {
+      considerWrite(state, member, node, info);
+    }
+    return;
+  }
   if (target?.type === "fresh" && target.ownerEnv !== info.scope.ownerEnv && info.scope.fnTag) {
     info.scope.fnTag.captured.push(target);
     info.scope.fnTag.deferred.push({

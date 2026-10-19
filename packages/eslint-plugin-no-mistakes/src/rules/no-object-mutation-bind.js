@@ -26,15 +26,27 @@ function bindingScope(scope, name) {
   return null;
 }
 
+function bindingEscapes(scope, name) {
+  const owner = bindingScope(scope, name);
+  if (!owner) {
+    return false;
+  }
+  const cell = owner.cells.get(name);
+  if (cell.kind === "import") {
+    return false;
+  }
+  // A local `let` in this function can still be a builder. A cell in the
+  // module or another function can be read after this write.
+  return owner.isModule || owner.functionEnv !== scope.functionEnv;
+}
+
 function assignBinding(state, name, tag, scope) {
   const owner = bindingScope(scope, name);
   const cell = owner?.cells.get(name);
   if (!cell || cell.kind === "import") {
     return;
   }
-  // A local `let` in this function can still be a builder. A cell in the
-  // module or another function can be read after this write.
-  if (owner.isModule || owner.functionEnv !== scope.functionEnv) {
+  if (bindingEscapes(scope, name)) {
     api.releaseEscaping(state, tag);
   }
   if (cell.kind === "module") {
@@ -82,11 +94,11 @@ function assignPattern(state, pattern, tag, scope) {
     }
     return;
   }
-  if (pattern.type === "ArrayPattern") {
-    for (const element of pattern.elements) {
-      if (!element) {
-        continue;
-      }
+  if (pattern.type !== "ArrayPattern") {
+    return;
+  }
+  for (const element of pattern.elements) {
+    if (element) {
       assignPattern(state, element, elementTag(tag), scope);
     }
   }
@@ -136,11 +148,11 @@ function bindPattern(state, pattern, tag, scope, kind) {
     }
     return;
   }
-  if (pattern.type === "ArrayPattern") {
-    for (const element of pattern.elements) {
-      if (!element) {
-        continue;
-      }
+  if (pattern.type !== "ArrayPattern") {
+    return;
+  }
+  for (const element of pattern.elements) {
+    if (element) {
       const next = kind === "param" ? shared("parameter") : elementTag(tag);
       bindPattern(state, element, next, scope, kind);
     }
@@ -149,6 +161,7 @@ function bindPattern(state, pattern, tag, scope, kind) {
 
 module.exports = {
   assignPattern,
+  bindingEscapes,
   bindName,
   bindPattern,
 };

@@ -130,6 +130,12 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
     return;
   }
   seen.add(tag);
+  if (tag.type === "union") {
+    for (const member of tag.members) {
+      escapeNestedFunctions(state, member, seen);
+    }
+    return;
+  }
   if (tag.type === "fn") {
     escapeFunction(state, tag);
     return;
@@ -147,9 +153,21 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
 }
 
 function releaseEscaping(state, tag) {
-  if (tag?.type === "fn") {
+  if (tag == null) {
+    return;
+  }
+  if (tag.type === "union") {
+    for (const member of tag.members) {
+      releaseEscaping(state, member);
+    }
+    return;
+  }
+  if (tag.type === "fn") {
     escapeFunction(state, tag);
     return;
+  }
+  if (tag.fn?.type === "fn") {
+    escapeFunction(state, tag.fn);
   }
   markEscaped(state, tag);
 }

@@ -92,14 +92,21 @@ query(`SELECT id FROM ${tables.users} WHERE active`);
 function listed(row) {
   return [row];
 }
+
+function indexed(xs) {
+  return Object.fromEntries(xs.map((x) => [x, 1]));
+}
 ```
+
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is reported because
+`acc` is a parameter. `indexed` builds the object in one expression instead.
 
 `literal-rewrite.mts` declares `tables` once, so the query resolves
 `app.users`, and `replicaClient` returns a known object. `rows-rewrite.mts`
 is the rewrite for `rows.push(row)`: the return is a known array.
 `literal-mutated.mts` assigns those fields afterward, invalidates the object,
-and leaves the query unanalyzable. `rows-mutated.mts` pushes into the import,
-so the return stays that name instead of a known array. Those files are under
+and leaves the query unanalyzable. `rows-mutated.mts` records `rows.push(row)`
+and still returns the import name, not a known array. Those files are under
 `test-cases/codebase-analysis/no-object-mutation-literal/fixture/`.
 
 There is no autofix. `Object.assign` onto an existing object is not the same

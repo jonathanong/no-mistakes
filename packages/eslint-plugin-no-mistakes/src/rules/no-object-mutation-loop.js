@@ -5,6 +5,13 @@ const { assignPattern, bindPattern } = require("./no-object-mutation-bind");
 const { elementTag, unknown, child } = require("./no-object-mutation-values");
 
 function cellRank(tag) {
+  if (tag.type === "union") {
+    let rank = 0;
+    for (const member of tag.members) {
+      rank = Math.max(rank, cellRank(member));
+    }
+    return rank;
+  }
   if (tag.type === "fresh") {
     return tag.escaped ? 1 : 0;
   }

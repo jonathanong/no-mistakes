@@ -1,5 +1,8 @@
 "use strict";
 
+const { joinValues } = require("./no-object-mutation-join");
+const { elementTag, escapeFresh, readMember } = require("./no-object-mutation-read");
+
 function rootEnv() {
   const env = {
     cells: new Map(),
@@ -58,6 +61,12 @@ function remember(fresh, tag) {
     }
     return;
   }
+  if (tag.type === "union") {
+    for (const member of tag.members) {
+      remember(fresh, member);
+    }
+    return;
+  }
   fresh.items.push(tag);
   fresh.dynamic = joinDynamic(fresh.dynamic, tag);
 }
@@ -78,41 +87,6 @@ function joinDynamic(existing, tag) {
   return unknown();
 }
 
-function joinValues(left, right) {
-  if (!left || !right || left.type === "unknown" || right.type === "unknown") {
-    return unknown();
-  }
-  if (left === right) {
-    return left;
-  }
-  if (left.type === "shared" && right.type === "shared" && left.origin === right.origin) {
-    return left;
-  }
-  if (left.type === "mapset" && right.type === "mapset") {
-    return left;
-  }
-  if (left.type === "this" && right.type === "this" && left.inClass === right.inClass) {
-    return left;
-  }
-  return unknown();
-}
-
-function elementTag(tag) {
-  if (tag.type === "shared" || tag.type === "mapset" || tag.type === "this") {
-    return tag;
-  }
-  if (tag.type !== "fresh") {
-    return unknown();
-  }
-  if (tag.escaped) {
-    return tag;
-  }
-  if (tag.dynamic) {
-    return tag.dynamic;
-  }
-  return unknown();
-}
-
 function lookup(scope, name) {
   for (let cursor = scope; cursor; cursor = cursor.outer) {
     if (cursor.cells.has(name)) {
@@ -122,62 +96,6 @@ function lookup(scope, name) {
   return null;
 }
 
-function readMember(tag, key) {
-  if (!tag || tag.type === "unknown" || tag.type === "fn") {
-    return unknown();
-  }
-  if (tag.type === "shared" || tag.type === "mapset" || tag.type === "this") {
-    return tag;
-  }
-  if (tag.escaped) {
-    return tag;
-  }
-  if (key && tag.fields.has(key)) {
-    return tag.fields.get(key);
-  }
-  // A computed key can name any field. Prefer a shared or already-escaped
-  // candidate over the fresh object, which would hide that write.
-  if (!key && tag.type === "fresh") {
-    for (const field of tag.fields.values()) {
-      if (reportableMember(field)) {
-        return field;
-      }
-    }
-    if (reportableMember(tag.dynamic)) {
-      return tag.dynamic;
-    }
-  }
-  if (tag.dynamic) {
-    return tag.dynamic;
-  }
-  return tag;
-}
-
-function reportableMember(tag) {
-  if (!tag) {
-    return false;
-  }
-  if (tag.type === "shared" || tag.type === "this") {
-    return true;
-  }
-  return tag.type === "fresh" && tag.escaped;
-}
-
-function escapeFresh(tag, seen = new Set()) {
-  if (!tag || seen.has(tag) || tag.type !== "fresh") {
-    return;
-  }
-  seen.add(tag);
-  tag.escaped = true;
-  for (const field of tag.fields.values()) {
-    escapeFresh(field, seen);
-  }
-  for (const item of tag.items) {
-    escapeFresh(item, seen);
-  }
-  escapeFresh(tag.dynamic, seen);
-}
-
 function callable(tag) {
   if (!tag) {
     return null;
@@ -185,7 +103,7 @@ function callable(tag) {
   if (tag.type === "fn") {
     return tag;
   }
-  if (tag.fn?.type === "fn") {
+  if (tag.fn && tag.fn.type === "fn") {
     return tag.fn;
   }
   return null;
