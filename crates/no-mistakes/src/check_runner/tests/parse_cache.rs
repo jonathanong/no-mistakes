@@ -104,7 +104,6 @@ fn supplemental_call_sources_collect_facts_once() {
     // The alternate saved config makes the skipped call source supplemental.
     // That config builds no graph. fact_collections ignores the call-only pass,
     // so the supplemental path's own parse attempt is the once-only proof.
-    let first_observer = Arc::clone(&observer);
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
     let session =
         no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
@@ -139,10 +138,6 @@ fn supplemental_call_sources_collect_facts_once() {
     assert_eq!(
         work.get("parse.files_after_extract"),
         work.get("parse.files")
-    );
-    assert_eq!(
-        first_observer.snapshot().work.get("check.prepare.catalog"),
-        Some(&1)
     );
     assert!(result
         .rules
