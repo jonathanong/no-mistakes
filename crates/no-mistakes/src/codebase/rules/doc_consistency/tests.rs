@@ -250,14 +250,18 @@ fn entrypoint_option_and_include_errors_propagate() {
     assert!(check_with_files(&root, &invalid_options, &files).is_err());
 }
 
-fn pattern_error(root: &Path, pattern: &str) -> String {
-    let yaml = format!(
-        "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: '{pattern}'\n    message: hi"
-    );
+fn load_pattern_fixture(name: &str) -> (std::path::PathBuf, NoMistakesConfig) {
+    let root = fixture_root(&format!("pattern-config/{name}"));
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
+        .unwrap_or_else(|error| panic!("{name} config should load: {error}"));
+    (root, config)
+}
+
+fn pattern_config_error(name: &str) -> String {
+    let (root, config) = load_pattern_fixture(name);
     let files = [root.join("CLAUDE.md")];
     let sources = source_store_for_files(&files);
-    let error =
-        check_with_files_and_sources(root, &config_with_rule(&yaml), &files, &sources).unwrap_err();
+    let error = check_with_files_and_sources(&root, &config, &files, &sources).unwrap_err();
     assert_eq!(sources.physical_read_count(), 0, "{error}");
     error.to_string()
 }
@@ -272,54 +276,56 @@ fn empty_matching_patterns_fail_at_config_load() {
     .unwrap_err();
     let message = error.to_string();
     assert!(message.contains("bannedPatterns[0]"), "{message}");
-    assert!(message.contains("can match the empty string"), "{message}");
+    assert!(message.contains("`a*|QQ`"), "{message}");
+    assert!(message.contains("hides later alternatives"), "{message}");
 
-    let pass = fixture_root("pass");
-    for pattern in ["a*", "a?", "(a|)?", "(|b)", "(?m)^", "a*|QQ", "QQ|a*"] {
-        let message = pattern_error(&pass, pattern);
+    for (name, pattern) in [
+        ("a-star", "a*"),
+        ("a-optional", "a?"),
+        ("optional-group", "(a|)?"),
+        ("empty-alt", "(|b)"),
+        ("multiline-start", "(?m)^"),
+        ("star-or-qq", "a*|QQ"),
+        ("qq-or-star", "QQ|a*"),
+    ] {
+        let message = pattern_config_error(name);
         assert!(
-            message.contains("can match the empty string"),
-            "{pattern}: {message}"
+            message.contains(&format!("`{pattern}`")),
+            "{name}: {message}"
+        );
+        assert!(
+            message.contains("hides later alternatives"),
+            "{name}: {message}"
         );
     }
-    let later = pattern_error_at(
-        &pass,
-        "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: PIN\n    message: hi\n  - files: [\"docs/*.md\"]\n    pattern: 'a*|QQ'\n    message: later",
-    );
+    let later = pattern_config_error("later-index");
     assert!(later.contains("bannedPatterns[1]"), "{later}");
-    assert!(later.contains("can match the empty string"), "{later}");
+    assert!(later.contains("`a*|QQ`"), "{later}");
+    assert!(later.contains("hides later alternatives"), "{later}");
 }
 
 #[test]
 fn non_empty_patterns_still_compile() {
-    let root = fixture_root("patterns");
-    let living = [root.join("docs/living.md")];
-    for pattern in ["a+", "(?:a*)?PIN-[0-9]{3}", "[a&&b]"] {
-        let yaml = format!(
-            "bannedPatterns:\n  - files: [\"docs/living.md\"]\n    pattern: '{pattern}'\n    message: kept"
-        );
-        check_with_files(&root, &config_with_rule(&yaml), &living)
-            .unwrap_or_else(|error| panic!("{pattern} should compile: {error}"));
+    for name in [
+        "compile-a-plus",
+        "compile-optional-star-pin",
+        "compile-intersection",
+    ] {
+        let (root, config) = load_pattern_fixture(name);
+        check(&root, &config).unwrap_or_else(|error| panic!("{name} should compile: {error}"));
     }
 }
 
 #[test]
 fn oversized_patterns_report_pattern_too_large() {
-    let message = pattern_error(&fixture_root("pass"), "(a{1000}){1000}");
-    assert!(message.contains("pattern too large"), "{message}");
+    let message = pattern_config_error("too-big");
+    assert!(message.contains("`(a{1000}){1000}`"), "{message}");
+    assert!(message.contains("10 MiB compiled-size limit"), "{message}");
+    assert!(message.contains("reduce repetition counts"), "{message}");
     assert!(
         !message.contains("invalid regex"),
         "size failures must not look like syntax errors: {message}"
     );
-}
-
-fn pattern_error_at(root: &Path, yaml: &str) -> String {
-    let files = [root.join("CLAUDE.md")];
-    let sources = source_store_for_files(&files);
-    let error =
-        check_with_files_and_sources(root, &config_with_rule(yaml), &files, &sources).unwrap_err();
-    assert_eq!(sources.physical_read_count(), 0, "{error}");
-    error.to_string()
 }
 
 #[test]

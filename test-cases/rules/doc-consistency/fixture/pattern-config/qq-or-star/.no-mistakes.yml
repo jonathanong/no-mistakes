@@ -1,0 +1,8 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      bannedPatterns:
+        - files: ["docs/*.md"]
+          pattern: 'QQ|a*'
+          message: "saved config"

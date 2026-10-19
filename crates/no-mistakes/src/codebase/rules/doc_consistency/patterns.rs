@@ -66,17 +66,21 @@ fn pattern_can_match_empty(pattern: &str) -> bool {
 
 fn compile_pattern(index: usize, pattern: &str) -> Result<Regex> {
     if pattern_can_match_empty(pattern) {
-        bail!("doc-consistency bannedPatterns[{index}].pattern can match the empty string");
+        bail!(
+            "doc-consistency bannedPatterns[{index}].pattern `{pattern}` can match the empty string, so that branch hides later alternatives; use `+` instead of `*` or drop the empty branch"
+        );
     }
     RegexBuilder::new(pattern)
         .size_limit(BANNED_PATTERN_SIZE_LIMIT)
         .build()
-        .map_err(|error| pattern_regex_error(index, error))
+        .map_err(|error| pattern_regex_error(index, pattern, error))
 }
 
-fn pattern_regex_error(index: usize, error: regex::Error) -> anyhow::Error {
+fn pattern_regex_error(index: usize, pattern: &str, error: regex::Error) -> anyhow::Error {
     if matches!(error, regex::Error::CompiledTooBig(_)) {
-        anyhow::anyhow!("doc-consistency bannedPatterns[{index}].pattern is a pattern too large")
+        anyhow::anyhow!(
+            "doc-consistency bannedPatterns[{index}].pattern `{pattern}` exceeds the 10 MiB compiled-size limit; reduce repetition counts"
+        )
     } else {
         anyhow::anyhow!(
             "doc-consistency bannedPatterns[{index}].pattern is an invalid regex: {error}"

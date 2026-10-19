@@ -86,11 +86,8 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
         include_str!("../../codebase/rules/run/prepared/execution/independent.rs"),
         include_str!("../../codebase/rules/run/prepared/execution/independent_collect.rs"),
     );
-    // include! is textual at compile time; include_str does not follow it.
-    let rule_roots = concat!(
-        include_str!("../../codebase/rules/mod.rs"),
-        include_str!("../../codebase/rules/reexports.rs"),
-    );
+    let rule_mod = include_str!("../../codebase/rules/mod.rs");
+    let rule_reexports = include_str!("../../codebase/rules/reexports.rs");
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
     let tasks = check_task_sources();
 
@@ -101,10 +98,17 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
         rules.contains("req.inferred_roots"),
         "independent rule bodies must reuse the precomputed inferred_roots option"
     );
-    assert!(rule_roots.contains("target_roots_with_inferred"));
+    assert!(rule_reexports.contains("target_roots_with_inferred"));
     assert!(unique_exports.contains("project_roots_for_rule_with_inferred"));
 
-    for source in [discovery, rules, rule_roots, unique_exports, tasks.as_str()] {
+    for source in [
+        discovery,
+        rules,
+        rule_mod,
+        rule_reexports,
+        unique_exports,
+        tasks.as_str(),
+    ] {
         for discovery_wrapper in [
             "infer_nextjs_root(",
             "infer_remix_root(",
