@@ -5,6 +5,7 @@ use super::{
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use anyhow::Result;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 mod playwright;
 mod setup;
@@ -34,12 +35,33 @@ pub(crate) fn run_all_with_sql_verdicts(
     include_runner_config_deadlines: bool,
     include_sql_verdicts: bool,
 ) -> Result<CheckResults> {
-    no_mistakes::invocation::set_timeout_phase("check.prepare");
-    no_mistakes::invocation::check_timeout()?;
-    let root = root.canonicalize().unwrap_or(root);
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
         no_mistakes::diagnostics::current(),
     );
+    run_all_with_session(
+        &session,
+        root,
+        config_path,
+        tsconfig_path,
+        include_suppressed,
+        include_runner_config_deadlines,
+        include_sql_verdicts,
+    )
+}
+
+pub(crate) fn run_all_with_session(
+    session: &Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
+    root: PathBuf,
+    config_path: Option<PathBuf>,
+    tsconfig_path: Option<PathBuf>,
+    include_suppressed: bool,
+    include_runner_config_deadlines: bool,
+    include_sql_verdicts: bool,
+) -> Result<CheckResults> {
+    let session = Arc::clone(session);
+    no_mistakes::invocation::set_timeout_phase("check.prepare");
+    no_mistakes::invocation::check_timeout()?;
+    let root = root.canonicalize().unwrap_or(root);
     let prepared = prepared::prepare_with_session(
         &session,
         &root,

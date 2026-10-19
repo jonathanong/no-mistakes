@@ -70,6 +70,7 @@ pub(crate) fn prepare_from_shared(
         );
     }
     let observer = no_mistakes::diagnostics::current();
+    // Branches must stay AST-free: REQUEST_PARSE_CACHES, runner REQUEST_CACHES, and the SPANS stacks are not propagated.
     let (
         tsconfig_catalog,
         (inferred_roots, codebase_config, react, workflow_documents, tsconfig_gate_project_inputs),

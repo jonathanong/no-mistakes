@@ -77,7 +77,7 @@ fn postgres_offset_rule_reuses_the_requested_prepared_projection() {
 }
 
 #[test]
-fn supplemental_call_sources_share_one_fact_collection_and_graph() {
+fn supplemental_call_sources_collect_facts_once() {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped");
     let fixture = crate::test_support::materialize_saved_fixture(&source);
@@ -102,18 +102,36 @@ fn supplemental_call_sources_share_one_fact_collection_and_graph() {
         .any(|finding| { finding.rule == no_mistakes::codebase::rules::FINITE_SET_CONSISTENCY }));
 
     // The alternate saved config makes the skipped call source supplemental.
+    // That config builds no graph. fact_collections ignores the call-only pass,
+    // so the supplemental path's own parse attempt is the once-only proof.
     let first_observer = Arc::clone(&observer);
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session =
+        no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
+    let supplemental_root = fixture.path().canonicalize().unwrap();
     let result = {
         let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        run_all(
-            fixture.path().canonicalize().unwrap(),
+        super::super::run_all_with_session(
+            &session,
+            supplemental_root.clone(),
             Some(fixture.path().join(".no-mistakes-supplemental.yml")),
             None,
+            false,
+            false,
         )
         .unwrap()
     };
     let work = observer.snapshot().work;
+    let call_source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &supplemental_root.join("generated/schedules.test.mts"),
+    );
+    let parse_attempts = session.work_snapshot().parse_attempts;
+    assert!(
+        parse_attempts
+            .get(&call_source)
+            .is_some_and(|count| *count <= 1),
+        "{parse_attempts:#?}"
+    );
     assert_eq!(work.get("check.fact_collections"), Some(&1), "{work:#?}");
     assert_eq!(work.get("check.prepare.catalog"), Some(&1), "{work:#?}");
     assert_eq!(work.get("check.prepare.independent"), Some(&1), "{work:#?}");

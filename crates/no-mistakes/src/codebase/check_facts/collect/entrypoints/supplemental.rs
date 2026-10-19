@@ -11,10 +11,13 @@ pub fn collect_check_facts_with_supplemental_call_sites(
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>),
     supplemental_call_sites: Vec<PathBuf>,
-    plan: CheckFactPlan,
+    mut plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<SourceStore>,
 ) -> CheckFactMap {
+    // A primary plan that omits call sites would keep an overlapping
+    // production-import entry and skip the call-only pass below.
+    plan.graph.call_sites |= !supplemental_call_sites.is_empty();
     // Main collection can admit these paths through production imports,
     // Playwright sources, or runner helpers. Keep the richer entry when it does.
     let mut facts = super::collect_with_scope(
@@ -48,6 +51,7 @@ pub fn collect_check_facts_with_supplemental_call_sites(
             None,
             &sources,
         );
+        facts.stats.files_discovered += supplemental.len();
         facts.stats.files_parsed += supplemental.values().filter(|file| file.parsed).count();
         facts.stats.parse_errors += supplemental
             .values()

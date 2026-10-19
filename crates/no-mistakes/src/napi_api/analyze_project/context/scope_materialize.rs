@@ -14,7 +14,7 @@ impl PreparedScopePlan {
         call_site_facts: crate::codebase::check_facts::CheckFactMap,
     ) -> Result<PreparedScope> {
         let graph_facts = facts.graph_view_with_supplemental(&symbol_facts);
-        let check_facts = facts.fact_view_with_supplemental(&call_site_facts);
+        let check_facts = facts.fact_view_filling_missing(&call_site_facts);
         self.traversal.use_check_facts(&graph_facts);
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
