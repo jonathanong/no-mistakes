@@ -68,26 +68,26 @@ function asPossible(part) {
   return { ...part, definite: false };
 }
 
-// `??` follows only a left operand that can be nullish. Comparisons, `typeof`,
-// `!`, unary `+`/`-`/`~`, `new`, and object, array, or function literals are
-// never nullish, so `flag === 1 ?? read` stays silent.
-const MAY_BE_NULLISH = new Set([
-  "AssignmentExpression",
-  "AwaitExpression",
-  "CallExpression",
-  "ChainExpression",
-  "ConditionalExpression",
-  "Identifier",
-  "LogicalExpression",
-  "MemberExpression",
-  "SequenceExpression",
-  "YieldExpression",
+// `??` follows a left operand unless it is provably never nullish. A node type
+// missing from this set reports: silence is not the fallback. `void` is always
+// undefined and is chosen earlier by `isNullishLiteral`, so it never reaches
+// here. Every other unary (`typeof`, `!`, `+`, `-`, `~`, `delete`) is not nullish.
+const NEVER_NULLISH = new Set([
+  "ArrayExpression",
+  "ArrowFunctionExpression",
+  "BinaryExpression",
+  "ClassExpression",
+  "FunctionExpression",
+  "NewExpression",
+  "ObjectExpression",
+  "TemplateLiteral",
 ]);
 
 function mayBeNullish(node) {
   let current = node;
   while (current && TS_ASSERTIONS.has(current.type)) current = current.expression;
-  return MAY_BE_NULLISH.has(current.type);
+  if (current.type === "UnaryExpression") return false;
+  return !NEVER_NULLISH.has(current.type);
 }
 
 function propertyText(member) {

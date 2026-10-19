@@ -76,6 +76,14 @@ export function edges(
   run(client.load() && read, account);
   run(client?.flag && read, account);
   run(client?.flag ?? read, account);
+  function tag(text: TemplateStringsArray) {
+    return text;
+  }
+  run(tag`q` ?? read, account);
+  run(this ?? read, account);
+  run(new.target ?? read, account);
+  run(client.flag ?? read, account);
+  run((flag as unknown) ?? read, account);
   run(!flag && read, account);
   run(typeof flag && read, account);
   run(new Runner() && read, account);
