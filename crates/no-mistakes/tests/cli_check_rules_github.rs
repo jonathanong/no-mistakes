@@ -243,3 +243,13 @@ fn github_actions_job_step_sum_cli_reads_opt_in_from_config() {
     targets.sort_unstable();
     assert_eq!(targets, ["above", "conditional-matrix-composite", "equal"]);
 }
+
+#[test]
+fn github_actions_docker_host_ports_cli_fails_for_a_literal_host_port() {
+    let root = fixture("github-actions-docker-host-ports", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(body.contains("github-actions-docker-host-ports"), "{body}");
+    assert!(body.contains("5432"), "{body}");
+}

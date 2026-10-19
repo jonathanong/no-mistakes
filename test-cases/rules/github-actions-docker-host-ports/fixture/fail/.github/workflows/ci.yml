@@ -1,0 +1,163 @@
+name: ci
+on: push
+jobs:
+  literal:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 postgres
+  ip:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 127.0.0.1:5432:5432 postgres
+  long:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --publish 8080:80 nginx
+  equals:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --publish=8080:80 nginx
+  attached:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p5432:5432 postgres
+  clustered:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -dp 5432:5432 postgres
+  range:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 8000-8002:8000-8002 app
+  quoted:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p "5432:5432" postgres
+  udp:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432/udp postgres
+  chain:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo starting && docker run --rm -e POSTGRES_PASSWORD=x -p 5432:5432 postgres
+  block:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo starting
+          docker run -p 5432:5432 postgres
+  ipv6:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p "[::1]:5432:5432" postgres
+  path:
+    runs-on: ubuntu-latest
+    steps:
+      - run: /usr/bin/docker run -p 5432:5432 postgres
+  two:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 -p 6379:6379 postgres
+  second-step:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo skip
+      - run: docker run -p 5432:5432 postgres
+  env-prefix:
+    runs-on: ubuntu-latest
+    steps:
+      - run: DEBUG=1 docker run -p 5432:5432 postgres
+  container-var:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:$PORT postgres
+  known-flags:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --rm -d --name db --network=host -p 127.0.0.1:5432:5432 postgres
+  continued:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          docker run -p \
+            5432:5432 \
+            postgres
+  captured:
+    runs-on: ubuntu-latest
+    steps:
+      - run: CID=$(docker run -d -p 5432:5432 postgres)
+  subst-value:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 -e PW=$(cat pw) postgres
+  subst:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 $(date) postgres
+  cap-add-after:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 --cap-add SYS_ADMIN postgres
+  cap-add-before:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --cap-add SYS_ADMIN -p 5432:5432 postgres
+  reservation:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --memory-reservation 1g -p 5432:5432 postgres
+  after-heredoc:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF > x.txt
+          hi
+          EOF
+          docker run -p 5432:5432 postgres
+  hd-space-after:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat << EOF > x.txt
+          hi
+          EOF
+          docker run -p 5432:5432 postgres
+  hd-space-quoted:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat << 'EOF' > x.sh
+          hi
+          EOF
+          docker run -p 5432:5432 postgres
+  hd-pipe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF | docker run -i -p 5432:5432 pg
+          hi
+          EOF
+  hd-and:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF && docker run -p 5432:5432 postgres
+          hi
+          EOF
+  container-run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker container run -p 5432:5432 postgres
+  sudo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo docker run -p 5432:5432 postgres
+  if-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - run: if docker run -p 5432:5432 postgres; then echo ok; fi
+  subshell:
+    runs-on: ubuntu-latest
+    steps:
+      - run: (docker run -p 5432:5432 postgres)

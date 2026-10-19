@@ -10,11 +10,34 @@ pub(crate) struct StepUse {
     pub(crate) line: usize,
 }
 
+pub(crate) struct StepRun {
+    pub(crate) job: String,
+    pub(crate) step: usize,
+    pub(crate) lines: Vec<(usize, String)>,
+}
+
 pub(crate) fn step_uses_lines(source: &str) -> Vec<StepUse> {
     let lines: Vec<&str> = source.lines().collect();
     let mut scanner = Scanner::from_lines(&lines, false, false, true);
     scanner.scan();
     scanner.located
+}
+
+pub(crate) fn step_run_lines(source: &str, action: bool) -> Vec<StepRun> {
+    let lines: Vec<&str> = source.lines().collect();
+    let mut scanner = Scanner::from_lines(&lines, action, action, true);
+    scanner.scan();
+    scanner.runs
+}
+
+pub(super) fn item_scope(line: &str) -> Option<usize> {
+    let indent = super::super::yaml_text::leading_indent(line);
+    let trimmed = line[indent..].trim_end();
+    if trimmed == "-" || trimmed.starts_with("- ") {
+        Some(indent)
+    } else {
+        None
+    }
 }
 
 pub(super) fn begin_job(scanner: &mut Scanner<'_>, name: &str) {
@@ -90,6 +113,13 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
     let uses = scanner.uses.take();
     let run_lines = std::mem::take(&mut scanner.run_lines);
     let script_lines = std::mem::take(&mut scanner.script_lines);
+    if scanner.locate && !run_lines.is_empty() {
+        scanner.runs.push(StepRun {
+            job: scanner.job.clone(),
+            step: scanner.step,
+            lines: run_lines.clone(),
+        });
+    }
     for (line, text) in run_lines {
         for expr in expressions(&text) {
             scanner.hits.push(Hit {

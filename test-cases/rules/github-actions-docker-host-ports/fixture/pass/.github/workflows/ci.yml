@@ -1,0 +1,83 @@
+name: ci
+on: push
+jobs:
+  allocated:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 127.0.0.1::5432 postgres
+  colon:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p ::5432 postgres
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432 postgres
+  dollar:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p $PORT:5432 postgres
+  brace:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p ${PORT}:5432 postgres
+  expression:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p ${{ env.PORT }}:5432 postgres
+  expression-colon:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p ${{ inputs.port || '5432' }}:5432 postgres
+  ip-var:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 127.0.0.1:${PORT}:5432 postgres
+  quoted-var:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p "$PORT:5432" postgres
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo docker run -p 5432:5432 postgres
+  image-then-flag:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run postgres -p 5432:5432
+  entrypoint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --entrypoint /bin/echo postgres -p 5432:5432
+  publish-all:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -P postgres
+  ipv6-allocated:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p "[::1]::5432" postgres
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          # docker run -p 5432:5432 postgres
+          echo ok
+  env-key:
+    runs-on: ubuntu-latest
+    env:
+      run: docker run -p 5432:5432 postgres
+    steps:
+      - run: echo ok
+  single-quoted:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p '$PORT:5432' postgres
+  zero:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 0:5432 postgres
+  zero-ip:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 127.0.0.1:0:5432 postgres

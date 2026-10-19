@@ -1,0 +1,51 @@
+name: ci
+on: push
+jobs:
+  unknown:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --not-a-real-flag value -p 5432:5432 postgres
+  backtick:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p `echo 5432:5432` postgres
+  heredoc:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF
+          docker run -p 5432:5432 postgres
+          EOF
+  # The blank line is intentional: it guards against the empty-delimiter bug.
+  hd-space-blank-body:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat << EOF > x.sh
+          echo start
+
+          docker run -p 5432:5432 postgres
+          EOF
+  hd-nospace-body:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat<<EOF > x.sh
+          docker run -p 5432:5432 postgres
+          EOF
+  hd-redirect-first:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat >x.sh<<EOF
+          docker run -p 5432:5432 postgres
+          EOF
+  not-string:
+    runs-on: ubuntu-latest
+    steps:
+      - run:
+          script: docker run -p 5432:5432 postgres
+  mixed-prefix:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p pre$PORT:5432 postgres

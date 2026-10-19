@@ -1,0 +1,14 @@
+# Same-column '-' items must keep the finding on the step line for disable-next-line.
+name: compact
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    # no-mistakes-disable-next-line github-actions-docker-host-ports
+    - run: docker run -p 5432:5432 postgres
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+      - run: docker run -p 5432:5432 postgres
