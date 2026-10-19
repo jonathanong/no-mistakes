@@ -63,7 +63,10 @@ A `string` or `number` parameter does not. A callback result of `{}`, an alias
 of `{}`, `{ (): {} }`, or a literal whose members are only optional or members
 every Promise has, such as `then` or `toString`, is the same kind of
 Promise-compatible type.
-`{ foo: string }` is not: that callback still allows the report. A direct
+`{ foo: string }` is not: that callback still allows the report. A builder
+passed where the parameter is a non-callable literal stays silent unless the
+literal has a required member a function does not have, such as `{ foo: string }`.
+`{ name: string }` and `{ call(t: any): any }` stay silent. A direct
 `{}` argument and a property typed `{ f: () => {} }` stay silent. The same check applies to a bound local (`const query = build()`),
 including when that local is passed on, returned, or copied into another
 local. A use this file does not explicitly recognize, such as `instanceof` or

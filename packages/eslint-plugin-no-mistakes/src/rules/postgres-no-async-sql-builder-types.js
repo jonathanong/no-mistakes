@@ -40,6 +40,25 @@ const PROMISE_MEMBERS = new Set([
   "propertyIsEnumerable",
 ]);
 
+// Object.prototype names, plus the members a function value already has.
+const FUNCTION_MEMBERS = new Set([
+  "constructor",
+  "toString",
+  "toLocaleString",
+  "valueOf",
+  "hasOwnProperty",
+  "isPrototypeOf",
+  "propertyIsEnumerable",
+  "name",
+  "length",
+  "call",
+  "apply",
+  "bind",
+  "prototype",
+  "arguments",
+  "caller",
+]);
+
 const UNRESOLVED_TYPES = new Set([
   "TSConditionalType",
   "TSImportType",
@@ -131,9 +150,9 @@ function unwrapType(node) {
   return current;
 }
 
-function typeLiteralPromiseFlag(type) {
-  // Non-Promise only with a required member other than then/catch/finally.
-  // Optional members and an empty literal still accept a Promise.
+function typeLiteralFlag(type, inherited) {
+  // "no" only when a required member is outside `inherited`. Optional members
+  // and an empty literal stay unknown.
   for (const member of type.members) {
     if (
       member.optional ||
@@ -142,9 +161,13 @@ function typeLiteralPromiseFlag(type) {
       continue;
     }
     const name = staticKeyName(member);
-    if (name && !PROMISE_MEMBERS.has(name)) return "no";
+    if (name && !inherited.has(name)) return "no";
   }
   return "unknown";
+}
+
+function typeLiteralPromiseFlag(type) {
+  return typeLiteralFlag(type, PROMISE_MEMBERS);
 }
 
 function typePromiseFlag(typeNode, types, seen) {
@@ -181,6 +204,7 @@ function annotationContract(typeNode, types) {
 }
 
 module.exports = {
+  FUNCTION_MEMBERS,
   NON_PROMISE_TYPES,
   annotationContract,
   collectTypes,
@@ -188,6 +212,7 @@ module.exports = {
   lookup,
   referenceName,
   staticKeyName,
+  typeLiteralFlag,
   unwrapType,
   walkAst,
 };

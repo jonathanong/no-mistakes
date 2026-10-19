@@ -1847,7 +1847,7 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         run(build);
       `),
-      ["removeAsync"],
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -2589,6 +2589,55 @@ describe("postgres-no-async-sql-builder", () => {
         run2(build);
       `),
       [],
+    );
+    assert.deepEqual(
+      ids(`
+        function run2(cb: { call(t: any): any }) { return cb.call(null).then(String); }
+        async function build() { return "SELECT 1"; }
+        run2(build);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function run2(cb: { apply(t: any, a?: any): any }) { return cb.apply(null).then(String); }
+        async function build() { return "SELECT 1"; }
+        run2(build);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function run2(cb: { bind(t: any): () => any }) { return cb.bind(null)().then(String); }
+        async function build() { return "SELECT 1"; }
+        run2(build);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function run2(cb: { length: number }) { return (cb as any)().then(String); }
+        async function build() { return "SELECT 1"; }
+        run2(build);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          class A { load: { name: string } = async () => "SELECT 1"; }
+        `,
+        { builders: [{ names: ["load"] }] },
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function run2(cb: { foo: string }) { return (cb as any)(); }
+        async function build() { return "SELECT 1"; }
+        run2(build);
+      `),
+      ["removeAsync"],
     );
     assert.deepEqual(
       ids(`

@@ -1,12 +1,14 @@
 "use strict";
 
 const {
+  FUNCTION_MEMBERS,
   NON_PROMISE_TYPES,
   annotationContract,
   combine,
   lookup,
   referenceName,
   staticKeyName,
+  typeLiteralFlag,
   unwrapType,
 } = require("./postgres-no-async-sql-builder-types");
 
@@ -24,11 +26,11 @@ function callableReturnContract(typeNode, types, seen = new Set()) {
     const call = type.members.find((member) => member.type === "TSCallSignatureDeclaration");
     if (call) return annotationContract(call.returnType, types);
     // A construct signature is not a value the caller can treat as SQL.
-    // Any other literal is the value's own shape: `{}` stays unknown, and a
-    // required member a Promise does not have allows the report.
+    // A literal with no call signature describes the function itself. Report
+    // only when a required member is one a function does not have.
     if (type.members.some((member) => member.type === "TSConstructSignatureDeclaration"))
       return "unknown";
-    return annotationContract(typeNode, types);
+    return typeLiteralFlag(type, FUNCTION_MEMBERS) === "no" ? "allows" : "unknown";
   }
   if (type.type === "TSTypeReference") {
     const name = referenceName(type.typeName);
