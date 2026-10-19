@@ -106,6 +106,11 @@ export function stored(
   run(typeof flag || read, account);
   run(typeof flag ?? read, account);
   run(flag === cond ?? read, account);
+  run(`x${flag}` ?? read, account);
+  run([] ?? read, account);
+  run(new Runner() ?? read, account);
+  run(!flag ?? read, account);
+  run(+flag ?? read, account);
   run(new Runner() || read, account);
   run(read.bind(null, account), account);
   run(read.bind(null)(account), account);
