@@ -1,5 +1,5 @@
-use super::narrow::{prefix_pattern, root_prefix};
-use super::tests::parse;
+use super::super::narrow::{prefix_pattern, root_prefix};
+use super::parse;
 use crate::config::v2::schema::NoMistakesConfig;
 
 fn list(config: &NoMistakesConfig, index: usize, key: &str) -> Vec<String> {
