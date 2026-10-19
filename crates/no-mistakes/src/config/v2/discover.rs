@@ -1,6 +1,4 @@
 use anyhow::Result;
-use globset::GlobBuilder;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::schema::NoMistakesConfig;
@@ -22,6 +20,7 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
 }
 
 mod check_commands;
+mod path_globs;
 mod swift_commands;
 mod targeted_triggers;
 
@@ -141,6 +140,7 @@ fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
     let mut config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config, path)?;
+    super::postgres_project_scope::materialize(&mut config)?;
     for policy in config.tests.vitest.projects.values_mut() {
         if !policy.setup_files.is_empty() {
             policy.declaration_path = Some(crate::codebase::ts_resolver::normalize_path(path));
@@ -167,15 +167,15 @@ fn emit_v2_deprecation_warnings(config: &NoMistakesConfig, path: &Path) {
 
 fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
     for (name, project) in &config.projects {
-        validate_globs(&project.include, &format!("projects.{name}.include"))?;
-        validate_globs(&project.exclude, &format!("projects.{name}.exclude"))?;
+        path_globs::validate_globs(&project.include, &format!("projects.{name}.include"))?;
+        path_globs::validate_globs(&project.exclude, &format!("projects.{name}.exclude"))?;
     }
     for (index, rule) in config.rules.iter().enumerate() {
         if rule.rule.trim().is_empty() {
             anyhow::bail!("rules[{index}].rule is required");
         }
-        validate_globs(&rule.include, &format!("rules[{index}].include"))?;
-        validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
+        path_globs::validate_globs(&rule.include, &format!("rules[{index}].include"))?;
+        path_globs::validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
     check_commands::validate(config)?;
     swift_commands::validate(&config.tests.swift)?;
@@ -183,45 +183,7 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         project.validate_vitest_setup_files(name)?;
     }
     targeted_triggers::validate(config, path)?;
-    validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
-    Ok(())
-}
-
-fn validate_playwright_selector_wrappers(
-    wrappers: &[super::schema::PlaywrightSelectorWrapper],
-) -> Result<()> {
-    let mut arguments_by_export = BTreeMap::new();
-    for (index, wrapper) in wrappers.iter().enumerate() {
-        if wrapper.module.trim().is_empty() {
-            anyhow::bail!("tests.playwright.selectors.wrappers[{index}].module must not be blank");
-        }
-        if wrapper.export.trim().is_empty() {
-            anyhow::bail!("tests.playwright.selectors.wrappers[{index}].export must not be blank");
-        }
-        let identity = (wrapper.module.as_str(), wrapper.export.as_str());
-        if let Some(previous_argument) =
-            arguments_by_export.insert(identity, wrapper.test_id_argument)
-        {
-            if previous_argument != wrapper.test_id_argument {
-                anyhow::bail!(
-                    "tests.playwright.selectors.wrappers configures `{}:{}` with conflicting testIdArgument values {previous_argument} and {}",
-                    wrapper.module,
-                    wrapper.export,
-                    wrapper.test_id_argument
-                );
-            }
-        }
-    }
-    Ok(())
-}
-
-fn validate_globs(patterns: &[String], key: &str) -> Result<()> {
-    for pattern in patterns {
-        GlobBuilder::new(pattern.trim_start_matches("./"))
-            .literal_separator(false)
-            .build()
-            .map_err(|err| anyhow::anyhow!("{key} contains invalid glob `{pattern}`: {err}"))?;
-    }
+    path_globs::validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())
 }
 

@@ -2,7 +2,7 @@ use super::RuleDef;
 use anyhow::Result;
 use serde_yaml::Value;
 
-pub(super) const RULE_IDS: &[&str] = &[
+pub(crate) const RULE_IDS: &[&str] = &[
     "postgres-bounded-statements",
     "postgres-explicit-columns",
     "postgres-generated-column-predicates",

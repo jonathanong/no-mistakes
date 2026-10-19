@@ -166,5 +166,55 @@ fn postgres_no_offset_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+fn json_findings(root: &PathBuf) -> Vec<serde_json::Value> {
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(root)
+        .args(["--config", ".no-mistakes.yml", "--json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected findings: {body}");
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap();
+    let mut findings = report["rules"].as_array().cloned().unwrap_or_default();
+    findings.sort_by(|left, right| {
+        (
+            left["rule"].as_str(),
+            left["file"].as_str(),
+            left["line"].as_u64(),
+            left["target"].as_str(),
+        )
+            .cmp(&(
+                right["rule"].as_str(),
+                right["file"].as_str(),
+                right["line"].as_u64(),
+                right["target"].as_str(),
+            ))
+    });
+    findings
+}
+
+#[test]
+fn project_scope_matches_duplicated_executor_options() {
+    let shared = json_findings(&fixture("project-scope-shared"));
+    let duplicated = json_findings(&fixture("project-scope-duplicated"));
+    assert!(!shared.is_empty(), "{shared:?}");
+    assert_eq!(shared, duplicated);
+    assert!(shared.iter().any(|finding| {
+        finding["rule"] == "postgres-no-offset" && finding["file"] == "src/query.ts"
+    }));
+}
+
+#[test]
+fn project_include_skips_executor_calls_outside_the_project() {
+    let findings = json_findings(&fixture("project-scope-include"));
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "postgres-no-offset" && finding["file"] == "inside/query.ts"
+    }));
+    assert!(findings
+        .iter()
+        .all(|finding| finding["file"] != "outside/query.ts"));
+}
+
 #[path = "cli_check_rules_postgres_offset/builder_mutation_escapes.rs"]
 mod builder_mutation_escapes;

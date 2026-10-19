@@ -1,5 +1,7 @@
 # postgres-no-offset statement coverage
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 ## Statement coverage and locations
 
 The shared SQL pass records every OFFSET in source order, including INSERT,

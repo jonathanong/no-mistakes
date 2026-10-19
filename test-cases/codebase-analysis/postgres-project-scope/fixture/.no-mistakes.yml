@@ -1,0 +1,17 @@
+# Factory and type names are declared once. returnedMembers stay effect-only.
+projects:
+  db:
+    include: ["src/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        factoryNames: [beginTransaction]
+        typeNames: [TransactionQuery]
+effects:
+  postgres:
+    project: db
+    returnedMembers:
+      - { module: "@example/db", export: writePool.connect, member: query }
+rules:
+  - rule: postgres-no-offset
+    projects: [db]

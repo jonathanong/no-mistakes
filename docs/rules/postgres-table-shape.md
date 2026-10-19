@@ -1,5 +1,7 @@
 # `postgres-table-shape`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Tables whose names match a configured pattern must have that concept's columns,
 primary-key types, and triggers. A banned name is reported even when no shape
 matches. With only `schemaCatalogPath` set, `shapes` and `bannedTablePatterns`

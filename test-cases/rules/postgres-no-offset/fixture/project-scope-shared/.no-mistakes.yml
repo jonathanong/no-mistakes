@@ -1,0 +1,12 @@
+# One project scope shared by both PostgreSQL rules.
+projects:
+  db:
+    include: ["src/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+rules:
+  - rule: postgres-no-offset
+    projects: [db]
+  - rule: postgres-require-query-annotation
+    projects: [db]

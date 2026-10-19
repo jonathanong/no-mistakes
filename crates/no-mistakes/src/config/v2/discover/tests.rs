@@ -1,4 +1,5 @@
-use super::{validate_playwright_selector_wrappers, validate_v2_config};
+use super::path_globs::validate_playwright_selector_wrappers;
+use super::validate_v2_config;
 use crate::config::v2::schema::{
     NamedFullSuiteTrigger, NoMistakesConfig, PlaywrightSelectorWrapper, Project, RuleDef,
     TestPlanProjectDependency, TestPlanTargetedProjectDependency,

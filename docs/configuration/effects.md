@@ -140,6 +140,30 @@ the effects query and the per-item rule. They default to empty and preserve
 category filtering in `no-mistakes effects --category`. Existing `targets` and
 `returnedExecutors` behavior is unchanged.
 
+## Project scope
+
+`effects.postgres.project` names a project that has a
+[`postgres` block](projects.md#postgresql-scope). Config load copies
+`executors.factoryNames` into `returnedExecutors` and `executors.typeNames`
+into `typedExecutors`, each as `{ module: importSpecifier, export: name }`
+with no category. `functions`, `categories`, `targets`, `returnedMembers`,
+`transactionFunctions`, and `batchFunctions` stay as written. `query`, `read`,
+and `write` are not synthesized.
+
+```yaml
+effects:
+  postgres:
+    project: db
+    returnedMembers:
+      - { module: "@data-stores/psql", export: writePool.connect, member: query }
+```
+
+An unknown project name, a project without `postgres`, and a factory or type
+name that is already listed in `returnedExecutors` or `typedExecutors` are
+config errors. An empty `importSpecifier` with any factory or type name is a
+config error. Other effect kinds reject `project`. When `project` is omitted,
+effect matching is unchanged.
+
 The per-item rule is enabled separately and must select configured family names
 with `options.effects`. Nothing is scanned as a database effect by default.
 Use `options.allow` for a reviewed baseline of existing per-item callsites, and

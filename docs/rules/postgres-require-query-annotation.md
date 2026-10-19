@@ -1,5 +1,7 @@
 # `postgres-require-query-annotation`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Require a leading `/* name */` block comment on executed PostgreSQL SQL so
 slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
 (`-- name`) do not count. `BEGIN`, `COMMIT`, and `ROLLBACK` are exempt.

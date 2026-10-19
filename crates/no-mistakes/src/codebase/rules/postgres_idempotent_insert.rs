@@ -22,6 +22,8 @@ pub(crate) struct Options {
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
     pub(crate) sql_include: Vec<String>,
+    #[serde(default)]
+    pub(crate) sql_include_locked: bool,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
@@ -50,6 +52,7 @@ impl Default for Options {
             include: Vec::new(),
             exclude: Vec::new(),
             sql_include: Vec::new(),
+            sql_include_locked: false,
             import_specifier: String::new(),
             executor_names: Vec::new(),
             executor_factory_names: Vec::new(),
@@ -134,11 +137,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         include,
         exclude,
         schema: PostgresSchemaOptions {
-            sql_include: if opts.sql_include.is_empty() {
-                PostgresSchemaOptions::default().sql_include
-            } else {
-                opts.sql_include.clone()
-            },
+            sql_include: crate::codebase::postgres::effective_sql_include(
+                &opts.sql_include,
+                opts.sql_include_locked,
+            ),
         },
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)

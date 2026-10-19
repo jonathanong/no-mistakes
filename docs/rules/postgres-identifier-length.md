@@ -1,5 +1,7 @@
 # `postgres-identifier-length`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags identifiers a migration declares that PostgreSQL will silently truncate.
 PostgreSQL stores at most 63 bytes (`NAMEDATALEN - 1`) and only emits a
 NOTICE, so two long names that share a prefix collide in the database. The

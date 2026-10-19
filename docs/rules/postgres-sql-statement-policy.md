@@ -1,5 +1,7 @@
 # `postgres-sql-statement-policy`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags configured PostgreSQL statement kinds and settings in matching SQL files
 and configured JavaScript/TypeScript executor calls. Use this to keep tests,
 helpers, or seed files from changing shared database state or bypassing

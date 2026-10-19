@@ -155,15 +155,12 @@ pub(crate) fn check_with_borrowed_source_store(
     })
 }
 
-pub(crate) fn schema_options_with_fallback(
+pub(crate) fn schema_options(
     sql_include: &[String],
+    locked: bool,
 ) -> crate::codebase::postgres::PostgresSchemaOptions {
     crate::codebase::postgres::PostgresSchemaOptions {
-        sql_include: if sql_include.is_empty() {
-            crate::codebase::postgres::PostgresSchemaOptions::default().sql_include
-        } else {
-            sql_include.to_vec()
-        },
+        sql_include: crate::codebase::postgres::effective_sql_include(sql_include, locked),
     }
 }
 

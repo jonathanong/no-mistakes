@@ -11,6 +11,8 @@ use std::path::{Path, PathBuf};
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
+    #[serde(default)]
+    pub(crate) sql_include_locked: bool,
 }
 
 pub(crate) struct CompiledOptions {
@@ -19,7 +21,7 @@ pub(crate) struct CompiledOptions {
 
 pub(crate) fn compile_options(opts: &Options) -> CompiledOptions {
     CompiledOptions {
-        schema: super::schema_options_with_fallback(&opts.sql_include),
+        schema: super::schema_options(&opts.sql_include, opts.sql_include_locked),
     }
 }
 

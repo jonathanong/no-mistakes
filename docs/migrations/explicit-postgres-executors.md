@@ -153,6 +153,53 @@ Every PostgreSQL rule that scans executor calls and the ESLint runtime rules
 `postgres-no-executor-adapter`, `postgres-no-manual-transaction`, and
 `postgres-no-unbounded-query-fanout` accept both options.
 
+## One project scope
+
+When several PostgreSQL rules repeat the same executor block, move that block
+onto the project and point the rules at it. Per-rule `importSpecifier`,
+`executorNames`, `executorFactoryNames`, `executorTypeNames`,
+`trustedSqlTags`, `schemaCatalogPath`, and `unanalyzableSql` stay valid on a
+rule that does not reference a project with a `postgres` block.
+
+```yaml
+projects:
+  db:
+    root: backend
+    include: [services/**]
+    postgres:
+      sqlInclude: [data-stores/psql/views/**/*.sql]
+      schemaCatalogPath: data-stores/psql/schema-snapshot/no-mistakes-catalog.json
+      unanalyzableSql: ignore
+      executors:
+        importSpecifier: "@data-stores/psql"
+        factoryNames: [beginTransaction]
+        typeNames: [TransactionQuery]
+        trustedSqlTags: [{ module: "@data-stores/psql", name: sql }]
+
+rules:
+  - rule: postgres-no-offset
+    projects: [db]
+  - rule: postgres-required-predicates
+    projects: [db]
+    options:
+      relations: [{ table: topics, require: ["deleted_at IS NULL"] }]
+
+effects:
+  postgres:
+    project: db
+    returnedMembers:
+      - { module: "@data-stores/psql", export: writePool.connect, member: query }
+```
+
+Delete the repeated executor keys from those rules. Restating them is a config
+error, as is `scope: repository` on a rule that uses the project. Narrow with
+`include`, `exclude`, or `sqlInclude` only. An empty project `sqlInclude` stays
+empty for the rules that previously expanded an empty list to `**/*.sql`; set
+`sqlInclude` on the project when those rules should still read SQL files.
+`effects.postgres.project` supplies the factory and type selectors. Leave
+`returnedMembers` on the effect. See
+[PostgreSQL scope](../configuration/projects.md#postgresql-scope).
+
 ### Reporting unmatched names
 
 A configured `executorFactoryNames` or `executorTypeNames` entry that no scanned

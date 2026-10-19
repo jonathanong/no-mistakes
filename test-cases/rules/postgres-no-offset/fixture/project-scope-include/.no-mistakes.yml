@@ -1,0 +1,10 @@
+# outside/query.ts is the same OFFSET call. A scan wider than include would report it.
+projects:
+  db:
+    include: ["inside/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+rules:
+  - rule: postgres-no-offset
+    projects: [db]

@@ -31,6 +31,8 @@ struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
+    #[serde(default)]
+    sql_include_locked: bool,
     import_specifier: String,
     executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
@@ -158,11 +160,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let (where_clause, join_clause, order_clause) = validate::clauses(opts.clauses.as_deref())?;
     Ok(CompiledOptions {
         schema: PostgresSchemaOptions {
-            sql_include: if opts.sql_include.is_empty() {
-                PostgresSchemaOptions::default().sql_include
-            } else {
-                opts.sql_include.clone()
-            },
+            sql_include: crate::codebase::postgres::effective_sql_include(
+                &opts.sql_include,
+                opts.sql_include_locked,
+            ),
         },
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)

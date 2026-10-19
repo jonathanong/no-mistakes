@@ -1,5 +1,6 @@
 pub mod discover;
 pub mod frontend_apps;
+mod postgres_project_scope;
 pub mod schema;
 pub mod test_plan;
 pub mod view;

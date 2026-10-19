@@ -420,3 +420,6 @@ mod demand_followups;
 mod external_roots;
 #[path = "tests/profile_lifetimes.rs"]
 mod profile_lifetimes;
+#[cfg(feature = "test-instrumentation")]
+#[path = "tests/project_scope.rs"]
+mod project_scope;

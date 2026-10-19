@@ -1,5 +1,7 @@
 # `postgres-constraint-validate`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Pairs named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` statements with a
 matching `VALIDATE CONSTRAINT`. Adding `NOT VALID` without a later validate
 leaves the constraint unenforced; validating a name that was never added

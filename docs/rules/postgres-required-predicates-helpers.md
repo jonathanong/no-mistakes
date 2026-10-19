@@ -1,5 +1,7 @@
 # postgres-required-predicates — Executor SQL built by helpers
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 ### Executor SQL built by helpers
 
 Executor SQL assembled from helpers is checked, including helpers imported
