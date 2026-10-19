@@ -15,16 +15,25 @@ tests:
       - swift-clients/core
       - swift-clients/ui
       - swift-clients/android
+    # Executing this argv creates sentinel-should-not-exist. `$0` is that
+    # name; `--package-path` and `--filter` are later arguments and ignored.
+    # Do not replace it with a missing binary: "command not found" creates no file.
     baseCommands:
       swift-clients/core:
+        - sh
+        - -c
+        - touch "$0"
         - sentinel-should-not-exist
-        - test
       swift-clients/ui:
+        - sh
+        - -c
+        - touch "$0"
         - sentinel-should-not-exist
-        - test
       swift-clients/android:
+        - sh
+        - -c
+        - touch "$0"
         - sentinel-should-not-exist
-        - test
     projects:
       swift-core:
         include:
