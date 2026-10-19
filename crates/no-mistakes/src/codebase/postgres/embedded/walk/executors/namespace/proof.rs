@@ -2,6 +2,8 @@ use super::super::ScopeVisitor;
 use super::identity::Origin;
 use super::MemberCall;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
+use oxc_ast::ast::{CallExpression, Expression};
 use std::collections::HashSet;
 
 fn uncertain(call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
@@ -40,6 +42,42 @@ fn downgrade(call: &mut EmbeddedSqlCall) {
 }
 
 impl ScopeVisitor<'_> {
+    pub(in crate::codebase::postgres::embedded::walk) fn note_imported_alias_call(
+        &mut self,
+        call: &CallExpression<'_>,
+    ) {
+        let Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else {
+            return;
+        };
+        if self.uncertain_query_capture(name.name.as_str()) {
+            self.downgrade_latest_confirmed_call();
+        }
+    }
+
+    fn capture_key(&self, name: &str) -> Option<(u32, String)> {
+        let (index, _) = self
+            .scopes
+            .iter()
+            .enumerate()
+            .rev()
+            .find(|(_, scope)| scope.contains_key(name))?;
+        Some((self.member_query_proof.scope_ids[index], name.to_string()))
+    }
+
+    pub(in crate::codebase::postgres::embedded::walk) fn mark_uncertain_query_capture(
+        &mut self,
+        name: &str,
+    ) {
+        if let Some(key) = self.capture_key(name) {
+            self.member_query_proof.uncertain_captures.insert(key);
+        }
+    }
+
+    fn uncertain_query_capture(&self, name: &str) -> bool {
+        self.capture_key(name)
+            .is_some_and(|key| self.member_query_proof.uncertain_captures.contains(&key))
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn capture_is_uncertain(
         &self,
         receiver: &oxc_ast::ast::Expression<'_>,
