@@ -54,8 +54,10 @@ It checks artifact origin/expiry/digest, exact source trees, build-helper hashes
 release/default-feature/compiler metadata, and binary/probe hashes before use.
 The baseline step uploads its raw output before the candidate starts. Both arms
 use jobs1, the full original config, diagnostics enabled, and a 10000-second
-collection cap on one ARM VM. Minute heartbeats go to the Actions log; CLI JSON
+inner collection cap on one ARM VM, with a 16-minute outer stop per arm.
+The builder and measurement image versions are recorded separately; this
+capacity-only retry accepts the observed hosted image rollout. Minute heartbeats go to the Actions log; CLI JSON
 and stderr remain raw files. The workflow retains censored/error states, runs
 report and diagnostic parity after both arms, and always marks this observation
-ineligible for gate evidence. It does not alter the already-running feasibility
+ineligible for gate evidence. It does not alter the cancelled feasibility
 workflow or build another CLI pair.

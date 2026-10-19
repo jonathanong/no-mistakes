@@ -9,6 +9,7 @@ import urllib.request
 from inputs import CAP_SECONDS, SOURCES, outcome, validate_parity
 import common
 import worker
+from machine import stable_machine, verify_measurement
 
 RUN, ARTIFACT, HARNESS = 39282454396, 12204356184, '4bee78e73b19f571f766011c34b43395936d54f9'
 ARCHIVE = '03b1795720e60ee507cb4923b633b93d7533dfe151d45fc8ceb8e15642c1b2e8'
@@ -55,19 +56,8 @@ def artifact_row(artifact_id, expected_digest, run_id, head_sha, name):
     return check_artifact_row(row, artifact_id, expected_digest, run_id, head_sha, name)
 
 
-def stable_machine(machine):
-    required = ('uname', 'affinity', 'imageOS', 'imageVersion', 'cpuinfo', 'meminfo')
-    assert all(key in machine for key in required)
-    uname = machine['uname']
-    assert len(uname) == 5
-    return {'uname': [uname[0], uname[2], uname[3], uname[4]],
-            'affinity': machine['affinity'], 'imageOS': machine['imageOS'],
-            'imageVersion': machine['imageVersion'], 'cpuinfo': machine['cpuinfo']}
-
-
 def verify():
     assert os.uname().machine == 'aarch64'
-    assert (os.environ['ImageOS'], os.environ['ImageVersion']) == IMAGE
     rows, proofs = {}, {}
     for role in SOURCES:
         folder = Path('cli') / role
@@ -110,8 +100,7 @@ def verify():
         for field in ('binarySha256', 'cpuProbeSha256', 'rustc', 'cargo', 'features',
                       'profile', 'buildJobs', 'incremental'):
             assert artifact['builds'][role][field] == proofs[role][field]
-    measured_machine = common.machine()
-    assert stable_machine(proofs['base']['machine']) == stable_machine(measured_machine)
+    measured_machine = verify_measurement(common.machine())
     physical = common.workload(Path('fixture').resolve())
     consumer = json.loads(Path('prepared/fixture-provenance.json').read_text())
     assert physical == consumer
@@ -119,6 +108,7 @@ def verify():
             'collectionCapSeconds': CAP_SECONDS, 'diagnostics': 'on', 'jobs': '1',
             'sourceProofs': proofs, 'builderMachine': proofs['base']['machine'],
             'measurementMachine': measured_machine, 'workload': physical,
+            'builderMatchesMeasurement': stable_machine(proofs['base']['machine']) == stable_machine(measured_machine),
             'cliArtifact': artifact_row(ARTIFACT, ARCHIVE, RUN, HARNESS, 'current-phase-clis'),
             'consumerArtifact': artifact_row(12158768554,
                 '080223598499563b3f21bdd29e450536db72183c5ef65e3d3f221976273c6911',

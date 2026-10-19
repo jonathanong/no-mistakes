@@ -41,6 +41,14 @@ class RetryProvenance(unittest.TestCase):
                 retry.check_artifact_row(self.fixture(name), retry.ARTIFACT, retry.ARCHIVE,
                                          retry.RUN, retry.HARNESS, 'current-phase-clis')
 
+    def test_measurement_image_is_disclosed_separately_from_the_builder(self):
+        measured = self.fixture('machine-measurement-older-image.json')
+        self.assertEqual(retry.verify_measurement(measured), measured)
+        self.assertNotEqual(retry.stable_machine(measured),
+                            retry.stable_machine(self.fixture('machine-builder.json')))
+        with self.assertRaises(AssertionError):
+            retry.verify_measurement(self.fixture('machine-wrong-image.json'))
+
     def test_stable_identity_ignores_hostname_and_volatile_meminfo(self):
         builder = retry.stable_machine(self.fixture('machine-builder.json'))
         measured = retry.stable_machine(self.fixture('machine-measurement.json'))
@@ -123,7 +131,7 @@ class WorkflowContract(unittest.TestCase):
     def test_one_job_is_split_around_immediate_base_retention(self):
         workflow = (ROOT / '.github/workflows/current-phase-observable-capacity-arm.yml').read_text()
         self.assertIn('timeout-minutes: 355', workflow)
-        self.assertEqual(workflow.count('timeout-minutes: 169'), 2)
+        self.assertEqual(workflow.count('timeout-minutes: 16'), 2)
         budgets = [int(value) for value in re.findall(r'timeout-minutes: (\d+)', workflow)]
         self.assertEqual(budgets[0], 355)
         self.assertLess(sum(budgets[1:]), 355)

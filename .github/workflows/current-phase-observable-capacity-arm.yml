@@ -52,7 +52,7 @@ jobs:
       - name: Observe baseline capacity with progress and timings
         id: base
         if: ${{ always() && steps.verify.outcome == 'success' && !cancelled() }}
-        timeout-minutes: 169
+        timeout-minutes: 16
         env:
           MATCHED_COLLECTION_CAP_SECONDS: '10000'
         run: python3 -B harness/.github/scripts/current-arm/retry.py base
@@ -68,7 +68,7 @@ jobs:
       - name: Observe candidate capacity with progress and timings
         id: candidate
         if: ${{ always() && steps.verify.outcome == 'success' && !cancelled() }}
-        timeout-minutes: 169
+        timeout-minutes: 16
         env:
           MATCHED_COLLECTION_CAP_SECONDS: '10000'
         run: python3 -B harness/.github/scripts/current-arm/retry.py candidate

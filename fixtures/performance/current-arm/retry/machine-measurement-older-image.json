@@ -1,0 +1,1 @@
+{"uname": ["Linux", "measure-host", "7.0.0", "#1 SMP", "aarch64"], "affinity": [0, 1, 2, 3], "imageOS": "ubuntu24-arm64", "imageVersion": "20261012.149.1", "cpuinfo": "arm cpu details", "meminfo": "MemAvailable: 2000 kB"}
