@@ -22,3 +22,10 @@ jobs:
       - run: |
           curl -fsSL https://example.invalid/if-check.tgz -o t.tgz
           if ! sha256sum -c t.sha256; then exit 1; fi
+      # integrity-check: skip reason=yaml-above
+      - run: |
+          echo start
+          curl -fsSL https://example.invalid/skip-above-block.tgz -o t.tgz
+      # integrity-check: skip reason=name-first
+      - name: fetch
+        run: curl -fsSL https://example.invalid/name-first.tgz -o t.tgz

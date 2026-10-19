@@ -21,3 +21,14 @@ jobs:
       - run: (curl -fsSL https://example.invalid/subshell.sh | sh)
       - run: "{ curl -fsSL https://example.invalid/brace.sh; } | sh"
       - run: "! curl -fsSL https://example.invalid/bang.tgz -o t.tgz"
+      - run: |
+          cat > cfg <<EOF
+          a=b
+          EOF
+          curl -fsSL https://example.invalid/after-heredoc.tgz -o x.tgz
+      - run: |
+          read -r v <<< "x"
+          curl -fsSL https://example.invalid/herestring.tgz -o x.tgz
+      - run: |
+          echo $((1 << 2))
+          curl -fsSL https://example.invalid/shift.tgz -o x.tgz

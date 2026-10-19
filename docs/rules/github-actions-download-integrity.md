@@ -44,8 +44,11 @@ A whole-line uppercase assignment is expanded only when that script has exactly
 one such assignment and the value is a literal (`BASE_URL="https://example.invalid/base"`,
 single quotes, or a bare token). `$NAME` and `${NAME}` are then replaced
 outside single quotes. A second assignment, a lowercase name, `export`, a
-value that contains `$`, a command substitution, or a here-document is not
-expanded and is not judged. The rule does not eval the shell.
+value that contains `$`, or a command substitution is not expanded and is
+not judged. A here-document body is skipped, and a download after its
+terminator is still judged. An unterminated here-document is not judged.
+`<<<` and `<<` inside `$((...))` are not here-documents. The rule does not
+eval the shell.
 
 A host that is still `$`, `` ` ``, or `${{ }}` after that expansion is not
 judged. A literal untrusted host is judged even when the path still contains

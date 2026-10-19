@@ -46,17 +46,19 @@ fn skipped(lines: &[&str], place: Option<&StepRun>, script: &str) -> bool {
     let Some(place) = place else {
         return false;
     };
-    // A recorded run has a line, and `steps:` is always above it.
-    let &(first, _) = &place.lines[0];
-    let prev = lines[first - 2];
-    if prev.trim_start().starts_with('#') && judge::has_skip(prev) {
-        return true;
+    // The skip comment sits above the `- ` item, which may be above `run:`.
+    let start = place.item_line;
+    if start >= 2 {
+        let prev = lines.get(start - 2).copied().unwrap_or("");
+        if prev.trim_start().starts_with('#') && judge::has_skip(prev) {
+            return true;
+        }
     }
-    let last = place.lines.last().map(|(line, _)| *line).unwrap_or(first);
+    let last = place.lines.last().map(|(line, _)| *line).unwrap_or(start);
     lines
         .iter()
         .take(last)
-        .skip(first.saturating_sub(1))
+        .skip(start.saturating_sub(1))
         .any(|line| judge::has_skip(line))
 }
 

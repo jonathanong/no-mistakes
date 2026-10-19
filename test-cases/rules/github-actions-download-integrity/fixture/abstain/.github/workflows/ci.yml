@@ -19,3 +19,6 @@ jobs:
           cat <<'EOF'
           curl https://example.invalid/heredoc.tgz
           EOF
+      - run: |
+          cat <<EOF
+          curl https://example.invalid/unterminated.tgz

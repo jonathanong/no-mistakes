@@ -29,6 +29,7 @@ pub(super) struct Scanner<'a> {
     pub(super) job: String,
     pub(super) step: usize,
     pub(super) uses_line: Option<usize>,
+    pub(super) item_line: Option<usize>,
     pub(super) located: Vec<StepUse>,
     pub(super) runs: Vec<StepRun>,
 }
@@ -54,6 +55,7 @@ impl<'a> Scanner<'a> {
             job: String::new(),
             step: 0,
             uses_line: None,
+            item_line: None,
             located: Vec::new(),
             runs: Vec::new(),
         }
@@ -87,7 +89,7 @@ impl<'a> Scanner<'a> {
             if let Some(parsed) = parse_line(line) {
                 self.apply(parsed, index);
             } else if self.locate {
-                self.note_unparsed_item(line);
+                self.note_unparsed_item(line, line_no);
             }
             index += 1;
         }
@@ -97,7 +99,7 @@ impl<'a> Scanner<'a> {
     fn apply(&mut self, parsed: Parsed, index: usize) {
         self.pop_until(parsed.scope, parsed.is_item);
         if parsed.is_item && self.parent() == Some(Kind::Steps) {
-            detail::begin_step(self);
+            detail::begin_step(self, index + 1);
             self.frames.push(Frame {
                 indent: parsed.scope,
                 kind: Kind::Step,
@@ -180,13 +182,13 @@ impl<'a> Scanner<'a> {
     }
 
     // serde counts every sequence entry. Values this parser skips still occupy a step.
-    fn note_unparsed_item(&mut self, line: &str) {
+    fn note_unparsed_item(&mut self, line: &str, line_no: usize) {
         let Some(scope) = detail::item_scope(line) else {
             return;
         };
         self.pop_until(scope, true);
         if self.parent() == Some(Kind::Steps) {
-            detail::begin_step(self);
+            detail::begin_step(self, line_no);
             self.frames.push(Frame {
                 indent: scope,
                 kind: Kind::Step,

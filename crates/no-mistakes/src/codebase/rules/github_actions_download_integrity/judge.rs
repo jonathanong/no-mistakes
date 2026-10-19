@@ -10,12 +10,16 @@ pub(super) struct Hit {
 }
 
 pub(super) fn download_hits(script: &str, helpers: &[String]) -> Vec<Hit> {
-    if words::has_heredoc(script) || url::has_skip(script) || verify::step_verifies(script) {
+    if url::has_skip(script) || verify::step_verifies(script) {
         return Vec::new();
     }
     let expanded = expand_uppercase(script);
+    let parsed = words::parse(&expanded);
+    if parsed.unterminated_heredoc {
+        return Vec::new();
+    }
     let mut hits = Vec::new();
-    for command in words::commands(&expanded) {
+    for command in parsed.commands {
         let Some((name, arg_at)) = words::command_at(&command.words) else {
             continue;
         };

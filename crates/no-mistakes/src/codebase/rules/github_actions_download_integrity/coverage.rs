@@ -2,7 +2,7 @@ use super::assign::expand_uppercase;
 use super::judge::{self, configured_host, download_hits};
 use super::url::{self, http_url};
 use super::verify::{step_verifies, takes_url_slot};
-use super::words::{self, commands, has_heredoc};
+use super::words::{self, commands};
 use super::RULE_ID;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
@@ -46,8 +46,6 @@ fn shell_forms_cover_quotes_pipes_and_verifiers() {
             .contains("https://example.invalid/plain/a")
     );
 
-    assert!(has_heredoc("curl <<EOF\nhttps://example.invalid\nEOF\n"));
-    assert!(!has_heredoc("echo '<<'\n"));
     assert!(check(&workflow("curl <<EOF")).is_empty());
     assert_eq!(
         check(&workflow("curl `echo https://example.invalid/a`")).len(),

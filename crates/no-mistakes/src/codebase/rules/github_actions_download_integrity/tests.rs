@@ -200,6 +200,9 @@ fn saved_fail_fixtures_report_unverified_downloads() {
         "subshell.sh",
         "brace.sh",
         "bang.tgz",
+        "after-heredoc.tgz",
+        "herestring.tgz",
+        "shift.tgz",
     ] {
         assert!(
             messages.iter().any(|message| message.contains(url)),
@@ -372,6 +375,37 @@ fn missing_workflow_source_is_skipped() {
     assert!(!missing.exists());
     let findings = super::check_with_files(&root, &enabled_config(), &[missing]).unwrap();
     assert!(findings.is_empty());
+}
+
+#[test]
+fn step_item_line_is_the_dash_not_the_run_key() {
+    let source = "\
+on: push
+jobs:
+  build:
+    steps:
+    - run: curl -fsSL https://example.invalid/a.tgz
+    - name: fetch
+      run: curl -fsSL https://example.invalid/b.tgz
+";
+    let runs =
+        crate::codebase::rules::github_actions_script_expressions::step_run_lines(source, false);
+    assert_eq!(runs.len(), 2, "{source}");
+    let lines: Vec<_> = source.lines().collect();
+    assert!(
+        lines[runs[0].item_line - 1]
+            .trim_start()
+            .starts_with("- run:"),
+        "{}",
+        lines[runs[0].item_line - 1]
+    );
+    assert!(
+        lines[runs[1].item_line - 1]
+            .trim_start()
+            .starts_with("- name:"),
+        "{}",
+        lines[runs[1].item_line - 1]
+    );
 }
 
 #[test]

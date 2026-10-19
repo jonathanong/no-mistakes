@@ -13,6 +13,8 @@ pub(crate) struct StepUse {
 pub(crate) struct StepRun {
     pub(crate) job: String,
     pub(crate) step: usize,
+    /// 1-based line of the `- ` step item, which may sit above `run:`.
+    pub(crate) item_line: usize,
     pub(crate) lines: Vec<(usize, String)>,
 }
 
@@ -48,12 +50,13 @@ pub(super) fn begin_job(scanner: &mut Scanner<'_>, name: &str) {
     scanner.step = 0;
 }
 
-pub(super) fn begin_step(scanner: &mut Scanner<'_>) {
+pub(super) fn begin_step(scanner: &mut Scanner<'_>, line: usize) {
     if !scanner.locate {
         return;
     }
     scanner.step += 1;
     scanner.uses_line = None;
+    scanner.item_line = Some(line);
 }
 
 pub(super) fn note_uses(scanner: &mut Scanner<'_>, line: usize) {
@@ -117,6 +120,7 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
         scanner.runs.push(StepRun {
             job: scanner.job.clone(),
             step: scanner.step,
+            item_line: scanner.item_line.unwrap_or(1),
             lines: run_lines.clone(),
         });
     }

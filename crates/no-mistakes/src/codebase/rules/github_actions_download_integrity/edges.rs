@@ -2,7 +2,7 @@ use super::assign::expand_uppercase;
 use super::judge::download_hits;
 use super::url::{configured_host, http_url};
 use super::verify::{step_verifies, takes_url_slot};
-use super::words::{commands, has_heredoc, is_assignment};
+use super::words::{commands, is_assignment};
 use super::RULE_ID;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
@@ -81,7 +81,6 @@ fn host_and_verifier_edges_match_the_documented_forms() {
     assert!(!takes_url_slot("curl", "--"));
     assert!(!takes_url_slot("curl", "--output=out"));
     assert!(takes_url_slot("wget", "-O"));
-    assert!(!has_heredoc("echo \"<<\"\n"));
     assert!(!is_assignment("nope"));
     let quoted = commands("echo \"a\nb\"");
     assert_eq!(quoted[0].words[1].text, "a\nb");
