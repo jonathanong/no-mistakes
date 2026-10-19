@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from common import SOURCES, digest, install_cancel_handler, machine, save, workload
+from common import CAP_SECONDS, SOURCES, digest, install_cancel_handler, machine, save, workload
 from report import compare_reports
 from worker import sample
 
@@ -15,7 +15,7 @@ assert case in {'verdicts-default', 'verdicts-ledger', 'phases-full', 'phases-co
 assert jobs in {'1', '4', 'default'} and diagnostics in {'on', 'off'}
 assert order in {'bc', 'bccb'}
 output = Path('results')
-output.mkdir()
+output.mkdir(exist_ok=True)
 root = Path('fixture').resolve()
 physical = workload(root)
 config = root / '.no-mistakes.yml'
@@ -53,6 +53,7 @@ if case != 'verdicts-ledger':
     assert proofs['b']['binarySha256'] != proofs['c']['binarySha256']
 assert proofs['b']['effectiveDefaultJobs'] == proofs['c']['effectiveDefaultJobs']
 provenance = {'case': case, 'jobs': jobs, 'diagnostics': diagnostics, 'order': order,
+              'collectionCapSeconds': CAP_SECONDS,
               'workload': physical, 'configSha256': digest(config), 'builds': proofs,
               'machine': machine(), 'harnessCommit': os.environ['GITHUB_SHA'],
               'baseAncestry': 'Phases descends from401; 401-to-8de changes only tests, fixtures, docs and ESLint. Native source, manifests and lock are identical.',

@@ -1,0 +1,28 @@
+name: Temporary longer matched value-flow ARM evaluation
+
+on:
+  push:
+    branches: [eval/2215-2118-long-arm]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: matched-value-flow-long-arm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sample:
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        case: [verdicts-default, verdicts-ledger, phases-full, phases-control]
+        jobs: ['1', '4', default]
+        diagnostics: ['off', 'on']
+    uses: ./.github/workflows/matched-arm-long-sample.yml
+    with:
+      case: ${{ matrix.case }}
+      jobs: ${{ matrix.jobs }}
+      diagnostics: ${{ matrix.diagnostics }}
