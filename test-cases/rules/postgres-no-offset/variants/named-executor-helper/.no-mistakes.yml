@@ -1,0 +1,8 @@
+# Helper names the executor on the SQL text. That call is a judged offset, not an
+# incomplete or unanalyzable statement, even with unanalyzableSql: fail.
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: fail

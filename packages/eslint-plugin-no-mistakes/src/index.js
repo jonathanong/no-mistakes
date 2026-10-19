@@ -37,6 +37,7 @@ const rules = {
   "react-no-iife-in-jsx": require("./rules/react-no-iife-in-jsx"),
   "playwright-unique": require("./rules/playwright-unique"),
   "postgres-cursor-call-contract": require("./rules/postgres-cursor-call-contract"),
+  "postgres-no-executor-adapter": require("./rules/postgres-no-executor-adapter"),
   "postgres-no-manual-transaction": require("./rules/postgres-no-manual-transaction"),
   "postgres-no-unbounded-query-fanout": require("./rules/postgres-no-unbounded-query-fanout"),
   "react-no-nullish-react-node": require("./rules/react-no-nullish-react-node"),

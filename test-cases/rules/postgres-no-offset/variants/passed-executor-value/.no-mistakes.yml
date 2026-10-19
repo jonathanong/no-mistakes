@@ -1,0 +1,8 @@
+# `run(read, account)` does not connect the helper's statement to `read`.
+# With unanalyzableSql: fail the report is empty, never a judged offset.
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: fail

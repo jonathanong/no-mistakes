@@ -42,16 +42,28 @@ function ids(code, rule, option, filename = "app.ts") {
 
 describe("plugin exports", () => {
   it("registers postgres runtime rules outside presets", () => {
+    assert.ok(plugin.rules["postgres-no-executor-adapter"]);
     assert.ok(plugin.rules["postgres-no-manual-transaction"]);
     assert.ok(plugin.rules["postgres-no-unbounded-query-fanout"]);
+    assert.equal(plugin.rules["postgres-no-executor-adapter"].meta.docs.recommended, false);
+    assert.equal(plugin.rules["postgres-no-executor-adapter"].meta.fixable, undefined);
+    assert.equal(plugin.rules["postgres-no-executor-adapter"].meta.hasSuggestions, undefined);
     assert.equal(plugin.rules["postgres-no-manual-transaction"].meta.docs.recommended, false);
     assert.equal(plugin.rules["postgres-no-unbounded-query-fanout"].meta.docs.recommended, false);
+    assert.equal(
+      plugin.configs.recommended.rules["no-mistakes/postgres-no-executor-adapter"],
+      undefined,
+    );
     assert.equal(
       plugin.configs.recommended.rules["no-mistakes/postgres-no-manual-transaction"],
       undefined,
     );
     assert.equal(
       plugin.configs.recommended.rules["no-mistakes/postgres-no-unbounded-query-fanout"],
+      undefined,
+    );
+    assert.equal(
+      plugin.configs.strict.rules["no-mistakes/postgres-no-executor-adapter"],
       undefined,
     );
     assert.equal(

@@ -478,6 +478,12 @@ fn equivalent_physical_branches_do_not_exhaust_the_concrete_version_cap() {
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
 }
 
+#[path = "cli_check_rules_postgres_variants/direct_executor_reference.rs"]
+mod direct_executor_reference;
+
+#[path = "cli_check_rules_postgres_variants/executor_helper_rewrite.rs"]
+mod executor_helper_rewrite;
+
 #[path = "cli_check_rules_postgres_variants/logical.rs"]
 mod logical;
 

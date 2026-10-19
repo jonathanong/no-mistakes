@@ -167,6 +167,15 @@ when set).
 `module` or a subpath of `module`, including a rename. A default import is not
 enough, and a shadowed or rebound local fails closed.
 
+### `postgres-no-executor-adapter`
+
+`importSpecifier?: string` (default empty),
+`executorNames?: string[]` (default empty without a module; `["query", "read", "write"]` with a module),
+`executorFactoryNames?: string[]` and `executorTypeNames?: string[]` (default empty;
+scoped executors that also match imports from `importSpecifier` subpaths and relative imports that resolve into that package, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
+and `trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
+shared executor configuration validates; this rule does not read SQL text).
+
 ### `postgres-no-manual-transaction`
 
 `importSpecifier?: string` (default empty),
