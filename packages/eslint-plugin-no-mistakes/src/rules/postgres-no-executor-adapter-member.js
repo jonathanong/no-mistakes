@@ -7,7 +7,7 @@ const {
   constInitializer,
   variableIsImportedExecutor,
   variableIsScopedExecutor,
-} = require("./postgres-no-executor-adapter-ref");
+} = require("./postgres-no-executor-adapter-binding");
 
 function broadQueryMembers(options) {
   return !options.importSpecifier && (options.executorNames ?? []).includes("query");

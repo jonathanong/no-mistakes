@@ -136,7 +136,8 @@ function directCall(source, call, index, name) {
   const args = call.arguments.map((argument, argumentIndex) =>
     argumentIndex === index ? name : source.getText(argument),
   );
-  return `${source.getText(call.callee)}(${args.join(", ")})`;
+  const invoked = `${source.getText(call.callee)}(${args.join(", ")})`;
+  return call.type === "NewExpression" ? `new ${invoked}` : invoked;
 }
 
 function judgedDirect(names, leaves, conditionalText) {

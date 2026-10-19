@@ -1,62 +1,20 @@
 "use strict";
 
 const { childNodes, resolveVariable } = require("./postgres-query-text");
+const {
+  TS_ASSERTIONS,
+  constInitializer,
+  variableIsImportedExecutor,
+  variableIsScopedExecutor,
+} = require("./postgres-no-executor-adapter-binding");
+const { isProvenQueryMember } = require("./postgres-no-executor-adapter-member");
 
-const TS_ASSERTIONS = new Set([
-  "TSAsExpression",
-  "TSInstantiationExpression",
-  "TSNonNullExpression",
-  "TSSatisfiesExpression",
-  "TSTypeAssertion",
-]);
 const NESTED_THIS_BOUNDARIES = new Set([
   "ClassDeclaration",
   "ClassExpression",
   "FunctionDeclaration",
   "FunctionExpression",
 ]);
-
-function importedName(specifier) {
-  const imported = specifier.imported;
-  return imported.type === "Literal" ? String(imported.value) : imported.name;
-}
-
-function variableIsImportedExecutor(variable, options) {
-  if (!variable?.defs?.length) return false;
-  return variable.defs.every((def) => {
-    if (def.type !== "ImportBinding" || def.node?.type !== "ImportSpecifier") return false;
-    const declaration = def.parent;
-    if (
-      declaration?.type !== "ImportDeclaration" ||
-      declaration.importKind === "type" ||
-      def.node.importKind === "type"
-    ) {
-      return false;
-    }
-    const imported = importedName(def.node);
-    if (!options.executorNames.includes(imported)) return false;
-    return !options.importSpecifier || declaration.source?.value === options.importSpecifier;
-  });
-}
-
-function variableIsScopedExecutor(variable, scoped, node) {
-  if (!variable?.defs || variable.defs.length !== 1) return false;
-  const def = variable.defs[0];
-  return scoped.some((entry) => {
-    if (
-      entry.name !== node.name ||
-      node.range[0] < entry.range[0] ||
-      node.range[0] >= entry.range[1]
-    ) {
-      return false;
-    }
-    if (def.type === "Parameter") {
-      const block = variable.scope?.block;
-      return block?.range?.[0] === entry.range[0] && block?.range?.[1] === entry.range[1];
-    }
-    return def.type === "Variable" && def.node?.range?.[0] === entry.range[0];
-  });
-}
 
 function executorRef(node, context, bindings, options) {
   if (node.type === "ChainExpression") return null;
@@ -75,14 +33,7 @@ function executorRef(node, context, bindings, options) {
     }
     return null;
   }
-  if (
-    require("./postgres-no-executor-adapter-member").isProvenQueryMember(
-      current,
-      context,
-      bindings,
-      options,
-    )
-  ) {
+  if (isProvenQueryMember(current, context, bindings, options)) {
     return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
   }
   return null;
@@ -147,19 +98,6 @@ function unwrapArgument(node) {
   }
   if (current?.type === "ChainExpression") return { node: null, assertion };
   return { node: current, assertion };
-}
-
-// One const initializer, or null when the binding can change or is not a simple name.
-function constInitializer(identifier, context, seen) {
-  const variable = resolveVariable(identifier, context);
-  const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
-  // eslint-scope puts `const` on the VariableDeclaration parent, not on the def.
-  if (!def || def.type !== "Variable" || def.parent.kind !== "const" || seen.has(def.node)) {
-    return null;
-  }
-  if (def.node?.id?.type !== "Identifier" || !def.node.init) return null;
-  seen.add(def.node);
-  return def.node.init;
 }
 
 function matchForward(params, args) {

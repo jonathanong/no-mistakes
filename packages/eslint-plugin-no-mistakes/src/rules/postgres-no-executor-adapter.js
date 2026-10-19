@@ -86,6 +86,10 @@ module.exports = rule(
         expr = expr.expression;
       }
       if (!expr || expr.type === "ChainExpression") return;
+      if (expr.type === "ObjectExpression" || expr.type === "ArrayExpression") {
+        visitFresh(expr, call, index);
+        return;
+      }
       if (expr.type === "ConditionalExpression") {
         const leaves = executorLeaves(expr, context, bindings, options);
         // Every branch is an executor, so the conditional callee itself is judged.
@@ -122,11 +126,25 @@ module.exports = rule(
       reportPassed(argument, passed);
     }
 
+    function visitFresh(expr, call, index) {
+      if (expr.type === "ObjectExpression") {
+        for (const property of expr.properties) {
+          if (property.type !== "Property" || property.kind !== "init") continue;
+          visitArgument(property.value, call, index);
+        }
+        return;
+      }
+      for (const element of expr.elements) visitArgument(element, call, index);
+    }
+
     return {
       Program(node) {
         bindings = executorBindings(node, options, context.filename);
       },
       CallExpression(node) {
+        node.arguments.forEach((argument, index) => visitArgument(argument, node, index));
+      },
+      NewExpression(node) {
         node.arguments.forEach((argument, index) => visitArgument(argument, node, index));
       },
     };
