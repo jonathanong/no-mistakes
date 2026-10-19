@@ -21,6 +21,8 @@ export function list(
 
 export function typed(tx: TxExecutor) {
   tx.query("SELECT id FROM orders WHERE account_id = $1 OFFSET 6"); // findings: offset
+  const alias = tx;
+  alias.query("SELECT id FROM orders WHERE account_id = $1 OFFSET 11"); // findings: offset
   return tx("SELECT id FROM orders WHERE account_id = $1 OFFSET 7"); // findings: offset
 }
 

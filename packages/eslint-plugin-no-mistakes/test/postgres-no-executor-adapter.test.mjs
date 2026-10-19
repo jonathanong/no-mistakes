@@ -578,8 +578,8 @@ describe("postgres-no-executor-adapter", () => {
       [],
     );
     assert.deepEqual(ids(`${IMPORT}const adapter = () => read();\nrun(adapter);`), []);
-    // Not followed: a constructor argument and an object property are not tracked.
-    assert.deepEqual(ids(`${IMPORT}new Runner((statement) => read(statement));`), []);
+    // A stored property read is not followed: the object can be mutated.
+    // Constructor arguments and fresh object or array values are fixture-backed.
     assert.deepEqual(
       ids(
         `${IMPORT}const options = { exec: (statement) => read(statement) };\nrun(options.exec, account);`,

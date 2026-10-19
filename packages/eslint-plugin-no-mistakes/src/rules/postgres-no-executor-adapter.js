@@ -45,11 +45,19 @@ module.exports = rule(
     const source = context.sourceCode;
     let bindings = { scoped: [], queryMembers: false };
 
-    function reportAdapter(node, adapter, call, index) {
+    function quotedExecutor(quoteNode, name) {
+      if (quoteNode?.type !== "Property") return name;
+      const key = source.getText(quoteNode.key);
+      return `${quoteNode.computed ? `[${key}]` : key}: ${name}`;
+    }
+
+    function reportAdapter(node, adapter, call, index, quoteNode) {
       if (suppressed(node)) return;
       const names = adapter.names;
       const leaves = adapter.leaves ?? [];
-      const rejected = names.map((name) => directCall(source, call, index, name)).join(" or ");
+      const rejected = names
+        .map((name) => directCall(source, call, index, quotedExecutor(quoteNode, name), quoteNode))
+        .join(" or ");
       context.report({
         node,
         messageId: adapter.reason ? "blocked" : "forward",
@@ -77,7 +85,7 @@ module.exports = rule(
       });
     }
 
-    function visitArgument(argument, call, index) {
+    function visitArgument(argument, call, index, quoteNode) {
       if (!argument || argument.type === "SpreadElement") return;
       let expr = argument;
       let wrapped = false;
@@ -86,6 +94,10 @@ module.exports = rule(
         expr = expr.expression;
       }
       if (!expr || expr.type === "ChainExpression") return;
+      if (expr.type === "ObjectExpression" || expr.type === "ArrayExpression") {
+        visitFresh(expr, call, index);
+        return;
+      }
       if (expr.type === "ConditionalExpression") {
         const leaves = executorLeaves(expr, context, bindings, options);
         // Every branch is an executor, so the conditional callee itself is judged.
@@ -101,6 +113,7 @@ module.exports = rule(
             },
             call,
             index,
+            quoteNode,
           );
           return;
         }
@@ -109,17 +122,37 @@ module.exports = rule(
         const adapter = classifyFunction(expr, context, bindings, options);
         if (!adapter) return;
         if (wrapped && !adapter.reason) adapter.reason = "type assertion";
-        reportAdapter(argument, adapter, call, index);
+        reportAdapter(argument, adapter, call, index, quoteNode);
         return;
       }
       const passed = resolvePassed(expr, context, bindings, options, new Set());
       if (!passed) return;
       if (passed.adapter) {
         if (wrapped && !passed.adapter.reason) passed.adapter.reason = "type assertion";
-        reportAdapter(argument, passed.adapter, call, index);
+        reportAdapter(argument, passed.adapter, call, index, quoteNode);
         return;
       }
       reportPassed(argument, passed);
+    }
+
+    function visitFresh(expr, call, index) {
+      if (expr.type === "ObjectExpression") {
+        for (const property of expr.properties) {
+          if (property.type !== "Property" || property.kind !== "init") continue;
+          visitArgument(property.value, call, index, property);
+        }
+        return;
+      }
+      for (const element of expr.elements) visitArgument(element, call, index, element);
+    }
+
+    // The bind result is already the reported value. Its arguments are not a
+    // second pass of that same executor (`run(read.bind(read), account)`).
+    function bindResultIsReported(node) {
+      const parent = node.parent;
+      const called = parent?.type === "CallExpression" || parent?.type === "NewExpression";
+      if (!called || !parent.arguments.includes(node)) return false;
+      return Boolean(resolvePassed(node, context, bindings, options, new Set()));
     }
 
     return {
@@ -127,6 +160,10 @@ module.exports = rule(
         bindings = executorBindings(node, options, context.filename);
       },
       CallExpression(node) {
+        if (bindResultIsReported(node)) return;
+        node.arguments.forEach((argument, index) => visitArgument(argument, node, index));
+      },
+      NewExpression(node) {
         node.arguments.forEach((argument, index) => visitArgument(argument, node, index));
       },
     };

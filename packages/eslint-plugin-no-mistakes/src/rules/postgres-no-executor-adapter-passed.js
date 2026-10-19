@@ -1,6 +1,8 @@
 "use strict";
 
+const { stableFunction } = require("./postgres-no-executor-adapter-binding");
 const { classifyFunction } = require("./postgres-no-executor-adapter-forward");
+const { boundExecutor, logicalPassed } = require("./postgres-no-executor-adapter-logic");
 const {
   TS_ASSERTIONS,
   constInitializer,
@@ -40,14 +42,16 @@ function combineConditional(consequent, alternate) {
     ),
   ];
   const leaves = known.flatMap((part) => (part.adapter ? part.adapter.leaves : part.leaves));
-  if (!known.some((part) => part.adapter)) return { leaves, conditionalText: null };
+  const definite = Boolean(consequent?.definite && alternate?.definite);
+  if (!known.some((part) => part.adapter)) return { leaves, conditionalText: null, definite };
   return {
     adapter: { names, reason: "conditional selection", leaves, conditionalText: null },
+    definite,
   };
 }
 
-// An executor value, a const of those values, or a const adapter. Constructors
-// and object properties are not followed.
+// An executor value, a const or stable function that carries one, bind, or
+// && / || / ??. Fresh objects and constructor arguments are visited by the rule.
 function resolvePassed(node, context, bindings, options, seen) {
   const current = unwrapPassed(node);
   if (!current) return null;
@@ -62,6 +66,7 @@ function resolvePassed(node, context, bindings, options, seen) {
         leaves,
         conditionalText:
           current.type === "ConditionalExpression" ? context.sourceCode.getText(current) : null,
+        definite: true,
       };
     }
   }
@@ -72,14 +77,28 @@ function resolvePassed(node, context, bindings, options, seen) {
       resolvePassed(current.alternate, context, bindings, options, seen),
     );
   }
+  if (current.type === "LogicalExpression") {
+    return logicalPassed(
+      current,
+      (part) => resolvePassed(part, context, bindings, options, seen),
+      context,
+      combineConditional,
+    );
+  }
+  if (current.type === "CallExpression") {
+    return boundExecutor(current, (part) => resolvePassed(part, context, bindings, options, seen));
+  }
   if (current.type === "Identifier") {
     const init = constInitializer(current, context, seen);
-    if (!init) return null;
-    return resolvePassed(init, context, bindings, options, seen);
+    if (init) return resolvePassed(init, context, bindings, options, seen);
+    const fn = stableFunction(current, context);
+    if (!fn) return null;
+    const adapter = classifyFunction(fn, context, bindings, options);
+    return adapter ? { adapter, definite: true } : null;
   }
   if (current.type === "ArrowFunctionExpression" || current.type === "FunctionExpression") {
     const adapter = classifyFunction(current, context, bindings, options);
-    return adapter ? { adapter } : null;
+    return adapter ? { adapter, definite: true } : null;
   }
   return null;
 }

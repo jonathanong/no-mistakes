@@ -132,11 +132,17 @@ function classifyFunction(fn, context, bindings, options) {
   });
 }
 
-function directCall(source, call, index, name) {
-  const args = call.arguments.map((argument, argumentIndex) =>
-    argumentIndex === index ? name : source.getText(argument),
-  );
-  return `${source.getText(call.callee)}(${args.join(", ")})`;
+function directCall(source, call, index, name, quoteNode) {
+  const args = call.arguments.map((argument, argumentIndex) => {
+    if (argumentIndex !== index) return source.getText(argument);
+    if (!quoteNode) return name;
+    const text = source.getText(argument);
+    const start = quoteNode.range[0] - argument.range[0];
+    const end = quoteNode.range[1] - argument.range[0];
+    return text.slice(0, start) + name + text.slice(end);
+  });
+  const invoked = `${source.getText(call.callee)}(${args.join(", ")})`;
+  return call.type === "NewExpression" ? `new ${invoked}` : invoked;
 }
 
 function judgedDirect(names, leaves, conditionalText) {
