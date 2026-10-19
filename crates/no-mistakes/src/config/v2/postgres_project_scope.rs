@@ -10,6 +10,8 @@ mod scope;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+mod tests_edges;
+#[cfg(test)]
 mod tests_effects;
 mod yaml;
 

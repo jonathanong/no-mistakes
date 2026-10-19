@@ -41,6 +41,11 @@ rules:
     super::materialize(&mut config).unwrap();
     assert_eq!(config.effects["postgres"].returned_executors.len(), 1);
     assert_eq!(config.effects["postgres"].typed_executors.len(), 1);
+    // `apply` itself is idempotent when the config-level flag is not what stops the call.
+    let expanded = super::effects::apply(&mut config).unwrap();
+    assert!(!expanded);
+    assert_eq!(config.effects["postgres"].returned_executors.len(), 1);
+    assert_eq!(config.effects["postgres"].typed_executors.len(), 1);
 }
 
 #[test]

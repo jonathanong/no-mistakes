@@ -24,19 +24,19 @@ pub(super) fn apply(config: &mut NoMistakesConfig) -> Result<bool> {
     validate_project_globs(config)?;
     let mut plans = Vec::new();
     for (index, rule) in config.rules.iter().enumerate() {
-        if let Some(scope) = plan_rule(config, rule)? {
-            plans.push((index, scope));
+        if let Some(plan) = plan_rule(config, rule)? {
+            plans.push((index, plan));
         }
     }
-    for (index, scope) in plans {
+    for (index, (scope, keep_rule_sql)) in plans {
         let rule_name = config.rules[index].rule.clone();
         let options = ensure_mapping(&mut config.rules[index].options, &rule_name)?;
-        write_scope(&rule_name, options, &scope)?;
+        write_scope(&rule_name, options, &scope, keep_rule_sql);
     }
     Ok(!config.rules.is_empty() && config.rules.iter().any(locked))
 }
 
-fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<Scope>> {
+fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<(Scope, bool)>> {
     if !rule.enabled || !rule.rule.starts_with("postgres-") {
         return Ok(None);
     }
@@ -46,7 +46,8 @@ fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<Scope>>
     }
     reject_restate(rule)?;
     let scope = merge(rule, &scopes)?;
-    narrow(rule, &scope)?;
+    // Empty sqlInclude inherits the project list. A non-empty list was proven narrower.
+    let keep_rule_sql = narrow(rule, &scope)?;
     if postgres_executors::RULE_IDS.contains(&rule.rule.as_str())
         && scope.import_specifier.is_empty()
     {
@@ -55,7 +56,7 @@ fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<Scope>>
             rule.rule
         );
     }
-    Ok(Some(scope))
+    Ok(Some((scope, keep_rule_sql)))
 }
 
 fn referenced<'a>(
@@ -108,7 +109,7 @@ fn reject_restate(rule: &RuleDef) -> Result<()> {
     Ok(())
 }
 
-fn narrow(rule: &RuleDef, scope: &Scope) -> Result<()> {
+fn narrow(rule: &RuleDef, scope: &Scope) -> Result<bool> {
     for pattern in &rule.include {
         validate_glob(pattern, &format!("{} include", rule.rule))?;
         if scope
@@ -138,7 +139,7 @@ fn narrow(rule: &RuleDef, scope: &Scope) -> Result<()> {
         "sqlInclude",
     )?;
     if sql_include.is_empty() {
-        return Ok(());
+        return Ok(false);
     }
     if scope.sql_include.is_empty() {
         bail!(
@@ -151,12 +152,13 @@ fn narrow(rule: &RuleDef, scope: &Scope) -> Result<()> {
         "options.sqlInclude",
         &sql_include,
         &scope.sql_include,
-    )
+    )?;
+    Ok(true)
 }
 
-fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope) -> Result<()> {
+fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, keep_rule_sql: bool) {
     if super::yaml::write_catalog_only(rule, options, &scope.schema_catalog_path) {
-        return Ok(());
+        return;
     }
     if !scope.import_specifier.is_empty() {
         set_string(options, "importSpecifier", &scope.import_specifier);
@@ -176,16 +178,10 @@ fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope) -> 
     if !scope.unanalyzable_sql.is_empty() {
         set_string(options, "unanalyzableSql", &scope.unanalyzable_sql);
     }
-    let existing = string_list(
-        options.get(Value::String("sqlInclude".to_string())),
-        rule,
-        "sqlInclude",
-    )?;
-    if existing.is_empty() {
+    if !keep_rule_sql {
         set_strings(options, "sqlInclude", &scope.sql_include);
     }
     set_bool(options, "sqlIncludeLocked", true);
-    Ok(())
 }
 
 fn validate_project_globs(config: &NoMistakesConfig) -> Result<()> {
