@@ -36,7 +36,7 @@ fn sha256_check(word: &str) -> bool {
 
 fn shasum_256_check(words: &[&str]) -> bool {
     let algorithm = words.windows(2).any(|pair| pair == ["-a", "256"])
-        || words.iter().any(|word| *word == "-a256");
+        || words.contains(&"-a256");
     let check = words
         .iter()
         .any(|word| *word == "-c" || *word == "--check" || word.starts_with("--check="));
