@@ -249,3 +249,57 @@ rules:
         assert!(error.contains(needle), "{error}");
     }
 }
+
+#[test]
+fn duplicate_factory_and_type_names_synthesize_one_selector_each() {
+    let config = parse(
+        r#"
+projects:
+  db:
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        factoryNames: [beginTransaction, beginTransaction]
+        typeNames: [TransactionQuery, TransactionQuery]
+effects:
+  postgres:
+    project: db
+"#,
+    )
+    .unwrap();
+    let returned: Vec<_> = config.effects["postgres"]
+        .returned_executors
+        .iter()
+        .map(|selector| selector.export.as_str())
+        .collect();
+    let typed: Vec<_> = config.effects["postgres"]
+        .typed_executors
+        .iter()
+        .map(|selector| selector.export.as_str())
+        .collect();
+    assert_eq!(returned, ["beginTransaction"]);
+    assert_eq!(typed, ["TransactionQuery"]);
+}
+
+#[test]
+fn the_same_name_in_factory_names_and_type_names_is_an_error() {
+    let error = parse(
+        r#"
+projects:
+  db:
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        factoryNames: [beginTransaction]
+        typeNames: [beginTransaction]
+effects:
+  postgres:
+    project: db
+"#,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("factoryNames"), "{error}");
+    assert!(error.contains("typeNames"), "{error}");
+    assert!(error.contains("beginTransaction"), "{error}");
+}
