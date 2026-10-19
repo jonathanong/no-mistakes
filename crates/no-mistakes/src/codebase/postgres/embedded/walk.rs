@@ -117,8 +117,16 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.walk_unary_write_expression(unary);
     }
 
+    fn visit_new_expression(&mut self, expression: &ast::NewExpression<'a>) {
+        walk::walk_new_expression(self, expression);
+        self.revoke_namespace_arguments(&expression.callee, &expression.arguments);
+    }
+
     fn visit_tagged_template_expression(&mut self, template: &ast::TaggedTemplateExpression<'a>) {
         self.visit_builder_template(template);
+        for (index, expression) in template.quasi.expressions.iter().enumerate() {
+            self.revoke_namespace_expression(&template.tag, index, expression);
+        }
     }
     // Erased types cannot retain a runtime builder reference.
     fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
