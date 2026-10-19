@@ -146,13 +146,12 @@ fn expanded_assign_sources(
     let mut sources = Vec::new();
     for (index, source) in arguments.iter().enumerate().skip(1) {
         if let Some(oxc_ast::ast::Argument::SpreadElement(spread)) = raw.get(index) {
-            if let oxc_ast::ast::Expression::ArrayExpression(array) =
-                crate::codebase::ts_source::unwrap_ts_wrappers(&spread.argument)
+            let value = collector.value_expression(&spread.argument);
+            if let Some(entries) =
+                super::super::super::parameter_call_origins::array_entries(collector, &value)
             {
-                for element in &array.elements {
-                    if let Some(expression) = element.as_expression() {
-                        sources.push(collector.value_expression(expression));
-                    }
+                for (_, value) in entries {
+                    sources.push(value);
                 }
                 continue;
             }

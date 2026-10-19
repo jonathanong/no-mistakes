@@ -20,7 +20,19 @@ impl ParameterCallOrigins {
         let mut values: FxHashMap<(usize, String), Vec<ValueExpression>> = fx_map();
         for call in &collector.value_flow.calls {
             if let ValueExpression::Member(receiver, method) = &call.callee {
-                if matches!(method.as_str(), "forEach" | "map") {
+                if matches!(
+                    method.as_str(),
+                    "forEach"
+                        | "map"
+                        | "filter"
+                        | "some"
+                        | "every"
+                        | "find"
+                        | "findIndex"
+                        | "findLast"
+                        | "findLastIndex"
+                        | "flatMap"
+                ) {
                     if let (Some(items), Some(callback)) =
                         (array_elements(collector, receiver), call.arguments.first())
                     {
@@ -33,14 +45,26 @@ impl ParameterCallOrigins {
                     }
                 }
                 if matches!(method.as_str(), "reduce" | "reduceRight") {
-                    if let (Some(callback), Some(initial)) =
-                        (call.arguments.first(), call.arguments.get(1))
-                    {
-                        if let Some(key) = callable_owner(collector, callback)
-                            .and_then(|owner| slots.get(&owner))
-                            .and_then(|parameters| parameters.get(&0))
+                    if let Some(callback) = call.arguments.first() {
+                        if let Some(parameters) =
+                            callable_owner(collector, callback).and_then(|owner| slots.get(&owner))
                         {
-                            values.entry(key.clone()).or_default().push(initial.clone());
+                            if let Some(key) = parameters.get(&0) {
+                                if let Some(initial) = call.arguments.get(1) {
+                                    values.entry(key.clone()).or_default().push(initial.clone());
+                                } else if let Some(items) = array_elements(collector, receiver) {
+                                    // One element never invokes the callback. Two or more
+                                    // pass element 0 as the accumulator.
+                                    if items.len() >= 2 {
+                                        values.entry(key.clone()).or_default().extend(items);
+                                    }
+                                }
+                            }
+                            if let Some(key) = parameters.get(&1) {
+                                if let Some(items) = array_elements(collector, receiver) {
+                                    values.entry(key.clone()).or_default().extend(items);
+                                }
+                            }
                         }
                     }
                 }
@@ -58,18 +82,9 @@ impl ParameterCallOrigins {
                         .push(argument.clone());
                 }
             }
-            if let Some(extras) = collector.escaped_parameter_arguments.get(&call.offset) {
-                for (index, extra) in extras {
-                    if let Some(key) = parameters.get(index) {
-                        values
-                            .entry(key.clone())
-                            .or_default()
-                            .extend(extra.iter().cloned());
-                    }
-                }
-            }
+            arrays::apply_escaped(&mut values, parameters, collector, call.offset);
         }
-        for (owner, arguments) in &collector.class_method_calls {
+        for (offset, owner, arguments) in &collector.class_method_calls {
             let Some(parameters) = slots.get(owner) else {
                 continue;
             };
@@ -81,6 +96,7 @@ impl ParameterCallOrigins {
                         .push(argument.clone());
                 }
             }
+            arrays::apply_escaped(&mut values, parameters, collector, *offset);
         }
         for (scope, name, value) in &collector.parameter_reassignments {
             values
@@ -117,34 +133,10 @@ impl ImportCollector {
     }
 }
 
-pub(super) fn array_elements(
-    collector: &ImportCollector,
-    value: &ValueExpression,
-) -> Option<Vec<ValueExpression>> {
-    match value {
-        ValueExpression::Array(items) => Some(sorted_array(items)),
-        ValueExpression::Named { name, scope, .. } => {
-            let scope = scope.unwrap_or(0);
-            let indexes = collector.value_binding_indexes.get(&scope)?.get(name)?;
-            // Appended with the binding, so the last index addresses that value.
-            let index = indexes[indexes.len() - 1];
-            match &collector.value_flow.bindings[index].value {
-                ValueExpression::Array(items) => Some(sorted_array(items)),
-                _ => None,
-            }
-        }
-        _ => None,
-    }
-}
+#[path = "parameter_call_origin_arrays.rs"]
+mod arrays;
 
-fn sorted_array(items: &FxHashMap<String, ValueExpression>) -> Vec<ValueExpression> {
-    let mut entries: Vec<_> = items.iter().collect();
-    entries.sort_by(|left, right| left.0.cmp(right.0));
-    entries
-        .into_iter()
-        .map(|(_, value)| value.clone())
-        .collect()
-}
+pub(super) use arrays::{array_elements, array_entries};
 
 fn callable_owner(collector: &ImportCollector, callee: &ValueExpression) -> Option<CallableId> {
     match callee {

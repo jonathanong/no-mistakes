@@ -7,7 +7,8 @@ function mutate(accumulator) {
 }
 box = { client: replica };
 [untouched].reduce(mutate, box);
-// No initial value, and a callback with no bare slot, add no accumulator origin.
+// One element and no initial value never invokes the callback, so this adds
+// no accumulator origin. Two or more elements are `reduce-no-initial.mts`.
 [box].reduce(mutate);
 [box].reduce(() => box, box);
 replica.get('changed');

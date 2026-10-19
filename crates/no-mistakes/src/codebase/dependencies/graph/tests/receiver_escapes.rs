@@ -1,6 +1,6 @@
 use super::*;
 
-fn graph() -> (DepGraph, std::path::PathBuf) {
+pub(super) fn graph() -> (DepGraph, std::path::PathBuf) {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("value-flow-receiver-escapes"));
     let config = TsConfig {
@@ -34,7 +34,7 @@ fn site<'a>(
         .unwrap_or_else(|| panic!("{file} lacks {callee}"))
 }
 
-fn assert_unknown(graph: &DepGraph, root: &std::path::Path, file: &str, callee: &str) {
+pub(super) fn assert_unknown(graph: &DepGraph, root: &std::path::Path, file: &str, callee: &str) {
     let site = site(graph, root, file, callee);
     assert!(
         site.has_unknown_target() && site.targets().next().is_none(),
@@ -42,7 +42,7 @@ fn assert_unknown(graph: &DepGraph, root: &std::path::Path, file: &str, callee: 
     );
 }
 
-fn assert_export(graph: &DepGraph, root: &std::path::Path, file: &str, callee: &str) {
+pub(super) fn assert_export(graph: &DepGraph, root: &std::path::Path, file: &str, callee: &str) {
     let site = site(graph, root, file, callee);
     assert!(
         matches!(&site.target, ResolvedCallTarget::ModuleExport { export_path, .. } if export_path == callee),

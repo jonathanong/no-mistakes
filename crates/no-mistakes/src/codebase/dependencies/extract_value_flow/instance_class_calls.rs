@@ -41,7 +41,8 @@ impl ImportCollector {
                     })
             })
             .collect();
-        self.class_method_calls.push((method, arguments));
+        self.class_method_calls
+            .push((call.span.start, method, arguments));
     }
 
     fn class_method_id(&self, call: &CallExpression<'_>) -> Option<CallableId> {
@@ -75,28 +76,44 @@ impl ImportCollector {
 
     fn note_escaped_arguments(&mut self, call: &CallExpression<'_>) {
         let mut extras: FxHashMap<usize, Vec<ValueExpression>> = fx_map();
-        for (index, argument) in call.arguments.iter().enumerate() {
+        let mut position = 0usize;
+        let mut open_from: Option<usize> = None;
+        let mut open_values = Vec::new();
+        for (raw_index, argument) in call.arguments.iter().enumerate() {
             match argument {
                 Argument::SpreadElement(spread) => {
-                    if let ValueExpression::Array(items) = self.value_expression(&spread.argument) {
-                        let mut entries: Vec<_> = items.iter().collect();
-                        entries.sort_by(|left, right| left.0.cmp(right.0));
-                        for (offset, (_, value)) in entries.into_iter().enumerate() {
-                            extras
-                                .entry(index + offset)
-                                .or_default()
-                                .push(value.clone());
+                    let value = self.value_expression(&spread.argument);
+                    match super::parameter_call_origins::array_entries(self, &value) {
+                        Some(entries) if open_from.is_none() => {
+                            let mut next = position;
+                            for (slot, value) in entries {
+                                let at = position + slot;
+                                extras.entry(at).or_default().push(value);
+                                next = next.max(at + 1);
+                            }
+                            position = next;
+                        }
+                        Some(entries) => {
+                            open_values.extend(entries.into_iter().map(|(_, value)| value));
+                        }
+                        None => {
+                            open_from.get_or_insert(position);
                         }
                     }
                 }
                 other => {
-                    if let Some(Expression::ConditionalExpression(conditional)) = other
-                        .as_expression()
-                        .map(crate::codebase::ts_source::unwrap_ts_wrappers)
-                    {
-                        let values = extras.entry(index).or_default();
-                        values.push(self.value_expression(&conditional.consequent));
-                        values.push(self.value_expression(&conditional.alternate));
+                    let values = other.as_expression().map_or_else(Vec::new, |expression| {
+                        candidate_argument_values(self, expression)
+                    });
+                    if open_from.is_some() {
+                        open_values.extend(values);
+                    } else if values.len() != 1 || position != raw_index {
+                        if !values.is_empty() {
+                            extras.entry(position).or_default().extend(values);
+                        }
+                        position += 1;
+                    } else {
+                        position += 1;
                     }
                 }
             }
@@ -105,5 +122,34 @@ impl ImportCollector {
             self.escaped_parameter_arguments
                 .insert(call.span.start, extras);
         }
+        if let Some(start) = open_from.filter(|_| !open_values.is_empty()) {
+            self.escaped_open_arguments
+                .insert(call.span.start, (start, open_values));
+        }
+    }
+}
+
+/// Both sides of a conditional or logical expression can be the runtime argument.
+fn candidate_argument_values(
+    collector: &ImportCollector,
+    expression: &Expression<'_>,
+) -> Vec<ValueExpression> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        Expression::ConditionalExpression(conditional) => {
+            let mut values = candidate_argument_values(collector, &conditional.consequent);
+            values.extend(candidate_argument_values(collector, &conditional.alternate));
+            values
+        }
+        Expression::LogicalExpression(logical) => {
+            let mut values = candidate_argument_values(collector, &logical.left);
+            values.extend(candidate_argument_values(collector, &logical.right));
+            values
+        }
+        Expression::SequenceExpression(sequence) => sequence
+            .expressions
+            .last()
+            .map(|expression| candidate_argument_values(collector, expression))
+            .unwrap_or_default(),
+        other => vec![collector.value_expression(other)],
     }
 }
