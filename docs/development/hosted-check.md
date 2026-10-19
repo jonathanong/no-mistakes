@@ -77,21 +77,33 @@ stderr; this harness does not inject timing flags or change CLI output.
 
 Wall and peak-RSS budgets live in `.github/scripts/hosted-check-budgets.json`, keyed
 by the exact consumer commit and worker selection. Every completed candidate
-sample must stay at or below the stored observed maximum plus a margin of three
-sample standard deviations. The margin is derived separately for wall time and
-RSS from the six measured samples, rather than choosing one arbitrary regression
-percentage. Six samples estimate variance; they do not establish a population
-confidence bound. Missing budgets fail closed and produce
+sample must stay at or below the stored observed maximum plus a margin of
+`max(3σ, 10%)` for wall time and `max(3σ, 2%)` for peak RSS. σ is the sample
+standard deviation of that cohort's six measurements. The percentage is a floor
+under that deviation, not a replacement for it: when the six samples already
+spread by more than the floor, the margin stays three standard deviations.
+Missing budgets fail closed and produce
 `proposed-budgets.json` in the summary artifact. Incomplete samples, timeouts,
 signals, invalid resource counters and nonzero candidate exits cannot calibrate
 a budget. Historical published-binary failures remain visible but cannot supply
 candidate budgets. A failed cohort retains the valid proposals from other cohorts
 and reports every incomplete or invalid group before failing the summary.
 
-The maximum-plus-three-standard-deviations rule is an empirical regression gate.
+The margin rule is an empirical regression gate.
 Six samples and multiple metric/cohort comparisons do not establish a population
 false-positive guarantee; allocator or hosted-VM drift may require reviewed
-calibration across additional runs. Do not invent a relative floor without data.
+calibration across additional runs. The relative floor is the smallest margin
+the first enforcing run showed was necessary. On
+[run 39080083217](https://github.com/jonathanong/no-mistakes/actions/runs/39080083217)
+(head `3b995f7d`), acceptance `--jobs 1` peak RSS was 4,687,272 KiB against a
+3σ limit of 4,689,906 KiB: 2.6 MB, or 0.06%, while that cohort's RSS σ was only
+about 1,097 KiB. A 2% floor on the 4,686,616 KiB maximum is 93,732 KiB. It
+still fails a materially larger working set, and it is wider than one noisy
+sample of allocator growth. Wall time on that run was 294.66 s against the
+unchanged 318.14 s limit. In every calibrated cohort, 3σ of wall time is already
+larger than 10% of the maximum (the tightest is acceptance `--jobs auto`, 41.26 s
+against a 13.21 s floor), so the wall floor does not widen today's budgets. It
+applies only if a later cohort is quieter than 10%.
 
 Fresh hosted pairs may use different CPU generations despite equal core counts
 and runner images. Inspect the CPU model, actual workers, compiler and build
@@ -161,23 +173,25 @@ CPUs and image `20261012.334.1`; automatic workers were therefore four. Model
 identities and pair counts are retained in the measurement record. These limits
 cover that observed hosted population, rather than one fixed machine. Pooling
 its completed observations captures the variability the ordinary hosted gate
-will encounter, so the same reviewed maximum-plus-three-standard-deviations
-heuristic is applied to each cohort. It remains a descriptive regression guard,
+will encounter, so each cohort uses the same reviewed rule: three sample
+standard deviations, or the relative floor when that is wider. It remains a descriptive regression guard,
 not a confidence bound, matched-machine noise estimate or runtime SLO. A new
 runner population or intentional memory/runtime change requires review of the
 new evidence; these limits never widen automatically.
 
 | Fixture / jobs    | Wall maximum s | Wall sample deviation s | Wall limit s | RSS limit KiB |
 | ----------------- | -------------: | ----------------------: | -----------: | ------------: |
-| Acceptance / 1    |         260.48 |                   19.22 |       318.14 |  4,689,906.11 |
+| Acceptance / 1    |         260.48 |                   19.22 |       318.14 |  4,780,348.32 |
 | Acceptance / 4    |         128.29 |                   17.29 |       180.16 |  5,352,283.10 |
 | Acceptance / auto |         132.06 |                   13.75 |       173.32 |  5,164,465.56 |
-| Passing / 1       |         286.66 |                   57.15 |       458.11 |  4,688,885.84 |
+| Passing / 1       |         286.66 |                   57.15 |       458.11 |  4,780,360.56 |
 | Passing / 4       |         131.41 |                   11.58 |       166.14 |  5,301,603.55 |
 | Passing / auto    |         129.14 |                   18.05 |       183.28 |  5,135,187.31 |
 
 Displayed limits are rounded; the budget JSON preserves the calculation values.
-The collection cap remains 600 seconds and does not replace these regression
+Jobs=1 RSS is the only cohort whose 3σ margin was narrower than 2% of the
+maximum, so only those two RSS limits changed. The other limits are still three
+standard deviations. The collection cap remains 600 seconds and does not replace these regression
 limits. Historical 180-second runs, including
 [the earlier complete run](https://github.com/jonathanong/no-mistakes/actions/runs/39065375682),
 remain censored failures with their original caps and source identities. They

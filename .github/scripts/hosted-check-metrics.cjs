@@ -71,7 +71,10 @@ function calibratedBudget(samples) {
       values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1),
     );
     budget[field] = Math.max(...values);
-    budget[`${field}Margin`] = 3 * stddev;
+    budget[`${field}Margin`] = Math.max(
+      3 * stddev,
+      budget[field] * (field === "wallSeconds" ? 0.1 : 0.02),
+    );
     budget[`${field}Stddev`] = stddev;
   }
   return budget;
