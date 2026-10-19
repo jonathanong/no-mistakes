@@ -22,10 +22,20 @@ pub(crate) struct WorkerSite {
     pub file: PathBuf,
     pub line: usize,
     pub queue_name: Option<String>,
+    /// Local identifier of a queue-name argument that is imported, not a literal.
+    pub queue_name_import: Option<String>,
     pub jobs: Vec<String>,
     pub processor_specifier: Option<String>,
     pub processor_file: Option<PathBuf>,
     pub wildcard: bool,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct LocalCheck {
+    pub line: usize,
+    pub kind: String,
+    pub job: Option<String>,
+    pub message: String,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -36,4 +46,13 @@ pub(crate) struct FileFacts {
     pub producers: Vec<ProducerSite>,
     pub workers: Vec<WorkerSite>,
     pub diagnostics: Vec<(usize, String)>,
+    /// `export const NAME = "value"` strings other files can import.
+    pub exported_strings: HashMap<String, String>,
+    /// Named imports that may be a string constant or a queue binding.
+    pub string_imports: HashMap<String, (String, String)>,
+    /// Local queue binding whose name argument is an imported identifier.
+    pub pending_queue_bindings: HashMap<String, String>,
+    /// `(exported name, local binding)` aliases of a queue object.
+    pub reexports: Vec<(String, String)>,
+    pub checks: Vec<LocalCheck>,
 }

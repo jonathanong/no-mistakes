@@ -194,10 +194,13 @@ pub(super) fn resolve_queue_relationships_with_resolver<
         &HashMap<PathBuf, FileFacts>,
     ) -> T,
 ) -> T {
-    let queue_defs = queue_definitions(facts);
+    let mut facts = facts.clone();
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
-    let producers = resolve_producers(facts, &queue_defs, resolver, &remapper);
-    let workers = resolve_workers(facts, &queue_defs, resolver, &remapper);
-    builder(root, producers, workers, facts)
+    crate::queue::factory_resolve::resolve_imported_queue_names(&mut facts, resolver, &remapper);
+    let queue_defs = queue_definitions(&facts);
+    let definitions = crate::queue::factory_resolve::definition_files(&facts);
+    let producers = resolve_producers(&facts, &queue_defs, &definitions, resolver, &remapper);
+    let workers = resolve_workers(&facts, &definitions, resolver, &remapper);
+    builder(root, producers, workers, &facts)
 }

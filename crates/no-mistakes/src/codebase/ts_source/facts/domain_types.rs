@@ -11,6 +11,7 @@ pub struct TsFactContext {
     pub queue_factory_function: Option<String>,
     pub queue_factory_glob: Option<GlobSet>,
     pub queue_project_factory_names: Vec<String>,
+    pub queue_factory_roles: crate::config::v2::schema::QueueFactoryRoles,
     pub http_prefixes: Vec<String>,
     pub effect_functions: HashMap<String, Option<String>>,
     pub visible_files: Option<Arc<crate::fx::PathSet>>,
@@ -136,6 +137,7 @@ impl TsFactContext {
             .extend(other.queue_project_factory_names);
         self.queue_project_factory_names.sort();
         self.queue_project_factory_names.dedup();
+        self.queue_factory_roles.merge(&other.queue_factory_roles);
         self.http_prefixes.extend(other.http_prefixes);
         self.http_prefixes.sort();
         self.http_prefixes.dedup();
@@ -193,6 +195,7 @@ impl Default for TsFactContext {
             queue_factory_function: None,
             queue_factory_glob: None,
             queue_project_factory_names: Vec::new(),
+            queue_factory_roles: crate::config::v2::schema::QueueFactoryRoles::default(),
             http_prefixes: Vec::new(),
             effect_functions: HashMap::new(),
             visible_files: None,

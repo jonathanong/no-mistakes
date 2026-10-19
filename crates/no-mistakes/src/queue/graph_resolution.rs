@@ -17,12 +17,13 @@ pub(super) fn queue_definitions(
 pub(super) fn resolve_producers<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
+    definitions: &HashMap<String, PathBuf>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalProducer> {
     let mut out = Vec::new();
     for (path, facts) in facts {
-        let local = local_queues(path, facts, queue_defs, resolver, remapper);
+        let local = local_queues(path, facts, queue_defs, definitions, resolver, remapper);
         for site in &facts.producers {
             let queue = local.get(&site.binding).cloned();
             out.push(InternalProducer {
@@ -36,19 +37,15 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
 
 pub(super) fn resolve_workers<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,
-    queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
+    definitions: &HashMap<String, PathBuf>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalWorker> {
-    let by_name = queue_defs
-        .iter()
-        .flat_map(|(file, exports)| exports.values().map(|name| (name.clone(), file.clone())))
-        .collect::<HashMap<_, _>>();
     let mut out = Vec::new();
     for (path, facts) in facts {
         for site in &facts.workers {
             let queue = site.queue_name.as_ref().and_then(|name| {
-                by_name.get(name).map(|file| QueueKey {
+                definitions.get(name).map(|file| QueueKey {
                     queue_file: file.clone(),
                     queue_name: name.clone(),
                 })
@@ -69,6 +66,7 @@ fn local_queues<R: ImportResolverFacade>(
     path: &Path,
     facts: &FileFacts,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
+    definitions: &HashMap<String, PathBuf>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> HashMap<String, QueueKey> {
@@ -97,7 +95,7 @@ fn local_queues<R: ImportResolverFacade>(
                 map.insert(
                     import.local.clone(),
                     QueueKey {
-                        queue_file: resolved,
+                        queue_file: definitions.get(queue_name).cloned().unwrap_or(resolved),
                         queue_name: queue_name.clone(),
                     },
                 );

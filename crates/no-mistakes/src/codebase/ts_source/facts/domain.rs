@@ -85,6 +85,7 @@ pub(crate) fn collect_domain_facts<'a>(
             source,
             program,
             &context.queue_project_factory_names,
+            &context.queue_factory_roles,
         )
     });
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();

@@ -57,7 +57,7 @@ pub(super) fn collect_jobs_from_args(args: &[Argument<'_>], source: &str) -> Vec
         .collect::<Vec<_>>()
         .join("\n");
     let mut jobs = Vec::new();
-    for marker in ["job.name ===", "job.name===", "name:"] {
+    for marker in ["job.name ===", "job.name===", "case ", "case\t", "name:"] {
         let mut rest = text.as_str();
         while let Some(index) = rest.find(marker) {
             rest = &rest[index + marker.len()..];

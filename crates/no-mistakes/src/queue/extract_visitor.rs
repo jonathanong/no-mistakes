@@ -1,14 +1,15 @@
 use crate::queue::extract_helpers::{
-    binding_name, collect_jobs_from_args, export_name, is_queue_package, literal_expr,
-    processor_specifier,
+    binding_name, collect_jobs_from_args, export_name, is_queue_package, processor_specifier,
 };
 use crate::queue::extract_model::{FileFacts, ImportBinding, WorkerSite};
 use crate::queue::extract_record::{record_enqueue, record_flow};
 use crate::queue::source::line_number;
-use oxc_ast::ast::{Argument, CallExpression, Expression, ImportDeclarationSpecifier};
+use oxc_ast::ast::{CallExpression, Expression, ImportDeclarationSpecifier};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+
+mod helpers;
 
 pub(super) struct QueueVisitor<'a> {
     pub path: &'a Path,
@@ -19,8 +20,13 @@ pub(super) struct QueueVisitor<'a> {
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
     pub flow_bindings: HashSet<String>,
-    pub factory_functions: HashSet<String>,
     pub configured_factory_names: &'a [String],
+    pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
+    pub queue_name_index: HashMap<String, usize>,
+    pub enqueue_factories: HashMap<String, (usize, usize)>,
+    pub worker_factories: HashMap<String, (usize, usize)>,
+    pub in_job: u32,
+    pub current_case: Option<String>,
     pub namespace_imports: HashMap<String, String>,
 }
 
@@ -46,9 +52,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                         if is_queue_package(&source) && imported == "FlowProducer" {
                             self.flow_classes.insert(local.clone());
                         }
-                        if self.configured_factory_names.contains(&imported) {
-                            self.factory_functions.insert(local.clone());
-                        }
+                        super::extract_factory::note_named_import(self, &imported, &local, &source);
                         self.facts.imports.push(ImportBinding {
                             local,
                             imported,
@@ -98,18 +102,10 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
             }
         }
         if let Some(Expression::CallExpression(call_expr)) = &decl.init {
-            if self.is_factory_call(&call_expr.callee) {
-                if let Some(queue_name) = call_expr
-                    .arguments
-                    .first()
-                    .and_then(|arg| self.literal_arg(arg))
-                {
-                    self.facts
-                        .queue_bindings
-                        .insert(name.clone(), queue_name.clone());
-                    self.facts.queue_exports.insert(name, queue_name);
-                }
-            }
+            super::extract_factory::note_queue_binding(self, &name, call_expr);
+        }
+        if let Some(Expression::Identifier(id)) = &decl.init {
+            super::extract_factory::note_alias(self, &name, id.name.as_str());
         }
         walk::walk_variable_declarator(self, decl);
     }
@@ -136,9 +132,13 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                         &mut self.facts,
                         call,
                     );
+                    super::extract_factory::note_self_dedup(self, call);
+                } else if method == "addAndWait" || method == "waitUntilFinished" {
+                    super::extract_factory::note_wait(self, call);
                 }
             }
         }
+        super::extract_factory::note_factory_call(self, call);
         walk::walk_call_expression(self, call);
     }
 
@@ -157,6 +157,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                 file: self.path.to_path_buf(),
                 line: line_number(self.source, new_expr.span.start),
                 queue_name,
+                queue_name_import: None,
                 wildcard: jobs.is_empty(),
                 jobs,
                 processor_specifier,
@@ -165,32 +166,33 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
         }
         walk::walk_new_expression(self, new_expr);
     }
-}
 
-impl QueueVisitor<'_> {
-    pub fn is_queue_constructor(&self, expr: &Expression<'_>) -> bool {
-        matches!(expr, Expression::Identifier(id) if self.queue_classes.contains(id.name.as_str()))
+    fn visit_export_named_declaration(&mut self, decl: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
+        super::extract_factory::note_export(self, decl);
+        walk::walk_export_named_declaration(self, decl);
     }
 
-    pub fn is_worker_constructor(&self, expr: &Expression<'_>) -> bool {
-        matches!(expr, Expression::Identifier(id) if self.worker_classes.contains(id.name.as_str()))
+    fn visit_export_declaration(&mut self, decl: &oxc_ast::ast::ExportDeclaration<'a>) {
+        super::extract_factory::note_exported_declaration(self, decl);
+        walk::walk_export_declaration(self, decl);
     }
 
-    pub fn is_flow_constructor(&self, expr: &Expression<'_>) -> bool {
-        matches!(expr, Expression::Identifier(id) if self.flow_classes.contains(id.name.as_str()))
+    fn visit_function(
+        &mut self,
+        func: &oxc_ast::ast::Function<'a>,
+        flags: oxc_syntax::scope::ScopeFlags,
+    ) {
+        super::extract_factory::visit_function(self, func, flags);
     }
 
-    pub fn is_factory_call(&self, expr: &Expression<'_>) -> bool {
-        matches!(expr, Expression::Identifier(id) if self.factory_functions.contains(id.name.as_str()))
+    fn visit_arrow_function_expression(
+        &mut self,
+        arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+    ) {
+        super::extract_factory::visit_arrow(self, arrow);
     }
 
-    pub fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
-        match arg {
-            Argument::StringLiteral(value) => Some(value.value.as_str().to_string()),
-            Argument::Identifier(id) => self.const_strings.get(id.name.as_str()).cloned(),
-            _ => arg
-                .as_expression()
-                .and_then(|expr| literal_expr(expr, &self.const_strings)),
-        }
+    fn visit_switch_statement(&mut self, stmt: &oxc_ast::ast::SwitchStatement<'a>) {
+        super::extract_factory::visit_switch(self, stmt);
     }
 }

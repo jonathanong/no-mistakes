@@ -11,6 +11,7 @@ pub(crate) fn extract_program_with_factories(
     source: &str,
     program: &Program<'_>,
     factory_names: &[String],
+    roles: &crate::config::v2::schema::QueueFactoryRoles,
 ) -> FileFacts {
     let mut visitor = QueueVisitor {
         path,
@@ -21,8 +22,13 @@ pub(crate) fn extract_program_with_factories(
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),
         flow_bindings: HashSet::new(),
-        factory_functions: HashSet::new(),
         configured_factory_names: factory_names,
+        roles,
+        queue_name_index: HashMap::new(),
+        enqueue_factories: HashMap::new(),
+        worker_factories: HashMap::new(),
+        in_job: 0,
+        current_case: None,
         namespace_imports: HashMap::new(),
     };
     visitor.visit_program(program);

@@ -73,8 +73,9 @@ fn analyze_project_inner<T>(
         ),
     };
     let filter = build_filter(filters)?;
-    let factory_names = dataset
-        .config(None)
+    let loaded_config = dataset.config(None).ok();
+    let roles = loaded_config
+        .as_ref()
         .map(|config| config.queues.factories.clone())
         .unwrap_or_default();
     let files = visible_files
@@ -93,7 +94,8 @@ fn analyze_project_inner<T>(
         })
         .collect::<Vec<_>>();
     let mut context = crate::codebase::ts_source::facts::TsFactContext::new(root);
-    context.queue_project_factory_names = factory_names;
+    context.queue_project_factory_names = roles.queue_names();
+    context.queue_factory_roles = roles;
     let ts_facts =
         crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
             &session,
@@ -106,9 +108,11 @@ fn analyze_project_inner<T>(
             &sources,
         );
     crate::invocation::check_timeout()?;
-    let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
+    let mut facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
+    if let Some(config) = loaded_config.as_ref() {
+        crate::queue::globs::record_empty_globs(root, config.as_ref(), &files, &mut facts);
+    }
 
-    let queue_defs = queue_definitions(&facts);
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         &tsconfig_catalog,
         &visible_set,
@@ -117,9 +121,12 @@ fn analyze_project_inner<T>(
     .with_queue_compatibility(root);
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
-    let mut producers = resolve_producers(&facts, &queue_defs, &resolver, &remapper);
-    let mut workers = resolve_workers(&facts, &queue_defs, &resolver, &remapper);
-    if let Ok(config) = dataset.config(None) {
+    crate::queue::factory_resolve::resolve_imported_queue_names(&mut facts, &resolver, &remapper);
+    let queue_defs = queue_definitions(&facts);
+    let definitions = crate::queue::factory_resolve::definition_files(&facts);
+    let mut producers = resolve_producers(&facts, &queue_defs, &definitions, &resolver, &remapper);
+    let mut workers = resolve_workers(&facts, &definitions, &resolver, &remapper);
+    if let Some(config) = loaded_config.as_ref() {
         let (lang_producers, lang_workers) = crate::queue::lang::language_queue_sites(
             root,
             &session,
