@@ -6,6 +6,8 @@ mod append_contributors;
 mod branch_correlation;
 #[path = "cli_check_rules_postgres_variants/captured_builder_identities.rs"]
 mod captured_builder_identities;
+#[path = "cli_check_rules_postgres_variants/conditional_clauses.rs"]
+mod conditional_clauses;
 #[path = "cli_check_rules_postgres_variants/destructuring_assignments.rs"]
 mod destructuring_assignments;
 #[path = "cli_check_rules_postgres_variants/exception_flow.rs"]

@@ -7,6 +7,8 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclaration<'a>,
     ) {
+        let previous = self.declaring_const;
+        self.declaring_const = declaration.kind == ast::VariableDeclarationKind::Const;
         for declarator in &declaration.declarations {
             if let Some(init) = &declarator.init {
                 // A mutable alias or mixed const result can expose `.query`.
@@ -33,6 +35,7 @@ impl<'a> ScopeVisitor<'a> {
                 resolve::bind_query_property(declarator, true, self);
             }
         }
+        self.declaring_const = previous;
     }
 
     pub(super) fn walk_assignment_target_reference(

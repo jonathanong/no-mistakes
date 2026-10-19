@@ -74,6 +74,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) sql_statement_types: HashSet<String>,
     pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
     pub(super) literal_objects: super::const_literals::LiteralObjects,
+    pub(super) declaring_const: bool,
+    pub(super) clause_unions: crate::fx::FxHashSet<(usize, String)>,
 }
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
@@ -150,6 +152,8 @@ pub(crate) fn collect_calls<'a>(
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),
         literal_objects: super::const_literals::LiteralObjects::default(),
+        declaring_const: false,
+        clause_unions: crate::fx::fx_set(),
     };
     visitor.visit_program(program);
     visitor.downgrade_escaped_member_calls();

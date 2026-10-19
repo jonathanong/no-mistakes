@@ -84,6 +84,8 @@ pub(super) fn recover(
         {
             template::recover(visitor, &tagged.quasi, depth - 1, constraints)
         }
+        Expression::TemplateLiteral(template) => literal(visitor, expr, line)
+            .or_else(|| template::clauses::recover(visitor, template, depth, constraints)),
         Expression::CallExpression(call) => {
             if let Some(recovered) = super::helper::recover(visitor, call, depth - 1, constraints) {
                 recovered
