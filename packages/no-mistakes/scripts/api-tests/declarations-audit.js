@@ -99,15 +99,16 @@ test("audit declarations export named artifacts, evidence and async report contr
   ]) {
     assert.match(declarations, new RegExp(`export interface ${name} \\{`));
   }
-  assert.match(declarations, /granularity: "per-test-file";/);
-  assert.match(declarations, /suite: "full";/);
-  assert.match(declarations, /complete: true;/);
-  assert.match(declarations, /changedSymbols: TestAuditSymbol\[\];/);
-  assert.match(declarations, /selectedWithIncompleteTraces: string\[\];/);
-  assert.match(
-    declarations,
+  for (const pattern of [
+    /granularity: "per-test-file";/,
+    /suite: "full";/,
+    /complete: true;/,
+    /changedSymbols: TestAuditSymbol\[\];/,
+    /selectedWithIncompleteTraces: string\[\];/,
     /export type TestsAuditOptions = TestsAuditPlanInput & TestsAuditObservationsInput;/,
-  );
+  ]) {
+    assert.match(declarations, pattern);
+  }
   const api = readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");
   assert.match(
     api,

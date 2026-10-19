@@ -136,32 +136,24 @@ test("Swift package base commands are an exported argv map", () => {
 test("test plan declarations require current results but accept saved legacy plan documents", () => {
   const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
 
-  assert.match(
-    declarations,
+  for (const pattern of [
     /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
-  );
-  assert.match(declarations, /\n  changedFiles: string\[\];/);
-  assert.match(declarations, /export type SavedTestPlan = TestPlan;/);
-  assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
-  assert.match(
-    declarations,
+    /\n  changedFiles: string\[\];/,
+    /export type SavedTestPlan = TestPlan;/,
+    /planJson\?: SavedTestPlan \| string;/,
     /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
-  );
-  assert.match(declarations, /export type TestsPlanOptions =/);
-  assert.match(
-    declarations,
+    /export type TestsPlanOptions =/,
     /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "java"\n  \| "kotlin"\n  \| "elixir"\n  \| "dart"\n  \| "jest";/,
-  );
-  assert.match(declarations, /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/);
-  assert.match(declarations, /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/);
-  assert.match(declarations, /limitPercent\?: never;[\s\S]*limitFiles\?: never;/);
-  assert.match(declarations, /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/);
-  assert.match(declarations, /export interface TestPlanIncompleteness \{/);
-  assert.match(
-    declarations,
+    /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/,
+    /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/,
+    /limitPercent\?: never;[\s\S]*limitFiles\?: never;/,
+    /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/,
+    /export interface TestPlanIncompleteness \{/,
     /export type TestPlanIncompletenessKind = "dependency-baseline-missing";/,
-  );
-  assert.match(declarations, /incomplete\?: TestPlanIncompleteness\[\];/);
+    /incomplete\?: TestPlanIncompleteness\[\];/,
+  ]) {
+    assert.match(declarations, pattern);
+  }
   assert.doesNotMatch(declarations, /TestPlan\["incomplete"\]/);
 });
 
@@ -180,11 +172,15 @@ test("graph declarations expose GitHub Actions workflow relationships and virtua
   ]) {
     assert.match(traversalDeclarations, new RegExp(`\\| "${relationship}"`));
   }
-  assert.match(traversalDeclarations, /workflowFile\?: string;/);
-  assert.match(traversalDeclarations, /job\?: string;/);
-  assert.match(traversalDeclarations, /step\?: number;/);
-  assert.match(flowDeclarations, /"workflow-job"/);
-  assert.match(flowDeclarations, /"workflow-step"/);
-  assert.match(flowDeclarations, /workflowFile\?: string;/);
-  assert.match(flowDeclarations, /step\?: number;/);
+  for (const pattern of [/workflowFile\?: string;/, /job\?: string;/, /step\?: number;/]) {
+    assert.match(traversalDeclarations, pattern);
+  }
+  for (const pattern of [
+    /"workflow-job"/,
+    /"workflow-step"/,
+    /workflowFile\?: string;/,
+    /step\?: number;/,
+  ]) {
+    assert.match(flowDeclarations, pattern);
+  }
 });
