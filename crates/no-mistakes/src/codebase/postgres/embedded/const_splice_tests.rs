@@ -117,3 +117,35 @@ fn spread_object_member_stays_unknown() {
 fn computed_member_write_stays_unknown() {
     assert_unknown("const-splice-computed-write.ts");
 }
+
+#[test]
+fn empty_template_object_member_is_inlined() {
+    let calls = read_calls("const-splice-member-empty-template.ts");
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].kind, EmbeddedSqlKind::Inline);
+    assert_eq!(
+        calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM users WHERE account_id = $1")
+    );
+}
+
+#[test]
+fn string_and_empty_template_pieces_are_inlined() {
+    assert_inlined("const-splice-string-piece.ts", EmbeddedSqlKind::Inline);
+    assert_inlined("const-splice-empty-piece.ts", EmbeddedSqlKind::Inline);
+}
+
+#[test]
+fn nested_template_piece_is_inlined() {
+    assert_inlined("const-splice-nested-template.ts", EmbeddedSqlKind::Inline);
+}
+
+#[test]
+fn missing_object_member_stays_unknown() {
+    assert_unknown("const-splice-missing-member.ts");
+}
+
+#[test]
+fn non_string_const_template_piece_stays_unknown() {
+    assert_unknown("const-splice-non-string-piece.ts");
+}
