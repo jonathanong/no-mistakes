@@ -41,7 +41,7 @@ export NO_MISTAKES_BUILD_NAPI=1
 export CARGO_TARGET_DIR
 CARGO_TARGET_DIR=$(python -c 'from pathlib import Path; print(Path("target").resolve())')
 # Explicitly require mimalloc while preserving all release default features.
-cargo build --release --locked --target "$target" -p no-mistakes --features mimalloc 2>&1 | tee "$out/build.log"
+cargo build --release --locked --timings --target "$target" -p no-mistakes --features mimalloc 2>&1 | tee "$out/build.log"
 release="target/$target/release"
 file "$release/$binary" "$release/$addon" | tee "$out/file-types.txt"
 file "$release/$binary" | grep -E "$magic"

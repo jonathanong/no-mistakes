@@ -92,6 +92,13 @@ Local development from this repository:
 cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 ```
 
+<!-- cspell:ignore mimalloc -->
+## Rust library
+
+The published crate enables mimalloc as its global allocator by default.
+A downstream crate that installs its own global allocator must opt out with
+`--no-default-features --features mermaid-validation`.
+
 ## Why AST-based?
 
 Many codebase-intelligence tools build persistent indexes, vector embeddings,

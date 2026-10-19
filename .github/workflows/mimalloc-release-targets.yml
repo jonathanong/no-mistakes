@@ -1,13 +1,6 @@
 name: Mimalloc release targets
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/mimalloc-release-targets.yml"
-      - "scripts/performance/mimalloc-release-build.sh"
-      - "crates/no-mistakes/Cargo.toml"
-      - "crates/no-mistakes/src/lib.rs"
-      - "Cargo.lock"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +14,7 @@ jobs:
   native-release:
     name: Mimalloc release (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 100 || 80 }}
     strategy:
       fail-fast: false
       matrix:
@@ -83,8 +76,11 @@ jobs:
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm run build:js
+      - name: Record host memory and CPU
+        timeout-minutes: 1
+        run: free -m || vm_stat || true; nproc || sysctl -n hw.logicalcpu || true; df -h . || true
       - name: Build release CLI and N-API addon
-        timeout-minutes: 24
+        timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 75 || 45 }}
         env:
           EXPECTED_TARGET: ${{ matrix.target }}
         run: bash scripts/performance/mimalloc-release-build.sh "artifacts/${{ matrix.target }}"
@@ -104,5 +100,14 @@ jobs:
         with:
           name: mimalloc-release-${{ matrix.target }}
           path: artifacts/${{ matrix.target }}
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload Cargo timings
+        if: always()
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-cargo-timings-${{ matrix.target }}
+          path: target/cargo-timings
           if-no-files-found: warn
           retention-days: 7

@@ -16,6 +16,27 @@ HOST_FIELDS = ("host_id", "cwd", "platform", "machine", "cpu_model", "available_
 CELL_FIELDS = ("platform", "workload", "diagnostics", "jobs")
 BUILD_FIELDS = ("source", "lock", "lto", "codegenUnits", "rayon_jobs", "automatic_rayon_jobs",
                 "rayon_environment", "workload_commit", "workload_tree")
+# Fixed before any eligible sample. summarize() does not apply these thresholds.
+ADOPTION_RULE = {
+    "status": "pre-registered",
+    "results": None,
+    "applied_to_summary": False,
+    "median_wall_ratio_max": 1.00,
+    "pair_wall_ratio_max": 1.05,
+    "median_peak_rss_ratio_at_jobs_1_max": 1.00,
+    "median_peak_rss_ratio_at_max_jobs_on_many_core_host_max": 0.95,
+    "report_parity": "100%",
+}
+
+
+def mimalloc_environment(row):
+    if "mimalloc_environment" in row:
+        value = row["mimalloc_environment"]
+    else:
+        value = row.get("metadata", {}).get("mimalloc_environment", {})
+    if not isinstance(value, dict):
+        return None
+    return value
 
 
 def project(value):
@@ -76,6 +97,10 @@ def summarize_pair(a, b, pair):
         errors.append("report, warning, or status mismatch")
     if any(STATS["classify"](row) not in ("success", "expected_failure") for row in (a, b)):
         errors.append("unexpected or censored process result")
+    environments = [mimalloc_environment(row) for row in (a, b)]
+    if (any(environment is None for environment in environments)
+            or environments[0] != environments[1] or any(environments)):
+        errors.append("non-empty or mismatched MIMALLOC_ environment")
     deltas, ratios = {}, {}
     completed = all(STATS["eligible"](row) for row in (a, b))
     for key in STATS["METRICS"]:

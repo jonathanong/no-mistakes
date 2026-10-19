@@ -12,6 +12,10 @@ import time
 from pathlib import Path
 
 
+def mimalloc_environment():
+    return {key: value for key, value in os.environ.items() if key.startswith("MIMALLOC_")}
+
+
 def rss_bytes(raw):
     if sys.platform == "darwin":
         return raw
@@ -82,6 +86,7 @@ def measure(argv, cwd, output, sample, metadata, timeout):
         "platform": platform.platform(), "machine": platform.machine(), "cpu_model": cpu_model(),
         "logical_cpus": os.cpu_count(), "available_cpus": available,
         "rayon_environment": os.environ.get("RAYON_NUM_THREADS"),
+        "mimalloc_environment": mimalloc_environment(),
         "executable": str(executable), "executable_sha256": hashlib.sha256(executable.read_bytes()).hexdigest(),
     }
     (output / f"{sample}.json").write_text(json.dumps(row, indent=2) + "\n")
@@ -130,7 +135,7 @@ def main():
         parser.add_argument(f"--{name}", required=True)
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--workload", choices=("consumer", "hosted-acceptance", "hosted-passing-failing"), required=True)
-    parser.add_argument("--jobs", choices=("1", "4", "max"), required=True)
+    parser.add_argument("--jobs", choices=("1", "4", "16", "max"), required=True)
     parser.add_argument("--diagnostics", choices=("on", "off"), required=True)
     parser.add_argument("--pair", type=int, choices=range(4), required=True)
     parser.add_argument("--host-id", required=True)
@@ -178,6 +183,7 @@ def main():
                     "rayon_jobs": int(args.jobs) if args.jobs != "max" else automatic_jobs,
                     "automatic_rayon_jobs": automatic_jobs, "num_cpus_default": probe_jobs[variant],
                     "rayon_environment": raw_rayon_override,
+                    "mimalloc_environment": mimalloc_environment(),
                     "timeout_seconds": args.timeout}
         sample = f"{args.platform}-{cell}-pair{args.pair}-{variant}"
         measure(command(getattr(args, variant), workload, root, args.jobs, diagnostics), root,

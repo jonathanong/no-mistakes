@@ -89,6 +89,7 @@ class MimallocReportTests(unittest.TestCase):
                      "paired-wrong-command.json", "paired-missing-host.json",
                      "paired-missing-metric.json", "paired-wrong-rayon.json",
                      "paired-wrong-lock.json", "paired-wrong-environment.json",
+                     "paired-wrong-mimalloc-environment.json",
                      "paired-wrong-workload.json"):
             with self.subTest(name=name):
                 self.assertFalse(self.group(name)["valid"])
@@ -120,6 +121,31 @@ class MimallocReportTests(unittest.TestCase):
         rows = json.loads((FIXTURES / "matrix-wrong-binary.json").read_text())
         with self.assertRaisesRegex(ValueError, "identity changed"):
             REPORT["summarize"](rows)
+
+    def test_mimalloc_environment_must_be_empty_and_identical(self):
+        mismatched = self.group("paired-wrong-mimalloc-environment.json")
+        self.assertFalse(mismatched["valid"])
+        self.assertTrue(any("MIMALLOC_" in error for pair in mismatched["pairs"] for error in pair["errors"]))
+        rows = json.loads((FIXTURES / "paired-success.json").read_text())
+        for row in rows:
+            row["mimalloc_environment"] = {}
+        self.assertTrue(REPORT["summarize_group"](rows)["valid"])
+        for row in rows:
+            row["mimalloc_environment"] = {"MIMALLOC_PURGE_DELAY": "0"}
+        matched = REPORT["summarize_group"](rows)
+        self.assertFalse(matched["valid"])
+        self.assertTrue(any("MIMALLOC_" in error for pair in matched["pairs"] for error in pair["errors"]))
+
+    def test_preregistered_adoption_thresholds_have_no_results(self):
+        rule = REPORT["ADOPTION_RULE"]
+        self.assertEqual(rule["status"], "pre-registered")
+        self.assertIsNone(rule["results"])
+        self.assertFalse(rule["applied_to_summary"])
+        self.assertEqual(rule["median_wall_ratio_max"], 1.00)
+        self.assertEqual(rule["pair_wall_ratio_max"], 1.05)
+        self.assertEqual(rule["median_peak_rss_ratio_at_jobs_1_max"], 1.00)
+        self.assertEqual(rule["median_peak_rss_ratio_at_max_jobs_on_many_core_host_max"], 0.95)
+        self.assertEqual(rule["report_parity"], "100%")
 
     def test_workload_tree_drift_between_hosts_is_rejected(self):
         rows = json.loads((FIXTURES / "matrix-wrong-workload.json").read_text())

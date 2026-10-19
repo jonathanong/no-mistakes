@@ -9,16 +9,16 @@ jobs:
   build:
     name: Build ${{ matrix.target }} (${{ matrix.variant }})
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    timeout-minutes: 80
     strategy:
       fail-fast: false
       matrix:
         include:
           - target: aarch64-unknown-linux-gnu
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
             variant: system
           - target: aarch64-unknown-linux-gnu
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
             variant: mimalloc
           - target: aarch64-apple-darwin
             runner: macos-15
@@ -52,11 +52,12 @@ jobs:
           prefix-key: mimalloc-evaluation
           key: ${{ matrix.target }}
           cache-bin: "false"
+      - name: Record host memory and CPU
+        timeout-minutes: 1
+        run: free -m || vm_stat; nproc || sysctl -n hw.logicalcpu; df -h .
       - name: Build release CLI and addon
-        # Cold releases took 22m40s on ubuntu-22.04-arm and 18m45s on macOS.
-        # The Linux comparison predates ubuntu-24.04-arm, so retain a margin:
-        # 27m build plus at most 3m setup/upload inside the 30m job cap.
-        timeout-minutes: 27
+        # Match release.yml build-native: 45m compile inside an 80m job.
+        timeout-minutes: 45
         env:
           TARGET: ${{ matrix.target }}
           CARGO_TARGET_DIR: ${{ github.workspace }}/target
@@ -68,4 +69,13 @@ jobs:
           name: mimalloc-${{ matrix.target }}-${{ matrix.variant }}
           path: ${{ runner.temp }}/${{ matrix.variant }}
           if-no-files-found: error
+          retention-days: 7
+      - name: Upload Cargo timings
+        if: always()
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-cargo-timings-${{ matrix.target }}-${{ matrix.variant }}
+          path: target/cargo-timings
+          if-no-files-found: warn
           retention-days: 7

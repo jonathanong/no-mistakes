@@ -34,18 +34,23 @@ export CARGO_PROFILE_RELEASE_LTO="$lto"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS="$units"
 export CARGO_PROFILE_RELEASE_DEBUG=0
 export CARGO_INCREMENTAL=0
-build_jobs=$(mimalloc_cargo_jobs "$target")
-case "$build_jobs" in ''|*[!0-9]*|0) echo "invalid Cargo build job count: $build_jobs" >&2; exit 2 ;; esac
-export CARGO_BUILD_JOBS="$build_jobs"
 export RUSTC_WRAPPER=
 export NO_MISTAKES_BUILD_NAPI=1
-mimalloc_build "$variant" cargo build --release --locked --target "$target" \
-  -p no-mistakes --lib --bin no-mistakes --example allocator_probe
+# Same artifacts as release.yml: one rustc emits the CLI rlib and the addon.
+# Leave CARGO_BUILD_JOBS unset so Cargo uses its default, matching release.yml.
+mimalloc_build "$variant" cargo build --release --locked --timings --target "$target" \
+  -p no-mistakes --lib --bin no-mistakes
 binary="$CARGO_TARGET_DIR/$target/release/no-mistakes"
 cp "$binary" "$out/$variant/no-mistakes"
-cp "$CARGO_TARGET_DIR/$target/release/examples/allocator_probe" "$out/$variant/rayon-probe"
 cp "$CARGO_TARGET_DIR/$target/release/$addon" "$out/$variant/$addon"
 cp "$out/$variant/$addon" "$out/$variant/no-mistakes.node"
+# The probe only checks registration. Build it separately with LTO off so
+# dev-dependency features are not unified into the measured CLI and addon.
+probe_target="$out/probe-target-$variant"
+CARGO_TARGET_DIR="$probe_target" CARGO_PROFILE_RELEASE_LTO=off CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
+  mimalloc_build "$variant" cargo build --release --locked --target "$target" \
+  -p no-mistakes --example allocator_probe
+cp "$probe_target/$target/release/examples/allocator_probe" "$out/$variant/rayon-probe"
 python3 - "$out/$variant" <<'PY'
 import hashlib, pathlib, sys
 root = pathlib.Path(sys.argv[1])
@@ -69,12 +74,15 @@ provenance = {
     "features": "default" if variant == "mimalloc" else "--no-default-features --features mermaid-validation",
     "lto": os.environ["CARGO_PROFILE_RELEASE_LTO"],
     "codegenUnits": int(os.environ["CARGO_PROFILE_RELEASE_CODEGEN_UNITS"]),
-    "buildJobs": int(os.environ["CARGO_BUILD_JOBS"]),
     "runnerOS": os.environ.get("RUNNER_OS"), "imageOS": os.environ.get("ImageOS"),
     "imageVersion": os.environ.get("ImageVersion"), "machine": platform.machine(),
 }
 for name in ("no-mistakes", "no-mistakes.node", "rayon-probe"):
     provenance[name] = {"bytes": os.path.getsize(os.path.join(os.path.dirname(output), name)),
                         "sha256": hashlib.sha256(open(os.path.join(os.path.dirname(output), name), "rb").read()).hexdigest()}
+# Record Cargo's job cap only when the environment actually set it.
+jobs = os.environ.get("CARGO_BUILD_JOBS")
+if jobs and jobs.isdigit() and int(jobs) > 0:
+    provenance["buildJobs"] = int(jobs)
 open(output, "w").write(json.dumps(provenance, indent=2) + "\n")
 PY

@@ -7,10 +7,12 @@ output=${2:?output directory required}
 manifest="$root/crates/no-mistakes/src/lib.rs"
 host=$(rustc -vV | sed -n 's/^host: //p')
 case "$host" in
-  aarch64-unknown-linux-gnu) lto=fat; units=1 ;;
-  aarch64-apple-darwin) lto=thin; units=16 ;;
+  aarch64-unknown-linux-gnu|aarch64-apple-darwin) ;;
   *) echo "unsupported native runner target: $host" >&2; exit 2 ;;
 esac
+# Registration does not depend on LTO.
+lto=off
+units=16
 mkdir -p "$output"
 backup="$manifest.nm2120-backup"
 restore() {

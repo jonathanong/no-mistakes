@@ -10,10 +10,3 @@ mimalloc_build() {
   fi
 }
 
-mimalloc_cargo_jobs() {
-  case "$1" in
-    aarch64-unknown-linux-gnu) nproc ;;
-    aarch64-apple-darwin) sysctl -n hw.logicalcpu ;;
-    *) return 2 ;;
-  esac
-}

@@ -17,15 +17,15 @@ jobs:
           - workload: consumer
             commit: f38a048f5eeff0438fc59a15e9eb742def575a36
             platform: linux-arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
           - workload: hosted-acceptance
             commit: 22edf4bfe0a782ac0d030c916dedfd6f8acb499c
             platform: linux-arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
           - workload: hosted-passing-failing
             commit: 92d0a2061bde8d260aa0b86a2d71110ece1a43ca
             platform: linux-arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
           - workload: consumer
             commit: f38a048f5eeff0438fc59a15e9eb742def575a36
             platform: macos-arm64

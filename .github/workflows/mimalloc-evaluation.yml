@@ -1,16 +1,6 @@
 name: Mimalloc native evaluation
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/mimalloc-evaluation*.yml"
-      - "Cargo.lock"
-      - "crates/no-mistakes/Cargo.toml"
-      - "crates/no-mistakes/src/lib.rs"
-      - "crates/no-mistakes/examples/allocator_probe.rs"
-      - "scripts/performance/mimalloc-*"
-      - "scripts/performance/fixtures/mimalloc-report/**"
-      - "docs/performance/mimalloc-evaluation.md"
   workflow_dispatch:
 
 permissions:
@@ -23,7 +13,7 @@ concurrency:
 jobs:
   harness-tests:
     name: Saved measurement harness tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - name: Check out candidate source
