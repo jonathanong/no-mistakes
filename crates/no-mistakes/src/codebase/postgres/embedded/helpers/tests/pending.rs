@@ -19,7 +19,7 @@ fn call(facts: &EmbeddedSqlFileFacts, index: usize) -> &EmbeddedSqlCall {
 #[test]
 fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
     let facts = extract("pending.ts");
-    assert_eq!(facts.calls.len(), 14);
+    assert_eq!(facts.calls.len(), 15);
     // Public form: exactly what the walk produced before imports were modeled.
     assert_eq!(call(&facts, 0).kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(
@@ -33,18 +33,18 @@ fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
     let holes = sentinel::find_all(template);
     assert_eq!(holes.len(), 1);
     assert!(template[holes[0].0.end..].ends_with(" ORDER BY l.id"));
-    assert_eq!(
-        pending.sites,
-        [(
-            holes[0].1,
-            ImportedSite {
-                local: "ownerVisible".into(),
-                args: vec![SiteArg::Literal("l.parent_id".into())],
-                value_used: true,
-                line: 8,
-            }
-        )]
-    );
+    let (index, site) = &pending.sites[0];
+    assert_eq!(*index, holes[0].1);
+    assert_eq!(site.local, "ownerVisible");
+    assert!(site.value_used);
+    assert_eq!(site.line, 8);
+    let SiteArg::Literal(literal) = &site.args[0] else {
+        panic!("string literal argument");
+    };
+    assert_eq!(literal.text, "l.parent_id");
+    // The literal is written on the call line; later splicing must use this line.
+    assert_eq!(literal.line, 8);
+    assert!(literal.origin > 0);
 }
 
 #[test]
@@ -97,13 +97,24 @@ fn unexecuted_or_interpolated_helpers_never_become_holes() {
     assert_eq!(call(&facts, 4).sql_text.as_deref(), Some("SELECT 1 WHERE "));
     // An interpolated call is a bound value, not SQL text.
     assert!(pending_for(&facts, 6).is_none());
-    assert_eq!(facts.pending_imported.len(), 10);
+    // Ten holes from the original calls, plus the bare-template argument.
+    assert_eq!(facts.pending_imported.len(), 11);
 }
 
 #[test]
 fn argument_shapes_decide_whether_a_hole_is_recorded() {
     let facts = extract("pending.ts");
-    let args = pending_for(&facts, 10).map(|pending| pending.sites[0].1.args.clone());
+    let args = pending_for(&facts, 10).map(|pending| {
+        pending.sites[0]
+            .1
+            .args
+            .iter()
+            .map(|arg| match arg {
+                SiteArg::Literal(literal) => SiteArg::Literal(literal.text.clone().into()),
+                other => other.clone(),
+            })
+            .collect::<Vec<_>>()
+    });
     assert_eq!(
         args,
         Some(vec![
@@ -113,14 +124,18 @@ fn argument_shapes_decide_whether_a_hole_is_recorded() {
             SiteArg::Null,
         ])
     );
+    // A no-substitution template is not a string literal. The hole is recorded
+    // so a static helper can still run, but the argument cannot be spliced.
+    let backtick = pending_for(&facts, 11).map(|pending| pending.sites[0].1.args.clone());
+    assert_eq!(backtick, Some(vec![SiteArg::Scalar]));
     // An object literal of classifiable values is recorded as such.
-    let object = pending_for(&facts, 12).map(|pending| pending.sites[0].1.args.clone());
+    let object = pending_for(&facts, 13).map(|pending| pending.sites[0].1.args.clone());
     assert_eq!(
         object,
         Some(vec![SiteArg::Object(vec![("a".into(), SiteArg::Scalar)])])
     );
     // Spread and two-builder arguments cannot be reasoned about.
-    for index in [11, 13] {
+    for index in [12, 14] {
         assert!(pending_for(&facts, index).is_none(), "{index}");
         assert_eq!(
             call(&facts, index).sql_text.as_deref(),
@@ -163,7 +178,35 @@ fn a_trimmed_fragment_publishes_only_the_binds_that_remain() {
         .iter()
         .find(|fragment| fragment.sql_text.as_deref() == Some("SELECT sql_placeholder_1 WHERE "))
         .expect("trimmed fragment");
+    // The suffix `AND ${id} = ${id}` is its own fragment. If the trimmed
+    // fragment kept positions from before the cut, those binds would still be here.
     assert_eq!(trimmed.recovered_placeholder_positions, [(1, 8)]);
+    assert!(facts.fragments.iter().any(|fragment| {
+        fragment.sql_text.as_deref() == Some(" AND sql_placeholder_1 = sql_placeholder_2")
+    }));
+}
+
+#[test]
+fn unresolved_imported_calls_keep_the_pre_recovery_public_facts() {
+    // Public shape from before imported-helper recovery: Dynamic, and only the
+    // verified leading statement. The saved file is that differential.
+    let facts = extract("pending.ts");
+    let mut snapshot = String::new();
+    for (index, call) in facts.calls.iter().enumerate() {
+        snapshot.push_str(&format!(
+            "{index}\t{:?}\t{:?}\t{:?}\t{}\n",
+            call.kind,
+            call.sql_text,
+            call.recovered_placeholder_positions,
+            call.variants.len()
+        ));
+    }
+    let baseline = fixture("pending-unresolved.txt");
+    let saved = std::fs::read_to_string(&baseline).unwrap_or_default();
+    assert_eq!(
+        snapshot, saved,
+        "public facts for unresolved imported helpers drifted from {baseline:?}"
+    );
 }
 
 #[test]

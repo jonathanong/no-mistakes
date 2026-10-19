@@ -1,15 +1,59 @@
 //! Summaries of exported SQL helpers and the call sites that need them.
 
-use super::split::with_origin_entry;
-use super::template::TemplateHelper;
+use super::split::{with_origin_entry, Marker};
+use super::template::{Spliced, TemplateHelper};
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
 use crate::codebase::postgres::embedded::EmbeddedSqlCall;
 use std::path::Path;
 
+/// A string literal passed to a helper, plus where it was written.
+///
+/// `line == 0` means the location was not recorded (a value rebuilt inside a
+/// helper, or a synthetic site). The splice then keeps the `${param}` line.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct LiteralArg {
+    pub(crate) text: String,
+    pub(crate) line: u32,
+    pub(crate) origin: u32,
+}
+
+impl LiteralArg {
+    pub(crate) fn bare(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            line: 0,
+            origin: 0,
+        }
+    }
+
+    fn splice<'a>(&'a self, caller: &Path) -> Spliced<'a> {
+        Spliced {
+            text: &self.text,
+            at: (self.line > 0).then(|| Marker {
+                line: self.line,
+                path: Some(caller.to_path_buf()),
+                origin: self.origin,
+            }),
+        }
+    }
+}
+
+impl From<&str> for LiteralArg {
+    fn from(text: &str) -> Self {
+        Self::bare(text)
+    }
+}
+
+impl From<String> for LiteralArg {
+    fn from(text: String) -> Self {
+        Self::bare(text)
+    }
+}
+
 /// One argument of an imported-helper call, as far as the walk can tell.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) enum SiteArg {
-    Literal(String),
+    Literal(LiteralArg),
     Bool(bool),
     Null,
     Undefined,
@@ -66,8 +110,16 @@ pub(crate) struct BuilderHelper {
 }
 
 impl HelperSummary {
-    /// The text that fills a call's hole, attributed to `origin`'s physical lines.
-    pub(crate) fn fill(&self, site: &ImportedSite, origin: &Path) -> Option<RecoveredSql> {
+    /// The text that fills a call's hole.
+    ///
+    /// Helper text is attributed to `helper`. A string literal spliced into a
+    /// template is attributed to `caller` instead, at the literal's own line.
+    pub(crate) fn fill(
+        &self,
+        site: &ImportedSite,
+        helper: &Path,
+        caller: &Path,
+    ) -> Option<RecoveredSql> {
         let builders = site
             .args
             .iter()
@@ -80,7 +132,7 @@ impl HelperSummary {
                     .args
                     .iter()
                     .map(|arg| match arg {
-                        SiteArg::Literal(text) => Some(text.as_str()),
+                        SiteArg::Literal(literal) => Some(literal.splice(caller)),
                         _ => None,
                     })
                     .collect::<Option<Vec<_>>>()?;
@@ -95,6 +147,6 @@ impl HelperSummary {
             }
             _ => return None,
         };
-        Some(with_origin_entry(recovered).with_source_file(origin))
+        Some(with_origin_entry(recovered).with_source_file(helper))
     }
 }

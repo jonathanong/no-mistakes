@@ -29,3 +29,10 @@ export async function spreadArguments(id: string, columns: [string, string]) {
   query.append(ownerVisibleSql(...columns));
   return read(query);
 }
+
+// A no-substitution template literal is not a string literal on this path either.
+export async function fromBacktick(id: string) {
+  const query = sql`SELECT l.id FROM links l WHERE l.account_id = ${id} AND `;
+  query.append(ownerVisibleSql(`l.parent_id`, `l.account_id`));
+  return read(query);
+}

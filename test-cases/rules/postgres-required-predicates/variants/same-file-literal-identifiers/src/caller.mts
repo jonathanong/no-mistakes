@@ -34,3 +34,10 @@ export async function withVariable(id: string, column: string) {
   query.append(ownerVisibleSql(column, "l.account_id"));
   return read(query);
 }
+
+// A no-substitution template literal is not a string literal, so it is not spliced.
+export async function withBacktick(id: string) {
+  const query = sql`SELECT l.id FROM links l WHERE l.account_id = ${id} AND `;
+  query.append(ownerVisibleSql(`l.parent_id`, `l.account_id`));
+  return read(query);
+}

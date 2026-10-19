@@ -60,6 +60,8 @@ export function nestedFragment() {
 export function fragmentWithBind(id: string) {
   const inner = sql`SELECT ${id} WHERE `;
   inner.append(ownerVisible("x"));
+  // A bind after the hole must not stay on the trimmed fragment.
+  inner.append(sql` AND ${id} = ${id}`);
   const outer = sql`SELECT 3 `;
   outer.append(inner);
 }
@@ -71,7 +73,14 @@ export function alternatives(flag: boolean) {
 
 export function argumentKinds() {
   const q = sql`SELECT 1 WHERE `;
-  q.append(ownerVisible(`l.template`, 3, true, null));
+  // A quoted string is a literal. A no-substitution template is not.
+  q.append(ownerVisible("l.template", 3, true, null));
+  query(q);
+}
+
+export function backtickArgument() {
+  const q = sql`SELECT 1 WHERE `;
+  q.append(ownerVisible(`l.template`));
   query(q);
 }
 

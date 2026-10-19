@@ -2,8 +2,9 @@
 
 use super::super::resolve::compose::static_fragment;
 use super::super::ScopeVisitor;
-use crate::codebase::postgres::embedded::helpers::SiteArg;
-use crate::codebase::postgres::embedded::{unpublished_sql_text, EmbeddedSqlKind};
+use crate::codebase::postgres::embedded::helpers::{LiteralArg, SiteArg};
+use crate::codebase::postgres::embedded::EmbeddedSqlKind;
+use crate::codebase::ts_source::byte_offset_to_line;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression, ObjectPropertyKind, PropertyKey, PropertyKind};
 
@@ -47,12 +48,20 @@ fn is_builder(visitor: &ScopeVisitor<'_>, name: &str) -> bool {
 
 /// A non-builder value. Objects nest only through `nested`, and never hold
 /// builders: a builder inside an object cannot be tracked.
+///
+/// A string literal is a quoted `StringLiteral` only. A no-substitution
+/// template literal is not spliced, same as a same-file template helper.
 fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) -> Option<SiteArg> {
     Some(match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => SiteArg::Literal(literal.value.to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            SiteArg::Literal(unpublished_sql_text(expression)?)
-        }
+        Expression::StringLiteral(literal) => SiteArg::Literal(LiteralArg {
+            text: literal.value.to_string(),
+            line: byte_offset_to_line(visitor.source, literal.span.start as usize),
+            origin: literal.span.start + 1,
+        }),
+        // A no-substitution template is not a string literal, so a template
+        // helper will not splice it. It is still a known value: a helper whose
+        // arguments never reach the SQL can be applied.
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => SiteArg::Scalar,
         Expression::NumericLiteral(_) => SiteArg::Scalar,
         Expression::BooleanLiteral(literal) => SiteArg::Bool(literal.value),
         Expression::NullLiteral(_) => SiteArg::Null,

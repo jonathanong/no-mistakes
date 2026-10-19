@@ -4,7 +4,7 @@
 //! The template is summarized once per file as structured data. A call whose
 //! every argument is a string literal splices the literals in as SQL text.
 
-use super::split::{compose, plain, split};
+use super::split::{compose, plain, split, Marker};
 use crate::codebase::postgres::embedded::placeholders::INTERNAL_PLACEHOLDER;
 use crate::codebase::postgres::embedded::unpublished_sql_text;
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
@@ -21,10 +21,19 @@ pub(crate) struct TemplateHelper {
     parameters: usize,
 }
 
+/// One string-literal argument. `at` is the literal's physical location;
+/// `None` keeps the helper `${param}` line (a synthetic site with no caller).
+pub(crate) struct Spliced<'a> {
+    pub(crate) text: &'a str,
+    pub(crate) at: Option<Marker>,
+}
+
 impl TemplateHelper {
     /// Splices one string literal per parameter. `None` for any other call shape.
-    pub(crate) fn apply(&self, literals: &[&str]) -> Option<RecoveredSql> {
-        if literals.len() != self.parameters || !literals.iter().all(|text| splice_safe(text)) {
+    pub(crate) fn apply(&self, literals: &[Spliced<'_>]) -> Option<RecoveredSql> {
+        if literals.len() != self.parameters
+            || !literals.iter().all(|literal| splice_safe(literal.text))
+        {
             return None;
         }
         // `summarize` made exactly one placeholder per slot, in the same order.
@@ -34,7 +43,10 @@ impl TemplateHelper {
         let mut pieces = pieces.into_iter();
         parts.extend(pieces.next());
         for ((slot, marker), piece) in self.slots.iter().zip(origins).zip(pieces) {
-            parts.push(plain(literals[*slot].to_string(), marker));
+            // The literal was written once. Every use of that parameter reads
+            // from the caller, not from this `${param}`.
+            let at = literals[*slot].at.clone().unwrap_or(marker);
+            parts.push(plain(literals[*slot].text.to_string(), at));
             parts.push(piece);
         }
         compose(parts)

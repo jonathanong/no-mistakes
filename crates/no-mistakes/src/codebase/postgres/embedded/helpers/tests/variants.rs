@@ -83,13 +83,28 @@ fn a_statement_level_builder_helper_extends_the_builder() {
                 .collect::<Vec<_>>()
         })
     };
+    let shape = |index| {
+        sites(index).map(|groups| {
+            groups
+                .into_iter()
+                .map(|args| {
+                    args.into_iter()
+                        .map(|arg| match arg {
+                            SiteArg::Literal(literal) => SiteArg::Literal(literal.text.into()),
+                            other => other,
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+    };
     let builder_call = Some(vec![vec![
         SiteArg::Builder,
         SiteArg::Literal("tier".into()),
     ]]);
-    assert_eq!(sites(1), builder_call);
+    assert_eq!(shape(1), builder_call);
     // Inside a branch only the alternatives hold the helper's text.
-    assert_eq!(sites(2), builder_call);
+    assert_eq!(shape(2), builder_call);
     assert_eq!(
         facts.calls[2].sql_text.as_deref(),
         Some("SELECT 1 FROM t WHERE true")

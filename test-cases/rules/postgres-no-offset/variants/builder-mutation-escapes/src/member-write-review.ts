@@ -17,6 +17,12 @@ import { read } from "@example/db";
   (q as any).strings = ["SELECT id FROM accounts OFFSET 5"];
   read(q); // expect: dynamic
 }
+// An index assignment is the same storage write, not a read of projected text.
+{
+  const q = sql`SELECT id FROM accounts WHERE active IS TRUE`;
+  (q as any).strings[0] = "SELECT id FROM accounts OFFSET 5";
+  read(q); // expect: dynamic
+}
 {
   const q = sql`SELECT id FROM accounts WHERE active IS TRUE`;
   (q.strings as string[]) = ["SELECT id FROM accounts OFFSET 5"];

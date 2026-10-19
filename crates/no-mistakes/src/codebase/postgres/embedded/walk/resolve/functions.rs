@@ -188,7 +188,7 @@ fn resolve_named(
             return None;
         }
         if let Some(template) = callables.templates.get(callee) {
-            return call::apply_template(template, call);
+            return call::apply_template(template, call, source);
         }
         resolve_named(callee, source, depth, callables, resolving, tag_shadows)
     };
