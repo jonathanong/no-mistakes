@@ -1,0 +1,69 @@
+name: One matched ARM observation block
+
+on:
+  workflow_call:
+    inputs:
+      case:
+        required: true
+        type: string
+      jobs:
+        required: true
+        type: string
+      diagnostics:
+        required: true
+        type: string
+      order:
+        required: true
+        type: string
+      prefix:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sample:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout harness
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Download production artifacts
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: matched-cli-*
+          path: cli
+      - name: Download frozen installed consumer
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: matched-consumer
+          path: prepared
+      - name: Restore physical fixture and control parser
+        timeout-minutes: 3
+        run: |
+          tar -xzf prepared/fixture.tar.gz
+          python3 -m pip install --disable-pip-version-check PyYAML==6.0.2
+      - name: Measure adjacent pair with unchanged 600-second collection caps
+        timeout-minutes: 21
+        env:
+          CASE: ${{ inputs.case }}
+          JOBS: ${{ inputs.jobs }}
+          DIAGNOSTICS: ${{ inputs.diagnostics }}
+          ORDER: ${{ inputs.order }}
+        run: python3 harness/.github/scripts/matched-arm/measure.py "$CASE" "$JOBS" "$DIAGNOSTICS" "$ORDER"
+      - name: Retain raw outcomes including censored failures
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.prefix }}-${{ inputs.case }}-${{ inputs.jobs }}-${{ inputs.diagnostics }}-${{ inputs.order }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 7

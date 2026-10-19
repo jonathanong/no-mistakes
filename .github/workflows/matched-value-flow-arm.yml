@@ -1,0 +1,84 @@
+name: Temporary matched value-flow ARM evaluation
+
+on:
+  push:
+    branches: [eval/2215-2118-matched-arm]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matched-value-flow-arm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/matched-arm-build.yml
+
+  canary:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        case: [verdicts-ledger, phases-full]
+        jobs: ['1', '4', default]
+    uses: ./.github/workflows/matched-arm-sample.yml
+    with:
+      case: ${{ matrix.case }}
+      jobs: ${{ matrix.jobs }}
+      diagnostics: 'off'
+      order: bc
+      prefix: canary
+
+  feasibility:
+    needs: [prepare, canary]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    outputs:
+      feasible: ${{ steps.result.outputs.feasible }}
+    steps:
+      - name: Checkout harness
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Download local canary outcomes
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: canary-*
+          path: canaries
+      - name: Require complete uncensored canaries before fanout
+        id: result
+        timeout-minutes: 1
+        run: python3 harness/.github/scripts/matched-arm/feasibility.py
+      - name: Retain feasibility decision
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: matched-feasibility
+          path: feasibility.json
+          if-no-files-found: error
+          retention-days: 7
+
+  sample:
+    needs: [prepare, feasibility]
+    if: ${{ !cancelled() && needs.feasibility.outputs.feasible == 'true' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        case: [verdicts-default, verdicts-ledger, phases-full, phases-control]
+        jobs: ['1', '4', default]
+        diagnostics: ['off', 'on']
+    uses: ./.github/workflows/matched-arm-sample.yml
+    with:
+      case: ${{ matrix.case }}
+      jobs: ${{ matrix.jobs }}
+      diagnostics: ${{ matrix.diagnostics }}
+      order: bccb
+      prefix: matched
