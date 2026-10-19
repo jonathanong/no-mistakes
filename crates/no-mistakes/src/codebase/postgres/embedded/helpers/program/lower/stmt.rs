@@ -22,7 +22,13 @@ fn one(scope: &mut Scope<'_, '_>, statement: &Statement<'_>) -> Option<Vec<Stmt>
         Statement::ExpressionStatement(statement) => {
             vec![Stmt::Expr(expr::lower(scope, &statement.expression))]
         }
-        Statement::IfStatement(s) if switch::skippable(s, scope.ctx.throws) => Vec::new(),
+        Statement::IfStatement(statement)
+            if switch::skippable(statement, &|name| {
+                scope.ctx.throws.contains(name) && !scope.is_rebound(name)
+            }) =>
+        {
+            Vec::new()
+        }
         Statement::IfStatement(statement) => {
             let test = expr::lower(scope, &statement.test);
             let then = body(scope, &statement.consequent)?;

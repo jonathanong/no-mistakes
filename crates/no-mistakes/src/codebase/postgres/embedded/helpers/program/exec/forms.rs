@@ -80,14 +80,11 @@ impl Machine<'_> {
         for (path, value) in self.eval(left, path)? {
             match value {
                 Val::Null | Val::Undef => out.extend(self.eval(right, path)?),
-                // Bound scalar stays a bind. SQL on the right abstains; free does not publish the fallback.
+                // A bound scalar stays a bind. SQL on the right keeps both forks.
                 Val::Unknown => {
-                    let forks = self.eval(right, path)?;
-                    if forks.iter().any(|(_, value)| matches!(value, Val::Sql(_))) {
-                        return None;
-                    }
-                    out.extend(forks.into_iter().map(|(path, _)| (path, Val::Unknown)));
+                    out.extend(nullish_unknown(self.eval(right, path.clone())?, path));
                 }
+                // Free is not a bound value, so the fallback is not published.
                 Val::Free => out.push((path, value)),
                 other => out.push((path, other)),
             }
@@ -168,6 +165,21 @@ impl Machine<'_> {
         }
         Some(out)
     }
+}
+
+/// Unknown `??` right. SQL keeps the left fork and the right forks. Any other
+/// right, including a module const the body does not bind, collapses to one bind.
+fn nullish_unknown(forks: Forks, path: Path) -> Forks {
+    if forks.iter().any(|(_, value)| matches!(value, Val::Sql(_))) {
+        let mut kept = Vec::with_capacity(forks.len() + 1);
+        kept.push((path, Val::Unknown));
+        kept.extend(forks);
+        return kept;
+    }
+    forks
+        .into_iter()
+        .map(|(path, _)| (path, Val::Unknown))
+        .collect()
 }
 
 /// A spread of unknown keys may override any earlier prop, so none of them

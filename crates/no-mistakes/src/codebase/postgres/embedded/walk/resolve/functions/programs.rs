@@ -25,7 +25,7 @@ pub(super) fn lower_all(
     let rebound = |name: &str| shadows.contains(name);
     let throwing = throwing_names(
         raw.iter()
-            .map(|(name, resolvable)| (*name, resolvable.body)),
+            .map(|(name, resolvable)| (*name, resolvable.params, resolvable.body)),
     );
     let ctx = Ctx {
         source,
