@@ -1,5 +1,5 @@
 use super::super::{Expr, Stmt};
-use super::{expr, Scope};
+use super::{expr, switch, Scope};
 use oxc_ast::ast::{BindingPattern, Statement, VariableDeclarationKind};
 use oxc_span::GetSpan;
 
@@ -22,6 +22,7 @@ fn one(scope: &mut Scope<'_, '_>, statement: &Statement<'_>) -> Option<Vec<Stmt>
         Statement::ExpressionStatement(statement) => {
             vec![Stmt::Expr(expr::lower(scope, &statement.expression))]
         }
+        Statement::IfStatement(s) if switch::skippable(s, scope.ctx.throws) => Vec::new(),
         Statement::IfStatement(statement) => {
             let test = expr::lower(scope, &statement.test);
             let then = body(scope, &statement.consequent)?;
@@ -49,6 +50,7 @@ fn one(scope: &mut Scope<'_, '_>, statement: &Statement<'_>) -> Option<Vec<Stmt>
             vec![Stmt::Return(argument, mark)]
         }
         Statement::ThrowStatement(_) => vec![Stmt::Throw],
+        Statement::SwitchStatement(statement) => vec![switch::lower(scope, statement)],
         // Hoisted: a call can reach it before (or without) this statement
         // running, so the whole body must fail rather than skip the name.
         Statement::FunctionDeclaration(_) => {
@@ -133,6 +135,10 @@ pub(super) fn contributes_sql(statement: &Stmt) -> bool {
         Stmt::Return(argument, _) => argument.as_ref().is_some_and(expr::contributes_sql),
         Stmt::ForOf(_, iterable, body) => {
             expr::contributes_sql(iterable) || body.iter().any(contributes_sql)
+        }
+        Stmt::Switch(discriminant, arms) => {
+            expr::contributes_sql(discriminant)
+                || arms.iter().any(|arm| expr::contributes_sql(&arm.value))
         }
         Stmt::Throw | Stmt::Opaque => false,
     }

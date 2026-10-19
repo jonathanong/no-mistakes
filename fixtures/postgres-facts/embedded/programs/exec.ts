@@ -343,6 +343,179 @@ export function passesNestedBuilder(q: SQLStatement) {
   return sql`SELECT 1`;
 }
 
+// Literal switch arms. `default` must throw, or the helper stays opaque.
+export function markReadSql(kind: string) {
+  switch (kind) {
+    case "post":
+      return sql`UPDATE posts SET read_at = NOW() WHERE id = ${1}`;
+    case "comment":
+      return sql`UPDATE comments SET read_at = NOW() WHERE id = ${1}`;
+    default:
+      throw new Error("unknown type");
+  }
+}
+// #2203 rewrite: one complete statement per arm, not correlated appends.
+export function accessSql(access: string) {
+  switch (access) {
+    case "owned":
+      return sql`SELECT id FROM orders WHERE account_id = ${1}`;
+    case "member":
+      return sql`SELECT id FROM orders WHERE member_id = ${1}`;
+    case "all":
+      return sql`SELECT id FROM orders WHERE account_id = ${1} UNION ALL SELECT id FROM orders WHERE member_id = ${1}`;
+    default:
+      throw new Error("unknown access");
+  }
+}
+// #2198 rewrite: literal identifiers, not a record lookup.
+export function tableName(kind: string) {
+  switch (kind) {
+    case "x":
+      return "orders";
+    case "y":
+      return "accounts";
+    default:
+      throw new Error("unknown table");
+  }
+}
+export function groupedKind(kind: string) {
+  switch (kind) {
+    case "a":
+    case "b":
+      return sql`SELECT 1 FROM posts WHERE id = ${1}`;
+    case "c":
+      return sql`SELECT 1 FROM comments WHERE id = ${1}`;
+    default: {
+      throw new Error("unknown kind");
+    }
+  }
+}
+function failClosed(value: never): never {
+  throw new Error(String(value));
+}
+export function tableViaThrow(kind: string) {
+  switch (kind) {
+    case "x":
+      return "orders";
+    case "y":
+      return "accounts";
+    default:
+      failClosed(kind);
+  }
+}
+// The name is not proof. The body returns, so the switch stays opaque.
+function assertNever(value: string): string {
+  return value;
+}
+export function assertNeverIsNotProof(kind: string) {
+  switch (kind) {
+    case "x":
+      return sql`SELECT 1 FROM orders`;
+    default:
+      return assertNever(kind);
+  }
+  return sql`SELECT 2`;
+}
+// Duplicate labels abstain the switch. A known arm is not kept.
+export function duplicateLabel(kind: string) {
+  switch (kind) {
+    case "a":
+      return sql`SELECT 1`;
+    case "a":
+      return sql`SELECT 2`;
+    default:
+      throw new Error("no");
+  }
+  return sql`SELECT 3`;
+}
+// A local before the return is not the literal-return shape.
+export function switchWithLocal(kind: string) {
+  switch (kind) {
+    case "a": {
+      const extra = "x";
+      return sql`SELECT ${extra}`;
+    }
+    default:
+      throw new Error("no");
+  }
+  return sql`SELECT 2`;
+}
+// Seventeen arms: the cap abstains instead of keeping sixteen.
+export function switchCap(kind: string) {
+  switch (kind) {
+    case "01": return sql`SELECT 1`;
+    case "02": return sql`SELECT 1`;
+    case "03": return sql`SELECT 1`;
+    case "04": return sql`SELECT 1`;
+    case "05": return sql`SELECT 1`;
+    case "06": return sql`SELECT 1`;
+    case "07": return sql`SELECT 1`;
+    case "08": return sql`SELECT 1`;
+    case "09": return sql`SELECT 1`;
+    case "10": return sql`SELECT 1`;
+    case "11": return sql`SELECT 1`;
+    case "12": return sql`SELECT 1`;
+    case "13": return sql`SELECT 1`;
+    case "14": return sql`SELECT 1`;
+    case "15": return sql`SELECT 1`;
+    case "16": return sql`SELECT 1`;
+    case "17": return sql`SELECT 1`;
+    default:
+      throw new Error("no");
+  }
+}
+export async function asyncSwitch(kind: string) {
+  switch (kind) {
+    case "a":
+      return sql`SELECT 1`;
+    default:
+      throw new Error("no");
+  }
+}
+
+// A check the model cannot evaluate still throws no SQL.
+export function guardedLimit(limit: number) {
+  if (!Number.isInteger(limit)) throw new Error("bad limit");
+  return sql`SELECT id FROM orders WHERE account_id = ${1} LIMIT ${limit}`;
+}
+export function guardedBlock(limit: number) {
+  if (!Number.isInteger(limit)) {
+    throw new Error("bad limit");
+  }
+  return sql`SELECT id FROM orders WHERE account_id = ${1}`;
+}
+// `&&` of opaque member checks is still a throw guard.
+export function guardedAnd(limit: number, offset: number) {
+  if (!Number.isInteger(limit) && !Number.isInteger(offset)) throw new Error("bad");
+  return sql`SELECT id FROM orders WHERE account_id = ${1}`;
+}
+// Not a throw guard: both arms return SQL, and the test is opaque.
+export function opaqueBranch(limit: number) {
+  if (!Number.isInteger(limit)) {
+    return sql`SELECT 0`;
+  }
+  return sql`SELECT 1`;
+}
+
+// `??` on a bound value stays a bind. The constant is not SQL text.
+const START = "0";
+export function nullishOuter(after) {
+  const afterId = after ?? START;
+  return sql`SELECT id FROM orders WHERE account_id = ${1} AND id > ${afterId}`;
+}
+export function nullishLocal(after) {
+  const start = "0";
+  const afterId = after ?? start;
+  return sql`SELECT id FROM orders WHERE id > ${afterId}`;
+}
+// The left side is an unknown fragment: do not publish the fallback.
+export function nullishFragment() {
+  return missing ?? sql`SELECT 1`;
+}
+export function nullishSqlFallback(a) {
+  return a ?? sql`SELECT 1`;
+}
+
 export function looseEquality(a, b) {
   if (a == b) return sql`yes`;
   return sql`no`;

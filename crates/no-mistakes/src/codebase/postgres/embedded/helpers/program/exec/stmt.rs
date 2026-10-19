@@ -1,4 +1,4 @@
-use super::super::{Mark, Stmt};
+use super::super::{Expr, Mark, Stmt, SwitchArm};
 use super::val::{Path, Val};
 use super::{Machine, Outcome, Ret, MAX_EMBEDDED_SQL_VARIANTS};
 
@@ -64,8 +64,37 @@ impl Machine<'_> {
             ),
             Stmt::Throw => Some(Vec::new()),
             Stmt::ForOf(name, iterable, body) => self.for_of(name, iterable, body, path),
+            Stmt::Switch(discriminant, arms) => self.switch(discriminant, arms, path),
             Stmt::Opaque => None,
         }
+    }
+
+    /// Unknown selectors keep every arm. Past the cap the call abstains.
+    #[rustfmt::skip]
+    fn switch(&mut self, discriminant: &Expr, arms: &[SwitchArm], path: Path) -> Option<Vec<Path>> {
+        let mut out = Vec::new();
+        for (path, selector) in self.eval(discriminant, path)? {
+            match selector {
+                Val::Str(text) => {
+                    if let Some(arm) = arms.iter().find(|arm| arm.cases.iter().any(|case| case == &text.value)) {
+                        out.extend(self.switch_arm(arm, path)?);
+                    }
+                }
+                Val::Unknown | Val::Free => {
+                    for arm in arms { out.extend(self.switch_arm(arm, path.clone())?); }
+                }
+                _ => {}
+            }
+            if out.len() > MAX_EMBEDDED_SQL_VARIANTS { return None; }
+        }
+        Some(out)
+    }
+
+    #[rustfmt::skip]
+    fn switch_arm(&mut self, arm: &SwitchArm, path: Path) -> Option<Vec<Path>> {
+        Some(self.eval(&arm.value, path)?.into_iter().map(|(path, value)| {
+            returned(path, self.with_provenance(value, arm.mark))
+        }).collect())
     }
 
     /// The caller-visible result of a finished path.

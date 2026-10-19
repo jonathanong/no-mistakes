@@ -3,6 +3,7 @@
 use super::reassigned::ReassignedNames;
 use super::shadows::TagShadows;
 use super::Resolvable;
+use crate::codebase::postgres::embedded::helpers::program::lower::throwing_names;
 use crate::codebase::postgres::embedded::helpers::program::lower::{lower, Body, Ctx};
 use crate::codebase::postgres::embedded::helpers::program::Program as HelperProgram;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -22,11 +23,16 @@ pub(super) fn lower_all(
     builder_types: &std::collections::HashSet<String>,
 ) -> FxHashMap<String, std::sync::Arc<HelperProgram>> {
     let rebound = |name: &str| shadows.contains(name);
+    let throwing = throwing_names(
+        raw.iter()
+            .map(|(name, resolvable)| (*name, resolvable.body)),
+    );
     let ctx = Ctx {
         source,
         tags: shadows.imported_tags(),
         builder_types,
         rebound: &rebound,
+        throws: &throwing,
     };
     let mut programs = FxHashMap::default();
     for (name, resolvable) in raw {

@@ -80,10 +80,15 @@ impl Machine<'_> {
         for (path, value) in self.eval(left, path)? {
             match value {
                 Val::Null | Val::Undef => out.extend(self.eval(right, path)?),
-                Val::Unknown | Val::Free => {
-                    out.push((path.clone(), value));
-                    out.extend(self.eval(right, path)?);
+                // Bound scalar stays a bind. SQL on the right abstains; free does not publish the fallback.
+                Val::Unknown => {
+                    let forks = self.eval(right, path)?;
+                    if forks.iter().any(|(_, value)| matches!(value, Val::Sql(_))) {
+                        return None;
+                    }
+                    out.extend(forks.into_iter().map(|(path, _)| (path, Val::Unknown)));
                 }
+                Val::Free => out.push((path, value)),
                 other => out.push((path, other)),
             }
         }

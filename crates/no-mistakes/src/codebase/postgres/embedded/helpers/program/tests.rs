@@ -12,6 +12,8 @@ use std::sync::Arc;
 
 #[path = "tests/lowering.rs"]
 mod lowering;
+#[path = "tests/recovery.rs"]
+mod recovery;
 #[path = "tests/values.rs"]
 mod values;
 

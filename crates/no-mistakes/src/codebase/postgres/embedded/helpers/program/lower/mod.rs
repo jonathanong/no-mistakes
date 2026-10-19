@@ -3,7 +3,10 @@
 mod compound;
 mod expr;
 mod stmt;
+mod switch;
 mod template;
+
+pub(crate) use switch::names as throwing_names;
 
 use super::{Mark, Param, Program, Stmt};
 use crate::codebase::postgres::embedded::tags::SqlTagNames;
@@ -21,6 +24,8 @@ pub(crate) struct Ctx<'a> {
     /// Names that are not the trusted tag even when spelled like it
     /// (top-level rebindings; the function's own parameters are added here).
     pub(crate) rebound: &'a dyn Fn(&str) -> bool,
+    /// Same-file functions whose bodies always throw.
+    pub(crate) throws: &'a HashSet<String>,
 }
 
 /// The body of a callable: statements, or an arrow function's expression.
