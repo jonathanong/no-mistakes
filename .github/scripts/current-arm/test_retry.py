@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import re
 import signal
+import subprocess
+import sys
 import threading
 import tempfile
 import unittest
@@ -128,6 +130,18 @@ class ObservableWorker(unittest.TestCase):
 
 
 class WorkflowContract(unittest.TestCase):
+    def test_retry_imports_with_the_workflow_environment(self):
+        workflow = (ROOT / '.github/workflows/current-phase-observable-capacity-arm.yml').read_text()
+        # Shared helpers accept only gate caps during import; retry sets the
+        # capacity cap on the worker after import instead.
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
+        env.pop('MATCHED_COLLECTION_CAP_SECONDS', None)
+        result = subprocess.run([sys.executable, '-c',
+            'import retry; assert retry.CAP_SECONDS == 10000'],
+            cwd=ROOT / '.github/scripts/current-arm', env=env, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertNotIn('MATCHED_COLLECTION_CAP_SECONDS', workflow)
+
     def test_one_job_is_split_around_immediate_base_retention(self):
         workflow = (ROOT / '.github/workflows/current-phase-observable-capacity-arm.yml').read_text()
         self.assertIn('timeout-minutes: 355', workflow)
@@ -137,7 +151,7 @@ class WorkflowContract(unittest.TestCase):
         self.assertLess(sum(budgets[1:]), 355)
         self.assertIn('artifact-ids: 12204356184', workflow)
         self.assertIn('run-id: 39282454396', workflow)
-        self.assertIn('MATCHED_COLLECTION_CAP_SECONDS: \'10000\'', workflow)
+        self.assertNotIn('MATCHED_COLLECTION_CAP_SECONDS', workflow)
         base = workflow.index('retry.py base')
         upload = workflow.index('Retain baseline raw output immediately')
         candidate = workflow.index('retry.py candidate')
