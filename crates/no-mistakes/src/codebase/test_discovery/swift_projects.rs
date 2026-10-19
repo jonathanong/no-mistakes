@@ -122,13 +122,37 @@ fn swift_package_for_policy(
     policy: &TestProjectPolicy,
     packages: &[String],
 ) -> Option<String> {
+    let mut best: Option<&str> = None;
     for package in packages {
         let package = package.trim_end_matches('/');
-        if project_name == package || policy.include.iter().any(|glob| glob.starts_with(package)) {
-            return Some(package.to_string());
+        if !package_matches_policy(project_name, policy, package) {
+            continue;
+        }
+        if best.is_none_or(|current| package.len() > current.len()) {
+            best = Some(package);
         }
     }
-    packages
-        .first()
-        .map(|package| package.trim_end_matches('/').to_string())
+    best.map(str::to_string).or_else(|| {
+        packages
+            .first()
+            .map(|package| package.trim_end_matches('/').to_string())
+    })
+}
+
+/// `clients/core` must not own `clients/core-extra/...`. A longer declared
+/// package wins when several boundaries match.
+fn package_matches_policy(project_name: &str, policy: &TestProjectPolicy, package: &str) -> bool {
+    project_name == package
+        || policy
+            .include
+            .iter()
+            .any(|glob| glob_matches_package(glob, package))
+}
+
+fn glob_matches_package(glob: &str, package: &str) -> bool {
+    match glob.strip_prefix(package) {
+        Some("") => true,
+        Some(rest) => rest.starts_with('/'),
+        None => false,
+    }
 }

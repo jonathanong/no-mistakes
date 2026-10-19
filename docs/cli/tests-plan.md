@@ -228,8 +228,9 @@ Keep these paths scoped to the native workspaces you want analyzed; no
 repository-wide `.csproj`, `.sln`, or `Package.swift` scan runs by default.
 
 `--format commands` prints the exact runner commands for selected execution
-targets. Use it when an agent needs runnable commands instead of test paths or a
-structured plan.
+targets, sorted by that rendered string. A `baseCommands` override can therefore
+print before `swift test`. JSON order is unchanged. Use it when an agent needs
+runnable commands instead of test paths or a structured plan.
 
 Node API: `testsPlan(options)`.
 

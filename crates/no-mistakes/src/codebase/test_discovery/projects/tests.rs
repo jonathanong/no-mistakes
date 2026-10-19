@@ -167,6 +167,60 @@ fn swift_projects_cover_package_fallback_and_policy_overrides() {
         .any(|project| project.policy_name.as_deref() == Some("empty-policy")));
 }
 
+/// `clients/core` is a string prefix of `clients/core-extra` and is listed
+/// first. The policy still belongs to the longer package.
+#[test]
+fn swift_project_policy_prefers_the_longest_path_boundary() {
+    let root = Path::new("");
+    let mut config = NoMistakesConfig::default();
+    config.tests.swift.packages = vec![
+        "clients/core".to_string(),
+        "clients".to_string(),
+        "clients/core-extra".to_string(),
+    ];
+    config.tests.swift.projects.insert(
+        "extra".to_string(),
+        TestProjectPolicy {
+            include: vec!["clients/core-extra/Tests/**".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let projects = runner_projects(root, &config, TestRunner::Swift).unwrap();
+    let extra = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("extra"))
+        .expect("extra policy");
+    assert_eq!(extra.config.as_deref(), Some("clients/core-extra"));
+}
+
+/// An include equal to a declared package is a boundary match. The shorter
+/// parent `clients` also matches and must not win.
+#[test]
+fn swift_project_policy_matches_an_exact_package_glob() {
+    let root = Path::new("");
+    let mut config = NoMistakesConfig::default();
+    config.tests.swift.packages = vec![
+        "clients".to_string(),
+        "clients/core".to_string(),
+        "clients/core-extra".to_string(),
+    ];
+    config.tests.swift.projects.insert(
+        "exact-glob".to_string(),
+        TestProjectPolicy {
+            include: vec!["clients/core".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let projects = runner_projects(root, &config, TestRunner::Swift).unwrap();
+    let exact = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("exact-glob"))
+        .expect("exact glob policy");
+    assert_eq!(exact.config.as_deref(), Some("clients/core"));
+}
+
 #[test]
 fn swift_projects_lossy_uses_swift_project_loader() {
     let root = Path::new("");

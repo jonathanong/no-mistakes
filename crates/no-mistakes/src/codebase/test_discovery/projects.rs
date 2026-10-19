@@ -8,6 +8,9 @@ use super::types::TestRunner;
 
 mod policies;
 #[cfg(test)]
+#[path = "projects/swift_prefix_plan_tests.rs"]
+mod swift_prefix_plan_tests;
+#[cfg(test)]
 mod tests;
 
 use policies::apply_explicit_policy_projects;

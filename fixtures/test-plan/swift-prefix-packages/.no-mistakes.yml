@@ -1,0 +1,20 @@
+tests:
+  swift:
+    packages:
+      - clients/core
+      - clients/core-extra
+    baseCommands:
+      clients/core:
+        - /opt/core-only-swift
+        - test
+    projects:
+      extra:
+        include:
+          - clients/core-extra/Tests/**
+testPlan:
+  swift:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+rules: []
