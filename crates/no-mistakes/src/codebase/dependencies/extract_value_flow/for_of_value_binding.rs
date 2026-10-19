@@ -12,15 +12,14 @@ impl ImportCollector {
         let ForStatementLeft::VariableDeclaration(declaration) = left else {
             return;
         };
-        let ValueExpression::Array(elements) = self.value_expression(right) else {
+        // A named array (`const items = [box]`) is the same receiver list as a
+        // literal. One binding hop; anything else is not a known element list.
+        let Some(mut values) = super::super::parameter_call_origins::array_elements(
+            self,
+            &self.value_expression(right),
+        ) else {
             return;
         };
-        let mut entries: Vec<_> = elements.iter().collect();
-        entries.sort_by(|left, right| left.0.cmp(right.0));
-        let mut values: Vec<_> = entries
-            .into_iter()
-            .map(|(_, value)| value.clone())
-            .collect();
         if !values
             .iter()
             .any(|value| self.assigned_rhs_has_receiver(value))

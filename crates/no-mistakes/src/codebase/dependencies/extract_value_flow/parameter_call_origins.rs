@@ -20,21 +20,27 @@ impl ParameterCallOrigins {
         let mut values: FxHashMap<(usize, String), Vec<ValueExpression>> = fx_map();
         for call in &collector.value_flow.calls {
             if let ValueExpression::Member(receiver, method) = &call.callee {
-                if method == "forEach" {
-                    if let (ValueExpression::Array(items), Some(callback)) =
-                        (receiver.as_ref(), call.arguments.first())
+                if matches!(method.as_str(), "forEach" | "map") {
+                    if let (Some(items), Some(callback)) =
+                        (array_elements(collector, receiver), call.arguments.first())
                     {
-                        if let Some(parameters) =
-                            callable_owner(collector, callback).and_then(|owner| slots.get(&owner))
+                        if let Some(key) = callable_owner(collector, callback)
+                            .and_then(|owner| slots.get(&owner))
+                            .and_then(|parameters| parameters.get(&0))
                         {
-                            if let Some(key) = parameters.get(&0) {
-                                let mut entries: Vec<_> = items.iter().collect();
-                                entries.sort_by(|left, right| left.0.cmp(right.0));
-                                values
-                                    .entry(key.clone())
-                                    .or_default()
-                                    .extend(entries.into_iter().map(|(_, value)| value.clone()));
-                            }
+                            values.entry(key.clone()).or_default().extend(items);
+                        }
+                    }
+                }
+                if matches!(method.as_str(), "reduce" | "reduceRight") {
+                    if let (Some(callback), Some(initial)) =
+                        (call.arguments.first(), call.arguments.get(1))
+                    {
+                        if let Some(key) = callable_owner(collector, callback)
+                            .and_then(|owner| slots.get(&owner))
+                            .and_then(|parameters| parameters.get(&0))
+                        {
+                            values.entry(key.clone()).or_default().push(initial.clone());
                         }
                     }
                 }
@@ -52,6 +58,35 @@ impl ParameterCallOrigins {
                         .push(argument.clone());
                 }
             }
+            if let Some(extras) = collector.escaped_parameter_arguments.get(&call.offset) {
+                for (index, extra) in extras {
+                    if let Some(key) = parameters.get(index) {
+                        values
+                            .entry(key.clone())
+                            .or_default()
+                            .extend(extra.iter().cloned());
+                    }
+                }
+            }
+        }
+        for (owner, arguments) in &collector.class_method_calls {
+            let Some(parameters) = slots.get(owner) else {
+                continue;
+            };
+            for (index, argument) in arguments.iter().enumerate() {
+                if let Some(key) = parameters.get(&index) {
+                    values
+                        .entry(key.clone())
+                        .or_default()
+                        .push(argument.clone());
+                }
+            }
+        }
+        for (scope, name, value) in &collector.parameter_reassignments {
+            values
+                .entry((*scope, name.clone()))
+                .or_default()
+                .push(value.clone());
         }
         for parameter in &collector.value_flow.parameters {
             if parameter.projection.is_empty()
@@ -80,6 +115,35 @@ impl ImportCollector {
         self.parameter_call_origins = Some(std::sync::Arc::clone(&origins));
         origins
     }
+}
+
+pub(super) fn array_elements(
+    collector: &ImportCollector,
+    value: &ValueExpression,
+) -> Option<Vec<ValueExpression>> {
+    match value {
+        ValueExpression::Array(items) => Some(sorted_array(items)),
+        ValueExpression::Named { name, scope, .. } => {
+            let scope = scope.unwrap_or(0);
+            let indexes = collector.value_binding_indexes.get(&scope)?.get(name)?;
+            // Appended with the binding, so the last index addresses that value.
+            let index = indexes[indexes.len() - 1];
+            match &collector.value_flow.bindings[index].value {
+                ValueExpression::Array(items) => Some(sorted_array(items)),
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn sorted_array(items: &FxHashMap<String, ValueExpression>) -> Vec<ValueExpression> {
+    let mut entries: Vec<_> = items.iter().collect();
+    entries.sort_by(|left, right| left.0.cmp(right.0));
+    entries
+        .into_iter()
+        .map(|(_, value)| value.clone())
+        .collect()
 }
 
 fn callable_owner(collector: &ImportCollector, callee: &ValueExpression) -> Option<CallableId> {

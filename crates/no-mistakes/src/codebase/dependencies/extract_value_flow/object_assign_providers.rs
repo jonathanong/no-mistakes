@@ -7,6 +7,7 @@ impl ImportCollector {
         &mut self,
         callee: &ValueExpression,
         arguments: &[ValueExpression],
+        raw: &[oxc_ast::ast::Argument<'_>],
         completed: u32,
     ) {
         let ValueExpression::Member(base, method) = callee else {
@@ -17,18 +18,20 @@ impl ImportCollector {
         {
             return;
         }
-        let Some((target, sources)) = arguments.split_first() else {
+        let Some(target) = arguments.first() else {
             return;
         };
+        let sources = expanded_assign_sources(self, arguments, raw);
         let mut destinations: Vec<nested::ReceiverWrite> = Vec::new();
         nested::write_receiver_references(target, &[], &[], &mut destinations);
+        let mut concrete_writes = Vec::new();
         for ((key, prefix), reads, read) in destinations {
             let version = self.mutable_receiver_version(&key, read);
             let root_identity = version.map(mutable_origins::RootVersion::identity);
             let component = self
                 .prior_member_mutations
                 .assigned_destination_component(&key);
-            for source in sources {
+            for source in &sources {
                 // Unknown/source aliases are kept as possible prefix values;
                 // literal fields can also participate in ordinary member reads.
                 let fields = match source {
@@ -44,6 +47,9 @@ impl ImportCollector {
                     if let Some(member) = member {
                         path.push(Some(member));
                         acquired.push(Some((completed, self.current_function_id())));
+                        // A copied field is a member write. Reads must go Unknown
+                        // rather than keep the previous known callee.
+                        concrete_writes.push((key.0, key.1.clone(), path.clone()));
                     }
                     let mut parent_identities =
                         self.assignment_rhs_parent_identities(&key, &path, &acquired, version);
@@ -73,5 +79,85 @@ impl ImportCollector {
                 }
             }
         }
+        for (scope, base, path) in concrete_writes {
+            let dotted = std::iter::once(base.as_str())
+                .chain(path.iter().filter_map(|part| part.as_deref()))
+                .collect::<Vec<_>>()
+                .join(".");
+            self.invalidate_value_write_with_path(
+                scope,
+                &dotted,
+                completed,
+                Some(&path),
+                completed,
+            );
+        }
     }
+
+    /// Literal `Object.assign({}, { client })` is the merged object. Anything
+    /// else stays a call so a shadowed or partial assign cannot invent a field.
+    pub(in super::super::super) fn object_assign_result(
+        &self,
+        call: &oxc_ast::ast::CallExpression<'_>,
+    ) -> Option<ValueExpression> {
+        if simple_callee_name(&call.callee).as_deref() != Some("Object.assign")
+            || self.callee_binding_scope("Object").is_some()
+        {
+            return None;
+        }
+        let mut raw = call.arguments.iter();
+        let target = raw.next()?.as_expression()?;
+        let oxc_ast::ast::Expression::ObjectExpression(target) =
+            crate::codebase::ts_source::unwrap_ts_wrappers(target)
+        else {
+            return None;
+        };
+        let ValueExpression::Object(target_fields, null_prototype) = self.object_value(target)
+        else {
+            return None;
+        };
+        let mut fields = (*target_fields).clone();
+        for source in raw {
+            let expression = source.as_expression()?;
+            let oxc_ast::ast::Expression::ObjectExpression(object) =
+                crate::codebase::ts_source::unwrap_ts_wrappers(expression)
+            else {
+                return None;
+            };
+            let ValueExpression::Object(source_fields, _) = self.object_value(object) else {
+                return None;
+            };
+            for (key, value) in source_fields.iter() {
+                fields.insert(key.clone(), value.clone());
+            }
+        }
+        Some(ValueExpression::Object(
+            std::sync::Arc::new(fields),
+            null_prototype,
+        ))
+    }
+}
+
+fn expanded_assign_sources(
+    collector: &ImportCollector,
+    arguments: &[ValueExpression],
+    raw: &[oxc_ast::ast::Argument<'_>],
+) -> Vec<ValueExpression> {
+    let mut sources = Vec::new();
+    for (index, source) in arguments.iter().enumerate().skip(1) {
+        if let Some(oxc_ast::ast::Argument::SpreadElement(spread)) = raw.get(index) {
+            if let oxc_ast::ast::Expression::ArrayExpression(array) =
+                crate::codebase::ts_source::unwrap_ts_wrappers(&spread.argument)
+            {
+                for element in &array.elements {
+                    if let Some(expression) = element.as_expression() {
+                        sources.push(collector.value_expression(expression));
+                    }
+                }
+                continue;
+            }
+        }
+        sources.push(source.clone());
+    }
+    sources
 }

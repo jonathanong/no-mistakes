@@ -159,6 +159,7 @@ mod forward_receiver_aliases;
 #[path = "module_scope_receiver_reads.rs"]
 mod module_scope_receiver_reads;
 mod namespace_executor_shadows;
+mod receiver_escapes;
 mod unique_execution_phases;
 
 #[path = "mutable_receiver_bindings.rs"]
