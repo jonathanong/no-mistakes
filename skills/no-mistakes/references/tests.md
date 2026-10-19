@@ -70,6 +70,8 @@ Key flags:
   package versions. JSON then includes
   `incomplete: [{ kind: "dependency-baseline-missing", files: [...] }]`
   (`incomplete` on `testsPlan()`; import `TestPlanIncompleteness`).
+  `dotnet-dependency-no-baseline` uses that same kind for `.csproj`,
+  `Directory.Packages.props`, and NuGet lockfiles.
   `fallback_triggered: true` is not completeness. A dynamic Vitest
   `setupFiles` fallback can still select only that project's tests.
   Example: only `package.json`, `tooling/package.json`, and `pnpm-lock.yaml`
