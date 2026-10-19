@@ -3,7 +3,7 @@
 Pushing `eval/2238-conflict-locations-arm` starts the isolated
 `conflict-locations-ordering-arm.yml` workflow. It freshly builds baseline
 `fbac9dc5857259ea8eff7820b0b0385ba2dea9ab` and candidate
-`90d9ec30758770ec503c7f6b76e5c3f91772b9b1` on one `ubuntu-24.04-arm` VM.
+`d7f0f0a184964de6cbd3a89a5afc4bf1a1a7dfeb` on one `ubuntu-24.04-arm` VM.
 Source/tree/compiler/lock/profile/binary hashes and CPU probes are retained.
 No historical executable is reused. The candidate passed full local workspace
 validation and the unchanged 98% coverage floors before launch.

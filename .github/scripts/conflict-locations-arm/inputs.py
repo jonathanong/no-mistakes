@@ -4,7 +4,7 @@ from pathlib import Path
 HELPERS = Path(__file__).resolve().parents[1] / 'matched-arm'
 SOURCES = {
     'base': 'fbac9dc5857259ea8eff7820b0b0385ba2dea9ab',
-    'candidate': '90d9ec30758770ec503c7f6b76e5c3f91772b9b1',
+    'candidate': 'd7f0f0a184964de6cbd3a89a5afc4bf1a1a7dfeb',
 }
 CONSUMER = 'f38a048f5eeff0438fc59a15e9eb742def575a36'
 ARTIFACT_ID = 12158768554
