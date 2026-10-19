@@ -164,6 +164,7 @@ fn verifiers_and_option_errors_are_explicit() {
     assert!(!step_verifies("sha256sum sums"));
     assert!(!step_verifies("shasum -a 512 -c sums"));
     assert!(!step_verifies("$(sha256sum) -c sums"));
+    assert!(!step_verifies("sha256sum -c $(cat sums)"));
     assert!(takes_url_slot("curl", "-o"));
     assert!(takes_url_slot("wget", "--directory-prefix"));
     assert!(!takes_url_slot("curl", "--url=https://example.invalid"));

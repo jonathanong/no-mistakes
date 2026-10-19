@@ -27,7 +27,8 @@ It flags `curl`, `wget`, or a configured helper when an argument is an
 of these is true:
 
 - the same `run` body runs `sha256sum -c` (or `--check`, including a short
-  cluster such as `-cw`) or `shasum -a 256 -c` (also `-a256` and `--check`)
+  cluster such as `-cw`) or `shasum -a 256 -c` (also `-a256` and `--check`).
+  A command substitution or backtick in that check does not count
 - the host, after stripping a port and any login prefix, is trusted
 - the URL path is a checksum file (`.sha256`, `.sha256sum`, `.sha512`,
   `.sha512sum`, `SHA256SUMS`, `SHA256SUMS.txt`, `SHA512SUMS`, or

@@ -2,6 +2,10 @@ use super::words::commands;
 
 pub(super) fn step_verifies(script: &str) -> bool {
     commands(script).into_iter().any(|command| {
+        // A substitution hides the checksum file, so the check is not judged.
+        if command.dynamic {
+            return false;
+        }
         let words: Vec<&str> = command
             .words
             .iter()
