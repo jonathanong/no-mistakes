@@ -113,6 +113,7 @@ impl Recovered {
         left == right
     }
     pub(super) fn publish(self) -> EmbeddedSqlVariant {
+        debug_assert_eq!(self.origins.len(), self.sql.len());
         let sql_source_offsets = origins::rewrite(&self.sql, &self.origins, 0, true);
         let (sql_text, recovered_placeholder_positions) =
             placeholders::publish_placeholders_with_positions(self.sql);
