@@ -80,6 +80,9 @@ fn has_unknown_relation(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool 
     })
 }
 
+#[cfg(test)]
+mod tests;
+
 fn kind_name(kind: SqlBoundKind) -> &'static str {
     match kind {
         SqlBoundKind::Select => "select",

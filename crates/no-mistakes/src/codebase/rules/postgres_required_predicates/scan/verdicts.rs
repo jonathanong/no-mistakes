@@ -67,6 +67,9 @@ pub(super) fn record(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests;
+
 fn judge(
     obligation: &Obligation<'_>,
     statement: &SqlStatementFileFacts,

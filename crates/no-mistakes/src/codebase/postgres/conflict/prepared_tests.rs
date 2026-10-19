@@ -1,7 +1,9 @@
-use super::prepared::reliable_conflicts;
+use super::prepared::{reliable_chunk_tokens, reliable_conflicts, ConflictChunks};
 use super::SqlConflictTarget;
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
 use crate::codebase::postgres::statements::extract_sql_variant_statement_facts;
+use sqlparser::tokenizer::{Span, Token, TokenWithSpan};
+use std::sync::Arc;
 
 const FAILED_TARGETLESS: &str =
     "INSERT INTO items (id) VALUES (gen_random_uuid()) ON CONFLICT DO NOTHING RETURNING (";
@@ -86,5 +88,57 @@ fn extracted_failed_sibling_keeps_only_its_own_target() {
             .any(|fact| columns_id(&fact.target)),
         "{:?}",
         locations.reliable_conflicts
+    );
+}
+
+fn eof_token() -> TokenWithSpan {
+    TokenWithSpan {
+        token: Token::EOF,
+        span: Span::empty(),
+    }
+}
+
+/// A missing token chunk is a boundary, not a continuation of the previous text.
+/// An incomplete statement there abstains instead of borrowing a sibling target.
+#[test]
+fn missing_chunk_between_distinct_texts_overlaps_when_incomplete() {
+    let statements = parse_postgres_sql("SELECT 1; SELECT 2; SELECT 3").expect("selects");
+    assert_eq!(statements.len(), 3);
+    let left: Arc<[TokenWithSpan]> = Arc::from([eof_token()]);
+    let right: Arc<[TokenWithSpan]> = Arc::from([eof_token(), eof_token()]);
+    let chunks = [Some(left), None, Some(right)];
+    let recovery = reliable_chunk_tokens(
+        &statements,
+        &[],
+        &ConflictChunks {
+            complete: &[true, false, true],
+            chunks: &chunks,
+            orphans: &[],
+        },
+    );
+    assert!(recovery.failure_overlaps_conflict);
+    assert!(recovery.reliable.is_empty());
+}
+
+/// A recovered statement with no chunk tokens is not an orphan `ON CONFLICT` chunk.
+#[test]
+fn statements_without_chunk_tokens_are_not_orphan_chunks() {
+    let statement = parse_postgres_sql("SELECT 1")
+        .expect("select")
+        .pop()
+        .expect("one statement");
+    let located = crate::codebase::postgres::parse::LocatedStatement {
+        statement,
+        source: None,
+        function_projection: false,
+        synthetic_select: false,
+        recovered_functions: Vec::new(),
+        policy_arbiter: None,
+        complete: true,
+        chunk_tokens: None,
+    };
+    assert!(
+        crate::codebase::postgres::parse::orphan_chunk_tokens(std::slice::from_ref(&located))
+            .is_empty()
     );
 }

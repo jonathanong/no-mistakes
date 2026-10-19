@@ -255,6 +255,29 @@ include!("report_error_tests.rs");
 include!("report_success_tests.rs");
 
 #[test]
+fn check_report_returns_a_rule_option_error() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/check-rule-error/fixture"),
+    );
+    let options: super::super::types::AnalyzeProjectOptions =
+        serde_json::from_value(serde_json::json!({
+            "root": root,
+            "config": "broken.yml",
+            "reports": [{"type": "check"}]
+        }))
+        .unwrap();
+    let context = super::AnalyzeProjectContext::prepare(&options).unwrap();
+    let error = context
+        .project_report(&options.reports[0], &options)
+        .expect_err("missing schema catalog");
+    assert!(
+        error.to_string().contains("schemaCatalogPath: required"),
+        "{error:#}"
+    );
+}
+
+#[test]
 fn command_report_rejects_unknown_type() {
     let request = super::super::types::AnalyzeReportRequest {
         id: None,

@@ -3,6 +3,7 @@ mod false_positives;
 mod join_pinning;
 mod multi_target;
 mod options;
+mod patch_coverage;
 mod pinned_prefix;
 mod unanalyzable;
 mod variants;

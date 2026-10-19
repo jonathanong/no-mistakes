@@ -44,6 +44,9 @@ pub(super) fn record(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests;
+
 fn judge(
     check: &str,
     statement: &SqlStatementFileFacts,

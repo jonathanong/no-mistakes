@@ -108,6 +108,9 @@ pub(super) fn record(
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 fn metadata<'a>(
     call: &'a EmbeddedSqlCall,
     prepared: Option<&'a SqlStatementFileFacts>,

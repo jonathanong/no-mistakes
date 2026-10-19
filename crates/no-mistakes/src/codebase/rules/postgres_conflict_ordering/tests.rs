@@ -1,3 +1,4 @@
+mod patch_coverage;
 mod variants;
 use super::*;
 use crate::config::v2::{
