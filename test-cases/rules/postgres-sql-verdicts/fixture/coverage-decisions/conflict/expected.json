@@ -1,0 +1,5 @@
+[
+  {"line": 2, "status": "proven-clear", "residualReasons": []},
+  {"line": 3, "status": "abstain", "residualReasons": ["unresolved-conflict-catalog-or-source"]},
+  {"line": 4, "status": "violation", "residualReasons": []}
+]

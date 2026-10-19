@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      relations:
+        - table: events
+          requireColumns: [owner_id]

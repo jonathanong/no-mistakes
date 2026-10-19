@@ -1,0 +1,7 @@
+rules:
+- rule: postgres-no-generated-column-writes
+  scope: repository
+  options:
+    importSpecifier: "@example/db"
+    unanalyzableSql: advise
+    sqlInclude: [schema.sql]

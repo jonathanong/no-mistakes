@@ -27,7 +27,7 @@ test(
     assert.deepEqual(await esm.check(requested), report);
     assert.deepEqual(report.rules, baseline.rules);
     assert.deepEqual(report.advisories, baseline.advisories);
-    assert.equal(report.sqlVerdicts.length, 4);
+    assert.equal(report.sqlVerdicts.length, 5);
     assert.equal(report.sqlVerdicts.filter((row) => row.file !== "src/query.ts").length, 2);
 
     const batch = await cjs.analyzeProject({

@@ -1,0 +1,38 @@
+[
+  {
+    "line": 3,
+    "subcheck": "select-star",
+    "status": "proven-clear",
+    "residualReasons": []
+  },
+  {
+    "line": 3,
+    "subcheck": "returning-star",
+    "status": "proven-clear",
+    "residualReasons": []
+  },
+  {
+    "line": 4,
+    "subcheck": "select-star",
+    "status": "proven-clear",
+    "residualReasons": []
+  },
+  {
+    "line": 4,
+    "subcheck": "returning-star",
+    "status": "proven-clear",
+    "residualReasons": []
+  },
+  {
+    "line": 5,
+    "subcheck": "select-star",
+    "status": "violation",
+    "residualReasons": []
+  },
+  {
+    "line": 5,
+    "subcheck": "returning-star",
+    "status": "proven-clear",
+    "residualReasons": []
+  }
+]

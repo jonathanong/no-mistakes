@@ -1,0 +1,30 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {"key": "RANGE (account_id)"},
+      "columns": {
+        "id": {"dataType": "integer", "ordinalPosition": 1},
+        "account_id": {"dataType": "integer", "ordinalPosition": 2},
+        "owner_id": {"dataType": "integer", "ordinalPosition": 3}
+      }
+    },
+    "ordinary": {
+      "columns": {"id": {"dataType": "integer", "ordinalPosition": 1}}
+    },
+    "unkeyed": {
+      "relationKind": "partitioned table",
+      "columns": {"id": {"dataType": "integer", "ordinalPosition": 1}}
+    },
+    "expression_events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {"key": "RANGE (date_trunc('day'::text, created_at))"},
+      "columns": {
+        "id": {"dataType": "integer", "ordinalPosition": 1},
+        "created_at": {"dataType": "timestamp", "ordinalPosition": 2}
+      }
+    }
+  }
+}

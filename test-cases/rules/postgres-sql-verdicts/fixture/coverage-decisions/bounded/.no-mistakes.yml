@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      statements: [select]
+      unanalyzableSql: advise

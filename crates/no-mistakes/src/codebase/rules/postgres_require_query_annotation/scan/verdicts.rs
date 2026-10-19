@@ -41,11 +41,6 @@ pub(super) fn record(
                         residual,
                     )
                 }
-                (EmbeddedSqlKind::Dynamic, None) => (
-                    SqlVerdictStatus::Abstain,
-                    None,
-                    vec!["unresolved-leading-sql".to_string()],
-                ),
                 (_, Some(sql)) => (
                     annotation_status(sql),
                     Some(SqlEvidenceKind::Exact),

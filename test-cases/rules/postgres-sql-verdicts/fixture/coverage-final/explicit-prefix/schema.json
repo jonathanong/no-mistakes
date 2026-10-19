@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "integer", "ordinalPosition": 1},
+        "name": {"dataType": "text", "ordinalPosition": 2}
+      },
+      "primaryKey": {"columns": ["id"]}
+    }
+  }
+}

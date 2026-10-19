@@ -1,0 +1,9 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "items": {
+      "columns": {"id": {"dataType": "integer", "ordinalPosition": 1}}
+    }
+  }
+}
