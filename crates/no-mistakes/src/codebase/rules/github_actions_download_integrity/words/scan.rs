@@ -109,7 +109,7 @@ impl<'a> Scan<'a> {
         if self.word.is_empty() {
             self.word_line = self.line;
         }
-        self.index = take_expansion(&self.chars, self.index, &mut self.word, &mut self.line);
+        self.index = take_expansion(self.chars, self.index, &mut self.word, &mut self.line);
         true
     }
 
