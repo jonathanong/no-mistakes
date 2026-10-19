@@ -1,0 +1,8 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      bannedPatterns:
+        - files: ["docs/*.md"]
+          pattern: '(a{1000}){1000}'
+          message: "saved config"

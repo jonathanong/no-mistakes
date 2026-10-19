@@ -1,0 +1,11 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      bannedPatterns:
+        - files: ["docs/*.md"]
+          pattern: PIN
+          message: "first"
+        - files: ["docs/*.md"]
+          pattern: 'a*|QQ'
+          message: "later"

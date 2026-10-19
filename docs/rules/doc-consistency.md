@@ -24,15 +24,17 @@ empty or omitted `bannedPatterns` list does no pattern work.
 Each `bannedPatterns` entry requires `files`, `pattern`, and `message`. There
 is no default message. `files` lists at least one non-empty glob. `pattern` is
 a Rust regex and is not trimmed. It must not be able to match the empty string.
-`a*`, `a?`, `(a|)?`, `(|b)`, `(?m)^`, and `a*|QQ` fail configuration, because an
-empty match is not a finding and a leading empty alternative would hide a later
-one. A pattern that cannot match empty, such as `a+` or `PIN-[0-9]{3}`, is
-unchanged. `message` is reported verbatim after trimming and must not be empty.
-Invalid globs, empty fields, empty-matching patterns, patterns over the
-explicit regex size limit, and invalid regexes fail configuration before any
-source is read, including when no file is selected. An oversized pattern such
-as `(a{1000}){1000}` reports `pattern too large`, not a generic invalid-regex
-error. The size limit is the regex crate's 10 MiB ceiling, set explicitly. The
+`a*`, `a?`, `(a|)?`, `(|b)`, `(?m)^`, and `a*|QQ` fail configuration. The error
+echoes the pattern, says that empty-matching branch hides later alternatives,
+and tells you to use `+` instead of `*` or drop the empty branch. A pattern
+that cannot match empty, such as `a+` or `PIN-[0-9]{3}`, is unchanged. `message`
+is reported verbatim after trimming and must not be empty. Invalid globs, empty
+fields, empty-matching patterns, patterns over the explicit regex size limit,
+and invalid regexes fail configuration before any source is read, including
+when no file is selected. An oversized pattern such as `(a{1000}){1000}` reports
+that the pattern exceeds the 10 MiB compiled-size limit and to reduce
+repetition counts, not a generic invalid-regex error. The size limit is the
+regex crate's 10 MiB ceiling, set explicitly. The
 first invalid entry in index order fails the application, so a later valid
 pattern produces no findings.
 

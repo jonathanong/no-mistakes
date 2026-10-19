@@ -114,14 +114,27 @@ pub mod vitest_test_correspondence;
 pub mod workflow_topology_policy;
 pub mod workspace_package_cycles;
 
+mod catalog_rule;
+mod entrypoints;
 pub mod filesystem_dispatch;
+mod masked_source;
 pub(crate) mod path_filter;
+mod postgres_findings;
+mod prepared_facts;
+mod prepared_postgres_scan;
+mod reexports;
 mod rule_context;
 mod run;
+mod selected_files;
+mod simple_schema_rule;
+mod sort_findings;
 mod source_access;
+mod sql_glob_rules;
 mod suppression;
+mod target_roots;
+mod variant_findings;
 
-include!("reexports.rs");
+pub use reexports::*;
 
 #[cfg(test)]
 mod suppression_absolute_paths_tests;
