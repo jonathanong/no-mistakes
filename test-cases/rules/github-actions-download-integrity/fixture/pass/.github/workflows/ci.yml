@@ -29,3 +29,7 @@ jobs:
       # integrity-check: skip reason=name-first
       - name: fetch
         run: curl -fsSL https://example.invalid/name-first.tgz -o t.tgz
+      - run: |
+          # don't cache this
+          curl -fsSL https://example.invalid/commented.tgz -o t.tgz
+          sha256sum -c t.tgz.sha256

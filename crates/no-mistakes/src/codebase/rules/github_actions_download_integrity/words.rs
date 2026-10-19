@@ -24,6 +24,24 @@ pub(super) fn parse(script: &str) -> Parse {
     scan::run(script)
 }
 
+fn skip_arithmetic(chars: &[char], mut index: usize, line: &mut usize) -> usize {
+    index += 2;
+    let mut depth = 2i32;
+    while index < chars.len() && depth > 0 {
+        let ch = chars[index];
+        if ch == '\n' {
+            *line += 1;
+        }
+        if ch == '(' {
+            depth += 1;
+        } else if ch == ')' {
+            depth -= 1;
+        }
+        index += 1;
+    }
+    index
+}
+
 fn take_expansion(chars: &[char], mut index: usize, word: &mut String, line: &mut usize) -> usize {
     let open = chars[index + 1];
     let close = if open == '(' { ')' } else { '}' };

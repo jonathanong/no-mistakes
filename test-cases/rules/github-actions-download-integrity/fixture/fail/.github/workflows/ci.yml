@@ -32,3 +32,17 @@ jobs:
       - run: |
           echo $((1 << 2))
           curl -fsSL https://example.invalid/shift.tgz -o x.tgz
+      - run: |
+          # don't cache this
+          curl -fsSL https://example.invalid/comment-apostrophe.tgz -o t.tgz
+          echo 'done'
+          curl -fsSL https://example.invalid/after-quote.tgz -o t.tgz
+      - run: |
+          curl -fsSL https://example.invalid/trailing-comment.tgz -o t.tgz # it's pinned
+          curl -fsSL https://example.invalid/after-trailing.tgz -o t.tgz
+      - run: |
+          # shift with << here
+          curl -fsSL https://example.invalid/comment-shift.tgz -o t.tgz
+      - run: |
+          (( n = 1 << 3 ))
+          curl -fsSL https://example.invalid/after-arith.tgz -o t.tgz

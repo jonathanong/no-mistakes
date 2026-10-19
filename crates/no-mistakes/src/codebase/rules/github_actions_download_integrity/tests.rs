@@ -203,6 +203,12 @@ fn saved_fail_fixtures_report_unverified_downloads() {
         "after-heredoc.tgz",
         "herestring.tgz",
         "shift.tgz",
+        "comment-apostrophe.tgz",
+        "after-quote.tgz",
+        "trailing-comment.tgz",
+        "after-trailing.tgz",
+        "comment-shift.tgz",
+        "after-arith.tgz",
     ] {
         assert!(
             messages.iter().any(|message| message.contains(url)),

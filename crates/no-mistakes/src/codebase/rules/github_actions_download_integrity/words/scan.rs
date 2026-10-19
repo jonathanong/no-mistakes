@@ -1,5 +1,7 @@
 use super::heredoc;
-use super::{flush_command, flush_word, push_char, take_expansion, Command, Parse};
+use super::{
+    flush_command, flush_word, push_char, skip_arithmetic, take_expansion, Command, Parse,
+};
 
 struct Scan<'a> {
     chars: &'a [char],
@@ -47,8 +49,10 @@ impl<'a> Scan<'a> {
         let ch = self.chars[self.index];
         if self.line_continue(ch)
             || self.quoted(ch)
+            || self.comment(ch)
             || self.start_quote(ch)
             || self.expansion(ch)
+            || self.arithmetic()
             || self.heredoc_op()
         {
             return false;
@@ -86,6 +90,34 @@ impl<'a> Scan<'a> {
             }
         }
         self.index += 1;
+        true
+    }
+
+    /// `#` starts a comment only at the beginning of a word, outside quotes.
+    /// The newline stays for `separator`, so a here-document opener on the
+    /// same line still skips its body (`cat <<EOF # note`).
+    fn comment(&mut self, ch: char) -> bool {
+        if ch != '#' || self.quoting.is_some() || !self.word.is_empty() {
+            return false;
+        }
+        while self.index < self.chars.len() && self.chars[self.index] != '\n' {
+            self.index += 1;
+        }
+        true
+    }
+
+    /// `(( ... ))` is an arithmetic command, not a here-document. A shift
+    /// inside it must not swallow the rest of the step.
+    fn arithmetic(&mut self) -> bool {
+        if self.quoting.is_some()
+            || !self.word.is_empty()
+            || !self.current.words.is_empty()
+            || self.chars.get(self.index) != Some(&'(')
+            || self.chars.get(self.index + 1) != Some(&'(')
+        {
+            return false;
+        }
+        self.index = skip_arithmetic(self.chars, self.index, &mut self.line);
         true
     }
 
