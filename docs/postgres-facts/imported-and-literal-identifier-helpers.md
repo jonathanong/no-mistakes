@@ -66,11 +66,13 @@ rest of the request, so a package's own `paths` win over the root's `@/*`.
 
 A helper that is not one of the fixed shapes above is run, not summarized. Its
 body is lowered to a small model: `const`/`let` locals, `if`/`else`, `return`,
-`throw`, `for (const x of ...)`, `.append(...)` chains, tagged `sql` templates,
-untagged templates, string literals, ternaries, `&&`/`||`/`??`/`!`,
-`===`/`!==`/`==`/`!=`, `+`, object and array literals, member access
-(including `?.`) and calls to other top-level helpers. Anything else lowers to
-an opaque node that fails the run only when a path actually reaches it.
+`throw`, a `switch` whose arms each return a literal statement or literal
+identifier and whose `default` is proven to throw, `for (const x of ...)`,
+`.append(...)` chains, tagged `sql` templates, untagged templates, string
+literals, ternaries, `&&`/`||`/`??`/`!`, `===`/`!==`/`==`/`!=`, `+`, object
+and array literals, member access (including `?.`) and calls to other
+top-level helpers. Anything else lowers to an opaque node that fails the run
+only when a path actually reaches it.
 
 Each call runs the model against the call site's arguments:
 
@@ -79,8 +81,21 @@ Each call runs the model against the call site's arguments:
   unknown scalar forks into both outcomes, and a repeated test of the same
   parameters agrees with its first answer. `throw` ends a path, since the
   executor never runs after it, and an early `return` ends its path with the
-  SQL appended so far. At most **16** paths survive; past that the call stays
-  `Dynamic`.
+  SQL appended so far. An `if` that only throws, and whose test cannot write
+  SQL (`!Number.isInteger(limit)`, or `&&` / `||` of such member calls, not a
+  helper call or `.append`), is skipped. A recoverable `switch` yields one
+  alternative per arm. An unknown selector, or a name that is not bound,
+  keeps every arm; a selector that matches none reaches `default` and that
+  path ends. `default` is proven only when the analyzer sees `throw`, or a
+  same-file callee whose body always throws — a function named `assertNever`
+  is not enough. A `switch` that is not this shape, including a `default` that
+  does not throw, stays `Dynamic` rather than keeping the known arms. At most
+  **16** paths survive; past that the call stays `Dynamic` and the union is
+  not truncated.
+- **`??`.** A bound scalar `??` fallback stays a bind, so a string constant
+  there is not its own SQL alternative. `??` on a name the helper does not
+  bind (it may be an SQL fragment) stays unknown and does not publish the
+  fallback. A fallback that is itself a builder abstains.
 - **Bind values.** `${options.limit}` inside a tagged template is a bind, so it
   needs no literal. An object-literal argument is accepted when its properties
   are literals, identifiers or member chains; the helper may read it only in a
@@ -147,7 +162,8 @@ re-export chain past 8 hops, a re-export cycle, ambiguous `export *` names,
 `export * as ns`, namespace-import member calls (`ns.helper()`), CommonJS
 `require`, dynamic `import()`, a local variable shadowing the imported name or
 the SQL tag, any helper the walk could not lower, a path through `while`, `do`,
-`for`, `for...in`, `switch`, `try`, assignment, a closure or a spread of a
+`for`, `for...in`, a `switch` without a proven throwing `default`, `try`,
+assignment, a closure or a spread of a
 non-object, more than 16 alternatives, helpers more than 8 deep, a cycle, a
 caller's builder handed to a parameter that is not annotated `SQLStatement` or
 to a function whose body is unknown, a helper that reads the builder it was

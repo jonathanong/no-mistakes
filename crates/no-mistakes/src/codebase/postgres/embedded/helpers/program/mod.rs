@@ -35,6 +35,13 @@ pub(crate) struct Param {
 }
 
 #[derive(Clone, PartialEq, Eq)]
+pub(crate) struct SwitchArm {
+    pub(crate) cases: Vec<String>,
+    pub(crate) value: Expr,
+    pub(crate) mark: Mark,
+}
+
+#[derive(Clone, PartialEq, Eq)]
 pub(crate) enum Stmt {
     Let(String, Expr),
     Expr(Expr),
@@ -44,6 +51,8 @@ pub(crate) enum Stmt {
     Throw,
     /// `for (const name of iterable) body`, unrolled over a known array.
     ForOf(String, Expr, Vec<Stmt>),
+    /// Literal returns and a proven throwing `default`.
+    Switch(Expr, Vec<SwitchArm>),
     Opaque,
 }
 
