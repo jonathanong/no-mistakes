@@ -1,0 +1,9 @@
+# A sequence key is not a string, number, or bool job id.
+name: complex
+on: push
+jobs:
+  ? [build]
+  :
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.invalid/complex.tgz -o complex.tgz

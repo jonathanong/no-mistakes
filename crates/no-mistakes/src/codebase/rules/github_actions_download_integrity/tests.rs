@@ -54,6 +54,15 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
         ],
         "helpers" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
         "empty-hosts" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
+        "edges" => &[
+            ".github/actions/fetch/action.yml",
+            ".github/workflows/ci.yml",
+            ".github/workflows/complex.yml",
+            ".github/workflows/empty.yml",
+            ".github/workflows/flow.yml",
+            ".github/workflows/jobs.yml",
+            ".no-mistakes.yml",
+        ],
         other => panic!("unknown fixture scenario {other}"),
     }
 }
@@ -255,4 +264,156 @@ fn suppression_directives_hide_file_line_and_next_line() {
     assert!(hidden.contains("hidden.tgz"), "{hidden}");
     let kept = text.lines().nth(compact.line - 1).unwrap();
     assert!(kept.contains("kept.tgz"), "{kept}");
+}
+
+fn config_with_options(options: &str) -> NoMistakesConfig {
+    let mut config = enabled_config();
+    config.rules[0].options = serde_yaml::from_str(options).unwrap();
+    config
+}
+
+fn download_url(message: &str) -> &str {
+    let marker = "downloads `";
+    let start = message.find(marker).unwrap_or(0) + marker.len();
+    let rest = message.get(start..).unwrap_or(message);
+    let end = rest.find('`').unwrap_or(rest.len());
+    &rest[..end]
+}
+
+fn target_for<'a>(findings: &'a [RuleFinding], url: &str) -> &'a str {
+    findings
+        .iter()
+        .find(|finding| download_url(&finding.message) == url)
+        .and_then(|finding| finding.target.as_deref())
+        .unwrap_or("")
+}
+
+#[test]
+fn bad_host_and_helper_options_name_the_entry() {
+    let host = super::check_with_files(
+        Path::new("."),
+        &config_with_options("trustedHosts: ['https://example.invalid']"),
+        &[],
+    )
+    .unwrap_err();
+    assert!(
+        host.to_string()
+            .contains("trustedHosts entry `https://example.invalid` is not a host"),
+        "{host}"
+    );
+    let bracket = super::check_with_files(
+        Path::new("."),
+        &config_with_options("trustedHosts: ['[::1']"),
+        &[],
+    )
+    .unwrap_err();
+    assert!(
+        bracket
+            .to_string()
+            .contains("trustedHosts entry `[::1` is not a host"),
+        "{bracket}"
+    );
+    let helper = super::check_with_files(
+        Path::new("."),
+        &config_with_options("downloadHelpers: ['9bad']"),
+        &[],
+    )
+    .unwrap_err();
+    assert!(
+        helper
+            .to_string()
+            .contains("downloadHelpers entry `9bad` is not a command name"),
+        "{helper}"
+    );
+}
+
+#[test]
+fn port_and_bracket_hosts_replace_the_defaults() {
+    let (root, _, files) = load_fixture("fail");
+    let config = config_with_options(
+        "trustedHosts:\n  - 'Example.Invalid:443'\n  - '[::1]'\ndownloadHelpers: [ci_fetch]\n",
+    );
+    let findings = super::check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("api.github.com"),
+        "{findings:?}"
+    );
+    let silenced = check_source(
+        WORKFLOW,
+        "on: push\njobs:\n  build:\n    steps:\n      - run: 'curl -fsSL https://[::1]/silent.tgz'\n",
+        &["::1".to_string()],
+        &[],
+    );
+    assert!(silenced.is_empty(), "{silenced:?}");
+}
+
+#[test]
+fn missing_workflow_source_is_skipped() {
+    let root = fixture_root("pass");
+    let missing = root.join(".github/workflows/missing.yml");
+    assert!(!missing.exists());
+    let findings = super::check_with_files(&root, &enabled_config(), &[missing]).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn edge_fixtures_cover_unresolved_shell_and_job_shapes() {
+    let (root, config, files) = load_fixture("edges");
+    let findings = super::check_with_files(&root, &config, &files).unwrap();
+    let mut urls: Vec<&str> = findings
+        .iter()
+        .map(|finding| download_url(&finding.message))
+        .collect();
+    let mut expected = vec![
+        "https://[::1]",
+        "https://[::1]:9/v6.tgz",
+        "https://user:pw@example.invalid/auth.tgz",
+        "https://example.invalid/bad-marker.tgz",
+        "https://example.invalid/bare.tgz",
+        "https://example.invalid/bool.tgz",
+        "https://example.invalid/commented.tgz",
+        "https://example.invalid/complex.tgz",
+        "https://example.invalid/continued.tgz",
+        "https://example.invalid/dashed.tgz",
+        "https://example.invalid/dynamic.tgz",
+        "https://example.invalid/empty-assign.tgz",
+        "https://example.invalid/file{1}.sha256",
+        "https://example.invalid/flow.tgz",
+        "https://example.invalid/inline.tgz",
+        "https://example.invalid/kept-after.tgz",
+        "https://example.invalid/no-reason.tgz",
+        "https://example.invalid/num.tgz",
+        "https://example.invalid/quoted-nl.tgz",
+        "https://example.invalid/spaced-assign.tgz",
+        "https://example.invalid/stuck-skip.tgz",
+        "https://example.invalid/trailing-junk.tgz",
+        "https://example.invalid/unclosed.tgz",
+    ];
+    urls.sort_unstable();
+    expected.sort_unstable();
+    assert_eq!(urls, expected);
+
+    let flow = findings
+        .iter()
+        .find(|finding| finding.file.ends_with("flow.yml"))
+        .unwrap();
+    assert_eq!(flow.line, 1, "{flow:?}");
+    let num = findings
+        .iter()
+        .find(|finding| download_url(&finding.message).ends_with("num.tgz"))
+        .unwrap();
+    assert_ne!(num.line, 1, "{num:?}");
+    assert_eq!(
+        target_for(&findings, "https://example.invalid/num.tgz"),
+        "7"
+    );
+    assert_eq!(
+        target_for(&findings, "https://example.invalid/bool.tgz"),
+        "true"
+    );
+    assert_eq!(
+        target_for(&findings, "https://example.invalid/complex.tgz"),
+        "job"
+    );
 }

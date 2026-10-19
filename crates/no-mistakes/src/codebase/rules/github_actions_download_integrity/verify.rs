@@ -43,9 +43,7 @@ fn shasum_256_check(words: &[&str]) -> bool {
 }
 
 pub(super) fn takes_url_slot(command: &str, token: &str) -> bool {
-    if token == "--" || token.starts_with("--url=") {
-        return false;
-    }
+    // `--` and `--url=` are peeled off before this is called.
     if token.starts_with("--") && token.contains('=') {
         return false;
     }
