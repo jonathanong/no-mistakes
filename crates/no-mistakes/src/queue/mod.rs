@@ -1,4 +1,5 @@
 pub(crate) mod extract;
+mod extract_factory;
 mod extract_helpers;
 mod extract_model;
 mod extract_record;
@@ -8,6 +9,8 @@ mod graph_build;
 mod graph_entities;
 mod graph_model;
 mod graph_related;
+mod factory_resolve;
+mod globs;
 mod graph_resolution;
 mod lang;
 mod resolver;

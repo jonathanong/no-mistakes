@@ -109,7 +109,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         project_route_globset: compile_project_route_globset(&project_route_globs),
         test_filter,
         rewrites,
-        queue_project_factory_names: v2_config.queues.factories.clone(),
+        queue_project_factory_names: v2_config.queues.factories.queue_names(),
         dotnet_projects: crate::codebase::dotnet::configured_projects(
             root,
             &v2_config.tests.dotnet,

@@ -19,6 +19,7 @@ pub struct CheckFactPlan {
     pub react_usages: bool,
     pub queue: bool,
     pub queue_factory_names: Vec<String>,
+    pub queue_factory_roles: crate::config::v2::schema::QueueFactoryRoles,
     pub integration: bool,
     pub integration_runner_configs:
         Option<Arc<crate::integration_tests::PreparedIntegrationRunnerConfigs>>,
@@ -119,6 +120,7 @@ impl CheckFactPlan {
         self.queue_factory_names.extend(other.queue_factory_names);
         self.queue_factory_names.sort();
         self.queue_factory_names.dedup();
+        self.queue_factory_roles.merge(&other.queue_factory_roles);
         self.integration |= other.integration;
         if self.integration_runner_configs.is_none() {
             self.integration_runner_configs = other.integration_runner_configs;

@@ -130,6 +130,7 @@ fn language_worker(root: &Path, path: &Path, job: &str, cluster: Option<&str>) -
             file: path.to_path_buf(),
             line: 0,
             queue_name: Some(cluster.unwrap_or("default").to_string()),
+            queue_name_import: None,
             jobs: vec![topic_identity(cluster, job)],
             processor_specifier: None,
             processor_file: None,

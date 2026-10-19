@@ -665,7 +665,7 @@ projects:
     trpc:
       routers: ["src/trpc/**/*.ts"]
 queues:
-  factories: [createQueue]
+  factories: [createQueue] # or { queue, enqueue, worker } argument indexes
 tests:
   python:
     packages:

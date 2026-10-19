@@ -1,5 +1,6 @@
 use crate::edge_index::{CanonicalEdge, PreparedRelationshipIndex};
 use crate::queue::extract::FileFacts;
+use crate::queue::graph_model::CheckFinding;
 use crate::queue::graph_model::{
     dedup_sorted, diagnostics, node_name, InternalProducer, InternalWorker, PreparedProjectReport,
     ProjectReport,
@@ -39,6 +40,24 @@ pub(super) fn build_prepared_report(
     }
 }
 
+fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
+    let mut out = Vec::new();
+    for (path, facts) in facts {
+        for check in &facts.checks {
+            out.push(CheckFinding {
+                kind: check.kind.clone(),
+                file: relative_string(root, path),
+                line: check.line,
+                queue_file: None,
+                queue_name: None,
+                job: check.job.clone(),
+                message: check.message.clone(),
+            });
+        }
+    }
+    out
+}
+
 fn build_report_and_relationships(
     root: &Path,
     producers: Vec<InternalProducer>,
@@ -69,6 +88,7 @@ fn build_report_and_relationships(
             }
         }
     }
+    check.extend(local_checks(root, facts));
     let report = ProjectReport {
         producers: producers.iter().map(|p| p.public(root)).collect(),
         workers: workers.iter().map(|w| w.public(root)).collect(),

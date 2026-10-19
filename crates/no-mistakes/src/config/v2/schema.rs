@@ -13,9 +13,12 @@ mod ci_checks;
 mod effects;
 mod infra_config;
 mod postgres_executors;
+mod queues;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;
+
+pub use queues::{EnqueueFactory, QueueFactoryRoles, QueueNameFactory, WorkerFactory};
 
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use effects::{EffectKindConfig, EffectReturnedMemberConfig, EffectTargetConfig};
@@ -67,7 +70,12 @@ pub struct ReactTraitsConfig {
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct QueuesTopLevelConfig {
-    pub factories: Vec<String>,
+    #[serde(
+        default,
+        deserialize_with = "queues::deserialize_factories",
+        serialize_with = "queues::serialize_factories"
+    )]
+    pub factories: QueueFactoryRoles,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

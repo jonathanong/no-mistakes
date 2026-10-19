@@ -40,7 +40,13 @@ pub(super) fn extract_file_with_factories(
 ) -> anyhow::Result<FileFacts> {
     let source = std::fs::read_to_string(path)?;
     crate::ast::with_program(path, &source, |program, _| {
-        crate::queue::extract::extract_program_with_factories(path, &source, program, factory_names)
+        crate::queue::extract::extract_program_with_factories(
+            path,
+            &source,
+            program,
+            factory_names,
+            &crate::config::v2::schema::QueueFactoryRoles::default(),
+        )
     })
 }
 #[test]

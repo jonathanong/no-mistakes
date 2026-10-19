@@ -31,6 +31,7 @@ pub(super) fn ts_extract_context(root: &Path, plan: &CheckFactPlan) -> TsFactCon
     context.root = root.to_path_buf();
     if plan.queue || plan.graph.queue_project {
         context.queue_project_factory_names = plan.queue_factory_names.clone();
+        context.queue_factory_roles = plan.queue_factory_roles.clone();
     }
     context
 }

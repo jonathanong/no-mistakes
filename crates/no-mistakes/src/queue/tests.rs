@@ -1,4 +1,5 @@
 mod collisions;
+mod factory_roles;
 mod lang;
 mod prepared;
 mod resolver;
