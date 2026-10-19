@@ -148,9 +148,7 @@ fn omitted_options_run_and_unknown_options_are_rejected() {
 #[test]
 fn dynamic_or_unparsed_commands_stay_silent() {
     let silent = [
-        "on: push\njobs:\n  build:\n    steps:\n      - run: docker run -p 5432:5432 $(date)\n",
-        "on: push\njobs:\n  build:\n    steps:\n      - run: sudo docker run -p 5432:5432 postgres\n",
-        "on: push\njobs:\n  build:\n    steps:\n      - run: docker container run -p 5432:5432 postgres\n",
+        "on: push\njobs:\n  build:\n    steps:\n      - run: docker run -p $(echo 1) img\n",
         "on: push\njobs:\n  build:\n    steps:\n      - run: docker run --mystery 1 -p 5432:5432 postgres\n",
         "on: push\njobs:\n  build:\n    steps:\n      - run: docker run postgres -p 5432:5432\n",
         "on: push\njobs:\n  build:\n    steps:\n      - run: echo docker run -p 5432:5432\n",
@@ -235,13 +233,19 @@ fn saved_fixtures_flag_only_literal_host_ports() {
     got.sort();
     let mut expected = Vec::new();
     for (job, spec) in [
+        ("after-heredoc", "5432:5432"),
         ("attached", "5432:5432"),
         ("block", "5432:5432"),
+        ("cap-add-after", "5432:5432"),
+        ("cap-add-before", "5432:5432"),
+        ("captured", "5432:5432"),
         ("chain", "5432:5432"),
+        ("container-run", "5432:5432"),
         ("clustered", "5432:5432"),
         ("container-var", "5432:$PORT"),
         ("continued", "5432:5432"),
         ("env-prefix", "5432:5432"),
+        ("if-guard", "5432:5432"),
         ("equals", "8080:80"),
         ("ip", "127.0.0.1:5432:5432"),
         ("ipv6", "[::1]:5432:5432"),
@@ -251,6 +255,11 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         ("path", "5432:5432"),
         ("quoted", "5432:5432"),
         ("range", "8000-8002:8000-8002"),
+        ("reservation", "5432:5432"),
+        ("subshell", "5432:5432"),
+        ("subst", "5432:5432"),
+        ("subst-value", "5432:5432"),
+        ("sudo", "5432:5432"),
         ("two", "5432:5432"),
         ("two", "6379:6379"),
         ("udp", "5432:5432/udp"),

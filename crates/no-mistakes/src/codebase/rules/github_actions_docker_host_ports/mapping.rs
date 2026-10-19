@@ -17,7 +17,7 @@ pub(super) fn classify(spec: &str) -> Verdict {
     if host.is_empty() {
         return Verdict::Allowed;
     }
-    if is_variable(&host) {
+    if is_variable(&host) || allocated_zero(&host) {
         return Verdict::Allowed;
     }
     if is_literal_port(&host) {
@@ -168,6 +168,22 @@ fn is_variable(host: &str) -> bool {
         && rest
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+}
+
+fn allocated_zero(host: &str) -> bool {
+    let mut sides = host.split('-');
+    let Some(start) = sides.next() else {
+        return false;
+    };
+    let end = sides.next();
+    if sides.next().is_some() {
+        return false;
+    }
+    let zeros = |text: &str| !text.is_empty() && text.bytes().all(|byte| byte == b'0');
+    match end {
+        None => zeros(start),
+        Some(end) => zeros(start) && zeros(end),
+    }
 }
 
 fn is_literal_port(host: &str) -> bool {

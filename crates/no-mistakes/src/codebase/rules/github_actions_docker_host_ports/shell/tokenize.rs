@@ -5,6 +5,7 @@ pub(super) fn commands(script: &str) -> Vec<Command> {
     Tok::new(&chars).finish()
 }
 
+mod group;
 mod quote;
 
 struct Tok<'a> {
@@ -14,6 +15,7 @@ struct Tok<'a> {
     word: String,
     word_line: usize,
     open: bool,
+    word_dynamic: bool,
     quote: Option<char>,
     subst: i32,
     backtick: bool,
@@ -30,6 +32,7 @@ impl<'a> Tok<'a> {
             word: String::new(),
             word_line: 1,
             open: false,
+            word_dynamic: false,
             quote: None,
             subst: 0,
             backtick: false,
@@ -52,14 +55,14 @@ impl<'a> Tok<'a> {
 
     fn step(&mut self) -> bool {
         self.quoted_single()
-            || self.inside_backtick()
-            || self.inside_subst()
             || self.quoted_double()
             || self.line_continue()
             || self.escaped()
             || self.start_quote()
-            || self.start_backtick()
-            || self.start_subst()
+            || self.capture_backtick()
+            || self.capture_dollar()
+            || self.capture_process()
+            || self.skip_heredoc()
             || self.comment()
             || self.separator()
             || self.push_plain()
@@ -94,26 +97,6 @@ impl<'a> Tok<'a> {
             self.mark_open();
             self.quote = Some(ch);
             self.index += 1;
-            return true;
-        }
-        false
-    }
-
-    fn start_backtick(&mut self) -> bool {
-        if self.ch() == '`' {
-            self.command.dynamic = true;
-            self.backtick = true;
-            self.index += 1;
-            return true;
-        }
-        false
-    }
-
-    fn start_subst(&mut self) -> bool {
-        if self.ch() == '$' && self.chars.get(self.index + 1) == Some(&'(') {
-            self.command.dynamic = true;
-            self.subst = 1;
-            self.index += 2;
             return true;
         }
         false
@@ -167,7 +150,9 @@ impl<'a> Tok<'a> {
             self.command.words.push(Word {
                 text: std::mem::take(&mut self.word),
                 line: self.word_line,
+                dynamic: self.word_dynamic,
             });
+            self.word_dynamic = false;
             self.open = false;
         }
     }

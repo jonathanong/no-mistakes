@@ -25,17 +25,22 @@ It flags `-p` and `--publish` when the host port is a literal number or a
 literal range (`5432`, `8000-8002`), including an IP prefix
 (`127.0.0.1:5432:5432`, `[::1]:5432:5432`) and a `/tcp` or `/udp` suffix. These forms are allowed:
 
-- Docker-allocated ports: `127.0.0.1::5432`, `::5432`, `[::1]::5432`, and a
-  container port alone (`5432`).
+- Docker-allocated ports: `127.0.0.1::5432`, `::5432`, `[::1]::5432`,
+  `0:5432`, `127.0.0.1:0:5432`, and a container port alone (`5432`).
 - Variable host ports: `$PORT:5432`, `${PORT}:5432`, and `${{ ... }}:5432`.
 
 The command word is `docker` (a path whose last segment is `docker` counts)
-followed by `run`. Flags before the image are parsed only when this rule
-knows them. An unknown flag, a command substitution, a backtick, a heredoc,
-or a `run` value that is not a string is not a finding. A `-p` after the
-image is the container command, not a publish mapping. Invalid YAML is not
-a finding. Flow-style steps that the line scan cannot place are reported on
-line 1.
+followed by `run`, or `docker container run`. A leading `sudo`, assignment,
+or shell prefix (`if`, `time`, `exec`, `(`, and the same family) does not
+hide the command. Flags before the image are parsed when this rule knows
+them. An unknown `--name=value` flag is skipped. Any other unknown flag
+stops the scan, and publish flags already seen stay findings. A command
+substitution or backtick is judged when the publish word itself is literal;
+a substitution used as the publish value is not a finding. A heredoc body is
+not scanned, and a `docker run` after the terminator is. A `run` value that
+is not a string is not a finding. A `-p` after the image is the container
+command, not a publish mapping. Invalid YAML is not a finding. Flow-style
+steps that the line scan cannot place are reported on line 1.
 
 ## Options
 

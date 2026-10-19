@@ -18,39 +18,6 @@ impl<'a> Tok<'a> {
         true
     }
 
-    pub(super) fn inside_backtick(&mut self) -> bool {
-        if !self.backtick {
-            return false;
-        }
-        self.command.dynamic = true;
-        if self.ch() == '\n' {
-            self.line += 1;
-        }
-        if self.ch() == '`' {
-            self.backtick = false;
-        }
-        self.index += 1;
-        true
-    }
-
-    pub(super) fn inside_subst(&mut self) -> bool {
-        if self.subst <= 0 {
-            return false;
-        }
-        self.command.dynamic = true;
-        let ch = self.ch();
-        if ch == '\n' {
-            self.line += 1;
-        }
-        if ch == '(' {
-            self.subst += 1;
-        } else if ch == ')' {
-            self.subst -= 1;
-        }
-        self.index += 1;
-        true
-    }
-
     pub(super) fn quoted_double(&mut self) -> bool {
         if self.quote != Some('"') {
             return false;
@@ -95,16 +62,12 @@ impl<'a> Tok<'a> {
             return true;
         }
         if ch == '`' {
-            self.command.dynamic = true;
-            self.backtick = true;
-            self.index += 1;
-            return true;
+            self.word_dynamic = true;
+            return self.capture_backtick();
         }
         if ch == '$' && self.chars.get(self.index + 1) == Some(&'(') {
-            self.command.dynamic = true;
-            self.subst = 1;
-            self.index += 2;
-            return true;
+            self.word_dynamic = true;
+            return self.capture_dollar();
         }
         false
     }

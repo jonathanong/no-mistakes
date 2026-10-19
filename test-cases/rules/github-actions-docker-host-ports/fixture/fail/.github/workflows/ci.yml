@@ -83,3 +83,51 @@ jobs:
           docker run -p \
             5432:5432 \
             postgres
+  captured:
+    runs-on: ubuntu-latest
+    steps:
+      - run: CID=$(docker run -d -p 5432:5432 postgres)
+  subst-value:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 -e PW=$(cat pw) postgres
+  subst:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 $(date) postgres
+  cap-add-after:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 5432:5432 --cap-add SYS_ADMIN postgres
+  cap-add-before:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --cap-add SYS_ADMIN -p 5432:5432 postgres
+  reservation:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --memory-reservation 1g -p 5432:5432 postgres
+  after-heredoc:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF > x.txt
+          hi
+          EOF
+          docker run -p 5432:5432 postgres
+  container-run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker container run -p 5432:5432 postgres
+  sudo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo docker run -p 5432:5432 postgres
+  if-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - run: if docker run -p 5432:5432 postgres; then echo ok; fi
+  subshell:
+    runs-on: ubuntu-latest
+    steps:
+      - run: (docker run -p 5432:5432 postgres)

@@ -73,3 +73,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: docker run -p '$PORT:5432' postgres
+  zero:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 0:5432 postgres
+  zero-ip:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p 127.0.0.1:0:5432 postgres

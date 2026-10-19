@@ -1,6 +1,7 @@
 pub(super) struct Word {
     pub(super) text: String,
     pub(super) line: usize,
+    pub(super) dynamic: bool,
 }
 
 #[derive(Default)]
