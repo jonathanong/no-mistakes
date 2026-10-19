@@ -155,6 +155,9 @@ fn narrow(rule: &RuleDef, scope: &Scope) -> Result<()> {
 }
 
 fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope) -> Result<()> {
+    if super::yaml::write_catalog_only(rule, options, &scope.schema_catalog_path) {
+        return Ok(());
+    }
     if !scope.import_specifier.is_empty() {
         set_string(options, "importSpecifier", &scope.import_specifier);
     }

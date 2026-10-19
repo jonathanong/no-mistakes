@@ -9,6 +9,8 @@ mod narrow;
 mod scope;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_effects;
 mod yaml;
 
 /// Copied project PostgreSQL scope. Lists that rules compare are already in the

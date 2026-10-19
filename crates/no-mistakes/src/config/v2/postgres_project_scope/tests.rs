@@ -3,7 +3,7 @@ use std::path::Path;
 use crate::config::v2::discover::parse_v2_config_quiet;
 use crate::config::v2::schema::NoMistakesConfig;
 
-fn parse(yaml: &str) -> anyhow::Result<NoMistakesConfig> {
+pub(super) fn parse(yaml: &str) -> anyhow::Result<NoMistakesConfig> {
     parse_v2_config_quiet(yaml, Path::new(".no-mistakes.yml"))
 }
 
@@ -315,12 +315,16 @@ rules:
     let column: crate::codebase::rules::postgres_column_naming::Options =
         naming.rules[0].try_rule_options().unwrap();
     assert_eq!(column.schema_catalog_path, "backend/catalog.json");
-    assert_eq!(column.import_specifier, "@example/db");
-    assert!(column.sql_include_locked);
+    assert!(naming.rules[0].options.get("importSpecifier").is_none());
+    assert!(naming.rules[0].options.get("sqlIncludeLocked").is_none());
     let keys: crate::codebase::rules::postgres_key_column_types::Options =
         naming.rules[1].try_rule_options().unwrap();
-    assert_eq!(keys.executor_factory_names, ["beginTransaction"]);
-    assert!(keys.sql_include_locked);
+    assert_eq!(keys.schema_catalog_path, "backend/catalog.json");
+    assert!(naming.rules[1]
+        .options
+        .get("executorFactoryNames")
+        .is_none());
+    assert!(naming.rules[1].options.get("sqlIncludeLocked").is_none());
 }
 
 #[test]
@@ -401,135 +405,4 @@ rules:
     )
     .unwrap();
     assert!(plain.rules[0].options.get("sqlIncludeLocked").is_none());
-}
-
-#[test]
-fn effects_project_synthesizes_selectors_once() {
-    let yaml = r#"
-projects:
-  db:
-    postgres:
-      executors:
-        importSpecifier: "@example/db"
-        factoryNames: [beginTransaction]
-        typeNames: [TransactionQuery]
-effects:
-  postgres:
-    project: db
-    returnedMembers:
-      - { module: "@example/db", export: writePool.connect, member: query }
-rules:
-  - rule: postgres-no-offset
-    projects: [db]
-"#;
-    let mut config = parse(yaml).unwrap();
-    assert!(config.effects["postgres"].functions.is_empty());
-    assert!(config.effects["postgres"].targets.is_empty());
-    assert_eq!(config.effects["postgres"].returned_executors.len(), 1);
-    assert_eq!(
-        config.effects["postgres"].returned_executors[0].export,
-        "beginTransaction"
-    );
-    assert!(config.effects["postgres"].returned_executors[0]
-        .category
-        .is_none());
-    assert_eq!(
-        config.effects["postgres"].typed_executors[0].export,
-        "TransactionQuery"
-    );
-    assert_eq!(
-        config.effects["postgres"].returned_members[0].member,
-        "query"
-    );
-    super::materialize(&mut config).unwrap();
-    assert_eq!(config.effects["postgres"].returned_executors.len(), 1);
-    assert_eq!(config.effects["postgres"].typed_executors.len(), 1);
-}
-
-#[test]
-fn effects_project_rejects_unknown_projects_and_restated_selectors() {
-    let cases = [
-        (
-            r#"
-effects:
-  postgres:
-    project: missing
-"#,
-            "not a known project",
-        ),
-        (
-            r#"
-projects:
-  db:
-    include: ["src/**"]
-effects:
-  postgres:
-    project: db
-"#,
-            "has no postgres block",
-        ),
-        (
-            r#"
-projects:
-  db:
-    postgres:
-      executors:
-        importSpecifier: "@example/db"
-        factoryNames: [beginTransaction]
-effects:
-  postgres:
-    project: db
-    returnedExecutors:
-      - { module: "@example/db", export: beginTransaction }
-"#,
-            "repeats",
-        ),
-        (
-            r#"
-projects:
-  db:
-    postgres:
-      executors:
-        factoryNames: [beginTransaction]
-effects:
-  postgres:
-    project: db
-"#,
-            "importSpecifier",
-        ),
-        (
-            r#"
-effects:
-  valkey:
-    project: db
-"#,
-            "unsupported",
-        ),
-    ];
-    for (yaml, needle) in cases {
-        let error = parse(yaml).unwrap_err().to_string();
-        assert!(error.contains(needle), "{error}");
-    }
-}
-
-#[test]
-fn rule_include_that_escapes_the_project_root_is_a_config_error() {
-    let error = parse(
-        r#"
-projects:
-  db:
-    root: backend
-    include: ["services/**"]
-    postgres:
-      executors:
-        importSpecifier: "@example/db"
-rules:
-  - rule: postgres-no-offset
-    projects: [db]
-    include: ["../outside/**"]
-"#,
-    )
-    .unwrap_err()
-    .to_string();
-    assert!(error.contains("escapes the project root"), "{error}");
 }

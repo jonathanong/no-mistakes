@@ -18,28 +18,6 @@ fn default_true() -> bool {
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Options {
     pub(crate) schema_catalog_path: String,
-    /// Copied from `projects.<name>.postgres` when this rule references that project.
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) import_specifier: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) executor_factory_names: Vec<String>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) executor_type_names: Vec<String>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) unanalyzable_sql: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) sql_include: Vec<String>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    pub(crate) sql_include_locked: bool,
     pub(crate) allowed_types: Vec<String>,
     pub(crate) allow_enum_types: bool,
     #[serde(default = "default_true")]
@@ -53,13 +31,6 @@ impl Default for Options {
     fn default() -> Self {
         Self {
             schema_catalog_path: String::new(),
-            import_specifier: String::new(),
-            executor_factory_names: Vec::new(),
-            executor_type_names: Vec::new(),
-            trusted_sql_tags: Vec::new(),
-            unanalyzable_sql: String::new(),
-            sql_include: Vec::new(),
-            sql_include_locked: false,
             allowed_types: Vec::new(),
             allow_enum_types: false,
             check_primary_keys: true,
