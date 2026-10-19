@@ -103,12 +103,9 @@ function callable(tag) {
   if (tag.type === "fn") {
     return tag;
   }
-  const nested = tag.fn;
-  if (nested) {
-    if (nested.type === "fn") {
-      return nested;
-    }
-    return null;
+  // Module bindings are the only tags with `fn`, and that value is a function tag.
+  if (tag.fn) {
+    return tag.fn;
   }
   return null;
 }

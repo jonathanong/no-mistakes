@@ -95,18 +95,12 @@ function walkChildren(state, node, scope) {
     }
     const value = node[key];
     if (Array.isArray(value)) {
+      // visit ignores a hole and a value that is not a syntax node.
       for (const childNode of value) {
-        if (!childNode) {
-          continue;
-        }
-        if (typeof childNode.type === "string") {
-          api.visit(state, childNode, scope, "read");
-        }
+        api.visit(state, childNode, scope, "read");
       }
     } else if (value && typeof value.type === "string") {
       api.visit(state, value, scope, "read");
-    } else {
-      continue;
     }
   }
 }

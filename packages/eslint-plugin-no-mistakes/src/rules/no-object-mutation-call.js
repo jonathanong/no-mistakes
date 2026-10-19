@@ -101,11 +101,7 @@ function visitIdentifier(state, node, scope, role) {
     api.releaseEscaping(state, tag);
   }
   captureOuter(scope, tag);
-  if (tag) {
-    return tag;
-  } else {
-    return unknown();
-  }
+  return tag || unknown();
 }
 
 function escapeExport(state, local, scope) {

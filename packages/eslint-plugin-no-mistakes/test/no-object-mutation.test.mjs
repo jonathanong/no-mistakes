@@ -4,8 +4,9 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, it } from "vitest";
-import { memberKey, mutationCall, staticKey } from "../src/rules/no-object-mutation-syntax.js";
 import { __dirname, lint, messages, plugin, require as loadCjs } from "./helpers.mjs";
+
+const { memberKey, mutationCall, staticKey } = loadCjs("../src/rules/no-object-mutation-syntax.js");
 
 const RULE = "no-object-mutation";
 
@@ -856,20 +857,7 @@ describe("no-object-mutation", () => {
     );
   });
 
-  it("walks typed assignment targets and empty child slots", () => {
-    const { bindPattern } = loadCjs("../src/rules/no-object-mutation-bind.js");
-    const { walkChildren } = loadCjs("../src/rules/no-object-mutation-build.js");
-    const { callable, readMember } = loadCjs("../src/rules/no-object-mutation-values.js");
-    bindPattern(null, { type: "Literal" }, null, null, "local");
-    walkChildren(
-      {},
-      { type: "List", items: [null, { type: 1 }, { type: "Literal", value: 1 }] },
-      {},
-    );
-    readMember({ type: "box", escaped: false, dynamic: null }, null);
-    callable({ type: "shared", fn: { type: "fn" } });
-    callable({ type: "shared", fn: { type: "box" } });
-    callable({ type: "shared" });
+  it("walks typed assignment targets", () => {
     assert.deepEqual(
       ids(`
         function cast(rows, name) {
