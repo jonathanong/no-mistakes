@@ -64,6 +64,9 @@ SQL from before the assignment.
 
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
 offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET sql_placeholder_1`.
+A same-file const string or unwritten object member spliced into that template
+is checked as if it were written in place. See
+[Embedded SQL facts](../postgres-facts/embedded-sql-facts.md).
 
 ```ts
 import { query } from "@example/db";

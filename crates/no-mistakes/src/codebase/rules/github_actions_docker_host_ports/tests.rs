@@ -73,6 +73,7 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/actions/node/action.yaml",
             ".github/workflows/broken.yml",
             ".github/workflows/ci.yml",
+            ".github/workflows/merge.yml",
             ".github/workflows/nested/old.yml",
             ".no-mistakes.yml",
         ],
@@ -81,6 +82,7 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/workflows/ci.yml",
             ".github/workflows/compact.yml",
             ".github/workflows/disabled.yml",
+            ".github/workflows/duplicate.yml",
             ".no-mistakes.yml",
         ],
         other => panic!("unknown fixture scenario {other}"),
@@ -187,7 +189,9 @@ jobs:
         .message
         .contains("Hosted and shared runners collide"));
     assert!(findings[0].message.contains("127.0.0.1::5432"));
-    assert!(findings[0].message.contains("$PORT:5432"));
+    assert!(findings[0].message.contains("0:5432"));
+    assert!(findings[0].message.contains("not judged"));
+    assert!(!findings[0].message.contains("$PORT:5432"));
     assert_eq!(findings[0].rule, RULE_ID);
     assert_eq!(findings[0].target.as_deref(), Some("build"));
 }
@@ -264,18 +268,65 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         ("subst", "5432:5432"),
         ("subst-value", "5432:5432"),
         ("sudo", "5432:5432"),
+        ("env-wrapper", "5432:5432"),
+        ("timeout-wrapper", "5432:5432"),
+        ("sudo-preserve", "5432:5432"),
+        ("xargs-wrapper", "5432:5432"),
+        ("xargs-equals", "5432:5432"),
+        ("quiet-short", "5432:5432"),
+        ("docker-create", "5432:5432"),
+        ("docker-context", "5432:5432"),
+        ("let-shift", "5432:5432"),
+        ("quoted-arith", "5432:5432"),
+        ("bash-c", "5434:5432"),
+        ("sh-c", "5435:5432"),
+        ("bash-lc", "5436:5432"),
+        ("sudo-sh-c", "5469:5432"),
+        ("eval-wrapper", "5449:5432"),
+        ("sudo-end", "5440:5432"),
+        ("sudo-user", "5474:5432"),
+        ("env-path", "5473:5432"),
+        ("env-chdir", "5445:5432"),
+        ("env-split", "5444:5432"),
+        ("timeout-signal", "5446:5432"),
+        ("docker-tls", "5441:5432"),
+        ("docker-tlsverify", "5443:5432"),
+        ("docker-short-context", "5442:5432"),
         ("two", "5432:5432"),
         ("two", "6379:6379"),
         ("udp", "5432:5432/udp"),
     ] {
         expected.push(format!("ci.yml:{job}:1:{spec}"));
     }
+    expected.push("ci.yml:same-indent-ports:0:6001:5432".to_string());
+    expected.push("ci.yml:flow-services:0:6002:5432".to_string());
+    expected.push("ci.yml:flow-nested:0:6003:5432".to_string());
+    expected.push("ci.yml:flow-container:0:6007:80".to_string());
+    expected.push("ci.yml:service-options:0:6010:5432".to_string());
+    expected.push("ci.yml:service-ports:0:5432:5432".to_string());
+    expected.push("ci.yml:service-ports:0:9:9".to_string());
+    expected.push("ci.yml:service-ports:0:6:6".to_string());
+    expected.push("ci.yml:service-ports:0:8080:80".to_string());
     expected.push("ci.yml:second-step:2:5432:5432".to_string());
     expected.push("compact.yml:a:1:5432:5432".to_string());
     expected.push("compact.yml:b:2:127.0.0.1:5432:5432".to_string());
     expected.push("action.yml:composite:1:5432:5432".to_string());
     expected.sort();
     assert_eq!(got, expected, "{findings:?}");
+    let service_ports: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.target.as_deref() == Some("service-ports"))
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(service_ports
+        .iter()
+        .any(|message| { message.contains("service `scalar`") && message.contains("in `9:9`") }));
+    assert!(service_ports
+        .iter()
+        .any(|message| { message.contains("service `bare`") && message.contains("in `6:6`") }));
+    assert!(service_ports
+        .iter()
+        .all(|message| !message.contains("in `8`")));
 
     let text = |file: &str| std::fs::read_to_string(root.join(file)).unwrap();
     let located = |file: &str, target: &str, step: usize| {
@@ -318,9 +369,34 @@ fn saved_fixtures_flag_only_literal_host_ports() {
 fn suppression_directives_hide_file_line_and_next_line() {
     let (root, config, files) = load_fixture("suppression");
     let raw = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(raw.len(), 6, "{raw:?}");
+    assert_eq!(raw.len(), 10, "{raw:?}");
+    let duplicate: Vec<_> = raw
+        .iter()
+        .filter(|finding| finding.file.ends_with("duplicate.yml"))
+        .collect();
+    assert_eq!(duplicate.len(), 2, "{duplicate:?}");
+    assert!(duplicate
+        .iter()
+        .any(|finding| { finding.line == 8 && finding.message.contains("service `a`") }));
+    assert!(duplicate
+        .iter()
+        .any(|finding| { finding.line == 12 && finding.message.contains("service `b`") }));
     let findings = crate::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings.len(), 4, "{findings:?}");
+    assert!(findings.iter().any(|finding| {
+        finding.file.ends_with("duplicate.yml")
+            && finding.line == 8
+            && finding.message.contains("service `a`")
+    }));
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.message.contains("service `b`")));
+    assert!(findings.iter().any(|finding| {
+        finding.target.as_deref() == Some("service") && finding.message.contains("in `6011:5432`")
+    }));
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.message.contains("6008:5432")));
     let ci = findings
         .iter()
         .find(|finding| finding.file.ends_with("ci.yml"))
@@ -340,6 +416,53 @@ fn suppression_directives_hide_file_line_and_next_line() {
 }
 
 #[test]
+fn flow_and_same_column_service_ports_use_the_parsed_value() {
+    let same = "\
+on: push
+jobs:
+  t:
+    services:
+      pg:
+        image: postgres
+        ports:
+        - 6001:5432
+    steps:
+      - run: echo
+";
+    let findings = check(WORKFLOW, same);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(nth_line(same, findings[0].line).contains("6001:5432"));
+    assert!(findings[0].message.contains("service `pg`"));
+
+    let quoted = "\
+on: push
+\"jobs\":
+  build:
+    services:
+      pg:
+        ports: [\"1:2\"]
+";
+    let findings = check(WORKFLOW, quoted);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("in `1:2`"));
+
+    let allocated = "\
+on: push
+jobs:
+  t:
+    container: { image: ubuntu, ports: [6004] }
+    steps:
+      - run: echo
+";
+    assert!(check(WORKFLOW, allocated).is_empty());
+    assert!(check(
+        WORKFLOW,
+        "on: push\njobs:\n  t:\n    steps:\n      - run: bash -c \"docker run -p $(echo 1:2) pg\"\n"
+    )
+    .is_empty());
+}
+
+#[test]
 fn shell_quotes_substitutions_and_joins_stay_one_command() {
     let script = "echo 'a\nb' \"c\\\nd\" \"e\\f\" \"g`h\ni`\" \"j$(k\n(l))\"\ncurl \\\n  -p 5432:5432 # note\ntrue && echo x; echo y || echo z\necho `m\nn` $(o)\necho \\x \"unterminated";
     let commands = super::shell::commands(script);
@@ -356,138 +479,49 @@ fn shell_quotes_substitutions_and_joins_stay_one_command() {
 }
 
 #[test]
-fn parser_edges_cover_wrappers_hosts_and_yaml_shapes() {
-    use super::mapping::{classify, Verdict};
-
-    for spec in [
-        "",
-        "1 2",
-        "80/http",
-        "80/tcp/udp",
-        "[]:1:2",
-        "a:b:c:d",
-        "[::1]:a:b:c",
-        "${unclosed:80",
-        "$:80",
-        "${{PORT}}x:80",
-        "${{a${{b}}}}:80",
-        "${{ PORT:80",
-        "0-0-0:80",
-        "1-2-3:80",
-        "${a{b}}:80",
-        "${}:80",
-    ] {
-        assert!(matches!(classify(spec), Verdict::Silent), "{spec}");
-    }
-    for spec in ["[::1]::80", "80", "0-0:80", "00:80", "${{PORT}}:80"] {
-        assert!(matches!(classify(spec), Verdict::Allowed), "{spec}");
-    }
-    assert!(matches!(classify("9:8/sctp"), Verdict::Literal(_)));
-    assert!(matches!(classify("[::1]:9:80"), Verdict::Literal(_)));
-
-    assert_eq!(super::flags::short_kind('z'), None);
-    assert_eq!(super::flags::long_arg("nope"), None);
-    assert!(!super::flags::is_assign("1=x"));
-    assert!(!super::flags::is_assign("echo"));
-    assert_eq!(super::flags::basename(r"C:\docker"), "docker");
-
+fn shell_option_flags_and_skipped_service_values_still_place_a_port() {
     let hit = |script: &str| super::publish::publish_hits(script);
-    assert!(hit("docker run -p 1:2 \"").is_empty());
-    assert!(hit("docker build -p 1:2 img").is_empty());
-    assert!(hit("docker container build -p 1:2 img").is_empty());
-    assert!(hit("docker run -z -p 1:2 img").is_empty());
-    assert!(hit("docker run --publish").is_empty());
-    assert_eq!(hit("docker run --mystery=1 -p 1:2 img").len(), 1);
-    assert_eq!(hit("docker run --rm=true -p 3:4 img").len(), 1);
-    assert_eq!(hit("docker run --memory $(echo 1) -p 5:6 img").len(), 1);
-    assert_eq!(hit("docker run -p=7:8 img").len(), 1);
-    assert_eq!(hit("sudo -E -n -H -u root docker run -p 1:2 img").len(), 1);
-    assert!(hit("sudo -u").is_empty());
-    assert_eq!(hit("() docker run -p 1:2 img").len(), 1);
-    assert_eq!(hit("(FOO=1) docker run -p 2:3 img").len(), 1);
-    assert_eq!(hit("time ! { docker run -p 4:5 img; }").len(), 1);
-    assert_eq!(
-        hit("cat <<\"EOF\"\ninner\nEOF\ndocker run -p 6:7 img").len(),
-        1
-    );
-    assert_eq!(hit("cat << EOF\nx\nEOF\ndocker run -p 1:2 img").len(), 1);
-    assert!(hit("cat<<EOF\ndocker run -p 1:2 img\nEOF").is_empty());
-    assert_eq!(
-        hit("cat <<-EOF\n\tinner\nEOF\ndocker run -p 8:9 img").len(),
-        1
-    );
-    assert!(hit("cat <<EOF\ninner").is_empty());
-    assert_eq!(hit("echo <<<text\ndocker run -p 1:2 img").len(), 1);
-    assert_eq!(hit("echo <(cat) >(tee)\ndocker run -p 1:2 img").len(), 1);
-    assert!(hit("echo `unterminated").is_empty());
-    assert!(hit("echo $(echo hi").is_empty());
-    assert_eq!(hit("docker run -p 1:2 $(echo").len(), 1);
-    assert_eq!(hit("docker run -p 1:2 `echo").len(), 1);
-    assert!(hit("docker run -p $(echo").is_empty());
-    assert_eq!(hit("(( n = 1 << 3 ))\ndocker run -p 1:2 img").len(), 1);
-    assert_eq!(hit("((n=1<<3))\ndocker run -p 1:2 img").len(), 1);
-    let quoted = super::shell::commands("echo $(echo 'a)' \"b)\")\necho \"a\nb\" \"trail\\");
-    assert!(quoted.len() >= 2);
-    assert!(quoted.iter().any(|command| command.dynamic));
+    assert_eq!(hit("env --chdir=/tmp docker run -p 1:2 img").len(), 1);
+    assert_eq!(hit("bash -o errexit -c \"docker run -p 1:2 img\"").len(), 1);
+    assert!(hit("bash -e echo").is_empty());
+    assert!(hit("bash -cdocker").is_empty());
 
-    let numbered = "\
+    let source = "\
 on: push
 jobs:
-  1:
-    steps:
-      - run: docker run -p 1:2 img
+
+  # gap
+  build:
+    services:
+      pg: postgres
+      real:
+        ports: [\"1:2\"]
+concurrency: cancel
 ";
-    let findings = check(WORKFLOW, numbered);
+    let findings = check(WORKFLOW, source);
     assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("1"));
+    assert!(findings[0].message.contains("service `real`"));
+    assert!(nth_line(source, findings[0].line).contains("1:2"));
 
-    let boolean = "\
-on: push
-jobs:
-  true:
-    steps:
-      - run: docker run -p 1:2 img
-";
-    assert_eq!(check(WORKFLOW, boolean)[0].target.as_deref(), Some("true"));
-
-    let empty_name = "\
-on: push
-jobs:
-  \"\":
-    steps:
-      - run: docker run -p 1:2 img
-";
-    assert_eq!(
-        check(WORKFLOW, empty_name)[0].target.as_deref(),
-        Some("job")
-    );
-
-    for source in [
-        "on: push\njobs:\n  build: null\n",
-        "on: push\njobs:\n  build:\n    runs-on: x\n",
-        "on: push\njobs:\n  build:\n    steps:\n      - 1\n",
-        "name: a\nruns:\n  using: composite\n",
-        "name: a\nruns:\n  using: composite\n  steps:\n    - uses: actions/checkout@v4\n",
-    ] {
-        let rel = if source.contains("jobs:") {
-            WORKFLOW
-        } else {
-            ACTION
-        };
-        assert!(check(rel, source).is_empty(), "{source}");
-    }
-
-    let folded = "\
+    let prefixed = "\
 on: push
 jobs:
   build:
-    steps:
-      - run: >
-          docker run -p
-          5432:5432 postgres
+    services:
+      pg:
+        ports:
+          - 15432:5432
+          - 5432:5432
 ";
-    let findings = check(WORKFLOW, folded);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    let line = folded.lines().nth(findings[0].line - 1).unwrap();
-    assert!(line.contains("5432:5432"), "{line}");
+    let findings = check(WORKFLOW, prefixed);
+    let short = findings
+        .iter()
+        .find(|finding| finding.message.contains("in `5432:5432`"))
+        .unwrap();
+    let line = nth_line(prefixed, short.line);
+    assert!(line.contains("- 5432:5432"), "{line}");
+    assert!(!line.contains("15432"), "{line}");
 }
+
+#[path = "parser_edges_tests.rs"]
+mod parser_edges_tests;

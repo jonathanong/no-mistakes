@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 // Rebinding a sloppy parameter also puts the callback in its mapped slot.
 function forward(callback) {
   const query = sql``;

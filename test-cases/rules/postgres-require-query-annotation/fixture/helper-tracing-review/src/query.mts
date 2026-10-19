@@ -262,8 +262,8 @@ export function importedModuleAppend() {
   write(appendSharedStatement()); // known:module-append
 }
 export function importedLocalTags() {
-  write(localAnnotatedStatement()); // known:imported-local-tag
-  write(localUnannotatedStatement()); // finding:imported-local-tag-missing
+  write(localAnnotatedStatement()); // unanalyzable:imported-local-tag
+  write(localUnannotatedStatement()); // unanalyzable:imported-local-tag-missing
 }
 export function transparentExecutorWrappers() {
   void write(annotatedOrdersSql()); // known:unary-annotated
@@ -276,7 +276,7 @@ export function transparentExecutorWrappers() {
 
 export async function importedAsyncLocalTag() {
   write(asyncLocalStatement()); // unanalyzable:unawaited-local-tag
-  write(await asyncLocalStatement()); // known:awaited-local-tag
+  write(await asyncLocalStatement()); // unanalyzable:awaited-local-tag
 }
 
 function executeLogical(statement: unknown) {

@@ -1,6 +1,6 @@
 pub(super) fn short_kind(ch: char) -> Option<bool> {
     match ch {
-        'd' | 'i' | 't' | 'P' => Some(false),
+        'd' | 'i' | 'q' | 't' | 'P' => Some(false),
         'a' | 'c' | 'e' | 'h' | 'l' | 'm' | 'p' | 'u' | 'v' | 'w' => Some(true),
         _ => None,
     }
@@ -23,6 +23,8 @@ pub(super) fn long_arg(name: &str) -> Option<bool> {
         "quiet",
         "disable-content-trust",
         "use-api-socket",
+        "tls",
+        "tlsverify",
     ];
     const ARGS: &[&str] = &[
         "add-host",
@@ -102,6 +104,13 @@ pub(super) fn long_arg(name: &str) -> Option<bool> {
         "kernel-memory",
         "link-local-ip",
         "memory-swappiness",
+        "context",
+        "host",
+        "config",
+        "log-level",
+        "tlscacert",
+        "tlscert",
+        "tlskey",
     ];
     if BOOLS.contains(&name) {
         Some(false)

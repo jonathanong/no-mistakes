@@ -121,6 +121,12 @@ describe("postgres-no-executor-adapter shapes", () => {
       "run(flag === cond || read, account)",
       "run(+account.length && read, account)",
       "run((account, flag) && read, account)",
+      "run(void 0 ?? read, account)",
+      "run(tag`q` ?? read, account)",
+      "run(this ?? read, account)",
+      "run(new.target ?? read, account)",
+      "run(client.flag ?? read, account)",
+      "run((flag as unknown) ?? read, account)",
     ]) {
       const reported = onLine("edges.ts", snippet);
       assert.equal(reported.length, 1, snippet);

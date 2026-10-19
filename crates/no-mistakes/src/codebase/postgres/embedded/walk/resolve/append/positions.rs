@@ -13,10 +13,15 @@ pub(in crate::codebase::postgres::embedded::walk) fn fragment(
     // apply_append has already verified that its first argument is static.
     let expression = call.arguments[0].as_expression().unwrap();
     if let Expression::Identifier(ident) = unwrap_ts_wrappers(expression) {
-        let binding = visitor.lookup(ident.name.as_str()).unwrap();
-        let mut positions = binding.sql_source_positions;
-        renumber(&mut positions, binding.sql.as_deref().unwrap(), offset);
-        return (binding.line, positions);
+        // A same-file const has a binding. An imported const is only a sentinel
+        // until projection fills it, so it has no local positions.
+        if let Some(binding) = visitor.lookup(ident.name.as_str()) {
+            let mut positions = binding.sql_source_positions;
+            renumber(&mut positions, binding.sql.as_deref().unwrap(), offset);
+            return (binding.line, positions);
+        }
+        let line = byte_offset_to_line(visitor.source, call.span.start as usize);
+        return (line, Vec::new());
     }
     if let Some(mut provenance) = super::super::compose::helper_provenance(expression, visitor) {
         renumber(&mut provenance.positions, &provenance.sql, offset);

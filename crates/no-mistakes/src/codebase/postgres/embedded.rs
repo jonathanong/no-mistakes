@@ -87,6 +87,7 @@ pub fn extract_embedded_sql_from_program(
         call_spans: collected.call_spans,
         exported_helpers: collected.exported_helpers,
         exported_programs: collected.exported_programs,
+        exported_constants: collected.exported_constants,
         pending_imported: collected.pending_imported,
         imported_call_lines: Default::default(),
         source_comment_spans: program
@@ -181,6 +182,8 @@ mod chain_tests;
 mod compose_classification_tests;
 #[cfg(test)]
 mod conditional_clause_tests;
+#[cfg(test)]
+mod configured_sql_tag_tests;
 #[cfg(test)]
 mod const_splice_tests;
 #[cfg(test)]

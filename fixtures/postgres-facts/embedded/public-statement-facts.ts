@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import sql from "sql-template-strings"; import { query } from "@data-stores/psql";
 
 // User-written marker-like identifiers stay columns; only generated positions mark binds.
 query(sql`SELECT sql_placeholder_1

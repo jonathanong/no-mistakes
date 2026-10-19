@@ -13,12 +13,8 @@ pub(super) fn resolve_imported_queue_names<R: ImportResolverFacade>(
         if updates.is_empty() {
             break;
         }
-        let mut changed = false;
         for update in updates {
-            changed |= apply_update(facts, update);
-        }
-        if !changed {
-            break;
+            apply_update(facts, update);
         }
     }
 }
@@ -39,6 +35,11 @@ enum Update {
         index: usize,
         queue_name: String,
     },
+    ProducerJob {
+        file: PathBuf,
+        index: usize,
+        job: String,
+    },
 }
 
 fn pending_updates<R: ImportResolverFacade>(
@@ -52,7 +53,9 @@ fn pending_updates<R: ImportResolverFacade>(
             if file.queue_bindings.contains_key(binding) {
                 continue;
             }
-            if let Some(queue_name) = lookup(facts, resolver, remapper, path, local) {
+            if let Some(queue_name) =
+                follow::lookup(facts, resolver, remapper, path, local, follow::Want::Either)
+            {
                 updates.push(Update::Binding {
                     file: path.clone(),
                     binding: binding.clone(),
@@ -64,11 +67,8 @@ fn pending_updates<R: ImportResolverFacade>(
             if file.queue_exports.contains_key(exported) {
                 continue;
             }
-            let queue_name = file
-                .queue_bindings
-                .get(local)
-                .cloned()
-                .or_else(|| lookup(facts, resolver, remapper, path, local));
+            let queue_name =
+                follow::reexport_queue(facts, resolver, remapper, path, file, exported, local);
             if let Some(queue_name) = queue_name {
                 updates.push(Update::Export {
                     file: path.clone(),
@@ -84,7 +84,9 @@ fn pending_updates<R: ImportResolverFacade>(
             let Some(local) = &worker.queue_name_import else {
                 continue;
             };
-            if let Some(queue_name) = lookup(facts, resolver, remapper, path, local) {
+            if let Some(queue_name) =
+                follow::lookup(facts, resolver, remapper, path, local, follow::Want::Either)
+            {
                 updates.push(Update::Worker {
                     file: path.clone(),
                     index,
@@ -93,6 +95,7 @@ fn pending_updates<R: ImportResolverFacade>(
             }
         }
     }
+    updates.extend(follow::star_and_job_updates(facts, resolver, remapper));
     updates
 }
 
@@ -140,25 +143,49 @@ fn apply_update(facts: &mut HashMap<PathBuf, FileFacts>, update: Update) -> bool
             worker.queue_name = Some(queue_name);
             true
         }
+        Update::ProducerJob { file, index, job } => {
+            let Some(producer) = facts
+                .get_mut(&file)
+                .and_then(|file| file.producers.get_mut(index))
+            else {
+                return false;
+            };
+            if producer.job.is_some() {
+                return false;
+            }
+            producer.job = Some(job);
+            true
+        }
     }
 }
 
-fn lookup<R: ImportResolverFacade>(
+#[cfg(test)]
+#[path = "factory_resolve_apply_tests.rs"]
+mod apply_tests;
+
+#[path = "factory_resolve_follow.rs"]
+mod follow;
+
+pub(super) fn binding_queue<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
     path: &Path,
-    local: &str,
-) -> Option<String> {
-    let (specifier, imported) = facts.get(path)?.string_imports.get(local)?;
-    let resolved = resolver.resolve(specifier, path)?;
-    let resolved = remapper.remap(&resolved)?;
-    let other = facts.get(&resolved)?;
-    other
-        .exported_strings
-        .get(imported)
-        .cloned()
-        .or_else(|| other.queue_exports.get(imported).cloned())
+    binding: &str,
+    definitions: &HashMap<String, PathBuf>,
+) -> Option<crate::queue::types::QueueKey> {
+    let queue_name = follow::lookup(
+        facts,
+        resolver,
+        remapper,
+        path,
+        binding,
+        follow::Want::Queue,
+    )?;
+    Some(crate::queue::types::QueueKey {
+        queue_file: definitions.get(&queue_name)?.clone(),
+        queue_name,
+    })
 }
 
 pub(super) fn definition_files(facts: &HashMap<PathBuf, FileFacts>) -> HashMap<String, PathBuf> {
@@ -166,10 +193,7 @@ pub(super) fn definition_files(facts: &HashMap<PathBuf, FileFacts>) -> HashMap<S
     paths.sort();
     let mut out = HashMap::new();
     for path in paths {
-        let Some(file) = facts.get(&path) else {
-            continue;
-        };
-        for name in file.queue_bindings.values() {
+        for name in facts[&path].queue_bindings.values() {
             out.entry(name.clone()).or_insert_with(|| path.clone());
         }
     }

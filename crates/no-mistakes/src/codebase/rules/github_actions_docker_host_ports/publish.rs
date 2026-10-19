@@ -9,6 +9,7 @@ pub(super) struct Hit {
 }
 
 mod lead;
+mod wrappers;
 
 pub(super) fn publish_hits(script: &str) -> Vec<Hit> {
     let mut hits = Vec::new();
@@ -16,11 +17,24 @@ pub(super) fn publish_hits(script: &str) -> Vec<Hit> {
         if command.dynamic {
             continue;
         }
-        if let Some(found) = docker_hits(&command.words) {
-            hits.extend(found);
-        }
+        hits.extend(command_hits(&command.words));
     }
     hits
+}
+
+fn command_hits(words: &[Word]) -> Vec<Hit> {
+    let index = lead::skip_prefix(words);
+    if let Some(operand) = wrappers::shell_operand(words, index) {
+        let base = operand.line.saturating_sub(1);
+        return publish_hits(&operand.text)
+            .into_iter()
+            .map(|mut hit| {
+                hit.line += base;
+                hit
+            })
+            .collect();
+    }
+    docker_hits(words).unwrap_or_default()
 }
 
 fn docker_hits(words: &[Word]) -> Option<Vec<Hit>> {
@@ -29,10 +43,14 @@ fn docker_hits(words: &[Word]) -> Option<Vec<Hit>> {
         return Some(Vec::new());
     }
     index += 1;
+    index = lead::skip_globals(words, index);
     if words.get(index).map(|word| word.text.as_str()) == Some("container") {
         index += 1;
     }
-    if words.get(index).map(|word| word.text.as_str()) != Some("run") {
+    if !matches!(
+        words.get(index).map(|word| word.text.as_str()),
+        Some("run" | "create")
+    ) {
         return Some(Vec::new());
     }
     index += 1;

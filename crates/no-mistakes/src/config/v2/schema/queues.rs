@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 /// Queue, enqueue, and worker factories declared in `queues.factories`.
 ///
 /// A bare list of names stays the queue-factory form: each name is a call whose
@@ -10,7 +8,15 @@ pub struct QueueFactoryRoles {
     pub queue: Vec<QueueNameFactory>,
     pub enqueue: Vec<EnqueueFactory>,
     pub worker: Vec<WorkerFactory>,
+    /// Each project's `queues.waitScopes`, prefixed like other project globs.
+    /// An empty scope list means every file of that project.
+    pub wait_scopes: Vec<ProjectWaitScopes>,
 }
+
+#[path = "queues_wait.rs"]
+mod wait;
+
+pub use wait::ProjectWaitScopes;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueueNameFactory {
@@ -23,6 +29,7 @@ pub struct EnqueueFactory {
     pub callee: String,
     pub queue: usize,
     pub job: usize,
+    pub options: Option<usize>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,10 +51,35 @@ impl QueueFactoryRoles {
         names
     }
 
-    pub fn merge(&mut self, other: &Self) {
+    /// Copy each project's wait scopes onto the roles the extractor receives.
+    pub fn with_project_wait_scopes(mut self, config: &super::NoMistakesConfig) -> Self {
+        wait::attach(&mut self.wait_scopes, config);
+        self
+    }
+
+    /// Keep the first roles when `other` disagrees on an argument index.
+    pub fn merge(&mut self, other: &Self) -> Result<(), String> {
+        if let Some(message) = list_conflict(&self.queue, &other.queue, queue_same, "queue")
+            .or_else(|| list_conflict(&self.enqueue, &other.enqueue, enqueue_same, "enqueue"))
+            .or_else(|| list_conflict(&self.worker, &other.worker, worker_same, "worker"))
+        {
+            return Err(message);
+        }
         self.queue.extend(other.queue.clone());
         self.enqueue.extend(other.enqueue.clone());
         self.worker.extend(other.worker.clone());
+        wait::merge(&mut self.wait_scopes, &other.wait_scopes);
+        self.dedup_callees();
+        Ok(())
+    }
+
+    pub fn conflicts(&self) -> Option<String> {
+        within(&self.queue, queue_same, "queue")
+            .or_else(|| within(&self.enqueue, enqueue_same, "enqueue"))
+            .or_else(|| within(&self.worker, worker_same, "worker"))
+    }
+
+    pub(super) fn dedup_callees(&mut self) {
         self.queue
             .sort_by(|left, right| left.callee.cmp(&right.callee));
         self.queue
@@ -60,151 +92,85 @@ impl QueueFactoryRoles {
             .sort_by(|left, right| left.callee.cmp(&right.callee));
         self.worker
             .dedup_by(|left, right| left.callee == right.callee);
+        wait::dedup(&mut self.wait_scopes);
     }
 }
 
-pub fn deserialize_factories<'de, D>(deserializer: D) -> Result<QueueFactoryRoles, D::Error>
+fn queue_same(left: &QueueNameFactory, right: &QueueNameFactory) -> bool {
+    left.name == right.name
+}
+
+fn enqueue_same(left: &EnqueueFactory, right: &EnqueueFactory) -> bool {
+    left.queue == right.queue && left.job == right.job && left.options == right.options
+}
+
+fn worker_same(left: &WorkerFactory, right: &WorkerFactory) -> bool {
+    left.name == right.name && left.processor == right.processor
+}
+
+fn list_conflict<T>(
+    left: &[T],
+    right: &[T],
+    same: impl Fn(&T, &T) -> bool,
+    kind: &str,
+) -> Option<String>
 where
-    D: serde::Deserializer<'de>,
+    T: Callee,
 {
-    FactoriesInput::deserialize(deserializer).map(FactoriesInput::into_roles)
-}
-
-pub fn serialize_factories<S>(roles: &QueueFactoryRoles, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    if roles.enqueue.is_empty()
-        && roles.worker.is_empty()
-        && roles.queue.iter().all(|factory| factory.name == 0)
-    {
-        let names = roles
-            .queue
+    for item in right {
+        if let Some(existing) = left
             .iter()
-            .map(|factory| factory.callee.as_str())
-            .collect::<Vec<_>>();
-        return names.serialize(serializer);
-    }
-    RolesBody {
-        queue: roles
-            .queue
-            .iter()
-            .map(|factory| {
-                QueueEntry::Spec(QueueNameInput {
-                    callee: factory.callee.clone(),
-                    name: factory.name,
-                })
-            })
-            .collect(),
-        enqueue: roles
-            .enqueue
-            .iter()
-            .map(|factory| EnqueueInput {
-                callee: factory.callee.clone(),
-                queue: factory.queue,
-                job: factory.job,
-            })
-            .collect(),
-        worker: roles
-            .worker
-            .iter()
-            .map(|factory| WorkerInput {
-                callee: factory.callee.clone(),
-                name: factory.name,
-                processor: factory.processor,
-            })
-            .collect(),
-    }
-    .serialize(serializer)
-}
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum FactoriesInput {
-    Names(Vec<String>),
-    Roles(RolesBody),
-}
-
-#[derive(Deserialize, Serialize, Default)]
-#[serde(rename_all = "camelCase", deny_unknown_fields, default)]
-struct RolesBody {
-    queue: Vec<QueueEntry>,
-    enqueue: Vec<EnqueueInput>,
-    worker: Vec<WorkerInput>,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(untagged)]
-enum QueueEntry {
-    Name(String),
-    Spec(QueueNameInput),
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct QueueNameInput {
-    callee: String,
-    #[serde(default)]
-    name: usize,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct EnqueueInput {
-    callee: String,
-    queue: usize,
-    job: usize,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct WorkerInput {
-    callee: String,
-    name: usize,
-    processor: usize,
-}
-
-impl FactoriesInput {
-    fn into_roles(self) -> QueueFactoryRoles {
-        match self {
-            Self::Names(names) => QueueFactoryRoles {
-                queue: names
-                    .into_iter()
-                    .map(|callee| QueueNameFactory { callee, name: 0 })
-                    .collect(),
-                ..QueueFactoryRoles::default()
-            },
-            Self::Roles(body) => QueueFactoryRoles {
-                queue: body
-                    .queue
-                    .into_iter()
-                    .map(|entry| match entry {
-                        QueueEntry::Name(callee) => QueueNameFactory { callee, name: 0 },
-                        QueueEntry::Spec(spec) => QueueNameFactory {
-                            callee: spec.callee,
-                            name: spec.name,
-                        },
-                    })
-                    .collect(),
-                enqueue: body
-                    .enqueue
-                    .into_iter()
-                    .map(|spec| EnqueueFactory {
-                        callee: spec.callee,
-                        queue: spec.queue,
-                        job: spec.job,
-                    })
-                    .collect(),
-                worker: body
-                    .worker
-                    .into_iter()
-                    .map(|spec| WorkerFactory {
-                        callee: spec.callee,
-                        name: spec.name,
-                        processor: spec.processor,
-                    })
-                    .collect(),
-            },
+            .find(|candidate| candidate.callee() == item.callee())
+        {
+            if !same(existing, item) {
+                return Some(conflict_message(item.callee(), kind));
+            }
         }
     }
+    None
 }
+
+fn within<T>(items: &[T], same: impl Fn(&T, &T) -> bool, kind: &str) -> Option<String>
+where
+    T: Callee,
+{
+    for (index, item) in items.iter().enumerate() {
+        if let Some(message) =
+            list_conflict(&items[..index], std::slice::from_ref(item), &same, kind)
+        {
+            return Some(message);
+        }
+    }
+    None
+}
+
+fn conflict_message(callee: &str, kind: &str) -> String {
+    format!("queue factory `{callee}` declares conflicting {kind} argument indexes")
+}
+
+trait Callee {
+    fn callee(&self) -> &str;
+}
+
+impl Callee for QueueNameFactory {
+    fn callee(&self) -> &str {
+        &self.callee
+    }
+}
+
+impl Callee for EnqueueFactory {
+    fn callee(&self) -> &str {
+        &self.callee
+    }
+}
+
+impl Callee for WorkerFactory {
+    fn callee(&self) -> &str {
+        &self.callee
+    }
+}
+
+#[path = "queues_parse.rs"]
+mod parse;
+
+pub use parse::{deserialize_factories, serialize_factories};

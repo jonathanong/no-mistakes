@@ -137,7 +137,12 @@ impl TsFactContext {
             .extend(other.queue_project_factory_names);
         self.queue_project_factory_names.sort();
         self.queue_project_factory_names.dedup();
-        self.queue_factory_roles.merge(&other.queue_factory_roles);
+        // Config load already rejects conflicting roles, so a merge error keeps the first plan.
+        let merged = self.queue_factory_roles.merge(&other.queue_factory_roles);
+        debug_assert!(
+            merged.is_ok(),
+            "conflicting queue factory roles: {merged:?}"
+        );
         self.http_prefixes.extend(other.http_prefixes);
         self.http_prefixes.sort();
         self.http_prefixes.dedup();

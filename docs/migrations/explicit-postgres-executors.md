@@ -117,8 +117,12 @@ is a direct write or delete of `.query`, a mutator builtin (`Object.assign`,
 `Reflect.set`, `Reflect.defineProperty`, `Reflect.deleteProperty`, or
 `Reflect.setPrototypeOf`) applied to the binding, a write through an alias, a
 holder or a return, or a same-file helper that writes the parameter. A same-file
-alias, assignment, destructure, or parameter also counts. Only passing the
-binding to a function declared elsewhere is non-mutating. Passing
+`new` constructor and a tagged template are that same helper, and
+`new Proxy(executor, ...)` replaces the target. A same-file
+alias, assignment, destructure, or parameter also counts. A constructor, tag,
+or helper declared in another module is non-mutating, and so is any other
+function declared elsewhere. Move the constructor, tag, or helper that touches
+`.query` into an imported module, or stop passing the executor into it. Passing
 the module object itself still can. `const { query } = ns` captures that
 function: an escape already in effect at the binding downgrades later calls
 through the local, and an escape after the binding does not rewrite them. A
@@ -251,7 +255,10 @@ With that option the tag is trusted the same way as a default import from
 `sql-template-strings`: interpolations are placeholders and the SQL is analyzed.
 `import { sql as dbSql }` trusts the local binding `dbSql`. `import sql from
 "@example/db"` does not. `@example/db/sql` matches `module: "@example/db"`;
-`@example/dbx` does not.
+`@example/dbx` does not. An identifier named `sql` is not a tag by itself.
+Trust comes from a configured `trustedSqlTags` import, or from
+`sql-template-strings`: a default import under any local name, or a named
+`sql` import whose local name is still `sql`.
 
 `postgres-cursor-call-contract` uses the same list for named imports, in addition
 to its default-import `sqlTagModules` list. The ESLint runtime rules accept the

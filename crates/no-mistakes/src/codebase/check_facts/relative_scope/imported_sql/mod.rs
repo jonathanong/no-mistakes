@@ -16,6 +16,7 @@ use locate::Locator;
 use program::Shared;
 use std::path::{Path, PathBuf};
 
+mod constants;
 mod locate;
 mod program;
 

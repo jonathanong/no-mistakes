@@ -426,7 +426,16 @@ tests:
 
 Use `tests.swift.projects` when a package needs named include/exclude policies.
 Project aliases affect discovery, while runnable Swift filters remain SwiftPM
-test targets derived from the selected test file.
+test targets derived from the selected test file. A declared package matches
+when the project key equals that package, or when an include is that package
+or starts with its path followed by `/`. The longest match wins, so a key
+equal to a shorter package still yields a longer package that the include
+reaches. A key that equals a declared package keeps that package even when
+every include lives outside it, and does not fall back to the first package.
+A wildcard inside the package segment, such as `clients/core*/Tests/**`, does
+not match. The first package is the fallback only when the key is not a
+declared package and no include matches a package boundary. An empty or `/`
+package matches every include on the root boundary.
 
 When native tests are discoverable but the source/project change cannot be
 traced, `tests plan swift` falls back to framework-scoped discovered tests and

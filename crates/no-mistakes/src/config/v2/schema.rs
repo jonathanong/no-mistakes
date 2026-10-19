@@ -19,7 +19,9 @@ mod rule_targets;
 mod string_or_list;
 mod tests_config;
 
-pub use queues::{EnqueueFactory, QueueFactoryRoles, QueueNameFactory, WorkerFactory};
+pub use queues::{
+    EnqueueFactory, ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, WorkerFactory,
+};
 
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use effects::{EffectKindConfig, EffectReturnedMemberConfig, EffectTargetConfig};
@@ -132,6 +134,10 @@ pub struct QueueConfig {
     pub enqueues: Vec<String>,
     pub workers: Vec<String>,
     pub cluster: Option<String>,
+    /// Files whose `addAndWait` / `waitUntilFinished` calls are checked.
+    /// Empty means every scanned file.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub wait_scopes: Vec<String>,
 }
 
 include!("schema_trpc.rs");

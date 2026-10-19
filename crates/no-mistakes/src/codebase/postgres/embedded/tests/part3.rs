@@ -102,12 +102,13 @@ fn append_non_static_and_non_append_members_are_dynamic_or_unchanged() {
 
 #[test]
 fn inline_tagged_and_interpolated_calls_are_not_identifier_bindings() {
+    // A free `sql` identifier is not a configured tag, so both forms stay dynamic.
     let tagged = extract_embedded_sql_from_source(
         Path::new("inline-tagged.ts"),
         "import { query } from '@example/db'\nquery(sql`SELECT 1`)\n",
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
-    assert_eq!(tagged.calls[0].kind, super::super::EmbeddedSqlKind::Inline);
+    assert_eq!(tagged.calls[0].kind, super::super::EmbeddedSqlKind::Dynamic);
     let interpolated = extract_embedded_sql_from_source(
         Path::new("inline-template.ts"),
         "import { query } from '@example/db'\nquery(`SELECT ${id}`)\n",
@@ -152,7 +153,7 @@ fn inline_tagged_and_interpolated_calls_are_not_identifier_bindings() {
     );
     assert_eq!(
         sql_param.calls[0].kind,
-        super::super::EmbeddedSqlKind::Inline
+        super::super::EmbeddedSqlKind::Dynamic
     );
 }
 

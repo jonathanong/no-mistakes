@@ -16,6 +16,7 @@ fn literals(values: &[&str]) -> ImportedSite {
             .collect(),
         value_used: false,
         line: 1,
+        constant: None,
     }
 }
 
@@ -102,6 +103,7 @@ fn parameters_are_spliced_wherever_they_are_interpolated() {
         args: vec![SiteArg::Scalar],
         value_used: false,
         line: 1,
+        constant: None,
     };
     let template = summary(&facts, "arrow").expect("arrow");
     assert!(template.fill(&scalar, origin, origin).is_none());
@@ -155,6 +157,7 @@ fn spliced_literals_are_credited_to_the_caller_not_the_placeholder() {
         })],
         value_used: false,
         line: 12,
+        constant: None,
     };
     let filled = summary(&facts, "arrow")
         .expect("arrow")
@@ -202,6 +205,7 @@ fn a_statement_builder_helper_fills_only_a_matching_builder_call() {
         args,
         value_used: false,
         line: 1,
+        constant: None,
     };
     let filled = builder
         .fill(

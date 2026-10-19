@@ -23,12 +23,12 @@ fn configured_factory_roles_resolve_aliases_and_name_dead_jobs() {
         report.check
     );
     assert!(
-        report
-            .check
-            .iter()
-            .any(|finding| finding.kind == "unmatched-worker"
-                && finding.job.as_deref() == Some("stale")),
-        "stale handler should be unmatched, check: {:?}",
+        report.check.iter().any(|finding| {
+            finding.kind == "unmatched-worker-unresolved-producers"
+                && finding.job.as_deref() == Some("stale")
+                && finding.message.contains("workers/worker.ts:")
+        }),
+        "stale handler should abstain while a producer job is unresolved, check: {:?}",
         report.check
     );
     assert!(
@@ -80,7 +80,10 @@ fn cycle_walk_visits_a_queue_that_does_not_enqueue() {
             line: 4,
             binding: "leaf".to_string(),
             job: Some("ping".to_string()),
+            job_import: None,
             raw_job: None,
+            worker_index: Some(0),
+            self_dedup: false,
         },
         queue: Some(crate::queue::types::QueueKey {
             queue_file: queues.clone(),
@@ -142,7 +145,7 @@ queues:
     let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
     let mut roles = config.queues.factories.clone();
     let extra = roles.clone();
-    roles.merge(&extra);
+    roles.merge(&extra).unwrap();
     assert_eq!(roles.queue.len(), 2);
     assert_eq!(
         roles

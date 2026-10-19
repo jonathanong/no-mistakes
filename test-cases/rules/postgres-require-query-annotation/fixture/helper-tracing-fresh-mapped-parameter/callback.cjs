@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 // A definite rebinding remains observable after an earlier arguments escape.
 function forward(callback) {
   const query = sql``;

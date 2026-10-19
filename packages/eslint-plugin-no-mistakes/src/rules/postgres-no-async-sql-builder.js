@@ -3,7 +3,8 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { isTransparentExpression, traverse } = require("./async-ast");
-const { collectTypes, contractFor } = require("./postgres-no-async-sql-builder-contract");
+const { contractFor } = require("./postgres-no-async-sql-builder-calls");
+const { collectTypes } = require("./postgres-no-async-sql-builder-types");
 const {
   configuredBuilders,
   isConfiguredBuilder,

@@ -50,9 +50,9 @@ function readMember(tag, key) {
     if (tag.fields.has(key)) {
       return tag.fields.get(key);
     }
-  } else if (tag.type === "fresh") {
-    // A computed key can name any field. Prefer a shared or already-escaped
-    // candidate over the fresh object, which would hide that write.
+  } else {
+    // A computed key can name any field. Only an unescaped fresh tag reaches
+    // here. Prefer a shared or already-escaped candidate over that object.
     for (const field of tag.fields.values()) {
       if (reportableMember(field)) {
         return field;

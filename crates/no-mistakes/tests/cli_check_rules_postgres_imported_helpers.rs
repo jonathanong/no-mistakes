@@ -152,10 +152,9 @@ fn same_file_helpers_splice_literal_identifiers_too() {
             ("src/caller.mts", 5, VIEW),
             ("src/caller.mts", 9, VIEW),
             // An optional call and a non-literal argument stay unanalyzable.
+            // A no-substitution template splices, so it is not a third one.
             ("src/caller.mts", 28, UNANALYZABLE),
             ("src/caller.mts", 35, UNANALYZABLE),
-            // A no-substitution template literal is not spliced.
-            ("src/caller.mts", 42, UNANALYZABLE),
         ])
     );
 }
@@ -211,6 +210,32 @@ fn caller_directives_still_suppress_sql_reported_in_the_helper() {
         .iter()
         .all(|entry| entry["file"].as_str().unwrap().starts_with("src/")
             && entry["file"] != "src/helper.mts"));
+}
+
+#[test]
+fn module_level_string_constants_are_judged_and_computed_forms_stay_unanalyzable() {
+    let unknown = [
+        86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
+    ];
+    let mut rows = vec![("src/caller.mts", 74, "orders")];
+    rows.extend(
+        unknown
+            .into_iter()
+            .map(|line| ("src/caller.mts", line, UNANALYZABLE)),
+    );
+    assert_eq!(required("module-const-sql"), expect(&rows));
+    let report = run(REQUIRED, "module-const-sql", true);
+    let suppressed = report["suppressed"].as_array().unwrap();
+    assert!(
+        suppressed.iter().any(|entry| {
+            entry["file"] == "src/caller.mts"
+                && entry["line"].as_u64() == Some(81)
+                && entry["reason"].as_str().is_some_and(|reason| {
+                    reason.contains("orders") && reason.contains("account_id")
+                })
+        }),
+        "{report}"
+    );
 }
 
 #[test]
@@ -343,6 +368,22 @@ fn a_spliced_caller_literal_is_credited_to_the_literal_not_the_placeholder() {
     assert_eq!(
         findings_of("postgres-no-offset", "same-file-spliced-literal"),
         expect(&[("src/caller.mts", 12, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "imported-spliced-backtick"),
+        expect(&[("src/caller.mts", 8, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "imported-spliced-backtick-escape"),
+        expect(&[("src/caller.mts", 9, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "same-file-spliced-backtick"),
+        expect(&[("src/caller.mts", 12, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "same-file-spliced-backtick-escape"),
+        expect(&[("src/caller.mts", 13, "offset")])
     );
 }
 

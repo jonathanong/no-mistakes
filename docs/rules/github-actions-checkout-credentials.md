@@ -46,12 +46,14 @@ next to them. The finding names the first proven write scope in source order.
 A file whose `on` includes `workflow_call`, alone or with other events,
 cannot prove a write token. The caller can only pass the same or a more
 restrictive `GITHUB_TOKEN`, and this rule does not read the caller. A write
-grant in that file, including a missing `permissions` key, is not a finding.
-Empty permissions are not write. A null `permissions` value stays unknown.
+grant in that file is not a finding. Empty permissions are not write. A null
+`permissions` value stays unknown. `assumeWriteWhenUnspecified` does not
+change any of those cases.
 
-If `permissions` is absent and the workflow is not `workflow_call`, the rule
-does not guess GitHub's default token, including for `pull_request_target`.
-That is not a finding. Expressions and other values that are not literal true
+If `permissions` is absent, the rule does not guess GitHub's default token,
+including for `pull_request_target` and for `workflow_call`, unless
+`assumeWriteWhenUnspecified` is true. The default is false, so a missing key
+is not a finding. Expressions and other values that are not literal true
 or false for `persist-credentials`, and permission values that are not literal
 `read`, `none`, or `write`, are not findings. An explicit `with.token` is not
 judged, because it is not proven to be the job `GITHUB_TOKEN`. Invalid YAML is
@@ -63,13 +65,20 @@ checkout name is `actions/checkout` with an optional ref and trailing slash.
 
 ## Options
 
-This rule has no options. There is no configurable default. Listing the rule
-is what turns it on. Product defaults do not enable it.
+`assumeWriteWhenUnspecified` defaults to `false`. Set it only for a repository
+or organization whose default `GITHUB_TOKEN` can write. When it is true, a
+missing `permissions` key, including on `workflow_call`, is judged as write.
+An explicit permissions value is unchanged, and a `workflow_call` file that
+sets `contents: write` is still not a finding. A null `permissions:` value
+stays unknown when the option is on. Unknown option keys are rejected.
+Listing the rule is what turns it on. Product defaults do not enable it.
 
 ```yaml
 rules:
   - rule: github-actions-checkout-credentials
     scope: repository
+    options:
+      assumeWriteWhenUnspecified: true
 ```
 
 ## Valid example
@@ -128,8 +137,10 @@ Set the input to false:
 The same fix applies to `permissions: write-all` and to a job block that grants
 any write scope above. Narrowing the token to `contents: read` is the other fix
 when the job does not need to write. A `workflow_call` workflow is not a
-finding, even when it sets no permissions: the caller can only pass the same or
-a more restrictive token, and this rule does not read the caller. A null
+finding when it sets `contents: write`: the caller can only pass the same or
+a more restrictive token, and this rule does not read the caller. With
+`assumeWriteWhenUnspecified`, a `workflow_call` file that omits `permissions`
+is a finding, because the option treats that missing key as write. A null
 `persist-credentials` value is not a finding either.
 
 ## Suppression

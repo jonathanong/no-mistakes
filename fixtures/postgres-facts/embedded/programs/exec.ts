@@ -416,6 +416,29 @@ export function assertNeverIsNotProof(kind: string) {
   }
   return sql`SELECT 2`;
 }
+// A parameter shadows the proven thrower, so the default is not proof.
+export function shadowedThrowParam(kind, failClosed) {
+  switch (kind) {
+    case "a":
+      return sql`SELECT 1`;
+    default:
+      failClosed(kind);
+  }
+  return sql`SELECT 2`;
+}
+function throwsViaShadowedParam(k, failClosed) {
+  return failClosed(k);
+}
+// The wrapper's default calls that shadowed body, which is not proof either.
+export function shadowedThrowWrapper(kind) {
+  switch (kind) {
+    case "a":
+      return sql`SELECT 1`;
+    default:
+      throwsViaShadowedParam(kind, failClosed);
+  }
+  return sql`SELECT 2`;
+}
 // Duplicate labels abstain the switch. A known arm is not kept.
 export function duplicateLabel(kind: string) {
   switch (kind) {
@@ -427,6 +450,18 @@ export function duplicateLabel(kind: string) {
       throw new Error("no");
   }
   return sql`SELECT 3`;
+}
+// The first "a" falls into default. The later "a" is not a separate arm.
+export function duplicateAfterDefault(kind: string) {
+  switch (kind) {
+    case "a":
+    default:
+      throw new Error("no");
+    case "a":
+      return sql`SELECT * FROM a19 OFFSET 1`;
+    case "b":
+      return sql`SELECT * FROM b19 OFFSET 1`;
+  }
 }
 // A local before the return is not the literal-return shape.
 export function switchWithLocal(kind: string) {
@@ -514,6 +549,9 @@ export function nullishFragment() {
 }
 export function nullishSqlFallback(a) {
   return a ?? sql`SELECT 1`;
+}
+export function nullishNestedFallback(x) {
+  return sql`SELECT * FROM n14 WHERE a = ${x ?? sql`SELECT * FROM n14b OFFSET 4`} OFFSET 5`;
 }
 
 export function looseEquality(a, b) {

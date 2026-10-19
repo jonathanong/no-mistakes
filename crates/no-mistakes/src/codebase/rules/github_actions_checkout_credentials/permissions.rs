@@ -63,14 +63,27 @@ pub(super) fn triggers_workflow_call(doc: &Mapping) -> bool {
     mapping_get(doc, "on").is_some_and(is_workflow_call)
 }
 
-pub(super) fn job_proof(job: &Mapping, workflow: Option<&Value>, callable: bool) -> Proof {
-    let proof = if let Some(permissions) = mapping_get(job, "permissions") {
-        proof_of(permissions, Origin::Job)
-    } else if let Some(permissions) = workflow {
-        proof_of(permissions, Origin::Workflow)
+pub(super) fn job_proof(
+    job: &Mapping,
+    workflow: Option<&Value>,
+    callable: bool,
+    assume_unspecified: bool,
+) -> Proof {
+    let specified = if let Some(permissions) = mapping_get(job, "permissions") {
+        Some(proof_of(permissions, Origin::Job))
     } else {
-        // Missing permissions are not GitHub's default. Do not guess.
-        Proof::Unknown
+        workflow.map(|permissions| proof_of(permissions, Origin::Workflow))
+    };
+    // No permissions key at either level. Only the opt-in treats that as write.
+    // An explicit grant on workflow_call is still not proof below.
+    let Some(proof) = specified else {
+        return if assume_unspecified {
+            Proof::Write(
+                "permissions are unspecified and assumeWriteWhenUnspecified is set".to_string(),
+            )
+        } else {
+            Proof::Unknown
+        };
     };
     // A called workflow can only keep or lower the caller token. A write
     // grant in this file does not prove the token that actually runs.

@@ -15,7 +15,7 @@ pub(super) fn collect(
     options: &super::super::EmbeddedSqlOptions,
 ) -> BTreeSet<String> {
     let mut trusted = conventional::collect(program);
-    // Runtime module bindings shadow the conventional global tag, including
+    // Runtime module bindings replace a same-named trusted import, including
     // destructuring and TypeScript import-equals declarations.
     for name in bindings::function_scope(&program.body) {
         trusted.remove(&name);
@@ -61,7 +61,39 @@ pub(super) fn collect(
             }
         }
     }
+    for statement in &program.body {
+        if let Some(name) = require_sql_template_tag(statement) {
+            trusted.insert(name);
+        }
+    }
     trusted
+}
+
+/// `const local = require("sql-template-strings")` is the CommonJS form of the
+/// default import. The local name is trusted because of that module, not spelling.
+fn require_sql_template_tag(statement: &Statement<'_>) -> Option<String> {
+    let Statement::VariableDeclaration(declaration) = statement else {
+        return None;
+    };
+    let [declarator] = declaration.declarations.as_slice() else {
+        return None;
+    };
+    let oxc_ast::ast::BindingPattern::BindingIdentifier(binding) = &declarator.id else {
+        return None;
+    };
+    let oxc_ast::ast::Expression::CallExpression(call) = declarator.init.as_ref()? else {
+        return None;
+    };
+    let oxc_ast::ast::Expression::Identifier(callee) = &call.callee else {
+        return None;
+    };
+    if callee.name != "require" || call.arguments.len() != 1 {
+        return None;
+    }
+    let oxc_ast::ast::Expression::StringLiteral(module) = call.arguments[0].as_expression()? else {
+        return None;
+    };
+    (module.value == "sql-template-strings").then(|| binding.name.to_string())
 }
 
 pub(super) fn legacy_local_tags(program: &Program<'_>) -> std::collections::BTreeMap<String, u32> {

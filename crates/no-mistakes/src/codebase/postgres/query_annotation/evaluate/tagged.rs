@@ -11,7 +11,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         } else {
             file.facts.trusted_tags.contains(tag)
         };
-        trusted && !self.scopes[env].contains_key(name) && !file.facts.globals.contains_key(name)
+        if !trusted {
+            return false;
+        }
+        // A configured tag's own module binding is that tag. CommonJS records
+        // it as a global `const local = require(...)`. Nested scopes that
+        // rebind the name, including parameters, are not the binding.
+        if tag != "String.raw" {
+            return !self.scopes[env].contains_key(name);
+        }
+        !self.scopes[env].contains_key(name) && !file.facts.globals.contains_key(name)
     }
     pub(super) fn tagged(
         &mut self,

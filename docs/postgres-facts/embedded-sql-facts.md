@@ -9,13 +9,17 @@ call site.
 Supported argument shapes:
 
 - string literals
-- tagged templates, such as a `sql` tag applied to a template literal. The trusted tag is an identifier
-  spelled `sql` (case-insensitive) that is not lexically shadowed, a
-  default import from `sql-template-strings` under any local name, or a
-  `trustedSqlTags` named import (including a rename) from that module or a
-  subpath of it. Other `sql`-named imports, including `import * as sql`, a
-  default import from the configured module, and the same name from another
-  module, remain untrusted. The list defaults to empty.
+- tagged templates. A tag is trusted only when its binding is configured:
+  a default import from `sql-template-strings` under any local name, a named
+  import of `sql` from that module whose local name is still `sql`, or a
+  `trustedSqlTags`
+  named import (including a rename) from that module or a subpath of it. An
+  identifier spelled `sql` is not enough. A local helper, an import from a
+  package that is not configured, and a parameter that shadows the configured binding
+  stay unknown: the template is unanalyzable and the call remains a candidate.
+  Other `sql`-named imports, including `import * as sql`, a default import
+  from the configured module, and the same name from another module, remain
+  untrusted. `trustedSqlTags` defaults to empty.
   `String.raw` with no interpolations is trusted only when `String` is the
   intrinsic, not a local import, class, parameter, or callable rebinding.
 - template literals
@@ -27,6 +31,20 @@ the next placeholder. User-authored text that happens to contain the
 `sql_placeholder_` substring is not renumbered when fragments are joined.
 This is the lock-ordering `sqlText` contract. It is intentionally different
 from a runtime-query helper, which joins quasis with `?`.
+
+A same-file `const` string, no-substitution template, or `as const` scalar is
+spliced into that placeholder instead, including nested untagged templates up
+to depth 8. A constant object-literal member is spliced only when the binding
+is never referenced except as `X.member` reads, and is never exported or
+written (including a write after the read). A poisoned member keeps the proved
+SQL and substitutes `sql_placeholder_N` for that member. The same literal
+exported from another file is spliced when it is interpolated into an untagged
+template or passed to `.append`, including `as const`. An imported tagged
+fragment constant is spliced only by `.append`; an untagged template would
+stringify the statement object. `let`, reassigned bindings, computed
+initializers, spreads, computed keys or writes, nested members, numeric keys,
+getters, and methods stay unknown. `no-object-mutation` (#2219) keeps object
+members in this shape.
 
 A placeholder stands for a parameterized value. When a trusted tag's
 interpolation instead splices another SQL fragment, the fragment's SQL is

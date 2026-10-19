@@ -9,6 +9,8 @@ use crate::codebase::postgres::embedded::{
 };
 use std::path::{Path, PathBuf};
 
+#[path = "tests/finalize.rs"]
+mod finalize;
 #[path = "tests/pending.rs"]
 mod pending;
 #[path = "tests/summaries.rs"]
@@ -149,6 +151,7 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
         args,
         value_used: false,
         line: 1,
+        constant: None,
     };
     let fixed = HelperSummary::Static(plain(
         "TRUE".into(),

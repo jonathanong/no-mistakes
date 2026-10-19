@@ -1,0 +1,9 @@
+# No permissions key. The next line hides the assumed write finding.
+name: suppressed
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # no-mistakes-disable-next-line github-actions-checkout-credentials
+      - uses: actions/checkout@v4

@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 function create(parameter, removed) {
   const escaped = opaque(arguments);
   const deleted = delete arguments[1];

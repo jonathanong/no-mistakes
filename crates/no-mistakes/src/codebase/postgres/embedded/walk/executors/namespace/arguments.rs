@@ -1,6 +1,6 @@
 use super::super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{CallExpression, Expression};
+use oxc_ast::ast::{Argument, Expression};
 
 const MEMBER_MUTATORS: &[(&str, &str)] = &[
     ("Object", "assign"),
@@ -18,23 +18,54 @@ impl ScopeVisitor<'_> {
     ///
     /// An identifier callee is non-mutating only when this file proves the
     /// name is an import or ambient `declare function` with no other binding.
-    pub(super) fn namespace_argument_mutates(
-        &self,
-        call: &CallExpression<'_>,
-        index: usize,
-    ) -> bool {
-        if known_member_mutator(call) {
+    pub(super) fn namespace_argument_mutates(&self, callee: &Expression<'_>, index: usize) -> bool {
+        if known_member_mutator(callee) {
             return index == 0;
         }
-        match unwrap_ts_wrappers(&call.callee) {
-            Expression::Identifier(name) => !self.functions.declared_elsewhere(name.name.as_str()),
-            _ => true,
+        // `new Proxy(target, handler)` replaces the target even when `Proxy`
+        // is an import. Other arguments keep the ordinary callee rule.
+        match callee_name(callee) {
+            Some("Proxy") if index == 0 => true,
+            Some(name) => !self.functions.declared_elsewhere(name),
+            None => true,
+        }
+    }
+
+    pub(in crate::codebase::postgres::embedded::walk) fn revoke_namespace_arguments(
+        &mut self,
+        callee: &Expression<'_>,
+        arguments: &[Argument<'_>],
+    ) {
+        for (index, argument) in arguments.iter().enumerate() {
+            if let Some(expression) = argument.as_expression() {
+                self.revoke_namespace_expression(callee, index, expression);
+            }
+        }
+    }
+
+    pub(in crate::codebase::postgres::embedded::walk) fn revoke_namespace_expression(
+        &mut self,
+        callee: &Expression<'_>,
+        index: usize,
+        expression: &Expression<'_>,
+    ) {
+        if self.namespace_argument_mutates(callee, index) {
+            self.revoke_query_receiver(expression);
+        } else {
+            self.revoke_passed_argument(expression);
         }
     }
 }
 
-fn known_member_mutator(call: &CallExpression<'_>) -> bool {
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+fn callee_name<'a>(callee: &'a Expression<'a>) -> Option<&'a str> {
+    match unwrap_ts_wrappers(callee) {
+        Expression::Identifier(name) => Some(name.name.as_str()),
+        _ => None,
+    }
+}
+
+fn known_member_mutator(callee: &Expression<'_>) -> bool {
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(callee) else {
         return false;
     };
     let Expression::Identifier(object) = unwrap_ts_wrappers(&member.object) else {

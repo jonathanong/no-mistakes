@@ -1,9 +1,13 @@
 mod collisions;
+mod factory_detectors;
+mod factory_false_positives;
+mod factory_reexports;
 mod factory_roles;
 mod lang;
 mod prepared;
 mod resolver;
 pub(crate) mod session_lang;
+mod wait_scopes;
 use super::*;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};
@@ -67,19 +71,6 @@ fn missing_project_root_returns_empty_report() {
     assert!(report.workers.is_empty());
     let indexed = analyze_project_indexed(&fixture("does-not-exist"), None, &[]).unwrap();
     assert!(indexed.report.producers.is_empty());
-}
-
-#[test]
-fn dynamic_producer_is_warning_not_check_failure() {
-    let report = analyze_project(&fixture("dynamic"), None, &[]).unwrap();
-    assert!(report
-        .check
-        .iter()
-        .any(|finding| finding.kind == "unmatched-worker"));
-    assert!(report
-        .diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("dynamic")));
 }
 
 #[test]

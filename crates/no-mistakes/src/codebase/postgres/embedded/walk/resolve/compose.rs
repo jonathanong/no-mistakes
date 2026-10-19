@@ -109,7 +109,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
         Expression::Identifier(ident) => recovered_binding_sql(ident.name.as_str(), visitor),
-        Expression::StaticMemberExpression(member) => visitor.spliced_member(member),
+        Expression::StaticMemberExpression(member) => visitor.spliced_member(member, 1),
         Expression::TemplateLiteral(template) => visitor.spliced_template(template, 8),
         _ => None,
     }
@@ -204,6 +204,13 @@ pub(in crate::codebase::postgres::embedded::walk) fn tag_shadowed(
 fn recovered_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<String> {
     let binding = visitor.lookup(name)?;
     match binding.kind {
+        // A tagged-template const is immutable but not a string. Splicing it
+        // would treat an SQLStatement object as SQL text.
+        EmbeddedSqlKind::ImmutableLocal
+            if !visitor.literal_objects.is_text_const(&visitor.scopes, name) =>
+        {
+            None
+        }
         EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed | EmbeddedSqlKind::Inline => {
             binding.sql
         }

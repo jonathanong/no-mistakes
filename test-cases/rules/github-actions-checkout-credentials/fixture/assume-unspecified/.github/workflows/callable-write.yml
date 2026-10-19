@@ -1,0 +1,10 @@
+# An explicit write on workflow_call is still not proof. The caller can lower the token.
+name: callable-write
+on: workflow_call
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

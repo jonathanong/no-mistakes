@@ -153,6 +153,93 @@ fn postgres_no_offset_ignores_sql_when_sql_include_is_empty() {
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
+fn const_splice_root(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../fixtures/postgres/no-offset/const-splice/{name}"
+    ))
+}
+
+fn offset_lines(root: &PathBuf) -> Vec<u64> {
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let report: serde_json::Value =
+        serde_json::from_str(&body).unwrap_or_else(|_| panic!("{body}"));
+    report["rules"]
+        .as_array()
+        .unwrap_or_else(|| panic!("{body}"))
+        .iter()
+        .filter(|finding| {
+            finding["rule"] == RULE
+                && finding["target"]
+                    .as_str()
+                    .is_some_and(|target| target == "offset" || target.starts_with("offset#"))
+        })
+        .filter_map(|finding| finding["line"].as_u64())
+        .collect()
+}
+
+#[test]
+fn const_splice_ternary_reports_offset_on_the_call() {
+    let lines = offset_lines(&const_splice_root("ternary"));
+    assert_eq!(lines, vec![6], "{lines:?}");
+}
+
+#[test]
+fn const_splice_poisoned_member_still_reports_offset_when_unanalyzable_is_ignored() {
+    let lines = offset_lines(&const_splice_root("poison"));
+    assert_eq!(lines, vec![6], "{lines:?}");
+}
+
+#[test]
+fn const_splice_scalar_and_member_report_offset() {
+    let mut lines = offset_lines(&const_splice_root("scalar"));
+    lines.sort_unstable();
+    assert_eq!(lines, vec![7, 11], "{lines:?}");
+}
+
+fn offset_findings(root: &PathBuf) -> Vec<serde_json::Value> {
+    json_findings(root)
+        .into_iter()
+        .filter(|finding| {
+            finding["rule"] == RULE
+                && finding["target"]
+                    .as_str()
+                    .is_some_and(|target| target == "offset" || target.starts_with("offset#"))
+        })
+        .collect()
+}
+
+#[test]
+fn const_splice_origins_reports_one_offset_on_the_call_line() {
+    let findings = json_findings(&fixture("const-splice-origins"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["rule"], RULE);
+    assert_eq!(findings[0]["file"], "src/query.ts");
+    assert_eq!(findings[0]["line"], 5);
+    assert_eq!(findings[0]["target"], "offset");
+}
+
+#[test]
+fn const_splice_origins_cross_file_still_reports_the_other_offset() {
+    let root = fixture("const-splice-origins-cross-file");
+    let findings = offset_findings(&root);
+    assert!(
+        findings.iter().any(|finding| {
+            finding["file"] == "src/paged.ts"
+                && finding["line"] == 4
+                && finding["target"] == "offset"
+        }),
+        "{findings:?}"
+    );
+}
+
 #[test]
 fn postgres_no_offset_filesystem_runner_discovers_files() {
     let root = fixture("fail");

@@ -95,7 +95,18 @@ fn unwritten_object_member_appended_to_a_builder_is_composed() {
 
 #[test]
 fn member_write_before_or_after_the_read_stays_unknown() {
-    assert_unknown("const-splice-member-write.ts");
+    let calls = read_calls("const-splice-member-write.ts");
+    assert_eq!(calls.len(), 2, "{calls:?}");
+    for call in &calls {
+        assert!(call.is_unanalyzable(), "{call:?}");
+        let sql = call.sql_text.as_deref().unwrap_or("");
+        assert!(
+            sql.contains("sql_placeholder_1"),
+            "placeholder text preserved: {sql}"
+        );
+        assert!(!sql.contains("users"), "{sql}");
+        assert!(!sql.contains('\0'), "{sql}");
+    }
 }
 
 #[test]
@@ -149,3 +160,40 @@ fn missing_object_member_stays_unknown() {
 fn non_string_const_template_piece_stays_unknown() {
     assert_unknown("const-splice-non-string-piece.ts");
 }
+
+#[test]
+fn nested_sql_const_splice_keeps_calls_and_aligned_origins() {
+    let calls = read_calls("const-splice-origins-nested-sql.ts");
+    assert_eq!(calls.len(), 2, "{calls:?}");
+    let mut sqls = Vec::new();
+    for call in &calls {
+        assert!(
+            !call.is_unanalyzable(),
+            "call dropped or left unanalyzable: {call:?}"
+        );
+        assert!(
+            !call.variants.is_empty(),
+            "analyzable call has no variant: {call:?}"
+        );
+        for variant in &call.variants {
+            assert_eq!(
+                variant.sql_source_offsets.len(),
+                variant.sql_text.len(),
+                "{}",
+                variant.sql_text
+            );
+            sqls.push(variant.sql_text.clone());
+        }
+    }
+    sqls.sort();
+    assert_eq!(
+        sqls,
+        vec![
+            "SELECT id, name, created_at FROM t WHERE id = sql_placeholder_1".to_string(),
+            "SELECT id, name, created_at, updated_at, status, owner_id FROM t WHERE id = sql_placeholder_1 AND other = sql_placeholder_2".to_string(),
+        ]
+    );
+}
+
+#[path = "const_splice_review_tests.rs"]
+mod review;

@@ -5,17 +5,16 @@ use oxc_ast::ast::{ImportDeclaration, ImportDeclarationSpecifier, ImportOrExport
 
 const TRUSTED_SQL_TAG_MODULE: &str = "sql-template-strings";
 
-/// Record whether an import rebinds `sql` away from the trusted tag.
+/// Record whether an import is a configured tag or a rebinding of that name.
 ///
-/// A default import (or `import { default as local }`) from
-/// `sql-template-strings` *is* the trusted tag: store the local name so
-/// classification can trust it even when it isn't spelled `sql`. A named
-/// `sql` import from that module is not a shadow either; trust still comes
-/// from the `sql` spelling. A configured `trustedSqlTags` named import is
-/// the same kind of opt-in: store its local name, including a rename.
-/// A namespace import is always the module object, so a local `sql` there
-/// remains untrusted. Any other `sql`-spelled import is a shadow: the
-/// source module is not the real tag library.
+/// A default import or `{ default as local }` from `sql-template-strings` is
+/// the trusted tag under whatever local name the file used. A named `sql`
+/// import from that module is trusted only when the local name is still
+/// `sql` in any casing; a rename to a different word is not that binding.
+/// A configured `trustedSqlTags` named import is trusted under its local
+/// name, including a rename. A namespace import is the module object, so a
+/// local `sql` there remains untrusted. Any other `sql`-spelled import is a
+/// shadow: the source module is not a configured tag.
 pub(super) fn record_import(
     import: &ImportDeclaration<'_>,
     shadows: &mut TagShadows,
@@ -57,6 +56,7 @@ fn record_specifier(
                 return;
             }
             if trusted && imported.as_str() == "sql" && local.eq_ignore_ascii_case("sql") {
+                shadows.imported.insert_imported(local.to_string());
                 return;
             }
             shadow_sql_local(local, shadows);

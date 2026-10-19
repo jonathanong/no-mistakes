@@ -1,6 +1,6 @@
 use crate::ast;
 use crate::queue::extract::{FileFacts, ProducerSite};
-use crate::queue::extract_helpers::literal_expr;
+use crate::queue::extract_helpers::{literal_expr, literal_or_import};
 use crate::queue::source::line_number;
 use oxc_ast::ast::{Argument, CallExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
@@ -17,16 +17,21 @@ pub(super) fn record_enqueue(
     call: &CallExpression<'_>,
 ) {
     if method == "add" {
+        let (job, job_import) = call
+            .arguments
+            .first()
+            .and_then(Argument::as_expression)
+            .map(|expr| literal_or_import(expr, consts, &facts.string_imports))
+            .unwrap_or((None, None));
         facts.producers.push(ProducerSite {
             file: path.to_path_buf(),
             line: line_number(source, call.span.start),
             binding: binding.to_string(),
             raw_job: call.arguments.first().map(|arg| span(source, arg.span())),
-            job: call
-                .arguments
-                .first()
-                .and_then(|arg| arg.as_expression())
-                .and_then(|expr| literal_expr(expr, consts)),
+            job,
+            job_import,
+            worker_index: None,
+            self_dedup: false,
         });
         return;
     }
@@ -51,6 +56,7 @@ pub(super) fn record_flow(
     };
     let mut queue = None;
     let mut job = None;
+    let mut job_import = None;
     let mut raw_job = None;
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
@@ -58,7 +64,8 @@ pub(super) fn record_flow(
                 Some("queueName") => queue = literal_expr(&property.value, consts),
                 Some("name") => {
                     raw_job = Some(span(source, property.value.span()));
-                    job = literal_expr(&property.value, consts);
+                    (job, job_import) =
+                        literal_or_import(&property.value, consts, &facts.string_imports);
                 }
                 _ => {}
             }
@@ -76,6 +83,9 @@ pub(super) fn record_flow(
         binding,
         raw_job,
         job,
+        job_import,
+        worker_index: None,
+        self_dedup: false,
     });
 }
 
@@ -91,12 +101,17 @@ fn record_bulk_items(
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
             if property.key.static_name().as_deref() == Some("name") {
+                let (job, job_import) =
+                    literal_or_import(&property.value, consts, &facts.string_imports);
                 facts.producers.push(ProducerSite {
                     file: path.to_path_buf(),
                     line: line_number(source, call.span.start),
                     binding: binding.to_string(),
                     raw_job: Some(span(source, property.value.span())),
-                    job: literal_expr(&property.value, consts),
+                    job,
+                    job_import,
+                    worker_index: None,
+                    self_dedup: false,
                 });
             }
         }

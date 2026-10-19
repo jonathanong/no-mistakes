@@ -1,24 +1,54 @@
 use super::*;
 
+#[path = "array_element_values.rs"]
+mod array_element_values;
+#[path = "escaped_array_bindings.rs"]
+mod escaped_array_bindings;
 #[path = "escaped_array_entries.rs"]
 mod escaped_array_entries;
 #[path = "escaped_call_arguments.rs"]
 mod escaped_call_arguments;
+#[path = "escaped_class_aliases.rs"]
+mod escaped_class_aliases;
+#[path = "escaped_class_lookup.rs"]
+mod escaped_class_lookup;
 #[path = "escaped_class_methods.rs"]
 mod escaped_class_methods;
+#[path = "escaped_higher_order.rs"]
+mod escaped_higher_order;
 #[path = "escaped_origin_absorb.rs"]
 mod escaped_origin_absorb;
 #[path = "escaped_parameters.rs"]
 mod escaped_parameters;
 
+pub(super) use array_element_values::value as array_element_value;
 pub(super) use escaped_array_entries::{array_elements, assign_sources, copied_member};
 pub(super) use escaped_origin_absorb::absorb;
+
+type StoredArray = (
+    usize,
+    String,
+    u32,
+    std::sync::Arc<FxHashMap<String, ValueExpression>>,
+);
 
 #[derive(Default)]
 pub(in super::super) struct Side {
     /// `const api = new Api()` — write origins only, not a callable binding.
-    /// Keyed by binding scope and name.
+    /// Keyed by binding scope and name. Dotted keys are instance fields.
     instances: FxHashMap<(usize, String), CallableId>,
+    /// Arrow callables. `arguments` belongs to the enclosing function.
+    arrows: FxHashSet<CallableId>,
+    /// Instance field `(class, name)` initialized with an arrow or function.
+    fields: FxHashMap<(CallableId, String), CallableId>,
+    /// `return new Class()` recorded for the returning function.
+    returns: FxHashMap<CallableId, CallableId>,
+    /// `const r = instance.method`.
+    method_aliases: FxHashMap<(usize, String), CallableId>,
+    /// `const a = arguments`.
+    argument_aliases: FxHashSet<(usize, String)>,
+    /// Array values from `let` bindings and later array assignments.
+    arrays: Vec<StoredArray>,
     /// Call span `(start, end)`, method, and the raw argument values. Spread and
     /// conditional shapes are also stored in the escaped maps under that same span.
     methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>)>,

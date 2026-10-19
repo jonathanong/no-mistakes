@@ -21,7 +21,7 @@ impl ImportCollector {
         let Some(target) = arguments.first() else {
             return;
         };
-        let sources = super::receiver_escapes::assign_sources(self, arguments, raw);
+        let sources = super::receiver_escapes::assign_sources(self, arguments, raw, completed);
         let mut destinations: Vec<nested::ReceiverWrite> = Vec::new();
         nested::write_receiver_references(target, &[], &[], &mut destinations);
         for ((key, prefix), reads, read) in destinations {

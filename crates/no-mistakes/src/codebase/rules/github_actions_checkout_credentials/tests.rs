@@ -1,5 +1,8 @@
 use super::checkout::check_source;
 use super::{gha_kind, RULE_ID};
+
+#[path = "assume_write_tests.rs"]
+mod assume_write_tests;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
@@ -9,7 +12,7 @@ const WORKFLOW: &str = ".github/workflows/ci.yml";
 const ACTION: &str = ".github/actions/local/action.yml";
 
 fn check(rel: &str, source: &str) -> Vec<RuleFinding> {
-    check_source(rel, source)
+    check_source(rel, source, false)
 }
 
 fn step_of(message: &str) -> usize {

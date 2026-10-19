@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::process::Command;
 
 use crate::common;
 
@@ -324,14 +325,30 @@ fn swift_base_commands_planning_does_not_execute_argv() {
     let root = fixture("../../fixtures/test-plan/swift-native-topology");
     let sentinel = root.join("sentinel-should-not-exist");
     assert!(!sentinel.exists());
-    let plan = plan_swift_json(
-        &root,
-        Some(&root.join("runner-argv-sentinel.no-mistakes.yml")),
-        &[
+    let config = root.join("runner-argv-sentinel.no-mistakes.yml");
+    // The argv touches a relative path, so the process cwd has to be the fixture.
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .current_dir(&root)
+        .args([
+            "test",
+            "plan",
+            "swift",
+            "--root",
+            root.to_str().unwrap(),
+            "--config",
+            config.to_str().unwrap(),
             "--changed-file",
             "swift-clients/core/Sources/ExampleCore/APIClient.swift",
-        ],
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
     );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert!(plan.to_string().contains("sentinel-should-not-exist"));
     assert!(
         !sentinel.exists(),

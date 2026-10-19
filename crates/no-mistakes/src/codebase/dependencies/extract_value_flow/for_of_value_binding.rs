@@ -12,9 +12,11 @@ impl ImportCollector {
         let ForStatementLeft::VariableDeclaration(declaration) = left else {
             return;
         };
-        let Some(mut values) =
-            super::super::receiver_escapes::array_elements(self, &self.value_expression(right))
-        else {
+        let Some(mut values) = super::super::receiver_escapes::array_elements(
+            self,
+            &self.value_expression(right),
+            right.span().start,
+        ) else {
             return;
         };
         if !values

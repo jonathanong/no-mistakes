@@ -1,9 +1,10 @@
-use super::super::flags::is_assign;
+use super::super::flags::{basename, is_assign};
 use super::super::shell::Word;
+use super::wrappers::{skip_adjusted, skip_env, skip_sudo, skip_xargs};
 
 const LEADING: &[&str] = &[
     "if", "then", "elif", "else", "do", "while", "until", "!", "{", "(", "time", "exec", "command",
-    "nohup",
+    "nohup", "setsid",
 ];
 
 pub(super) fn command_text(text: &str) -> &str {
@@ -18,8 +19,20 @@ pub(super) fn skip_prefix(words: &[Word]) -> usize {
             index += 1;
             continue;
         }
-        if text == "sudo" {
+        if basename(text) == "sudo" {
             index = skip_sudo(words, index + 1);
+            continue;
+        }
+        if basename(text) == "env" {
+            index = skip_env(words, index + 1);
+            continue;
+        }
+        if matches!(text, "timeout" | "nice" | "stdbuf") {
+            index = skip_adjusted(words, index + 1);
+            continue;
+        }
+        if text == "xargs" {
+            index = skip_xargs(words, index + 1);
             continue;
         }
         break;
@@ -27,17 +40,36 @@ pub(super) fn skip_prefix(words: &[Word]) -> usize {
     index
 }
 
-fn skip_sudo(words: &[Word], mut index: usize) -> usize {
-    while let Some(flag) = words.get(index) {
-        match flag.text.as_str() {
-            "-E" | "-n" | "-H" => index += 1,
-            "-u" => {
-                index += 1;
-                if words.get(index).is_some() {
-                    index += 1;
-                }
-            }
-            _ => break,
+/// Docker client globals sit between `docker` and `run` / `create`.
+pub(super) fn skip_globals(words: &[Word], mut index: usize) -> usize {
+    while let Some(word) = words.get(index) {
+        let text = word.text.as_str();
+        let (flag, inline) = text
+            .split_once('=')
+            .map(|(name, value)| (name, Some(value)))
+            .unwrap_or((text, None));
+        if matches!(flag, "-D" | "--debug" | "--tls" | "--tlsverify") {
+            index += 1;
+            continue;
+        }
+        if !matches!(
+            flag,
+            "--context"
+                | "-c"
+                | "--host"
+                | "-H"
+                | "--config"
+                | "--log-level"
+                | "-l"
+                | "--tlscacert"
+                | "--tlscert"
+                | "--tlskey"
+        ) {
+            break;
+        }
+        index += 1;
+        if inline.is_none() && words.get(index).is_some() {
+            index += 1;
         }
     }
     index

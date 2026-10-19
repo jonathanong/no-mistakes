@@ -137,7 +137,12 @@ fn check_fact_plan(
     Ok(crate::codebase::check_facts::CheckFactPlan {
         queue,
         queue_factory_names: traversal.config().queues.factories.queue_names(),
-        queue_factory_roles: traversal.config().queues.factories.clone(),
+        queue_factory_roles: traversal
+            .config()
+            .queues
+            .factories
+            .clone()
+            .with_project_wait_scopes(traversal.config()),
         react,
         react_usages,
         symbols: symbols || react_usages,

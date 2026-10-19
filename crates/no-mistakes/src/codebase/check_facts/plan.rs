@@ -137,7 +137,12 @@ impl CheckFactPlan {
         self.queue_factory_names.extend(other.queue_factory_names);
         self.queue_factory_names.sort();
         self.queue_factory_names.dedup();
-        self.queue_factory_roles.merge(&other.queue_factory_roles);
+        // Config load already rejects conflicting roles, so a merge error keeps the first plan.
+        let merged = self.queue_factory_roles.merge(&other.queue_factory_roles);
+        debug_assert!(
+            merged.is_ok(),
+            "conflicting queue factory roles: {merged:?}"
+        );
         self.integration |= other.integration;
         if self.integration_runner_configs.is_none() {
             self.integration_runner_configs = other.integration_runner_configs;

@@ -351,3 +351,87 @@ fn namespace_export_and_whole_namespace_transfer_have_distinct_reach() {
         ],
     );
 }
+
+#[test]
+fn same_file_constructor_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-new.ts",
+        &options,
+        &[site(
+            11,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn tagged_template_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-tagged.ts",
+        &options,
+        &[site(
+            9,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn proxy_target_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-proxy.ts",
+        &options,
+        &[site(
+            5,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn member_chain_assign_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-member-chain.ts",
+        &options,
+        &[site(
+            8,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn imported_constructor_does_not_downgrade_executor_calls() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-new-import.ts",
+        &options,
+        &[site(
+            6,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            Some("SELECT id FROM users WHERE x = 1"),
+        )],
+    );
+}
+
+#[test]
+fn imported_tag_does_not_downgrade_executor_calls() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-tagged-import.ts",
+        &options,
+        &[site(
+            6,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            Some("SELECT id FROM users WHERE x = 1"),
+        )],
+    );
+}

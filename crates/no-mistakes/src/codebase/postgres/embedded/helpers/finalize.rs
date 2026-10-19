@@ -33,10 +33,22 @@ pub(crate) fn finalize(walked: Walked<'_>, sites: &[ImportedSite]) -> Vec<Pendin
         pending.extend(span.and_then(|span| take_pending(&mut relative.call, span, sites)));
     }
     for fragment in walked.fragments.iter_mut() {
-        if fragment.sql_text.as_deref().is_some_and(sentinel::contains) {
-            let text = fragment.sql_text.take().unwrap_or_default();
-            fragment.sql_text = keep_prefix(&text);
+        if !fragment.sql_text.as_deref().is_some_and(sentinel::contains) {
+            continue;
         }
+        let text = fragment.sql_text.take().unwrap_or_default();
+        // Defensive invariant (#2287): fragment placeholder positions are normally
+        // empty here (assigned later in embedded.rs). Keep the trim so positions
+        // never point past the cut; covered by
+        // trimmed_fragment_drops_placeholder_positions_past_the_hole.
+        let Some((kept, cut)) = trimmed_prefix(&text) else {
+            fragment.recovered_placeholder_positions.clear();
+            continue;
+        };
+        fragment
+            .recovered_placeholder_positions
+            .retain(|position| *position < cut);
+        fragment.sql_text = Some(kept);
     }
     for variants in walked.fragment_variants.iter_mut() {
         if variants
@@ -110,18 +122,23 @@ fn scrub(call: &mut EmbeddedSqlCall) {
         return;
     }
     let text = call.sql_text.take().unwrap_or_default();
-    let prefix = sentinel::prefix(&text);
-    let Some(kept) = keep_prefix(&text) else {
+    let Some((kept, cut)) = trimmed_prefix(&text) else {
         call.sql_source_positions.clear();
         call.recovered_placeholder_positions.clear();
         return;
     };
-    let cut = coordinate(&text, prefix.len());
     call.sql_source_positions
         .retain(|position| (position.sql_line, position.sql_column) < cut);
     call.recovered_placeholder_positions
         .retain(|position| *position < cut);
     call.sql_text = Some(kept);
+}
+
+/// Prefix before the first hole, plus the SQL coordinate where that prefix ends.
+fn trimmed_prefix(text: &str) -> Option<(String, (u32, u32))> {
+    let prefix = sentinel::prefix(text);
+    let kept = keep_prefix(text)?;
+    Some((kept, coordinate(text, prefix.len())))
 }
 
 /// The prefix before the first hole, when it is a known statement.

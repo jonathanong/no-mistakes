@@ -91,10 +91,14 @@ arrow form. `read ?? write` and `read || write` name only `read`: a proven
 executor is never nullish or falsy, so the right operand is not the value.
 `read && write` names only `write`. `flag && read`, `flag === 1 && read`,
 `typeof flag && read`, and `flag ?? read` name only `read`, not the whole
-expression. `typeof` and `new` are always truthy, so `typeof flag && read` and
-`new Runner() && read` always pass `read`. A comparison, `!`, unary `+` or
-`-`, or a sequence can be truthy or falsy, so those left operands are followed
-too (`!flag && read`, `+account.length && read`, `(account, flag) && read`).
+expression. A left operand that might be nullish reports the same way unless
+it is provably never nullish: `void 0 ?? read`, `client.flag ?? read`,
+``tag`q` ?? read``, `this ?? read`, and `new.target ?? read` (inside a plain
+function) name only `read`. `typeof` and `new` are always truthy, so
+`typeof flag && read` and `new Runner() && read` always pass `read`. A
+comparison, `!`, unary `+` or `-`, or a sequence can be truthy or falsy, so
+those left operands are followed too (`!flag && read`, `+account.length && read`,
+`(account, flag) && read`).
 
 A conditional reports when any branch is an executor. The message names only
 those branches (``read(sql`…`)`` for a passed value, `read(sql)` inside a
@@ -148,8 +152,13 @@ declaration that is assigned, or that shares its scope with direct `eval`, is
 not followed. A function expression's inner name is not followed; the `const`
 binding is the one this rule judges. A left operand that cannot select the
 executor stays silent. `typeof flag || read` and `new Runner() || read` are
-always the left side. `typeof flag ?? read` and `flag === 1 ?? read` stay
-silent because that left side is never nullish. Literal operands are folded:
+always the left side. `typeof flag ?? read`, `flag === 1 ?? read`,
+`` `x${flag}` ?? read ``, `[] ?? read`, `new Runner() ?? read`, and
+`!flag ?? read` stay silent. `typeof`, an untagged template, `new`, an array,
+object, or function literal, a comparison or other binary expression,
+`!` or unary `+` `-` `~`, `delete`, an update expression, and dynamic
+`import()` are never nullish. `void` is always `undefined`, so
+it is not in that set. Literal operands are folded:
 `0 && read`, `1 || read`, and `0 ?? read` are silent because that executor is
 not the value. An untyped `client.query` under a configured module is not
 named, including when it appears in these shapes.
@@ -170,6 +179,14 @@ run(adapter, account);
 run(typeof flag || read, account);
 run(new Runner() || read, account);
 run(flag === 1 ?? read, account);
+run(`x${flag}` ?? read, account);
+run([] ?? read, account);
+run(new Runner() ?? read, account);
+run(!flag ?? read, account);
+run(flag++ ?? read, account);
+run(import("m") ?? read, account);
+const obj = { k: true };
+run(delete obj.k ?? read, account);
 run(0 ?? read, account);
 ```
 

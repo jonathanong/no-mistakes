@@ -150,14 +150,14 @@ bindings mutated through `globalThis` are unsupported.
 A call is reported once per distinct requirement. That requirement is
 `optionsPosition`, `propertyMatch`, the set of `requiredProperties`, and the
 message (the target `message`, otherwise the top-level `message`). An imported
-target and a receiver target that share it produce one finding. Two imported
-targets whose globs both match the call, such as `ssrf-guard/node` and
-`ssrf-guard/*`, also produce one finding. For example,
+target and a receiver target that share it produce one finding. For example,
 `import * as client from "agent"` followed by `client.create()` configured as
-both `{ agent, create }` and receiver `client` is reported once. The default
-message names the first match: imported targets in configuration order, then
-global targets, then receiver targets. A second target is still reported when
-its properties, `propertyMatch`, `optionsPosition`, or message differ.
+both `{ agent, create }` and receiver `client` is reported once. Two imported
+targets whose globs both match the call, such as `ssrf-guard/node` and
+`ssrf-guard/*`, also produce one finding. The default message names the
+first match: imported targets in configuration order, then global targets,
+then receiver targets. A second target is still reported when its
+properties, `propertyMatch`, `optionsPosition`, or message differ.
 
 ## Fix
 

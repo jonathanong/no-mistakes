@@ -8,3 +8,14 @@ jobs:
       - run: docker run -p 5432:5432 postgres
       - run: docker run -p 5432:5432 postgres # no-mistakes-disable-line github-actions-docker-host-ports
       - run: docker run -p 6379:6379 redis
+  service:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres
+        ports:
+          # no-mistakes-disable-next-line github-actions-docker-host-ports
+          - 6008:5432
+          - 6011:5432
+    steps:
+      - run: echo ok

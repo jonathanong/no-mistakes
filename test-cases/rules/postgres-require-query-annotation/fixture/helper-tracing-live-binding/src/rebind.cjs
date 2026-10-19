@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 function forward() {
   let statement = sql`/* surviving alias */ SELECT 1`;
   const alias = statement;

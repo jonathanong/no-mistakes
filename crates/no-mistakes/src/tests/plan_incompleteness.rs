@@ -4,9 +4,10 @@ use std::fmt;
 /// Why a plan's dependency coverage is unfinished.
 ///
 /// The serde name is the public `incomplete[].kind` value. Package manifests,
-/// JavaScript lockfiles, and .NET dependency inputs (`*.csproj`,
-/// `Directory.Packages.props`, NuGet lockfiles) share one kind: the files
-/// differ, and the condition is still a missing comparison baseline.
+/// JavaScript lockfiles, .NET dependency inputs (`*.csproj`,
+/// `Directory.Packages.props`, NuGet lockfiles), and Swift dependency inputs
+/// (`Package.swift`, `Package.resolved`) share one kind: the files differ, and
+/// the condition is still a missing comparison baseline.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlanIncompletenessKind {
     #[serde(rename = "dependency-baseline-missing")]

@@ -76,14 +76,14 @@ impl<'a> Tok<'a> {
         true
     }
 
-    // `(( n << 1 ))` is arithmetic. A heredoc word never begins with `((`.
+    // `(( n << 1 ))` and `let` arguments are shifts. Only the command's first
+    // word counts, so a later quoted `"(("` does not hide a real heredoc.
     fn arithmetic_shift(&self) -> bool {
-        self.word.starts_with("((")
-            || self
-                .command
-                .words
-                .iter()
-                .any(|word| word.text.starts_with("(("))
+        match self.command.words.first().map(|word| word.text.as_str()) {
+            Some("let") => true,
+            Some(text) => text.starts_with("(("),
+            None => self.word.starts_with("(("),
+        }
     }
 
     fn mark_dynamic(&mut self) {

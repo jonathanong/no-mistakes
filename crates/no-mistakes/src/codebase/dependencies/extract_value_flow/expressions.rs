@@ -72,7 +72,7 @@ impl ImportCollector {
                     let value = element
                         .as_expression()
                         .map_or(ValueExpression::Undefined, |expression| {
-                            self.value_expression(expression)
+                            super::receiver_escapes::array_element_value(self, expression)
                         });
                     fields.insert(index.to_string(), value);
                 }

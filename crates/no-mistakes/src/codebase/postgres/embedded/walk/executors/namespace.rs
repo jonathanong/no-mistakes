@@ -182,19 +182,4 @@ impl ScopeVisitor<'_> {
                 });
         }
     }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn revoke_namespace_arguments(
-        &mut self,
-        call: &CallExpression<'_>,
-    ) {
-        for (index, argument) in call.arguments.iter().enumerate() {
-            if let Some(expression) = argument.as_expression() {
-                if self.namespace_argument_mutates(call, index) {
-                    self.revoke_query_receiver(expression);
-                } else {
-                    self.revoke_passed_argument(expression);
-                }
-            }
-        }
-    }
 }

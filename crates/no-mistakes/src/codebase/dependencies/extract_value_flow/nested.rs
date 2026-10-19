@@ -78,7 +78,7 @@ fn walk_references(
                 .collect::<Vec<_>>();
             walk_references(base, &fields, acquired + 1, output);
         }
-        ValueExpression::Default(value, fallback) => {
+        ValueExpression::Default(value, fallback) | ValueExpression::Either(value, fallback) => {
             walk_references(value, path, acquired, output);
             walk_references(fallback, path, acquired, output);
         }

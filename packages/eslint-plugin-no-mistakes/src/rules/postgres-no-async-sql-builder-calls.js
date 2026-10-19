@@ -2,22 +2,36 @@
 
 const { isFunction, isTransparentExpression, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
+const { propertyName } = require("./module-mock-helpers");
 const {
   bindingResultContract,
   boundVariable,
+  exportContract,
   hasLaterWrite,
-  isThenCall,
   returnedPromiseContract,
 } = require("./postgres-no-async-sql-builder-bindings");
-const { callableReturnContract } = require("./postgres-no-async-sql-builder-property");
+const { callableReturnContract } = require("./postgres-no-async-sql-builder-callable");
 const { annotationContract, combine } = require("./postgres-no-async-sql-builder-types");
+
+const PROMISE_USES = new Set(["then", "catch", "finally"]);
+
+function isThenUse(node) {
+  const member = node.parent;
+  if (member?.type !== "MemberExpression" || member.object !== node || member.computed)
+    return false;
+  const name = propertyName(member.property);
+  return (
+    PROMISE_USES.has(name) &&
+    member.parent?.type === "CallExpression" &&
+    member.parent.callee === member
+  );
+}
 
 function callResultContract(call, context, types, seen = new Set()) {
   let current = call;
   while (current) {
-    if (isThenCall(current)) return "requires";
+    if (isThenUse(current)) return "requires";
     const parent = current.parent;
-    if (!parent) return "unknown";
     if (parent.type === "ExpressionStatement") return "allows";
     if (
       parent.type === "VariableDeclarator" &&
@@ -55,7 +69,6 @@ function callResultContract(call, context, types, seen = new Set()) {
     }
     return "unknown";
   }
-  return "unknown";
 }
 
 function argumentParameterContract(argument, context, types, contractOf) {
@@ -106,21 +119,34 @@ function referenceContract(func, context, types) {
 
 function directValueContract(func, context, types) {
   const parent = func.parent;
-  if (
-    parent?.type === "MethodDefinition" ||
-    parent?.type === "PropertyDefinition" ||
-    parent?.type === "Property" ||
-    (parent?.type === "VariableDeclarator" && parent.init === func)
-  ) {
-    return "allows";
-  }
   if (parent?.type === "CallExpression" && parent.arguments.includes(func)) {
     return argumentParameterContract(func, context, types, callableReturnContract);
   }
   return "unknown";
 }
 
+// Class fields, methods, and object properties abstain. Heritage and object
+// escape are not modeled.
+function builderIsMember(func) {
+  const parent = func.parent;
+  return (
+    parent.type === "MethodDefinition" ||
+    parent.type === "PropertyDefinition" ||
+    parent.type === "Property"
+  );
+}
+
+function contractFor(func, context, types) {
+  if (builderIsMember(func)) return "unknown";
+  return combine([
+    annotationContract(func.returnType, types),
+    exportContract(func, context),
+    referenceContract(func, context, types),
+  ]);
+}
+
 module.exports = {
   callResultContract,
+  contractFor,
   referenceContract,
 };

@@ -78,6 +78,9 @@ pub(crate) struct ImportedSite {
     pub(crate) value_used: bool,
     /// Line of the call in the caller's file.
     pub(crate) line: u32,
+    /// `Some(allow_fragment)` reads an exported constant instead of calling a helper.
+    /// The flag is true only for `.append`, which may take a tagged fragment.
+    pub(crate) constant: Option<bool>,
 }
 
 /// Executor SQL that is complete once the holes of `sites` are filled.
