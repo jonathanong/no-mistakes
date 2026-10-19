@@ -12,8 +12,9 @@ import time
 from pathlib import Path
 
 
-def mimalloc_environment():
-    return {key: value for key, value in os.environ.items() if key.startswith("MIMALLOC_")}
+def mimalloc_environment(environment=None):
+    environment = os.environ if environment is None else environment
+    return {key: value for key, value in environment.items() if key.startswith("MIMALLOC_")}
 
 
 def rss_bytes(raw):
@@ -63,13 +64,13 @@ def wait_child(child, timeout, grace=5):
         time.sleep(0.05)
 
 
-def measure(argv, cwd, output, sample, metadata, timeout):
+def measure(argv, cwd, output, sample, metadata, timeout, env=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     stdout_path, stderr_path = output / f"{sample}.stdout", output / f"{sample}.stderr"
     started = time.perf_counter()
     with stdout_path.open("wb") as stdout, stderr_path.open("wb") as stderr:
-        child = subprocess.Popen(argv, cwd=cwd, stdout=stdout, stderr=stderr, start_new_session=True)
+        child = subprocess.Popen(argv, cwd=cwd, stdout=stdout, stderr=stderr, start_new_session=True, env=env)
         usage, timed_out = wait_child(child, timeout)
     executable = Path(argv[0]).resolve()
     available = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count()
@@ -86,16 +87,14 @@ def measure(argv, cwd, output, sample, metadata, timeout):
         "platform": platform.platform(), "machine": platform.machine(), "cpu_model": cpu_model(),
         "logical_cpus": os.cpu_count(), "available_cpus": available,
         "rayon_environment": os.environ.get("RAYON_NUM_THREADS"),
-        "mimalloc_environment": mimalloc_environment(),
+        "mimalloc_environment": mimalloc_environment(env),
         "executable": str(executable), "executable_sha256": hashlib.sha256(executable.read_bytes()).hexdigest(),
     }
     (output / f"{sample}.json").write_text(json.dumps(row, indent=2) + "\n")
 
 
 def command(binary, workload, root, jobs, diagnostics):
-    args = [binary]
-    if workload.startswith("hosted-"):
-        args += ["--timeout", "0", "--lock-timeout", "0"]
+    args = [binary, "--timeout", "0", "--lock-timeout", "0"]
     args += ["check", "--root", root, "--format", "json"]
     if jobs != "max":
         args += ["--jobs", jobs]
@@ -104,36 +103,17 @@ def command(binary, workload, root, jobs, diagnostics):
     return args
 
 
-def verify_artifact(binary, variant, source, platform_name):
-    binary_path = Path(binary).resolve()
-    provenance_path = binary_path.parent / "provenance.json"
-    provenance = json.loads(provenance_path.read_text())
-    target, lto, units = {
-        "linux-arm64": ("aarch64-unknown-linux-gnu", "fat", 1),
-        "linux-x64": ("x86_64-unknown-linux-gnu", "fat", 1),
-        "macos-arm64": ("aarch64-apple-darwin", "thin", 16),
-    }[platform_name]
-    expected = {"variant": variant, "source": source, "target": target, "lto": lto,
-                "codegenUnits": units}
-    for key, value in expected.items():
-        if provenance.get(key) != value:
-            raise ValueError(f"{variant} artifact {key}={provenance.get(key)!r}, expected {value!r}")
-    recorded = provenance.get("no-mistakes", {})
-    digest = hashlib.sha256(binary_path.read_bytes()).hexdigest()
-    if recorded.get("sha256") != digest:
-        raise ValueError(f"{variant} binary hash does not match its provenance")
-    probe_path = binary_path.parent / "rayon-probe"
-    probe_record = provenance.get("rayon-probe", {})
-    probe_digest = hashlib.sha256(probe_path.read_bytes()).hexdigest()
-    if probe_record.get("sha256") != probe_digest:
-        raise ValueError(f"{variant} Rayon probe hash does not match its provenance")
-    return provenance
+ARTIFACT = __import__("runpy").run_path(str(Path(__file__).with_name("mimalloc-artifact.py")))
+verify_artifact = ARTIFACT["verify_artifact"]
+verify_pair = ARTIFACT["verify_pair"]
+verify_probe = ARTIFACT["verify_probe"]
 
 
 def main():
     parser = argparse.ArgumentParser()
     for name in ("system", "mimalloc", "consumer", "hosted-acceptance", "hosted-passing-failing", "output"):
         parser.add_argument(f"--{name}", required=True)
+    parser.add_argument("--measurement-id", help="unique collection ID; defaults to host-id")
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--workload", choices=("consumer", "hosted-acceptance", "hosted-passing-failing"), required=True)
     parser.add_argument("--jobs", choices=("1", "4", "16", "max"), required=True)
@@ -151,11 +131,10 @@ def main():
     root = getattr(args, workload.replace("-", "_"))
     artifacts = {variant: verify_artifact(getattr(args, variant), variant, args.source, args.platform)
                  for variant in ("system", "mimalloc")}
-    if artifacts["system"].get("lock") != artifacts["mimalloc"].get("lock"):
-        raise ValueError("system and mimalloc artifacts were built from different lockfiles")
+    verify_pair(artifacts)
     probe_jobs = {}
     for variant in ("system", "mimalloc"):
-        probe = Path(getattr(args, f"{variant}_probe")).resolve()
+        probe = verify_probe(getattr(args, f"{variant}_probe"), artifacts[variant])
         result = json.loads(subprocess.check_output([probe], text=True))
         expected = variant == "mimalloc"
         if result.get("expected_mimalloc") is not expected or result.get("is_mimalloc_heap") is not expected:
@@ -178,7 +157,11 @@ def main():
                     "diagnostics": diagnostics,
                     "jobs": args.jobs, "pair": args.pair, "order": "AB" if order[0] == "system" else "BA",
                     "position": position, "host_id": args.host_id, "expected_exit": 0,
+                    "measurement_id": args.measurement_id or args.host_id, "tree": artifacts[variant]["tree"],
                     "source": args.source, "lock": artifacts[variant]["lock"],
+                    "rustc": artifacts[variant]["rustc"], "cargo": artifacts[variant]["cargo"],
+                    "target": artifacts[variant]["target"], "build_flags": artifacts[variant]["build_flags"],
+                    "artifact_sha256": artifacts[variant]["no-mistakes"]["sha256"],
                     "workload_commit": args.workload_commit, "workload_tree": args.workload_tree,
                     "lto": artifacts[variant]["lto"], "codegenUnits": artifacts[variant]["codegenUnits"],
                     "rayon_jobs": int(args.jobs) if args.jobs != "max" else automatic_jobs,

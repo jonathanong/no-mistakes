@@ -77,11 +77,13 @@ def main():
     order = ("system", "mimalloc") if args.pair in (0, 3) else ("mimalloc", "system")
     for position, variant in enumerate(order):
         build = artifacts[variant]
-        metadata = {key: build[key] for key in ("source", "lock", "lto", "codegenUnits", "rustc", "cargo", "target", "build_flags")}
+        metadata = {key: build[key] for key in ("source", "tree", "lock", "lto", "codegenUnits", "rustc", "cargo", "target", "build_flags")}
         metadata.update({"variant": variant, "workload": "consumer-napi", "platform": args.platform,
                          "diagnostics": False, "jobs": args.jobs, "pair": args.pair,
                          "order": "AB" if order[0] == "system" else "BA", "position": position,
-                         "host_id": args.host_id, "expected_exit": 0, "timeout_seconds": 600,
+                         "host_id": args.host_id,
+                         "measurement_id": f"{os.environ.get('GITHUB_RUN_ID', args.host_id)}-{os.environ.get('GITHUB_RUN_ATTEMPT', '1')}",
+                         "expected_exit": 0, "timeout_seconds": 600,
                          "artifact_sha256": digest(addons[variant]), "node_version": node_version,
                          "node_sha256": digest(node), "workload_commit": workload["commit"],
                          "workload_tree": workload["tree"], "num_cpus_default": probes[variant],

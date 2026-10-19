@@ -1,0 +1,56 @@
+{
+  "system": {
+    "source": "s",
+    "tree": "t",
+    "lock": {
+      "sha256": "lock"
+    },
+    "rustc": "rustc fixed",
+    "cargo": "cargo fixed",
+    "target": "aarch64-unknown-linux-gnu",
+    "lto": "fat",
+    "codegenUnits": 1,
+    "build_flags": {
+      "RUSTFLAGS": null,
+      "CARGO_ENCODED_RUSTFLAGS": null,
+      "RUSTC_WRAPPER": "",
+      "CARGO_PROFILE_RELEASE_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "NO_MISTAKES_BUILD_NAPI": "1"
+    },
+    "features": "default",
+    "no-mistakes": {
+      "sha256": "system-cli"
+    },
+    "no-mistakes.node": {
+      "sha256": "system-addon"
+    }
+  },
+  "mimalloc": {
+    "source": "s",
+    "tree": "t",
+    "lock": {
+      "sha256": "lock"
+    },
+    "rustc": "rustc fixed",
+    "cargo": "cargo fixed",
+    "target": "aarch64-unknown-linux-gnu",
+    "lto": "fat",
+    "codegenUnits": 1,
+    "build_flags": {
+      "RUSTFLAGS": null,
+      "CARGO_ENCODED_RUSTFLAGS": null,
+      "RUSTC_WRAPPER": "",
+      "CARGO_PROFILE_RELEASE_DEBUG": "0",
+      "CARGO_INCREMENTAL": "0",
+      "NO_MISTAKES_BUILD_NAPI": "1"
+    },
+    "features": "default",
+    "no-mistakes": {
+      "sha256": "mimalloc-cli"
+    },
+    "no-mistakes.node": {
+      "sha256": "mimalloc-addon"
+    }
+  }
+}

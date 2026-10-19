@@ -18,21 +18,56 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Download all paired samples
+        if: always()
         timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: mimalloc-sample-*
           path: measurements
           merge-multiple: true
-      - name: Require complete parity and report paired statistics
+      - name: Download N-API paired samples
+        if: always()
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: mimalloc-napi-sample-*
+          path: measurements-napi
+          merge-multiple: true
+      - name: Download four-target size deltas
+        if: always()
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: mimalloc-size-summary
+          path: sizes
+      - name: Require complete CLI parity and report paired statistics
+        if: always()
         timeout-minutes: 2
         run: python3 scripts/performance/mimalloc-report.py summarize measurements
+      - name: Require complete N-API parity and report paired statistics
+        if: always()
+        timeout-minutes: 2
+        run: python3 scripts/performance/mimalloc-report.py summarize --matrix napi measurements-napi
+      - name: Record exploratory adoption evidence and missing scopes
+        if: always()
+        timeout-minutes: 2
+        run: |
+          mkdir -p summaries
+          arguments=(--output summaries/adoption.json)
+          [[ ! -f measurements/summary.json ]] || arguments+=(--hosted measurements/summary.json)
+          [[ ! -f measurements-napi/summary.json ]] || arguments+=(--napi measurements-napi/summary.json)
+          [[ ! -f sizes/size-summary.json ]] || arguments+=(--sizes sizes/size-summary.json)
+          python3 scripts/performance/mimalloc-adoption.py "${arguments[@]}"
       - name: Upload summary
         if: always()
         timeout-minutes: 3
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: mimalloc-summary
-          path: measurements/summary.json
+          path: |
+            measurements/summary.json
+            measurements-napi/summary.json
+            sizes/size-summary.json
+            summaries/adoption.json
           if-no-files-found: warn
           retention-days: 7

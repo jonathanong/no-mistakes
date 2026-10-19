@@ -1,101 +1,133 @@
-<!-- cspell:ignore Mimalloc mimalloc codegen Vouchington dlopen -->
+<!-- cspell:ignore Mimalloc mimalloc codegen Vouchington dlopen wait4 readelf -->
 
 # Mimalloc allocator evaluation
 
-The CLI and N-API library use mimalloc through Rust's global allocator when the
-default `mimalloc` feature is enabled. That dependency enables
-`local_dynamic_tls`, so a Unix build of the addon does not use initial-exec TLS
-inside a library Node loads with `dlopen`. The `override` feature is not
-enabled, so the C allocator used by Node remains unchanged. Default features
-build mimalloc v3; the `v2` feature is not enabled. Rust-library consumers that
-provide their own global allocator can opt out with
+The CLI and N-API library use mimalloc for Rust allocations when the default
+`mimalloc` feature is enabled. Node's allocator remains unchanged. The dependency
+enables `local_dynamic_tls` and does not enable `override` or `v2`. Rust-library
+consumers with their own global allocator can use
 `--no-default-features --features mermaid-validation`.
 
-## Pre-registered adoption rule
+This PR remains a draft. No eligible allocator resource measurements or release
+size deltas exist for this change. Historical runs on other SHAs cannot validate it.
 
-This rule was written before any eligible paired sample existed. It is not a
-result. No hosted cell and no many-core cell has been measured on this head.
-`scripts/performance/mimalloc-report.py` records the same thresholds in
-`ADOPTION_RULE` and does not apply them.
+## Required evidence and adoption rule
 
-Adopt mimalloc only if every measured cell meets all of the following:
+Every required scope must be present and valid:
 
-- the median paired wall-time ratio (mimalloc / system) is at most 1.00, and no
-  pair's wall-time ratio is above 1.05
-- the median paired peak-RSS ratio is at most 1.00 at jobs 1
-- the median paired peak-RSS ratio is at most 0.95 at max jobs on the
-  many-core host (≥16 logical CPUs)
-- report, warning, and exit-status parity is 100%
+- 36 hosted CLI cells: Linux arm64 and macOS arm64, three workloads, diagnostics
+  off/on, jobs 1/4/max.
+- 24 many-core Linux cells and 24 many-core Apple Silicon cells: three workloads,
+  diagnostics off/on, jobs 1/4/16/max. Linux may be arm64 or x64.
+- Four N-API consumer cells: Linux arm64 and macOS arm64, jobs 1/max, diagnostics off.
+- Paired CLI and addon sizes for all four release targets: Linux arm64/x64,
+  macOS arm64, and Windows x64.
 
-These thresholds were not tuned to a measurement. Nothing below is a result.
+The preregistered thresholds remain wall ratio ≤1.00 at the median, no individual
+wall ratio >1.05, jobs-1 peak-RSS median ratio ≤1.00, and many-core max-jobs peak-RSS
+median ratio ≤0.95. Every cell must preserve the complete report, warnings, and
+exit status. CPU (user + system) is reported for review.
 
-## Unmeasured
+Four pairs are exploratory. They cannot establish a one-sided 95% upper bound
+for the population median, even when every observed ratio is ≤1.00. Eligibility
+for maintainer review additionally requires at least 12 distinct matched pairs
+per cell and a one-sided 95% median upper bound below each applicable threshold.
+The bound uses the exact binomial order statistic, assuming independent paired
+observations from a stable sampling process. It does not establish a tail bound.
+Twelve pairs can be obtained from three independent four-pair collections; this
+change does not automatically dispatch those repetitions or tune thresholds.
 
-No eligible paired samples exist. Do not read this page as a timing, RSS, or
-size result.
+`scripts/performance/mimalloc-adoption-rule.py` records the rule before samples.
+`mimalloc-report.py` exports it and produces descriptive summaries.
+`mimalloc-adoption.py` evaluates complete evidence, records missing scopes, rejects
+duplicate measurement/pair identities, and checks source, lock, compiler, flags,
+and artifact consistency across collections. Empty or hosted-only evidence cannot
+pass. Even complete qualifying evidence only returns
+`eligible-for-maintainer-review`; `adopt` remains false. Adoption needs maintainer
+review, including CPU regressions and all release size deltas.
 
-The hosted matrix, once a dispatch produces samples, is Linux arm64 and macOS
-arm64, three workloads, diagnostics off and on, and jobs 1, 4, and max: 36
-cells, four pairs each. Each cell should report the median and max paired
-ratios for wall time, user+sys CPU, and peak RSS, the valid-pair count, and
-report parity. Those cells are not filled in.
+## Collection and summaries
 
-The high-worker matrix is separate and also unmeasured. It needs one many-core
-Linux host and one many-core Apple Silicon Mac, each with at least 16 logical
-CPUs, using the release-equivalent artifacts from the fixed build. Jobs are 1,
-4, 16, and max (`--jobs` omitted). Diagnostics are off and on. One platform,
-three workloads, and both diagnostics settings are 24 cells. Summarize them
-with `summarize --matrix many-core --platform <platform>`. A `max` row whose
-`automatic_rayon_jobs` is below 16 is rejected. The hosted summary command
-stays `summarize <dir>` and still requires the 36-cell matrix. Hosted
-`ubuntu-22.04-arm` has 4 vCPUs, so a hosted `jobs=max` cell is not that
-measurement. The measure script accepts `--jobs 16` and `--platform linux-x64`
-(`x86_64-unknown-linux-gnu`, fat LTO, one codegen unit) for this run; those
-choices are not part of the hosted 36-cell matrix.
+The manual native evaluation workflow builds both allocator variants, checks
+registration controls, runs existing N-API parity tests, and collects the hosted
+CLI and N-API matrices. The callable release-target workflow builds both variants
+for all four targets and uploads `mimalloc-size-summary`. It can also be dispatched
+independently. Neither workflow claims to provide a many-core machine.
 
-N-API wall time and peak RSS, and build-size deltas for all four release
-targets, are unmeasured.
+Many-core collections need one physical host per 24-cell matrix, at least 16
+available CPUs, and an unmodified default CPU probe of at least 16. An explicit
+`RAYON_NUM_THREADS=16` on a four-CPU runner cannot qualify. Use one `--host-id` for
+the host, a unique `--measurement-id` for each collection, and the exact measured
+artifacts. `max` omits `--jobs`; explicit 16 and default remain separate cells.
+`mimalloc-build.sh system <out>` and `mimalloc-build.sh mimalloc <out>` support
+native Linux arm64/x64 and macOS arm64 builders.
 
-## Harness
+Summarize raw CLI samples with:
 
-The comparison uses the same source revision and lockfile for both variants.
-The system-allocator control disables default features and explicitly retains
-`mermaid-validation`; the candidate uses the default features. Only the
-allocator feature differs. Linux arm64 and Linux x64 measured artifacts use
-release fat LTO and one codegen unit. macOS arm64 measured artifacts use thin
-LTO and 16 codegen units, matching release builds. The measured cargo invocation builds
-the library and `no-mistakes` bin only, on `ubuntu-22.04-arm` for Linux, and
-does not set `CARGO_BUILD_JOBS`. It does not build the allocator example, so
-dev-dependency features stay out of the measured CLI and addon.
+```sh
+python3 scripts/performance/mimalloc-report.py summarize measurements
+python3 scripts/performance/mimalloc-report.py summarize --matrix many-core --platform linux-x64 linux-many-core
+python3 scripts/performance/mimalloc-report.py summarize --matrix many-core --platform macos-arm64 mac-many-core
+python3 scripts/performance/mimalloc-report.py summarize --matrix napi measurements-napi
+```
 
-The registration probe is a second invocation with LTO off and 16 codegen
-units. The standalone probe jobs use that same non-LTO profile. `measure.py`
-runs the probe before timing the CLI. The probe calls `mi_is_in_heap_region`
-only while its `Vec` remains live. A dependency-only control without the
-registration must fail.
+Each command requires its entire declared matrix. There are four pairs per cell,
+in AB/BA/BA/AB order. Every A/B pair uses the same physical runner and command.
+The reporter compares paired ratios before aggregating; it never divides
+cross-host medians. It reports wall, user/system/total CPU, and per-process peak
+RSS with eligible counts, median, maximum, and nearest-rank p95. At four samples,
+p95 is the observed maximum and supplies no guaranteed tail bound.
 
-The native evaluation workflow is manual `workflow_dispatch` only. It builds
-both the CLI and N-API addon, checks the probe with the feature off, without
-global-allocator registration, and with registration, then runs N-API parity
-tests for both variants. It measures the pinned Vouchington consumer and both
-public hosted-check fixtures with `--jobs 1`, `4`, and `max`. Four same-runner
-matched pairs per cell use AB, BA, BA, AB order. Each process saves its
-executable hash, platform and CPU facts, exit status, normalized report and
-warnings, wall time, user/system CPU time, per-process peak RSS, and any
-`MIMALLOC_*` environment. A non-empty or mismatched `MIMALLOC_*` environment
-fails the pair. The summary reports paired differences and ratios, maxima,
-nearest-rank p95, and eligible resource counts. Four samples cannot establish
-a guaranteed tail bound.
+To evaluate collected summaries, repeat each option for independent collections:
 
-Prepared workload artifacts retain the pinned checkout's Git index and native
-core inventory settings, so tracked-but-ignored files remain visible to the
-analyzer. Remote and credential configuration is removed before upload.
+```sh
+python3 scripts/performance/mimalloc-adoption.py \
+  --hosted cli/summary.json --napi napi/summary.json \
+  --many-core-linux linux-many-core/summary.json \
+  --many-core-macos mac-many-core/summary.json \
+  --sizes release-sizes/size-summary.json --output adoption.json
+```
 
-Every hosted-check tree is expected to exit zero, as required by the pinned
-hosted-check contract. A nonzero exit, timeout, signal, missing pair, parity
-mismatch, or incomplete report fails the evaluation. Censored or signaled runs
-remain in the raw artifacts but do not contribute CPU or RSS maxima. Evaluation
-builds use an 80-minute job and a 45-minute compile step, matching the
-non-Windows `release.yml` caps. Release-target checks use 100/75 minutes on
-Windows and 80/45 otherwise. Measurement jobs keep a 30-minute deadline and run
-both variants on the same native runner before uploading that pair's evidence.
+A single four-pair collection remains insufficient even with all scopes present.
+The hosted workflow records an incomplete exploratory adoption report while
+many-core scopes remain absent. A green collection workflow is not adoption.
+
+## Artifact and runtime checks
+
+Both allocator variants use identical source, lockfile, compiler, and build flags.
+The control disables default features but retains `mermaid-validation`; the
+candidate uses defaults. Linux uses fat LTO/one codegen unit; macOS uses thin
+LTO/16 units. Measured artifacts build only the library and CLI, without setting
+Cargo's job count. The registration probe is a separate build with LTO off and
+16 units so example dev-dependency features do not enter measured artifacts.
+It checks a live allocation against `mi_is_in_heap_region`. Both CLI and addon
+hashes must differ between allocator variants; N-API pairs use the same Node
+executable and distinct verified addons.
+
+Every Linux builder runs `readelf -d` on the actual copied addon. A `STATIC_TLS`
+requirement fails the build: rebuild with `local_dynamic_tls` before measuring a
+library Node loads via `dlopen`. `addon-dynamic.txt` retains the dynamic-section
+dump; `addon-tls.json` links its hash and the exact addon hash. Artifact verifiers
+recheck that evidence before measurement and size reporting.
+
+The release builder takes `<system|mimalloc> <out>`. Its size verifier requires
+all eight artifacts, validates each source/lock/compiler/profile and actual file
+hash/size, then reports baseline/candidate bytes, byte deltas, and percentages for
+both CLI and addon on every target. Missing controls cannot yield a size result.
+
+N-API samples start fresh Node processes and await the async JS facade's `check()`.
+They do not spawn the CLI. Peak RSS includes Node and the Rust addon. Complete
+JSON and CLI-equivalent exit status are retained. Node version/hash, addon hash,
+source/workload identities, CPU facts, effective Rayon jobs, and raw stdout/stderr
+are recorded. Non-empty or mismatched `MIMALLOC_*` environments invalidate a pair.
+
+CLI and N-API calls disable internal command/lock deadlines; each measured child
+has the same 600-second outer collection cap. Build/install preparation is outside
+that cap. A nonzero expected-clean workload exit, timeout, signal, missing pair,
+or parity mismatch fails the evaluation. Raw censored evidence is retained and
+excluded from completed resource comparisons. Build steps retain 45-minute
+non-Windows/75-minute Windows limits and 80/100-minute job limits.
+
+Prepared workloads preserve pinned Git inventories and native core settings,
+including tracked-but-ignored files. Credentials and remotes are removed before
+upload. No older local consumer fixture substitutes for the pinned snapshot.

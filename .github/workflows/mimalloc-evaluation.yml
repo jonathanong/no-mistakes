@@ -22,10 +22,20 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Set up Node for saved runner tests
+        timeout-minutes: 3
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: false
+          install: false
       - name: Test saved measurement fixtures
         timeout-minutes: 2
         run: |
-          python3 scripts/performance/mimalloc-report-tests.py
+          for suite in report evidence artifact adoption napi-measure; do
+            python3 "scripts/performance/mimalloc-$suite-tests.py"
+          done
+          node --test scripts/performance/mimalloc-napi-runner.test.js
           bash scripts/performance/mimalloc-build-tests.sh
   build:
     needs: harness-tests
@@ -39,10 +49,16 @@ jobs:
   napi:
     needs: build
     uses: ./.github/workflows/mimalloc-evaluation-napi.yml
+  napi-resources:
+    needs: [build, prepare, napi]
+    uses: ./.github/workflows/mimalloc-evaluation-napi-measure.yml
+  release-targets:
+    needs: harness-tests
+    uses: ./.github/workflows/mimalloc-release-targets.yml
   measure:
     needs: [build, probe, napi, prepare]
     uses: ./.github/workflows/mimalloc-evaluation-measure.yml
   summarize:
     if: always()
-    needs: [harness-tests, build, probe, napi, prepare, measure]
+    needs: [harness-tests, build, probe, napi, prepare, measure, napi-resources, release-targets]
     uses: ./.github/workflows/mimalloc-evaluation-summary.yml

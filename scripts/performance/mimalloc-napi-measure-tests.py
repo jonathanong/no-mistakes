@@ -40,7 +40,7 @@ class NativeEvidenceTests(unittest.TestCase):
         args = SimpleNamespace(system="/system", mimalloc="/mimalloc", consumer=str(FIXTURE),
                                prepared=str(FIXTURE), output="/output", host_id="host", source="source",
                                jobs="max", pair=1, platform="linux-arm64")
-        fields = {key: key for key in ("source", "lock", "lto", "codegenUnits", "rustc", "cargo", "target", "build_flags")}
+        fields = json.loads((FIXTURE / "sampler-build.json").read_text())
         calls = []
         shared = {"mimalloc_environment": lambda: {}, "verify_pair": lambda artifacts: None,
                   "verify_artifact": lambda *unused: fields,

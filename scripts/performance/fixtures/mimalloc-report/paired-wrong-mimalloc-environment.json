@@ -43,7 +43,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "system-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -94,7 +109,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "mimalloc-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -147,7 +177,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "system-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -198,7 +243,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "mimalloc-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -251,7 +311,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "system-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -302,7 +377,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "mimalloc-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -355,7 +445,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "system-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",
@@ -406,7 +511,22 @@
       "automatic_rayon_jobs": 4,
       "rayon_environment": null,
       "workload_commit": "pinned-consumer",
-      "workload_tree": "tree-consumer"
+      "workload_tree": "tree-consumer",
+      "rustc": "rustc fixture linux-arm64",
+      "cargo": "cargo fixture",
+      "target": "aarch64-unknown-linux-gnu",
+      "build_flags": {
+        "RUSTFLAGS": null,
+        "CARGO_ENCODED_RUSTFLAGS": null,
+        "RUSTC_WRAPPER": "",
+        "CARGO_PROFILE_RELEASE_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "NO_MISTAKES_BUILD_NAPI": "1"
+      },
+      "artifact_sha256": "mimalloc-binary",
+      "num_cpus_default": 4,
+      "tree": "same-source-tree",
+      "measurement_id": "fixture-run-1"
     },
     "normalized_report_sha256": "full-report",
     "warnings_sha256": "warnings",

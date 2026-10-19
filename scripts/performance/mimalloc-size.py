@@ -74,7 +74,7 @@ def summarize(root):
         if any(not base.get(k) or base[k] != candidate.get(k) for k in IDENTITY):
             raise ValueError('paired release source, lock, compiler or flags differ')
         identities.add((base['source'], base['tree'], base['lockSha256']))
-        row = {'target': target, 'valid': True, 'source': base['source']}
+        row = {'target': target, 'valid': True, **{k: base[k] for k in ('source', 'tree', 'lockSha256', 'rustc', 'cargo', 'profile')}}
         for label, name in [('cli', binary), ('addon', 'no-mistakes.node')]:
             b, c = base['artifacts'][name], candidate['artifacts'][name]
             if b['sha256'] == c['sha256']:

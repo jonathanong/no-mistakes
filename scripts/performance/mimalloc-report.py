@@ -2,11 +2,9 @@
 """Compare complete semantics and aggregate resources within physical host pairs."""
 import argparse
 import hashlib
-import itertools
 import json
 import re
 import runpy
-from collections import defaultdict
 from pathlib import Path
 
 STATS = runpy.run_path(str(Path(__file__).with_name("mimalloc-report-stats.py")))
@@ -15,24 +13,11 @@ SEMANTICS = ("normalized_report_sha256", "warnings_sha256", "stderr_semantics_sh
 HOST_FIELDS = ("host_id", "cwd", "platform", "machine", "cpu_model", "available_cpus")
 CELL_FIELDS = ("platform", "workload", "diagnostics", "jobs")
 BUILD_FIELDS = ("source", "lock", "lto", "codegenUnits", "rayon_jobs", "automatic_rayon_jobs",
-                "rayon_environment", "workload_commit", "workload_tree")
-WORKLOADS = ("consumer", "hosted-acceptance", "hosted-passing-failing")
-HOSTED_PLATFORMS = ("linux-arm64", "macos-arm64")
-HOSTED_JOBS = ("1", "4", "max")
-MANY_CORE_JOBS = ("1", "4", "16", "max")
-# Same names verify_artifact accepts, including the x64 release target.
-PLATFORMS = ("linux-arm64", "linux-x64", "macos-arm64")
-# Fixed before any eligible sample. summarize() does not apply these thresholds.
-ADOPTION_RULE = {
-    "status": "pre-registered",
-    "results": None,
-    "applied_to_summary": False,
-    "median_wall_ratio_max": 1.00,
-    "pair_wall_ratio_max": 1.05,
-    "median_peak_rss_ratio_at_jobs_1_max": 1.00,
-    "median_peak_rss_ratio_at_max_jobs_on_many_core_host_max": 0.95,
-    "report_parity": "100%",
-}
+                "rayon_environment", "workload_commit", "workload_tree", "rustc", "cargo", "target",
+                "build_flags", "num_cpus_default", "tree", "measurement_id")
+MATRIX = runpy.run_path(str(Path(__file__).with_name("mimalloc-report-matrix.py")))
+PLATFORMS = MATRIX["PLATFORMS"]
+ADOPTION_RULE = runpy.run_path(str(Path(__file__).with_name("mimalloc-adoption-rule.py")))["ADOPTION_RULE"]
 
 
 def mimalloc_environment(row):
@@ -54,6 +39,7 @@ def project(value):
 
 def read_run(path):
     row = json.loads(path.read_text())
+    row["cpu_seconds"] = STATS["cpu_seconds"](row)
     row["status"] = STATS["classify"](row)
     row["resources_eligible"] = STATS["eligible"](row)
     if row["status"] in ("timeout", "signal"):
@@ -107,6 +93,15 @@ def summarize_pair(a, b, pair):
     if (any(environment is None for environment in environments)
             or environments[0] != environments[1] or any(environments)):
         errors.append("non-empty or mismatched MIMALLOC_ environment")
+    if a["metadata"]["workload"] == "consumer-napi":
+        for key in ("node_version", "node_sha256"):
+            if not a["metadata"].get(key) or a["metadata"].get(key) != b["metadata"].get(key):
+                errors.append("missing or mismatched Node identity")
+        if any(row.get("executable_sha256") != row["metadata"].get("node_sha256") for row in (a, b)):
+            errors.append("Node executable identity mismatch")
+    if a["metadata"]["workload"] != "consumer-napi":
+        if any(row.get("executable_sha256") != row["metadata"].get("artifact_sha256") for row in (a, b)):
+            errors.append("CLI executable does not match allocator artifact identity")
     deltas, ratios = {}, {}
     completed = all(STATS["eligible"](row) for row in (a, b))
     for key in STATS["METRICS"]:
@@ -115,7 +110,9 @@ def summarize_pair(a, b, pair):
             errors.append(f"ineligible paired metric: {key}")
         deltas[key] = b[key] - a[key] if values else None
         ratios[key] = b[key] / a[key] if values and a[key] else None
-    return {"pair": pair, "host_id": a.get("host_id"), "order": order, "valid": not errors,
+    return {"pair": pair, "host_id": a.get("host_id"), "measurement_id": a["metadata"].get("measurement_id"), "order": order,
+            "hostFacts": {key: a.get(key) for key in HOST_FIELDS},
+            "node": {key: a["metadata"].get(key) for key in ("node_version", "node_sha256")}, "valid": not errors,
             "statuses": {name: STATS["classify"](row) for name, row in (("system", a), ("mimalloc", b))},
             "exits": {name: row.get("exit") for name, row in (("system", a), ("mimalloc", b))},
             "provenance": {key: a["metadata"].get(key) for key in BUILD_FIELDS},
@@ -123,6 +120,7 @@ def summarize_pair(a, b, pair):
 
 
 def summarize_group(rows):
+    rows = [dict(row, cpu_seconds=STATS["cpu_seconds"](row)) for row in rows]
     variants = {name: [row for row in rows if row["metadata"]["variant"] == name]
                 for name in ("system", "mimalloc")}
     indexed = {name: {row["metadata"].get("pair"): row for row in entries}
@@ -131,12 +129,15 @@ def summarize_group(rows):
                              for name, entries in variants.items()):
         raise ValueError("duplicate or missing four physical pairs per variant")
     for name, entries in variants.items():
-        hashes = {row.get("executable_sha256") for row in entries}
+        hashes = {row["metadata"].get("artifact_sha256") for row in entries}
         if None in hashes or len(hashes) != 1:
             raise ValueError(f"missing or changed executable identity for {name}")
+    if indexed["system"][0]["metadata"]["artifact_sha256"] == indexed["mimalloc"][0]["metadata"]["artifact_sha256"]:
+        raise ValueError("system and mimalloc require distinct allocator artifacts")
     pairs = [summarize_pair(indexed["system"][i], indexed["mimalloc"][i], i) for i in range(4)]
     result = {key: rows[0]["metadata"][key] for key in CELL_FIELDS}
     result.update({name: STATS["summarize_resources"](entries) for name, entries in variants.items()})
+    result["artifact_sha256"] = {name: entries[0]["metadata"].get("artifact_sha256") for name, entries in variants.items()}
     result.update({"valid": all(pair["valid"] for pair in pairs), "pairs": pairs,
                    "samples_per_variant": 4,
                    "tail_note": "Four samples: nearest-rank p95 equals max; no guaranteed tail bound."})
@@ -149,78 +150,14 @@ def summarize_group(rows):
     return result
 
 
-def matrix_cells(matrix, platform):
-    """Return the required (platform, workload, diagnostics, jobs) tuples."""
-    if matrix == "hosted":
-        cells = set(itertools.product(HOSTED_PLATFORMS, WORKLOADS, (False, True), HOSTED_JOBS))
-        return cells, "all 36 native cells"
-    if matrix == "many-core":
-        # One host. Jobs include 16, which the hosted 4-vCPU runners cannot separate from max.
-        cells = set(itertools.product((platform,), WORKLOADS, (False, True), MANY_CORE_JOBS))
-        return cells, "all 24 many-core cells"
-    raise ValueError(f"unknown measurement matrix {matrix!r}")
-
-
-def many_core_platform(rows, platform):
-    found = {row["metadata"].get("platform") for row in rows}
-    if platform is None:
-        if len(found) != 1 or None in found:
-            raise ValueError("many-core matrix requires exactly one platform")
-        return next(iter(found))
-    if platform not in PLATFORMS:
-        raise ValueError(f"unknown platform {platform!r}")
-    return platform
-
-
-def reject_small_many_core_host(rows):
-    # Hosted max can be 4 vCPUs. Many-core max must be a host with at least 16 threads.
-    for row in rows:
-        meta = row["metadata"]
-        if meta.get("jobs") != "max":
-            continue
-        automatic = meta.get("automatic_rayon_jobs")
-        if type(automatic) is not int or automatic < 16:
-            raise ValueError("many-core max jobs require automatic_rayon_jobs of at least 16")
-
-
 def summarize(rows, matrix, platform=None):
-    if matrix not in ("hosted", "many-core"):
-        raise ValueError(f"unknown measurement matrix {matrix!r}")
-    rows = list(rows)
-    if not rows:
-        raise ValueError("no measurement samples were produced")
-    groups = defaultdict(list)
-    identities = defaultdict(set)
-    sources, locks = set(), set()
-    workloads = defaultdict(set)
-    for row in rows:
-        groups[tuple(row["metadata"][key] for key in CELL_FIELDS)].append(row)
-        identities[(row["metadata"]["platform"], row["metadata"]["variant"])].add(row.get("executable_sha256"))
-        sources.add(row["metadata"].get("source"))
-        locks.add(json.dumps(row["metadata"].get("lock"), sort_keys=True))
-        workloads[row["metadata"]["workload"]].add((row["metadata"].get("workload_commit"),
-                                                   row["metadata"].get("workload_tree")))
-    if matrix == "many-core":
-        platform = many_core_platform(rows, platform)
-    expected, label = matrix_cells(matrix, platform)
-    if set(groups) != expected:
-        raise ValueError(f"expected {label}; missing={expected - set(groups)}, extra={set(groups) - expected}")
-    if matrix == "many-core":
-        reject_small_many_core_host(rows)
-    if any(len(hashes) != 1 or None in hashes for hashes in identities.values()):
-        raise ValueError("executable identity changed across native cells")
-    if len(sources) != 1 or None in sources or len(locks) != 1 or "null" in locks:
-        raise ValueError("source or lock identity changed across native cells")
-    if any(len(pins) != 1 or any(not commit or not tree for commit, tree in pins)
-           for pins in workloads.values()):
-        raise ValueError("workload commit or tree changed across native cells")
-    return [summarize_group(entries) for _, entries in sorted(groups.items())]
+    return MATRIX["summarize"](rows, matrix, platform, summarize_group)
 
 
 def main():
     parser = argparse.ArgumentParser(prog="mimalloc-report.py")
     parser.add_argument("command", choices=("summarize",))
-    parser.add_argument("--matrix", choices=("hosted", "many-core"), default="hosted")
+    parser.add_argument("--matrix", choices=("hosted", "many-core", "napi"), default="hosted")
     parser.add_argument("--platform", choices=PLATFORMS)
     parser.add_argument("directory")
     args = parser.parse_args()

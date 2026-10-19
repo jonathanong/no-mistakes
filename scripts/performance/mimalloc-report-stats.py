@@ -3,7 +3,7 @@ import math
 import statistics
 from collections import Counter
 
-METRICS = ("wall_seconds", "user_seconds", "system_seconds", "peak_rss_bytes")
+METRICS = ("wall_seconds", "user_seconds", "system_seconds", "cpu_seconds", "peak_rss_bytes")
 STATUSES = ("success", "expected_failure", "unexpected_exit", "timeout", "signal")
 
 
@@ -52,3 +52,8 @@ def summarize_resources(rows):
             "resources_eligible_count": len(completed),
             "metrics": {key: describe(row[key] for row in completed if valid_metric(row.get(key)))
                         for key in METRICS}}
+
+
+def cpu_seconds(row):
+    values = [row.get(key) for key in ("user_seconds", "system_seconds")]
+    return sum(values) if all(valid_metric(value) for value in values) else None
