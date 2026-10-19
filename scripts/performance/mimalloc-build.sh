@@ -8,7 +8,7 @@ case "$variant" in system|mimalloc) ;; *) exit 2 ;; esac
 source "$root/scripts/performance/mimalloc-build-args.sh"
 target=$(rustc -vV | sed -n 's/^host: //p')
 case "$target" in
-  aarch64-unknown-linux-gnu) lto=fat; units=1; addon=libno_mistakes.so ;;
+  x86_64-unknown-linux-gnu|aarch64-unknown-linux-gnu) lto=fat; units=1; addon=libno_mistakes.so ;;
   aarch64-apple-darwin) lto=thin; units=16; addon=libno_mistakes.dylib ;;
   *) echo "unsupported native runner target: $target" >&2; exit 2 ;;
 esac
@@ -44,6 +44,9 @@ binary="$CARGO_TARGET_DIR/$target/release/no-mistakes"
 cp "$binary" "$out/$variant/no-mistakes"
 cp "$CARGO_TARGET_DIR/$target/release/$addon" "$out/$variant/$addon"
 cp "$out/$variant/$addon" "$out/$variant/no-mistakes.node"
+if [[ "$target" == *-unknown-linux-gnu ]]; then
+  python3 "$root/scripts/performance/mimalloc-tls.py" "$out/$variant/no-mistakes.node" "$out/$variant"
+fi
 # The probe only checks registration. Build it separately with LTO off so
 # dev-dependency features are not unified into the measured CLI and addon.
 probe_target="$out/probe-target-$variant"
@@ -74,6 +77,9 @@ provenance = {
     "features": "default" if variant == "mimalloc" else "--no-default-features --features mermaid-validation",
     "lto": os.environ["CARGO_PROFILE_RELEASE_LTO"],
     "codegenUnits": int(os.environ["CARGO_PROFILE_RELEASE_CODEGEN_UNITS"]),
+    "build_flags": {key: os.environ.get(key) for key in (
+        "RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTC_WRAPPER", "CARGO_PROFILE_RELEASE_DEBUG",
+        "CARGO_INCREMENTAL", "NO_MISTAKES_BUILD_NAPI")},
     "runnerOS": os.environ.get("RUNNER_OS"), "imageOS": os.environ.get("ImageOS"),
     "imageVersion": os.environ.get("ImageVersion"), "machine": platform.machine(),
 }

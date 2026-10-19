@@ -1,0 +1,32 @@
+{
+  "source": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "lockSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "rustc": "rustc pinned x86_64-pc-windows-msvc",
+  "cargo": "cargo pinned",
+  "node": "v24",
+  "profile": {
+    "CARGO_PROFILE_RELEASE_LTO": "thin",
+    "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "16",
+    "CARGO_PROFILE_RELEASE_DEBUG": "0",
+    "CARGO_INCREMENTAL": "0",
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "RUSTC_WRAPPER": "",
+    "NO_MISTAKES_BUILD_NAPI": "1"
+  },
+  "target": "x86_64-pc-windows-msvc",
+  "allocator": "mimalloc",
+  "features": "default",
+  "artifacts": {
+    "no-mistakes.exe": {
+      "bytes": 31,
+      "sha256": "fff531b19afc2640234ee487c0fc8083f2995965adb360ce3215d0ad5909d1cb"
+    },
+    "no-mistakes.node": {
+      "bytes": 32,
+      "sha256": "ab1ece20d02e01ec4aa4937be2dba68ce16c0eb621ad63ffc0d0c29e4bd79491"
+    }
+  },
+  "manifestRewrite": "crate-type = [\"rlib\", \"cdylib\"]"
+}

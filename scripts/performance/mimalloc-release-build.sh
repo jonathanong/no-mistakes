@@ -3,7 +3,10 @@ set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
 cd "$root"
-out=${1:?output directory required}
+variant=${1:?variant must be system or mimalloc}
+case "$variant" in system|mimalloc) ;; *) exit 2 ;; esac
+out=${2:?output directory required}
+source "$root/scripts/performance/mimalloc-build-args.sh"
 target=$(rustc -vV | sed -n 's/^host: //p')
 binary=no-mistakes
 case "$target" in
@@ -40,8 +43,8 @@ export RUSTC_WRAPPER=
 export NO_MISTAKES_BUILD_NAPI=1
 export CARGO_TARGET_DIR
 CARGO_TARGET_DIR=$(python -c 'from pathlib import Path; print(Path("target").resolve())')
-# Explicitly require mimalloc while preserving all release default features.
-cargo build --release --locked --timings --target "$target" -p no-mistakes --features mimalloc 2>&1 | tee "$out/build.log"
+# Preserve release defaults; the control disables only the allocator feature.
+mimalloc_build "$variant" cargo build --release --locked --timings --target "$target" -p no-mistakes 2>&1 | tee "$out/build.log"
 release="target/$target/release"
 file "$release/$binary" "$release/$addon" | tee "$out/file-types.txt"
 file "$release/$binary" | grep -E "$magic"
@@ -49,11 +52,14 @@ file "$release/$addon" | grep -E "$magic"
 cp "$release/$binary" "$out/$binary"
 cp "$release/$addon" "$out/no-mistakes.node"
 "$out/$binary" --version | tee "$out/cli-version.txt"
-cargo tree --locked -p no-mistakes --features mimalloc -e features -i mimalloc > "$out/allocator-features.txt"
-python - "$out" "$target" "$binary" <<'PY'
+if [[ "$target" == *-unknown-linux-gnu ]]; then
+  python "$root/scripts/performance/mimalloc-tls.py" "$out/no-mistakes.node" "$out"
+fi
+mimalloc_build "$variant" cargo tree --locked -p no-mistakes -e features > "$out/allocator-features.txt"
+python - "$out" "$target" "$binary" "$variant" <<'PY'
 from pathlib import Path
 import hashlib, json, os, platform, subprocess, sys
-out, target, binary = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+out, target, binary, variant = Path(sys.argv[1]), *sys.argv[2:]
 def run(*args):
     return subprocess.check_output(args, text=True).strip()
 cpu = platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER", "unavailable")
@@ -66,7 +72,7 @@ for name in (binary, "no-mistakes.node"):
     artifacts[name] = {"bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 data = {
     "source": run("git", "rev-parse", "HEAD"), "tree": run("git", "rev-parse", "HEAD^{tree}"),
-    "target": target, "features": "default + mimalloc", "allocator": "mimalloc",
+    "target": target, "features": "default" if variant == "mimalloc" else "--no-default-features --features mermaid-validation", "allocator": variant,
     "rustc": run("rustc", "-Vv"), "cargo": run("cargo", "-V"), "node": run("node", "--version"),
     "profile": {key: os.environ.get(key) for key in (
         "CARGO_PROFILE_RELEASE_LTO", "CARGO_PROFILE_RELEASE_CODEGEN_UNITS", "CARGO_PROFILE_RELEASE_DEBUG",

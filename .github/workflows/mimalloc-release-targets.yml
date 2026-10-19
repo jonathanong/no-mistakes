@@ -1,6 +1,7 @@
 name: Mimalloc release targets
 
 on:
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -12,12 +13,14 @@ concurrency:
 
 jobs:
   native-release:
-    name: Mimalloc release (${{ matrix.target }})
+    name: Mimalloc release (${{ matrix.target }}, ${{ matrix.variant }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 100 || 80 }}
     strategy:
       fail-fast: false
       matrix:
+        target: [aarch64-apple-darwin, x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu, x86_64-pc-windows-msvc]
+        variant: [system, mimalloc]
         include:
           - target: aarch64-apple-darwin
             os: macos-15
@@ -83,7 +86,7 @@ jobs:
         timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 75 || 45 }}
         env:
           EXPECTED_TARGET: ${{ matrix.target }}
-        run: bash scripts/performance/mimalloc-release-build.sh "artifacts/${{ matrix.target }}"
+        run: bash scripts/performance/mimalloc-release-build.sh "${{ matrix.variant }}" "artifacts/${{ matrix.target }}"
       - name: Test compiled release addon
         timeout-minutes: 5
         run: |
@@ -98,7 +101,7 @@ jobs:
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: mimalloc-release-${{ matrix.target }}
+          name: mimalloc-release-${{ matrix.target }}-${{ matrix.variant }}
           path: artifacts/${{ matrix.target }}
           if-no-files-found: warn
           retention-days: 7
@@ -107,7 +110,35 @@ jobs:
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: mimalloc-cargo-timings-${{ matrix.target }}
+          name: mimalloc-cargo-timings-${{ matrix.target }}-${{ matrix.variant }}
           path: target/cargo-timings
           if-no-files-found: warn
+          retention-days: 7
+
+  size-summary:
+    needs: native-release
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - name: Checkout size verifier
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download paired release artifacts
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: mimalloc-release-*
+          path: release-sizes
+      - name: Verify four paired release sizes
+        timeout-minutes: 3
+        run: python3 scripts/performance/mimalloc-size.py release-sizes
+      - name: Upload verified size deltas
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-size-summary
+          path: release-sizes/size-summary.json
+          if-no-files-found: error
           retention-days: 7

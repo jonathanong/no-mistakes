@@ -15,3 +15,5 @@ for variant in system mimalloc; do
   fi
 done
 
+python3 "$root/scripts/performance/mimalloc-tls-tests.py"
+python3 "$root/scripts/performance/mimalloc-size-tests.py"

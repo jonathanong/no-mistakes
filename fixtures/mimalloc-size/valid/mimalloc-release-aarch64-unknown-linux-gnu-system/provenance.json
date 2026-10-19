@@ -1,0 +1,32 @@
+{
+  "source": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "lockSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "rustc": "rustc pinned aarch64-unknown-linux-gnu",
+  "cargo": "cargo pinned",
+  "node": "v24",
+  "profile": {
+    "CARGO_PROFILE_RELEASE_LTO": "fat",
+    "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "1",
+    "CARGO_PROFILE_RELEASE_DEBUG": "0",
+    "CARGO_INCREMENTAL": "0",
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "RUSTC_WRAPPER": "",
+    "NO_MISTAKES_BUILD_NAPI": "1"
+  },
+  "target": "aarch64-unknown-linux-gnu",
+  "allocator": "system",
+  "features": "--no-default-features --features mermaid-validation",
+  "artifacts": {
+    "no-mistakes": {
+      "bytes": 25,
+      "sha256": "90e01ccd67f12d379b9f73b44cabaecb6a6731b9fd842a57f4a420b570cab700"
+    },
+    "no-mistakes.node": {
+      "bytes": 30,
+      "sha256": "4d923dccf30dd69a9fb2522d00b0782f586caa6df3d6718238306fae8f233709"
+    }
+  },
+  "manifestRewrite": "crate-type = [\"rlib\", \"cdylib\"]"
+}

@@ -1,0 +1,10 @@
+{
+  "addonSha256": "ab1ece20d02e01ec4aa4937be2dba68ce16c0eb621ad63ffc0d0c29e4bd79491",
+  "dynamicDumpSha256": "741c5a4536e39f6dd45b956720c94284f4d861084c7b17f2a9b11b64f2d32dfc",
+  "command": [
+    "readelf",
+    "-d",
+    "no-mistakes.node"
+  ],
+  "staticTls": false
+}

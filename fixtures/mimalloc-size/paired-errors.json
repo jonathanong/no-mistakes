@@ -1,0 +1,30 @@
+[
+  {
+    "field": "source",
+    "value": "dddddddddddddddddddddddddddddddddddddddd"
+  },
+  {
+    "field": "tree",
+    "value": "dddddddddddddddddddddddddddddddddddddddd"
+  },
+  {
+    "field": "lockSha256",
+    "value": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  {
+    "field": "rustc",
+    "value": "other compiler"
+  },
+  {
+    "field": "cargo",
+    "value": "other cargo"
+  },
+  {
+    "field": "node",
+    "value": "v25"
+  },
+  {
+    "field": "profile",
+    "value": {}
+  }
+]

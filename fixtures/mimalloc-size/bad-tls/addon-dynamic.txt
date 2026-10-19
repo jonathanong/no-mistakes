@@ -1,0 +1,5 @@
+Dynamic section at offset 0x2048 contains 3 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000001e (FLAGS)              BIND_NOW STATIC_TLS
+ 0x0000000000000000 (NULL)               0x0
