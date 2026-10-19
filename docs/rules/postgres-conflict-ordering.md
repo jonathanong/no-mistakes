@@ -85,6 +85,11 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 See [details](postgres-conflict-ordering-proof.md).
 
+An `INSERT ... SELECT unnest(enum_range(...)) ON CONFLICT DO NOTHING` can
+produce several rows. Its omitted conflict target violates this rule even when
+the current catalog lists just one unique key. The finding establishes the
+policy violation; it does not establish that a deadlock occurred.
+
 ## Valid example
 
 ```sql

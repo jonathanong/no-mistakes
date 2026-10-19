@@ -14,6 +14,8 @@ pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
 mod scope;
 pub use scope::SqlSourceRelation;
+#[cfg(test)]
+mod consumer_recovery_tests;
 mod single_row;
 #[cfg(test)]
 mod single_row_tests;
