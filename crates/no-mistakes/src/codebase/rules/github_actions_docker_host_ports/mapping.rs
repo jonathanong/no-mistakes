@@ -159,10 +159,9 @@ fn is_variable(host: &str) -> bool {
             };
             return !inner.contains("${{") && !inner.contains("}}");
         }
-        let Some(inner) = rest.strip_suffix('}') else {
-            return false;
-        };
-        return !inner.is_empty() && !inner.contains('{') && !inner.contains('}');
+        if let Some(inner) = rest.strip_suffix('}') {
+            return !inner.is_empty() && !inner.contains('{') && !inner.contains('}');
+        }
     }
     !rest.is_empty()
         && rest
@@ -172,9 +171,7 @@ fn is_variable(host: &str) -> bool {
 
 fn allocated_zero(host: &str) -> bool {
     let mut sides = host.split('-');
-    let Some(start) = sides.next() else {
-        return false;
-    };
+    let start = sides.next().unwrap_or("");
     let end = sides.next();
     if sides.next().is_some() {
         return false;
@@ -188,9 +185,7 @@ fn allocated_zero(host: &str) -> bool {
 
 fn is_literal_port(host: &str) -> bool {
     let mut sides = host.split('-');
-    let Some(start) = sides.next() else {
-        return false;
-    };
+    let start = sides.next().unwrap_or("");
     let end = sides.next();
     if sides.next().is_some() {
         return false;
