@@ -121,6 +121,13 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
         },
         |value| (value.line, value.positions, value.origins),
     );
+    // Const splicing inlines hole text, while origin walks still count a placeholder.
+    // Stamp the expression when those lengths diverge so publish cannot panic.
+    let origins = if origins.len() == sql.len() {
+        origins
+    } else {
+        vec![expr.span().start; sql.len()]
+    };
     Some(vec![Recovered {
         value: ValueKind::Sql,
         origins,

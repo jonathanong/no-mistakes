@@ -1,13 +1,17 @@
 use crate::codebase::postgres::embedded::placeholders;
 
 /// Rewrites generated markers while keeping authored SQL byte identities stable.
+///
+/// A short origin list is a caller bug. Index with `get` so that bug cannot panic.
 pub(crate) fn rewrite(sql: &str, origins: &[u32], offset: u32, publish: bool) -> Vec<u32> {
     let mut out = Vec::new();
     let mut at = 0;
     let mut seen = 0;
     while let Some(relative) = sql[at..].find(placeholders::INTERNAL_PLACEHOLDER) {
         let marker = at + relative;
-        out.extend_from_slice(&origins[at..marker]);
+        if let Some(chunk) = origins.get(at..marker) {
+            out.extend_from_slice(chunk);
+        }
         let after = marker + placeholders::INTERNAL_PLACEHOLDER.len();
         let digits = sql[after..].bytes().take_while(u8::is_ascii_digit).count();
         seen += 1;
@@ -21,9 +25,17 @@ pub(crate) fn rewrite(sql: &str, origins: &[u32], offset: u32, publish: bool) ->
         } else {
             (offset + seen).to_string().len()
         };
-        out.extend(std::iter::repeat_n(origins[marker], width + count));
+        if let Some(origin) = origins.get(marker) {
+            out.extend(std::iter::repeat_n(*origin, width + count));
+        }
         at = after + digits;
     }
-    out.extend_from_slice(&origins[at..]);
+    if let Some(tail) = origins.get(at..) {
+        out.extend_from_slice(tail);
+    }
     out
 }
+
+#[cfg(test)]
+#[path = "origins_tests.rs"]
+mod origins_tests;
