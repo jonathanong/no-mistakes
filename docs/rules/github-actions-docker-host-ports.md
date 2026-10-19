@@ -37,7 +37,9 @@ them. An unknown `--name=value` flag is skipped. Any other unknown flag
 stops the scan, and publish flags already seen stay findings. A command
 substitution or backtick is judged when the publish word itself is literal;
 a substitution used as the publish value is not a finding. A heredoc body is
-not scanned, and a `docker run` after the terminator is. A `run` value that
+not scanned, including when a space precedes the delimiter. A `docker run`
+after the terminator, or on the operator line after `|` or `&&`, is judged.
+A `run` value that
 is not a string is not a finding. A `-p` after the image is the container
 command, not a publish mapping. Invalid YAML is not a finding. Flow-style
 steps that the line scan cannot place are reported on line 1.

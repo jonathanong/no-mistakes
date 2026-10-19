@@ -43,36 +43,22 @@ impl<'a> Tok<'a> {
     }
 
     pub(super) fn skip_heredoc(&mut self) -> bool {
-        if self.open || self.ch() != '<' || self.chars.get(self.index + 1) != Some(&'<') {
+        if self.ch() != '<' || self.chars.get(self.index + 1) != Some(&'<') {
             return false;
         }
         if self.chars.get(self.index + 2) == Some(&'<') {
-            return false;
+            // `<<<` is a here-string. Consume it so the next `<<` is not a heredoc.
+            self.flush_word();
+            self.index += 3;
+            return true;
         }
+        // `cat<<EOF` is still a heredoc. The operator is not part of the word.
+        self.flush_word();
         self.index += 2;
         let strip_tabs = self.bump_if('-');
-        let delim = self.heredoc_delim();
-        self.finish_line();
-        while self.index < self.chars.len() {
-            let mut line = String::new();
-            while self.index < self.chars.len() && self.chars[self.index] != '\n' {
-                line.push(self.chars[self.index]);
-                self.index += 1;
-            }
-            let compare = if strip_tabs {
-                line.trim_start_matches('\t')
-            } else {
-                line.as_str()
-            };
-            let done = compare == delim;
-            self.finish_line();
-            if done {
-                break;
-            }
-        }
-        // The terminator ends this command. The next line is a new one.
-        self.flush_word();
-        self.flush_command();
+        let (delim, next) = super::heredoc::delimiter(self.chars, self.index);
+        self.index = next;
+        self.pending_heredocs.push((delim, strip_tabs));
         true
     }
 
@@ -149,41 +135,6 @@ impl<'a> Tok<'a> {
             true
         } else {
             false
-        }
-    }
-
-    fn heredoc_delim(&mut self) -> String {
-        let quote = if self.index < self.chars.len() && matches!(self.chars[self.index], '\'' | '"')
-        {
-            let quote = self.chars[self.index];
-            self.index += 1;
-            Some(quote)
-        } else {
-            None
-        };
-        let mut delim = String::new();
-        while self.index < self.chars.len() {
-            let ch = self.chars[self.index];
-            if quote == Some(ch) {
-                self.index += 1;
-                break;
-            }
-            if quote.is_none() && (ch.is_whitespace() || ch == ';') {
-                break;
-            }
-            delim.push(ch);
-            self.index += 1;
-        }
-        delim
-    }
-
-    fn finish_line(&mut self) {
-        while self.index < self.chars.len() && self.chars[self.index] != '\n' {
-            self.index += 1;
-        }
-        if self.index < self.chars.len() {
-            self.index += 1;
-            self.line += 1;
         }
     }
 }

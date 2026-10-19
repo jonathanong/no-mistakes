@@ -6,6 +6,7 @@ pub(super) fn commands(script: &str) -> Vec<Command> {
 }
 
 mod group;
+mod heredoc;
 mod quote;
 
 struct Tok<'a> {
@@ -21,6 +22,7 @@ struct Tok<'a> {
     backtick: bool,
     command: Command,
     commands: Vec<Command>,
+    pending_heredocs: Vec<(String, bool)>,
 }
 
 impl<'a> Tok<'a> {
@@ -38,6 +40,7 @@ impl<'a> Tok<'a> {
             backtick: false,
             command: Command::default(),
             commands: Vec::new(),
+            pending_heredocs: Vec::new(),
         }
     }
 
@@ -121,6 +124,9 @@ impl<'a> Tok<'a> {
         if ch == '\n' {
             self.line += 1;
             self.flush_command();
+            self.index += 1;
+            self.skip_pending_bodies();
+            return true;
         } else if ch == ';' || ch == '|' || ch == '&' {
             if (ch == '|' || ch == '&') && self.chars.get(self.index + 1) == Some(&ch) {
                 self.index += 1;

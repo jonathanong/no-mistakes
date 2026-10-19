@@ -245,6 +245,10 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         ("container-var", "5432:$PORT"),
         ("continued", "5432:5432"),
         ("env-prefix", "5432:5432"),
+        ("hd-and", "5432:5432"),
+        ("hd-pipe", "5432:5432"),
+        ("hd-space-after", "5432:5432"),
+        ("hd-space-quoted", "5432:5432"),
         ("if-guard", "5432:5432"),
         ("equals", "8080:80"),
         ("ip", "127.0.0.1:5432:5432"),
@@ -294,6 +298,10 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         .trim()
         .starts_with("5432:5432"));
     assert!(nth_line(&ci, located("ci.yml", "literal", 1)).contains("- run:"));
+    for job in ["hd-and", "hd-pipe", "hd-space-after", "hd-space-quoted"] {
+        let line = nth_line(&ci, located("ci.yml", job, 1));
+        assert!(line.contains("docker run"), "{job} {line}");
+    }
     for finding in &findings {
         assert!(finding.message.contains("Publish a Docker-allocated port"));
     }
@@ -402,6 +410,8 @@ fn parser_edges_cover_wrappers_hosts_and_yaml_shapes() {
         hit("cat <<\"EOF\"\ninner\nEOF\ndocker run -p 6:7 img").len(),
         1
     );
+    assert_eq!(hit("cat << EOF\nx\nEOF\ndocker run -p 1:2 img").len(), 1);
+    assert!(hit("cat<<EOF\ndocker run -p 1:2 img\nEOF").is_empty());
     assert_eq!(
         hit("cat <<-EOF\n\tinner\nEOF\ndocker run -p 8:9 img").len(),
         1

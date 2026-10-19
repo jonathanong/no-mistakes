@@ -115,6 +115,36 @@ jobs:
           hi
           EOF
           docker run -p 5432:5432 postgres
+  hd-space-after:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat << EOF > x.txt
+          hi
+          EOF
+          docker run -p 5432:5432 postgres
+  hd-space-quoted:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat << 'EOF' > x.sh
+          hi
+          EOF
+          docker run -p 5432:5432 postgres
+  hd-pipe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF | docker run -i -p 5432:5432 pg
+          hi
+          EOF
+  hd-and:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<EOF && docker run -p 5432:5432 postgres
+          hi
+          EOF
   container-run:
     runs-on: ubuntu-latest
     steps:
