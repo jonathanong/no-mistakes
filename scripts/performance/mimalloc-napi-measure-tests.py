@@ -4,6 +4,7 @@ import copy
 import json
 from pathlib import Path
 import runpy
+import sys
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -53,9 +54,12 @@ class NativeEvidenceTests(unittest.TestCase):
             return json.dumps({"expected_mimalloc": enabled, "is_mimalloc_heap": enabled,
                                "default_rayon_jobs": 4})
 
-        with patch("argparse.ArgumentParser.parse_args", return_value=args), patch.dict(
+        # Hosted Node lives outside the default path; clearing env must not make
+        # this mocked orchestration test depend on a system Node installation.
+        with patch("os.confstr", return_value=""), patch("argparse.ArgumentParser.parse_args", return_value=args), patch.dict(
                 GLOBALS, SHARED=shared, verify_addon=lambda directory, provenance: Path(directory) / "no-mistakes.node",
-                digest=lambda artifact: HELPERS["digest"](artifact) if Path(artifact).is_file() else str(artifact)), patch("subprocess.check_output", side_effect=output), patch.dict(
+                digest=lambda artifact: HELPERS["digest"](artifact) if Path(artifact).is_file() else str(artifact)), patch("subprocess.check_output", side_effect=output), patch(
+                "shutil.which", return_value=sys.executable), patch.dict(
                 "os.environ", {}, clear=True):
             HELPERS["main"]()
         self.assertEqual(len(calls), 2)
