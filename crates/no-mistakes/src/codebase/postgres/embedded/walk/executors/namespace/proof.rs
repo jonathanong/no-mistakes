@@ -9,21 +9,48 @@ use std::collections::HashSet;
 fn uncertain(call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
     call.origins
         .iter()
-        .any(|origin| escape_blocks(origin, call, proof))
+        .any(|origin| escape_blocks(origin, call, proof, blocks))
 }
 
-fn escape_blocks(origin: &Origin, call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
-    let direct = proof
-        .escapes
-        .get(origin)
-        .is_some_and(|escapes| escapes.iter().any(|escape| blocks(escape, call, origin)));
+fn capture_uncertain(call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
+    call.origins
+        .iter()
+        .any(|origin| escape_blocks(origin, call, proof, capture_blocks))
+}
+
+fn escape_blocks(
+    origin: &Origin,
+    call: &MemberCall,
+    proof: &super::MemberQueryProof,
+    blocks_escape: fn(&super::Escape, &MemberCall, &Origin) -> bool,
+) -> bool {
+    let direct = proof.escapes.get(origin).is_some_and(|escapes| {
+        escapes
+            .iter()
+            .any(|escape| blocks_escape(escape, call, origin))
+    });
     direct
         || matches!(origin, Origin::Export(module, _)
-            if escape_blocks(&Origin::Module(module.clone()), call, proof))
+            if escape_blocks(&Origin::Module(module.clone()), call, proof, blocks_escape))
 }
 
 fn blocks(escape: &super::Escape, call: &MemberCall, origin: &Origin) -> bool {
+    // Another function, or a loop, can run before this member lookup.
     let ordered = escape.event < call.event || escape.owner != call.owner || escape.in_loop;
+    ordered_escape(ordered, escape, origin)
+}
+
+fn capture_blocks(escape: &super::Escape, call: &MemberCall, origin: &Origin) -> bool {
+    // A top-level `const { query } = ns` copies the function during module
+    // evaluation, before any function body runs. A later function does not
+    // reach that copy. A copy inside a function is unordered with other
+    // functions, and a loop still reaches backward. Function ids start at 1.
+    let inside_function = call.owner != 0;
+    let reaches = inside_function && (escape.owner != call.owner || escape.in_loop);
+    ordered_escape(escape.event < call.event || reaches, escape, origin)
+}
+
+fn ordered_escape(ordered: bool, escape: &super::Escape, origin: &Origin) -> bool {
     if !ordered {
         return false;
     }
@@ -137,7 +164,7 @@ impl ScopeVisitor<'_> {
         let mut uncertain_keys = HashSet::new();
         for index in 0..captures {
             let call = captured_call(&self.member_query_proof.captures[index]);
-            if uncertain(&call, &self.member_query_proof) {
+            if capture_uncertain(&call, &self.member_query_proof) {
                 uncertain_keys.insert(self.member_query_proof.captures[index].key.clone());
             }
         }
