@@ -1,0 +1,14 @@
+{
+  "syntheticFixture": true,
+  "id": 39293039433,
+  "head_sha": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+  "repository": {
+    "id": 1235521884
+  },
+  "head_repository": {
+    "id": 1235521884
+  },
+  "path": ".github/workflows/current-verdict-ordering-arm.yml",
+  "event": "push",
+  "head_branch": "eval/2238-current-arm"
+}

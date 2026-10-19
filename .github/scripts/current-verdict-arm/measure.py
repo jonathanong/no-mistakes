@@ -42,12 +42,19 @@ validate_fixture_contract(
 origin = long_frozen.artifact_metadata('matched-consumer')
 assert origin['id'] == 12158768554
 assert origin['digest'] == 'sha256:080223598499563b3f21bdd29e450536db72183c5ef65e3d3f221976273c6911'
+reuse_proof = None
+if 'CLI_BUILD_HARNESS_SHA' in os.environ:
+    from recheck_contract import BUILDER_SHA, RECHECK_JOB_MINUTES, validate_manifest
+    reuse_proof = json.loads(Path('results/recheck-preparation.json').read_text())
+    assert reuse_proof['status'] == 'passed'
+    validate_manifest(reuse_proof['manifest'])
+    assert os.environ['CLI_BUILD_HARNESS_SHA'] == BUILDER_SHA
 proofs, binaries = {}, {}
 for role in SOURCES:
     folder = Path('cli') / role
     proof = json.loads((folder / 'provenance.json').read_text())
     assert proof['source'] == SOURCES[role]
-    assert proof['artifactHarnessCommit'] == os.environ['GITHUB_SHA']
+    assert proof['artifactHarnessCommit'] == os.environ.get('CLI_BUILD_HARNESS_SHA', os.environ['GITHUB_SHA'])
     assert not proof.get('frozenCliBuild')
     assert proof['machine']['imageOS'] == os.environ['ImageOS']
     assert proof['machine']['imageVersion'] == os.environ['ImageVersion']
@@ -70,12 +77,17 @@ assert proofs['base']['effectiveDefaultJobs'] == proofs['candidate']['effectiveD
 common.save(output / 'provenance.json', {
     'purpose': 'ordering-only measurement; not a full-config or full-consumer gate',
     'eligibleForGate': False, 'sourcePins': SOURCES, 'consumer': physical,
-    'consumerArtifact': origin, 'fixtureArchiveSha256': common.digest(archive),
+    'consumerArtifact': origin, 'consumerArtifactZipSha256': origin['digest'].removeprefix('sha256:'),
+    'fixtureTarSha256': common.digest(archive),
     'orderingConfig': config_proof, 'builds': proofs, 'machine': common.machine(),
-    'harnessCommit': os.environ['GITHUB_SHA'], 'jobs': jobs,
+    'harnessCommit': os.environ['GITHUB_SHA'],
+    'cliBuilderHarnessCommit': os.environ.get('CLI_BUILD_HARNESS_SHA', os.environ['GITHUB_SHA']),
+    'artifactReuseProof': reuse_proof,
+    'jobs': jobs,
     'diagnostics': diagnostics, 'ledger': ledger, 'order': 'BCCB',
     'collectionCapSecondsPerArm': CAP_SECONDS,
-    'stepBudgetMinutes': 245, 'jobBudgetMinutes': JOB_MINUTES})
+    'stepBudgetMinutes': 245,
+    'jobBudgetMinutes': RECHECK_JOB_MINUTES if reuse_proof else JOB_MINUTES})
 rows, status = [], 'incomplete'
 try:
     def sample_arm(role, use_ledger, arm, ordinal):

@@ -37,3 +37,34 @@ python3 -B -m unittest discover -s .github/scripts/matched-arm -p 'test_*.py'
 python3 -B -m unittest discover -s .github/scripts/current-verdict-arm -p 'test_*.py'
 actionlint .github/workflows/current-verdict-ordering-arm.yml
 ```
+
+## Measure-only recheck
+
+The separate `current-verdict-ordering-recheck-arm.yml` triggers only on
+`eval/2238-ordering-recheck-arm-main`. It never builds or changes the original
+`eval/2238-current-arm` workflow. It reuses only the fresh production CLI pair
+from builder run `39293039433`, builder harness commit
+`26c28f246c03ce7f235b7d1d8765e96a11005aed`, and the same frozen source pins above.
+The new measurement harness SHA is recorded separately; it must not be substituted
+for the original builder SHA inside downloaded build proofs.
+
+The launch manifest `fixtures/performance/current-verdict-arm/recheck-artifact.json`
+pins the root-verified artifact `12209251738`, outer ZIP SHA256
+`c89044cc9489bf84b51d7bdc041dea8500908da51eeeab7963df96f2003adfb4`, all twelve
+file hashes, both independently Git-verified source trees, and matched build
+fields. The saved metadata records expiry `2026-10-26T17:18:52Z`; runtime checks
+still require a fresh unexpired API snapshot and successful original build job.
+The incomplete `recheck-artifact-pending.json` remains a negative test fixture;
+synthetic fixtures under `recheck-contract/` are never launch metadata.
+The original matrix need not finish. No readiness polling or recursive dispatch exists.
+
+Each recheck independently verifies artifact origin/expiry, actual downloaded
+ZIP digest, safe ZIP paths, exact CLI file inventory/hashes, and source/build
+proofs before any executable runs. Consumer outer ZIP SHA256 and inner
+`fixture.tar.gz` SHA256 are different identities and are both retained. The
+restored consumer must still match its physical provenance and original config.
+The same twelve ordering-only BCCB blocks, early report parity, 3600-second arm
+cap, and `eligibleForGate: false` remain in force. The 270-minute job covers
+261 minutes of declared steps. User-authorized uninterrupted consumer arms take
+precedence over the generic 30-minute Actions skill default; there are no hidden
+background operations. This remains selected-rule evidence, never a full gate.

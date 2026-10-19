@@ -1,0 +1,67 @@
+name: Current ordering-only ARM artifact recheck
+
+on:
+  push:
+    branches: [eval/2238-ordering-recheck-arm-main]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: current-verdict-recheck-arm-${{ github.ref }}
+  cancel-in-progress: true
+
+# User-authorized uninterrupted consumer arms exceed the generic 30m skill default.
+# This measure-only workflow reuses a verified fresh build; no background jobs or polling.
+
+jobs:
+  measure-recheck:
+    name: jobs ${{ matrix.jobs }} diagnostics ${{ matrix.diagnostics }} ledger ${{ matrix.ledger }} BCCB
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 270
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        jobs: ['1', '4', 'default']
+        diagnostics: ['off', 'on']
+        ledger: ['off', 'on']
+    steps:
+      - name: Checkout isolated measurement harness
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Validate and download pinned fresh CLI and consumer artifacts
+        timeout-minutes: 10
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 -B harness/.github/scripts/current-verdict-arm/recheck_prepare.py
+          harness/fixtures/performance/current-verdict-arm/recheck-artifact.json
+      - name: Restore the exact physical consumer tree
+        timeout-minutes: 1
+        run: tar -xzf prepared/fixture.tar.gz
+      - name: Measure one ordering-only BCCB block with retained raw evidence
+        timeout-minutes: 245
+        env:
+          JOBS: ${{ matrix.jobs }}
+          DIAGNOSTICS: ${{ matrix.diagnostics }}
+          LEDGER: ${{ matrix.ledger }}
+          GITHUB_TOKEN: ${{ github.token }}
+          MATCHED_COLLECTION_CAP_SECONDS: '3600'
+          CLI_BUILD_HARNESS_SHA: '26c28f246c03ce7f235b7d1d8765e96a11005aed'
+        run: >-
+          python3 -B harness/.github/scripts/current-verdict-arm/measure.py
+          "$JOBS" "$DIAGNOSTICS" "$LEDGER"
+      - name: Retain raw reports, stderr, timing, censored arms, and provenance
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: current-verdict-recheck-${{ matrix.jobs }}-${{ matrix.diagnostics }}-${{ matrix.ledger }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 7

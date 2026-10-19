@@ -1,0 +1,96 @@
+{
+  "base": {
+    "lockSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "rustc": "rustc synthetic unit fixture",
+    "cargo": "cargo synthetic unit fixture",
+    "features": "default",
+    "profile": {
+      "lto": true,
+      "codegen-units": 1
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--bin",
+      "no-mistakes"
+    ],
+    "buildJobs": 2,
+    "incremental": false,
+    "source": "c009d087f3eb32b27a27d6a200154e26b7be0a5d",
+    "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "artifactHarnessCommit": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+    "machine": {
+      "uname": [
+        "Linux",
+        "arm-host-1",
+        "6.11",
+        "build",
+        "aarch64"
+      ],
+      "affinity": [
+        0,
+        1
+      ],
+      "imageOS": "ubuntu24-arm64",
+      "imageVersion": "20261015.1",
+      "cpuinfo": "processor: 0\nmodel: ARM runner\n",
+      "meminfo": "MemTotal: 32000000 kB\nMemAvailable: 18000000 kB\n"
+    },
+    "binarySha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "cpuProbeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "cpuProbeBuild": {
+      "syntheticFixture": true
+    }
+  },
+  "candidate": {
+    "lockSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "rustc": "rustc synthetic unit fixture",
+    "cargo": "cargo synthetic unit fixture",
+    "features": "default",
+    "profile": {
+      "lto": true,
+      "codegen-units": 1
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--bin",
+      "no-mistakes"
+    ],
+    "buildJobs": 2,
+    "incremental": false,
+    "source": "1f65a505367720f4519e486d300036fad4eb3adc",
+    "tree": "cccccccccccccccccccccccccccccccccccccccc",
+    "artifactHarnessCommit": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+    "machine": {
+      "uname": [
+        "Linux",
+        "arm-host-1",
+        "6.11",
+        "build",
+        "aarch64"
+      ],
+      "affinity": [
+        0,
+        1
+      ],
+      "imageOS": "ubuntu24-arm64",
+      "imageVersion": "20261015.1",
+      "cpuinfo": "processor: 0\nmodel: ARM runner\n",
+      "meminfo": "MemTotal: 32000000 kB\nMemAvailable: 7000000 kB\n"
+    },
+    "binarySha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "cpuProbeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "cpuProbeBuild": {
+      "syntheticFixture": true
+    }
+  }
+}

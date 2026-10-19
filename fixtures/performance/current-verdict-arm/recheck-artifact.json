@@ -1,0 +1,53 @@
+{
+  "schema": "nm2238-recheck-artifact-v1",
+  "builderRun": 39293039433,
+  "builderCommit": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+  "repositoryId": 1235521884,
+  "sources": {
+    "base": "c009d087f3eb32b27a27d6a200154e26b7be0a5d",
+    "candidate": "1f65a505367720f4519e486d300036fad4eb3adc"
+  },
+  "artifactName": "current-verdict-arm-clis",
+  "artifactId": 12209251738,
+  "artifactZipSha256": "c89044cc9489bf84b51d7bdc041dea8500908da51eeeab7963df96f2003adfb4",
+  "sourceTrees": {
+    "base": "31c5fd596f09b238762546ddf3045bcc98dcc4e3",
+    "candidate": "c9b3626f13eac7013a357b73f893c8e3b442da9e"
+  },
+  "build": {
+    "lockSha256": "10b8ea13c1fd4526aca570dfa7fa5e6e064f69198ffca18a59cb349a5f17d50a",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+    "features": "default",
+    "profile": {
+      "lto": true,
+      "codegen-units": 1
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--bin",
+      "no-mistakes"
+    ],
+    "buildJobs": 2,
+    "incremental": false
+  },
+  "files": {
+    "base/build.log": "e5f1a4d3a8e00aff48d510a26ac6710bd40d303e8b4acd4951f1147e02e183ba",
+    "base/cpu-probe": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+    "base/cpu-probe.build.log": "2f437066a0791612a1048f43af69c7f39dc7c37db9207a1811ce357d0bc9f9c5",
+    "base/no-mistakes": "dfc64181daa3e5fc44c7cf4826342d0c7600b2b05a1dc2ba505f107e64619052",
+    "base/provenance.json": "4a369981ac85992d8f60e20b8954868b9a541044c2e1c77a684d4e57bba3ce85",
+    "base/source.json": "ca733775a31421a95289ce527df381b465e9de697689c738941543682c66dcd0",
+    "candidate/build.log": "56c13065f406f3e9885244a244c7c6c3879a49dd2ea05ab2bdca84e0c73b3157",
+    "candidate/cpu-probe": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+    "candidate/cpu-probe.build.log": "e2d853379579389d5b54012dda820573efcc2f2348fa5e605b69699109793685",
+    "candidate/no-mistakes": "5d0b769ad53958e4881df0ae601529a2d2a30a8c52de3341101587ba8a1341d3",
+    "candidate/provenance.json": "6ec3569053dc93896a50945763fc570ced8f0c4a8a3141f82d2da5df9138cba3",
+    "candidate/source.json": "d335071ac06bbe4b809a8c7920583287ca80a5c56c7ba422141155ade97b6e18"
+  }
+}

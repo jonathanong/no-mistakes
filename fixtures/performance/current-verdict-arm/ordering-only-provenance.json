@@ -8,5 +8,7 @@
     "production PostgreSQL writers acquire conflicts in catalog order"
   ],
   "unchangedNonRulePayload": true,
-  "scope": "Only postgres-conflict-ordering remains in configured rules; all non-rule payload intentionally retained. Not a measurement."
+  "scope": "Only postgres-conflict-ordering remains in configured rules; all non-rule payload intentionally retained. Not a measurement.",
+  "artifactZipSha256": "080223598499563b3f21bdd29e450536db72183c5ef65e3d3f221976273c6911",
+  "fixtureTarSha256": "122e1702d8d644b44fb440f1ab951fd2bb895a5df99cfe1612ca49960edca45c"
 }

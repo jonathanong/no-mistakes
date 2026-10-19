@@ -1,0 +1,19 @@
+{
+  "schema": "nm2238-recheck-artifact-v1",
+  "repositoryId": 1235521884,
+  "builderRun": 39293039433,
+  "builderCommit": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+  "artifactName": "current-verdict-arm-clis",
+  "artifactId": null,
+  "artifactZipSha256": null,
+  "sources": {
+    "base": "c009d087f3eb32b27a27d6a200154e26b7be0a5d",
+    "candidate": "1f65a505367720f4519e486d300036fad4eb3adc"
+  },
+  "sourceTrees": {
+    "base": null,
+    "candidate": null
+  },
+  "build": null,
+  "files": null
+}

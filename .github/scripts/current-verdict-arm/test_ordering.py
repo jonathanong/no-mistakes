@@ -8,7 +8,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / 'matched-arm'))
-from inputs import (ARTIFACT_ID, ARTIFACT_SHA256, CAP_SECONDS, CONFIG_SHA256,
+from inputs import (ARTIFACT_ID, ARTIFACT_ZIP_SHA256, FIXTURE_TAR_SHA256, CAP_SECONDS, CONFIG_SHA256,
                     CONSUMER, JOBS, SOURCES, DIAGNOSTICS, LEDGER,
                     MEASURE_MINUTES, JOB_MINUTES, EXPECTED_FINDINGS)
 from common import assert_same_machine_identity
@@ -155,13 +155,15 @@ class OrderingOnlyContract(unittest.TestCase):
 
     def test_artifact_provenance_contract_rejects_changed_config_demand(self):
         proof = ROOT / 'fixtures/performance/current-verdict-arm/ordering-only-provenance.json'
-        validate_fixture_contract(proof, ARTIFACT_SHA256)
+        validate_fixture_contract(proof, FIXTURE_TAR_SHA256)
+        with self.assertRaises(AssertionError):
+            validate_fixture_contract(proof, ARTIFACT_ZIP_SHA256)
         with self.assertRaises(AssertionError):
             validate_fixture_contract(proof, '0' * 64)
         with self.assertRaises(AssertionError):
             validate_fixture_contract(
                 ROOT / 'fixtures/performance/current-verdict-arm/ordering-only-wrong-demand.json',
-                ARTIFACT_SHA256)
+                FIXTURE_TAR_SHA256)
 
 
 if __name__ == '__main__':

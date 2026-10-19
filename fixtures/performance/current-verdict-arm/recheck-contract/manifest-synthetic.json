@@ -1,0 +1,50 @@
+{
+  "schema": "nm2238-recheck-artifact-v1",
+  "repositoryId": 1235521884,
+  "builderRun": 39293039433,
+  "builderCommit": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+  "artifactName": "current-verdict-arm-clis",
+  "artifactId": 1,
+  "artifactZipSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "sources": {
+    "base": "c009d087f3eb32b27a27d6a200154e26b7be0a5d",
+    "candidate": "1f65a505367720f4519e486d300036fad4eb3adc"
+  },
+  "sourceTrees": {
+    "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "candidate": "cccccccccccccccccccccccccccccccccccccccc"
+  },
+  "build": {
+    "lockSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "rustc": "rustc synthetic unit fixture",
+    "cargo": "cargo synthetic unit fixture",
+    "features": "default",
+    "profile": {
+      "lto": true,
+      "codegen-units": 1
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--bin",
+      "no-mistakes"
+    ],
+    "buildJobs": 2,
+    "incremental": false
+  },
+  "files": {
+    "base/no-mistakes": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "base/cpu-probe": "1111111111111111111111111111111111111111111111111111111111111111",
+    "base/source.json": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "base/provenance.json": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "candidate/no-mistakes": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "candidate/cpu-probe": "1111111111111111111111111111111111111111111111111111111111111111",
+    "candidate/source.json": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "candidate/provenance.json": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "syntheticFixture": true
+}

@@ -1,0 +1,15 @@
+{
+  "syntheticFixture": true,
+  "id": 1,
+  "name": "current-verdict-arm-clis",
+  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "expired": false,
+  "expires_at": "2099-01-01T00:00:00Z",
+  "size_in_bytes": 100,
+  "workflow_run": {
+    "id": 39293039433,
+    "head_sha": "26c28f246c03ce7f235b7d1d8765e96a11005aed",
+    "repository_id": 1235521884,
+    "head_repository_id": 1235521884
+  }
+}

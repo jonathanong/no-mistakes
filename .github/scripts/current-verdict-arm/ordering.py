@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'matched-arm'))
 
-from inputs import (ARTIFACT_ID, ARTIFACT_SHA256, CAP_SECONDS, CONFIG_SHA256,
+from inputs import (ARTIFACT_ID, ARTIFACT_ZIP_SHA256, FIXTURE_TAR_SHA256, CAP_SECONDS, CONFIG_SHA256,
                     CONSUMER, EXPECTED_FINDINGS, JOBS, DIAGNOSTICS, LEDGER,
                     MEASURE_MINUTES, ORIGINAL_CONFIG_SHA256)
 from report import (aggregate_ledger, compare_feature_delta, digest, read_report,
@@ -128,4 +128,6 @@ def validate_fixture_contract(provenance, archive_sha256):
     assert proof['selectedRuleApplications'] == 1
     assert proof['unchangedNonRulePayload'] is True
     assert ARTIFACT_ID == 12158768554
-    assert archive_sha256 == ARTIFACT_SHA256
+    assert proof['artifactZipSha256'] == ARTIFACT_ZIP_SHA256
+    assert proof['fixtureTarSha256'] == FIXTURE_TAR_SHA256
+    assert archive_sha256 == FIXTURE_TAR_SHA256
