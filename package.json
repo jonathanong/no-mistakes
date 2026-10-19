@@ -35,8 +35,8 @@
     "@storybook/addon-vitest": "10.6.1",
     "@storybook/react": "10.6.1",
     "@storybook/react-vite": "10.6.1",
-    "@vitest/browser-playwright": "5.0.3",
-    "@vitest/coverage-v8": "^5.0.3",
+    "@vitest/browser-playwright": "5.0.4",
+    "@vitest/coverage-v8": "^5.0.4",
     "cspell": "^10.3.6",
     "eslint": "^10.12.0",
     "husky": "^9.1.7",
@@ -48,7 +48,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "storybook": "10.6.1",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.4"
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
