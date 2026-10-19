@@ -17,6 +17,7 @@ pub mod github_actions_action_timeout_pair;
 pub mod github_actions_checkout_credentials;
 pub mod github_actions_composite_step_schema;
 pub mod github_actions_docker_host_ports;
+pub mod github_actions_download_integrity;
 pub mod github_actions_job_timeouts;
 pub mod github_actions_pinned_hash;
 pub mod github_actions_script_expressions;

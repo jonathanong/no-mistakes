@@ -1,0 +1,7 @@
+name: fetch
+description: download a tool
+runs:
+  using: composite
+  steps:
+    - run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+      shell: bash

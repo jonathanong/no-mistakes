@@ -1,0 +1,6 @@
+name: nested
+on: push
+jobs:
+  build:
+    steps:
+      - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz

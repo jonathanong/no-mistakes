@@ -44,3 +44,10 @@ For [`github-actions-script-expressions`](../rules/github-actions-script-express
 service-port patterns documented on that page. Omitting the option keeps that
 default. An explicit list, including `[]`, replaces it. The rule stays off
 until a configuration lists it.
+
+For [`github-actions-download-integrity`](../rules/github-actions-download-integrity.md),
+`options.trustedHosts` defaults to `localhost`, `127.0.0.1`, `api.github.com`,
+and `objects.githubusercontent.com`. Omitting the option keeps that default.
+An explicit list, including `[]`, replaces it. `options.downloadHelpers` adds
+command names beside `curl` and `wget`; the default is no extra helpers. The
+rule stays off until a configuration lists it.

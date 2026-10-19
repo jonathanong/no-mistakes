@@ -1,0 +1,8 @@
+name: helpers
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ci_download_to dest https://example.invalid/tool.tgz
+      - run: curl -fsSL https://api.github.com/repos/example/tool

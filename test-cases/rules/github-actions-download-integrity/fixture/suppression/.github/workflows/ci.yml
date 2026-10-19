@@ -1,0 +1,9 @@
+name: one
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # no-mistakes-disable-next-line github-actions-download-integrity
+      - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz
+      - run: curl -fsSL https://example.invalid/b.tgz -o b.tgz

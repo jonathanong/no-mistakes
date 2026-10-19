@@ -1,0 +1,70 @@
+name: edges
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # A lowercase name is not expanded. One bare uppercase literal is.
+      # Single quotes and any other `$` name stay literal.
+      - run: |
+          base_url=https://ignored.example
+          BASE_URL=https://example.invalid
+          curl -fsSL ${BASE_URL}/bare.tgz
+          echo '$BASE_URL' $OTHER $!
+      - run: |
+          BASE_URL="https://example.invalid" # pin
+          curl -fsSL "$BASE_URL/commented.tgz"
+      - run: |
+          BASE_URL=
+          curl -fsSL https://example.invalid/empty-assign.tgz
+      - run: |
+          BASE_URL=https://example.invalid/has space
+          curl -fsSL "$BASE_URL/spaced.tgz"
+          curl -fsSL https://example.invalid/spaced-assign.tgz
+      - run: |
+          BASE_URL="https://example.invalid" extra
+          curl -fsSL "$BASE_URL/junk.tgz"
+          curl -fsSL https://example.invalid/trailing-junk.tgz
+      # The open quote is after the URL so it does not swallow that download.
+      - run: |
+          curl -fsSL https://example.invalid/unclosed.tgz
+          BASE_URL="https://example.invalid
+      - run: |
+          curl -fsSL \
+            https://example.invalid/continued.tgz -o continued.tgz
+      - run: |
+          curl -o "out
+          file" https://example.invalid/quoted-nl.tgz
+      - run: |
+          curl -fsSL https://example.invalid/dynamic.tgz
+          sha256sum -c $(cat sums.txt)
+      - run: |
+          curl -fsSL https://example.invalid/cluster.tgz
+          sha256sum -cw cluster.tgz.sha256
+      - run: shasum -a256 --check=sums.txt && curl -fsSL https://example.invalid/shasum.tgz
+      - run: curl --output=out.tgz --url=https://example.invalid/inline.tgz
+      - run: curl -fsSL -- https://example.invalid/dashed.tgz
+      - run: curl --url=https://example.invalid/inline.tgz.sha256
+      - run: 'curl -fsSL https://[::1]:9/v6.tgz'
+      - run: 'curl -fsSL https://[::1]'
+      - run: 'curl -fsSL https://[::1'
+      - run: curl -fsSL https://
+      - run: curl -fsSL https:///missing-host/a.tgz
+      - run: 'curl -fsSL https://example.invalid/file{1}.sha256'
+      - run: 'curl -fsSL https://user:pw@example.invalid/auth.tgz'
+      - run: |
+          # integrity-check: allow
+          curl -fsSL https://example.invalid/bad-marker.tgz
+      - run: |
+          # integrity-check: skipreason=nope
+          curl -fsSL https://example.invalid/stuck-skip.tgz
+      - run: |
+          # integrity-check: skip nope
+          curl -fsSL https://example.invalid/no-reason.tgz
+      - run: |
+          # integrity-check: skip reason=in-script
+          curl -fsSL https://example.invalid/script-skip.tgz
+      # integrity-check: skip reason=yaml-prev
+      - run: curl -fsSL https://example.invalid/yaml-skip.tgz -o yaml-skip.tgz
+      - run: curl -fsSL https://example.invalid/after-skip.tgz -o after-skip.tgz # integrity-check: skip reason=trail
+      - run: curl -fsSL https://example.invalid/kept-after.tgz -o kept-after.tgz

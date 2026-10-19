@@ -1,0 +1,7 @@
+name: compact
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    - run: curl -fsSL https://example.invalid/compact.tgz -o compact.tgz

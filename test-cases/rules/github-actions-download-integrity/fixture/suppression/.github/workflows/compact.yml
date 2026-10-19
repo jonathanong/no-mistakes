@@ -1,0 +1,15 @@
+# Same-column '-' items must keep the finding on the step line for disable-next-line.
+name: compact
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    # no-mistakes-disable-next-line github-actions-download-integrity
+    - run: curl -fsSL https://example.invalid/hidden.tgz -o hidden.tgz
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+      - run: curl -fsSL https://example.invalid/shown.tgz -o shown.tgz # no-mistakes-disable-line github-actions-download-integrity
+      - run: curl -fsSL https://example.invalid/kept.tgz -o kept.tgz

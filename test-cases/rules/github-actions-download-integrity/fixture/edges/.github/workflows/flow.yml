@@ -1,0 +1,7 @@
+# Flow-style steps are not located, so the finding stays on line 1.
+name: flow
+on: push
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    steps: [{run: "curl -fsSL https://example.invalid/flow.tgz -o flow.tgz"}]

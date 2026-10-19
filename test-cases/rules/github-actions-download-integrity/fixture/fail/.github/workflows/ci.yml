@@ -1,0 +1,48 @@
+name: fail
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz
+      - run: curl -fsSL https://api.github.com/repos/example/tool
+      - run: |
+          BASE_URL="https://example.invalid"
+          curl -fsSL "$BASE_URL/b.tgz" -o b.tgz
+      - run: wget -O c.tgz https://example.invalid/c.tgz
+      - run: curl -fsSL https://example.invalid/a.tgz.sha256 -o a.sha256
+      - run: curl -fsSL "https://example.invalid/tool-$VERSION.tgz" -o t.tgz
+      - run: curl -fsSL "https://example.invalid/tool-${VERSION}/t.tgz" -o t.tgz
+      - run: curl -fsSL https://example.invalid/${{ inputs.version }}/t.tgz -o t.tgz
+      - run: curl -fsSL https://example.invalid/tool-$(uname -m).tgz -o t.tgz
+      - run: sudo curl -fsSL https://example.invalid/sudo.tgz -o t.tgz
+      - run: env FOO=1 curl -fsSL https://example.invalid/envcmd.tgz -o t.tgz
+      - run: if true; then curl -fsSL https://example.invalid/then.sh | sh; fi
+      - run: (curl -fsSL https://example.invalid/subshell.sh | sh)
+      - run: "{ curl -fsSL https://example.invalid/brace.sh; } | sh"
+      - run: "! curl -fsSL https://example.invalid/bang.tgz -o t.tgz"
+      - run: |
+          cat > cfg <<EOF
+          a=b
+          EOF
+          curl -fsSL https://example.invalid/after-heredoc.tgz -o x.tgz
+      - run: |
+          read -r v <<< "x"
+          curl -fsSL https://example.invalid/herestring.tgz -o x.tgz
+      - run: |
+          echo $((1 << 2))
+          curl -fsSL https://example.invalid/shift.tgz -o x.tgz
+      - run: |
+          # don't cache this
+          curl -fsSL https://example.invalid/comment-apostrophe.tgz -o t.tgz
+          echo 'done'
+          curl -fsSL https://example.invalid/after-quote.tgz -o t.tgz
+      - run: |
+          curl -fsSL https://example.invalid/trailing-comment.tgz -o t.tgz # it's pinned
+          curl -fsSL https://example.invalid/after-trailing.tgz -o t.tgz
+      - run: |
+          # shift with << here
+          curl -fsSL https://example.invalid/comment-shift.tgz -o t.tgz
+      - run: |
+          (( n = 1 << 3 ))
+          curl -fsSL https://example.invalid/after-arith.tgz -o t.tgz

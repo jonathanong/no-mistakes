@@ -1,0 +1,4 @@
+name: fetch
+description: composite with no steps
+runs:
+  using: composite
