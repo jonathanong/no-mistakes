@@ -116,7 +116,11 @@ pub(super) fn scan_with_sources(
                 ));
                 continue;
             }
-            let prepared = gate::prepared_conflicts(statement);
+            let locations = statement
+                .variant_locations
+                .as_ref()
+                .expect("conflict locations");
+            let prepared = gate::prepared_conflicts(locations, statement.parse_failed);
             if prepared.unanalyzable
                 && opts.fail_unanalyzable
                 && analysis::contains_insert_conflict(sql)

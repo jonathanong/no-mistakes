@@ -17,7 +17,10 @@ same call and reach different verdicts.
 - `proven-clear`: every exhaustive alternative satisfies that subcheck, or a
   verified prefix settles a prefix-only obligation such as a leading annotation.
 - `abstain`: missing SQL, incomplete alternatives, parse failure, or catalog
-  uncertainty prevents either conclusion. For `postgres-conflict-ordering`,
+  uncertainty prevents either conclusion. A parse failure outside every
+  conflict statement does not block a clear result for
+  `postgres-conflict-ordering`: that failure cannot hide an `ON CONFLICT`.
+  For `postgres-conflict-ordering`,
   `unresolved-arbiter`, `ambiguous-arbiter`, and `unresolved-source-order` are
   still failing check findings; their ledger row stays `abstain`
   (`unresolved-conflict-catalog-or-source`) because the catalog or source shape

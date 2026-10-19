@@ -34,9 +34,9 @@ pub(crate) struct StatementPolicySources<'a> {
 struct StatementSources<'a> {
     locations: bool,
     tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
-    // `complete` is parallel to statements after a failed strict parse.
+    // `recovery` is parallel to statements after a failed strict parse.
     policy: StatementPolicySources<'a>,
-    complete: Option<&'a [bool]>,
+    recovery: Option<&'a crate::codebase::postgres::conflict::ConflictChunks<'a>>,
 }
 
 fn extract_from_parsed_and_sources(
@@ -195,7 +195,7 @@ fn extract_from_parsed_and_sources(
             sql,
             statements,
             placeholder_positions.unwrap_or_default(),
-            sources.complete,
+            sources.recovery,
         )
     });
     facts

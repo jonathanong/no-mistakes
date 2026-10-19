@@ -1,8 +1,14 @@
 //! One prepared SQL parse feeds every requested statement projection.
 use super::SqlStatementFileFacts;
-use crate::codebase::postgres::parse::{parse_postgres_sql_lenient_with_sources, PreparedSql};
+use crate::codebase::postgres::conflict::ConflictChunks;
+use crate::codebase::postgres::parse::{
+    orphan_chunk_tokens, parse_postgres_sql_lenient_with_sources, partition_function_sources,
+    PreparedSql,
+};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::Statement;
+use sqlparser::tokenizer::TokenWithSpan;
+use std::sync::Arc;
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
@@ -67,12 +73,20 @@ fn extract_sql_statement_facts_with_placeholder_positions(
             placeholder_positions,
         ),
         Err(_) => {
-            let (mut located, functions) =
-                crate::codebase::postgres::parse::partition_function_sources(
-                    parse_postgres_sql_lenient_with_sources(sql, prepared.normalized()),
-                );
+            let parsed = parse_postgres_sql_lenient_with_sources(sql, prepared.normalized());
+            let orphans = orphan_chunk_tokens(&parsed);
+            let (mut located, functions) = partition_function_sources(parsed);
             prepared.adopt_recovered_arbiters(&mut located);
             let complete: Vec<bool> = located.iter().map(|statement| statement.complete).collect();
+            let chunks: Vec<Option<Arc<[TokenWithSpan]>>> = located
+                .iter()
+                .map(|statement| statement.chunk_tokens.clone())
+                .collect();
+            let recovery = ConflictChunks {
+                complete: &complete,
+                chunks: &chunks,
+                orphans: &orphans,
+            };
             let (statements, sources): (Vec<_>, Vec<_>) = located
                 .into_iter()
                 .map(|located| (located.statement, located.source))
@@ -84,7 +98,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 super::StatementSources {
                     locations,
                     tokens: Some(&sources),
-                    complete: Some(&complete),
+                    recovery: Some(&recovery),
                     policy: super::StatementPolicySources {
                         schema: None,
                         functions: &functions,
@@ -114,7 +128,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         super::StatementSources {
             locations: false,
             tokens: None,
-            complete: None,
+            recovery: None,
             policy,
         },
         parse_failed,

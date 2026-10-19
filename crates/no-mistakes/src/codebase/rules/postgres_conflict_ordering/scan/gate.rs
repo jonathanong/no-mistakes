@@ -1,4 +1,5 @@
-use crate::codebase::postgres::{SqlConflictInsertFact, SqlStatementFileFacts};
+use crate::codebase::postgres::statements::SqlVariantLocations;
+use crate::codebase::postgres::SqlConflictInsertFact;
 
 pub(super) struct PreparedConflicts<'a> {
     pub conflicts: &'a [SqlConflictInsertFact],
@@ -6,22 +7,16 @@ pub(super) struct PreparedConflicts<'a> {
     pub unanalyzable: bool,
 }
 
-pub(super) fn prepared_conflicts(statement: &SqlStatementFileFacts) -> PreparedConflicts<'_> {
-    let Some(locations) = statement.variant_locations.as_ref() else {
+pub(super) fn prepared_conflicts(
+    locations: &SqlVariantLocations,
+    parse_failed: bool,
+) -> PreparedConflicts<'_> {
+    if !parse_failed {
+        // `conflicts` stays empty when analysis returns Err, so the error arm
+        // does not need a second empty slice.
         return PreparedConflicts {
-            conflicts: &[],
-            unanalyzable: true,
-        };
-    };
-    if !statement.parse_failed {
-        let unanalyzable = locations.conflict_error.is_some();
-        return PreparedConflicts {
-            conflicts: if unanalyzable {
-                &[]
-            } else {
-                &locations.conflicts
-            },
-            unanalyzable,
+            conflicts: &locations.conflicts,
+            unanalyzable: locations.conflict_error.is_some(),
         };
     }
     PreparedConflicts {

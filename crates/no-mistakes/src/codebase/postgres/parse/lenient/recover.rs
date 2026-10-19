@@ -8,10 +8,11 @@ pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
 use schema::start as schema_ddl_start;
-use sqlparser::ast::Statement;
+use sqlparser::ast::{DiscardObject, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
+use std::sync::Arc;
 
 pub(super) fn parse_chunks_with_function_calls(
     chunks: Vec<Vec<Token>>,
@@ -28,14 +29,30 @@ pub(super) fn parse_chunks_with_function_calls(
     let mut statements = Vec::new();
     let mut transaction_open = false;
     for chunk in chunks {
-        let source = located
-            .next()
-            .map(|source| locations::align(&chunk, source));
-        for statement in parse_chunk(
+        let original = located.next();
+        let aligned = original.map(|source| locations::align(&chunk, source));
+        // Own the chunk text even when recovery emits no statement. A later
+        // sibling must not inherit this chunk's ON CONFLICT target.
+        let tokens = original.map(Arc::<[TokenWithSpan]>::from);
+        let produced = parse_chunk(
             chunk,
-            source.as_deref(),
+            aligned.as_deref(),
             allow_concurrent_detach && !transaction_open,
-        ) {
+        );
+        if produced.is_empty() {
+            if let Some(tokens) = tokens {
+                let mut marker = LocatedStatement::functions(
+                    Statement::Discard {
+                        object_type: DiscardObject::ALL,
+                    },
+                    false,
+                );
+                marker.chunk_tokens = Some(tokens);
+                statements.push(marker);
+            }
+            continue;
+        }
+        for mut statement in produced {
             match &statement.statement {
                 Statement::StartTransaction { .. } => transaction_open = true,
                 Statement::Commit { chain, .. }
@@ -47,6 +64,7 @@ pub(super) fn parse_chunks_with_function_calls(
                 }
                 _ => {}
             }
+            statement.chunk_tokens = tokens.clone();
             statements.push(statement);
         }
     }

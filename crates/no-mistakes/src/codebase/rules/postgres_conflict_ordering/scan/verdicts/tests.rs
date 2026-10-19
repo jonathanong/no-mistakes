@@ -54,18 +54,6 @@ fn patch_gap_missing_prepared_facts_abstain() {
 }
 
 #[test]
-fn patch_gap_missing_locations_follow_parse_failure() {
-    let call = insert_call();
-    let mut facts = SqlStatementFileFacts::default();
-    assert_eq!(
-        reason(&call, Some(&facts)),
-        Some("missing-prepared-sql-facts")
-    );
-    facts.parse_failed = true;
-    assert_eq!(reason(&call, Some(&facts)), Some("invalid-sql"));
-}
-
-#[test]
 fn patch_gap_empty_conflicts_are_unresolved() {
     let facts = SqlStatementFileFacts {
         variant_locations: Some(Default::default()),

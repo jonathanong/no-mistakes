@@ -8,7 +8,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod collect;
 mod prepared;
-pub(in crate::codebase::postgres) use prepared::{analyze_parsed, reliable_conflicts};
+pub(in crate::codebase::postgres) use prepared::{
+    analyze_parsed, reliable_chunk_tokens, reliable_conflicts, ConflictChunks,
+};
 mod pinned;
 pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
@@ -16,6 +18,8 @@ mod scope;
 pub use scope::SqlSourceRelation;
 #[cfg(test)]
 mod consumer_recovery_tests;
+#[cfg(test)]
+mod prepared_tests;
 mod single_row;
 #[cfg(test)]
 mod single_row_tests;

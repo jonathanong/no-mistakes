@@ -33,6 +33,8 @@ mod sql_verdict_obligation_coverage_tests;
 #[cfg(test)]
 mod sql_verdict_replay_coverage_tests;
 #[cfg(test)]
+mod sql_verdict_sibling_order_tests;
+#[cfg(test)]
 mod sql_verdict_subchecks_tests;
 #[cfg(test)]
 mod sql_verdict_tests;

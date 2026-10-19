@@ -12,7 +12,11 @@ pub(super) fn findings(
     catalog: &SchemaCatalog,
     fail_unanalyzable: bool,
 ) -> Vec<RuleFinding> {
-    let prepared = super::gate::prepared_conflicts(statement);
+    let locations = statement
+        .variant_locations
+        .as_ref()
+        .expect("conflict locations");
+    let prepared = super::gate::prepared_conflicts(locations, statement.parse_failed);
     let mut findings = Vec::new();
     if prepared.unanalyzable && fail_unanalyzable && analysis::contains_insert_conflict(sql) {
         findings.push(analysis::finding(

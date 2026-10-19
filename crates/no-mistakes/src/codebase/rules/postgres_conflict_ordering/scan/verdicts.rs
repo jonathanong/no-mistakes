@@ -105,14 +105,11 @@ fn judge(
     let Some(statement) = prepared else {
         return SqlBranchJudgment::abstain("missing-prepared-sql-facts");
     };
-    if statement.variant_locations.is_none() {
-        return SqlBranchJudgment::abstain(if statement.parse_failed {
-            "invalid-sql"
-        } else {
-            "missing-prepared-sql-facts"
-        });
-    }
-    let prepared_conflicts = super::gate::prepared_conflicts(statement);
+    let locations = statement
+        .variant_locations
+        .as_ref()
+        .expect("conflict locations");
+    let prepared_conflicts = super::gate::prepared_conflicts(locations, statement.parse_failed);
     if statement.parse_failed && prepared_conflicts.conflicts.is_empty() {
         return SqlBranchJudgment::abstain("invalid-sql");
     }
