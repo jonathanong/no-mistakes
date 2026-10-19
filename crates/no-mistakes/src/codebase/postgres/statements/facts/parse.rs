@@ -72,6 +72,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                     parse_postgres_sql_lenient_with_sources(sql, prepared.normalized()),
                 );
             prepared.adopt_recovered_arbiters(&mut located);
+            let complete: Vec<bool> = located.iter().map(|statement| statement.complete).collect();
             let (statements, sources): (Vec<_>, Vec<_>) = located
                 .into_iter()
                 .map(|located| (located.statement, located.source))
@@ -83,6 +84,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 super::StatementSources {
                     locations,
                     tokens: Some(&sources),
+                    complete: Some(&complete),
                     policy: super::StatementPolicySources {
                         schema: None,
                         functions: &functions,
@@ -112,6 +114,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         super::StatementSources {
             locations: false,
             tokens: None,
+            complete: None,
             policy,
         },
         parse_failed,

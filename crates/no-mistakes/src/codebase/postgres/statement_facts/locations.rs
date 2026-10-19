@@ -55,6 +55,10 @@ pub struct SqlVariantLocations {
     pub locking: Vec<super::super::LockingSelectMetadata>,
     pub conflicts: Vec<super::super::SqlConflictInsertFact>,
     pub conflict_error: Option<String>,
+    /// Conflicts from chunks that parsed completely. Set only when the whole text failed to parse.
+    pub reliable_conflicts: Vec<super::super::SqlConflictInsertFact>,
+    /// The parse failure overlaps a conflict statement or the CTE that encloses it.
+    pub conflict_failure_overlaps: bool,
     pub(crate) append_sites: Vec<u32>,
     /// Source lines, in the executor's file, of the imported-helper calls whose
     /// text this statement contains.

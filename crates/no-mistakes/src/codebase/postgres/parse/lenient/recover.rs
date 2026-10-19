@@ -72,7 +72,9 @@ fn parse_chunk(
     };
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => {
-            vec![LocatedStatement::plain(statement)]
+            let mut located = LocatedStatement::plain(statement);
+            located.complete = true;
+            vec![located]
         }
         _ => {
             if let Some(tokens) = original {

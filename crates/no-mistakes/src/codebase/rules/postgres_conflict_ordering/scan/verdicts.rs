@@ -102,15 +102,21 @@ fn judge(
             SqlBranchJudgment::abstain("unresolved-sql-fragment")
         };
     }
-    let inserts: Cow<'_, [SqlConflictInsertFact]> = match prepared {
-        Some(statement) if statement.parse_failed => {
-            return SqlBranchJudgment::abstain("invalid-sql");
-        }
-        Some(statement) if statement.variant_locations.is_some() => {
-            Cow::Borrowed(&statement.variant_locations.as_ref().unwrap().conflicts)
-        }
-        _ => return SqlBranchJudgment::abstain("missing-prepared-sql-facts"),
+    let Some(statement) = prepared else {
+        return SqlBranchJudgment::abstain("missing-prepared-sql-facts");
     };
+    if statement.variant_locations.is_none() {
+        return SqlBranchJudgment::abstain(if statement.parse_failed {
+            "invalid-sql"
+        } else {
+            "missing-prepared-sql-facts"
+        });
+    }
+    let prepared_conflicts = super::gate::prepared_conflicts(statement);
+    if statement.parse_failed && prepared_conflicts.conflicts.is_empty() {
+        return SqlBranchJudgment::abstain("invalid-sql");
+    }
+    let inserts: Cow<'_, [SqlConflictInsertFact]> = Cow::Borrowed(prepared_conflicts.conflicts);
     if inserts.is_empty() {
         return SqlBranchJudgment::abstain("unresolved-conflict-statement");
     }
@@ -126,6 +132,9 @@ fn judge(
         } else {
             return SqlBranchJudgment::violation(false);
         }
+    }
+    if statement.parse_failed && prepared_conflicts.unanalyzable {
+        return SqlBranchJudgment::abstain("invalid-sql");
     }
     if uncertainty {
         SqlBranchJudgment::abstain("unresolved-conflict-catalog-or-source")

@@ -83,7 +83,9 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 ## What it catches
 
-See [details](postgres-conflict-ordering-proof.md).
+See [details](postgres-conflict-ordering-proof.md). Default-on finding changes are
+separate from the opt-in SQL verdict ledger and are listed in
+[the migration note](../migrations/postgres-conflict-ordering-findings.md).
 
 An `INSERT ... SELECT unnest(enum_range(...)) ON CONFLICT DO NOTHING` can
 produce several rows. Its omitted conflict target violates this rule even when

@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod collect;
 mod prepared;
-pub(in crate::codebase::postgres) use prepared::analyze_parsed;
+pub(in crate::codebase::postgres) use prepared::{analyze_parsed, reliable_conflicts};
 mod pinned;
 pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;

@@ -17,7 +17,11 @@ same call and reach different verdicts.
 - `proven-clear`: every exhaustive alternative satisfies that subcheck, or a
   verified prefix settles a prefix-only obligation such as a leading annotation.
 - `abstain`: missing SQL, incomplete alternatives, parse failure, or catalog
-  uncertainty prevents either conclusion.
+  uncertainty prevents either conclusion. For `postgres-conflict-ordering`,
+  `unresolved-arbiter`, `ambiguous-arbiter`, and `unresolved-source-order` are
+  still failing check findings; their ledger row stays `abstain`
+  (`unresolved-conflict-catalog-or-source`) because the catalog or source shape
+  proves neither a violation nor a clear result.
 
 `evidence` is `exact`, `exhaustive-union`, `verified-prefix`, or
 `policy-exemption` when a proof exists. A safe directive can prove the policy

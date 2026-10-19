@@ -1,5 +1,6 @@
 mod analysis;
 mod exact;
+mod gate;
 mod substitute;
 mod verdicts;
 
@@ -115,17 +116,17 @@ pub(super) fn scan_with_sources(
                 ));
                 continue;
             }
-            let locations = statement.variant_locations.as_ref().unwrap();
-            if statement.parse_failed || locations.conflict_error.is_some() {
-                if opts.fail_unanalyzable && analysis::contains_insert_conflict(sql) {
-                    dedup.push(&mut findings, statement, crate::codebase::postgres::statements::SqlFactSite::Origin, Some(&source), analysis::finding(&rel, call.line as usize, "unanalyzable-sql", "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked"));
-                }
-                continue;
+            let prepared = gate::prepared_conflicts(statement);
+            if prepared.unanalyzable
+                && opts.fail_unanalyzable
+                && analysis::contains_insert_conflict(sql)
+            {
+                dedup.push(&mut findings, statement, crate::codebase::postgres::statements::SqlFactSite::Origin, Some(&source), analysis::finding(&rel, call.line as usize, "unanalyzable-sql", "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked"));
             }
             for (index, finding) in analysis::findings_for_inserts(
                 &rel,
                 call.line as usize,
-                &locations.conflicts,
+                prepared.conflicts,
                 catalog,
             ) {
                 dedup.push(

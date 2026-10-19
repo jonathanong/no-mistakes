@@ -110,6 +110,7 @@ words:
   - smallint
   - sqlparser
   - quasis
+  - targetless
   - unanalyzable
   - unshift
   - unparseable

@@ -12,22 +12,20 @@ pub(super) fn findings(
     catalog: &SchemaCatalog,
     fail_unanalyzable: bool,
 ) -> Vec<RuleFinding> {
-    let locations = statement.variant_locations.as_ref();
-    if statement.parse_failed
-        || locations.is_none_or(|locations| locations.conflict_error.is_some())
-    {
-        if fail_unanalyzable && analysis::contains_insert_conflict(sql) {
-            return vec![analysis::finding(
-                file,
-                line,
-                "unanalyzable-sql",
-                "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
-            )];
-        }
-        return Vec::new();
+    let prepared = super::gate::prepared_conflicts(statement);
+    let mut findings = Vec::new();
+    if prepared.unanalyzable && fail_unanalyzable && analysis::contains_insert_conflict(sql) {
+        findings.push(analysis::finding(
+            file,
+            line,
+            "unanalyzable-sql",
+            "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+        ));
     }
-    analysis::findings_for_inserts(file, line, &locations.unwrap().conflicts, catalog)
-        .into_iter()
-        .map(|(_, finding)| finding)
-        .collect()
+    findings.extend(
+        analysis::findings_for_inserts(file, line, prepared.conflicts, catalog)
+            .into_iter()
+            .map(|(_, finding)| finding),
+    );
+    findings
 }

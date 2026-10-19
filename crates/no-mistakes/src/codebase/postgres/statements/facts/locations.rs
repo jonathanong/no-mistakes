@@ -147,11 +147,25 @@ pub(super) fn finish(
     sql: &str,
     statements: &[Statement],
     binds: &[(u32, u32)],
+    complete: Option<&[bool]>,
 ) -> SqlVariantLocations {
     let mut projected = locations.project(facts, tokens);
     match crate::codebase::postgres::conflict::analyze_parsed(sql, statements, binds) {
         Ok(conflicts) => projected.conflicts = conflicts,
         Err(error) => projected.conflict_error = Some(error.to_string()),
+    }
+    if facts.parse_failed {
+        // A sibling chunk can fail while this conflict statement parsed completely.
+        // Only a failure inside the conflict statement, or the CTE that encloses it, abstains.
+        if let Some(complete) = complete {
+            let recovery = crate::codebase::postgres::conflict::reliable_conflicts(
+                sql, statements, binds, complete,
+            );
+            projected.reliable_conflicts = recovery.reliable;
+            projected.conflict_failure_overlaps = recovery.failure_overlaps_conflict;
+        } else {
+            projected.conflict_failure_overlaps = true;
+        }
     }
     projected
 }

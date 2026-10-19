@@ -34,7 +34,9 @@ pub(crate) struct StatementPolicySources<'a> {
 struct StatementSources<'a> {
     locations: bool,
     tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
+    // `complete` is parallel to statements after a failed strict parse.
     policy: StatementPolicySources<'a>,
+    complete: Option<&'a [bool]>,
 }
 
 fn extract_from_parsed_and_sources(
@@ -53,10 +55,8 @@ fn extract_from_parsed_and_sources(
         .locations
         .then(|| locations::Locations::new(placeholder_positions.unwrap_or_default()));
     let mut inserts = Vec::new();
-    let mut selects = Vec::new();
-    let mut updates = Vec::new();
-    let mut deletes = Vec::new();
-    let mut triggers = Vec::new();
+    let (mut selects, mut updates) = (Vec::new(), Vec::new());
+    let (mut deletes, mut triggers) = (Vec::new(), Vec::new());
     let mut returning_stars = Vec::new();
     let mut bounds = Vec::new();
     let mut mutation_column_uses = Vec::new();
@@ -195,6 +195,7 @@ fn extract_from_parsed_and_sources(
             sql,
             statements,
             placeholder_positions.unwrap_or_default(),
+            sources.complete,
         )
     });
     facts
