@@ -77,10 +77,12 @@ if not all(row['eligible'] for row in rows):
 assert all(row['exit'] == rows[0]['exit'] for row in rows)
 assert all(row['semanticStderr'] == rows[0]['semanticStderr'] for row in rows)
 parity = compare_reports(output / rows[0]['stdout'], output / rows[1]['stdout'],
-                         with_ledger=case == 'verdicts-ledger')
+                         with_ledger=case == 'verdicts-ledger',
+                    feature_delta=case == 'verdicts-default')
 if order == 'bccb':
     compare_reports(output / rows[3]['stdout'], output / rows[2]['stdout'],
-                    with_ledger=case == 'verdicts-ledger')
+                    with_ledger=case == 'verdicts-ledger',
+                    feature_delta=case == 'verdicts-default')
     assert digest(output / rows[0]['stdout']) == digest(output / rows[3]['stdout'])
     assert digest(output / rows[1]['stdout']) == digest(output / rows[2]['stdout'])
 if 'ledger' in parity:

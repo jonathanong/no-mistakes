@@ -1,0 +1,25 @@
+{
+  "syntheticFixture": true,
+  "advisories": [],
+  "codebase": [],
+  "integration": [],
+  "queues": [],
+  "react": [],
+  "rules": [
+    {
+      "file": "existing.ts",
+      "line": 1,
+      "rule": "synthetic-existing",
+      "target": "existing",
+      "message": "Saved synthetic existing finding"
+    },
+    {
+      "file": "backend/services/post-publication/identity-bridge-cleanup.mts",
+      "line": 18,
+      "rule": "postgres-conflict-ordering",
+      "target": "targetless-arbiter",
+      "message": "Saved synthetic targetless policy finding"
+    }
+  ],
+  "warnings": []
+}

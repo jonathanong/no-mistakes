@@ -7,6 +7,9 @@ permissions:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      actions: read
     name: Build ${{ matrix.role }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
@@ -17,7 +20,7 @@ jobs:
           - role: base
             source: 8de12b05c425a45bbab806b140721e80db7e1bbb
           - role: verdicts
-            source: d8af2ab71154d5bf74c2ff43ef715358cbb668c7
+            source: ef45fdbffb7050b55677ca4d2b5b3b5e1e2b73ab
           - role: phases
             source: 956f213d635eb793fe61ac0d32822be08b37f205
     steps:
@@ -27,10 +30,6 @@ jobs:
         with:
           path: harness
           persist-credentials: false
-      - name: Validate saved measurement fixtures
-        timeout-minutes: 2
-        working-directory: harness
-        run: python3 -m unittest discover -s .github/scripts/matched-arm -p 'test_*.py'
       - name: Checkout immutable production source
         timeout-minutes: 3
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,6 +42,19 @@ jobs:
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
         with:
           toolchain: stable
+      - name: Validate saved measurement fixtures
+        timeout-minutes: 2
+        working-directory: harness
+        run: python3 -m unittest discover -s .github/scripts/matched-arm -p 'test_*.py'
+      - name: Restore audited frozen production CLI
+        if: ${{ matrix.role != 'verdicts' }}
+        timeout-minutes: 3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: matched-cli-${{ matrix.role }}
+          run-id: 39185937985
+          github-token: ${{ github.token }}
+          path: frozen
       - name: Build verified production artifact
         timeout-minutes: 25
         env:

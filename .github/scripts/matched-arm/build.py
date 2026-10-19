@@ -9,7 +9,8 @@ import sys
 import time
 import tomllib
 
-from common import SOURCES, digest, install_cancel_handler, machine, run, save
+from common import SOURCES, compile_cpu_probe, digest, install_cancel_handler, machine, run, save
+from frozen import PINS, copy_frozen
 
 install_cancel_handler()
 role = sys.argv[1]
@@ -36,27 +37,30 @@ proof = {'source': SOURCES[role], 'tree': run('git', 'rev-parse', 'HEAD^{tree}',
 save(output / 'source.json', proof)
 process = None
 try:
-    with (output / 'build.log').open('wb') as log:
-        process = subprocess.Popen(command, cwd=root, env=env, stdout=log,
-                                   stderr=subprocess.STDOUT, start_new_session=True)
-        started = time.monotonic()
-        while process.poll() is None:
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                size = int(run('du', '-sb', str(target)).split()[0])
-                if size >= 8_000_000_000 or time.monotonic() - started >= 24 * 60:
-                    raise RuntimeError('owned build exceeded time or target-size safety bound')
-        assert process.returncode == 0, process.returncode
-    assert not run('git', 'status', '--porcelain', cwd=root)
+    if role in PINS:
+        proof = copy_frozen(role, proof, output)
+    else:
+        with (output / 'build.log').open('wb') as log:
+            process = subprocess.Popen(command, cwd=root, env=env, stdout=log,
+                                       stderr=subprocess.STDOUT, start_new_session=True)
+            started = time.monotonic()
+            while process.poll() is None:
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    size = int(run('du', '-sb', str(target)).split()[0])
+                    if size >= 8_000_000_000 or time.monotonic() - started >= 24 * 60:
+                        raise RuntimeError('owned build exceeded time or target-size safety bound')
+            assert process.returncode == 0, process.returncode
+        assert not run('git', 'status', '--porcelain', cwd=root)
+        binary = output / 'no-mistakes'
+        shutil.copy2(target / 'release/no-mistakes', binary)
     binary = output / 'no-mistakes'
-    shutil.copy2(target / 'release/no-mistakes', binary)
-    libraries = list((target / 'release/deps').glob('libnum_cpus-*.rlib'))
-    assert len(libraries) == 1
-    subprocess.run(['rustc', 'harness/.github/scripts/matched-arm/cpu-probe.rs',
-                    '--edition=2021', '-L', 'dependency=' + str(target / 'release/deps'),
-                    '--extern', 'num_cpus=' + str(libraries[0]), '-o', str(output / 'cpu-probe')], check=True)
-    proof.update(binarySha256=digest(binary), cpuProbeSha256=digest(output / 'cpu-probe'))
+    probe = compile_cpu_probe('harness/fixtures/performance/matched-arm/cpu-probe-lto',
+                              root / 'Cargo.lock', output / 'cpu-probe')
+    proof.update(binarySha256=digest(binary), cpuProbeSha256=digest(output / 'cpu-probe'),
+                 cpuProbeBuild=probe)
+    proof['artifactHarnessCommit'] = os.environ['GITHUB_SHA']
     save(output / 'provenance.json', proof)
 finally:
     if process is not None and process.poll() is None:

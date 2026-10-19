@@ -1,0 +1,32 @@
+{
+  "syntheticFixture": true,
+  "advisories": [],
+  "codebase": [],
+  "integration": [],
+  "queues": [],
+  "react": [],
+  "rules": [
+    {
+      "file": "existing.ts",
+      "line": 1,
+      "rule": "synthetic-existing",
+      "target": "existing",
+      "message": "Saved synthetic existing finding"
+    },
+    {
+      "file": "backend/services/post-publication/identity-bridge-cleanup.mts",
+      "line": 18,
+      "rule": "postgres-conflict-ordering",
+      "target": "targetless-arbiter",
+      "message": "Saved synthetic targetless policy finding"
+    },
+    {
+      "file": "backend/services/posts/review-successions/mutations.mts",
+      "line": 94,
+      "rule": "postgres-conflict-ordering",
+      "target": "missing-canonical-order",
+      "message": "Saved synthetic CTE policy finding"
+    }
+  ],
+  "warnings": []
+}

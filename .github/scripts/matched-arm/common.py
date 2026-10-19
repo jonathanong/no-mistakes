@@ -3,12 +3,15 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import signal
 import subprocess
+import tempfile
+import tomllib
 
 SOURCES = {
     'base': '8de12b05c425a45bbab806b140721e80db7e1bbb',
-    'verdicts': 'd8af2ab71154d5bf74c2ff43ef715358cbb668c7',
+    'verdicts': 'ef45fdbffb7050b55677ca4d2b5b3b5e1e2b73ab',
     'phases': '956f213d635eb793fe61ac0d32822be08b37f205',
 }
 CONSUMER = 'f38a048f5eeff0438fc59a15e9eb742def575a36'
@@ -24,7 +27,11 @@ def install_cancel_handler():
 
 
 def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    value = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            value.update(block)
+    return value.hexdigest()
 
 
 def run(*args, cwd=None):
@@ -33,6 +40,34 @@ def run(*args, cwd=None):
 
 def save(path, value):
     Path(path).write_text(json.dumps(value, indent=2) + '\n')
+
+
+def compile_cpu_probe(fixture, production_lock, output):
+    # Link the release-LTO dependency with Cargo; its rlib may contain only LLVM bitcode.
+    fixture = Path(fixture)
+    def versions(lock):
+        packages = tomllib.loads(Path(lock).read_text())['package']
+        return {p['name']: {key: p[key] for key in ('version', 'source', 'checksum')}
+                for p in packages if p['name'] in {'num_cpus', 'libc', 'hermit-abi'}}
+    assert versions(fixture / 'Cargo.lock') == versions(production_lock)
+    profile = tomllib.loads((fixture / 'Cargo.toml').read_text())['profile']['release']
+    assert profile['lto'] is True and profile['codegen-units'] == 1
+    with tempfile.TemporaryDirectory(prefix='matched-arm-cpu-probe-',
+                                     dir=os.environ.get('RUNNER_TEMP')) as directory:
+        target = Path(directory) / 'target'
+        env = dict(os.environ, CARGO_TARGET_DIR=str(target), CARGO_INCREMENTAL='0',
+                   CARGO_BUILD_JOBS='2')
+        result = subprocess.run(['cargo', 'build', '--release', '--locked',
+                                 '--manifest-path', str(fixture / 'Cargo.toml')],
+                                env=env, capture_output=True, timeout=120)
+        Path(str(output) + '.build.log').write_bytes(result.stdout + result.stderr)
+        result.check_returncode()
+        shutil.copy2(target / 'release/matched-arm-cpu-probe-lto', output)
+    assert int(run(str(output))) > 0
+    return {'fixtureLockSha256': digest(fixture / 'Cargo.lock'),
+            'fixtureManifestSha256': digest(fixture / 'Cargo.toml'),
+            'dependencyVersions': {name: row['version'] for name, row in versions(production_lock).items()},
+            'dependencyPackages': versions(production_lock)}
 
 
 def machine():

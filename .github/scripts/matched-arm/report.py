@@ -96,7 +96,7 @@ def aggregate_ledger(rows):
             'newly_applied_calls': 'unmeasured without a matched baseline call/finding map'}
 
 
-def compare_reports(base_path, other_path, *, with_ledger):
+def compare_reports(base_path, other_path, *, with_ledger, feature_delta=False):
     base = read_report(base_path)
     other = read_report(other_path)
     if with_ledger:
@@ -110,7 +110,32 @@ def compare_reports(base_path, other_path, *, with_ledger):
                 'ledger_sha256': digest(canonical(ledger)), 'ledger': aggregate_ledger(ledger)}
     if 'sqlVerdicts' in base or 'sqlVerdicts' in other:
         raise ValueError('flag-off report unexpectedly contains sqlVerdicts')
+    if feature_delta:
+        return compare_feature_delta(base, other)
     with open(base_path, 'rb') as first, open(other_path, 'rb') as second:
         if first.read() != second.read():
             raise ValueError('baseline/candidate default reports differ byte-for-byte')
     return {'normalized_sha256': digest(canonical(base)), 'ledger_sha256': None}
+
+
+def compare_feature_delta(base, candidate):
+    # Both are flag-off reports. Existing findings remain byte-for-byte values;
+    # only these two saved-repro-proven #2215 policy findings may be added.
+    assert set(base) == set(candidate)
+    assert all(base[key] == candidate[key] for key in base if key != 'rules')
+    old = Counter(canonical(row).decode() for row in base['rules'])
+    new = Counter(canonical(row).decode() for row in candidate['rules'])
+    assert not old - new, 'existing finding removed'
+    added = [json.loads(row) for row in (new - old).elements()]
+    identities = {(row['file'], row['line'], row['rule'], row.get('target')) for row in added}
+    expected = {
+        ('backend/services/post-publication/identity-bridge-cleanup.mts', 18,
+         'postgres-conflict-ordering', 'targetless-arbiter'),
+        ('backend/services/posts/review-successions/mutations.mts', 94,
+         'postgres-conflict-ordering', 'missing-canonical-order'),
+    }
+    assert len(added) == 2 and identities == expected, 'unexpected feature finding delta'
+    return {'baseline_sha256': digest(canonical(base)),
+            'candidate_sha256': digest(canonical(candidate)),
+            'added_policy_findings': added, 'removed_findings': 0,
+            'parity': 'Existing fields/findings unchanged; two explicitly expected policy recoveries.'}

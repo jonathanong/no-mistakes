@@ -13,6 +13,9 @@ concurrency:
 
 jobs:
   prepare:
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/matched-arm-build.yml
 
   canary:

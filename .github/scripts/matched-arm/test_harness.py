@@ -12,12 +12,51 @@ import time
 import unittest
 
 from worker import sample
+from common import compile_cpu_probe
+from frozen import verify_manifest
+from report import compare_reports
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / 'fixtures/performance/matched-arm'
 
 
 class HarnessTests(unittest.TestCase):
+    def test_cpu_probe_links_release_lto_rlib(self):
+        fixture = FIXTURES / 'cpu-probe-lto'
+        with tempfile.TemporaryDirectory(prefix='matched-arm-lto-test-') as directory:
+            executable = Path(directory) / 'cpu-probe'
+            proof = compile_cpu_probe(fixture, ROOT / 'Cargo.lock', executable)
+            count = int(subprocess.check_output([executable], text=True).strip())
+            self.assertGreater(count, 0)
+            self.assertEqual(proof['dependencyVersions']['num_cpus'], '1.17.0')
+
+    def test_frozen_artifact_provenance_fails_closed(self):
+        for path in sorted((FIXTURES / 'frozen-provenance').glob('*.json')):
+            row = json.loads(path.read_text())
+            with self.subTest(fixture=path.name):
+                if row['accepted']:
+                    verify_manifest(row['proof'], row['expected'],
+                                    row['binarySha256'], row['pinnedSha256'])
+                else:
+                    with self.assertRaises(AssertionError):
+                        verify_manifest(row['proof'], row['expected'],
+                                        row['binarySha256'], row['pinnedSha256'])
+
+    def test_only_expected_feature_findings_are_accepted(self):
+        folder = FIXTURES / 'feature-delta'
+        for path in sorted(folder.glob('*.json')):
+            if path.name == 'baseline.json':
+                continue
+            with self.subTest(fixture=path.name):
+                if path.name == 'valid.json':
+                    proof = compare_reports(folder / 'baseline.json', path,
+                                            with_ledger=False, feature_delta=True)
+                    self.assertEqual(len(proof['added_policy_findings']), 2)
+                else:
+                    with self.assertRaises(AssertionError):
+                        compare_reports(folder / 'baseline.json', path,
+                                        with_ledger=False, feature_delta=True)
+
     def worker(self, name):
         # Temporary directories contain outputs; every input is a saved fixture.
         with tempfile.TemporaryDirectory(prefix='matched-arm-test-') as directory:
