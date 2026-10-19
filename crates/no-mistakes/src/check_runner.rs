@@ -23,6 +23,8 @@ mod sql_verdict_edge_tests;
 #[cfg(test)]
 mod sql_verdict_final_gate_tests;
 #[cfg(test)]
+mod sql_verdict_helper_advisory_tests;
+#[cfg(test)]
 mod sql_verdict_matrix_tests;
 #[cfg(test)]
 mod sql_verdict_modes_tests;

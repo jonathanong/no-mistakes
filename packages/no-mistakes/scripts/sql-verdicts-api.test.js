@@ -68,3 +68,31 @@ test(
     );
   },
 );
+
+test(
+  "compiled CJS and ESM report a conflict inside an executed CTE",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict",
+    );
+    for (const config of ["fail.yml", ".no-mistakes.yml", "advise.yml"]) {
+      const options = { root, config: join(root, config) };
+      const plain = await cjs.check(options);
+      const detailed = await cjs.check({ ...options, includeSqlVerdicts: true });
+      assert.deepEqual(detailed.rules, plain.rules, config);
+      assert.deepEqual(detailed.advisories, plain.advisories, config);
+      assert.deepEqual(await esm.check({ ...options, includeSqlVerdicts: true }), detailed);
+      assert.deepEqual(
+        detailed.rules.map(({ file, line, target }) => [file, line, target]),
+        [["src/query.ts", 4, "missing-canonical-order"]],
+      );
+      assert.equal(detailed.sqlVerdicts.length, 1);
+      assert.equal(detailed.sqlVerdicts[0].status, "violation");
+      assert.equal(detailed.sqlVerdicts[0].evidence, "exact");
+    }
+  },
+);
