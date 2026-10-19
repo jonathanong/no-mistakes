@@ -117,4 +117,8 @@ pub(super) fn gha_kind(rel: &str) -> Option<bool> {
 }
 
 #[cfg(test)]
+mod coverage;
+#[cfg(test)]
+mod edges;
+#[cfg(test)]
 mod tests;
