@@ -130,6 +130,11 @@ fn nested_spread_inside_a_spread_literal_opens_the_tail() {
 }
 
 #[test]
+fn hole_inside_a_spread_literal_advances_the_slot() {
+    unknown_replica("spread-element-hole");
+}
+
+#[test]
 fn spread_of_a_conditional_that_is_not_replica_stays_known() {
     let (built, root) = graph();
     assert_export(&built, &root, "spread-element-other", "replica.get");
