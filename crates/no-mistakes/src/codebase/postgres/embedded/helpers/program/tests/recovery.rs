@@ -54,6 +54,15 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
     fails(&p, "assertNeverIsNotProof", &[lit("x")]);
     // A repeated label abstains; the first arm is not kept.
     fails(&p, "duplicateLabel", &[lit("a")]);
+    // A label that fell through to default is not a later arm.
+    fails(&p, "duplicateAfterDefault", &[lit("a")]);
+    // A parameter or a parameter of the callee shadows the proven thrower.
+    fails(
+        &p,
+        "shadowedThrowParam",
+        &[SiteArg::Scalar, SiteArg::Scalar],
+    );
+    fails(&p, "shadowedThrowWrapper", &[SiteArg::Scalar]);
     fails(&p, "switchWithLocal", &[lit("a")]);
     fails(&p, "switchCap", &[SiteArg::Scalar]);
     assert_eq!(one(&p, "switchCap", &[lit("01")]), "sql:SELECT 1");
@@ -100,7 +109,17 @@ fn nullish_on_a_bound_scalar_stays_a_bind() {
     );
     // Known nullish with an unbound fallback cannot invent the constant's text.
     fails(&p, "nullishOuter", &[SiteArg::Null]);
-    // Unknown fragment: the fallback statement is not an outcome.
+    // Free name: Void is not a judged SQL result. The extractor rejects it.
     assert_eq!(exec(&p, "nullishFragment", &[]).unwrap(), ["void"]);
-    fails(&p, "nullishSqlFallback", &[SiteArg::Scalar]);
+    assert_eq!(
+        exec(&p, "nullishSqlFallback", &[SiteArg::Scalar]).unwrap(),
+        ["void", "sql:SELECT 1"]
+    );
+    assert_eq!(
+        exec(&p, "nullishNestedFallback", &[SiteArg::Scalar]).unwrap(),
+        [
+            "sql:SELECT * FROM n14 WHERE a = $1 OFFSET 5",
+            "sql:SELECT * FROM n14 WHERE a = SELECT * FROM n14b OFFSET 4 OFFSET 5",
+        ]
+    );
 }
