@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
     pub(super) fn push_scope(&mut self) {
+        self.literal_objects.push_frame();
         self.member_query_proof.next_scope_id += 1;
         self.member_query_proof
             .scope_ids
@@ -16,6 +17,7 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn pop_scope(&mut self) {
+        self.literal_objects.pop_frame();
         self.member_query_proof.scope_ids.pop();
         self.scopes.pop();
         self.relative_proofs.pop();

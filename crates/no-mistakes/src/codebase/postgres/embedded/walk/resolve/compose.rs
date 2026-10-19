@@ -66,7 +66,7 @@ pub(super) fn classify_init(
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
         }
-        Expression::TemplateLiteral(_) => (unpublished_sql_text(expr), EmbeddedSqlKind::Dynamic),
+        Expression::TemplateLiteral(_) => visitor.classified_const_template(expr, is_const),
         Expression::CallExpression(_) => match resolve_chain(expr, visitor) {
             Some(text) if is_const => (Some(text), EmbeddedSqlKind::Composed),
             Some(text) => (Some(text), EmbeddedSqlKind::Dynamic),
@@ -109,6 +109,8 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
         Expression::Identifier(ident) => recovered_binding_sql(ident.name.as_str(), visitor),
+        Expression::StaticMemberExpression(member) => visitor.spliced_member(member),
+        Expression::TemplateLiteral(template) => visitor.spliced_template(template, 8),
         _ => None,
     }
 }

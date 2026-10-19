@@ -63,6 +63,8 @@ fn recover(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>, dynamic: bool) -> 
             );
             Some(format!("{left}{right}"))
         }
+        Expression::StaticMemberExpression(_) => super::static_fragment(expr, visitor),
+        Expression::TemplateLiteral(_) => super::static_fragment(expr, visitor),
         Expression::CallExpression(call) => {
             let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee)
             else {

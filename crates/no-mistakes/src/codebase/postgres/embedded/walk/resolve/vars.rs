@@ -133,6 +133,9 @@ pub(super) fn record_declarator(
     if namespace_executor {
         visitor.namespace_proofs[scope_index].insert(ident.name.to_string());
     }
+    if is_const {
+        visitor.note_const_object(init, scope_index, ident.name.as_str());
+    }
 }
 
 pub(super) fn invalidate_vars(pattern: &BindingPattern<'_>, visitor: &mut ScopeVisitor<'_>) {
