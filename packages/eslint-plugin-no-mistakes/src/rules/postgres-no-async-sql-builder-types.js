@@ -2,8 +2,9 @@
 
 const { propertyName } = require("./module-mock-helpers");
 
+// `any`, `unknown`, and `object` are omitted. Each accepts a Promise, so a
+// parameter or return of those types is unknown rather than a non-Promise.
 const NON_PROMISE_TYPES = new Set([
-  "TSAnyKeyword",
   "TSArrayType",
   "TSBigIntKeyword",
   "TSBooleanKeyword",
@@ -14,14 +15,12 @@ const NON_PROMISE_TYPES = new Set([
   "TSNeverKeyword",
   "TSNullKeyword",
   "TSNumberKeyword",
-  "TSObjectKeyword",
   "TSStringKeyword",
   "TSSymbolKeyword",
   "TSThisType",
   "TSTupleType",
   "TSTypeLiteral",
   "TSUndefinedKeyword",
-  "TSUnknownKeyword",
   "TSVoidKeyword",
 ]);
 

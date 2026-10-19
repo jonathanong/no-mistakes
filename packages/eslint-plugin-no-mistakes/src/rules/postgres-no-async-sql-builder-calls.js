@@ -12,7 +12,7 @@ const {
 const { callableReturnContract } = require("./postgres-no-async-sql-builder-property");
 const { combine } = require("./postgres-no-async-sql-builder-types");
 
-function callResultContract(call, context, types) {
+function callResultContract(call, context, types, seen = new Set()) {
   let current = call;
   while (current) {
     if (isThenCall(current)) return "requires";
@@ -24,7 +24,7 @@ function callResultContract(call, context, types) {
       parent.init === current &&
       parent.id.type === "Identifier"
     ) {
-      return bindingResultContract(parent, context, types);
+      return bindingResultContract(parent, context, types, seen);
     }
     if (parent.type === "AwaitExpression" && parent.argument === current) return "allows";
     if (parent.type === "ReturnStatement" && parent.argument === current)

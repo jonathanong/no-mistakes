@@ -56,24 +56,32 @@ export function loadOrders(id: string) {
 including the `${id}` value bind, with no incomplete reason. That file is
 `fixtures/postgres-facts/executed-source/same-file-sql-builder.ts`. The rule
 does not itself suggest `read(buildQuery(id))` when `read` is an unresolved
-import. An untyped, `Promise`-typed, or unresolved parameter makes the rule
-stay silent, because the synchronous call would throw if that parameter uses
-the value as a Promise.
+import. An untyped, `Promise`-typed, `any`, `unknown`, `object`, or unresolved
+parameter makes the rule stay silent, because the synchronous call would throw
+if that parameter uses the value as a Promise. A `string` or `number` parameter
+does not. The same check applies to a bound local (`const query = build()`),
+including when that local is passed on, returned, or copied into another
+local. A use this file does not explicitly recognize, such as `instanceof` or
+a property, stays silent.
 
 The rule also stays silent, with no report, when it cannot prove the rewrite.
 That includes any of these:
 
-- a return that is not a string, a template with no substitutions, or a call
-  or tag of a configured callee, on every path (a `names` entry does not skip
-  this check)
+- a return that is not a string, a template with no substitutions, or a tag
+  of a configured callee, on every path (a `names` entry does not skip this
+  check). A call such as `sql(id)` stays silent. A tag placeholder that is not
+  an identifier, a literal, or already judged SQL, such as `${id.x}`, stays
+  silent
 - `db.query(...)`, `Promise.resolve(...)`, `loadSql(...)`, or a method call
   such as `` sql`...`.append(...) ``
 - `throw`, `new`, a loop, `switch`, `try`, or any call that is not a
   configured callee or tag
 - an exported builder, a return type or implemented interface it cannot
-  resolve, or an explicit `Promise<...>` return type
+  resolve, or an explicit `Promise<...>`, `any`, `unknown`, or `object` return
+  type
 - a builder passed to a same-file parameter whose type is a function returning
-  a Promise, or whose result is passed to `.then`, `.catch`, or `.finally`
+  a Promise, or whose result, directly or through a bound local, is passed to
+  `.then`, `.catch`, or `.finally`
 - a class or object value that escapes this file
 
 Silence is not permission to delete `async`.
@@ -94,11 +102,13 @@ async function buildQuery(id: string) {
 - `names` lists local function, method, or binding names to consider. A
   matching `async` function is still silent unless every return is a judged
   SQL shape.
-- `callees` lists calls or tagged templates that count as judged SQL when the
-  function returns them directly, through a conditional or `const` / `let`
-  binding that is not reassigned. A chained call such as
-  `` sql`...`.append(...) `` matches the builder, but the rule stays silent
-  because the returned call is not the configured callee.
+- `callees` lists tagged templates that count as judged SQL when the function
+  returns them directly, through a conditional or `const` / `let` binding that
+  is not reassigned. A call of that name, such as `sql(id)`, is not judged
+  SQL. A chained call such as `` sql`...`.append(...) `` matches the builder,
+  but the rule stays silent because the returned call is not the configured
+  tag. Placeholders must be identifiers, literals, or already judged SQL;
+  `${id.x}` stays silent because it can throw after `async` is removed.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
   name (`import { sql as tag }` matches `sql`). Type-only and default imports
@@ -122,8 +132,10 @@ async function buildQuery(id: string) {
 Removal is suggested only when every one of these is true:
 
 - every return is a string literal, a template literal with no substitutions,
-  or a call or tag of a configured callee, including both branches of a
-  conditional and a `const` / `let` binding that is not reassigned
+  or a tag of a configured callee whose placeholders are identifiers, literals,
+  or already judged SQL, including both branches of a conditional and a
+  `const` / `let` binding that is not reassigned. A call such as `sql(id)` does
+  not qualify
 - the function has no `await`, `for await`, `await using`, or dynamic
   `import()` that it returns
 - the body has no `throw`, `new`, loop, `switch`, `try`, or call other than a
@@ -131,14 +143,21 @@ Removal is suggested only when every one of these is true:
 - it is not an override or interface method required to return a Promise, a
   same-file base class or interface can be checked when one is declared, and
   no same-file subclass declares the same method
-- it has no explicit `Promise<...>` return type, including a same-file alias
-  of `Promise` and `globalThis.Promise`
+- it has no explicit `Promise<...>`, `any`, `unknown`, or `object` return
+  type, including a same-file alias of `Promise` and `globalThis.Promise`
 - it is not passed to a same-file parameter whose type is a function returning
   a Promise
-- callers in this file do not use the result with `.then`, `.catch`, or
-  `.finally`, and do not annotate that result as `Promise<...>`
-- a call that receives the result has a same-file parameter type that is not
-  a Promise and not unresolved; an untyped parameter abstains
+- callers in this file do not use the result, or a local that holds it, with
+  `.then`, `.catch`, or `.finally`, and do not annotate that result as
+  `Promise<...>`, `any`, `unknown`, or `object`
+- a call that receives the result, directly or through a local, has a
+  same-file parameter type that is not a Promise, `any`, `unknown`, `object`,
+  or unresolved; an untyped parameter abstains. A `string` or `number`
+  parameter still allows the report
+- a local that holds the result is only awaited, voided, passed, returned, or
+  copied in ways this file can prove do not need a Promise. Any other use,
+  including `instanceof`, a property, or an alias that later needs the
+  Promise, stays silent
 - the function, its class, and its object are not exported, and those values
   do not escape into an unresolved call
 
@@ -148,7 +167,7 @@ not tell you to keep `async`.
 ## Fix
 
 There is no autofix and no editor suggestion. When the rule reports, delete
-`async` and return the same string or configured SQL call. Callers that only
+`async` and return the same string or configured SQL tag. Callers that only
 `await` the builder can stay unchanged.
 
 Removing `async` runs the body before the caller continues. A throw, a

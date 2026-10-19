@@ -77,19 +77,23 @@ function isThenCall(node) {
   return isThenObject(node);
 }
 
-function bindingResultContract(declarator, context, types) {
+function bindingResultContract(declarator, context, types, seen = new Set()) {
+  if (seen.has(declarator)) return "unknown";
   let result = annotationContract(declarator.id.typeAnnotation, types);
   if (declarationExported(declarator.parent)) result = combine([result, "unknown"]);
   const variable = resolveVariable(declarator.id, context);
   if (!variable || hasLaterWrite(variable)) return combine([result, "unknown"]);
+  // calls.js imports this file. Load it here so each read uses the direct-call
+  // contract: arguments, returns, aliases, and nothing else.
+  const { callResultContract } = require("./postgres-no-async-sql-builder-calls");
+  seen.add(declarator);
+  const results = [result];
   for (const reference of variable.references) {
     if (reference.init) continue;
-    if (isThenObject(reference.identifier)) return "requires";
-    const parent = reference.identifier.parent;
-    if (parent?.type === "MemberExpression" && parent.object === reference.identifier)
-      return combine([result, "unknown"]);
+    results.push(callResultContract(reference.identifier, context, types, seen));
   }
-  return result;
+  seen.delete(declarator);
+  return combine(results);
 }
 
 function returnedPromiseContract(returnStatement, context, types) {

@@ -26,11 +26,24 @@ function isConstantTemplate(node) {
 }
 
 function isConfiguredSqlCall(node, builders, context) {
-  if (node.type !== "CallExpression" && node.type !== "TaggedTemplateExpression") return false;
+  // Callers only pass a call or a tagged template.
   const callee = node.type === "CallExpression" ? node.callee : node.tag;
   return builders.some(
     (builder) => builder.callees.length > 0 && calleeMatches(callee, builder, context),
   );
+}
+
+function isSafePlaceholder(node, builders, context, func, seen) {
+  const current = unwrapExpression(node);
+  if (current.type === "Literal" || isConstantTemplate(current)) return true;
+  if (current.type !== "Identifier") return isJudgedReturn(current, builders, context, func, seen);
+  if (seen.has(current)) return false;
+  const initializer = localInitializer(current, func, context);
+  if (!initializer) return true;
+  seen.add(current);
+  const safe = isSafePlaceholder(initializer, builders, context, func, seen);
+  seen.delete(current);
+  return safe;
 }
 
 function isJudgedReturn(node, builders, context, func, seen) {
@@ -57,7 +70,16 @@ function isJudgedReturn(node, builders, context, func, seen) {
     );
   }
   if (isStringLiteral(current) || isConstantTemplate(current)) return true;
-  if (isConfiguredSqlCall(current, builders, context)) return true;
+  // A call such as sql(id) is not a trusted tag. A placeholder must be an
+  // identifier, a literal, or already judged SQL; id.x throws once async is gone.
+  if (
+    current.type === "TaggedTemplateExpression" &&
+    isConfiguredSqlCall(current, builders, context)
+  ) {
+    return current.quasi.expressions.every((expression) =>
+      isSafePlaceholder(expression, builders, context, func, seen),
+    );
+  }
   if (current.type !== "Identifier" || seen.has(current)) return false;
   const initializer = localInitializer(current, func, context);
   if (!initializer) return false;

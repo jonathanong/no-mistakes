@@ -182,7 +182,8 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         { builders: [{ callees: ["sql"] }] },
       ),
-      ["removeAsync"],
+      // sql("SELECT 1") is a call, not a trusted tag the analyzer judges.
+      [],
     );
     assert.deepEqual(
       ids(
@@ -1200,7 +1201,8 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         { builders: [{ callees: ["sql"] }] },
       ),
-      ["removeAsync"],
+      // A declared callee call is not a judged tag either.
+      [],
     );
     assert.deepEqual(
       ids(`
@@ -1291,6 +1293,310 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return "SELECT 1"; }
         wrap(build());
       `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        function wrap(query: number) { return query; }
+        async function build() { return "SELECT 1"; }
+        wrap(build());
+      `),
+      ["removeAsync"],
+    );
+  });
+
+  it("abstains when a bound result is passed, returned, aliased, or used opaquely", () => {
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(p: Promise<string>) { return p.then(String); }
+          async function build() { return "SELECT 1"; }
+          const p = build();
+          wrap(p);
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(p) { return p.then(String); }
+          async function build() { return "SELECT 1"; }
+          const p = build();
+          wrap(p);
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        function outer() { const p = build(); return p; }
+        outer().then(String);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        const q = p;
+        q.then(String);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        (c ? p : p).then(String);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        const o = { p };
+        o.p.then(String);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        if (p instanceof Promise) read(p);
+      `),
+      [],
+    );
+    // Mutual aliases re-enter the same binding. That cycle is not a proven use.
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = flag ? build() : q;
+        const q = p;
+        await q;
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function wrap(query: string) { return query; }
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        wrap(p);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        const q = p;
+        await q;
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        const p = build();
+        await p;
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return "SELECT 1"; }
+        build().then(String);
+      `),
+      [],
+    );
+  });
+
+  it("abstains for any, unknown, and object, and still reports string", () => {
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(p: any) { return p.then(String); }
+          async function build() { return "SELECT 1"; }
+          wrap(build());
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(p: unknown) { return (p as Promise<string>).then(String); }
+          async function build() { return "SELECT 1"; }
+          wrap(build());
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          function wrap(p: object) { return p.then(String); }
+          async function build() { return "SELECT 1"; }
+          wrap(build());
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          function run2(cb: any) { return cb().then(String); }
+          async function build() { return "SELECT 1"; }
+          run2(build);
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          function run2(cb: () => any) { return cb().then(String); }
+          async function build() { return "SELECT 1"; }
+          run2(build);
+        `,
+        RULE,
+        NAMES,
+        "app.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function wrap(query: string) { return query; }
+        async function build() { return "SELECT 1"; }
+        wrap(build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(): any { return "SELECT 1"; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const query: any = build();
+        async function build() { return "SELECT 1"; }
+        read(query);
+      `),
+      [],
+    );
+  });
+
+  it("abstains when a tag placeholder or callee call is not judged SQL", () => {
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function build(id: any) { return sql\`SELECT \${id.x}\`; }
+          const a = build(null);
+          console.log(1);
+          await a;
+        `,
+        SQL,
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function build() {
+            const left = right;
+            const right = left;
+            return sql\`SELECT \${left}\`;
+          }
+          await build();
+        `,
+        SQL,
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          function sql(id) { return id; }
+          async function build(id) { return sql(id); }
+          read(build("1"));
+        `,
+        { builders: [{ callees: ["sql"] }] },
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function build(id: string) { return sql\`SELECT \${id}\`; }
+          await build("1");
+        `,
+        SQL,
+      ),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function build() { return sql\`SELECT \${"1"}\`; }
+          await build();
+        `,
+        SQL,
+      ),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function build() { return sql\`SELECT \${\`1\`}\`; }
+          await build();
+        `,
+        SQL,
+      ),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          import { sql } from "@example/db";
+          async function build() {
+            const id = "1";
+            return sql\`SELECT \${id}\`;
+          }
+          await build();
+        `,
+        SQL,
+      ),
       ["removeAsync"],
     );
   });
@@ -1435,7 +1741,8 @@ describe("postgres-no-async-sql-builder", () => {
       ids(`async function build() { return query.text(); }\nread(build());`, {
         builders: [{ callees: ["text"] }],
       }),
-      ["removeAsync"],
+      // Member calls are not tagged templates, so the analyzer has not judged them.
+      [],
     );
     assert.deepEqual(
       ids(
