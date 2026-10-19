@@ -1,0 +1,9 @@
+tests:
+  dotnet: {}
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: dependencies
+rules: []

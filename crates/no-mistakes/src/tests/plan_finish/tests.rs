@@ -1,7 +1,7 @@
 use super::grouped_execution_targets;
 use crate::codebase::test_discovery::TestExecutionTarget;
 use crate::tests::{
-    Confidence, PlanIncompleteness, SelectedTest, TestPlan, Warning, DEPENDENCY_BASELINE_MISSING,
+    Confidence, PlanIncompleteness, PlanIncompletenessKind, SelectedTest, TestPlan, Warning,
 };
 
 fn target(runner: &str, project: Option<&str>, base: &[&str]) -> TestExecutionTarget {
@@ -41,7 +41,7 @@ fn finish_marks_missing_dependency_baselines_once_and_keeps_other_warnings() {
     assert_eq!(
         plan.incomplete,
         vec![PlanIncompleteness {
-            kind: DEPENDENCY_BASELINE_MISSING.to_string(),
+            kind: PlanIncompletenessKind::DependencyBaselineMissing,
             files: vec![
                 "package.json".to_string(),
                 "pnpm-lock.yaml".to_string(),
@@ -74,7 +74,7 @@ fn finish_marks_missing_dependency_baselines_once_and_keeps_other_warnings() {
 fn finish_clears_a_stale_incomplete_marker_when_baselines_are_present() {
     let mut plan = TestPlan {
         incomplete: vec![PlanIncompleteness {
-            kind: DEPENDENCY_BASELINE_MISSING.to_string(),
+            kind: PlanIncompletenessKind::DependencyBaselineMissing,
             files: vec!["package.json".to_string()],
         }],
         warnings: vec![warning("package-dependency-untraceable", "package.json")],

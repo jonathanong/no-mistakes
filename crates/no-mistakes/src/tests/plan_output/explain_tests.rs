@@ -137,7 +137,7 @@ fn explain_and_markdown_render_missing_dependency_baselines() {
                 .to_string(),
         ),
         incomplete: vec![crate::tests::PlanIncompleteness {
-            kind: crate::tests::DEPENDENCY_BASELINE_MISSING.to_string(),
+            kind: crate::tests::PlanIncompletenessKind::DependencyBaselineMissing,
             files: vec!["package.json".to_string(), "pnpm-lock.yaml".to_string()],
         }],
         ..Default::default()

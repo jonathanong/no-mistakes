@@ -1,4 +1,4 @@
-use super::{GroupedExecutionTarget, PlanIncompleteness, TestPlan, DEPENDENCY_BASELINE_MISSING};
+use super::{GroupedExecutionTarget, PlanIncompleteness, PlanIncompletenessKind, TestPlan};
 use no_mistakes::codebase::test_discovery::TestExecutionTarget;
 use std::collections::BTreeMap;
 
@@ -27,12 +27,18 @@ impl TestPlan {
     }
 }
 
+/// Missing baselines share one incompleteness kind. `dotnet-dependency-no-baseline`
+/// names different files than package manifests and JavaScript lockfiles, but
+/// the condition is the same, so those paths join this entry instead of a
+/// second kind.
 fn dependency_baseline_incomplete(warnings: &[super::Warning]) -> Vec<PlanIncompleteness> {
     let mut files = std::collections::BTreeSet::new();
     for warning in warnings {
         if matches!(
             warning.r#type.as_str(),
-            "lockfile-no-baseline" | "package-manifest-no-baseline"
+            "lockfile-no-baseline"
+                | "package-manifest-no-baseline"
+                | "dotnet-dependency-no-baseline"
         ) {
             files.insert(warning.file.clone());
         }
@@ -41,7 +47,7 @@ fn dependency_baseline_incomplete(warnings: &[super::Warning]) -> Vec<PlanIncomp
         Vec::new()
     } else {
         vec![PlanIncompleteness {
-            kind: DEPENDENCY_BASELINE_MISSING.to_string(),
+            kind: PlanIncompletenessKind::DependencyBaselineMissing,
             files: files.into_iter().collect(),
         }]
     }
@@ -142,6 +148,10 @@ fn last_arg_selects_test_file(last: &str, test_file: &str) -> bool {
 #[cfg(test)]
 #[path = "plan_finish/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "plan_finish/dotnet_incomplete_tests.rs"]
+mod dotnet_incomplete_tests;
 
 fn regex_escape(value: &str) -> String {
     let mut escaped = String::with_capacity(value.len());

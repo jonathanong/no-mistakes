@@ -30,6 +30,8 @@ pub(crate) mod targets;
 pub(crate) mod why;
 
 mod plan_finish;
+mod plan_incompleteness;
+pub use plan_incompleteness::{PlanIncompleteness, PlanIncompletenessKind};
 
 pub use args::TestsArgs;
 pub(crate) use args::*;
@@ -155,15 +157,6 @@ impl PartialOrd for ResourceCallSite {
         Some(self.cmp(other))
     }
 }
-
-/// One reason a plan's dependency coverage is not complete.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct PlanIncompleteness {
-    pub kind: String,
-    pub files: Vec<String>,
-}
-
-pub(crate) const DEPENDENCY_BASELINE_MISSING: &str = "dependency-baseline-missing";
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Warning {

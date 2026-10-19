@@ -1,5 +1,5 @@
 use crate::test_support::{git_commit_all, git_init, materialize_saved_fixture};
-use crate::tests::{PlanArgs, TestFramework, DEPENDENCY_BASELINE_MISSING};
+use crate::tests::{PlanArgs, PlanIncompletenessKind, TestFramework};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -71,7 +71,7 @@ fn missing_dependency_baseline_is_incomplete_and_does_not_select_the_suite() {
     assert_eq!(
         json["incomplete"],
         serde_json::json!([{
-            "kind": DEPENDENCY_BASELINE_MISSING,
+            "kind": PlanIncompletenessKind::DependencyBaselineMissing.as_str(),
             "files": ["package.json", "pnpm-lock.yaml", "tooling/package.json"]
         }]),
         "{plan:#?}"
