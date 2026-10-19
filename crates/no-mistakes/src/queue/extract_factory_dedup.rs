@@ -3,7 +3,11 @@ use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectPropertyKind};
 
-pub(crate) fn note_self_dedup(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
+pub(crate) fn note_self_dedup(
+    visitor: &mut QueueVisitor<'_>,
+    call: &CallExpression<'_>,
+    recorded: usize,
+) {
     if let Some(expr) = call.arguments.get(2).and_then(Argument::as_expression) {
         if debounce_with_ttl(expr) {
             visitor.facts.checks.push(LocalCheck {
@@ -40,13 +44,7 @@ pub(crate) fn note_self_dedup(visitor: &mut QueueVisitor<'_>, call: &CallExpress
     if !dedup_uses_active_job(expr) {
         return;
     }
-    let line = line_number(visitor.source, call.span.start);
-    if let Some(producer) = visitor
-        .facts
-        .producers
-        .last_mut()
-        .filter(|producer| producer.line == line)
-    {
+    for producer in &mut visitor.facts.producers[recorded..] {
         producer.self_dedup = true;
     }
 }

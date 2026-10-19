@@ -140,7 +140,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                         call,
                     );
                     self.stamp_worker(recorded);
-                    super::extract_factory::note_self_dedup(self, call);
+                    super::extract_factory::note_self_dedup(self, call, recorded);
                 } else if method == "addAndWait" || method == "waitUntilFinished" {
                     super::extract_factory::note_wait(self, call);
                 }

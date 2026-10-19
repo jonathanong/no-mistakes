@@ -43,6 +43,13 @@ fn shared_file_workers_and_other_queue_dedup_are_not_findings() {
         report.check
     );
     assert!(
+        !report.check.iter().any(|finding| {
+            finding.kind == "self-dedup-enqueue" && finding.job.as_deref() == Some("y")
+        }),
+        "a same-line addBulk that records nothing should not mark the previous add, check: {:?}",
+        report.check
+    );
+    assert!(
         report.diagnostics.iter().any(|diagnostic| {
             diagnostic.file.contains("same-queue-dedup")
                 && diagnostic
