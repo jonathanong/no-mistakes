@@ -1,5 +1,5 @@
 use crate::codebase::check_facts::{
-    CheckFactMap, CheckFactPlan, CheckFileFacts, PlaywrightFactPlan,
+    CheckFactMap, CheckFactPlan, CheckFileFacts, PlaywrightFactPlan, SupplementalFactInput,
 };
 use crate::codebase::ts_source::{FileIdMap, SourceStore};
 use std::path::{Path, PathBuf};
@@ -12,9 +12,12 @@ pub(super) fn collect_with_scope(
     mut plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<SourceStore>,
-    precollected: FileIdMap<CheckFileFacts>,
-    supplemental_call_sites: &[PathBuf],
+    supplemental: SupplementalFactInput<'_, FileIdMap<CheckFileFacts>>,
 ) -> CheckFactMap {
+    let SupplementalFactInput {
+        facts: precollected,
+        call_sites: supplemental_call_sites,
+    } = supplemental;
     session.record_work("check.fact_collections", 1);
     let (files, graph_files, graph_files_complete) = file_scope;
     let files = plan.with_production_files(files);
@@ -34,8 +37,10 @@ pub(super) fn collect_with_scope(
             plan,
             playwright,
             sources,
-            precollected,
-            supplemental_call_sites,
+            SupplementalFactInput {
+                facts: precollected,
+                call_sites: supplemental_call_sites,
+            },
         );
     }
     super::super::collect_check_facts_inner(

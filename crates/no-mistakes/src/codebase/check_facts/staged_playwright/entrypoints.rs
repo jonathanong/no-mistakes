@@ -48,12 +48,14 @@ pub(crate) fn collect_precollected_route_facts(
         file_scope,
         plan,
         playwright,
-        super::PrecollectedFacts {
-            ts: precollected.ts,
-            files: FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory())),
-            routes: precollected.routes,
+        super::super::SupplementalFactInput {
+            facts: super::PrecollectedFacts {
+                ts: precollected.ts,
+                files: FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory())),
+                routes: precollected.routes,
+            },
+            call_sites: &[],
         },
         sources,
-        &[],
     )
 }

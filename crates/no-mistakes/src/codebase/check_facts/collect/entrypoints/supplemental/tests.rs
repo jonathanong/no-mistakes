@@ -10,9 +10,9 @@ fn supplemental_call_source_keeps_its_richer_production_import_facts() {
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
     let root = normalize_path(fixture.path());
     let call_source = normalize_path(&root.join("generated/schedules.test.mts"));
-    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(&[
-        call_source.clone(),
-    ]))));
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&call_source),
+    ))));
     let plan = CheckFactPlan {
         production_import_paths: Arc::new([call_source.clone()].into_iter().collect()),
         graph: TsFactPlan {
@@ -55,9 +55,9 @@ fn playwright_only_test_source_keeps_supplemental_call_sites() {
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
     let root = normalize_path(fixture.path());
     let call_source = normalize_path(&root.join("generated/schedules.test.mts"));
-    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(&[
-        call_source.clone(),
-    ]))));
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&call_source),
+    ))));
     let mut playwright = PlaywrightFactPlan::default();
     playwright.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
         path: call_source.clone(),
@@ -98,9 +98,9 @@ fn supplemental_read_failure_remains_addressable_without_widening_scopes() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped");
     let missing = root.join("generated/missing.mts");
-    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(&[
-        missing.clone(),
-    ]))));
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&missing),
+    ))));
     let facts = collect_check_facts_with_supplemental_call_sites(
         &crate::codebase::analysis_session::AnalysisSession::disabled(),
         &root,

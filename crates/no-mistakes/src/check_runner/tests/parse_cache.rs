@@ -117,7 +117,7 @@ fn supplemental_call_sources_share_one_fact_collection_and_graph() {
     assert_eq!(work.get("check.fact_collections"), Some(&1), "{work:#?}");
     assert_eq!(work.get("check.prepare.catalog"), Some(&1), "{work:#?}");
     assert_eq!(work.get("check.prepare.independent"), Some(&1), "{work:#?}");
-    assert!(work.get("graph.builds").is_none(), "{work:#?}");
+    assert!(!work.contains_key("graph.builds"), "{work:#?}");
     assert_eq!(
         work.get("parse.files_after_extract"),
         work.get("parse.files")

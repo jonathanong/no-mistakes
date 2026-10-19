@@ -147,8 +147,10 @@ pub fn collect_check_facts_with_playwright_and_session(
         plan,
         playwright,
         sources,
-        Default::default(),
-        &[],
+        super::super::SupplementalFactInput {
+            facts: Default::default(),
+            call_sites: &[],
+        },
     )
 }
 
@@ -168,7 +170,9 @@ pub(crate) fn collect_check_facts_with_precollected_file_facts(
         plan,
         playwright,
         sources,
-        precollected,
-        &[],
+        super::super::SupplementalFactInput {
+            facts: precollected,
+            call_sites: &[],
+        },
     )
 }

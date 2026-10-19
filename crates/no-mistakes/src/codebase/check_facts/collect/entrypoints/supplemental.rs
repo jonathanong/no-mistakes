@@ -24,8 +24,10 @@ pub fn collect_check_facts_with_supplemental_call_sites(
         plan,
         playwright,
         Arc::clone(&sources),
-        FileIdMap::with_inventory(Arc::clone(sources.inventory())),
-        &supplemental_call_sites,
+        crate::codebase::check_facts::SupplementalFactInput {
+            facts: FileIdMap::with_inventory(Arc::clone(sources.inventory())),
+            call_sites: &supplemental_call_sites,
+        },
     );
     let missing = supplemental_call_sites
         .into_iter()

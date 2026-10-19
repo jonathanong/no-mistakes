@@ -12,9 +12,12 @@ pub(super) fn collect_partitions(
     plan: &mut CheckFactPlan,
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &mut FileIdMap<CheckFileFacts>,
-    supplemental_call_sites: &[std::path::PathBuf],
+    supplemental: super::super::SupplementalFactInput<'_, &mut FileIdMap<CheckFileFacts>>,
 ) {
+    let super::super::SupplementalFactInput {
+        facts,
+        call_sites: supplemental_call_sites,
+    } = supplemental;
     let call_tests = if supplemental_call_sites.is_empty() {
         Vec::new()
     } else {
