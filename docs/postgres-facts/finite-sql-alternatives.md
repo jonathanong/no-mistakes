@@ -11,6 +11,7 @@ request's prepared statement facts for each version.
 Supported alternatives include:
 
 - conditional, `||`, and `??` executor arguments with recoverable outcomes;
+- an untagged `${...}` ternary whose every arm is a literal or a same-file immutable `const` of those literals; an unknown arm or a cap overflow publishes no alternative ([builder versions](builder-versions.md));
 - `.append(...)` and `+=` in straight-line `if` / `else` and `switch` bodies,
   including the path that does not append and supported switch fallthrough;
 - `let` bindings assigned static SQL on different branches;

@@ -40,9 +40,18 @@ fn ternary_literal_clauses_are_sql_alternatives() {
     ];
     for call in &calls[..4] {
         assert!(!call.is_unanalyzable(), "{call:?}");
-        assert!(pair.iter().all(|sql| sql.contains("account_id")));
+        assert!(call
+            .variants
+            .iter()
+            .all(|variant| variant.sql_text.contains("account_id")));
         assert_eq!(sql_of(call), pair, "{call:?}");
     }
+    // `cf` inside the call, not the module `extra` declaration.
+    assert!(
+        calls[3].variants.len() == 2 && calls[3].variants.iter().all(|variant| variant.line == 21),
+        "{:?}",
+        calls[3]
+    );
     assert_eq!(
         sql_of(&calls[4]),
         vec![
@@ -56,16 +65,12 @@ fn ternary_literal_clauses_are_sql_alternatives() {
 #[test]
 fn unknown_arms_abstain_instead_of_dropping_the_arm() {
     let known = "SELECT id FROM orders WHERE account_id = $1 AND id > $2";
-    for call in read_calls("conditional-clause-abstain.ts") {
+    let calls = read_calls("conditional-clause-abstain.ts");
+    assert_eq!(calls.len(), 10);
+    for call in calls {
         assert!(call.is_unanalyzable(), "{call:?}");
         assert!(call.variants.is_empty(), "{call:?}");
         assert_ne!(call.sql_text.as_deref(), Some(known), "{call:?}");
-        assert!(
-            call.variants
-                .iter()
-                .all(|variant| variant.sql_text != known),
-            "{call:?}"
-        );
     }
 }
 

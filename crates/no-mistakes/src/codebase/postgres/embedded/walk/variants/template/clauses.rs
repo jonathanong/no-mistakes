@@ -50,7 +50,7 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
     match expr {
         Expression::StringLiteral(literal) => text(visitor, expr, literal.value.to_string(), line),
         Expression::TemplateLiteral(template) => recover(visitor, template, depth - 1, constraints),
-        Expression::Identifier(ident) => constant(visitor, ident.name.as_str(), constraints),
+        Expression::Identifier(_) => constant(visitor, expr, constraints),
         Expression::ConditionalExpression(branch) => conditional(visitor, branch, depth, constraints),
         _ => None,
     }
@@ -74,15 +74,32 @@ fn conditional(visitor: &ScopeVisitor<'_>, branch: &ConditionalExpression<'_>, d
     binary_alternatives(left, right, id)
 }
 
-fn constant(visitor: &ScopeVisitor<'_>, name: &str, constraints: &[(u64, u32)]) -> Option<Vec<Recovered>> {
+fn constant(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, constraints: &[(u64, u32)]) -> Option<Vec<Recovered>> {
+    let Expression::Identifier(ident) = expr else { return None };
+    let name = ident.name.as_str();
     let binding = visitor.lookup(name)?;
     if binding.builder_identity.is_some() { return None; }
     let variants = binding.variants?;
-    if binding.kind == EmbeddedSqlKind::ImmutableLocal {
+    let values = if binding.kind == EmbeddedSqlKind::ImmutableLocal {
         let sql = binding.sql?;
-        return (variants.len() == 1 && variants[0].sql == sql).then(|| keep(variants, constraints)).flatten();
+        (variants.len() == 1 && variants[0].sql == sql).then(|| keep(variants, constraints)).flatten()?
+    } else {
+        is_union(visitor, name).then(|| keep(variants, constraints)).flatten()?
+    };
+    // One shared declaration must not collapse every caller into one finding.
+    Some(at_reference(visitor, expr, values))
+}
+
+fn at_reference(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, mut values: Vec<Recovered>) -> Vec<Recovered> {
+    let start = expr.span().start;
+    let line = byte_offset_to_line(visitor.source, start as usize);
+    let positions = source_positions::for_expression(expr, visitor.source, start as usize, line);
+    for value in &mut values {
+        value.line = line;
+        value.origins = vec![start; value.sql.len()];
+        value.positions = positions.clone();
     }
-    is_union(visitor, name).then(|| keep(variants, constraints)).flatten()
+    values
 }
 
 fn text(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, sql: String, line: u32) -> Option<Vec<Recovered>> {
