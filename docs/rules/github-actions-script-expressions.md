@@ -147,4 +147,6 @@ in the leading comment block suppresses the file.
 [`github-actions-pinned-hash`](github-actions-pinned-hash.md) pins action code.
 [`github-actions-job-timeouts`](github-actions-job-timeouts.md) and
 [`github-actions-step-timeouts`](github-actions-step-timeouts.md) bound runtime.
-This rule only judges expressions inside script bodies.
+[`github-actions-download-integrity`](github-actions-download-integrity.md)
+flags unverified `curl` and `wget` downloads. This rule only judges expressions
+inside script bodies.

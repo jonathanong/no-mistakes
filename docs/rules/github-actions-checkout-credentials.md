@@ -149,5 +149,7 @@ in the leading comment block suppresses the file.
 
 [`github-actions-pinned-hash`](github-actions-pinned-hash.md) pins action code.
 [`github-actions-script-expressions`](github-actions-script-expressions.md)
-rejects untrusted expressions inside scripts. This rule only judges persisted
+rejects untrusted expressions inside scripts.
+[`github-actions-download-integrity`](github-actions-download-integrity.md)
+flags unverified `curl` and `wget` downloads. This rule only judges persisted
 checkout credentials.
