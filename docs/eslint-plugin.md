@@ -65,9 +65,10 @@ targets set `globalNamePatterns: string[]`. Receiver-shaped targets set
 `calleeNamePatterns` and `receiverPatterns: string[]` (`*` is one dotted
 segment, `**` any prefix). A pattern that starts with `/` is a wrapped regex
 and cannot contain an unescaped `/` (`/^@acme\/http$/` is valid;
-`/^@acme/http$/` and `/abs/**` are rejected). Optional `propertyMatch?: "any" | "all"` defaults
-to `"any"`. Optional per-target `message` or top-level `message` replaces the
-report text. `checkedPathPatterns?: string[]` limits files (empty checks every
+`/^@acme/http$/` and `/abs/**` are rejected). Optional
+`propertyMatch?: "any" | "all"` defaults to `"any"`. Optional per-target
+`message` or top-level `message` replaces the report text.
+`checkedPathPatterns?: string[]` limits files (empty checks every
 file) and `allowedPathPatterns?: string[]` skips matches. Empty `targets`
 disables the rule. A required property whose statically visible value is
 definitely `undefined` does not count. A later spread does not erase an
