@@ -404,11 +404,13 @@ configured `Package.swift`, discovers `.testTarget(...)` targets under
 
 `tests.swift.baseCommands` replaces that `swift test` argv for one declared
 package. The value is an argv array, copied literally: spaces and punctuation
-stay inside one argument, and the planner does not spawn the command. Keys
-must be entries of `tests.swift.packages` (a trailing slash matches the same
-package). An omitted package, or an omitted `baseCommands` map, keeps
-`["swift", "test"]`. Generated `--package-path` and `--filter` arguments stay
-on `runnerArgs`.
+stay inside one argument, and the planner does not spawn the command. An
+element that is only whitespace is empty and is rejected. Unknown keys under
+`tests.swift` are rejected, so a misspelled `baseCommands` cannot silently fall
+back to `swift test`. Keys must be entries of `tests.swift.packages` (a trailing
+slash matches the same package). An omitted package, or an omitted
+`baseCommands` map, keeps `["swift", "test"]`. Generated `--package-path` and
+`--filter` arguments stay on `runnerArgs`.
 
 ```yaml
 tests:

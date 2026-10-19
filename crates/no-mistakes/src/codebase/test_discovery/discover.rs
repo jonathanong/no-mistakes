@@ -175,15 +175,7 @@ fn swift_base<'a>(
     if runner != TestRunner::Swift {
         return None;
     }
-    let package = package?;
-    let commands = &config.tests.swift.base_commands;
-    if let Some(argv) = commands.get(package) {
-        return Some(argv.as_slice());
-    }
-    commands
-        .iter()
-        .find(|(key, _)| key.trim_end_matches('/') == package)
-        .map(|(_, argv)| argv.as_slice())
+    config.tests.swift.base_command_for(package?)
 }
 
 fn to_discovered(

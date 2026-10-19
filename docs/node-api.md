@@ -597,6 +597,10 @@ the generated `--package-path` and `--filter`. Planning does not execute the
 argv. Import `SwiftPackageBaseCommands` for that map instead of indexing a
 target.
 
+`swiftTestTargets(options)` uses `tests.swift.baseCommands` for a declared
+package and `swift test` otherwise. Its `command` keeps the generated
+`--package-path` and anchored `--filter`.
+
 `testsPlan(options)` returns `fallbackTriggered` and `fallbackReason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a

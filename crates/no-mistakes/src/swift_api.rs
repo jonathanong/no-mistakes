@@ -6,13 +6,17 @@
 
 use anyhow::Result;
 use serde::Serialize;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
 use crate::codebase::swift::collect_swift_facts;
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
 use crate::config::v2::load_v2_config_from_visible;
+use crate::config::v2::schema::SwiftConfig;
+
+mod command;
+use command::test_command;
 
 struct TargetInfo {
     target: String,
@@ -25,6 +29,8 @@ pub struct SwiftReport {
     root: PathBuf,
     graph: DepGraph,
     targets: HashMap<PathBuf, TargetInfo>,
+    /// Cloned `tests.swift.baseCommands`. Missing packages stay `swift test`.
+    base_commands: BTreeMap<String, Vec<String>>,
 }
 
 /// One Swift file that imports/references the queried file.
@@ -42,7 +48,8 @@ pub struct TestTargetRow {
     pub target: String,
     /// The SwiftPM package directory, relative to the repo root.
     pub package: String,
-    /// The `swift test` command that runs just this target.
+    /// Command that runs just this target. A declared package uses
+    /// `tests.swift.baseCommands`; otherwise this is `swift test`.
     pub command: String,
 }
 
@@ -115,6 +122,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
         root,
         graph,
         targets,
+        base_commands: config.tests.swift.base_commands.clone(),
     })
 }
 
@@ -158,10 +166,13 @@ impl SwiftReport {
             self.record_test_target(path, &mut seen);
         }
         seen.into_iter()
-            .map(|(target, package)| TestTargetRow {
-                command: test_command(&package, &target),
-                target,
-                package,
+            .map(|(target, package)| {
+                let base = SwiftConfig::base_command_in(&self.base_commands, &package);
+                TestTargetRow {
+                    command: test_command(&package, &target, base),
+                    target,
+                    package,
+                }
             })
             .collect()
     }
@@ -180,38 +191,6 @@ impl SwiftReport {
             .display()
             .to_string()
     }
-}
-
-fn test_command(package: &str, target: &str) -> String {
-    // `swift test --filter` matches a regex against `<target>.<case>`; anchor to
-    // the target prefix and escape it so one target name cannot match another.
-    // Single-quote it so the shell preserves the regex backslashes verbatim.
-    let filter = shell_single_quote(&format!("^{}\\.", regex_escape(target)));
-    if package.is_empty() || package == "." {
-        format!("swift test --filter {filter}")
-    } else {
-        format!(
-            "swift test --package-path {} --filter {filter}",
-            shell_single_quote(package)
-        )
-    }
-}
-
-fn regex_escape(value: &str) -> String {
-    let mut escaped = String::with_capacity(value.len());
-    for ch in value.chars() {
-        if "\\.+*?()|[]{}^$".contains(ch) {
-            escaped.push('\\');
-        }
-        escaped.push(ch);
-    }
-    escaped
-}
-
-/// Wrap a value in single quotes for POSIX shells, escaping embedded quotes so a
-/// package path like `bob's app` stays a single argument.
-fn shell_single_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 #[cfg(test)]

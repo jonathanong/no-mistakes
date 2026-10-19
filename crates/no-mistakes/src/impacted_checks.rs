@@ -203,7 +203,7 @@ fn shell_join(command: &[String]) -> String {
         .join(" ")
 }
 
-fn shell_quote(token: &str) -> String {
+pub(crate) fn shell_quote(token: &str) -> String {
     let safe = !token.is_empty()
         && token.chars().all(|c| {
             c.is_ascii_alphanumeric()

@@ -31,7 +31,7 @@ pub(super) fn validate(swift: &SwiftConfig) -> Result<()> {
             );
         }
         for (index, arg) in argv.iter().enumerate() {
-            if arg.is_empty() {
+            if arg.trim().is_empty() {
                 anyhow::bail!(
                     "tests.swift.baseCommands.{package}[{index}] is empty; each element is one literal argument, not a shell string"
                 );

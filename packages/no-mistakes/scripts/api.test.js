@@ -1128,7 +1128,7 @@ test("Swift package base commands are an exported argv map", () => {
   const barrel = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
   assert.match(declarations, /export interface SwiftPackageBaseCommands \{/);
   assert.match(declarations, /\[packageRoot: string\]: string\[\];/);
-  assert.match(targets, /Swift uses `SwiftPackageBaseCommands` or `\["swift", "test"\]`\./);
+  assert.match(targets, /Swift uses \{@link SwiftPackageBaseCommands\} or `\["swift", "test"\]`\./);
   assert.match(barrel, /export \* from "\.\/swift-command-types";/);
 });
 

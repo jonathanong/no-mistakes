@@ -156,7 +156,7 @@ export interface TestExecutionTarget {
   project?: string | null;
   /** Path-prefix display name, such as a Swift package root. */
   name?: string;
-  /** Swift uses `SwiftPackageBaseCommands` or `["swift", "test"]`. */
+  /** Swift uses {@link SwiftPackageBaseCommands} or `["swift", "test"]`. */
   baseCommand: string[];
   runnerArgs: string[];
 }

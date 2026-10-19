@@ -1,4 +1,5 @@
 use crate::config::v2::load_v2_config;
+use crate::config::v2::schema::SwiftConfig;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -56,4 +57,44 @@ fn trailing_slash_duplicate_is_one_package() {
         .to_string();
     assert!(err.contains("clients/android"));
     assert!(err.contains("more than once"));
+}
+
+#[test]
+fn whitespace_only_argument_is_blank() {
+    let err = load_v2_config(&fixture("swift-base-commands-whitespace"), None)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        err.contains("baseCommands.swift-clients/android[0]"),
+        "{err}"
+    );
+    assert!(err.contains("literal argument"), "{err}");
+}
+
+#[test]
+fn misspelled_base_commands_key_is_rejected() {
+    let err = load_v2_config(&fixture("swift-base-commands-typo"), None).unwrap_err();
+    // CLI prints the anyhow chain (`{error:#}`), which carries the serde cause.
+    let err = format!("{err:#}");
+    assert!(err.contains("unknown field"), "{err}");
+    assert!(err.contains("baseCommands"), "{err}");
+}
+
+#[test]
+fn base_command_for_prefers_exact_key_then_trimmed_key() {
+    let mut cfg = SwiftConfig::default();
+    cfg.base_commands.insert(
+        "clients/android/".to_string(),
+        vec!["host".to_string(), "test".to_string()],
+    );
+    let expected = ["host".to_string(), "test".to_string()];
+    assert_eq!(
+        cfg.base_command_for("clients/android/"),
+        Some(expected.as_slice())
+    );
+    assert_eq!(
+        cfg.base_command_for("clients/android"),
+        Some(expected.as_slice())
+    );
+    assert_eq!(cfg.base_command_for("clients/core"), None);
 }
