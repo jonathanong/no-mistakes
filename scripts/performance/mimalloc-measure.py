@@ -110,6 +110,7 @@ def verify_artifact(binary, variant, source, platform_name):
     provenance = json.loads(provenance_path.read_text())
     target, lto, units = {
         "linux-arm64": ("aarch64-unknown-linux-gnu", "fat", 1),
+        "linux-x64": ("x86_64-unknown-linux-gnu", "fat", 1),
         "macos-arm64": ("aarch64-apple-darwin", "thin", 16),
     }[platform_name]
     expected = {"variant": variant, "source": source, "target": target, "lto": lto,
@@ -139,7 +140,7 @@ def main():
     parser.add_argument("--diagnostics", choices=("on", "off"), required=True)
     parser.add_argument("--pair", type=int, choices=range(4), required=True)
     parser.add_argument("--host-id", required=True)
-    parser.add_argument("--platform", choices=("linux-arm64", "macos-arm64"), required=True)
+    parser.add_argument("--platform", choices=("linux-arm64", "linux-x64", "macos-arm64"), required=True)
     parser.add_argument("--source", required=True)
     parser.add_argument("--system-probe", required=True)
     parser.add_argument("--mimalloc-probe", required=True)

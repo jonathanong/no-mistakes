@@ -106,21 +106,21 @@ class MimallocReportTests(unittest.TestCase):
 
     def test_all_36_native_cells_are_required(self):
         rows = json.loads((FIXTURES / "matrix-complete.json").read_text())
-        summary = REPORT["summarize"](rows)
+        summary = REPORT["summarize"](rows, "hosted")
         self.assertEqual(len(summary), 36)
         self.assertTrue(all(group["valid"] for group in summary))
         with self.assertRaisesRegex(ValueError, "all 36"):
-            REPORT["summarize"](json.loads((FIXTURES / "paired-success.json").read_text()))
+            REPORT["summarize"](json.loads((FIXTURES / "paired-success.json").read_text()), "hosted")
 
     def test_empty_sample_set_fails_closed_before_provenance_checks(self):
         rows = json.loads((FIXTURES / "matrix-empty.json").read_text())
         with self.assertRaisesRegex(ValueError, "no measurement samples"):
-            REPORT["summarize"](rows)
+            REPORT["summarize"](rows, "hosted")
 
     def test_artifact_change_across_cells_is_rejected(self):
         rows = json.loads((FIXTURES / "matrix-wrong-binary.json").read_text())
         with self.assertRaisesRegex(ValueError, "identity changed"):
-            REPORT["summarize"](rows)
+            REPORT["summarize"](rows, "hosted")
 
     def test_mimalloc_environment_must_be_empty_and_identical(self):
         mismatched = self.group("paired-wrong-mimalloc-environment.json")
@@ -150,7 +150,20 @@ class MimallocReportTests(unittest.TestCase):
     def test_workload_tree_drift_between_hosts_is_rejected(self):
         rows = json.loads((FIXTURES / "matrix-wrong-workload.json").read_text())
         with self.assertRaisesRegex(ValueError, "workload commit or tree"):
-            REPORT["summarize"](rows)
+            REPORT["summarize"](rows, "hosted")
+
+    def test_many_core_matrix_accepts_one_platform_with_sixteen_threads(self):
+        rows = json.loads((FIXTURES / "matrix-many-core.json").read_text())
+        summary = REPORT["summarize"](rows, "many-core")
+        self.assertEqual(len(summary), 24)
+        self.assertTrue(all(group["valid"] for group in summary))
+        with self.assertRaises(ValueError):
+            REPORT["summarize"](rows, "hosted")
+
+    def test_many_core_matrix_rejects_max_below_sixteen_threads(self):
+        rows = json.loads((FIXTURES / "matrix-many-core-low-cpu.json").read_text())
+        with self.assertRaisesRegex(ValueError, "automatic_rayon_jobs"):
+            REPORT["summarize"](rows, "many-core")
 
 
 if __name__ == "__main__":

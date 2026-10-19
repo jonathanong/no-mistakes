@@ -43,11 +43,15 @@ report parity. Those cells are not filled in.
 The high-worker matrix is separate and also unmeasured. It needs one many-core
 Linux host and one many-core Apple Silicon Mac, each with at least 16 logical
 CPUs, using the release-equivalent artifacts from the fixed build. Jobs are 1,
-4, 16, and max (`--jobs` omitted). Diagnostics are off and on. Max-jobs rows
-must show `automatic_rayon_jobs` of at least 16. Hosted `ubuntu-22.04-arm` has
-4 vCPUs, so a hosted `jobs=max` cell is not that measurement. The measure
-script accepts `--jobs 16` for this run; that choice is not part of the hosted
-36-cell matrix.
+4, 16, and max (`--jobs` omitted). Diagnostics are off and on. One platform,
+three workloads, and both diagnostics settings are 24 cells. Summarize them
+with `summarize --matrix many-core --platform <platform>`. A `max` row whose
+`automatic_rayon_jobs` is below 16 is rejected. The hosted summary command
+stays `summarize <dir>` and still requires the 36-cell matrix. Hosted
+`ubuntu-22.04-arm` has 4 vCPUs, so a hosted `jobs=max` cell is not that
+measurement. The measure script accepts `--jobs 16` and `--platform linux-x64`
+(`x86_64-unknown-linux-gnu`, fat LTO, one codegen unit) for this run; those
+choices are not part of the hosted 36-cell matrix.
 
 N-API wall time and peak RSS, and build-size deltas for all four release
 targets, are unmeasured.
@@ -57,9 +61,9 @@ targets, are unmeasured.
 The comparison uses the same source revision and lockfile for both variants.
 The system-allocator control disables default features and explicitly retains
 `mermaid-validation`; the candidate uses the default features. Only the
-allocator feature differs. Linux arm64 measured artifacts use release fat LTO
-and one codegen unit. macOS arm64 measured artifacts use thin LTO and 16
-codegen units, matching release builds. The measured cargo invocation builds
+allocator feature differs. Linux arm64 and Linux x64 measured artifacts use
+release fat LTO and one codegen unit. macOS arm64 measured artifacts use thin
+LTO and 16 codegen units, matching release builds. The measured cargo invocation builds
 the library and `no-mistakes` bin only, on `ubuntu-22.04-arm` for Linux, and
 does not set `CARGO_BUILD_JOBS`. It does not build the allocator example, so
 dev-dependency features stay out of the measured CLI and addon.

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Compare complete semantics and aggregate resources within physical host pairs."""
+import argparse
 import hashlib
 import itertools
 import json
 import re
 import runpy
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -16,6 +16,12 @@ HOST_FIELDS = ("host_id", "cwd", "platform", "machine", "cpu_model", "available_
 CELL_FIELDS = ("platform", "workload", "diagnostics", "jobs")
 BUILD_FIELDS = ("source", "lock", "lto", "codegenUnits", "rayon_jobs", "automatic_rayon_jobs",
                 "rayon_environment", "workload_commit", "workload_tree")
+WORKLOADS = ("consumer", "hosted-acceptance", "hosted-passing-failing")
+HOSTED_PLATFORMS = ("linux-arm64", "macos-arm64")
+HOSTED_JOBS = ("1", "4", "max")
+MANY_CORE_JOBS = ("1", "4", "16", "max")
+# Same names verify_artifact accepts, including the x64 release target.
+PLATFORMS = ("linux-arm64", "linux-x64", "macos-arm64")
 # Fixed before any eligible sample. summarize() does not apply these thresholds.
 ADOPTION_RULE = {
     "status": "pre-registered",
@@ -143,7 +149,43 @@ def summarize_group(rows):
     return result
 
 
-def summarize(rows):
+def matrix_cells(matrix, platform):
+    """Return the required (platform, workload, diagnostics, jobs) tuples."""
+    if matrix == "hosted":
+        cells = set(itertools.product(HOSTED_PLATFORMS, WORKLOADS, (False, True), HOSTED_JOBS))
+        return cells, "all 36 native cells"
+    if matrix == "many-core":
+        # One host. Jobs include 16, which the hosted 4-vCPU runners cannot separate from max.
+        cells = set(itertools.product((platform,), WORKLOADS, (False, True), MANY_CORE_JOBS))
+        return cells, "all 24 many-core cells"
+    raise ValueError(f"unknown measurement matrix {matrix!r}")
+
+
+def many_core_platform(rows, platform):
+    found = {row["metadata"].get("platform") for row in rows}
+    if platform is None:
+        if len(found) != 1 or None in found:
+            raise ValueError("many-core matrix requires exactly one platform")
+        return next(iter(found))
+    if platform not in PLATFORMS:
+        raise ValueError(f"unknown platform {platform!r}")
+    return platform
+
+
+def reject_small_many_core_host(rows):
+    # Hosted max can be 4 vCPUs. Many-core max must be a host with at least 16 threads.
+    for row in rows:
+        meta = row["metadata"]
+        if meta.get("jobs") != "max":
+            continue
+        automatic = meta.get("automatic_rayon_jobs")
+        if type(automatic) is not int or automatic < 16:
+            raise ValueError("many-core max jobs require automatic_rayon_jobs of at least 16")
+
+
+def summarize(rows, matrix, platform=None):
+    if matrix not in ("hosted", "many-core"):
+        raise ValueError(f"unknown measurement matrix {matrix!r}")
     rows = list(rows)
     if not rows:
         raise ValueError("no measurement samples were produced")
@@ -158,11 +200,13 @@ def summarize(rows):
         locks.add(json.dumps(row["metadata"].get("lock"), sort_keys=True))
         workloads[row["metadata"]["workload"]].add((row["metadata"].get("workload_commit"),
                                                    row["metadata"].get("workload_tree")))
-    expected = set(itertools.product(("linux-arm64", "macos-arm64"),
-                                    ("consumer", "hosted-acceptance", "hosted-passing-failing"),
-                                    (False, True), ("1", "4", "max")))
+    if matrix == "many-core":
+        platform = many_core_platform(rows, platform)
+    expected, label = matrix_cells(matrix, platform)
     if set(groups) != expected:
-        raise ValueError(f"expected all 36 native cells; missing={expected - set(groups)}, extra={set(groups) - expected}")
+        raise ValueError(f"expected {label}; missing={expected - set(groups)}, extra={set(groups) - expected}")
+    if matrix == "many-core":
+        reject_small_many_core_host(rows)
     if any(len(hashes) != 1 or None in hashes for hashes in identities.values()):
         raise ValueError("executable identity changed across native cells")
     if len(sources) != 1 or None in sources or len(locks) != 1 or "null" in locks:
@@ -174,11 +218,17 @@ def summarize(rows):
 
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] != "summarize":
-        raise SystemExit("usage: mimalloc-report.py summarize MEASUREMENTS_DIR")
-    root = Path(sys.argv[2])
+    parser = argparse.ArgumentParser(prog="mimalloc-report.py")
+    parser.add_argument("command", choices=("summarize",))
+    parser.add_argument("--matrix", choices=("hosted", "many-core"), default="hosted")
+    parser.add_argument("--platform", choices=PLATFORMS)
+    parser.add_argument("directory")
+    args = parser.parse_args()
+    if args.matrix == "many-core" and args.platform is None:
+        parser.error("--platform is required for the many-core matrix")
+    root = Path(args.directory)
     paths = sorted(path for path in root.rglob("*.json") if path.name != "summary.json")
-    summary = summarize(read_run(path) for path in paths)
+    summary = summarize((read_run(path) for path in paths), args.matrix, platform=args.platform)
     (root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary, indent=2))
     if not all(group["valid"] for group in summary):
