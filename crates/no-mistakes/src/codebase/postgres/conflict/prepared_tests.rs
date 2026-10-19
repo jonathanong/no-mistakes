@@ -2,7 +2,8 @@ use super::prepared::{reliable_chunk_tokens, reliable_conflicts, ConflictChunks}
 use super::SqlConflictTarget;
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
 use crate::codebase::postgres::statements::extract_sql_variant_statement_facts;
-use sqlparser::tokenizer::{Span, Token, TokenWithSpan};
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::tokenizer::{Span, Token, TokenWithSpan, Tokenizer};
 use std::sync::Arc;
 
 const FAILED_TARGETLESS: &str =
@@ -141,4 +142,20 @@ fn statements_without_chunk_tokens_are_not_orphan_chunks() {
         crate::codebase::postgres::parse::orphan_chunk_tokens(std::slice::from_ref(&located))
             .is_empty()
     );
+}
+
+/// sqlparser stores the unescaped value. Rendering must put the quotes back.
+#[test]
+fn quoted_tokens_round_trip_through_render_chunk() {
+    for sql in ["'it''s'", "N'a''b'", r"E'a\'b'", r"E'a\\b'", r#""we""ird""#] {
+        let tokens = tokenize(sql);
+        let rendered = super::prepared::render_chunk(&tokens);
+        assert_eq!(tokenize(&rendered), tokens, "{sql} -> {rendered}");
+    }
+}
+
+fn tokenize(sql: &str) -> Vec<TokenWithSpan> {
+    Tokenizer::new(&PostgreSqlDialect {}, sql)
+        .tokenize_with_location()
+        .expect("tokenize")
 }

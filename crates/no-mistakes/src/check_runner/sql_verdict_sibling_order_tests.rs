@@ -38,6 +38,8 @@ fn sibling_order_keeps_each_conflict_on_its_own_chunk() {
             ("src/exact.ts", 5, Some("targetless-arbiter")),
             ("src/exact.ts", 6, Some("targetless-arbiter")),
             ("src/query.ts", 5, Some("targetless-arbiter")),
+            ("src/quoted.ts", 7, Some("targetless-arbiter")),
+            ("src/quoted.ts", 12, Some("targetless-arbiter")),
         ];
         if let Some(target) = unanalyzable {
             expected.extend([
@@ -95,5 +97,16 @@ fn sibling_order_keeps_each_conflict_on_its_own_chunk() {
             assert_eq!(exact.status, SqlVerdictStatus::Violation, "{config} {nth}");
             assert!(exact.residual_reasons.is_empty(), "{config} {nth}");
         }
+        let quoted = verdict("src/quoted.ts", 0);
+        assert_eq!(quoted.status, SqlVerdictStatus::Violation, "{config}");
+        assert!(quoted.residual_reasons.is_empty(), "{config}");
+        assert_eq!(
+            verdict("src/quoted.ts", 1).status,
+            SqlVerdictStatus::ProvenClear,
+            "{config}"
+        );
+        let escaped = verdict("src/quoted.ts", 2);
+        assert_eq!(escaped.status, SqlVerdictStatus::Violation, "{config}");
+        assert!(escaped.residual_reasons.is_empty(), "{config}");
     }
 }

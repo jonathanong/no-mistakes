@@ -1,8 +1,11 @@
 //! Project conflict metadata from the AST owned by the shared statement pass.
 use super::{collect::collect_statement, raw::raw_conflicts, SqlConflictInsertFact};
 use sqlparser::ast::Statement;
-use sqlparser::tokenizer::{Token, TokenWithSpan};
+use sqlparser::tokenizer::TokenWithSpan;
 use std::sync::Arc;
+
+mod render;
+pub(super) use render::render_chunk;
 
 pub(in crate::codebase::postgres) fn analyze_parsed(
     sql: &str,
@@ -122,18 +125,6 @@ pub(in crate::codebase::postgres) fn reliable_chunk_tokens(
         .collect::<Vec<_>>();
     let orphans = orphan_text.iter().map(String::as_str).collect::<Vec<_>>();
     reliable_conflicts(statements, binds, chunks.complete, &rendered, &orphans)
-}
-
-fn render_chunk(tokens: &[TokenWithSpan]) -> String {
-    let mut text = String::new();
-    for token in tokens {
-        if matches!(token.token, Token::EOF) {
-            continue;
-        }
-        use std::fmt::Write;
-        let _ = write!(text, "{token}");
-    }
-    text
 }
 
 /// Missing chunk text does not fall back to the whole variant. An incomplete

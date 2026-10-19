@@ -55,7 +55,8 @@ RETURNING (`, still reports `unanalyzable-sql` under `fail` and nothing under
 `ignore` (`src/broken.ts`).
 
 A failing targeted conflict chunk before a complete multi-row targetless insert
-(`src/before.ts`) reports `targetless-arbiter` in both modes. `fail` also
+(`src/before.ts`) reports `targetless-arbiter` in both modes. The previous
+result was `unanalyzable-sql` in fail and nothing in ignore. `fail` also
 reports `unanalyzable-sql` for the chunk that did not parse. It does not
 report `missing-canonical-order`. A failing targetless chunk before a
 compliant upsert reports only `unanalyzable-sql` under `fail`, and nothing
