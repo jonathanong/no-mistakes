@@ -16,7 +16,7 @@ pub(crate) use placeholders::{
     count_placeholders, publish_placeholders_with_positions, renumber_placeholders,
     INTERNAL_PLACEHOLDER,
 };
-mod relative;
+pub(crate) mod relative;
 mod unproven;
 pub(crate) use unproven::retain_unproven_spans;
 mod scoped_bindings;
@@ -34,8 +34,6 @@ pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
-#[cfg(test)]
-pub(crate) use relative::{PendingRelativeCall, RelativeScopedCandidate};
 /// Parse `source` and extract executor SQL call sites.
 pub fn extract_embedded_sql_from_source(
     path: &Path,

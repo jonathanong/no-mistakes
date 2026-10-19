@@ -219,7 +219,7 @@ fn unproven_member_queries_without_relative_candidates_use_the_warning_line() {
 
 #[test]
 fn missing_source_keeps_an_unsuppressed_relative_member() {
-    use crate::codebase::postgres::{
+    use crate::codebase::postgres::embedded::relative::{
         PendingRelativeCall, PendingRelativeScope, RelativeScopedCandidate,
     };
     let path = PathBuf::from("/tmp/missing-unproven.ts");

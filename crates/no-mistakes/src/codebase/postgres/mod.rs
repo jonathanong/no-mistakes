@@ -7,7 +7,7 @@ mod catalog;
 mod collect;
 mod conflict;
 pub mod dml;
-mod embedded;
+pub(crate) mod embedded;
 mod function_calls;
 pub use function_calls::{SqlFunctionCallFact, SqlFunctionClause};
 pub(crate) mod idents;
@@ -82,8 +82,6 @@ pub(crate) use embedded::{
 pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
 };
-#[cfg(test)]
-pub(crate) use embedded::{PendingRelativeCall, PendingRelativeScope, RelativeScopedCandidate};
 pub use executed_source::{
     extract_executed_postgres_sql, extract_executed_postgres_sql_with_imports,
     ExecutedPostgresResolvedImport, ExecutedPostgresSource, ExecutedPostgresSql,
