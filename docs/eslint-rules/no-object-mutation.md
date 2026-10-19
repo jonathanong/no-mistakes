@@ -39,6 +39,11 @@ function write(box) {
 A conditional escape counts: `if (cond) sink(box); box.a = 1` is still a write
 after the object may have escaped.
 
+`p || b`, `p ?? b`, and `c ? p : b` keep both sides. Binding that join and
+passing the name out, including inside an array or object, releases `b`, so a
+later `b.a = 1` is reported. `c && {}` does not: the left side is the result
+only when it is falsy, and a falsy value is not the mutated object.
+
 ## Allowed
 
 ```ts

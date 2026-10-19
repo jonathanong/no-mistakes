@@ -94,13 +94,16 @@ function assignPattern(state, pattern, tag, scope) {
     }
     return;
   }
-  if (pattern.type !== "ArrayPattern") {
-    return;
-  }
-  for (const element of pattern.elements) {
-    if (element) {
-      assignPattern(state, element, elementTag(tag), scope);
+  if (pattern.type === "ArrayPattern") {
+    for (const element of pattern.elements) {
+      if (element === null) {
+        continue;
+      } else {
+        assignPattern(state, element, elementTag(tag), scope);
+      }
     }
+  } else {
+    return;
   }
 }
 
@@ -148,14 +151,17 @@ function bindPattern(state, pattern, tag, scope, kind) {
     }
     return;
   }
-  if (pattern.type !== "ArrayPattern") {
-    return;
-  }
-  for (const element of pattern.elements) {
-    if (element) {
-      const next = kind === "param" ? shared("parameter") : elementTag(tag);
-      bindPattern(state, element, next, scope, kind);
+  if (pattern.type === "ArrayPattern") {
+    for (const element of pattern.elements) {
+      if (element === null) {
+        continue;
+      } else {
+        const next = kind === "param" ? shared("parameter") : elementTag(tag);
+        bindPattern(state, element, next, scope, kind);
+      }
     }
+  } else {
+    return;
   }
 }
 

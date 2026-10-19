@@ -103,8 +103,9 @@ function visitIdentifier(state, node, scope, role) {
   captureOuter(scope, tag);
   if (tag) {
     return tag;
+  } else {
+    return unknown();
   }
-  return unknown();
 }
 
 function escapeExport(state, local, scope) {

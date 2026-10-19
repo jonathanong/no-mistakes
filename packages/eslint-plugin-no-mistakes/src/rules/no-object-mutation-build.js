@@ -96,7 +96,10 @@ function walkChildren(state, node, scope) {
     const value = node[key];
     if (Array.isArray(value)) {
       for (const childNode of value) {
-        if (childNode && typeof childNode.type === "string") {
+        if (!childNode) {
+          continue;
+        }
+        if (typeof childNode.type === "string") {
           api.visit(state, childNode, scope, "read");
         }
       }

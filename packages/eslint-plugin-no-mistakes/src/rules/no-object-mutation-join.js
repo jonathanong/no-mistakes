@@ -25,9 +25,10 @@ function unionOf(left, right) {
   return { type: "union", members };
 }
 
-// Shared wins over a fresh, null, or unknown side so the join stays reportable.
-// Two fresh or function tags stay a union: escaping it releases both, and a
-// write reports only when a member is already shared or escaped.
+// A shared side stays paired with the other side. Escaping the join then
+// releases a fresh or function member, and a write still reports the shared
+// one. Same-origin shared tags collapse. Two fresh or function tags stay a
+// union for the same reason.
 function joinValues(left, right) {
   if (left === right) {
     return left;
@@ -38,14 +39,17 @@ function joinValues(left, right) {
   if (isBlank(right)) {
     return left;
   }
-  if (left.type === "shared" && right.type === "shared") {
-    return left.origin === right.origin ? left : unionOf(left, right);
-  }
   if (left.type === "shared") {
-    return left;
+    if (right.type === "shared") {
+      if (left.origin === right.origin) {
+        return left;
+      }
+      return unionOf(left, right);
+    }
+    return unionOf(left, right);
   }
   if (right.type === "shared") {
-    return right;
+    return unionOf(left, right);
   }
   if (left.type === "this" && right.type === "this") {
     return left.inClass ? left : right;

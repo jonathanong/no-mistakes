@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, it } from "vitest";
 import { memberKey, mutationCall, staticKey } from "../src/rules/no-object-mutation-syntax.js";
-import { __dirname, lint, messages, plugin } from "./helpers.mjs";
+import { __dirname, lint, messages, plugin, require as loadCjs } from "./helpers.mjs";
 
 const RULE = "no-object-mutation";
 
@@ -710,6 +710,177 @@ describe("no-object-mutation", () => {
         }
       `),
       [],
+    );
+  });
+
+  it("releases the other side after a shared join is bound and escapes", () => {
+    assert.deepEqual(
+      ids(`
+        function orJoin(p, sink) {
+          const b = {};
+          const x = p || b;
+          sink(x);
+          b.a = 1;
+        }
+        function ternaryJoin(c, p, sink) {
+          const b = {};
+          const x = c ? p : b;
+          sink(x);
+          b.a = 1;
+        }
+        const mod = {};
+        function nullishJoin(sink) {
+          const b = {};
+          const x = mod ?? b;
+          sink(x);
+          b.a = 1;
+        }
+        function arrayJoin(c, p, sink) {
+          const b = {};
+          const x = c ? b : p;
+          sink([x]);
+          b.a = 1;
+        }
+        function objectJoin(c, p, sink) {
+          const b = {};
+          const x = c ? b : p;
+          sink({ k: x });
+          b.a = 1;
+        }
+        function closureJoin(c, p, sink) {
+          const b = {};
+          const g = () => {
+            b.a = 1;
+          };
+          const x = c ? p : g;
+          sink(x);
+          return b;
+        }
+        function direct(p, sink) {
+          const b = {};
+          sink(p || b);
+          b.a = 1;
+        }
+      `),
+      repeated(7),
+    );
+  });
+
+  it("does not treat the left operand of && as the mutated object", () => {
+    assert.deepEqual(
+      ids(`
+        function fromFlag(c) {
+          const o = c && {};
+          if (o) o.a = 1;
+          return o;
+        }
+        function fromProperty(p) {
+          const o = p.flag && {};
+          if (o) o.a = 1;
+          return o;
+        }
+        let slot;
+        function rightStillEscapes(c) {
+          const b = {};
+          slot = c && b;
+          b.a = 1;
+        }
+      `),
+      ["mutation"],
+    );
+  });
+
+  it("keeps an unescaped fresh join quiet", () => {
+    assert.deepEqual(
+      ids(`
+        function beforeReturn(c) {
+          const b1 = {};
+          const b2 = {};
+          let x = c ? b1 : b2;
+          b1.a = 1;
+          b2.b = 1;
+          x.c = 1;
+          return x;
+        }
+        function otherJoin(c, sink) {
+          const b1 = {};
+          const b2 = {};
+          const kept = {};
+          const x = c ? b1 : b2;
+          const y = c ? kept : kept;
+          sink(y);
+          b1.a = 1;
+          x.a = 1;
+        }
+        function eachIteration(c) {
+          for (let i = 0; i < 2; i += 1) {
+            const b = {};
+            const x = c ? b : {};
+            x.a = 1;
+          }
+        }
+        function localBuilder(extra) {
+          const b = { ...extra };
+          b.a = 1;
+          return { ...b };
+        }
+        class Box {
+          write() {
+            this.a = 1;
+          }
+        }
+        function freshOrNull(c) {
+          const o = c ? {} : null;
+          if (o) o.a = 1;
+          return o;
+        }
+        function localMap(c) {
+          const o = c ?? new Map();
+          o.set(1, 2);
+          return o;
+        }
+        function calledLocally(c) {
+          const b = {};
+          const left = () => {
+            b.a = 1;
+          };
+          const right = () => {
+            b.b = 1;
+          };
+          const fn = c ? left : right;
+          fn();
+          return b;
+        }
+      `),
+      [],
+    );
+  });
+
+  it("walks typed assignment targets and empty child slots", () => {
+    const { bindPattern } = loadCjs("../src/rules/no-object-mutation-bind.js");
+    const { walkChildren } = loadCjs("../src/rules/no-object-mutation-build.js");
+    const { callable, readMember } = loadCjs("../src/rules/no-object-mutation-values.js");
+    bindPattern(null, { type: "Literal" }, null, null, "local");
+    walkChildren(
+      {},
+      { type: "List", items: [null, { type: 1 }, { type: "Literal", value: 1 }] },
+      {},
+    );
+    readMember({ type: "box", escaped: false, dynamic: null }, null);
+    callable({ type: "shared", fn: { type: "fn" } });
+    callable({ type: "shared", fn: { type: "box" } });
+    callable({ type: "shared" });
+    assert.deepEqual(
+      ids(`
+        function cast(rows, name) {
+          (rows as T) = {};
+          (rows satisfies T) = {};
+          rows! = {};
+          rows[\`\${name}\`] = 1;
+          rows.a = 1;
+        }
+      `),
+      repeated(2),
     );
   });
 

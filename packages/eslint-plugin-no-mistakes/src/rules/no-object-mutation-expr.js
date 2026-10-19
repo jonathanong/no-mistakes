@@ -71,6 +71,11 @@ function visitExpression(state, node, scope, role) {
       api.visit(state, node.right, scope, "read");
       return unknown();
     case "LogicalExpression":
+      // && yields the left only when that side is falsy, so it cannot be the object.
+      if (node.operator === "&&") {
+        api.visit(state, node.left, scope, "read");
+        return api.visit(state, node.right, scope, role);
+      }
       return joinValues(
         api.visit(state, node.left, scope, role),
         api.visit(state, node.right, scope, role),

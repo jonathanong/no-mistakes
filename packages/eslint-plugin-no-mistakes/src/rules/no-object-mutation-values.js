@@ -103,8 +103,12 @@ function callable(tag) {
   if (tag.type === "fn") {
     return tag;
   }
-  if (tag.fn && tag.fn.type === "fn") {
-    return tag.fn;
+  const nested = tag.fn;
+  if (nested) {
+    if (nested.type === "fn") {
+      return nested;
+    }
+    return null;
   }
   return null;
 }
