@@ -26,5 +26,8 @@ pub(in crate::codebase::postgres::embedded::walk) fn bind_query_property(
         {
             binding.executor_alias = Some(true);
         }
+        if visitor.capture_is_uncertain(init) {
+            visitor.mark_uncertain_query_capture(local.name.as_str());
+        }
     }
 }

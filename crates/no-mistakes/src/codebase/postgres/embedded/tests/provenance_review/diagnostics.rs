@@ -69,6 +69,7 @@ fn unproven_sql_looking_member_is_counted_without_making_a_verdict() {
         )
     });
     assert!(facts.calls.is_empty());
+    assert_eq!(facts.unproven_member_query_sql, 4);
     assert_eq!(
         observer
             .snapshot()
@@ -78,6 +79,16 @@ fn unproven_sql_looking_member_is_counted_without_making_a_verdict() {
         Some(4),
         "SQL-looking queries, including WITH and DDL, count; HTTP object query does not"
     );
+}
+
+#[test]
+fn unproven_sql_looking_member_is_counted_without_a_verbose_observer() {
+    let facts = extract_embedded_sql_from_source(
+        &fixture("review-unproven-sql.ts"),
+        &read_fixture("review-unproven-sql.ts"),
+        &scoped_options(),
+    );
+    assert_eq!(facts.unproven_member_query_sql, 4);
 }
 
 #[test]

@@ -19,6 +19,10 @@ fn stdout(out: &Output) -> String {
     String::from_utf8_lossy(&out.stdout).into_owned()
 }
 
+fn stderr(out: &Output) -> String {
+    String::from_utf8_lossy(&out.stderr).into_owned()
+}
+
 fn check_json(root: &PathBuf) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
@@ -60,6 +64,24 @@ fn postgres_required_predicates_passes_suppressed_sql() {
     let root = fixture("postgres-required-predicates", "pass-suppressed");
     let out = check_json(&root);
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_required_predicates_flags_escaped_receiver_as_unanalyzable() {
+    let root = fixture("postgres-required-predicates", "escaped-receiver");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    let err = stderr(&out);
+    assert!(!out.status.success(), "{body}\n{err}");
+    assert!(body.contains("unanalyzable"), "{body}");
+    assert!(
+        !body.contains("weren't proven"),
+        "the warning stays off JSON stdout: {body}"
+    );
+    assert!(
+        err.contains("warning: 1 member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md"),
+        "{err}"
+    );
 }
 
 #[test]

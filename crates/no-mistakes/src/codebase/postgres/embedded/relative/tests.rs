@@ -53,6 +53,7 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         matched_factory_names: Vec::new(),
         matched_type_names: Vec::new(),
         pending_relative: pending,
+        unproven_member_query_sql: 0,
     }
 }
 

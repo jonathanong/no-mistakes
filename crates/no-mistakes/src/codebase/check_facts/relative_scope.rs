@@ -30,6 +30,7 @@ pub(super) fn project_relative_executor_scopes(
         .into_iter()
         .any(|(_, file)| !file.query_annotation.is_empty());
     if !has_relative_candidates(files) && !annotation && !imported_sql::has_candidates(files) {
+        emit_unproven_member_query_warning(files);
         return;
     }
     let tsconfig = tsconfig_for(session, root, sources);
@@ -108,6 +109,21 @@ pub(super) fn project_relative_executor_scopes(
                 );
             });
         }
+    }
+    emit_unproven_member_query_warning(files);
+}
+
+fn emit_unproven_member_query_warning(files: &FileIdMap<CheckFileFacts>) {
+    let mut count = 0u32;
+    for (_, facts) in files.into_iter() {
+        for (_, embedded) in &facts.embedded_sql {
+            count = count.saturating_add(embedded.unproven_member_query_sql);
+        }
+    }
+    if count > 0 {
+        crate::diagnostics::print_stderr(format_args!(
+            "warning: {count} member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md"
+        ));
     }
 }
 

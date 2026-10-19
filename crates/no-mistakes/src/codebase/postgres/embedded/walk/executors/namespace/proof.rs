@@ -5,17 +5,30 @@ use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
 use std::collections::HashSet;
 
 fn uncertain(call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
-    call.origins.iter().any(|origin| {
-        let escaped = |origin| {
-            proof.escapes.get(origin).is_some_and(|escapes| {
-                escapes.iter().any(|escape| {
-                    escape.event < call.event || escape.owner != call.owner || escape.in_loop
-                })
-            })
-        };
-        escaped(origin)
-            || matches!(origin, Origin::Export(module, _) if escaped(&Origin::Module(module.clone())))
-    })
+    call.origins
+        .iter()
+        .any(|origin| escape_blocks(origin, call, proof))
+}
+
+fn escape_blocks(origin: &Origin, call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
+    let direct = proof
+        .escapes
+        .get(origin)
+        .is_some_and(|escapes| escapes.iter().any(|escape| blocks(escape, call, origin)));
+    direct
+        || matches!(origin, Origin::Export(module, _)
+            if escape_blocks(&Origin::Module(module.clone()), call, proof))
+}
+
+fn blocks(escape: &super::Escape, call: &MemberCall, origin: &Origin) -> bool {
+    let ordered = escape.event < call.event || escape.owner != call.owner || escape.in_loop;
+    if !ordered {
+        return false;
+    }
+    match origin {
+        Origin::Export(_, _) => escape.mutates_member,
+        Origin::Binding(_, _) | Origin::Module(_) => true,
+    }
 }
 
 fn downgrade(call: &mut EmbeddedSqlCall) {
@@ -27,6 +40,39 @@ fn downgrade(call: &mut EmbeddedSqlCall) {
 }
 
 impl ScopeVisitor<'_> {
+    pub(in crate::codebase::postgres::embedded::walk) fn capture_is_uncertain(
+        &self,
+        receiver: &oxc_ast::ast::Expression<'_>,
+    ) -> bool {
+        let origins = self.receiver_origins(receiver);
+        if origins.is_empty() {
+            return false;
+        }
+        let owner = self
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        let call = MemberCall {
+            sequence: 0,
+            span: (0, 0),
+            origins,
+            owner,
+            event: self.member_query_proof.next_event,
+            sql_looking: false,
+        };
+        uncertain(&call, &self.member_query_proof)
+    }
+
+    pub(in crate::codebase::postgres::embedded::walk) fn downgrade_latest_confirmed_call(
+        &mut self,
+    ) {
+        if let Some(call) = self.calls.last_mut() {
+            downgrade(call);
+        }
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn downgrade_escaped_member_calls(&mut self) {
         let blocked = self
             .member_query_proof

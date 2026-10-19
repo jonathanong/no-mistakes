@@ -18,7 +18,7 @@ pub(crate) fn project_relative_scoped_facts(
     }
     let pending = std::mem::take(&mut facts.pending_relative);
     let Some(root) = package_root else {
-        diagnostic::count_unproven(&pending, &[]);
+        add_unproven(facts, diagnostic::count_unproven(&pending, &[]));
         return;
     };
     let mut kept = vec![false; pending.candidates.len()];
@@ -48,7 +48,7 @@ pub(crate) fn project_relative_scoped_facts(
         sort_dedup(&mut facts.matched_factory_names);
         sort_dedup(&mut facts.matched_type_names);
     }
-    diagnostic::count_unproven(&pending, &kept);
+    add_unproven(facts, diagnostic::count_unproven(&pending, &kept));
     let promoted = pending
         .calls
         .into_iter()
@@ -73,6 +73,10 @@ pub(crate) fn project_relative_scoped_facts(
         &pending.confirmed_order,
         promoted,
     );
+}
+
+fn add_unproven(facts: &mut EmbeddedSqlFileFacts, count: u32) {
+    facts.unproven_member_query_sql = facts.unproven_member_query_sql.saturating_add(count);
 }
 
 fn kept_owner(kept: &[bool], owners: &[u32]) -> bool {

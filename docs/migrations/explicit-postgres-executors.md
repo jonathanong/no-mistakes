@@ -108,11 +108,29 @@ establish a configured executor parameter.
 Use a locally bound configured factory result or an explicitly typed
 `TxExecutor` parameter where possible.
 
-Escaping a proven receiver can change its `.query` property. Subsequent calls
-on that receiver remain executor sites but are unanalyzable; configure
-`unanalyzableSql` to choose their policy. With `--verbose-timings`, the
-`postgres.unproven_member_query_sql` work counter records SQL-looking
-unproven `.query` calls outside confirmed executor sites. Review that count
+Escaping a proven receiver can change its `.query` property. Those calls stay
+executor sites but are unanalyzable when the escape is in another function or
+in a loop, including calls that appear earlier in the file. A later escape in
+the same function, outside a loop, does not reach backward. Passing a
+module-level imported binding to a helper does not downgrade its calls: the
+import binding is immutable, and only a write or delete of `.query` shows that
+export's members changed. Passing the module object itself still can.
+`const { query } = ns` captures that function: an escape already in effect at
+the binding downgrades later calls through the local, and an escape after the
+binding does not rewrite them. A live alias such as `const db = ns` still uses
+call-time ordering. Configure `unanalyzableSql` to choose the policy for
+unanalyzable sites.
+
+`check` prints one stderr line when SQL-looking `.query` calls were not proven
+to be executors:
+
+```text
+warning: N member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md
+```
+
+The line is the whole invocation, not a per-site list, and it is omitted when
+N is 0. JSON output does not include it. With `--verbose-timings`, the same
+count is also the `postgres.unproven_member_query_sql` work counter. Review it
 when migrating provider or callback APIs.
 
 Neither option counts as executor selection: a rule configured with only these

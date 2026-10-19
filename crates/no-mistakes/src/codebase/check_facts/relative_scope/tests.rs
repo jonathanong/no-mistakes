@@ -136,6 +136,7 @@ fn files_without_relative_candidates_are_left_untouched() {
                     matched_factory_names: Vec::new(),
                     matched_type_names: Vec::new(),
                     pending_relative: Default::default(),
+                    unproven_member_query_sql: 0,
                 },
             )],
             ..CheckFileFacts::default()
@@ -152,6 +153,54 @@ fn files_without_relative_candidates_are_left_untouched() {
     let stored = &files.get(&path).expect("file").embedded_sql[0].1;
     assert_eq!(stored.calls.len(), 1);
     assert!(stored.pending_relative.candidates.is_empty());
+}
+
+#[test]
+fn unproven_member_queries_warn_without_relative_candidates() {
+    let path = PathBuf::from("/tmp/unproven.ts");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+    let mut files = FileIdMap::with_inventory(Arc::clone(&inventory));
+    files.insert(
+        path.clone(),
+        CheckFileFacts {
+            embedded_sql: vec![(
+                options(),
+                EmbeddedSqlFileFacts {
+                    path: path.clone(),
+                    executor_bindings: Vec::new(),
+                    calls: Vec::new(),
+                    call_spans: Vec::new(),
+                    exported_helpers: Default::default(),
+                    exported_programs: Default::default(),
+                    pending_imported: Vec::new(),
+                    imported_call_lines: Default::default(),
+                    source_comment_spans: Vec::new(),
+                    fragments: Vec::new(),
+                    fragment_variants: Vec::new(),
+                    fragment_sites: Vec::new(),
+                    matched_factory_names: Vec::new(),
+                    matched_type_names: Vec::new(),
+                    pending_relative: Default::default(),
+                    unproven_member_query_sql: 2,
+                },
+            )],
+            ..CheckFileFacts::default()
+        },
+    );
+    let sources = SourceStore::new(inventory);
+    project_relative_executor_scopes(
+        &AnalysisSession::disabled(),
+        Path::new("/tmp"),
+        &sources,
+        None,
+        &mut files,
+    );
+    assert_eq!(
+        files.get(&path).expect("file").embedded_sql[0]
+            .1
+            .unproven_member_query_sql,
+        2
+    );
 }
 
 #[test]

@@ -75,12 +75,12 @@ impl<'a> ScopeVisitor<'a> {
             ast::MemberExpression::StaticMemberExpression(value)
                 if value.property.name == "query" =>
             {
-                self.revoke_query_receiver(&value.object);
+                self.revoke_mutated_query_member(&value.object);
             }
             ast::MemberExpression::ComputedMemberExpression(value)
                 if query_key::may_write_query(&value.expression) =>
             {
-                self.revoke_query_receiver(&value.object);
+                self.revoke_mutated_query_member(&value.object);
             }
             _ => {}
         }

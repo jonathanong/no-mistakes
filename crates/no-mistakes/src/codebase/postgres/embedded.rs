@@ -103,6 +103,7 @@ pub fn extract_embedded_sql_from_program(
             confirmed_order: std::mem::take(&mut collected.confirmed_order),
             call_spans: collected.pending_spans,
         },
+        unproven_member_query_sql: collected.unproven_member_query_sql,
     }
 }
 
