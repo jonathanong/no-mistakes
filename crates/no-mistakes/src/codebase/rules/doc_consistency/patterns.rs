@@ -58,16 +58,40 @@ fn compile_one(index: usize, pattern: &BannedPattern) -> Result<CompiledPattern>
     })
 }
 
-/// `find_iter` is leftmost-first, so an alternative that matches "" hides a
-/// later alternative at that position. Reject that at config load.
-fn pattern_can_match_empty(pattern: &str) -> bool {
-    regex_syntax::parse(pattern).is_ok_and(|hir| hir.properties().minimum_len() == Some(0))
+/// An empty match is never reported. A branch that matches "" also hides a
+/// later alternative at that position, because `find_iter` is leftmost-first.
+fn empty_match_hint(pattern: &str) -> Option<&'static str> {
+    let hir = regex_syntax::parse(pattern).ok()?;
+    if hir.properties().minimum_len() != Some(0) {
+        return None;
+    }
+    if alternation_hides_later_branch(&hir) {
+        Some(
+            "so that branch hides later alternatives; use `+` instead of `*` or drop the empty branch",
+        )
+    } else {
+        Some(
+            "and empty matches are never reported; require at least one character (e.g. `+` instead of `*`, drop a trailing `?`, anchor with a literal)",
+        )
+    }
+}
+
+fn alternation_hides_later_branch(hir: &regex_syntax::hir::Hir) -> bool {
+    let kind = hir.kind();
+    let hides = matches!(
+        kind,
+        regex_syntax::hir::HirKind::Alternation(branches)
+            if branches
+                .iter()
+                .any(|branch| branch.properties().minimum_len() == Some(0))
+    );
+    hides || kind.subs().iter().any(alternation_hides_later_branch)
 }
 
 fn compile_pattern(index: usize, pattern: &str) -> Result<Regex> {
-    if pattern_can_match_empty(pattern) {
+    if let Some(hint) = empty_match_hint(pattern) {
         bail!(
-            "doc-consistency bannedPatterns[{index}].pattern `{pattern}` can match the empty string, so that branch hides later alternatives; use `+` instead of `*` or drop the empty branch"
+            "doc-consistency bannedPatterns[{index}].pattern `{pattern}` can match the empty string, {hint}"
         );
     }
     RegexBuilder::new(pattern)

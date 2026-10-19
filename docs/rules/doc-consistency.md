@@ -24,9 +24,13 @@ empty or omitted `bannedPatterns` list does no pattern work.
 Each `bannedPatterns` entry requires `files`, `pattern`, and `message`. There
 is no default message. `files` lists at least one non-empty glob. `pattern` is
 a Rust regex and is not trimmed. It must not be able to match the empty string.
-`a*`, `a?`, `(a|)?`, `(|b)`, `(?m)^`, and `a*|QQ` fail configuration. The error
-echoes the pattern, says that empty-matching branch hides later alternatives,
-and tells you to use `+` instead of `*` or drop the empty branch. A pattern
+An empty match is never reported, and a leading empty alternative hides a
+later one, so `a*`, `a?`, `(a|)?`, `(|b)`, `(?m)^`, and `a*|QQ` fail
+configuration before any file is read. The error echoes the pattern. An empty
+alternative, such as `(|b)` or `a*|QQ`, says that branch hides later
+alternatives and tells you to use `+` instead of `*` or drop the empty branch.
+A pattern with no alternative, such as `a*`, `a?`, or `(?m)^`, says empty
+matches are never reported and to require at least one character. A pattern
 that cannot match empty, such as `a+` or `PIN-[0-9]{3}`, is unchanged. `message`
 is reported verbatim after trimming and must not be empty. Invalid globs, empty
 fields, empty-matching patterns, patterns over the explicit regex size limit,

@@ -293,10 +293,21 @@ fn empty_matching_patterns_fail_at_config_load() {
             message.contains(&format!("`{pattern}`")),
             "{name}: {message}"
         );
-        assert!(
+        let hides_alternative = matches!(
+            name,
+            "optional-group" | "empty-alt" | "star-or-qq" | "qq-or-star"
+        );
+        assert_eq!(
             message.contains("hides later alternatives"),
+            hides_alternative,
             "{name}: {message}"
         );
+        if !hides_alternative {
+            assert!(
+                message.contains("empty matches are never reported"),
+                "{name}: {message}"
+            );
+        }
     }
     let later = pattern_config_error("later-index");
     assert!(later.contains("bannedPatterns[1]"), "{later}");
@@ -317,7 +328,7 @@ fn non_empty_patterns_still_compile() {
 }
 
 #[test]
-fn oversized_patterns_report_pattern_too_large() {
+fn oversized_patterns_report_compiled_size_limit() {
     let message = pattern_config_error("too-big");
     assert!(message.contains("`(a{1000}){1000}`"), "{message}");
     assert!(message.contains("10 MiB compiled-size limit"), "{message}");
