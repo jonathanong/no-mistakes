@@ -119,6 +119,8 @@ fn language_producer(
             binding: String::new(),
             job: Some(identity),
             raw_job: Some(job.to_string()),
+            worker_index: None,
+            self_dedup: false,
         },
         queue: Some(queue_key(root, cluster)),
     }

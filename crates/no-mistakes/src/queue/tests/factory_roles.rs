@@ -81,6 +81,8 @@ fn cycle_walk_visits_a_queue_that_does_not_enqueue() {
             binding: "leaf".to_string(),
             job: Some("ping".to_string()),
             raw_job: None,
+            worker_index: Some(0),
+            self_dedup: false,
         },
         queue: Some(crate::queue::types::QueueKey {
             queue_file: queues.clone(),

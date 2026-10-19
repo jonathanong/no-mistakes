@@ -1,5 +1,6 @@
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
+use crate::queue::types::{Diagnostic, Severity};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -8,37 +9,32 @@ pub(super) fn queue_cycles(
     producers: &[InternalProducer],
     workers: &[InternalWorker],
 ) -> Vec<CheckFinding> {
-    let mut workers_by_file: HashMap<&Path, Vec<&InternalWorker>> = HashMap::new();
-    for worker in workers {
-        workers_by_file
-            .entry(worker.site.file.as_path())
-            .or_default()
-            .push(worker);
-    }
+    let workers_by_index = workers_by_file_index(workers);
     let mut outgoing: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     let mut origin: HashMap<String, (PathBuf, usize)> = HashMap::new();
     for producer in producers {
         let Some(target) = &producer.queue else {
             continue;
         };
-        let Some(handlers) = workers_by_file.get(producer.site.file.as_path()) else {
+        let Some(index) = producer.site.worker_index else {
             continue;
         };
-        for worker in handlers {
-            let Some(source) = &worker.queue else {
-                continue;
-            };
-            if source.queue_name == target.queue_name {
-                continue;
-            }
-            outgoing
-                .entry(source.queue_name.clone())
-                .or_default()
-                .insert(target.queue_name.clone());
-            origin
-                .entry(source.queue_name.clone())
-                .or_insert_with(|| (worker.site.file.clone(), worker.site.line));
+        let Some(worker) = workers_by_index.get(&(producer.site.file.as_path(), index)) else {
+            continue;
+        };
+        let Some(source) = &worker.queue else {
+            continue;
+        };
+        if source.queue_name == target.queue_name {
+            continue;
         }
+        outgoing
+            .entry(source.queue_name.clone())
+            .or_default()
+            .insert(target.queue_name.clone());
+        origin
+            .entry(source.queue_name.clone())
+            .or_insert_with(|| (worker.site.file.clone(), worker.site.line));
     }
     let mut seen = BTreeSet::new();
     let mut findings = Vec::new();
@@ -69,6 +65,62 @@ pub(super) fn queue_cycles(
             }
         })
         .collect()
+}
+
+pub(super) fn self_dedup_findings(
+    root: &Path,
+    producers: &[InternalProducer],
+    workers: &[InternalWorker],
+) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
+    let workers_by_index = workers_by_file_index(workers);
+    let mut checks = Vec::new();
+    let mut diagnostics = Vec::new();
+    for producer in producers {
+        if !producer.site.self_dedup {
+            continue;
+        }
+        let worker = producer.site.worker_index.and_then(|index| {
+            workers_by_index
+                .get(&(producer.site.file.as_path(), index))
+                .copied()
+        });
+        let queues = (
+            worker.and_then(|worker| worker.queue.as_ref()),
+            producer.queue.as_ref(),
+        );
+        if let (Some(source), Some(target)) = queues {
+            if source.queue_name == target.queue_name {
+                checks.push(CheckFinding {
+                    kind: "self-dedup-enqueue".to_string(),
+                    file: relative_string(root, &producer.site.file),
+                    line: producer.site.line,
+                    queue_file: Some(relative_string(root, &source.queue_file)),
+                    queue_name: Some(source.queue_name.clone()),
+                    job: producer.site.job.clone(),
+                    message: "enqueue of the active job reuses its deduplication id or job id, so the queue drops the add while that job is active".to_string(),
+                });
+            }
+            continue;
+        }
+        diagnostics.push(Diagnostic {
+            severity: Severity::Warning,
+            file: relative_string(root, &producer.site.file),
+            line: producer.site.line,
+            message: "self-dedup enqueue was not judged because the worker queue or the target queue did not resolve".to_string(),
+        });
+    }
+    (checks, diagnostics)
+}
+
+fn workers_by_file_index(workers: &[InternalWorker]) -> HashMap<(&Path, usize), &InternalWorker> {
+    let mut counts: HashMap<&Path, usize> = HashMap::new();
+    let mut out = HashMap::new();
+    for worker in workers {
+        let index = counts.entry(worker.site.file.as_path()).or_default();
+        out.insert((worker.site.file.as_path(), *index), worker);
+        *index += 1;
+    }
+    out
 }
 
 fn walk(

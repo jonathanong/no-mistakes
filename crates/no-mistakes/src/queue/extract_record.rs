@@ -27,6 +27,8 @@ pub(super) fn record_enqueue(
                 .first()
                 .and_then(|arg| arg.as_expression())
                 .and_then(|expr| literal_expr(expr, consts)),
+            worker_index: None,
+            self_dedup: false,
         });
         return;
     }
@@ -76,6 +78,8 @@ pub(super) fn record_flow(
         binding,
         raw_job,
         job,
+        worker_index: None,
+        self_dedup: false,
     });
 }
 
@@ -97,6 +101,8 @@ fn record_bulk_items(
                     binding: binding.to_string(),
                     raw_job: Some(span(source, property.value.span())),
                     job: literal_expr(&property.value, consts),
+                    worker_index: None,
+                    self_dedup: false,
                 });
             }
         }

@@ -156,8 +156,11 @@ pub(super) fn identifier_arg(arg: &Argument<'_>) -> Option<String> {
 
 #[path = "extract_factory_calls.rs"]
 mod calls;
+#[path = "extract_factory_dedup.rs"]
+mod dedup;
 #[path = "extract_factory_walk.rs"]
 mod job_scope;
 
-pub(super) use calls::{note_factory_call, note_self_dedup, note_wait};
+pub(super) use calls::{note_factory_call, note_wait};
+pub(super) use dedup::note_self_dedup;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};
