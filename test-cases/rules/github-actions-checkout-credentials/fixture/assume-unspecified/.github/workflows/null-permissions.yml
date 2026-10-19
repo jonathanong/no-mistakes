@@ -1,0 +1,9 @@
+# A present null permissions value stays unknown. The option only covers a missing key.
+name: null-permissions
+on: push
+permissions:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

@@ -1,0 +1,8 @@
+# workflow_call with no permissions key. The option assumes the caller can pass write.
+name: callable
+on: workflow_call
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

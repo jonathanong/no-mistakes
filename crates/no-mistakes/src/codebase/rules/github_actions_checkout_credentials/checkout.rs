@@ -17,7 +17,7 @@ enum Persist {
     Unknown,
 }
 
-pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
+pub(super) fn check_source(rel: &str, source: &str, assume_unspecified: bool) -> Vec<RuleFinding> {
     let Some(action) = gha_kind(rel) else {
         return Vec::new();
     };
@@ -31,7 +31,7 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
     let Ok(value) = serde_yaml::from_str::<Value>(source) else {
         return Vec::new();
     };
-    let checkouts = workflow_checkouts(&value);
+    let checkouts = workflow_checkouts(&value, assume_unspecified);
     if checkouts.iter().all(|checkout| checkout.reason.is_none()) {
         return Vec::new();
     }
@@ -56,7 +56,7 @@ fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
         .unwrap_or(1)
 }
 
-fn workflow_checkouts(value: &Value) -> Vec<Checkout> {
+fn workflow_checkouts(value: &Value, assume_unspecified: bool) -> Vec<Checkout> {
     let Some(doc) = value.as_mapping() else {
         return Vec::new();
     };
@@ -71,7 +71,7 @@ fn workflow_checkouts(value: &Value) -> Vec<Checkout> {
             continue;
         };
         let job_name = scalar_name(job_id);
-        let proof = job_proof(job, workflow_permissions, callable);
+        let proof = job_proof(job, workflow_permissions, callable, assume_unspecified);
         collect_steps(job, &job_name, &proof, &mut checkouts);
     }
     checkouts
