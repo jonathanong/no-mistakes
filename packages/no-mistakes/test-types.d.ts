@@ -148,15 +148,6 @@ export interface SelectedTest {
   targets?: TestExecutionTarget[];
 }
 
-/**
- * Literal per-package Swift runner argv from `tests.swift.baseCommands`.
- * Keys are declared `tests.swift.packages` paths. Omitted packages use
- * `["swift", "test"]`.
- */
-export interface SwiftPackageBaseCommands {
-  [packageRoot: string]: string[];
-}
-
 export interface TestExecutionTarget {
   runner: TestPlanFramework;
   config?: string | null;
