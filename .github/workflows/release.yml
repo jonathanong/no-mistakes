@@ -56,7 +56,7 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
@@ -69,7 +69,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           install: false
 
@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload prepared source
         timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-source
           path: ${{ runner.temp }}/release-source.tgz
@@ -195,7 +195,7 @@ jobs:
 
       - name: Download prepared source
         timeout-minutes: 5
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-source
           path: prepared-release
@@ -222,7 +222,7 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
           components: clippy, rustfmt
@@ -236,7 +236,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           install: false
 
@@ -402,7 +402,7 @@ jobs:
     steps:
       - name: Download prepared source
         timeout-minutes: 5
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-source
           path: prepared-release
@@ -420,7 +420,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           install: false
 
@@ -546,7 +546,7 @@ jobs:
 
       - name: Download prepared source
         timeout-minutes: 5
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-source
           path: prepared-release
@@ -557,7 +557,7 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
           targets: ${{ matrix.target }}
@@ -644,7 +644,7 @@ jobs:
 
       - name: Upload CLI artifact
         timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-cli-${{ matrix.target }}
           path: release-assets/*
@@ -677,7 +677,7 @@ jobs:
 
       - name: Upload N-API artifact
         timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-napi-${{ matrix.target }}
           path: no-mistakes-napi-*.node
@@ -712,7 +712,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           install: false
 
@@ -726,7 +726,7 @@ jobs:
 
       - name: Download CLI release assets
         timeout-minutes: 5
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: release-cli-*
           path: dist
@@ -734,7 +734,7 @@ jobs:
 
       - name: Download N-API release assets
         timeout-minutes: 5
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: release-napi-*
           path: dist
@@ -829,7 +829,7 @@ jobs:
 
       - name: Install Rust
         timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
@@ -933,7 +933,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           install: false
 
@@ -997,7 +997,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           install: false
 
