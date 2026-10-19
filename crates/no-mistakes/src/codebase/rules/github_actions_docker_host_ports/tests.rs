@@ -122,8 +122,14 @@ fn kinds_and_missing_sources_are_skipped() {
     assert!(check(WORKFLOW, "jobs: [\n").is_empty());
     let sources = crate::codebase::rules::source_store_for_files(&[]);
     let root = Path::new("/missing");
-    assert!(super::check_file(Path::new("README.md"), root, &sources).is_empty());
-    assert!(super::check_file(Path::new(WORKFLOW), root, &sources).is_empty());
+    let findings = super::super::github_actions_workflow_files::scan_files(
+        root,
+        &[PathBuf::from("README.md"), PathBuf::from(WORKFLOW)],
+        &sources,
+        &|_, _| panic!("a missing source is not judged"),
+    )
+    .unwrap();
+    assert!(findings.is_empty());
 }
 
 #[test]
@@ -314,4 +320,20 @@ fn suppression_directives_hide_file_line_and_next_line() {
     let line = text.lines().nth(compact.line - 1).unwrap();
     assert!(line.contains("docker run -p 5432:5432"), "{line}");
     assert!(!line.trim_start().starts_with("echo"), "{line}");
+}
+
+#[test]
+fn shell_quotes_substitutions_and_joins_stay_one_command() {
+    let script = "echo 'a\nb' \"c\\\nd\" \"e\\f\" \"g`h\ni`\" \"j$(k\n(l))\"\ncurl \\\n  -p 5432:5432 # note\ntrue && echo x; echo y || echo z\necho `m\nn` $(o)\necho \\x \"unterminated";
+    let commands = super::shell::commands(script);
+    assert!(commands.len() > 3);
+    assert!(commands.iter().any(|command| command.dynamic));
+    let texts: Vec<_> = commands
+        .iter()
+        .flat_map(|command| command.words.iter().map(|word| word.text.as_str()))
+        .collect();
+    assert!(texts.iter().any(|text| text.contains('b')), "{texts:?}");
+    assert!(texts.iter().any(|text| text.contains('f')), "{texts:?}");
+    assert!(texts.contains(&"5432:5432"), "{texts:?}");
+    assert!(texts.contains(&"x"), "{texts:?}");
 }

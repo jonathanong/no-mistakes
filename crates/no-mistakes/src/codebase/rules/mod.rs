@@ -22,6 +22,7 @@ pub mod github_actions_pinned_hash;
 pub mod github_actions_script_expressions;
 pub mod github_actions_step_timeouts;
 pub mod github_actions_test_timeout_literals;
+mod github_actions_workflow_files;
 mod ids;
 pub mod integration_test_no_mocks;
 mod lexical_mask;
