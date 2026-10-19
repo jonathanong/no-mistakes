@@ -120,6 +120,14 @@ fn reassigned_parameter_includes_the_live_binding() {
 }
 
 #[test]
+fn logical_reassignment_includes_the_nullish_fallback() {
+    let (graph, root) = graph();
+    assert_unknown(&graph, &root, "logical-reassign", "replica.get");
+    assert_export(&graph, &root, "logical-reassign", "primary.get");
+    assert_export(&graph, &root, "logical-reassign", "unrelated.get");
+}
+
+#[test]
 fn object_assign_spread_source_is_a_provider() {
     let (graph, root) = graph();
     assert_unknown(&graph, &root, "object-assign-spread", "replica.get");
