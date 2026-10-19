@@ -7,6 +7,7 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.note_instance_class(declarator);
         if let Some(init) = &declarator.init {
             self.record_callable_initializer(declarator, immutable, init);
             let value = if self
@@ -136,8 +137,9 @@ impl ImportCollector {
             return;
         }
         self.record_replacement_call(call);
+        self.note_escaped_call(call);
         let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
-        self.record_object_assign_providers(&callee, &arguments, call.span.end);
+        self.record_object_assign_providers(&callee, &arguments, &call.arguments, call.span.end);
         self.value_flow.calls.push(ValueCall {
             context: self.current_function_id(),
             offset: call.span.start,

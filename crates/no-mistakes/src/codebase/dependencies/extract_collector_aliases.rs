@@ -158,6 +158,12 @@ impl ImportCollector {
             .map(|depth| (depth, self.lexical_scope_ids[depth]))
         else {
             if self.collect_value_flow
+                && binding_name == "arguments"
+                && self.project_arguments_member(offset, path, completed_at)
+            {
+                return;
+            }
+            if self.collect_value_flow
                 && (self.imported_bindings.contains(binding_name)
                     || self.predeclared_imported_bindings.contains(binding_name))
             {

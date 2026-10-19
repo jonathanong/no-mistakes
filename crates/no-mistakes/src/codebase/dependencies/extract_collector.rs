@@ -50,6 +50,7 @@ struct ImportCollector {
     unreachable_value_binding_after: Option<u32>,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     parameter_call_origins: Option<std::sync::Arc<extract_value_flow::parameter_call_origins::ParameterCallOrigins>>,
+    receiver_escapes: extract_value_flow::receiver_escapes::Side,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
     receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,

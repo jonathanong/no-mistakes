@@ -7,6 +7,7 @@ impl ImportCollector {
         &mut self,
         callee: &ValueExpression,
         arguments: &[ValueExpression],
+        raw: &[oxc_ast::ast::Argument<'_>],
         completed: u32,
     ) {
         let ValueExpression::Member(base, method) = callee else {
@@ -17,9 +18,10 @@ impl ImportCollector {
         {
             return;
         }
-        let Some((target, sources)) = arguments.split_first() else {
+        let Some(target) = arguments.first() else {
             return;
         };
+        let sources = super::receiver_escapes::assign_sources(self, arguments, raw);
         let mut destinations: Vec<nested::ReceiverWrite> = Vec::new();
         nested::write_receiver_references(target, &[], &[], &mut destinations);
         for ((key, prefix), reads, read) in destinations {
@@ -28,7 +30,7 @@ impl ImportCollector {
             let component = self
                 .prior_member_mutations
                 .assigned_destination_component(&key);
-            for source in sources {
+            for source in &sources {
                 // Unknown/source aliases are kept as possible prefix values;
                 // literal fields can also participate in ordinary member reads.
                 let fields = match source {
@@ -44,6 +46,7 @@ impl ImportCollector {
                     if let Some(member) = member {
                         path.push(Some(member));
                         acquired.push(Some((completed, self.current_function_id())));
+                        super::receiver_escapes::copied_member(self, &key, &path, completed);
                     }
                     let mut parent_identities =
                         self.assignment_rhs_parent_identities(&key, &path, &acquired, version);

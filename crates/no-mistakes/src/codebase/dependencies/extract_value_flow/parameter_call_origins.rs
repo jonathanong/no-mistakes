@@ -19,26 +19,6 @@ impl ParameterCallOrigins {
         }
         let mut values: FxHashMap<(usize, String), Vec<ValueExpression>> = fx_map();
         for call in &collector.value_flow.calls {
-            if let ValueExpression::Member(receiver, method) = &call.callee {
-                if method == "forEach" {
-                    if let (ValueExpression::Array(items), Some(callback)) =
-                        (receiver.as_ref(), call.arguments.first())
-                    {
-                        if let Some(parameters) =
-                            callable_owner(collector, callback).and_then(|owner| slots.get(&owner))
-                        {
-                            if let Some(key) = parameters.get(&0) {
-                                let mut entries: Vec<_> = items.iter().collect();
-                                entries.sort_by(|left, right| left.0.cmp(right.0));
-                                values
-                                    .entry(key.clone())
-                                    .or_default()
-                                    .extend(entries.into_iter().map(|(_, value)| value.clone()));
-                            }
-                        }
-                    }
-                }
-            }
             let Some(parameters) =
                 callable_owner(collector, &call.callee).and_then(|owner| slots.get(&owner))
             else {
@@ -63,6 +43,7 @@ impl ParameterCallOrigins {
                     .push(parameter.default.clone());
             }
         }
+        super::receiver_escapes::absorb(collector, &slots, &mut values);
         Self { values }
     }
 
@@ -82,7 +63,10 @@ impl ImportCollector {
     }
 }
 
-fn callable_owner(collector: &ImportCollector, callee: &ValueExpression) -> Option<CallableId> {
+pub(super) fn callable_owner(
+    collector: &ImportCollector,
+    callee: &ValueExpression,
+) -> Option<CallableId> {
     match callee {
         ValueExpression::Callable(id) => Some(*id),
         ValueExpression::Named { name, scope, .. } => {

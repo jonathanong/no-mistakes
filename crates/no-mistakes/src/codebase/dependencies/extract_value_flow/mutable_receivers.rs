@@ -31,6 +31,7 @@ impl ImportCollector {
         &mut self,
         assignment: &AssignmentExpression<'_>,
     ) {
+        self.note_parameter_reassignment(assignment);
         if self.receiver_only_bindings.is_none() {
             return;
         }
