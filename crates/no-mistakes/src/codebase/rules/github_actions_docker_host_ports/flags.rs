@@ -1,6 +1,6 @@
 pub(super) fn short_kind(ch: char) -> Option<bool> {
     match ch {
-        'd' | 'i' | 't' | 'P' => Some(false),
+        'd' | 'i' | 'q' | 't' | 'P' => Some(false),
         'a' | 'c' | 'e' | 'h' | 'l' | 'm' | 'p' | 'u' | 'v' | 'w' => Some(true),
         _ => None,
     }

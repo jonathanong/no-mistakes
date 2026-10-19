@@ -57,7 +57,7 @@ rules:
 
 ## Valid example
 
-Let Docker choose the host port, or pass the host port in from the environment.
+Let Docker choose the host port.
 
 ```yaml
 jobs:
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: docker run -p 127.0.0.1::5432 postgres
-      - run: docker run -p "$PORT:5432" postgres
+      - run: docker run -p 0:5432 postgres
 ```
 
 A container port alone also asks Docker to allocate the host port:
@@ -92,10 +92,11 @@ Publish with a Docker-allocated host port:
       - run: docker run -p 127.0.0.1::5432 postgres
 ```
 
-`::5432` and a container port alone are the same fix. A variable host port
-(`$PORT:5432`, `${PORT}:5432`, `${{ env.PORT }}:5432`) is the fix when the
-port has to be chosen outside the script. The same rewrite applies to
-`--publish` and to composite `runs.steps`.
+`::5432`, `0:5432`, and a container port alone are the same fix. A variable
+host port (`$PORT:5432`, `${PORT}:5432`, `${{ env.PORT }}:5432`) is not judged:
+the rule cannot tell whether the variable holds a fixed port. The same rewrite
+applies to `--publish`, `docker create`, and composite `runs.steps`. Literal
+`ports:` on a job `services:` entry or `container:` are judged the same way.
 
 ## Suppression
 
@@ -118,5 +119,6 @@ that step line, so `no-mistakes-disable-next-line` above the step applies.
 [`github-actions-script-expressions`](github-actions-script-expressions.md)
 rejects untrusted expressions inside `run` scripts.
 [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
-flags a checkout that persists a write token. This rule only judges literal
-host ports on `docker run` publish mappings.
+flags a checkout that persists a write token. This rule judges literal host
+ports on `docker run` and `docker create` publish mappings, and on job
+`services:` and `container:` `ports:`.

@@ -29,10 +29,14 @@ fn docker_hits(words: &[Word]) -> Option<Vec<Hit>> {
         return Some(Vec::new());
     }
     index += 1;
+    index = lead::skip_globals(words, index);
     if words.get(index).map(|word| word.text.as_str()) == Some("container") {
         index += 1;
     }
-    if words.get(index).map(|word| word.text.as_str()) != Some("run") {
+    if !matches!(
+        words.get(index).map(|word| word.text.as_str()),
+        Some("run" | "create")
+    ) {
         return Some(Vec::new());
     }
     index += 1;
