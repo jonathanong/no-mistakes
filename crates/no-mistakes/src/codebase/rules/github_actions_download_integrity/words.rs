@@ -9,6 +9,7 @@ pub(super) struct Command {
 }
 
 mod heredoc;
+mod scan;
 
 pub(super) struct Parse {
     pub(super) commands: Vec<Command>,
@@ -20,109 +21,7 @@ pub(super) fn commands(script: &str) -> Vec<Command> {
 }
 
 pub(super) fn parse(script: &str) -> Parse {
-    let mut commands = Vec::new();
-    let mut current = Command {
-        dynamic: false,
-        words: Vec::new(),
-    };
-    let mut word = String::new();
-    let mut word_line = 1usize;
-    let mut quoting = None;
-    let mut line = 1usize;
-    let mut pending: Option<heredoc::Opener> = None;
-    let mut unterminated = false;
-    let chars: Vec<char> = script.chars().collect();
-    let mut index = 0;
-    while index < chars.len() {
-        let ch = chars[index];
-        if quoting.is_none() && ch == '\\' && chars.get(index + 1) == Some(&'\n') {
-            index += 2;
-            line += 1;
-            continue;
-        }
-        if let Some(quote) = quoting {
-            if ch == quote {
-                quoting = None;
-            } else {
-                push_char(&mut word, &mut word_line, line, ch);
-                if ch == '\n' {
-                    line += 1;
-                }
-            }
-            index += 1;
-            continue;
-        }
-        if ch == '\'' || ch == '"' {
-            quoting = Some(ch);
-            index += 1;
-            continue;
-        }
-        if ch == '`' {
-            current.dynamic = true;
-        }
-        if ch == '$' && matches!(chars.get(index + 1), Some(&'(' | &'{')) {
-            current.dynamic = true;
-            if word.is_empty() {
-                word_line = line;
-            }
-            index = take_expansion(&chars, index, &mut word, &mut line);
-            continue;
-        }
-        match heredoc::look(&chars, index) {
-            Some(heredoc::Look::Herestring { index: next }) => {
-                flush_word(&mut word, &mut current, word_line);
-                index = next;
-                continue;
-            }
-            Some(heredoc::Look::Document {
-                index: next,
-                opener,
-            }) => {
-                flush_word(&mut word, &mut current, word_line);
-                flush_command(&mut current, &mut commands);
-                pending = Some(opener);
-                index = next;
-                continue;
-            }
-            None => {}
-        }
-        if ch == '\n' || ch == ';' || ch == '|' || (ch == '&' && chars.get(index + 1) == Some(&'&'))
-        {
-            flush_word(&mut word, &mut current, word_line);
-            flush_command(&mut current, &mut commands);
-            if ch == '\n' {
-                if let Some(opener) = pending.take() {
-                    let body = heredoc::skip_body(&chars, index, line, &opener);
-                    index = body.index;
-                    line = body.line;
-                    if !body.terminated {
-                        unterminated = true;
-                        break;
-                    }
-                    continue;
-                }
-                line += 1;
-            }
-            if ch == '&' || (ch == '|' && chars.get(index + 1) == Some(&'|')) {
-                index += 1;
-            }
-            index += 1;
-            continue;
-        }
-        if ch.is_whitespace() || ch == '<' || ch == '>' {
-            flush_word(&mut word, &mut current, word_line);
-            index += 1;
-            continue;
-        }
-        push_char(&mut word, &mut word_line, line, ch);
-        index += 1;
-    }
-    flush_word(&mut word, &mut current, word_line);
-    flush_command(&mut current, &mut commands);
-    Parse {
-        commands,
-        unterminated_heredoc: unterminated || pending.is_some(),
-    }
+    scan::run(script)
 }
 
 fn take_expansion(chars: &[char], mut index: usize, word: &mut String, line: &mut usize) -> usize {
