@@ -52,6 +52,8 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
     fails(&p, "assertNeverIsNotProof", &[SiteArg::Scalar]);
     // A known arm is not kept when default is not proven to throw.
     fails(&p, "assertNeverIsNotProof", &[lit("x")]);
+    // A repeated label abstains; the first arm is not kept.
+    fails(&p, "duplicateLabel", &[lit("a")]);
     fails(&p, "switchWithLocal", &[lit("a")]);
     fails(&p, "switchCap", &[SiteArg::Scalar]);
     assert_eq!(one(&p, "switchCap", &[lit("01")]), "sql:SELECT 1");
@@ -68,6 +70,10 @@ fn throw_guards_are_skipped_when_they_cannot_write_sql() {
     );
     assert_eq!(
         one(&p, "guardedBlock", &[SiteArg::Scalar]),
+        "sql:SELECT id FROM orders WHERE account_id = $1"
+    );
+    assert_eq!(
+        one(&p, "guardedAnd", &[SiteArg::Scalar, SiteArg::Scalar]),
         "sql:SELECT id FROM orders WHERE account_id = $1"
     );
     // Both arms return SQL, so an opaque test still fails closed.

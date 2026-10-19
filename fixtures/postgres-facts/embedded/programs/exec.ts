@@ -416,6 +416,18 @@ export function assertNeverIsNotProof(kind: string) {
   }
   return sql`SELECT 2`;
 }
+// Duplicate labels abstain the switch. A known arm is not kept.
+export function duplicateLabel(kind: string) {
+  switch (kind) {
+    case "a":
+      return sql`SELECT 1`;
+    case "a":
+      return sql`SELECT 2`;
+    default:
+      throw new Error("no");
+  }
+  return sql`SELECT 3`;
+}
 // A local before the return is not the literal-return shape.
 export function switchWithLocal(kind: string) {
   switch (kind) {
@@ -470,6 +482,11 @@ export function guardedBlock(limit: number) {
   if (!Number.isInteger(limit)) {
     throw new Error("bad limit");
   }
+  return sql`SELECT id FROM orders WHERE account_id = ${1}`;
+}
+// `&&` of opaque member checks is still a throw guard.
+export function guardedAnd(limit: number, offset: number) {
+  if (!Number.isInteger(limit) && !Number.isInteger(offset)) throw new Error("bad");
   return sql`SELECT id FROM orders WHERE account_id = ${1}`;
 }
 // Not a throw guard: both arms return SQL, and the test is opaque.
