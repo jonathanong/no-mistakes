@@ -67,6 +67,9 @@ fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>)
             matched_factory_names: Vec::new(),
             matched_type_names: Vec::new(),
             pending_relative: Default::default(),
+            unproven_member_query_spans: Vec::new(),
+            postgres_rule_ids: Vec::new(),
+            record_unproven_spans: true,
         },
     ));
     facts.ts.insert(path.to_path_buf(), Arc::new(file));
