@@ -128,6 +128,21 @@ fn logical_reassignment_includes_the_nullish_fallback() {
 }
 
 #[test]
+fn chained_call_keeps_the_inner_spread_receiver() {
+    let (graph, root) = graph();
+    assert_unknown(&graph, &root, "chained-call-span", "replica.get");
+    assert_export(&graph, &root, "chained-call-span", "unrelated.get");
+}
+
+#[test]
+fn chained_plain_call_does_not_take_the_outer_spread() {
+    let (graph, root) = graph();
+    assert_export(&graph, &root, "chained-call-plain", "replica.get");
+    assert_unknown(&graph, &root, "chained-call-plain", "unrelated.get");
+    assert_export(&graph, &root, "chained-call-plain", "primary.get");
+}
+
+#[test]
 fn object_assign_spread_source_is_a_provider() {
     let (graph, root) = graph();
     assert_unknown(&graph, &root, "object-assign-spread", "replica.get");

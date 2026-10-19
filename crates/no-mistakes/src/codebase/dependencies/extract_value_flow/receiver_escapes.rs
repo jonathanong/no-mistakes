@@ -1,6 +1,6 @@
 use super::*;
 #[derive(Default)]
-pub(in super::super) struct Side { instances: FxHashMap<(usize, String), CallableId>, methods: Vec<(u32, CallableId, Vec<ValueExpression>)>, escaped: FxHashMap<u32, FxHashMap<usize, Vec<ValueExpression>>>, open: FxHashMap<u32, (usize, Vec<ValueExpression>)>, reassigned: Vec<(usize, String, ValueExpression)> }
+pub(in super::super) struct Side { instances: FxHashMap<(usize, String), CallableId>, methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>)>, escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>, open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>, reassigned: Vec<(usize, String, ValueExpression)> }
 impl ImportCollector {
     pub(in super::super) fn note_instance_class(&mut self, declarator: &VariableDeclarator<'_>) {
         let Some(init) = &declarator.init else { return };
@@ -28,15 +28,15 @@ impl ImportCollector {
                 }
             }
         }
-        if !extras.is_empty() { self.receiver_escapes.escaped.insert(call.span.start, extras); }
-        if let Some(start) = open_at.filter(|_| !open_vals.is_empty()) { self.receiver_escapes.open.insert(call.span.start, (start, open_vals)); }
+        if !extras.is_empty() { self.receiver_escapes.escaped.insert((call.span.start, call.span.end), extras); }
+        if let Some(start) = open_at.filter(|_| !open_vals.is_empty()) { self.receiver_escapes.open.insert((call.span.start, call.span.end), (start, open_vals)); }
     }
     fn note_class_method(&mut self, call: &CallExpression<'_>) {
         let Expression::StaticMemberExpression(member) = crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee) else { return };
         let Some(class) = class_id(self, &member.object) else { return };
         let Some(method) = owner_member_id(&self.aggregate_callable_member_ids, class, member.property.name.as_str()) else { return };
         let arguments = call.arguments.iter().map(|argument| argument.as_expression().map_or(ValueExpression::Unknown, |expression| self.value_expression(expression))).collect();
-        self.receiver_escapes.methods.push((call.span.start, method, arguments));
+        self.receiver_escapes.methods.push((call.span.start, call.span.end, method, arguments));
     }
     pub(in super::super) fn note_parameter_reassignment(&mut self, assignment: &AssignmentExpression<'_>) {
         if !self.collect_value_flow || !(assignment.operator.is_assign() || assignment.operator.is_logical()) { return }
@@ -110,19 +110,19 @@ pub(super) fn absorb(collector: &ImportCollector, slots: &FxHashMap<CallableId, 
                 }
             }
         }
-        if let Some(parameters) = super::parameter_call_origins::callable_owner(collector, &call.callee).and_then(|id| slots.get(&id)) { apply_escaped(values, parameters, collector, call.offset); }
+        if let Some(parameters) = super::parameter_call_origins::callable_owner(collector, &call.callee).and_then(|id| slots.get(&id)) { apply_escaped(values, parameters, collector, call.offset, call.end); }
     }
-    for (offset, method, arguments) in &collector.receiver_escapes.methods {
+    for (offset, end, method, arguments) in &collector.receiver_escapes.methods {
         if let Some(parameters) = slots.get(method) {
             for (index, argument) in arguments.iter().enumerate() { if let Some(key) = parameters.get(&index) { values.entry(key.clone()).or_default().push(argument.clone()); } }
-            apply_escaped(values, parameters, collector, *offset);
+            apply_escaped(values, parameters, collector, *offset, *end);
         }
     }
     for (scope, name, value) in &collector.receiver_escapes.reassigned { values.entry((*scope, name.clone())).or_default().push(value.clone()); }
 }
-fn apply_escaped(values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>, parameters: &FxHashMap<usize, (usize, String)>, collector: &ImportCollector, offset: u32) {
-    if let Some(extras) = collector.receiver_escapes.escaped.get(&offset) { for (index, extra) in extras { if let Some(key) = parameters.get(index) { values.entry(key.clone()).or_default().extend(extra.iter().cloned()); } } }
-    if let Some((start, extra)) = collector.receiver_escapes.open.get(&offset) { for (index, key) in parameters { if *index >= *start { values.entry(key.clone()).or_default().extend(extra.iter().cloned()); } } }
+fn apply_escaped(values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>, parameters: &FxHashMap<usize, (usize, String)>, collector: &ImportCollector, offset: u32, end: u32) {
+    if let Some(extras) = collector.receiver_escapes.escaped.get(&(offset, end)) { for (index, extra) in extras { if let Some(key) = parameters.get(index) { values.entry(key.clone()).or_default().extend(extra.iter().cloned()); } } }
+    if let Some((start, extra)) = collector.receiver_escapes.open.get(&(offset, end)) { for (index, key) in parameters { if *index >= *start { values.entry(key.clone()).or_default().extend(extra.iter().cloned()); } } }
 }
 fn push_slot(values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>, slots: &FxHashMap<CallableId, FxHashMap<usize, (usize, String)>>, owner: Option<CallableId>, index: usize, item: ValueExpression) {
     if let Some(key) = owner.and_then(|id| slots.get(&id)).and_then(|parameters| parameters.get(&index)) { values.entry(key.clone()).or_default().push(item); }
