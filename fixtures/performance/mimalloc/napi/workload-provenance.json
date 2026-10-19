@@ -1,0 +1,7 @@
+{
+  "platform": "linux-arm64",
+  "workload": "consumer",
+  "commit": "f38a048f5eeff0438fc59a15e9eb742def575a36",
+  "tree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "archive_sha256": "4d66d11b432ab4821c8284ce9fba1f29d6d10d16445b10bb75dc01726bfa6bbc"
+}

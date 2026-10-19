@@ -1,0 +1,103 @@
+{
+  "clear": {
+    "react": [],
+    "queues": [],
+    "rules": [],
+    "integration": [],
+    "codebase": [],
+    "warnings": [],
+    "advisories": []
+  },
+  "advisoryOnly": {
+    "react": [],
+    "queues": [],
+    "rules": [],
+    "integration": [],
+    "codebase": [],
+    "warnings": [],
+    "advisories": [
+      {
+        "message": "informational"
+      }
+    ]
+  },
+  "warning": {
+    "react": [],
+    "queues": [],
+    "rules": [],
+    "integration": [],
+    "codebase": [],
+    "warnings": [
+      "failure"
+    ],
+    "advisories": []
+  },
+  "rule": {
+    "react": [],
+    "queues": [],
+    "rules": [
+      {
+        "message": "failure"
+      }
+    ],
+    "integration": [],
+    "codebase": [],
+    "warnings": [],
+    "advisories": []
+  },
+  "incomplete": {
+    "react": []
+  },
+  "react": {
+    "react": [
+      {
+        "message": "failure"
+      }
+    ],
+    "queues": [],
+    "rules": [],
+    "integration": [],
+    "codebase": [],
+    "warnings": [],
+    "advisories": []
+  },
+  "queues": {
+    "react": [],
+    "queues": [
+      {
+        "message": "failure"
+      }
+    ],
+    "rules": [],
+    "integration": [],
+    "codebase": [],
+    "warnings": [],
+    "advisories": []
+  },
+  "integration": {
+    "react": [],
+    "queues": [],
+    "rules": [],
+    "integration": [
+      {
+        "message": "failure"
+      }
+    ],
+    "codebase": [],
+    "warnings": [],
+    "advisories": []
+  },
+  "codebase": {
+    "react": [],
+    "queues": [],
+    "rules": [],
+    "integration": [],
+    "codebase": [
+      {
+        "message": "failure"
+      }
+    ],
+    "warnings": [],
+    "advisories": []
+  }
+}

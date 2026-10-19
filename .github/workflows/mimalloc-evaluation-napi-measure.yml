@@ -1,0 +1,94 @@
+name: Mimalloc evaluation N-API paired resources
+
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: N-API ${{ matrix.platform }} jobs-${{ matrix.jobs }} pair-${{ matrix.pair }}
+    runs-on: ${{ matrix.platform == 'linux-arm64' && 'ubuntu-22.04-arm' || 'macos-15' }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        platform: [linux-arm64, macos-arm64]
+        jobs: ["1", max]
+        pair: [0, 1, 2, 3]
+    steps:
+      - name: Check out exact source and facade
+        timeout-minutes: 1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up Node and pnpm
+        timeout-minutes: 5
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: false
+          install: false
+      - name: Prepare JavaScript facade outside timed region
+        timeout-minutes: 8
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm run build:js
+      - name: Download exact prepared consumer
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: mimalloc-workload-${{ matrix.platform }}-consumer
+          path: ${{ runner.temp }}/prepared
+      - name: Download paired native artifacts
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: mimalloc-${{ matrix.platform == 'linux-arm64' && 'aarch64-unknown-linux-gnu' || 'aarch64-apple-darwin' }}-*
+          path: ${{ runner.temp }}/binaries
+          merge-multiple: false
+      - name: Verify and restore prepared consumer
+        timeout-minutes: 1
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/prepared" "$PLATFORM" <<'PY'
+          import runpy, sys
+          helpers = runpy.run_path("scripts/performance/mimalloc-napi-measure.py")
+          helpers["verify_workload"](sys.argv[1], sys.argv[2])
+          PY
+          tar -xzf "$RUNNER_TEMP/prepared/workload.tar.gz" -C "$GITHUB_WORKSPACE"
+          test -d workload
+      - name: Measure fresh Node pair with 600-second process caps
+        timeout-minutes: 21
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          JOBS: ${{ matrix.jobs }}
+          PAIR: ${{ matrix.pair }}
+          SOURCE_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          target=aarch64-unknown-linux-gnu
+          [[ "$PLATFORM" == macos-arm64 ]] && target=aarch64-apple-darwin
+          system="$RUNNER_TEMP/binaries/mimalloc-$target-system"
+          mimalloc="$RUNNER_TEMP/binaries/mimalloc-$target-mimalloc"
+          chmod +x "$system/no-mistakes" "$system/rayon-probe" \
+            "$mimalloc/no-mistakes" "$mimalloc/rayon-probe"
+          host_id="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${PLATFORM}-napi-j${JOBS}-p${PAIR}"
+          python3 scripts/performance/mimalloc-napi-measure.py \
+            --system "$system" --mimalloc "$mimalloc" \
+            --consumer "$GITHUB_WORKSPACE/workload" --prepared "$RUNNER_TEMP/prepared" \
+            --jobs "$JOBS" --pair "$PAIR" --platform "$PLATFORM" --source "$SOURCE_REF" \
+            --host-id "$host_id" --output "$RUNNER_TEMP/mimalloc-napi-results"
+      - name: Upload raw N-API resource samples
+        if: always()
+        timeout-minutes: 2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mimalloc-napi-sample-${{ matrix.platform }}-j${{ matrix.jobs }}-p${{ matrix.pair }}
+          path: ${{ runner.temp }}/mimalloc-napi-results
+          if-no-files-found: warn
+          retention-days: 7
