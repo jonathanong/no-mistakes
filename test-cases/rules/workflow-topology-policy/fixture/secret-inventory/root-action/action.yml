@@ -1,0 +1,5 @@
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo '${{ secrets.ROOT }}'

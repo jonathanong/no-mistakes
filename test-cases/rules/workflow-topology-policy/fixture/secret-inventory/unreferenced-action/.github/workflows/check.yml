@@ -1,0 +1,14 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./actions/outer/action.yml
+      - uses: ./actions/outer/action.yml
+      - uses: ./actions/missing
+      - uses: ./actions/plain
+      # `uses: ./` is the repository-root action. This fixture has no root
+      # action.yml, so it adds no finding. `./../` is not a local action path
+      # and must not select vendor/third-party/action.yml.
+      - uses: ./
+      - uses: ./../vendor/third-party

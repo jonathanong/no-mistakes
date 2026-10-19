@@ -33,21 +33,23 @@ pub(super) fn from_files(
             .get("secretInventory")
             .is_some_and(|value| !value.is_null())
     });
-    let actions = files
-        .iter()
-        .filter(|path| {
-            actions_requested
-                && path
-                    .file_name()
-                    .is_some_and(|name| name == "action.yml" || name == "action.yaml")
-        })
-        .cloned();
+    let workflows = Arc::new(ParsedWorkflowSet::from_paths_and_sources(
+        root, workflows, sources,
+    ));
+    let actions = if actions_requested {
+        crate::codebase::ci_workflows::referenced_local_action_paths(
+            root,
+            &workflows,
+            files.iter().cloned(),
+            sources,
+        )
+    } else {
+        Vec::new()
+    };
     PreparedWorkflowTopologyInputs::new(
         root,
         &config.ci,
-        Arc::new(ParsedWorkflowSet::from_paths_and_sources(
-            root, workflows, sources,
-        )),
+        workflows,
         ParsedWorkflowSet::from_paths_and_sources(root, actions, sources),
     )
 }

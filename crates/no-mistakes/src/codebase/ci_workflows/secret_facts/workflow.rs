@@ -1,6 +1,8 @@
-use super::document::{Document, Kind};
-use super::{DocumentFacts, Environment, Reference, Scope};
+use super::document::Document;
+use super::{DocumentFacts, Environment, Scope};
 use serde_yaml::Value;
+
+mod visit;
 
 pub(super) fn collect(value: &Value, source: &str, action: bool) -> DocumentFacts {
     let Some(document) = Document::parse(source) else {
@@ -17,7 +19,14 @@ pub(super) fn collect(value: &Value, source: &str, action: bool) -> DocumentFact
             .and_then(Value::as_str)
             == Some("composite");
         if result.composite {
-            visit(value, Some(0), &document, false, &mut result.references);
+            visit::visit(
+                value,
+                Some(0),
+                &document,
+                false,
+                visit::IfScope::Action,
+                &mut result.references,
+            );
         }
         return result;
     }
@@ -32,11 +41,12 @@ pub(super) fn collect(value: &Value, source: &str, action: bool) -> DocumentFact
         if matches!(key, "on" | "jobs") {
             continue;
         }
-        visit(
+        visit::visit(
             child,
             document.mapping_value(0, key),
             &document,
-            key == "if",
+            false,
+            visit::IfScope::Plain,
             &mut result.references,
         );
     }
@@ -88,7 +98,14 @@ pub(super) fn collect(value: &Value, source: &str, action: bool) -> DocumentFact
                 "job environment is not a literal name".into(),
             ));
         }
-        visit(job, node, &document, false, &mut scope.references);
+        visit::visit(
+            job,
+            node,
+            &document,
+            false,
+            visit::IfScope::Condition,
+            &mut scope.references,
+        );
         result.jobs.insert(key.to_owned(), scope);
     }
     result
@@ -106,77 +123,5 @@ fn environment(value: Option<&Value>) -> Environment {
             Environment::Named(name.to_owned())
         }
         _ => Environment::Unknown,
-    }
-}
-
-fn visit(
-    value: &Value,
-    node: Option<usize>,
-    document: &Document,
-    bare: bool,
-    refs: &mut Vec<Reference>,
-) {
-    match value {
-        Value::String(text) => {
-            let line = document.line(node);
-            let mut found = super::references::collect(text, bare, line);
-            if let Some(node) = node {
-                let raw = &document.resolved(node).raw;
-                let mut authored =
-                    super::references::collect(raw, bare, document.resolved(node).line);
-                for reference in &mut found {
-                    if let Some(index) = authored
-                        .iter()
-                        .position(|actual| same_name(actual, reference))
-                    {
-                        reference.line = authored.remove(index).line;
-                    } else {
-                        // Escaped YAML can change expression spelling and line breaks.
-                        // Keep unlocatable references incomplete rather than inventing a line.
-                        reference.name = None;
-                        reference.line = line;
-                    }
-                }
-            }
-            if node.is_none() {
-                for reference in &mut found {
-                    reference.name = None;
-                }
-            }
-            refs.extend(found);
-        }
-        Value::Mapping(mapping) => {
-            for (key, value) in mapping {
-                let child = key
-                    .as_str()
-                    .and_then(|key| node.and_then(|id| document.mapping_value(id, key)));
-                visit(value, child, document, key.as_str() == Some("if"), refs);
-            }
-        }
-        Value::Sequence(values) => {
-            let nodes = node.and_then(|id| match &document.resolved(id).kind {
-                Kind::Sequence(nodes) => Some(nodes.as_slice()),
-                _ => None,
-            });
-            for (index, value) in values.iter().enumerate() {
-                visit(
-                    value,
-                    nodes.and_then(|nodes| nodes.get(index)).copied(),
-                    document,
-                    false,
-                    refs,
-                );
-            }
-        }
-        Value::Tagged(tagged) => visit(&tagged.value, node, document, bare, refs),
-        _ => {}
-    }
-}
-
-fn same_name(left: &Reference, right: &Reference) -> bool {
-    match (&left.name, &right.name) {
-        (Some(left), Some(right)) => left.eq_ignore_ascii_case(right),
-        (None, None) => true,
-        _ => false,
     }
 }

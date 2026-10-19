@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      secretInventory:
+        repository: [REPO_ONLY]
+        environments:
+          prod: [ENV_ONLY]
+        reportUnused: false

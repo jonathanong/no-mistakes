@@ -4,5 +4,9 @@ rules:
     scope: repository
     options:
       secretInventory:
-        repository: [KNOWN, UNUSED]
+        repository: [KNOWN, UNUSED, GITHUB_TOKEN]
+        environments:
+          prod:
+            - ENV_ONLY
+        builtInExemptions: [GITHUB_TOKEN, EXTRA]
         reportUnused: true

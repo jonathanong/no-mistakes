@@ -3,4 +3,6 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - uses: ./actions/valid
+      - uses: ./actions/invalid
       - run: echo '${{ secrets.TOKEN }}'

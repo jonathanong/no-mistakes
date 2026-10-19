@@ -46,6 +46,27 @@ fn declared_inventory_reports_real_secret_use_locations() {
 }
 
 #[test]
+fn compatibility_preparation_matches_the_request_scoped_action_scan() {
+    let enabled = fixture("unreferenced-action");
+    let enabled_config =
+        crate::config::v2::load_v2_config(&enabled, Some(&enabled.join(".no-mistakes.yml")))
+            .unwrap();
+    assert_eq!(
+        super::prepare::check_with_files(&enabled, &enabled_config, &[]).unwrap(),
+        run("unreferenced-action", ".no-mistakes.yml").unwrap()
+    );
+
+    let disabled = fixture("repository");
+    let disabled_config =
+        crate::config::v2::load_v2_config(&disabled, Some(&disabled.join("disabled.yml"))).unwrap();
+    assert!(
+        super::prepare::check_with_files(&disabled, &disabled_config, &[])
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
 fn omitted_and_null_inventory_preserve_disabled_behavior() {
     for config in ["disabled.yml", "null.yml"] {
         assert!(run("repository", config).unwrap().is_empty());
@@ -54,7 +75,21 @@ fn omitted_and_null_inventory_preserve_disabled_behavior() {
 
 #[test]
 fn empty_inventory_is_strict_and_builtin_exemptions_are_configurable() {
-    assert_eq!(run("repository", "empty.yml").unwrap().len(), 5);
+    let findings = run("repository", "empty.yml").unwrap();
+    // `secrets["BRACKET"]` is not the static name BRACKET. reportUnused is off,
+    // so that dynamic selector is not an incomplete finding either.
+    assert_eq!(findings.len(), 4, "{findings:?}");
+    for name in ["allowed", "MISSING", "BARE", "MULTILINE"] {
+        assert!(
+            findings.iter().any(|finding| finding
+                .message
+                .contains(&format!("undeclared secret {name}"))),
+            "{name}: {findings:?}"
+        );
+    }
+    assert!(!findings.iter().any(|finding| {
+        finding.message.contains("BRACKET") || finding.message.contains("incomplete")
+    }));
     let findings = run("repository", "strict-builtin.yml").unwrap();
     assert_eq!(findings.len(), 4);
     assert!(findings

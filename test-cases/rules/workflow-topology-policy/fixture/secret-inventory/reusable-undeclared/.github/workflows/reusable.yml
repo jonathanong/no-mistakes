@@ -1,0 +1,21 @@
+# Static workflow_call names with no contract alias stay undeclared when they
+# are missing from repository and every environment, even with reportUnused off.
+# secrets: inherit can supply a name that exists in either inventory, so those
+# stay silent. The missing contract only blocks the unused proof.
+on:
+  workflow_call:
+    secrets:
+      ALIAS: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ secrets.ALIAS }}'
+      - run: echo '${{ secrets.REPO_ONLY }}'
+      - run: echo '${{ secrets.ENV_ONLY }}'
+      - run: echo '${{ secrets.MISSING }}'
+  dynamic:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    steps:
+      - run: echo '${{ secrets.ALSO_MISSING }}'

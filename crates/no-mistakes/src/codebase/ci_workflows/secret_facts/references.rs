@@ -97,7 +97,11 @@ fn static_access(text: &str, mut at: usize) -> Option<(String, usize)> {
     }
     at += 1;
     skip_space(bytes, &mut at);
-    if !matches!(bytes.get(at), Some(b'\'' | b'"')) {
+    // GitHub expression strings are single-quoted. Double quotes throw, so
+    // `secrets["FOO"]` is not the static name FOO.
+    // https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#literals
+    // "Wrapping with double quotes (`"`) will throw an error."
+    if bytes.get(at) != Some(&b'\'') {
         return None;
     }
     let end = quoted_end(bytes, at);

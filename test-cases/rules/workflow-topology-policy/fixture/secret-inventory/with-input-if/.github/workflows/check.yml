@@ -1,0 +1,11 @@
+# `with.if` is an action input, not a job or step conditional.
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          if: rotate secrets
+      - if: secrets.BARE != ''
+        run: echo ready

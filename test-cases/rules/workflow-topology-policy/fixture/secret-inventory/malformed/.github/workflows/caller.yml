@@ -1,0 +1,6 @@
+on: push
+jobs:
+  call:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./actions/broken

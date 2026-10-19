@@ -1,0 +1,16 @@
+# Unused claim withheld: workflow-level env vs job environment is not verified.
+# ENV_ONLY stays undeclared against the repository inventory.
+on: push
+env:
+  K: ${{ secrets.ENV_ONLY }}
+jobs:
+  one:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - run: echo one
+  two:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - run: echo two

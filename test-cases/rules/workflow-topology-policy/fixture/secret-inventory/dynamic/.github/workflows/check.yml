@@ -1,4 +1,6 @@
 on: push
+env:
+  dyn: '${{ secrets[inputs.secret] }}'
 jobs:
   selectors:
     runs-on: ubuntu-latest
@@ -12,5 +14,9 @@ jobs:
     environment: '${{ inputs.environment }}'
     env:
       selected: '${{ secrets.KNOWN }}'
+      missing: '${{ secrets.NOT_LISTED }}'
+      maybe: '${{ secrets.ENV_ONLY }}'
+      token: '${{ secrets.GITHUB_TOKEN }}'
+      extra: '${{ secrets.EXTRA }}'
     steps:
       - run: echo ready
