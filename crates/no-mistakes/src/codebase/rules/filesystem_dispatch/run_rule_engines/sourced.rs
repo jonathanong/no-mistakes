@@ -78,6 +78,11 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
+        GITHUB_ACTIONS_DOCKER_HOST_PORTS => {
+            github_actions_docker_host_ports::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         TSCONFIG_FILE_COVERAGE => {
             tsconfig_file_coverage::check_with_files_and_sources(root, config, files, sources)
         }

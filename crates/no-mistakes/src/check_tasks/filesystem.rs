@@ -15,6 +15,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::github_actions_pinned_hash::RULE_ID,
     rules::github_actions_script_expressions::RULE_ID,
     rules::github_actions_checkout_credentials::RULE_ID,
+    rules::github_actions_docker_host_ports::RULE_ID,
     rules::VERSION_PIN_CONSISTENCY,
     rules::BANNED_RENAMED_FILES,
     rules::CONFIG_PATH_REFERENCES,

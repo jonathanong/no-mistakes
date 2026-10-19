@@ -2,11 +2,11 @@ use super::hit::Hit;
 use super::yaml_parse::{
     classify_key, next_is_child_key, parse_line, script_role, BlockRole, Frame, Kind, Parsed,
 };
-use super::yaml_text::{block_continues, leading_indent, normalize_uses, scan_block_line};
+use super::yaml_text::{block_continues, normalize_uses, scan_block_line};
 
 mod detail;
 
-pub(crate) use detail::{step_uses_lines, StepUse};
+pub(crate) use detail::{step_run_lines, step_uses_lines, StepRun, StepUse};
 
 pub(super) fn hits_from_lines(source: &str, action: bool, composite: bool) -> Vec<Hit> {
     let lines: Vec<&str> = source.lines().collect();
@@ -30,6 +30,7 @@ pub(super) struct Scanner<'a> {
     pub(super) step: usize,
     pub(super) uses_line: Option<usize>,
     pub(super) located: Vec<StepUse>,
+    pub(super) runs: Vec<StepRun>,
 }
 
 impl<'a> Scanner<'a> {
@@ -54,6 +55,7 @@ impl<'a> Scanner<'a> {
             step: 0,
             uses_line: None,
             located: Vec::new(),
+            runs: Vec::new(),
         }
     }
 
@@ -179,7 +181,7 @@ impl<'a> Scanner<'a> {
 
     // serde counts every sequence entry. Values this parser skips still occupy a step.
     fn note_unparsed_item(&mut self, line: &str) {
-        let Some(scope) = item_scope(line) else {
+        let Some(scope) = detail::item_scope(line) else {
             return;
         };
         self.pop_until(scope, true);
@@ -190,15 +192,5 @@ impl<'a> Scanner<'a> {
                 kind: Kind::Step,
             });
         }
-    }
-}
-
-fn item_scope(line: &str) -> Option<usize> {
-    let indent = leading_indent(line);
-    let trimmed = line[indent..].trim_end();
-    if trimmed == "-" || trimmed.starts_with("- ") {
-        Some(indent)
-    } else {
-        None
     }
 }

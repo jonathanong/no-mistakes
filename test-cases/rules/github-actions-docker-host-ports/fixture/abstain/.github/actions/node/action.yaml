@@ -1,0 +1,7 @@
+name: node
+description: node action
+runs:
+  using: node20
+  main: index.js
+  steps:
+    - run: docker run -p 5432:5432 postgres

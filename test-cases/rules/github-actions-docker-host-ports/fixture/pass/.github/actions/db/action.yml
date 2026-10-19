@@ -1,0 +1,7 @@
+name: db
+description: start a database
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: docker run -p ::5432 postgres

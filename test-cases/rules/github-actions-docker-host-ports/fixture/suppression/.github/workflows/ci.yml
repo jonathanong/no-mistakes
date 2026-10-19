@@ -1,0 +1,10 @@
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # no-mistakes-disable-next-line github-actions-docker-host-ports
+      - run: docker run -p 5432:5432 postgres
+      - run: docker run -p 5432:5432 postgres # no-mistakes-disable-line github-actions-docker-host-ports
+      - run: docker run -p 6379:6379 redis

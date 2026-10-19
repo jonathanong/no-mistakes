@@ -1,0 +1,13 @@
+# The '-' item is in the same column as `steps:` so the finding stays on that step line.
+name: compact
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    - run: docker run -p 5432:5432 postgres
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo allocated
+      - run: docker run --publish 127.0.0.1:5432:5432 postgres
