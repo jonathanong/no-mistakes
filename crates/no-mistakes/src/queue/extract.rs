@@ -30,6 +30,8 @@ pub(crate) fn extract_program_with_factories(
         in_job: 0,
         current_case: None,
         namespace_imports: HashMap::new(),
+        processor_spans: Vec::new(),
+        worker_stack: Vec::new(),
     };
     visitor.visit_program(program);
     visitor.facts

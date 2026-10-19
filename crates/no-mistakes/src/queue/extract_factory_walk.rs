@@ -10,6 +10,7 @@ pub(crate) fn visit_function<'a>(
     func: &Function<'a>,
     flags: oxc_syntax::scope::ScopeFlags,
 ) {
+    let worker = enter_worker(visitor, func.span);
     let entered = has_job_param(&func.params);
     if entered {
         visitor.in_job += 1;
@@ -18,9 +19,13 @@ pub(crate) fn visit_function<'a>(
     if entered {
         visitor.in_job -= 1;
     }
+    if worker {
+        visitor.worker_stack.pop();
+    }
 }
 
 pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunctionExpression<'a>) {
+    let worker = enter_worker(visitor, arrow.span);
     let entered = has_job_param(&arrow.params);
     if entered {
         visitor.in_job += 1;
@@ -29,6 +34,23 @@ pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunct
     if entered {
         visitor.in_job -= 1;
     }
+    if worker {
+        visitor.worker_stack.pop();
+    }
+}
+
+fn enter_worker(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {
+    let Some(index) = visitor
+        .processor_spans
+        .iter()
+        .rev()
+        .find(|record| span.start >= record.0 && span.end <= record.1)
+        .map(|record| record.2)
+    else {
+        return false;
+    };
+    visitor.worker_stack.push(index);
+    true
 }
 
 pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStatement<'a>) {

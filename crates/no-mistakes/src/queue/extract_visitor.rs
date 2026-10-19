@@ -6,6 +6,7 @@ use crate::queue::extract_record::{record_enqueue, record_flow};
 use crate::queue::source::line_number;
 use oxc_ast::ast::{CallExpression, Expression, ImportDeclarationSpecifier};
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -28,6 +29,9 @@ pub(super) struct QueueVisitor<'a> {
     pub in_job: u32,
     pub current_case: Option<String>,
     pub namespace_imports: HashMap<String, String>,
+    /// `(processor span start, end, worker index)` for factory and `new Worker` processors.
+    pub processor_spans: Vec<(u32, u32, usize)>,
+    pub worker_stack: Vec<usize>,
 }
 
 impl<'a> Visit<'a> for QueueVisitor<'a> {
@@ -115,6 +119,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
             if let Expression::Identifier(object) = &member.object {
                 let method = member.property.name.as_str();
                 if method == "add" && self.flow_bindings.contains(object.name.as_str()) {
+                    let recorded = self.facts.producers.len();
                     record_flow(
                         self.path,
                         self.source,
@@ -122,7 +127,9 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                         &mut self.facts,
                         call,
                     );
+                    self.stamp_worker(recorded);
                 } else if method == "add" || method == "addBulk" {
+                    let recorded = self.facts.producers.len();
                     record_enqueue(
                         object.name.as_str(),
                         method,
@@ -132,6 +139,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                         &mut self.facts,
                         call,
                     );
+                    self.stamp_worker(recorded);
                     super::extract_factory::note_self_dedup(self, call);
                 } else if method == "addAndWait" || method == "waitUntilFinished" {
                     super::extract_factory::note_wait(self, call);
@@ -163,6 +171,11 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                 processor_specifier,
                 processor_file: None,
             });
+            if let Some(arg) = new_expr.arguments.get(1) {
+                let span = arg.span();
+                let index = self.facts.workers.len() - 1;
+                self.processor_spans.push((span.start, span.end, index));
+            }
         }
         walk::walk_new_expression(self, new_expr);
     }

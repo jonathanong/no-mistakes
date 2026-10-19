@@ -15,6 +15,15 @@ impl QueueVisitor<'_> {
         matches!(expr, Expression::Identifier(id) if self.flow_classes.contains(id.name.as_str()))
     }
 
+    pub(super) fn stamp_worker(&mut self, recorded: usize) {
+        let Some(index) = self.worker_stack.last().copied() else {
+            return;
+        };
+        for producer in &mut self.facts.producers[recorded..] {
+            producer.worker_index = Some(index);
+        }
+    }
+
     pub fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
         match arg {
             Argument::StringLiteral(value) => Some(value.value.as_str().to_string()),

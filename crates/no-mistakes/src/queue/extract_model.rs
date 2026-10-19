@@ -15,6 +15,10 @@ pub(crate) struct ProducerSite {
     pub binding: String,
     pub job: Option<String>,
     pub raw_job: Option<String>,
+    /// Index of the factory or `new Worker` processor that contains this enqueue.
+    pub worker_index: Option<usize>,
+    /// The add reuses the active job's dedup id or job id. Judged after queue resolution.
+    pub self_dedup: bool,
 }
 
 #[derive(Debug, Clone)]

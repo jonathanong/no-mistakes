@@ -1,0 +1,19 @@
+version: 2
+projects:
+  backend:
+    type: server
+    root: .
+    queues:
+      enqueues:
+        - queues/*.mts
+      workers:
+        - workers/*.mts
+queues:
+  factories:
+    queue:
+      - callee: createQueue
+        name: 0
+    worker:
+      - callee: createWorker
+        name: 0
+        processor: 1

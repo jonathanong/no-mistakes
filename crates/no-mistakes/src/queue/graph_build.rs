@@ -92,12 +92,17 @@ fn build_report_and_relationships(
     check.extend(crate::queue::cycles::queue_cycles(
         root, &producers, &workers,
     ));
+    let (dedup_checks, dedup_diagnostics) =
+        crate::queue::cycles::self_dedup_findings(root, &producers, &workers);
+    check.extend(dedup_checks);
+    let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
+    report_diagnostics.extend(dedup_diagnostics);
     let report = ProjectReport {
         producers: producers.iter().map(|p| p.public(root)).collect(),
         workers: workers.iter().map(|w| w.public(root)).collect(),
         jobs: public_jobs(root, &relationships),
         edges: public_edges(root, &relationships),
-        diagnostics: diagnostics(root, facts, &producers, &workers),
+        diagnostics: dedup_sorted(report_diagnostics),
         check: dedup_sorted(check),
     };
     (report, relationships)
