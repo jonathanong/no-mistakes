@@ -145,6 +145,30 @@ validateUrl(url, {});
     ]);
   });
 
+  it("reports one finding when two imported targets share a requirement", () => {
+    const shared = ssrfOptions.targets[0];
+    const options = {
+      targets: [
+        shared,
+        {
+          sourceSpecifierPatterns: ["ssrf-guard/*"],
+          calleeNamePatterns: ["validate*"],
+          optionsPosition: shared.optionsPosition,
+          requiredProperties: shared.requiredProperties,
+        },
+      ],
+    };
+    assert.deepEqual(
+      messages(
+        ruleFixture("identical-imported-targets.ts"),
+        RULE,
+        options,
+        "identical-imported-targets.ts",
+      ),
+      ["missingOptions"],
+    );
+  });
+
   it("tracks member-selected CommonJS bindings", () => {
     const code = `const checkUrl = require("ssrf-guard/node").validateUrl;
 checkUrl(url);

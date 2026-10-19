@@ -83,6 +83,8 @@ client.chat.responses.create({ signal });
   unescaped `/`. `/^@acme/http$/` and `/abs/**` fail at config load. Write a
   package path as a glob that does not start with `/` (`@acme/http` or
   `@acme/**`), or escape the slash (`/^@acme\/http$/`).
+  Rejecting slash-prefixed imported patterns at config load is a
+  user-visible tightening.
   Each group also sets:
   - `optionsPosition`: one-based argument index of the options object.
   - `requiredProperties`: property names that must be statically present with a
