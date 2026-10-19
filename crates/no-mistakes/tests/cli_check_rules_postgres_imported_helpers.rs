@@ -152,10 +152,9 @@ fn same_file_helpers_splice_literal_identifiers_too() {
             ("src/caller.mts", 5, VIEW),
             ("src/caller.mts", 9, VIEW),
             // An optional call and a non-literal argument stay unanalyzable.
+            // A no-substitution template splices, so it is not a third one.
             ("src/caller.mts", 28, UNANALYZABLE),
             ("src/caller.mts", 35, UNANALYZABLE),
-            // A no-substitution template literal is not spliced.
-            ("src/caller.mts", 42, UNANALYZABLE),
         ])
     );
 }
@@ -342,6 +341,14 @@ fn a_spliced_caller_literal_is_credited_to_the_literal_not_the_placeholder() {
     );
     assert_eq!(
         findings_of("postgres-no-offset", "same-file-spliced-literal"),
+        expect(&[("src/caller.mts", 12, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "imported-spliced-backtick"),
+        expect(&[("src/caller.mts", 8, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "same-file-spliced-backtick"),
         expect(&[("src/caller.mts", 12, "offset")])
     );
 }

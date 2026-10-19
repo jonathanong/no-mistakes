@@ -26,10 +26,10 @@ impl LocalFunctions {
     }
 }
 
-/// Splices a call's string-literal arguments into a template helper.
+/// Splices a call's string arguments into a template helper.
 ///
-/// Only a `StringLiteral` counts. A no-substitution template literal is not
-/// spliced, matching the imported-helper rule.
+/// A quoted string and a no-substitution template both count. A template with
+/// substitutions does not, matching the imported-helper rule.
 pub(super) fn apply_template(
     template: &TemplateHelper,
     call: &CallExpression<'_>,
@@ -43,19 +43,27 @@ pub(super) fn apply_template(
         .arguments
         .iter()
         .map(|argument| {
-            let Expression::StringLiteral(literal) = unwrap_ts_wrappers(argument.as_expression()?)
-            else {
-                return None;
-            };
+            let (text, start) = literal_argument(argument.as_expression()?)?;
             Some(Spliced {
-                text: literal.value.as_str(),
+                text,
                 at: Some(Marker {
-                    line: byte_offset_to_line(source, literal.span.start as usize),
+                    line: byte_offset_to_line(source, start as usize),
                     path: None,
-                    origin: literal.span.start + 1,
+                    origin: start + 1,
                 }),
             })
         })
         .collect::<Option<Vec<_>>>()?;
     template.apply(&literals)
+}
+
+fn literal_argument<'a>(expression: &'a Expression<'a>) -> Option<(&'a str, u32)> {
+    match unwrap_ts_wrappers(expression) {
+        Expression::StringLiteral(literal) => Some((literal.value.as_str(), literal.span.start)),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            let cooked = template.quasis.first()?.value.cooked.as_ref()?;
+            Some((cooked.as_str(), template.span.start))
+        }
+        _ => None,
+    }
 }

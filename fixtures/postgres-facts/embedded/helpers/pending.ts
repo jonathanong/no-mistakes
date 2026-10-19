@@ -73,7 +73,7 @@ export function alternatives(flag: boolean) {
 
 export function argumentKinds() {
   const q = sql`SELECT 1 WHERE `;
-  // A quoted string is a literal. A no-substitution template is not.
+  // A quoted string and a no-substitution template are both literals.
   q.append(ownerVisible("l.template", 3, true, null));
   query(q);
 }

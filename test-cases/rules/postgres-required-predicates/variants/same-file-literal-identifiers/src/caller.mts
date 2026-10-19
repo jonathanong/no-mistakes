@@ -35,7 +35,7 @@ export async function withVariable(id: string, column: string) {
   return read(query);
 }
 
-// A no-substitution template literal is not a string literal, so it is not spliced.
+// A no-substitution template is the same literal as a quoted string.
 export async function withBacktick(id: string) {
   const query = sql`SELECT l.id FROM links l WHERE l.account_id = ${id} AND `;
   query.append(ownerVisibleSql(`l.parent_id`, `l.account_id`));
