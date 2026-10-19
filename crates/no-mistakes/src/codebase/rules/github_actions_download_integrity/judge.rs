@@ -16,16 +16,14 @@ pub(super) fn download_hits(script: &str, helpers: &[String]) -> Vec<Hit> {
     let expanded = expand_uppercase(script);
     let mut hits = Vec::new();
     for command in words::commands(&expanded) {
-        if command.dynamic {
-            continue;
-        }
-        let Some(name) = words::command_name(&command.words) else {
+        let Some((name, arg_at)) = words::command_at(&command.words) else {
             continue;
         };
         if !words::is_downloader(&name, helpers) {
             continue;
         }
-        for (word, url) in url_words(&name, &command.words) {
+        let args = command.words.get(arg_at + 1..).unwrap_or(&[]);
+        for (word, url) in url_words(&name, args) {
             let Some(parsed) = url::http_url(url) else {
                 continue;
             };
@@ -52,14 +50,9 @@ fn trusted_host(url: &UrlHost, hosts: &[String]) -> bool {
     url::trusted(&url.host, hosts)
 }
 
-fn url_words<'a>(command: &str, words: &'a [Word]) -> Vec<(&'a Word, &'a str)> {
+fn url_words<'a>(command: &str, args: &'a [Word]) -> Vec<(&'a Word, &'a str)> {
     let mut out = Vec::new();
     let mut index = 0;
-    let args = words
-        .iter()
-        .position(|word| !words::is_assignment(&word.text))
-        .map(|start| &words[start + 1..])
-        .unwrap_or(&[]);
     while index < args.len() {
         let token = args[index].text.as_str();
         if token == "--" {

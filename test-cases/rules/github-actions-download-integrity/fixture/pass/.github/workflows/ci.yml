@@ -19,3 +19,6 @@ jobs:
           BASE_URL="https://api.github.com"
           curl -fsSL "$BASE_URL/repos/example/tool"
       - run: shasum -a 256 -c sums.txt && curl -fsSL https://example.invalid/d.tgz -o d.tgz
+      - run: |
+          curl -fsSL https://example.invalid/if-check.tgz -o t.tgz
+          if ! sha256sum -c t.sha256; then exit 1; fi

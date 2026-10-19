@@ -6,6 +6,7 @@ jobs:
     steps:
       # Unresolved hosts and helpers that are not configured stay silent. That is not a pass.
       - run: curl -fsSL "$(cat url.txt)" -o a.tgz
+      - run: curl -fsSL https://${{ vars.HOST }}/e.tgz -o e.tgz
       - run: ci_download_to out https://example.invalid/a.tgz
       - run: |
           BASE_URL="https://example.invalid/base"

@@ -49,7 +49,10 @@ fn shell_forms_cover_quotes_pipes_and_verifiers() {
     assert!(has_heredoc("curl <<EOF\nhttps://example.invalid\nEOF\n"));
     assert!(!has_heredoc("echo '<<'\n"));
     assert!(check(&workflow("curl <<EOF")).is_empty());
-    assert!(check(&workflow("curl `echo https://example.invalid/a`")).is_empty());
+    assert_eq!(
+        check(&workflow("curl `echo https://example.invalid/a`")).len(),
+        1
+    );
     assert!(check(&workflow("curl $(cat url)")).is_empty());
     assert_eq!(
         check(&workflow("curl https://example.invalid/a | wc")).len(),
@@ -88,7 +91,10 @@ fn shell_forms_cover_quotes_pipes_and_verifiers() {
 fn urls_hosts_and_skip_comments_name_the_decision() {
     assert!(http_url("not-a-url").is_none());
     assert!(http_url("https://").is_none());
-    assert!(http_url("https://example.invalid/$FILE").is_none());
+    let dynamic_path = http_url("https://example.invalid/$FILE").unwrap();
+    assert_eq!(dynamic_path.host, "example.invalid");
+    assert!(!dynamic_path.checksum);
+    assert!(http_url("https://${HOST}/a.tgz").is_none());
     assert_eq!(
         http_url("HTTP://Example.Invalid/a").unwrap().host,
         "example.invalid"

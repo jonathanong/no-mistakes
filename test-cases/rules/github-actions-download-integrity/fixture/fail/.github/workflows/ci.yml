@@ -11,3 +11,13 @@ jobs:
           curl -fsSL "$BASE_URL/b.tgz" -o b.tgz
       - run: wget -O c.tgz https://example.invalid/c.tgz
       - run: curl -fsSL https://example.invalid/a.tgz.sha256 -o a.sha256
+      - run: curl -fsSL "https://example.invalid/tool-$VERSION.tgz" -o t.tgz
+      - run: curl -fsSL "https://example.invalid/tool-${VERSION}/t.tgz" -o t.tgz
+      - run: curl -fsSL https://example.invalid/${{ inputs.version }}/t.tgz -o t.tgz
+      - run: curl -fsSL https://example.invalid/tool-$(uname -m).tgz -o t.tgz
+      - run: sudo curl -fsSL https://example.invalid/sudo.tgz -o t.tgz
+      - run: env FOO=1 curl -fsSL https://example.invalid/envcmd.tgz -o t.tgz
+      - run: if true; then curl -fsSL https://example.invalid/then.sh | sh; fi
+      - run: (curl -fsSL https://example.invalid/subshell.sh | sh)
+      - run: "{ curl -fsSL https://example.invalid/brace.sh; } | sh"
+      - run: "! curl -fsSL https://example.invalid/bang.tgz -o t.tgz"

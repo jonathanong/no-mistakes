@@ -189,6 +189,23 @@ fn saved_fail_fixtures_report_unverified_downloads() {
         messages.iter().any(|message| message.contains("tool.tgz")),
         "{messages:?}"
     );
+    for url in [
+        "tool-$VERSION.tgz",
+        "tool-${VERSION}",
+        "${{ inputs.version }}",
+        "$(uname -m)",
+        "sudo.tgz",
+        "envcmd.tgz",
+        "then.sh",
+        "subshell.sh",
+        "brace.sh",
+        "bang.tgz",
+    ] {
+        assert!(
+            messages.iter().any(|message| message.contains(url)),
+            "{url} missing from {messages:?}"
+        );
+    }
     assert!(
         messages
             .iter()

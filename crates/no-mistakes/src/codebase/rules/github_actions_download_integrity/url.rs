@@ -4,9 +4,6 @@ pub(super) struct UrlHost {
 }
 
 pub(super) fn http_url(word: &str) -> Option<UrlHost> {
-    if word.contains(['$', '`']) {
-        return None;
-    }
     let rest = if word.len() >= 8 && word[..8].eq_ignore_ascii_case("https://") {
         &word[8..]
     } else if word.len() >= 7 && word[..7].eq_ignore_ascii_case("http://") {
@@ -15,7 +12,8 @@ pub(super) fn http_url(word: &str) -> Option<UrlHost> {
         return None;
     };
     let (host, path) = split_host(rest);
-    if host.is_empty() {
+    // A dynamic path is not a checksum file. A dynamic authority cannot be judged.
+    if host.is_empty() || host.contains(['$', '`', '{']) {
         return None;
     }
     Some(UrlHost {

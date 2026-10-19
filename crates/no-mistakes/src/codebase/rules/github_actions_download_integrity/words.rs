@@ -65,8 +65,16 @@ pub(super) fn commands(script: &str) -> Vec<Command> {
             index += 1;
             continue;
         }
-        if ch == '`' || (ch == '$' && chars.get(index + 1) == Some(&'(')) {
+        if ch == '`' {
             current.dynamic = true;
+        }
+        if ch == '$' && matches!(chars.get(index + 1), Some(&'(' | &'{')) {
+            current.dynamic = true;
+            if word.is_empty() {
+                word_line = line;
+            }
+            index = take_expansion(&chars, index, &mut word, &mut line);
+            continue;
         }
         if ch == '\n' || ch == ';' || ch == '|' || (ch == '&' && chars.get(index + 1) == Some(&'&'))
         {
@@ -92,6 +100,29 @@ pub(super) fn commands(script: &str) -> Vec<Command> {
     flush_word(&mut word, &mut current, word_line);
     flush_command(&mut current, &mut commands);
     commands
+}
+
+fn take_expansion(chars: &[char], mut index: usize, word: &mut String, line: &mut usize) -> usize {
+    let open = chars[index + 1];
+    let close = if open == '(' { ')' } else { '}' };
+    word.push('$');
+    word.push(open);
+    index += 2;
+    let mut depth = 1i32;
+    while index < chars.len() && depth > 0 {
+        let ch = chars[index];
+        if ch == '\n' {
+            *line += 1;
+        }
+        if ch == open {
+            depth += 1;
+        } else if ch == close {
+            depth -= 1;
+        }
+        word.push(ch);
+        index += 1;
+    }
+    index
 }
 
 fn push_char(word: &mut String, word_line: &mut usize, line: usize, ch: char) {
@@ -122,9 +153,14 @@ fn flush_command(current: &mut Command, commands: &mut Vec<Command>) {
     }
 }
 
+mod lead;
+
+pub(super) fn command_at(words: &[Word]) -> Option<(String, usize)> {
+    lead::command_at(words)
+}
+
 pub(super) fn command_name(words: &[Word]) -> Option<String> {
-    let word = words.iter().find(|word| !is_assignment(&word.text))?;
-    Some(basename(&word.text))
+    command_at(words).map(|(name, _)| name)
 }
 
 pub(super) fn is_assignment(text: &str) -> bool {

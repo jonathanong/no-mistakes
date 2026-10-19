@@ -1,17 +1,13 @@
-use super::words::{basename, commands, is_assignment};
+use super::words::commands;
 
 pub(super) fn step_verifies(script: &str) -> bool {
     commands(script).into_iter().any(|command| {
-        if command.dynamic {
-            return false;
-        }
         let words: Vec<&str> = command
             .words
             .iter()
-            .skip_while(|word| is_assignment(&word.text))
             .map(|word| word.text.as_str())
             .collect();
-        let Some(name) = words.first().map(|word| basename(word)) else {
+        let Some((name, _)) = super::words::command_at(&command.words) else {
             return false;
         };
         if name == "sha256sum" {

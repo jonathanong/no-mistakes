@@ -21,7 +21,10 @@ actions (`.github/actions/**/action.{yml,yaml}` whose `runs.using` is
 script.
 
 It flags `curl`, `wget`, or a configured helper when an argument is an
-`http://` or `https://` URL, unless any of these is true:
+`http://` or `https://` URL. `sudo`, `env`, `xargs`, and a shell prefix
+(`if`, `!`, `(`, `{`, `time`, `exec`) do not hide that command, and
+`if ! sha256sum -c` still counts as a check. A finding is skipped when any
+of these is true:
 
 - the same `run` body runs `sha256sum -c` (or `--check`, including a short
   cluster such as `-cw`) or `shasum -a 256 -c` (also `-a256` and `--check`)
