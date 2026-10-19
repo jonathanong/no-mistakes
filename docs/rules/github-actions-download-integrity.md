@@ -2,42 +2,79 @@
 
 ## Why and when
 
-Use this rule when a workflow or composite action downloads a file with
-`curl` or `wget` on a hosted runner. An `http` or `https` URL that the same
-step does not verify can change between runs. The rule is opt-in. Listing it
-is what turns it on. It is off by default and is not part of a recommended or
-strict preset.
+Use this rule when a workflow or composite action downloads bytes with `curl`
+or `wget` inside a `run` script. An http(s) URL can change between runs, so a
+later step can execute or unpack different bytes than the author read. The
+rule is opt-in. Listing it is what turns it on. Product defaults do not enable
+it, and it is not part of a recommended or strict preset.
+
+The rule reports only a download it can judge. A URL it cannot resolve is not
+a finding. That silence means the URL was not followed, not that the download
+is safe.
 
 ## What it catches
 
-The rule reads workflow files directly under `.github/workflows/*.{yml,yaml}`
-and composite `action.yml` / `action.yaml` files under `.github/actions/`. A
-file in a subdirectory of `.github/workflows/` is not a workflow GitHub runs,
-so it is ignored. Inside those files it reads `run:` strings on workflow job
-`steps` and on composite `runs.steps`.
+The rule scans step `run` bodies in `.github/workflows/*.{yml,yaml}` (a file
+in a subdirectory is not a workflow GitHub runs) and `runs.steps` in composite
+actions (`.github/actions/**/action.{yml,yaml}` whose `runs.using` is
+`composite`). Other action kinds are ignored. `defaults.run` is not a step
+script.
 
-It flags `curl`, `wget`, and any command named in `downloadHelpers` when a
-word is an `http://` or `https://` URL. These downloads are allowed:
+It flags `curl`, `wget`, or a configured helper when an argument is an
+`http://` or `https://` URL, unless any of these is true:
 
-- The same step runs `sha256sum -c`, `sha256sum --check`, or
-  `shasum -a 256 -c`.
-- The host, with its port removed, is in `trustedHosts`.
-- The URL path is a checksum file (`.sha256`, `.sha256sum`, or `SHA256SUMS`).
-- The step carries `# integrity-check: skip reason=<slug>`. The slug starts
-  with a letter or digit and then uses letters, digits, `_`, or `-`.
+- the same `run` body runs `sha256sum -c` (or `--check`, including a short
+  cluster such as `-cw`) or `shasum -a 256 -c` (also `-a256` and `--check`)
+- the host, after stripping a port and any login prefix, is trusted
+- the URL path is a checksum file (`.sha256`, `.sha256sum`, `.sha512`,
+  `.sha512sum`, `SHA256SUMS`, `SHA256SUMS.txt`, `SHA512SUMS`, or
+  `SHA512SUMS.txt`)
+- the step carries `# integrity-check: skip reason=<slug>`
 
-A simple uppercase assignment such as `BASE_URL="https://example.com"` is
-expanded in later double-quoted and unquoted text in that step, so
-`curl "$BASE_URL/a.tgz"` is judged as that URL. Single quotes are left
-unchanged. A command substitution, backtick, or URL the rule cannot see stays
-silent. Invalid YAML is not a finding. A non-composite action is skipped.
+`<slug>` starts with a letter or digit and then uses letters, digits, `_`, or
+`-`. The comment may be a shell comment in the `run` body, a trailing YAML
+comment on a `run` line, or a YAML comment on the line immediately above the
+step item.
+
+A whole-line uppercase assignment is expanded only when that script has exactly
+one such assignment and the value is a literal (`BASE_URL="https://example.invalid/base"`,
+single quotes, or a bare token). `$NAME` and `${NAME}` are then replaced
+outside single quotes. A second assignment, a lowercase name, `export`, a
+value that contains `$`, a command substitution, or a here-document is not
+expanded and is not judged. The rule does not eval the shell.
+
+A host that is still `$`, `` ` ``, or `${{ }}` after that expansion is not
+judged. A literal untrusted host is judged even when the path still contains
+`$`, because the path is then not a proven checksum file. Flow-style steps the
+line scan cannot place are reported on line 1. Invalid YAML is not a finding,
+which is not a pass. Rewrite anchors, aliases, and flow style into ordinary
+block-style `run` bodies when a finding lands on line 1 and the download is
+not on that line.
+
+Compact `steps:` lists whose `-` item shares the `steps:` column are located
+with the same step scanner as `github-actions-script-expressions`, so
+`no-mistakes-disable-next-line` on the previous line matches the download.
 
 ## Options
 
-`trustedHosts` defaults to `localhost`, `127.0.0.1`, `api.github.com`, and
-`objects.githubusercontent.com`. Setting it, including to `[]`, replaces that
-list. `downloadHelpers` defaults to `[]` and adds command names next to `curl`
-and `wget`.
+`trustedHosts` is a list of host names. Ports are stripped before comparison,
+and comparison is case-insensitive. Subdomains are different hosts. When the
+rule is enabled and `trustedHosts` is omitted, the default is:
+
+```text
+localhost
+127.0.0.1
+api.github.com
+objects.githubusercontent.com
+```
+
+An explicit list replaces the default. `trustedHosts: []` trusts nothing, so
+`api.github.com` is flagged. Write IPv6 hosts in brackets (`[::1]`).
+
+`downloadHelpers` adds command names that count as downloads when they take an
+http(s) URL. The default is only `curl` and `wget`. An explicit list is extra,
+not a replacement, so `[]` leaves `curl` and `wget` in place. A helper is a
+single command token such as `ci_download_to`.
 
 ```yaml
 rules:
@@ -45,55 +82,84 @@ rules:
     scope: repository
     options:
       trustedHosts:
-        - localhost
-        - 127.0.0.1
-        - api.github.com
-        - objects.githubusercontent.com
+        - example.invalid
       downloadHelpers:
         - ci_download_to
 ```
 
 ## Valid example
 
-Verify the download in the same step, or use a trusted host.
+Verify the bytes in the same step, or download a checksum file from an
+untrusted host. Trusted hosts may stay unverified.
 
 ```yaml
 jobs:
-  tools:
+  build:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl -fsSL https://example.com/a.tgz -o a.tgz
-          sha256sum -c a.sha256
-      - run: curl -fsSL https://api.github.com/repos/example/tool
+          curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+          curl -fsSL https://example.invalid/tool.tgz.sha256 -o tool.tgz.sha256
+          sha256sum -c tool.tgz.sha256
+      - run: curl https://api.github.com/repos/example/tool
+      - run: |
+          # integrity-check: skip reason=vendor-tarball
+          curl -fsSL https://example.invalid/vendor.tgz -o vendor.tgz
+```
+
+A composite action uses the same `run` shape:
+
+```yaml
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+        sha256sum -c tool.sha256
 ```
 
 ## Counterexample and fix
 
-This step saves a tarball and never checks it:
+This step downloads an untrusted tarball and never checks the bytes:
 
 ```yaml
-jobs:
-  tools:
-    runs-on: ubuntu-latest
-    steps:
-      - run: curl -fsSL https://example.com/a.tgz -o a.tgz
+- run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
 ```
 
-Fix: run `sha256sum -c` or `shasum -a 256 -c` in that step. A host you trust
-can be added to `trustedHosts`. A download that cannot be checked can carry
-`# integrity-check: skip reason=vendor-tarball` on the step.
+Pin the download in the same step:
+
+```yaml
+- run: |
+    curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+    sha256sum -c tool.tgz.sha256
+```
+
+`wget`, `shasum -a 256 -c`, and a configured helper use the same fix. A single
+literal `BASE_URL="https://example.invalid/base"` followed by `curl "$BASE_URL/tool.tgz"`
+is the same download. Two assignments, or `BASE_URL="$(...)"`, are not expanded.
 
 ## Suppression
 
 Use a YAML comment. `no-mistakes-disable-next-line github-actions-download-integrity`
 suppresses the next line. `no-mistakes-disable-line github-actions-download-integrity`
 suppresses the same line. `no-mistakes-disable-file github-actions-download-integrity`
-suppresses the file. On a compact step list, put the next-line comment on the
-line above the `- run:` item. `guardrails-disable-*` is not a suppression.
+in the leading comment block suppresses the file.
 
 ```yaml
-    steps:
-    # no-mistakes-disable-next-line github-actions-download-integrity
-    - run: curl -fsSL https://example.com/a.tgz -o a.tgz
+# no-mistakes-disable-next-line github-actions-download-integrity
+- run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+- run: curl -fsSL https://example.invalid/other.tgz -o other.tgz # no-mistakes-disable-line github-actions-download-integrity
 ```
+
+`# integrity-check: skip reason=<slug>` is this rule's own skip for a download
+that should not be hashed. It is not a `no-mistakes-disable` comment.
+
+## Related rules
+
+[`github-actions-pinned-hash`](github-actions-pinned-hash.md) pins action code.
+[`github-actions-script-expressions`](github-actions-script-expressions.md)
+rejects untrusted expressions inside scripts.
+[`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
+rejects a persisted write token. This rule only judges http(s) downloads in
+`run` bodies.
