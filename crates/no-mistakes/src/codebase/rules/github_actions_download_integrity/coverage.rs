@@ -174,7 +174,7 @@ fn verifiers_and_option_errors_are_explicit() {
     let error = super::check_with_files(Path::new("."), &config, &[]).unwrap_err();
     assert!(error.to_string().contains("is not a host"), "{error}");
     config.rules[0].options = serde_yaml::from_str("downloadHelpers: ['1bad']").unwrap();
-    let error = super::check_with_files(Path::new(".").as_ref(), &config, &[]).unwrap_err();
+    let error = super::check_with_files(Path::new("."), &config, &[]).unwrap_err();
     assert!(
         error.to_string().contains("is not a command name"),
         "{error}"
