@@ -75,8 +75,8 @@ fn shell_forms_cover_quotes_pipes_and_verifiers() {
 
     let words = commands("FOO=1 /usr/bin/curl");
     assert_eq!(
-        words::command_name(&words[0].words).as_deref(),
-        Some("curl")
+        words::command_at(&words[0].words).map(|(name, _)| name),
+        Some("curl".to_string())
     );
     assert!(words::is_assignment("FOO=1"));
     assert!(!words::is_assignment("=1"));
@@ -84,7 +84,7 @@ fn shell_forms_cover_quotes_pipes_and_verifiers() {
     assert_eq!(words::basename("C:\\bin\\curl"), "curl");
     assert!(words::is_downloader("wget", &[]));
     assert!(!words::is_downloader("echo", &["curl".to_string()]));
-    assert!(words::command_name(&[]).is_none());
+    assert!(words::command_at(&[]).is_none());
 }
 
 #[test]

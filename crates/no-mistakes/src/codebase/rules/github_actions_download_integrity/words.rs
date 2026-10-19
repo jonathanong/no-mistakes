@@ -159,10 +159,6 @@ pub(super) fn command_at(words: &[Word]) -> Option<(String, usize)> {
     lead::command_at(words)
 }
 
-pub(super) fn command_name(words: &[Word]) -> Option<String> {
-    command_at(words).map(|(name, _)| name)
-}
-
 pub(super) fn is_assignment(text: &str) -> bool {
     let Some((name, _)) = text.split_once('=') else {
         return false;
