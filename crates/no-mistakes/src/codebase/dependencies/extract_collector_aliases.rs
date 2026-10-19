@@ -143,6 +143,7 @@ impl ImportCollector {
     fn record_reassigned_callable_alias(&mut self, name: &str, offset: u32) {
         self.record_reassigned_callable_alias_path(name, offset, None, offset);
     }
+    #[rustfmt::skip]
     fn record_reassigned_callable_alias_path(
         &mut self,
         name: &str,
@@ -157,12 +158,7 @@ impl ImportCollector {
             .rposition(|scope| scope.contains(binding_name))
             .map(|depth| (depth, self.lexical_scope_ids[depth]))
         else {
-            if self.collect_value_flow
-                && binding_name == "arguments"
-                && self.project_arguments_member(offset, path, completed_at)
-            {
-                return;
-            }
+            if self.collect_value_flow && binding_name == "arguments" && self.project_arguments_member(offset, path, completed_at) { return; }
             if self.collect_value_flow
                 && (self.imported_bindings.contains(binding_name)
                     || self.predeclared_imported_bindings.contains(binding_name))
@@ -182,5 +178,3 @@ impl ImportCollector {
         }
     }
 }
-
-include!("extract_collector_arguments.rs");

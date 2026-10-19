@@ -21,10 +21,9 @@ impl ImportCollector {
         let Some(target) = arguments.first() else {
             return;
         };
-        let sources = expanded_assign_sources(self, arguments, raw);
+        let sources = super::receiver_escapes::assign_sources(self, arguments, raw);
         let mut destinations: Vec<nested::ReceiverWrite> = Vec::new();
         nested::write_receiver_references(target, &[], &[], &mut destinations);
-        let mut concrete_writes = Vec::new();
         for ((key, prefix), reads, read) in destinations {
             let version = self.mutable_receiver_version(&key, read);
             let root_identity = version.map(mutable_origins::RootVersion::identity);
@@ -47,9 +46,7 @@ impl ImportCollector {
                     if let Some(member) = member {
                         path.push(Some(member));
                         acquired.push(Some((completed, self.current_function_id())));
-                        // A copied field is a member write. Reads must go Unknown
-                        // rather than keep the previous known callee.
-                        concrete_writes.push((key.0, key.1.clone(), path.clone()));
+                        super::receiver_escapes::copied_member(self, &key, &path, completed);
                     }
                     let mut parent_identities =
                         self.assignment_rhs_parent_identities(&key, &path, &acquired, version);
@@ -79,84 +76,5 @@ impl ImportCollector {
                 }
             }
         }
-        for (scope, base, path) in concrete_writes {
-            let dotted = std::iter::once(base.as_str())
-                .chain(path.iter().filter_map(|part| part.as_deref()))
-                .collect::<Vec<_>>()
-                .join(".");
-            self.invalidate_value_write_with_path(
-                scope,
-                &dotted,
-                completed,
-                Some(&path),
-                completed,
-            );
-        }
     }
-
-    /// Literal `Object.assign({}, { client })` is the merged object. Anything
-    /// else stays a call so a shadowed or partial assign cannot invent a field.
-    pub(in super::super::super) fn object_assign_result(
-        &self,
-        call: &oxc_ast::ast::CallExpression<'_>,
-    ) -> Option<ValueExpression> {
-        if simple_callee_name(&call.callee).as_deref() != Some("Object.assign")
-            || self.callee_binding_scope("Object").is_some()
-        {
-            return None;
-        }
-        let mut raw = call.arguments.iter();
-        let target = raw.next()?.as_expression()?;
-        let oxc_ast::ast::Expression::ObjectExpression(target) =
-            crate::codebase::ts_source::unwrap_ts_wrappers(target)
-        else {
-            return None;
-        };
-        let ValueExpression::Object(target_fields, null_prototype) = self.object_value(target)
-        else {
-            return None;
-        };
-        let mut fields = (*target_fields).clone();
-        for source in raw {
-            let expression = source.as_expression()?;
-            let oxc_ast::ast::Expression::ObjectExpression(object) =
-                crate::codebase::ts_source::unwrap_ts_wrappers(expression)
-            else {
-                return None;
-            };
-            let ValueExpression::Object(source_fields, _) = self.object_value(object) else {
-                return None;
-            };
-            for (key, value) in source_fields.iter() {
-                fields.insert(key.clone(), value.clone());
-            }
-        }
-        Some(ValueExpression::Object(
-            std::sync::Arc::new(fields),
-            null_prototype,
-        ))
-    }
-}
-
-fn expanded_assign_sources(
-    collector: &ImportCollector,
-    arguments: &[ValueExpression],
-    raw: &[oxc_ast::ast::Argument<'_>],
-) -> Vec<ValueExpression> {
-    let mut sources = Vec::new();
-    for (index, source) in arguments.iter().enumerate().skip(1) {
-        if let Some(oxc_ast::ast::Argument::SpreadElement(spread)) = raw.get(index) {
-            let value = collector.value_expression(&spread.argument);
-            if let Some(entries) =
-                super::super::super::parameter_call_origins::array_entries(collector, &value)
-            {
-                for (_, value) in entries {
-                    sources.push(value);
-                }
-                continue;
-            }
-        }
-        sources.push(source.clone());
-    }
-    sources
 }

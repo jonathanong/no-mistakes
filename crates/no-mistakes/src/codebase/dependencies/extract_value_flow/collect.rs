@@ -137,8 +137,7 @@ impl ImportCollector {
             return;
         }
         self.record_replacement_call(call);
-        self.note_class_method_call(call);
-        self.note_escaped_arguments(call);
+        self.note_escaped_call(call);
         let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
         self.record_object_assign_providers(&callee, &arguments, &call.arguments, call.span.end);
         self.value_flow.calls.push(ValueCall {
@@ -198,4 +197,3 @@ impl ImportCollector {
 }
 
 include!("callable_assignment_initializers.rs");
-include!("instance_class_calls.rs");

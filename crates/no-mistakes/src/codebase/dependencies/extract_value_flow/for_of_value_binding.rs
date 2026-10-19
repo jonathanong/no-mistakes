@@ -12,12 +12,9 @@ impl ImportCollector {
         let ForStatementLeft::VariableDeclaration(declaration) = left else {
             return;
         };
-        // A named array (`const items = [box]`) is the same receiver list as a
-        // literal. One binding hop; anything else is not a known element list.
-        let Some(mut values) = super::super::parameter_call_origins::array_elements(
-            self,
-            &self.value_expression(right),
-        ) else {
+        let Some(mut values) =
+            super::super::receiver_escapes::array_elements(self, &self.value_expression(right))
+        else {
             return;
         };
         if !values

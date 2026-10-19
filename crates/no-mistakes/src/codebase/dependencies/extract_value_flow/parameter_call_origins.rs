@@ -19,56 +19,6 @@ impl ParameterCallOrigins {
         }
         let mut values: FxHashMap<(usize, String), Vec<ValueExpression>> = fx_map();
         for call in &collector.value_flow.calls {
-            if let ValueExpression::Member(receiver, method) = &call.callee {
-                if matches!(
-                    method.as_str(),
-                    "forEach"
-                        | "map"
-                        | "filter"
-                        | "some"
-                        | "every"
-                        | "find"
-                        | "findIndex"
-                        | "findLast"
-                        | "findLastIndex"
-                        | "flatMap"
-                ) {
-                    if let (Some(items), Some(callback)) =
-                        (array_elements(collector, receiver), call.arguments.first())
-                    {
-                        if let Some(key) = callable_owner(collector, callback)
-                            .and_then(|owner| slots.get(&owner))
-                            .and_then(|parameters| parameters.get(&0))
-                        {
-                            values.entry(key.clone()).or_default().extend(items);
-                        }
-                    }
-                }
-                if matches!(method.as_str(), "reduce" | "reduceRight") {
-                    if let Some(callback) = call.arguments.first() {
-                        if let Some(parameters) =
-                            callable_owner(collector, callback).and_then(|owner| slots.get(&owner))
-                        {
-                            if let Some(key) = parameters.get(&0) {
-                                if let Some(initial) = call.arguments.get(1) {
-                                    values.entry(key.clone()).or_default().push(initial.clone());
-                                } else if let Some(items) = array_elements(collector, receiver) {
-                                    // One element never invokes the callback. Two or more
-                                    // pass element 0 as the accumulator.
-                                    if items.len() >= 2 {
-                                        values.entry(key.clone()).or_default().extend(items);
-                                    }
-                                }
-                            }
-                            if let Some(key) = parameters.get(&1) {
-                                if let Some(items) = array_elements(collector, receiver) {
-                                    values.entry(key.clone()).or_default().extend(items);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
             let Some(parameters) =
                 callable_owner(collector, &call.callee).and_then(|owner| slots.get(&owner))
             else {
@@ -82,27 +32,6 @@ impl ParameterCallOrigins {
                         .push(argument.clone());
                 }
             }
-            arrays::apply_escaped(&mut values, parameters, collector, call.offset);
-        }
-        for (offset, owner, arguments) in &collector.class_method_calls {
-            let Some(parameters) = slots.get(owner) else {
-                continue;
-            };
-            for (index, argument) in arguments.iter().enumerate() {
-                if let Some(key) = parameters.get(&index) {
-                    values
-                        .entry(key.clone())
-                        .or_default()
-                        .push(argument.clone());
-                }
-            }
-            arrays::apply_escaped(&mut values, parameters, collector, *offset);
-        }
-        for (scope, name, value) in &collector.parameter_reassignments {
-            values
-                .entry((*scope, name.clone()))
-                .or_default()
-                .push(value.clone());
         }
         for parameter in &collector.value_flow.parameters {
             if parameter.projection.is_empty()
@@ -114,6 +43,7 @@ impl ParameterCallOrigins {
                     .push(parameter.default.clone());
             }
         }
+        super::receiver_escapes::absorb(collector, &slots, &mut values);
         Self { values }
     }
 
@@ -133,12 +63,8 @@ impl ImportCollector {
     }
 }
 
-#[path = "parameter_call_origin_arrays.rs"]
-mod arrays;
-
-pub(super) use arrays::{array_elements, array_entries};
-
-fn callable_owner(collector: &ImportCollector, callee: &ValueExpression) -> Option<CallableId> {
+#[rustfmt::skip]
+pub(super) fn callable_owner(collector: &ImportCollector, callee: &ValueExpression) -> Option<CallableId> {
     match callee {
         ValueExpression::Callable(id) => Some(*id),
         ValueExpression::Named { name, scope, .. } => {

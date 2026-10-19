@@ -50,19 +50,7 @@ struct ImportCollector {
     unreachable_value_binding_after: Option<u32>,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     parameter_call_origins: Option<std::sync::Arc<extract_value_flow::parameter_call_origins::ParameterCallOrigins>>,
-    /// `const api = new Api()` — write origins only, not a callable binding.
-    /// Nested by scope so a name probe borrows `&str` instead of allocating a key.
-    instance_classes: FxHashMap<usize, FxHashMap<String, CallableId>>,
-    /// Call offset, method, and the raw argument values. Spread and conditional
-    /// shapes are also stored in the escaped maps under that same offset.
-    class_method_calls: Vec<(u32, CallableId, Vec<extract_value_flow::ValueExpression>)>,
-    /// Conditional and spread arguments. Keyed by call offset, then parameter index.
-    escaped_parameter_arguments:
-        FxHashMap<u32, FxHashMap<usize, Vec<extract_value_flow::ValueExpression>>>,
-    /// Values that can occupy every parameter at or after the index, because a
-    /// spread ahead of them had no known elements.
-    escaped_open_arguments: FxHashMap<u32, (usize, Vec<extract_value_flow::ValueExpression>)>,
-    parameter_reassignments: Vec<(usize, String, extract_value_flow::ValueExpression)>,
+    receiver_escapes: extract_value_flow::receiver_escapes::Side,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
     receiver_only_bindings: Option<Box<extract_value_flow::ReceiverBindingOrigins>>,
