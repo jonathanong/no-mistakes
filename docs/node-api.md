@@ -588,6 +588,19 @@ to `false`.
 Vitest literal setup paths use each effective project root, including paths
 without `./`. Package and tsconfig aliases take precedence over relative fallback.
 
+`testsPlan(options)`, `testsTargets(options)`, and `impactedChecks(options)` copy
+`tests.swift.baseCommands` into each Swift target's `baseCommand`. The map is
+optional. When a declared package has no entry, `baseCommand` stays
+`["swift", "test"]`, byte-for-byte the same argv as a config that omits the
+field. Values are literal argv, not a shell string. `runnerArgs` still carries
+the generated `--package-path` and `--filter`. Planning does not execute the
+argv. Import `SwiftPackageBaseCommands` for that map instead of indexing a
+target.
+
+`swiftTestTargets(options)` uses `tests.swift.baseCommands` for a declared
+package and `swift test` otherwise. Its `command` keeps the generated
+`--package-path` and anchored `--filter`.
+
 `testsPlan(options)` returns `fallbackTriggered` and `fallbackReason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a

@@ -122,10 +122,10 @@ fn analyze_project_uses_one_snapshot_and_one_swift_fact_collection() {
 
 #[test]
 fn test_command_handles_root_and_named_packages() {
-    assert_eq!(test_command("", "T"), "swift test --filter '^T\\.'");
-    assert_eq!(test_command(".", "T"), "swift test --filter '^T\\.'");
+    assert_eq!(test_command("", "T", None), "swift test --filter '^T\\.'");
+    assert_eq!(test_command(".", "T", None), "swift test --filter '^T\\.'");
     assert_eq!(
-        test_command("pkg/core", "T"),
+        test_command("pkg/core", "T", None),
         "swift test --package-path 'pkg/core' --filter '^T\\.'"
     );
 }
@@ -133,7 +133,7 @@ fn test_command_handles_root_and_named_packages() {
 #[test]
 fn test_command_escapes_regex_metacharacters() {
     assert_eq!(
-        test_command("pkg", "App.Tests"),
+        test_command("pkg", "App.Tests", None),
         "swift test --package-path 'pkg' --filter '^App\\.Tests\\.'"
     );
 }
@@ -141,7 +141,45 @@ fn test_command_escapes_regex_metacharacters() {
 #[test]
 fn test_command_escapes_quotes_in_package_path() {
     assert_eq!(
-        test_command("bob's app", "T"),
+        test_command("bob's app", "T", None),
         "swift test --package-path 'bob'\\''s app' --filter '^T\\.'"
+    );
+}
+
+#[test]
+fn test_command_quotes_declared_base_argv() {
+    let base = [
+        "/opt/Swift 6.3/usr/bin/swift".to_string(),
+        "test".to_string(),
+    ];
+    assert_eq!(
+        test_command("pkg", "T", Some(&base)),
+        "'/opt/Swift 6.3/usr/bin/swift' test --package-path 'pkg' --filter '^T\\.'"
+    );
+}
+
+#[test]
+fn test_targets_use_declared_base_commands() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/swift-native-topology/fixture"),
+    );
+    let config = root.join("runner-argv.no-mistakes.yml");
+    let report = analyze_project(&root, Some(&config)).expect("swift fixture should analyze");
+    let rows = report.test_targets("swift-clients/core/Sources/ExampleCore/APIClient.swift");
+    let command = |target: &str| {
+        rows.iter()
+            .find(|row| row.target == target)
+            .unwrap_or_else(|| panic!("{target} missing"))
+            .command
+            .as_str()
+    };
+    assert_eq!(
+        command("ExampleAndroidTests"),
+        "'host'\\''s swift' test --package-path 'swift-clients/android' --filter '^ExampleAndroidTests\\.'"
+    );
+    assert_eq!(
+        command("ExampleCoreTests"),
+        "swift test --package-path 'swift-clients/core' --filter '^ExampleCoreTests\\.'"
     );
 }

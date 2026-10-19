@@ -212,7 +212,16 @@ tests:
     packages:
       - swift-clients/core
       - swift-clients/ui
+    baseCommands:
+      swift-clients/ui:
+        - /opt/swift-6.3/usr/bin/swift
+        - test
 ```
+
+`tests.swift.baseCommands` is an optional argv map keyed by a declared package.
+Unset packages still render `swift test`. The array is not a shell command:
+`tests plan` and `tests targets` append `--package-path` and `--filter` as
+later argv elements and do not execute the runner.
 
 Keep these paths scoped to the native workspaces you want analyzed; no
 repository-wide `.csproj`, `.sln`, or `Package.swift` scan runs by default.

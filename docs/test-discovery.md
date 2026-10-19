@@ -38,4 +38,5 @@ Policy-only projects set both fields to the policy key.
 Swift discovery is explicit and package-scoped. Configure SwiftPM package roots
 with `tests.swift.packages`; each `Package.swift` contributes discovered
 `.testTarget(...)` targets under `Tests/<target>/**/*.swift`. Targets run as
-`swift test --package-path <package> --filter <test-target>`.
+`swift test --package-path <package> --filter <test-target>`, or the package's
+`tests.swift.baseCommands` argv.

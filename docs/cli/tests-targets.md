@@ -18,6 +18,10 @@ Key options: `--root`, `--config`, `--framework`, `--format`, and `--json`.
 
 Node API: `testsTargets(options)`.
 
+Swift targets use `["swift", "test"]` unless `tests.swift.baseCommands` sets a
+literal argv for that declared package. `--package-path` and `--filter` are
+still appended, and the lookup does not run the argv.
+
 Cargo targets use the owning visible `Cargo.toml`, its `[package].name`, and
 an enabled `--lib`, `--bin <name>`, or `--test <name>` target. Unit modules under
 `src/**/tests/` are not integration targets. Custom target paths and disabled

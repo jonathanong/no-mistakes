@@ -1,0 +1,8 @@
+tests:
+  swift:
+    packages:
+      - clients/android
+    baseCommand:
+      clients/android:
+        - swift
+        - test

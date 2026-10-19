@@ -87,6 +87,31 @@ fn swift_test_targets_impl_returns_targets() {
 }
 
 #[test]
+fn swift_test_targets_impl_uses_base_commands() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/swift-native-topology/fixture"),
+    );
+    let config = root.join("runner-argv.no-mistakes.yml");
+    let options = json!({
+        "root": root.display().to_string(),
+        "config": config.display().to_string(),
+        "file": "swift-clients/core/Sources/ExampleCore/APIClient.swift",
+    })
+    .to_string();
+    let output =
+        swift_test_targets_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    assert!(
+        output.contains(r#"host'\\''s swift"#),
+        "android command should use the declared runner: {output}"
+    );
+    assert!(
+        output.contains("swift test --package-path 'swift-clients/core'"),
+        "core stays the default toolchain: {output}"
+    );
+}
+
+#[test]
 fn swift_impls_require_file() {
     let options = json!({ "root": fixture_root("swift-test-plan") }).to_string();
     assert!(

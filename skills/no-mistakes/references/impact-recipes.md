@@ -213,7 +213,8 @@ Read the results as:
   dependency-graph traversal.
 - `--format commands` prints the exact runner invocation for every selected
   test (`vitest <file>`, `playwright test <file>`, `dotnet test <project>
-  --no-restore`, `swift test --filter <target>`), ready to run as-is.
+  --no-restore`, `swift test --filter <target>`, or the package's
+  `tests.swift.baseCommands` argv), ready to run as-is.
 - `--environment <name>` selects a configured `testPlan` environment (e.g. a
   narrower `pre-push` budget vs. a broader `pull-request` budget); omit it to
   use the default groups.

@@ -14,6 +14,7 @@ mod generic_checks;
 mod lang_frameworks;
 mod repository_checks;
 mod runner_isolation;
+mod swift_runner;
 mod timeout;
 
 fn fixture() -> PathBuf {

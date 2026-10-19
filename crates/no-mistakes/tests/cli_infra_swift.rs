@@ -160,3 +160,51 @@ fn swift_test_targets_reports_covering_target() {
         .collect();
     assert!(targets.contains(&"ExampleCoreTests"));
 }
+
+#[test]
+fn swift_test_targets_uses_declared_base_commands() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/swift-native-topology/fixture"),
+    );
+    let config = root.join("runner-argv.no-mistakes.yml");
+    let output = run_in(
+        &root,
+        &[
+            "swift",
+            "test-targets",
+            "swift-clients/core/Sources/ExampleCore/APIClient.swift",
+            "--config",
+            config.to_str().unwrap(),
+            "--json",
+        ],
+    );
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let command = |target: &str| {
+        json.as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["target"] == target)
+            .unwrap_or_else(|| panic!("{target} missing"))["command"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    assert_eq!(
+        command("ExampleAndroidTests"),
+        "'host'\\''s swift' test --package-path 'swift-clients/android' --filter '^ExampleAndroidTests\\.'"
+    );
+    assert_eq!(
+        command("ExampleCoreTests"),
+        "swift test --package-path 'swift-clients/core' --filter '^ExampleCoreTests\\.'"
+    );
+    assert_eq!(
+        command("ExampleUITests"),
+        "'/opt/Swift 6.3/usr/bin/swift' test --package-path 'swift-clients/ui' --filter '^ExampleUITests\\.'"
+    );
+}

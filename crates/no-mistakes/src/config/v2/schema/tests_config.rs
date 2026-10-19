@@ -113,10 +113,33 @@ pub struct VitestConfig {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct SwiftConfig {
     pub packages: Vec<String>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
+    /// Literal argv for one declared package. Omitted packages stay `swift test`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub base_commands: BTreeMap<String, Vec<String>>,
+}
+
+impl SwiftConfig {
+    /// Exact `baseCommands` key, otherwise a key whose trailing `/` trims to `package`.
+    pub(crate) fn base_command_for(&self, package: &str) -> Option<&[String]> {
+        Self::base_command_in(&self.base_commands, package)
+    }
+
+    pub(crate) fn base_command_in<'a>(
+        commands: &'a BTreeMap<String, Vec<String>>,
+        package: &str,
+    ) -> Option<&'a [String]> {
+        if let Some(argv) = commands.get(package) {
+            return Some(argv.as_slice());
+        }
+        commands
+            .iter()
+            .find(|(key, _)| key.trim_end_matches('/') == package)
+            .map(|(_, argv)| argv.as_slice())
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
