@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-download-integrity
+name: disabled
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz

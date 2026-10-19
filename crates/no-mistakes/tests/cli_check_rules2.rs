@@ -542,6 +542,16 @@ fn finite_set_path_regex_matches_broken_symlink_path_existence() {
 }
 
 #[test]
+fn github_actions_download_integrity_cli_fails_for_an_unverified_curl() {
+    let root = fixture("github-actions-download-integrity", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(body.contains("github-actions-download-integrity"), "{body}");
+    assert!(body.contains("example.invalid"), "{body}");
+}
+
+#[test]
 fn github_actions_checkout_credentials_cli_fails_for_a_write_token() {
     let root = fixture("github-actions-checkout-credentials", "fail");
     let out = check_fixture_config(&root, ".no-mistakes.yml");

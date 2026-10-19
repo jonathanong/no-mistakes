@@ -1,0 +1,8 @@
+name: empty-hosts
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl https://api.github.com/repos/example/tool
+      - run: curl http://127.0.0.1:9/health

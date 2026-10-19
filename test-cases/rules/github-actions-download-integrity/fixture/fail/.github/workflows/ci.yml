@@ -1,0 +1,13 @@
+name: fail
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz
+      - run: curl -fsSL https://api.github.com/repos/example/tool
+      - run: |
+          BASE_URL="https://example.invalid"
+          curl -fsSL "$BASE_URL/b.tgz" -o b.tgz
+      - run: wget -O c.tgz https://example.invalid/c.tgz
+      - run: curl -fsSL https://example.invalid/a.tgz.sha256 -o a.sha256

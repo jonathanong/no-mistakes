@@ -1,0 +1,21 @@
+name: pass
+on: push
+jobs:
+  ok:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.invalid/a.tgz -o a.tgz && sha256sum -c a.sha256
+      - run: curl -fsSL https://api.github.com/repos/example/tool
+      - run: curl http://127.0.0.1:9/health
+      - run: wget https://localhost/status
+      - run: curl https://objects.githubusercontent.com/pkg/artifact
+      - run: curl -fsSL https://example.invalid/a.tgz.sha256 -o a.sha256
+      - run: wget -O sums.txt https://example.invalid/SHA256SUMS
+      - run: |
+          # integrity-check: skip reason=vendor-tarball
+          curl -fsSL https://example.invalid/vendor.tgz -o vendor.tgz
+      - run: echo curl https://example.invalid/not-a-command
+      - run: |
+          BASE_URL="https://api.github.com"
+          curl -fsSL "$BASE_URL/repos/example/tool"
+      - run: shasum -a 256 -c sums.txt && curl -fsSL https://example.invalid/d.tgz -o d.tgz

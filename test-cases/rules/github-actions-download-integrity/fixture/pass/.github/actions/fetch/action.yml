@@ -1,0 +1,9 @@
+name: fetch
+description: verified download
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+        sha256sum -c tool.sha256

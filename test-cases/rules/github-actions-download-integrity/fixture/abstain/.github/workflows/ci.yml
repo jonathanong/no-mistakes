@@ -1,0 +1,20 @@
+name: dynamic
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Unresolved hosts and helpers that are not configured stay silent. That is not a pass.
+      - run: curl -fsSL "$(cat url.txt)" -o a.tgz
+      - run: ci_download_to out https://example.invalid/a.tgz
+      - run: |
+          BASE_URL="https://example.invalid/base"
+          OTHER_URL="https://example.invalid/other"
+          curl "$BASE_URL/tool.tgz"
+      - run: |
+          BASE_URL="$(printf '%s' https://example.invalid)"
+          curl "$BASE_URL/tool.tgz"
+      - run: |
+          cat <<'EOF'
+          curl https://example.invalid/heredoc.tgz
+          EOF
