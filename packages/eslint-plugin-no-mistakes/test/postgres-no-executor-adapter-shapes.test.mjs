@@ -112,6 +112,41 @@ describe("postgres-no-executor-adapter shapes", () => {
       ["passed", "forward"],
     );
     assert.match(constructed[1].message, /new Runner\(read, write\)/);
+
+    for (const snippet of [
+      "run(!flag && read, account)",
+      "run(typeof flag && read, account)",
+      "run(new Runner() && read, account)",
+      "run(flag === cond && read, account)",
+      "run(flag === cond || read, account)",
+      "run(+account.length && read, account)",
+      "run((account, flag) && read, account)",
+    ]) {
+      const reported = onLine("edges.ts", snippet);
+      assert.equal(reported.length, 1, snippet);
+      assert.equal(reported[0].messageId, "passed", snippet);
+      assert.match(reported[0].message, /read\(sql`…`\)/);
+      assert.doesNotMatch(reported[0].message, /&&|\|\|/);
+    }
+
+    const method = onLine("edges.ts", "exec(statement: string)");
+    assert.equal(method.length, 1);
+    assert.match(method[0].message, /run\(\{ exec: read \}, account\)/);
+
+    const computed = onLine("edges.ts", "[account](statement: string)");
+    assert.equal(computed.length, 1);
+    assert.match(computed[0].message, /run\(\{ \[account\]: read \}, account\)/);
+
+    const overload = onLine("edges.ts", "run(overload, account)");
+    assert.equal(overload.length, 1);
+    assert.equal(overload[0].messageId, "forward");
+
+    for (const snippet of ["run(read.bind(read), account)", "new Runner(read.bind(read))"]) {
+      const reported = onLine("edges.ts", snippet);
+      assert.equal(reported.length, 1, snippet);
+      assert.equal(reported[0].messageId, "passed", snippet);
+      assert.match(reported[0].message, /read\(sql`…`\)/);
+    }
   });
 
   it("leaves unjudged shapes silent, including an untyped client.query", () => {

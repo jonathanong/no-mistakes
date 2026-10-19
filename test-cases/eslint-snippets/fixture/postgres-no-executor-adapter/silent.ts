@@ -32,17 +32,12 @@ export function reassigned(account: string, other: unknown) {
   }
   void dynamic;
   run(stable, account);
-
-  function overload(statement: string): unknown;
-  function overload(statement: string) {
-    return read(statement);
-  }
-  run(overload, account);
 }
 
 export function stored(
   account: string,
   flag: boolean,
+  cond: boolean,
   name: string,
   client: { query(sql: string): unknown },
   other: unknown,
@@ -94,7 +89,6 @@ export function stored(
   run(NaN && read, account);
   run(!1 && read, account);
   run(`` && read, account);
-  run(+flag && read, account);
   run(1 || read, account);
   run(true || read, account);
   run("x" || read, account);
@@ -109,10 +103,12 @@ export function stored(
   run(!1 ?? read, account);
   run((0 as number) ?? read, account);
   run((0 as number) && read, account);
-  run(typeof flag && read, account);
   run(typeof flag || read, account);
   run(typeof flag ?? read, account);
-  run(flag === 1 && read, account);
+  run(flag === cond ?? read, account);
+  run(new Runner() || read, account);
+  run(read.bind(null, account), account);
+  run(read.bind(null)(account), account);
   run(read && flag, account);
   run(read && client.query, account);
   new Runner(client.query);

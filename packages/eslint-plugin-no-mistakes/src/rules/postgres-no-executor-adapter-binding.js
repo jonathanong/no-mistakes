@@ -84,11 +84,15 @@ function containsDirectEval(root) {
 }
 
 // A function declaration is stable only when nothing assigns it and no direct
-// eval in its scope can. A function expression's inner name is a different binding.
+// eval in its scope can. Overload signatures are TSDeclareFunction defs and
+// cannot reassign the one implementation. A function expression's inner name
+// is a different binding.
 function stableFunction(identifier, context) {
   const variable = resolveVariable(identifier, context);
-  if (!variable || variable.defs.length !== 1) return null;
-  const def = variable.defs[0];
+  if (!variable) return null;
+  const defs = variable.defs.filter((def) => def.node?.type !== "TSDeclareFunction");
+  if (defs.length !== 1) return null;
+  const def = defs[0];
   if (def.type !== "FunctionName" || def.node?.type !== "FunctionDeclaration") return null;
   if (variable.references.some((reference) => reference.isWrite())) return null;
   if (containsDirectEval(variable.scope.block)) return null;

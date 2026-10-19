@@ -38,10 +38,12 @@ export function edges(
   run({ exec: read, save: write }, account);
   run([read, , write], account);
   run({ exec(statement: string) { return read(statement); } }, account);
+  run({ [account](statement: string) { return read(statement); } }, account);
   run({ ...client, exec: read }, account);
   const exec = read;
   run({ exec }, account);
-  run(read.bind(null, account), account);
+  run(read.bind(read), account);
+  new Runner(read.bind(read));
   run(read["bind"](null), account);
   run(read[`bind`](null), account);
   run((flag ? read : write).bind(null), account);
@@ -75,9 +77,21 @@ export function edges(
   run(client?.flag && read, account);
   run(client?.flag ?? read, account);
   run(!flag && read, account);
+  run(typeof flag && read, account);
+  run(new Runner() && read, account);
+  run(flag === cond && read, account);
+  run(flag === cond || read, account);
+  run(+account.length && read, account);
+  run((account, flag) && read, account);
   run(read && write, account);
   run(read || write, account);
   run((flag ? read : other) ?? write, account);
+
+  function overload(statement: string): unknown;
+  function overload(statement: string) {
+    return read(statement);
+  }
+  run(overload, account);
 }
 
 export function shadowed(undefined: unknown, NaN: unknown, account: string) {

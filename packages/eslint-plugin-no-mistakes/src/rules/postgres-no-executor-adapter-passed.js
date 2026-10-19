@@ -50,10 +50,6 @@ function combineConditional(consequent, alternate) {
   };
 }
 
-function resolvePart(node, context, bindings, options, seen) {
-  return resolvePassed(node, context, bindings, options, seen);
-}
-
 // An executor value, a const or stable function that carries one, bind, or
 // && / || / ??. Fresh objects and constructor arguments are visited by the rule.
 function resolvePassed(node, context, bindings, options, seen) {
@@ -77,24 +73,24 @@ function resolvePassed(node, context, bindings, options, seen) {
   if (current.type === "ConditionalExpression") {
     // A const alias inside a branch is not the judged `(flag ? read : write)(sql)` callee.
     return combineConditional(
-      resolvePart(current.consequent, context, bindings, options, seen),
-      resolvePart(current.alternate, context, bindings, options, seen),
+      resolvePassed(current.consequent, context, bindings, options, seen),
+      resolvePassed(current.alternate, context, bindings, options, seen),
     );
   }
   if (current.type === "LogicalExpression") {
     return logicalPassed(
       current,
-      (part) => resolvePart(part, context, bindings, options, seen),
+      (part) => resolvePassed(part, context, bindings, options, seen),
       context,
       combineConditional,
     );
   }
   if (current.type === "CallExpression") {
-    return boundExecutor(current, (part) => resolvePart(part, context, bindings, options, seen));
+    return boundExecutor(current, (part) => resolvePassed(part, context, bindings, options, seen));
   }
   if (current.type === "Identifier") {
     const init = constInitializer(current, context, seen);
-    if (init) return resolvePart(init, context, bindings, options, seen);
+    if (init) return resolvePassed(init, context, bindings, options, seen);
     const fn = stableFunction(current, context);
     if (!fn) return null;
     const adapter = classifyFunction(fn, context, bindings, options);

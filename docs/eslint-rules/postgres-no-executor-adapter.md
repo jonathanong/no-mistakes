@@ -70,6 +70,8 @@ export function list(account: string, flag: boolean, tx: Tx) {
   run(read.bind(null), account);
   run(read ?? write, account);
   run(flag && read, account);
+  run(flag === 1 && read, account);
+  run(typeof flag && read, account);
 }
 ```
 
@@ -79,14 +81,20 @@ passing it. A `const` bound to a conditional of executors also names
 ``(flag ? read : write)(sql`…`)`` when every branch is an identifier executor.
 `run(read, account)` is not a judged rewrite. The same passed-value report
 covers a fresh object property or array element, a `new` argument, and
-`read.bind(...)`.
+`read.bind(null)`. The rejected quote keeps the property or element around
+that executor (`run({ exec: read }, account)`, `run([read], account)`).
 
 A `function` declaration is followed when that binding is never assigned and
-no direct `eval` can reach it. The message matches the `const` arrow form.
-`read ?? write` and `read || write` name only `read`: a proven executor is
-never nullish or falsy, so the right operand is not the value. `read && write`
-names only `write`. `flag && read` and `flag ?? read` name only `read`, not the
-whole `&&` or `??` expression.
+no direct `eval` can reach it. A TypeScript overload signature is not a second
+definition and does not block that rewrite. The message matches the `const`
+arrow form. `read ?? write` and `read || write` name only `read`: a proven
+executor is never nullish or falsy, so the right operand is not the value.
+`read && write` names only `write`. `flag && read`, `flag === 1 && read`,
+`typeof flag && read`, and `flag ?? read` name only `read`, not the whole
+expression. `typeof` and `new` are always truthy, so `typeof flag && read` and
+`new Runner() && read` always pass `read`. A comparison, `!`, unary `+` or
+`-`, or a sequence can be truthy or falsy, so those left operands are followed
+too (`!flag && read`, `+account.length && read`, `(account, flag) && read`).
 
 A conditional reports when any branch is an executor. The message names only
 those branches (``read(sql`…`)`` for a passed value, `read(sql)` inside a
@@ -133,15 +141,18 @@ Not followed, not safe: a missing report is not a judgment that the adapter is
 safe. The rule does not follow a stored object or array (properties can
 change), a property read, a spread element, a getter or setter, or a private
 method. It does not follow `read.bind` passed without calling it, optional
-`read?.bind(null)` / `read.bind?.(null)`, or `.bind` on a callback. A function
+`read?.bind(null)` / `read.bind?.(null)`, or `.bind` on a callback. `.bind`
+with arguments after `this` (`read.bind(null, account)`) is not followed:
+those arguments are prepended, and `read(sql`…`)` would drop them. A function
 declaration that is assigned, or that shares its scope with direct `eval`, is
 not followed. A function expression's inner name is not followed; the `const`
-binding is the one this rule judges. Comparisons, `typeof`, and other
-expressions this rule does not constant-fold stay silent (`typeof flag || read`,
-`flag === 1 && read`). Literal operands are folded: `0 && read`, `1 || read`,
-and `0 ?? read` are silent because that executor is not the value. An untyped
-`client.query` under a configured module is not named, including when it
-appears in these shapes.
+binding is the one this rule judges. A left operand that cannot select the
+executor stays silent. `typeof flag || read` and `new Runner() || read` are
+always the left side. `typeof flag ?? read` and `flag === 1 ?? read` stay
+silent because that left side is never nullish. Literal operands are folded:
+`0 && read`, `1 || read`, and `0 ?? read` are silent because that executor is
+not the value. An untyped `client.query` under a configured module is not
+named, including when it appears in these shapes.
 
 ```ts
 const options = { exec: (statement: string) => read(statement) };
@@ -150,12 +161,15 @@ run(options.exec, account);
 const fns = [read];
 run(fns[0], account);
 run(((statement: string) => read(statement)).bind(null), account);
+run(read.bind(null, account), account);
 function adapter(statement: string) {
   return read(statement);
 }
 adapter = other;
 run(adapter, account);
 run(typeof flag || read, account);
+run(new Runner() || read, account);
+run(flag === 1 ?? read, account);
 run(0 ?? read, account);
 ```
 
