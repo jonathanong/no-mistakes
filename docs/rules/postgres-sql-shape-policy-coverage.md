@@ -1,5 +1,7 @@
 # postgres-sql-shape-policy coverage
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 The opted-in `not-in-subquery` shape also checks `HAVING`, aggregate `FILTER`,
 and mutation predicates, including `MERGE ON` and `WHEN … AND` conditions.
 MERGE source queries and subqueries in its update/insert actions are also

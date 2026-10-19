@@ -1,5 +1,7 @@
 # postgres-sql-shape-policy: Bounded iteration shapes
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 ## Bounded iteration shapes
 
 Two opt-in shapes flag background-job SQL that signals unbounded work.

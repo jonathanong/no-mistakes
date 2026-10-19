@@ -1,5 +1,7 @@
 # `postgres-no-add-column`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags `ALTER TABLE … ADD COLUMN` in PostgreSQL schema SQL. New columns belong
 in the original `CREATE TABLE` so deployed databases are not widened in
 place. `ADD CONSTRAINT` and `CREATE TABLE` are not findings.

@@ -1,5 +1,7 @@
 # `postgres-column-requires-trigger`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 A column that must be maintained by a trigger is reported when that trigger is
 missing, fires only for `UPDATE OF` a column list, or is left behind after the
 column is dropped. With an empty `requirements` list the rule reports nothing.

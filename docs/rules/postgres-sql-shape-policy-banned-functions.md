@@ -2,6 +2,8 @@
 
 # postgres-sql-shape-policy: Banned function calls
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 `banned-function-call` is opt-in. Set a nonempty
 `shapeOptions.bannedFunctionCall.functions` list to the SQL function names to
 ban. An unqualified configured name matches the final name part, whether the

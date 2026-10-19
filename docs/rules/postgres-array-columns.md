@@ -1,5 +1,7 @@
 # `postgres-array-columns`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags a column whose `data_type` is an array. Array columns have no per-element
 foreign key, index, or cascade. A reviewed `allow` entry keeps the few arrays
 an external protocol defines. `uuid[]` is never allowlisted: each reference

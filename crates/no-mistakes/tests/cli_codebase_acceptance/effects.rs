@@ -400,6 +400,43 @@ fn effects_cli_invalidates_one_time_lexical_writes_before_a_loop() {
 }
 
 #[test]
+fn effects_project_uses_the_same_executors_as_postgres_rules() {
+    let root = fixture("postgres-project-scope");
+    let value = run_json(&root, &["effects", "postgres", "--entry", "src/query.ts"]);
+    let callees: Vec<_> = value["callSites"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|site| site["callee"].as_str().unwrap())
+        .collect();
+    assert!(callees.contains(&"beginTransaction"), "{value}");
+    assert!(callees.contains(&"TransactionQuery"), "{value}");
+    assert!(callees.contains(&"writePool.connect().query"), "{value}");
+
+    let config = root.join(".no-mistakes.yml");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--json",
+    ]);
+    let body = stdout(&output);
+    assert!(!output.status.success(), "{body}");
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap();
+    let files: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["rule"] == "postgres-no-offset")
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
+    assert!(files.contains(&5), "{report}");
+    assert!(files.contains(&6), "{report}");
+}
+
+#[test]
 fn lexical_replaced_members_reach_unknown_call_rule_findings() {
     let root = fixture("value-flow-lexical-member-replacement");
     let output = run_in(

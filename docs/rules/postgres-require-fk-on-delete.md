@@ -1,5 +1,7 @@
 # `postgres-require-fk-on-delete`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags foreign keys that omit `ON DELETE` or declare `ON DELETE NO ACTION`.
 PostgreSQL treats a missing action as `NO ACTION`, which is not an explicit
 choice. `RESTRICT`, `CASCADE`, `SET NULL`, and `SET DEFAULT` are clean.

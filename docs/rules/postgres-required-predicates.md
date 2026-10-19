@@ -1,5 +1,7 @@
 # `postgres-required-predicates`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Require configured predicates whenever a query reads a named PostgreSQL
 relation. A relation may require textual predicate fragments, named columns,
 or — when `partitionKeys` is `require` — every column of its catalog partition

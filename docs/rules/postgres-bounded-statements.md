@@ -1,5 +1,7 @@
 # `postgres-bounded-statements`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Require a statement that can match many rows to take a `LIMIT`. A `SELECT` with no
 bound, or an `UPDATE` or `DELETE` that touches every row matching a predicate, does
 work that grows with the table: its time, lock footprint and memory have no ceiling.

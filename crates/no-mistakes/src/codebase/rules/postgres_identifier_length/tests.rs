@@ -58,6 +58,16 @@ fn omitted_options_default_to_63_bytes_and_every_sql_file() {
 }
 
 #[test]
+fn locked_empty_sql_include_does_not_expand_to_every_sql_file() {
+    let opts: Options = serde_yaml::from_str("sqlIncludeLocked: true").unwrap();
+    assert!(compile_options(&opts)
+        .unwrap()
+        .schema
+        .sql_include
+        .is_empty());
+}
+
+#[test]
 fn max_bytes_outside_1_through_63_is_a_config_error() {
     for value in [0, 64, -1] {
         let Err(error) = compile_options(&Options {

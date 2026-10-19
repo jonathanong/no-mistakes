@@ -23,6 +23,12 @@ pub struct EffectKindConfig {
     pub transaction_functions: Vec<String>,
     /// Configured batch/pipeline builders which exempt their own call paths.
     pub batch_functions: Vec<String>,
+    /// Project whose `postgres.executors` supplies returned and typed selectors.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
+    /// Set after `project` selectors are expanded. Not configuration.
+    #[serde(skip, default)]
+    pub project_scope_expanded: bool,
 }
 
 /// An effect selected by its exact import specifier and exported member path.

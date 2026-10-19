@@ -19,6 +19,8 @@ const DEFAULT_DML_EXTENSIONS: &[&str] = &["ts", "mts", "tsx", "js", "sql"];
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
+    #[serde(default)]
+    pub(crate) sql_include_locked: bool,
     pub(crate) include: Vec<String>,
     pub(crate) import_specifier: Option<String>,
     pub(crate) executor_names: Vec<String>,
@@ -90,11 +92,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         include,
         schema: PostgresSchemaOptions {
-            sql_include: if opts.sql_include.is_empty() {
-                PostgresSchemaOptions::default().sql_include
-            } else {
-                opts.sql_include.clone()
-            },
+            sql_include: crate::codebase::postgres::effective_sql_include(
+                &opts.sql_include,
+                opts.sql_include_locked,
+            ),
         },
         embedded: embedded_options(opts),
         extra_generated_columns: opts.extra_generated_columns.clone(),

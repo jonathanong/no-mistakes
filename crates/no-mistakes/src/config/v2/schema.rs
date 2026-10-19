@@ -12,7 +12,8 @@ mod applications;
 mod ci_checks;
 mod effects;
 mod infra_config;
-mod postgres_executors;
+pub(crate) mod postgres_executors;
+mod project_postgres;
 mod queues;
 mod rule_targets;
 mod string_or_list;
@@ -23,6 +24,9 @@ pub use queues::{EnqueueFactory, QueueFactoryRoles, QueueNameFactory, WorkerFact
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use effects::{EffectKindConfig, EffectReturnedMemberConfig, EffectTargetConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
+pub use project_postgres::{
+    ProjectPostgresConfig, ProjectPostgresExecutors, ProjectPostgresTrustedSqlTag,
+};
 pub use tests_config::{
     DartConfig, DotnetConfig, DotnetProjectConfig, ElixirConfig, GoConfig, ImpactConfig,
     JavaConfig, JestConfig, KotlinConfig, PhpConfig, PlaywrightAppBinding,
@@ -54,6 +58,9 @@ pub struct NoMistakesConfig {
     #[serde(rename = "testPlan", alias = "test_plan")]
     pub test_plan: TestPlanConfig,
     pub rules: Vec<RuleDef>,
+    /// Set after PostgreSQL project scope inheritance. Not configuration.
+    #[serde(skip, default)]
+    pub postgres_project_scope_materialized: bool,
     /// GitHub Actions workflow analysis configuration (`no-mistakes ci`).
     pub ci: CiConfig,
     /// Changed-file validation command mappings (`no-mistakes impacted-checks`).
@@ -96,6 +103,8 @@ pub struct Project {
     pub queues: QueueConfig,
     pub trpc: TrpcConfig,
     pub rewrites: Vec<RewriteRule>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub postgres: Option<ProjectPostgresConfig>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

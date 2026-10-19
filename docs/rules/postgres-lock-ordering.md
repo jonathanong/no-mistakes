@@ -1,5 +1,7 @@
 # `postgres-lock-ordering`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags executed PostgreSQL SQL that takes a `FOR UPDATE` lock with a multi-row
 predicate (`IN` or `= ANY`) but no `ORDER BY` and no `SKIP LOCKED`. Two
 transactions that lock the same rows in opposite order can deadlock (ABBA).

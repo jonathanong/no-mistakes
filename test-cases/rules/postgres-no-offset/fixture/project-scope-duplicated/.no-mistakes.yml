@@ -1,0 +1,12 @@
+# Same two rules with the executor block repeated, for parity with project-scope-shared.
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include: ["src/**"]
+    options:
+      importSpecifier: "@example/db"
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: ["src/**"]
+    options:
+      importSpecifier: "@example/db"

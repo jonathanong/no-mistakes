@@ -14,6 +14,8 @@ const DEFAULT_ALLOW_DIRECTIVE: &str = "fk-index-allow";
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
+    #[serde(default)]
+    pub(crate) sql_include_locked: bool,
     pub(crate) allow_directive: String,
     pub(crate) allowed_columns: Vec<String>,
     pub(crate) allowed_tables: Vec<String>,
@@ -32,7 +34,7 @@ super::prepared_file_rule_facts!();
 
 fn compile_options(opts: &Options) -> CompiledOptions {
     CompiledOptions {
-        schema: super::schema_options_with_fallback(&opts.sql_include),
+        schema: super::schema_options(&opts.sql_include, opts.sql_include_locked),
         allow_directive: if opts.allow_directive.is_empty() {
             DEFAULT_ALLOW_DIRECTIVE.to_string()
         } else {

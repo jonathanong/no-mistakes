@@ -2,6 +2,8 @@
 
 # `postgres-object-naming`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Checks PostgreSQL object names in a schema snapshot against configured
 patterns, plural forms, denied tokens, and spelling. Naming conventions such
 as `idx_<table>__<columns>` stay readable when long table names are

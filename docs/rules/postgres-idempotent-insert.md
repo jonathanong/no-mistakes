@@ -1,5 +1,7 @@
 # `postgres-idempotent-insert`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Require executed `INSERT` statements to be replay-safe: `ON CONFLICT DO
 NOTHING`, a conjunctive `WHERE NOT EXISTS`, or `ON CONFLICT DO UPDATE` that
 converges. Optional follow-on proofs (volatility, arbiter identity, triggers,

@@ -1,5 +1,7 @@
 # `postgres-finite-text-columns`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Flags a text column whose `CHECK` constraint pins it to string literals, and
 optionally a text column whose name marks a fixed set of values. The value
 set belongs in an enum type or a foreign key to a lookup table. PostgreSQL

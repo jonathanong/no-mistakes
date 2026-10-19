@@ -26,6 +26,7 @@ mod profiles;
 mod rule_options;
 mod schema;
 mod source;
+mod sql_include_policy;
 mod statement_facts;
 pub use statement_facts::SqlLifecycleFacts;
 pub(crate) use statement_facts::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewReads};
@@ -114,6 +115,7 @@ pub(crate) use profiles::{
 pub use rule_options::fail_unanalyzable_sql;
 pub use schema::extract_create_table_metadata;
 pub use source::*;
+pub(crate) use sql_include_policy::{effective_sql_include, profile_sql_include};
 pub use statements::{
     extract_sql_statement_facts, extract_sql_statement_facts_for_embedded_call,
     has_top_level_not_exists_in, insert_keyword_count, mask_quoted_sql, SqlAssignmentFact,

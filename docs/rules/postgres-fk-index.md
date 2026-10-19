@@ -1,5 +1,7 @@
 # `postgres-fk-index`
 
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+
 Requires each foreign-key leading column in configured SQL files to have a
 btree or hash index that PostgreSQL can use for parent DELETE/RESTRICT probes.
 GIN/GiST/BRIN indexes and unrelated `WHERE` predicates do not count.
