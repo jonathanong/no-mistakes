@@ -37,6 +37,11 @@ fn configured_factory_roles_resolve_aliases_and_name_dead_jobs() {
         report.check
     );
     assert!(
+        kinds.contains(&"queue-cycle"),
+        "a producer/worker loop should be reported, check: {:?}",
+        report.check
+    );
+    assert!(
         kinds.contains(&"debounce-ttl"),
         "debounce ttl should be reported, check: {:?}",
         report.check

@@ -89,6 +89,9 @@ fn build_report_and_relationships(
         }
     }
     check.extend(local_checks(root, facts));
+    check.extend(crate::queue::cycles::queue_cycles(
+        root, &producers, &workers,
+    ));
     let report = ProjectReport {
         producers: producers.iter().map(|p| p.public(root)).collect(),
         workers: workers.iter().map(|w| w.public(root)).collect(),
