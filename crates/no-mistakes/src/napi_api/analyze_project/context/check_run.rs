@@ -136,6 +136,7 @@ impl SharedCheckContext {
                 facts_duration: std::time::Duration::ZERO,
                 completed,
                 include_suppressed,
+                unproven_member_query_sql: facts.unproven_member_query_sql,
             },
         )
     }

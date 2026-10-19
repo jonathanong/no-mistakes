@@ -4,6 +4,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 use std::collections::{HashMap, HashSet};
 
 mod aggregate;
+mod arguments;
 mod identity;
 mod proof;
 use identity::Origin;
@@ -122,6 +123,12 @@ impl ScopeVisitor<'_> {
         &mut self,
         receiver: &Expression<'_>,
     ) {
+        // Holders, returns, and aliases can replace `.query` after the copy.
+        self.revoke_receiver(receiver, true);
+    }
+
+    /// Passing a binding into a function declared outside this file.
+    fn revoke_passed_argument(&mut self, receiver: &Expression<'_>) {
         self.revoke_receiver(receiver, false);
     }
 
@@ -179,9 +186,13 @@ impl ScopeVisitor<'_> {
         &mut self,
         call: &CallExpression<'_>,
     ) {
-        for argument in &call.arguments {
+        for (index, argument) in call.arguments.iter().enumerate() {
             if let Some(expression) = argument.as_expression() {
-                self.revoke_query_receiver(expression);
+                if self.namespace_argument_mutates(call, index) {
+                    self.revoke_query_receiver(expression);
+                } else {
+                    self.revoke_passed_argument(expression);
+                }
             }
         }
     }

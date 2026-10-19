@@ -17,6 +17,8 @@ pub(crate) use placeholders::{
     INTERNAL_PLACEHOLDER,
 };
 mod relative;
+mod unproven;
+pub(crate) use unproven::retain_unproven_spans;
 mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
@@ -32,6 +34,8 @@ pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
+#[cfg(test)]
+pub(crate) use relative::{PendingRelativeCall, RelativeScopedCandidate};
 /// Parse `source` and extract executor SQL call sites.
 pub fn extract_embedded_sql_from_source(
     path: &Path,
@@ -103,7 +107,8 @@ pub fn extract_embedded_sql_from_program(
             confirmed_order: std::mem::take(&mut collected.confirmed_order),
             call_spans: collected.pending_spans,
         },
-        unproven_member_query_sql: collected.unproven_member_query_sql,
+        unproven_member_query_spans: collected.unproven_member_query_spans,
+        postgres_rule_ids: Vec::new(),
     }
 }
 

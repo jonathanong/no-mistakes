@@ -15,6 +15,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod imported_sql;
+mod unproven;
+pub(super) use unproven::count_unproven_member_queries;
+#[doc(hidden)]
+pub use unproven::unproven_member_query_warning;
 
 /// Promote relative scoped-executor candidates using the request resolver cache.
 ///
@@ -25,13 +29,12 @@ pub(super) fn project_relative_executor_scopes(
     sources: &SourceStore,
     catalog: Option<&TsConfigCatalog>,
     files: &mut FileIdMap<CheckFileFacts>,
-) {
+) -> u32 {
     let annotation = files
         .into_iter()
         .any(|(_, file)| !file.query_annotation.is_empty());
     if !has_relative_candidates(files) && !annotation && !imported_sql::has_candidates(files) {
-        emit_unproven_member_query_warning(files);
-        return;
+        return finish_unproven(files);
     }
     let tsconfig = tsconfig_for(session, root, sources);
     let workspace = workspace_for(session, root, sources);
@@ -53,9 +56,15 @@ pub(super) fn project_relative_executor_scopes(
                 &workspace,
                 &resolver,
             );
-            project_relative_scoped_facts(embedded, package_root.as_deref(), |specifier| {
-                resolver.resolve(specifier, path)
-            });
+            let source = sources
+                .read_path(path)
+                .unwrap_or_else(|_| std::sync::Arc::<str>::from(""));
+            project_relative_scoped_facts(
+                embedded,
+                source.as_ref(),
+                package_root.as_deref(),
+                |specifier| resolver.resolve(specifier, path),
+            );
         }
     }
     let imported = imported_sql::has_candidates(files);
@@ -110,21 +119,13 @@ pub(super) fn project_relative_executor_scopes(
             });
         }
     }
-    emit_unproven_member_query_warning(files);
+    finish_unproven(files)
 }
 
-fn emit_unproven_member_query_warning(files: &FileIdMap<CheckFileFacts>) {
-    let mut count = 0u32;
-    for (_, facts) in files.into_iter() {
-        for (_, embedded) in &facts.embedded_sql {
-            count = count.saturating_add(embedded.unproven_member_query_sql);
-        }
-    }
-    if count > 0 {
-        crate::diagnostics::print_stderr(format_args!(
-            "warning: {count} member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md"
-        ));
-    }
+fn finish_unproven(files: &FileIdMap<CheckFileFacts>) -> u32 {
+    let count = unproven::count_unproven_member_queries(files.values());
+    unproven::note_unproven_member_queries(count);
+    count
 }
 
 fn has_relative_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {

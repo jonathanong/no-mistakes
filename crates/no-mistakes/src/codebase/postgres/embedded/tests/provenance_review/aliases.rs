@@ -39,6 +39,76 @@ fn mutable_alias_branches_unknown_rebind_and_identity_assignment_are_sound() {
 }
 
 #[test]
+fn object_assign_on_an_imported_executor_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p2".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-assign.ts",
+        &options,
+        &[site(
+            5,
+            "p2.query(\"SELECT id FROM users WHERE x = 2\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn define_property_on_an_imported_executor_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p6".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-define.ts",
+        &options,
+        &[site(
+            5,
+            "p6.query(\"SELECT id FROM users WHERE x = 6\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn same_file_helper_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p5".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-helper.ts",
+        &options,
+        &[site(
+            9,
+            "p5.query(\"SELECT id FROM users WHERE x = 5\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn holder_object_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-holder.ts",
+        &options,
+        &[site(
+            5,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            None,
+        )],
+    );
+}
+
+#[test]
+fn returned_import_query_write_is_unanalyzable() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["p2".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-getter.ts",
+        &options,
+        &[site(
+            9,
+            "p2.query(\"SELECT id FROM users WHERE x = 2\")",
+            None,
+        )],
+    );
+}
+
+#[test]
 fn passing_an_imported_executor_does_not_downgrade_its_calls() {
     let options =
         EmbeddedSqlOptions::configured("@example/db", &["pool".into(), "replacement".into()]);

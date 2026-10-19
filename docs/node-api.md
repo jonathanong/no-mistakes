@@ -660,7 +660,12 @@ edges.
 `check(options)` returns the same structured check report as CLI JSON,
 including configured filesystem rules such as
 `package-json-nested-workspace-coverage`, and `warnings: string[]` for checks
-that could not run.
+that could not run. `check()` and `checkJson` also return optional
+`unprovenMemberQuerySql` (`number` on the exported `CheckReport`) when
+SQL-looking member `.query` calls were not proven to be executors. The field
+is omitted when the count is zero. It is not part of `warnings` and does not
+set a failure. Those APIs return the count and do not print the CLI stderr
+line. An `analyzeProject()` report of type `check` includes the same field.
 
 PostgreSQL checks share the CLI SQL frontend: parenthesized `TABLE relation`
 subqueries retain quoted identity and view cascade dependencies in `check()`

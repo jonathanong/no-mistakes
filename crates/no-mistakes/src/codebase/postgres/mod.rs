@@ -77,11 +77,13 @@ pub use embedded::{
     EmbeddedSqlSourcePosition, EmbeddedSqlVariant, TrustedSqlTag, MAX_EMBEDDED_SQL_VARIANTS,
 };
 pub(crate) use embedded::{
-    package_name, package_root_for_specifier, project_relative_scoped_facts,
+    package_name, package_root_for_specifier, project_relative_scoped_facts, retain_unproven_spans,
 };
 pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
 };
+#[cfg(test)]
+pub(crate) use embedded::{PendingRelativeCall, PendingRelativeScope, RelativeScopedCandidate};
 pub use executed_source::{
     extract_executed_postgres_sql, extract_executed_postgres_sql_with_imports,
     ExecutedPostgresResolvedImport, ExecutedPostgresSource, ExecutedPostgresSql,
@@ -102,8 +104,9 @@ pub use offset::{
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use profiles::{
-    configure_prepared_postgres_plan, configured_embedded_sql_options_for_checks,
-    configured_schema_catalog_paths, PREPARED_EMBEDDED_SQL_RULE_IDS, SCHEMA_CATALOG_RULE_IDS,
+    assign_prepared_embedded_sql_options, configure_prepared_postgres_plan,
+    configured_embedded_sql_options_for_checks, configured_schema_catalog_paths,
+    PREPARED_EMBEDDED_SQL_RULE_IDS, SCHEMA_CATALOG_RULE_IDS,
 };
 pub(crate) use profiles::{
     configured_embedded_sql_options, load_schema_catalogs, prepare_embedded_sql_facts,

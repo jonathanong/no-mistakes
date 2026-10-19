@@ -13,6 +13,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         suppressed,
         include_suppressed,
         timings,
+        unproven_member_query_sql,
     } = results;
     let _ = timings;
     let mut value = serde_json::json!({
@@ -31,6 +32,9 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
     if *include_suppressed {
         value["suppressed"] = serde_json::to_value(suppressed)
             .expect("suppression accounting serialization never fails");
+    }
+    if *unproven_member_query_sql > 0 {
+        value["unprovenMemberQuerySql"] = serde_json::json!(unproven_member_query_sql);
     }
     // Dependency feature unification can switch serde_json maps from sorted
     // storage to insertion-ordered storage. Keep the public report stable in

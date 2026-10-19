@@ -57,6 +57,9 @@ pub struct CheckFactMap {
     pub(crate) playwright_source_files: Arc<Vec<PathBuf>>,
     pub(crate) playwright_test_files_by_project: PlaywrightTestFilesByProject,
     pub stats: CheckFactStats,
+    /// Deduped SQL-looking member `.query` calls that were not proven executors.
+    /// Printed by the CLI; it is not a finding and does not fail the run.
+    pub(crate) unproven_member_query_sql: u32,
     pub(crate) app_selector_occurrences_cache: AppSelectorOccurrencesCache,
     pub(crate) playwright_routes_cache: PlaywrightRoutesCache,
     pub(crate) app_text_targets_cache: AppTextTargetsCache,
@@ -65,6 +68,14 @@ pub struct CheckFactMap {
         String,
         Result<Arc<crate::codebase::postgres::SchemaCatalog>, Arc<str>>,
     >,
+}
+
+impl CheckFactMap {
+    /// SQL-looking member `.query` calls that were not proven to be executors.
+    #[doc(hidden)]
+    pub fn unproven_member_query_sql(&self) -> u32 {
+        self.unproven_member_query_sql
+    }
 }
 
 #[derive(Default)]

@@ -36,7 +36,7 @@ fn an_unresolved_specifier_and_empty_or_unknown_owners_drop_the_call() {
             ..PendingRelativeScope::default()
         },
     );
-    project_relative_scoped_facts(&mut facts, Some(&root), |specifier| {
+    project_relative_scoped_facts(&mut facts, "", Some(&root), |specifier| {
         (specifier == "../transaction").then(|| inside.clone())
     });
     assert_eq!(sqls(&facts), ["kept-by-sibling"]);
@@ -139,7 +139,7 @@ fn empty_candidates_clear_pending_without_reading_the_resolver() {
             ..PendingRelativeScope::default()
         },
     );
-    project_relative_scoped_facts(&mut facts, None, |_| panic!("resolver"));
+    project_relative_scoped_facts(&mut facts, "", None, |_| panic!("resolver"));
     assert_eq!(sqls(&facts), ["confirmed"]);
     assert_eq!(facts.pending_relative, PendingRelativeScope::default());
 }

@@ -62,6 +62,36 @@ fn explicit_annotation_profiles_union_and_deduplicate() {
 }
 
 #[test]
+fn embedded_sql_rule_ids_union_without_duplicating_a_rule() {
+    let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
+    let mut plan = CheckFactPlan {
+        embedded_sql_rule_ids: [(read.clone(), vec!["postgres-required-predicates".into()])].into(),
+        ..Default::default()
+    };
+    plan.include(CheckFactPlan {
+        embedded_sql_rule_ids: [(
+            read.clone(),
+            vec![
+                "postgres-required-predicates".into(),
+                "postgres-explicit-columns".into(),
+            ],
+        )]
+        .into(),
+        ..Default::default()
+    });
+    assert_eq!(
+        plan.embedded_sql_rule_ids.get(&read).map(Vec::as_slice),
+        Some(
+            [
+                "postgres-required-predicates".to_string(),
+                "postgres-explicit-columns".to_string(),
+            ]
+            .as_slice()
+        )
+    );
+}
+
+#[test]
 fn inactive_plan_does_not_widen_explicit_annotation_demand() {
     let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
     let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);

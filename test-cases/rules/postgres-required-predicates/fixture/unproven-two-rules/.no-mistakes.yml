@@ -1,0 +1,15 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [pool]
+      unanalyzableSql: fail
+      relations: [{ table: users, requireColumns: [tenant_id] }]
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [other]
+      unanalyzableSql: fail
+      relations: [{ table: users, requireColumns: [tenant_id] }]

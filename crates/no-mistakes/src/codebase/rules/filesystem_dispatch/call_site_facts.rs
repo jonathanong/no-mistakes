@@ -43,10 +43,7 @@ pub(super) fn prepare_call_site_facts(
         plan.graph.imports = true;
     }
     crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
-    plan.embedded_sql_options = crate::codebase::postgres::configured_embedded_sql_options(
-        config,
-        crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS,
-    )?;
+    crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if !needs_call_sites
         && plan.companion_import_plans.is_empty()

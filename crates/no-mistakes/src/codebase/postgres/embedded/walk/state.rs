@@ -72,7 +72,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) function_scopes: Vec<usize>,
     pub(crate) functions: resolve::LocalFunctions,
     pub(crate) sql_statement_types: HashSet<String>,
-    pub(crate) unproven_member_query_sql: u32,
+    pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
 }
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
@@ -88,7 +88,7 @@ pub(crate) struct CollectedCalls {
     pub(crate) pending_calls: Vec<PendingRelativeCall>,
     pub(crate) diagnostic_member_sequences: Vec<u32>,
     pub(crate) confirmed_order: Vec<u32>,
-    pub(crate) unproven_member_query_sql: u32,
+    pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
 }
 
 pub(crate) fn collect_calls<'a>(
@@ -147,7 +147,7 @@ pub(crate) fn collect_calls<'a>(
         function_scopes: Vec::new(),
         functions: resolve::LocalFunctions::collect(program, source, &options.trusted_sql_tags),
         sql_statement_types: sql_statement_type_bindings(program),
-        unproven_member_query_sql: 0,
+        unproven_member_query_spans: Vec::new(),
     };
     visitor.visit_program(program);
     visitor.downgrade_escaped_member_calls();
@@ -183,6 +183,6 @@ pub(crate) fn collect_calls<'a>(
         pending_calls: visitor.pending_calls,
         diagnostic_member_sequences,
         confirmed_order: visitor.confirmed_order,
-        unproven_member_query_sql: visitor.unproven_member_query_sql,
+        unproven_member_query_spans: visitor.unproven_member_query_spans,
     }
 }

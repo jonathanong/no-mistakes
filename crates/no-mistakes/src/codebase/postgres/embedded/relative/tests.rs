@@ -53,7 +53,8 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         matched_factory_names: Vec::new(),
         matched_type_names: Vec::new(),
         pending_relative: pending,
-        unproven_member_query_sql: 0,
+        unproven_member_query_spans: Vec::new(),
+        postgres_rule_ids: Vec::new(),
     }
 }
 
@@ -66,7 +67,7 @@ fn sqls(facts: &EmbeddedSqlFileFacts) -> Vec<String> {
 }
 
 fn project(facts: &mut EmbeddedSqlFileFacts, root: Option<&Path>, resolved: Option<PathBuf>) {
-    project_relative_scoped_facts(facts, root, |_| resolved.clone());
+    project_relative_scoped_facts(facts, "", root, |_| resolved.clone());
 }
 
 fn embedded_fixture(name: &str) -> PathBuf {

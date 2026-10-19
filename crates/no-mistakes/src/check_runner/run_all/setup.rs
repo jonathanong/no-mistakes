@@ -64,8 +64,7 @@ pub(super) fn build(
     )?;
     plan.graph.imports |= !plan.production_import_paths.is_empty();
     no_mistakes::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
-    plan.embedded_sql_options =
-        no_mistakes::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;
+    no_mistakes::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     let schema_catalog_paths = no_mistakes::codebase::postgres::configured_schema_catalog_paths(
         config,
         no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,

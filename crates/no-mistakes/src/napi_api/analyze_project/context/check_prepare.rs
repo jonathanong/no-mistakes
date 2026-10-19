@@ -60,8 +60,7 @@ impl SharedCheckContext {
             unique_exports: unique_exports_enabled,
             embedded_sql: enabled.embedded_sql,
         });
-        plan.embedded_sql_options =
-            crate::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;
+        crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
         plan.postgres_schema_catalog_paths =
             crate::codebase::postgres::configured_schema_catalog_paths(
                 config,

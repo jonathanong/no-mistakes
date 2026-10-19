@@ -340,3 +340,22 @@ fn check_json_reads_job_step_sum_option_from_config() {
     targets.sort_unstable();
     assert_eq!(targets, ["above", "conditional-matrix-composite", "equal"]);
 }
+
+#[test]
+fn check_json_reports_unproven_member_query_sql_without_warnings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-required-predicates/fixture/unproven-two-rules");
+    let report: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": root.join(".no-mistakes.yml") }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(report["unprovenMemberQuerySql"], 1, "{report}");
+    assert_eq!(report["warnings"], json!([]), "{report}");
+    assert!(
+        report["rules"].as_array().is_some_and(Vec::is_empty),
+        "{report}"
+    );
+}

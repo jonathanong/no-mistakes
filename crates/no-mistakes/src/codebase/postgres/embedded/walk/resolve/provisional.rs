@@ -35,13 +35,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
             if owners.is_empty() {
                 let recovered = executor_call(visitor, call, "query".to_string());
                 if looks_like_statement(&recovered) {
-                    visitor.unproven_member_query_sql =
-                        visitor.unproven_member_query_sql.saturating_add(1);
-                    if let Some(observer) =
-                        crate::diagnostics::current().filter(|observer| observer.verbose())
-                    {
-                        observer.increment("postgres.unproven_member_query_sql", 1);
-                    }
+                    visitor
+                        .unproven_member_query_spans
+                        .push((call.span.start, call.span.end));
                 }
             }
             let sequence = visitor.next_seq;

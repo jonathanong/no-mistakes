@@ -78,10 +78,15 @@ warning, including when timings are off:
 warning: N member .query calls with SQL-looking text weren't proven to be executors; see docs/migrations/explicit-postgres-executors.md
 ```
 
-JSON stdout does not include that warning. Zero stays silent. Its advisory
-leading-statement heuristic includes common queries, transactions, and DDL; it
-does not prove executor ownership. A non-SQL HTTP `.query({ resource: ... })`
-does not add to it.
+JSON stdout omits the warning text. It includes optional
+`unprovenMemberQuerySql` when the deduped count is greater than zero and omits
+that field at zero. `check()` and `checkJson` return the same field and do not
+print the stderr line. A line suppressed for every PostgreSQL rule on that
+executor profile is not counted, and spans are deduplicated per file across option
+sets. Zero stays silent on stderr. The `--verbose-timings` work counter matches
+the deduped count. Its advisory leading-statement heuristic includes common
+queries, transactions, and DDL; it does not prove executor ownership. A
+non-SQL HTTP `.query({ resource: ... })` does not add to it.
 
 Parallel phase durations can overlap their enclosing phase and siblings. Never
 add lines marked `parallel; non-additive` to estimate total time; use `total`

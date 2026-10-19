@@ -142,9 +142,15 @@ pub(super) fn prepared_embedded_sql(
     profiles
         .into_iter()
         .map(|options| {
-            let facts = crate::codebase::postgres::extract_embedded_sql_from_program(
+            let mut facts = crate::codebase::postgres::extract_embedded_sql_from_program(
                 path, program, source, &options,
             );
+            facts.postgres_rule_ids = plan
+                .embedded_sql_rule_ids
+                .get(&options)
+                .cloned()
+                .unwrap_or_default();
+            crate::codebase::postgres::retain_unproven_spans(&mut facts, source);
             (options, facts)
         })
         .collect()

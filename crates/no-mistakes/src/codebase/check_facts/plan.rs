@@ -41,6 +41,12 @@ pub struct CheckFactPlan {
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
     pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
+    /// PostgreSQL rule ids that selected each embedded-SQL profile.
+    ///
+    /// Empty for a direct extract. A site is omitted from the unproven count
+    /// only when every id in the profile suppresses that line.
+    pub embedded_sql_rule_ids:
+        std::collections::BTreeMap<crate::codebase::postgres::EmbeddedSqlOptions, Vec<String>>,
     /// Repository-relative schema snapshots loaded once at the request boundary.
     pub postgres_schema_catalog_paths: Vec<String>,
     pub postgres_dml: bool,
@@ -56,6 +62,26 @@ pub struct CheckFactPlan {
     pub postgres_sql_include: Vec<String>,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
+}
+
+fn merge_embedded_sql_rule_ids(
+    existing: &mut std::collections::BTreeMap<
+        crate::codebase::postgres::EmbeddedSqlOptions,
+        Vec<String>,
+    >,
+    additional: std::collections::BTreeMap<
+        crate::codebase::postgres::EmbeddedSqlOptions,
+        Vec<String>,
+    >,
+) {
+    for (options, ids) in additional {
+        let slot = existing.entry(options).or_default();
+        for id in ids {
+            if !slot.contains(&id) {
+                slot.push(id);
+            }
+        }
+    }
 }
 
 impl CheckFactPlan {
@@ -134,6 +160,7 @@ impl CheckFactPlan {
         self.embedded_sql_options.extend(other.embedded_sql_options);
         self.embedded_sql_options.sort();
         self.embedded_sql_options.dedup();
+        merge_embedded_sql_rule_ids(&mut self.embedded_sql_rule_ids, other.embedded_sql_rule_ids);
         self.postgres_schema_catalog_paths
             .extend(other.postgres_schema_catalog_paths);
         self.postgres_schema_catalog_paths.sort();

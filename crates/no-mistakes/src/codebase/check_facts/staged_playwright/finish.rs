@@ -81,6 +81,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         app_text_targets_cache: Arc::new(app_text_targets_cache),
         route_reachable_files_cache: Arc::new(DashMap::new()),
         postgres_schema_catalogs,
+        unproven_member_query_sql: 0,
     };
     map.postgres =
         crate::codebase::postgres::prepared::prepare(&root, &map.files, &sources, &plan, &map);

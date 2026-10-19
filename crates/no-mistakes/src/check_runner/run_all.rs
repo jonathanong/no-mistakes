@@ -166,5 +166,6 @@ pub(crate) fn run_all_with_evidence(
             filesystem_rules,
         ))?,
         include_suppressed,
+        unproven_member_query_sql: facts.unproven_member_query_sql(),
     })
 }

@@ -852,6 +852,10 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     /domain:[\s\S]*\| "advisories";/,
   );
   assert.match(
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
+    /unprovenMemberQuerySql\?: number;/,
+  );
+  assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,
   );

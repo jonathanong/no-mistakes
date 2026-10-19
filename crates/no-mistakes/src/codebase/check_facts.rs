@@ -108,6 +108,8 @@ pub(crate) use playwright_plan::{
     PlaywrightFactSelection, PlaywrightModuleResolution, PlaywrightOccurrenceKey,
     PlaywrightSettingsKey,
 };
+#[doc(hidden)]
+pub use relative_scope::unproven_member_query_warning;
 pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, RunnerConfigFacts};
 pub use stats::CheckFactStats;
 

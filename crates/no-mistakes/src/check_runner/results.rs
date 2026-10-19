@@ -28,6 +28,7 @@ pub(crate) struct FinalizeInput<'a> {
     pub(crate) facts_duration: Duration,
     pub(crate) completed: CompletedDomainChecks,
     pub(crate) include_suppressed: bool,
+    pub(crate) unproven_member_query_sql: u32,
 }
 
 pub(crate) struct CheckResults {
@@ -43,6 +44,9 @@ pub(crate) struct CheckResults {
     pub(crate) suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
     pub(crate) include_suppressed: bool,
     pub(crate) timings: Vec<(&'static str, Duration)>,
+    /// Deduped SQL-looking member `.query` calls with no executor proof.
+    /// Omitted from JSON when zero. Not part of `warnings`.
+    pub(crate) unproven_member_query_sql: u32,
 }
 
 pub(crate) struct CompletedDomainChecks {
@@ -79,6 +83,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         facts_duration,
         completed,
         include_suppressed,
+        unproven_member_query_sql,
     } = input;
     let mut react = completed.react;
     let react_suppression_targets = react.react_suppression_targets.as_slice();
@@ -158,6 +163,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             Vec::new()
         },
         include_suppressed,
+        unproven_member_query_sql,
     })
 }
 
@@ -174,6 +180,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         advisories: Vec::new(),
         suppressed: Vec::new(),
         include_suppressed: false,
+        unproven_member_query_sql: 0,
         timings: vec![
             ("discover", Duration::ZERO),
             ("parse_extract", Duration::ZERO),

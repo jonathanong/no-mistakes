@@ -149,7 +149,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &sources,
         &mut ts,
     );
-    super::relative_scope::project_relative_executor_scopes(
+    let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
         session,
         root,
         &sources,
@@ -163,7 +163,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &ts,
         integration_runner_configs.clone(),
     );
-    finish_map(FinishMapInput {
+    let mut map = finish_map(FinishMapInput {
         integration_route_links,
         root: root.to_path_buf(),
         sources,
@@ -177,7 +177,9 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         playwright_source_files,
         playwright_test_files_by_project,
         integration_runner_configs,
-    })
+    });
+    map.unproven_member_query_sql = unproven_member_query_sql;
+    map
 }
 
 #[cfg(test)]

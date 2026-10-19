@@ -44,7 +44,11 @@ pub struct EmbeddedSqlFileFacts {
     pub matched_type_names: Vec<String>,
     /// Relative imports of configured names, projected after the request resolver exists.
     pub(crate) pending_relative: PendingRelativeScope,
-    pub(crate) unproven_member_query_sql: u32,
+    /// SQL-looking member `.query` calls with no executor proof, by source span.
+    pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
+    /// PostgreSQL rules that share this options profile. Empty means the
+    /// extract has no check rule, so suppression does not apply.
+    pub(crate) postgres_rule_ids: Vec<String>,
 }
 
 // Fragment alternatives are internal provenance, so the legacy public debug
