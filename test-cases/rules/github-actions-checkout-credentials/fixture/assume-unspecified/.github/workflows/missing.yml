@@ -1,0 +1,8 @@
+# No permissions key. The option treats the default token as write.
+name: missing
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

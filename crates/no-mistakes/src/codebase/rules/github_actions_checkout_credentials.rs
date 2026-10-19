@@ -11,20 +11,24 @@ mod uses;
 
 pub const RULE_ID: &str = "github-actions-checkout-credentials";
 
-/// The rule has no options. A non-empty options map is rejected.
+/// `assumeWriteWhenUnspecified` defaults to false. Unknown option keys are rejected.
 #[derive(Debug, Default, Deserialize)]
-struct Options;
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+struct Options {
+    assume_write_when_unspecified: bool,
+}
 
 super::sourced_file_rule_entrypoints!();
 
 fn scan(
     root: &Path,
-    _opts: &Options,
+    opts: &Options,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    let assume = opts.assume_write_when_unspecified;
     super::github_actions_workflow_files::scan_files(root, files, sources, &|rel, content| {
-        checkout::check_source(rel, content)
+        checkout::check_source(rel, content, assume)
     })
 }
 
