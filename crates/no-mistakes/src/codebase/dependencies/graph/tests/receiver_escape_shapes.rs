@@ -149,6 +149,80 @@ fn reduce_fallthrough_does_not_invent_a_write() {
 }
 
 #[test]
+fn intermediate_parameter_is_not_dropped_from_the_write() {
+    let (built, root) = graph();
+    assert_unknown(&built, &root, "intermediate-parameter", "b.client.get");
+    assert_unknown(&built, &root, "intermediate-parameter", "replica.get");
+    assert_export(&built, &root, "intermediate-parameter", "primary.get");
+    assert_export(&built, &root, "intermediate-parameter", "unrelated.get");
+}
+
+#[test]
+fn chained_calls_do_not_share_one_spread_slot() {
+    let (built, root) = graph();
+    assert_unknown(&built, &root, "chained-call-spread", "replica.get");
+    // Replacing `client` and then writing `.get` drops the previous client.
+    assert_export(&built, &root, "chained-call-spread", "untouched.get");
+    assert_export(&built, &root, "chained-call-spread", "unrelated.get");
+}
+
+#[test]
+fn curried_calls_do_not_share_one_spread_slot() {
+    let (built, root) = graph();
+    assert_unknown(&built, &root, "curried-call-spread", "replica.get");
+    // Replacing `client` and then writing `.get` drops the previous client.
+    assert_export(&built, &root, "curried-call-spread", "untouched.get");
+    assert_export(&built, &root, "curried-call-spread", "unrelated.get");
+}
+
+#[test]
+fn logical_reassignment_keeps_the_right_hand_receiver() {
+    let (built, root) = graph();
+    assert_unknown(&built, &root, "logical-reassign", "replica.get");
+    assert_export(&built, &root, "logical-reassign", "primary.get");
+    assert_export(&built, &root, "logical-reassign", "untouched.get");
+}
+
+#[test]
+fn compound_reassignment_does_not_adopt_the_right_hand_receiver() {
+    let (built, root) = graph();
+    assert_export(&built, &root, "compound-reassign", "replica.get");
+    assert_export(&built, &root, "compound-reassign", "primary.get");
+}
+
+#[test]
+fn nested_spread_holds_the_receiver() {
+    unknown_replica("spread-nested-holds-box");
+}
+
+#[test]
+fn nested_spread_keeps_its_element_ahead_of_a_later_one() {
+    unknown_replica("spread-nested-holds-box-then-other");
+}
+
+#[test]
+fn nested_spread_of_a_named_array_uses_the_element() {
+    unknown_replica("spread-nested-named");
+}
+
+#[test]
+fn nested_spread_conditional_reaches_the_later_parameter() {
+    unknown_replica("spread-nested-conditional");
+}
+
+#[test]
+fn class_method_nested_spread_uses_the_element() {
+    unknown_replica("class-method-nested-spread");
+}
+
+#[test]
+fn nested_spread_of_other_stays_known() {
+    let (built, root) = graph();
+    assert_export(&built, &root, "spread-nested-other", "replica.get");
+    assert_export(&built, &root, "spread-nested-other", "unrelated.get");
+}
+
+#[test]
 fn unrelated_object_assign_field_drops_the_previous_callee() {
     let (built, root) = graph();
     assert_unknown(

@@ -1,0 +1,122 @@
+use super::*;
+
+pub(in super::super) fn absorb(
+    collector: &ImportCollector,
+    slots: &FxHashMap<CallableId, FxHashMap<usize, (usize, String)>>,
+    values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
+) {
+    for call in &collector.value_flow.calls {
+        if let (ValueExpression::Member(receiver, method), Some(callback)) =
+            (&call.callee, call.arguments.first())
+        {
+            let owner = super::super::parameter_call_origins::callable_owner(collector, callback);
+            if matches!(
+                method.as_str(),
+                "forEach"
+                    | "map"
+                    | "filter"
+                    | "some"
+                    | "every"
+                    | "find"
+                    | "findIndex"
+                    | "findLast"
+                    | "findLastIndex"
+                    | "flatMap"
+            ) {
+                if let Some(items) = super::array_elements(collector, receiver) {
+                    for item in items {
+                        push_slot(values, slots, owner, 0, item);
+                    }
+                }
+            }
+            if matches!(method.as_str(), "reduce" | "reduceRight") {
+                let parameters = owner.and_then(|id| slots.get(&id));
+                if let Some(key) = parameters.and_then(|parameters| parameters.get(&0)) {
+                    if let Some(initial) = call.arguments.get(1) {
+                        values.entry(key.clone()).or_default().push(initial.clone());
+                    } else if let Some(items) =
+                        super::array_elements(collector, receiver).filter(|items| items.len() >= 2)
+                    {
+                        // One element never invokes the callback. Two or more pass
+                        // element 0 as the accumulator.
+                        values.entry(key.clone()).or_default().extend(items);
+                    }
+                }
+                if let Some(key) = parameters.and_then(|parameters| parameters.get(&1)) {
+                    if let Some(items) = super::array_elements(collector, receiver) {
+                        values.entry(key.clone()).or_default().extend(items);
+                    }
+                }
+            }
+        }
+        if let Some(parameters) =
+            super::super::parameter_call_origins::callable_owner(collector, &call.callee)
+                .and_then(|id| slots.get(&id))
+        {
+            apply_escaped(values, parameters, collector, call.offset, call.end);
+        }
+    }
+    for (offset, end, method, arguments) in &collector.receiver_escapes.methods {
+        if let Some(parameters) = slots.get(method) {
+            for (index, argument) in arguments.iter().enumerate() {
+                if let Some(key) = parameters.get(&index) {
+                    values
+                        .entry(key.clone())
+                        .or_default()
+                        .push(argument.clone());
+                }
+            }
+            apply_escaped(values, parameters, collector, *offset, *end);
+        }
+    }
+    for (scope, name, value) in &collector.receiver_escapes.reassigned {
+        values
+            .entry((*scope, name.clone()))
+            .or_default()
+            .push(value.clone());
+    }
+}
+
+fn apply_escaped(
+    values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
+    parameters: &FxHashMap<usize, (usize, String)>,
+    collector: &ImportCollector,
+    offset: u32,
+    end: u32,
+) {
+    if let Some(extras) = collector.receiver_escapes.escaped.get(&(offset, end)) {
+        for (index, extra) in extras {
+            if let Some(key) = parameters.get(index) {
+                values
+                    .entry(key.clone())
+                    .or_default()
+                    .extend(extra.iter().cloned());
+            }
+        }
+    }
+    if let Some((start, extra)) = collector.receiver_escapes.open.get(&(offset, end)) {
+        for (index, key) in parameters {
+            if *index >= *start {
+                values
+                    .entry(key.clone())
+                    .or_default()
+                    .extend(extra.iter().cloned());
+            }
+        }
+    }
+}
+
+fn push_slot(
+    values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
+    slots: &FxHashMap<CallableId, FxHashMap<usize, (usize, String)>>,
+    owner: Option<CallableId>,
+    index: usize,
+    item: ValueExpression,
+) {
+    if let Some(key) = owner
+        .and_then(|id| slots.get(&id))
+        .and_then(|parameters| parameters.get(&index))
+    {
+        values.entry(key.clone()).or_default().push(item);
+    }
+}

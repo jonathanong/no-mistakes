@@ -7,7 +7,7 @@ function mutate(a, x) {
   x.client.get = replacement;
 }
 box = { client: replica };
-// The nested spread opens the tail. `box` is a later visible element, so it is included.
+// The nested spread occupies slot 0. `box` is the next element, so it is parameter 1.
 mutate(...[...[other], box]);
 replica.get('changed');
 unrelated.get('control');

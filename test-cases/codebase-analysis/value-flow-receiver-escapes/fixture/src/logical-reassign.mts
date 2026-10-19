@@ -1,8 +1,8 @@
-import { primary, replica, unrelated } from '@vendor/valkey';
+import { primary, replica, untouched, unrelated } from '@vendor/valkey';
 function replacement() {}
 let box = { client: primary };
 function mutate(value) {
-  // A nullish argument takes the fallback. `??=` is still a write of `box`.
+  // `value` may stay nullish or become `box`. The RHS is a possible receiver.
   value ??= box;
   value.client.get = replacement;
 }
@@ -11,3 +11,4 @@ mutate(null);
 replica.get('changed');
 unrelated.get('control');
 primary.get('old');
+untouched.get('also');

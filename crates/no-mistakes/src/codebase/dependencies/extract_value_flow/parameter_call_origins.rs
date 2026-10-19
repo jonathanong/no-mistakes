@@ -63,8 +63,10 @@ impl ImportCollector {
     }
 }
 
-#[rustfmt::skip]
-pub(super) fn callable_owner(collector: &ImportCollector, callee: &ValueExpression) -> Option<CallableId> {
+pub(super) fn callable_owner(
+    collector: &ImportCollector,
+    callee: &ValueExpression,
+) -> Option<CallableId> {
     match callee {
         ValueExpression::Callable(id) => Some(*id),
         ValueExpression::Named { name, scope, .. } => {

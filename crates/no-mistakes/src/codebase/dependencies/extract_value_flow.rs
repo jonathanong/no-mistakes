@@ -57,7 +57,6 @@ pub use value_descriptors::{
 mod collect;
 #[path = "extract_value_flow/collect_helpers.rs"]
 mod collect_helpers;
-#[rustfmt::skip]
 #[path = "extract_value_flow/receiver_escapes.rs"]
 pub(super) mod receiver_escapes;
 
