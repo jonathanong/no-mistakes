@@ -50,6 +50,10 @@ See [options and examples](../../docs/eslint-rules/forbidden-member-chains.md).
 `no-object-mutation` is an opt-in rule for shared object writes and mutating calls.
 See [options and examples](../../docs/eslint-rules/no-object-mutation.md).
 
+`postgres-no-async-sql-builder` is an opt-in rule for async SQL builders that never wait.
+It suggests removing `async` only when the visible contract allows a synchronous return, and it never autofixes.
+See [options and examples](../../docs/eslint-rules/postgres-no-async-sql-builder.md).
+
 `require-options-on-imported-call` requires a static options object on configured
 imports, globals with no local binding, and terminal methods with a matching receiver shape.
 See [options and examples](../../docs/eslint-rules/require-options-on-imported-call.md).

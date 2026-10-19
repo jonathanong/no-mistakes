@@ -95,6 +95,25 @@ fn source_api_projects_imported_read_from_supplied_sources() {
 }
 
 #[test]
+fn source_api_judges_sync_rewrite_of_async_sql_builder() {
+    // Same literal as async-builder.ts after `async` is removed. A promise
+    // was the unanalyzable shape; the synchronous return is fully judged.
+    let sources = [
+        source("sync-rewritten-consumer.ts"),
+        source("sync-rewritten-builder.ts"),
+    ];
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let statements = extract_executed_postgres_sql_with_imports(&sources, &options, &[]).unwrap();
+    assert_eq!(statements.len(), 1, "{statements:?}");
+    assert_eq!(
+        statements[0].sql_text.as_deref(),
+        Some("/* async/read */ SELECT id FROM posts")
+    );
+    assert!(statements[0].complete, "{:?}", statements[0]);
+    assert_eq!(statements[0].incomplete_reason, None, "{:?}", statements[0]);
+}
+
+#[test]
 fn source_api_never_unwraps_an_unawaited_sql_promise() {
     let sources = [source("async-consumer.ts"), source("async-builder.ts")];
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
