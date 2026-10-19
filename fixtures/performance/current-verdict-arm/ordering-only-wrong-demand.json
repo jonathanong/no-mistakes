@@ -1,0 +1,12 @@
+{
+  "consumer": "f38a048f5eeff0438fc59a15e9eb742def575a36",
+  "originalConfigSha256": "c9fe0bae7cb65b06cbe89b66773bac19b3176a8601f4860e857d42dce169897c",
+  "orderingConfigSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "originalRuleApplications": 133,
+  "selectedRuleApplications": 1,
+  "selectedRuleNames": [
+    "production PostgreSQL writers acquire conflicts in catalog order"
+  ],
+  "unchangedNonRulePayload": true,
+  "scope": "Only postgres-conflict-ordering remains in configured rules; all non-rule payload intentionally retained. Not a measurement."
+}
