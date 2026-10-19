@@ -11,6 +11,7 @@ import tomllib
 
 from common import SOURCES, compile_cpu_probe, digest, install_cancel_handler, machine, run, save
 from frozen import PINS, copy_frozen
+from build_size import target_size
 
 install_cancel_handler()
 role = sys.argv[1]
@@ -44,11 +45,19 @@ try:
             process = subprocess.Popen(command, cwd=root, env=env, stdout=log,
                                        stderr=subprocess.STDOUT, start_new_session=True)
             started = time.monotonic()
+            heartbeat = started - 60
             while process.poll() is None:
                 try:
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    size = int(run('du', '-sb', str(target)).split()[0])
+                    size = target_size(target)
+                    now = time.monotonic()
+                    if now - heartbeat >= 60:
+                        lines = (output / 'build.log').read_text(errors='replace').splitlines()
+                        tail = lines[-1] if lines else ''
+                        print(f'[build] role={role} elapsed={now-started:.1f}s '
+                              f'targetBytes={size} lastCargoLine={tail!r}', flush=True)
+                        heartbeat = now
                     if size >= 8_000_000_000 or time.monotonic() - started >= 24 * 60:
                         raise RuntimeError('owned build exceeded time or target-size safety bound')
             assert process.returncode == 0, process.returncode

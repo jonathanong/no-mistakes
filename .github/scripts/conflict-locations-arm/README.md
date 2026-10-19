@@ -5,6 +5,8 @@ Pushing `eval/2238-conflict-locations-arm` starts the isolated
 `fbac9dc5857259ea8eff7820b0b0385ba2dea9ab` and candidate
 `d7f0f0a184964de6cbd3a89a5afc4bf1a1a7dfeb` on one `ubuntu-24.04-arm` VM.
 Source/tree/compiler/lock/profile/binary hashes and CPU probes are retained.
+Builds emit minute heartbeats. A vanished compiler temporary file does not
+abort a valid target-size scan; permission and other scan errors stay fatal.
 No historical executable is reused. The candidate passed full local workspace
 validation and the unchanged 98% coverage floors before launch.
 
@@ -33,3 +35,8 @@ The original evaluation workflows/branches are unchanged.
 Validate with the matched-arm and conflict-locations-arm Python unittest suites,
 then Actionlint/ShellCheck on the new workflow. Existing saved parity fixtures in
 `fixtures/performance/current-verdict-arm` and `matched-arm` remain the oracle.
+
+The known Ubuntu ARM image rollout (`20261012.149.1` / `20261018.154.1`)
+is disclosed separately for builder and measurement. Both binaries still share
+one builder/image, and every BCCB block shares one measurement VM/image.
+An unknown image is rejected. No resources are compared across those stages.

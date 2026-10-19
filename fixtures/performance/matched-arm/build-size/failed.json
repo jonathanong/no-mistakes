@@ -1,0 +1,5 @@
+{
+  "code": 2,
+  "stdout": "4096\t/owned/target\n",
+  "stderr": "du failed\n"
+}

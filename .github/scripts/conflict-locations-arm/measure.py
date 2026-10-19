@@ -11,6 +11,7 @@ from ordering import (derive_config, run_bccb, sample_plan,
 import common
 import long_frozen
 import worker
+from image_contract import image_provenance
 
 common.install_cancel_handler()
 common.SOURCES = SOURCES
@@ -50,7 +51,6 @@ for role in SOURCES:
     assert proof['artifactHarnessCommit'] == os.environ['GITHUB_SHA']
     assert not proof.get('frozenCliBuild')
     assert proof['machine']['imageOS'] == os.environ['ImageOS']
-    assert proof['machine']['imageVersion'] == os.environ['ImageVersion']
     assert proof['machine']['uname'][-1] == os.uname().machine
     for filename, field in [('no-mistakes', 'binarySha256'), ('cpu-probe', 'cpuProbeSha256')]:
         path = folder / filename
@@ -67,12 +67,14 @@ assert proofs['base']['cpuProbeBuild'] == proofs['candidate']['cpuProbeBuild']
 assert proofs['base']['binarySha256'] != proofs['candidate']['binarySha256']
 assert all(proofs['base'][key] == proofs['candidate'][key] for key in BUILD_FIELDS)
 assert proofs['base']['effectiveDefaultJobs'] == proofs['candidate']['effectiveDefaultJobs']
+measurement_machine = common.machine()
+images = image_provenance(proofs['base']['machine'], measurement_machine)
 common.save(output / 'provenance.json', {
     'purpose': 'ordering-only measurement; not a full-config or full-consumer gate',
     'eligibleForGate': False, 'sourcePins': SOURCES, 'consumer': physical,
     'consumerArtifact': origin, 'consumerArtifactZipSha256': origin['digest'].removeprefix('sha256:'),
-    'fixtureTarSha256': common.digest(archive),
-    'orderingConfig': config_proof, 'builds': proofs, 'machine': common.machine(),
+    'fixtureTarSha256': common.digest(archive), 'imageVersions': images,
+    'orderingConfig': config_proof, 'builds': proofs, 'machine': measurement_machine,
     'harnessCommit': os.environ['GITHUB_SHA'],
     'cliBuilderHarnessCommit': os.environ['GITHUB_SHA'],
     'jobs': jobs,
