@@ -1,4 +1,5 @@
-use super::{reliable_conflicts, SqlConflictTarget};
+use super::prepared::reliable_conflicts;
+use super::SqlConflictTarget;
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
 use crate::codebase::postgres::statements::extract_sql_variant_statement_facts;
 
