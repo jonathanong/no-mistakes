@@ -37,7 +37,7 @@ fn reason(
 }
 
 #[test]
-fn patch_gap_missing_sql_text_abstains() {
+fn missing_sql_text_abstains() {
     let call = EmbeddedSqlCall {
         kind: EmbeddedSqlKind::Inline,
         ..Default::default()
@@ -46,7 +46,7 @@ fn patch_gap_missing_sql_text_abstains() {
 }
 
 #[test]
-fn patch_gap_missing_prepared_facts_abstain() {
+fn missing_prepared_facts_abstain() {
     assert_eq!(
         reason(&insert_call(), None),
         Some("missing-prepared-sql-facts")
@@ -54,7 +54,7 @@ fn patch_gap_missing_prepared_facts_abstain() {
 }
 
 #[test]
-fn patch_gap_empty_conflicts_are_unresolved() {
+fn empty_conflicts_are_unresolved() {
     let facts = SqlStatementFileFacts {
         variant_locations: Some(Default::default()),
         ..Default::default()
@@ -66,7 +66,7 @@ fn patch_gap_empty_conflicts_are_unresolved() {
 }
 
 #[test]
-fn patch_gap_overlapping_parse_failure_abstains_after_reliable_conflicts() {
+fn overlapping_parse_failure_abstains_after_reliable_conflicts() {
     let mut facts = SqlStatementFileFacts {
         parse_failed: true,
         variant_locations: Some(Default::default()),
