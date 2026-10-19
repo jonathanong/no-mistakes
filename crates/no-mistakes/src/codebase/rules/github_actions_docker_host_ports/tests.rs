@@ -270,6 +270,7 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         ("timeout-wrapper", "5432:5432"),
         ("sudo-preserve", "5432:5432"),
         ("xargs-wrapper", "5432:5432"),
+        ("xargs-equals", "5432:5432"),
         ("quiet-short", "5432:5432"),
         ("docker-create", "5432:5432"),
         ("docker-context", "5432:5432"),
@@ -282,6 +283,8 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         expected.push(format!("ci.yml:{job}:1:{spec}"));
     }
     expected.push("ci.yml:service-ports:0:5432:5432".to_string());
+    expected.push("ci.yml:service-ports:0:9:9".to_string());
+    expected.push("ci.yml:service-ports:0:6:6".to_string());
     expected.push("ci.yml:service-ports:0:8080:80".to_string());
     expected.push("ci.yml:second-step:2:5432:5432".to_string());
     expected.push("compact.yml:a:1:5432:5432".to_string());
@@ -289,6 +292,20 @@ fn saved_fixtures_flag_only_literal_host_ports() {
     expected.push("action.yml:composite:1:5432:5432".to_string());
     expected.sort();
     assert_eq!(got, expected, "{findings:?}");
+    let service_ports: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.target.as_deref() == Some("service-ports"))
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(service_ports
+        .iter()
+        .any(|message| { message.contains("service `scalar`") && message.contains("in `9:9`") }));
+    assert!(service_ports
+        .iter()
+        .any(|message| { message.contains("service `bare`") && message.contains("in `6:6`") }));
+    assert!(service_ports
+        .iter()
+        .all(|message| !message.contains("in `8`")));
 
     let text = |file: &str| std::fs::read_to_string(root.join(file)).unwrap();
     let located = |file: &str, target: &str, step: usize| {

@@ -178,6 +178,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo pg | xargs docker run -p 5432:5432
+  xargs-equals:
+    runs-on: ubuntu-latest
+    steps:
+      # `--max-args=1` is one word. The `=` must not swallow `docker`.
+      - run: echo pg | xargs --max-args=1 docker run -p 5432:5432 postgres
   quiet-short:
     runs-on: ubuntu-latest
     steps:
@@ -212,6 +217,18 @@ jobs:
         ports:
           - 5432:5432
           - $PORT:5432
+      scalar:
+        image: postgres
+        ports: "9:9"
+      short:
+        image: postgres
+        # A one-character publish is not a host pin.
+        ports: 8
+      bare:
+        image: postgres
+        ports:
+          -
+          - 6:6
     container:
       image: ubuntu
       ports:

@@ -96,7 +96,8 @@ Publish with a Docker-allocated host port:
 host port (`$PORT:5432`, `${PORT}:5432`, `${{ env.PORT }}:5432`) is not judged:
 the rule cannot tell whether the variable holds a fixed port. The same rewrite
 applies to `--publish`, `docker create`, and composite `runs.steps`. Literal
-`ports:` on a job `services:` entry or `container:` are judged the same way.
+`ports:` on a job `services:` entry or `container:` are judged the same way,
+as one scalar, a flow list, or a block list. An empty list item is not a publish.
 
 ## Suppression
 

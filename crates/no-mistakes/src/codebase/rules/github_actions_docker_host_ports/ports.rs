@@ -41,15 +41,8 @@ pub(super) fn service_findings(rel: &str, source: &str) -> Vec<RuleFinding> {
         let Some((key, rest)) = mapping_key(trimmed) else {
             if parent(&stack) == Some(Role::Ports) {
                 if let Some(spec) = list_spec(trimmed) {
-                    note(
-                        &mut findings,
-                        rel,
-                        &job,
-                        &service,
-                        parent_place(&stack),
-                        &spec,
-                        line,
-                    );
+                    let place = described(&stack, &job, &service);
+                    note(&mut findings, rel, &job, place.as_deref(), &spec, line);
                 }
             }
             continue;
@@ -62,16 +55,9 @@ pub(super) fn service_findings(rel: &str, source: &str) -> Vec<RuleFinding> {
             service = key.to_string();
         }
         if role == Role::Ports {
+            let place = described(&stack, &job, &service);
             for spec in inline_specs(rest) {
-                note(
-                    &mut findings,
-                    rel,
-                    &job,
-                    &service,
-                    parent(&stack),
-                    &spec,
-                    line,
-                );
+                note(&mut findings, rel, &job, place.as_deref(), &spec, line);
             }
         }
         stack.push(Level { indent, role });
@@ -83,49 +69,33 @@ fn note(
     findings: &mut Vec<RuleFinding>,
     rel: &str,
     job: &str,
-    service: &str,
-    parent: Option<Role>,
+    place: Option<&str>,
     spec: &str,
     line: usize,
 ) {
-    let Verdict::Literal(host) = classify(spec) else {
-        return;
-    };
-    let Some(place) = place(job, service, parent) else {
+    let (Verdict::Literal(host), Some(place)) = (classify(spec), place) else {
         return;
     };
     findings.push(RuleFinding {
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,
-        message: pin_message(rel, line, &place, &host, spec),
+        message: pin_message(rel, line, place, &host, spec),
         import: None,
         target: Some(job.to_string()),
     });
 }
 
-fn place(job: &str, service: &str, parent: Option<Role>) -> Option<String> {
-    if job.is_empty() {
-        return None;
-    }
-    match parent {
-        Some(Role::Service) if !service.is_empty() => {
-            Some(format!("job `{job}` service `{service}`"))
-        }
-        Some(Role::Container) => Some(format!("job `{job}` container")),
+fn described(stack: &[Level], job: &str, service: &str) -> Option<String> {
+    stack.iter().rev().find_map(|level| match level.role {
+        Role::Service => Some(format!("job `{job}` service `{service}`")),
+        Role::Container => Some(format!("job `{job}` container")),
         _ => None,
-    }
+    })
 }
 
 fn parent(stack: &[Level]) -> Option<Role> {
     stack.last().map(|level| level.role)
-}
-
-fn parent_place(stack: &[Level]) -> Option<Role> {
-    stack.iter().rev().find_map(|level| match level.role {
-        Role::Service | Role::Container => Some(level.role),
-        _ => None,
-    })
 }
 
 fn role_for(parent: Option<Role>, key: &str, rest: &str) -> Role {
