@@ -1,0 +1,14 @@
+name: compact
+on: push
+permissions: write-all
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo hi
+    - uses: actions/checkout@v4
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo
+      - uses: actions/checkout@v4

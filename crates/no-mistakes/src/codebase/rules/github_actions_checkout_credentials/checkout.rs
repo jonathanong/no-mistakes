@@ -1,6 +1,7 @@
-use super::lines::{checkout_use_lines, is_checkout_uses};
 use super::permissions::{job_proof, triggers_workflow_call, Proof};
+use super::uses::is_checkout_uses;
 use super::{gha_kind, RuleFinding, RULE_ID};
+use crate::codebase::rules::github_actions_script_expressions::{step_uses_lines, StepUse};
 use serde_yaml::{Mapping, Value};
 
 struct Checkout {
@@ -34,17 +35,25 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
     if checkouts.iter().all(|checkout| checkout.reason.is_none()) {
         return Vec::new();
     }
-    let lines = checkout_use_lines(source);
-    let aligned = lines.len() == checkouts.len();
+    // The shared step locator keeps compact sequences and block scalars. Flow
+    // style has no `uses` line to name, so those findings stay on line 1.
+    let locations = step_uses_lines(source);
     checkouts
         .into_iter()
-        .enumerate()
-        .filter_map(|(index, checkout)| {
+        .filter_map(|checkout| {
             let reason = checkout.reason?;
-            let line = if aligned { lines[index] } else { 1 };
+            let line = located_line(&locations, &checkout.job, checkout.step);
             Some(finding(rel, line, &checkout.job, checkout.step, &reason))
         })
         .collect()
+}
+
+fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
+    locations
+        .iter()
+        .find(|item| item.step == step && item.job == job)
+        .map(|item| item.line)
+        .unwrap_or(1)
 }
 
 fn workflow_checkouts(value: &Value) -> Vec<Checkout> {

@@ -45,11 +45,13 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
     match scenario {
         "fail" => &[
             ".github/workflows/ci.yml",
+            ".github/workflows/compact.yml",
             ".github/workflows/edges.yml",
             ".github/workflows/empty-job.yml",
             ".github/workflows/inherited.yml",
             ".github/workflows/job-overrides-read.yml",
             ".github/workflows/scopes.yml",
+            ".github/workflows/shape.yml",
             ".no-mistakes.yml",
         ],
         "pass" => &[
@@ -82,6 +84,7 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
         "flow" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
         "suppression" => &[
             ".github/workflows/ci.yml",
+            ".github/workflows/compact.yml",
             ".github/workflows/disabled.yml",
             ".no-mistakes.yml",
         ],
@@ -327,8 +330,19 @@ fn saved_fixtures_flag_only_proven_persisted_write_tokens() {
         ("edges.yml", "9"),
         ("edges.yml", "true"),
         ("empty-job.yml", "job"),
+        ("shape.yml", "folded"),
+        ("shape.yml", "mixed"),
+        ("shape.yml", "capitalized"),
     ] {
         expected.push(format!("{file}:{target}:1"));
+    }
+    for (file, target, step) in [
+        ("compact.yml", "a", 2),
+        ("compact.yml", "b", 2),
+        ("shape.yml", "quoted-trap", 2),
+        ("shape.yml", "mixed", 2),
+    ] {
+        expected.push(format!("{file}:{target}:{step}"));
     }
     expected.sort();
     assert_eq!(got, expected, "{findings:?}");
@@ -358,17 +372,56 @@ fn saved_fixtures_flag_only_proven_persisted_write_tokens() {
     assert_eq!(empty.line, 1);
     for finding in &findings {
         if finding.line == 1 {
+            let empty_job = finding.file.ends_with("empty-job.yml");
+            let flow_step = finding.file.ends_with("shape.yml")
+                && finding.target.as_deref() == Some("mixed")
+                && step_of(&finding.message) == 1;
+            assert!(empty_job || flow_step, "unexpected line 1: {finding:?}");
             continue;
         }
         let text = std::fs::read_to_string(root.join(&finding.file)).unwrap();
         let line = text.lines().nth(finding.line - 1).unwrap();
         assert!(
-            line.contains("actions/checkout"),
+            line.contains("uses:")
+                && (line.contains("actions/checkout")
+                    || line.contains("Actions/Checkout")
+                    || line.contains("uses: >-"))
+                && !line.trim_start().starts_with("echo"),
             "{}:{} `{line}`",
             finding.file,
             finding.line
         );
     }
+    let compact = std::fs::read_to_string(root.join(".github/workflows/compact.yml")).unwrap();
+    let shape = std::fs::read_to_string(root.join(".github/workflows/shape.yml")).unwrap();
+    let located = |file: &str, job: &str, step: usize| {
+        findings
+            .iter()
+            .find(|finding| {
+                finding.file.ends_with(file)
+                    && finding.target.as_deref() == Some(job)
+                    && step_of(&finding.message) == step
+            })
+            .unwrap_or_else(|| panic!("missing {file} {job} step {step}"))
+            .line
+    };
+    fn nth_line(text: &str, line: usize) -> &str {
+        text.lines().nth(line - 1).expect("line")
+    }
+    assert!(nth_line(&compact, located("compact.yml", "a", 2)).starts_with("    - uses:"));
+    assert!(nth_line(&compact, located("compact.yml", "b", 2)).starts_with("      - uses:"));
+    assert_eq!(
+        nth_line(&shape, located("shape.yml", "quoted-trap", 2)).trim(),
+        "- uses: actions/checkout@v4"
+    );
+    assert!(nth_line(&shape, located("shape.yml", "folded", 1)).contains("uses: >-"));
+    assert_eq!(
+        nth_line(&shape, located("shape.yml", "mixed", 2)).trim(),
+        "- uses: actions/checkout@v4"
+    );
+    assert!(
+        nth_line(&shape, located("shape.yml", "capitalized", 1)).contains("Actions/Checkout@v4")
+    );
 
     let (root, config, files) = load_fixture("flow");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
@@ -386,9 +439,52 @@ fn saved_fixtures_flag_only_proven_persisted_write_tokens() {
 fn suppression_directives_hide_file_line_and_next_line() {
     let (root, config, files) = load_fixture("suppression");
     let raw = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(raw.len(), 4, "{raw:?}");
+    assert_eq!(raw.len(), 6, "{raw:?}");
     let findings = crate::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].file.ends_with("ci.yml"));
-    assert!(findings[0].message.contains("step 3"), "{findings:?}");
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    let ci = findings
+        .iter()
+        .find(|finding| finding.file.ends_with("ci.yml"))
+        .unwrap();
+    assert!(ci.message.contains("step 3"), "{ci:?}");
+    let compact = findings
+        .iter()
+        .find(|finding| finding.file.ends_with("compact.yml"))
+        .unwrap();
+    assert_eq!(compact.target.as_deref(), Some("b"));
+    assert!(compact.message.contains("step 2"), "{compact:?}");
+    let text = std::fs::read_to_string(root.join(".github/workflows/compact.yml")).unwrap();
+    let line = text.lines().nth(compact.line - 1).unwrap();
+    assert!(line.contains("uses: actions/checkout@v4"), "{line}");
+    assert!(!line.trim_start().starts_with("echo"), "{line}");
+}
+
+#[test]
+fn compact_crlf_workflow_keeps_each_uses_line() {
+    let source = "on: push
+permissions: write-all
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo hi
+    - uses: actions/checkout@v4
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo
+      - uses: actions/checkout@v4
+"
+    .replace('\n', "\r\n");
+    let findings = check(WORKFLOW, &source);
+    let mut expected: Vec<_> = source
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.contains("uses: actions/checkout"))
+        .map(|(index, _)| index + 1)
+        .collect();
+    let mut got: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    got.sort_unstable();
+    expected.sort_unstable();
+    assert_eq!(got, expected);
 }

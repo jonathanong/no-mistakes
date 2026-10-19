@@ -125,10 +125,12 @@ Set the input to false:
           persist-credentials: false
 ```
 
-The same fix applies to `permissions: write-all`, to a job block that grants
-any write scope above, and to a `workflow_call` workflow that sets no
-permissions. Narrowing the token to `contents: read` is the other fix when
-the job does not need to write.
+The same fix applies to `permissions: write-all` and to a job block that grants
+any write scope above. Narrowing the token to `contents: read` is the other fix
+when the job does not need to write. A `workflow_call` workflow is not a
+finding, even when it sets no permissions: the caller can only pass the same or
+a more restrictive token, and this rule does not read the caller. A null
+`persist-credentials` value is not a finding either.
 
 ## Suppression
 

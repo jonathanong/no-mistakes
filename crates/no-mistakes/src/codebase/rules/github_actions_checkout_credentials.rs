@@ -6,8 +6,8 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod checkout;
-mod lines;
 mod permissions;
+mod uses;
 
 pub const RULE_ID: &str = "github-actions-checkout-credentials";
 

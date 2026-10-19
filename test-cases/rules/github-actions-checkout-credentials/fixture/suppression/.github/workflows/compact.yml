@@ -1,0 +1,15 @@
+name: compact
+on: push
+permissions:
+  contents: write
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    # no-mistakes-disable-next-line github-actions-checkout-credentials
+    - uses: actions/checkout@v4
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo
+      - uses: actions/checkout@v4

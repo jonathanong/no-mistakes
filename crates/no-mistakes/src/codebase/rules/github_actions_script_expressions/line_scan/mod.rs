@@ -1,50 +1,70 @@
-use super::expressions::expressions;
 use super::hit::Hit;
 use super::yaml_parse::{
     classify_key, next_is_child_key, parse_line, script_role, BlockRole, Frame, Kind, Parsed,
 };
-use super::yaml_text::{
-    block_continues, ends_inside_quote, is_github_script, normalize_uses, scan_block_line,
-};
+use super::yaml_text::{block_continues, leading_indent, normalize_uses, scan_block_line};
+
+mod detail;
+
+pub(crate) use detail::{step_uses_lines, StepUse};
 
 pub(super) fn hits_from_lines(source: &str, action: bool, composite: bool) -> Vec<Hit> {
     let lines: Vec<&str> = source.lines().collect();
-    let mut scanner = Scanner {
-        lines: &lines,
-        action,
-        composite,
-        frames: Vec::new(),
-        open_quote: None,
-        uses: None,
-        run_lines: Vec::new(),
-        script_lines: Vec::new(),
-        hits: Vec::new(),
-    };
+    let mut scanner = Scanner::from_lines(&lines, action, composite, false);
     scanner.scan();
     scanner.hits
 }
 
-struct Scanner<'a> {
+pub(super) struct Scanner<'a> {
     lines: &'a [&'a str],
     action: bool,
     composite: bool,
+    pub(super) locate: bool,
     frames: Vec<Frame>,
-    open_quote: Option<(BlockRole, char)>,
-    uses: Option<String>,
-    run_lines: Vec<(usize, String)>,
-    script_lines: Vec<(usize, String)>,
-    hits: Vec<Hit>,
+    pub(super) open_quote: Option<(BlockRole, char)>,
+    pub(super) uses: Option<String>,
+    pub(super) run_lines: Vec<(usize, String)>,
+    pub(super) script_lines: Vec<(usize, String)>,
+    pub(super) hits: Vec<Hit>,
+    pub(super) job: String,
+    pub(super) step: usize,
+    pub(super) uses_line: Option<usize>,
+    pub(super) located: Vec<StepUse>,
 }
 
-impl Scanner<'_> {
-    fn scan(&mut self) {
+impl<'a> Scanner<'a> {
+    pub(super) fn from_lines(
+        lines: &'a [&'a str],
+        action: bool,
+        composite: bool,
+        locate: bool,
+    ) -> Self {
+        Self {
+            lines,
+            action,
+            composite,
+            locate,
+            frames: Vec::new(),
+            open_quote: None,
+            uses: None,
+            run_lines: Vec::new(),
+            script_lines: Vec::new(),
+            hits: Vec::new(),
+            job: String::new(),
+            step: 0,
+            uses_line: None,
+            located: Vec::new(),
+        }
+    }
+
+    pub(super) fn scan(&mut self) {
         let mut index = 0;
         while index < self.lines.len() {
             let line = self.lines[index];
             let line_no = index + 1;
             if let Some((role, quote)) = self.open_quote {
-                self.push_line(role, line_no, line);
-                if !ends_inside_quote(line, true, quote) {
+                detail::push_line(self, role, line_no, line);
+                if !detail::ends_quote(line, quote) {
                     self.open_quote = None;
                 }
                 index += 1;
@@ -54,7 +74,7 @@ impl Scanner<'_> {
                 let indent = self.frames.last().map(|frame| frame.indent).unwrap_or(0);
                 if block_continues(line, indent) {
                     if scan_block_line(literal, line) {
-                        self.push_line(role, line_no, line);
+                        detail::push_line(self, role, line_no, line);
                     }
                     index += 1;
                     continue;
@@ -64,6 +84,8 @@ impl Scanner<'_> {
             }
             if let Some(parsed) = parse_line(line) {
                 self.apply(parsed, index);
+            } else if self.locate {
+                self.note_unparsed_item(line);
             }
             index += 1;
         }
@@ -73,6 +95,7 @@ impl Scanner<'_> {
     fn apply(&mut self, parsed: Parsed, index: usize) {
         self.pop_until(parsed.scope, parsed.is_item);
         if parsed.is_item && self.parent() == Some(Kind::Steps) {
+            detail::begin_step(self);
             self.frames.push(Frame {
                 indent: parsed.scope,
                 kind: Kind::Step,
@@ -84,7 +107,11 @@ impl Scanner<'_> {
         let parent = self.parent();
         if key == "uses" && parent == Some(Kind::Step) {
             self.uses = Some(normalize_uses(&parsed.value));
-            return;
+            detail::note_uses(self, index + 1);
+            // A folded or literal `uses` value is still this step's action reference.
+            if !parsed.block {
+                return;
+            }
         }
         let role = script_role(key, parent);
         if parsed.block {
@@ -101,44 +128,23 @@ impl Scanner<'_> {
                     kind: Kind::Block(role.unwrap_or(BlockRole::Other), false),
                 });
             } else {
+                let kind = classify_key(key, parent, self.action, self.composite);
+                if kind == Kind::Job {
+                    detail::begin_job(self, key);
+                }
                 self.frames.push(Frame {
                     indent: parsed.key_indent,
-                    kind: classify_key(key, parent, self.action, self.composite),
+                    kind,
                 });
             }
             return;
         }
         if let Some(role) = role {
-            self.record_inline(role, index + 1, &parsed.value);
+            detail::record_inline(self, role, index + 1, &parsed.value);
         }
     }
 
-    fn record_inline(&mut self, role: BlockRole, line_no: usize, value: &str) {
-        self.push_line(role, line_no, value);
-        let trimmed = value.trim();
-        let bytes = trimmed.as_bytes();
-        // Callers only reach here with a non-empty scalar, so the first byte exists.
-        if bytes
-            .first()
-            .is_some_and(|byte| *byte == b'"' || *byte == b'\'')
-        {
-            let quote = bytes[0] as char;
-            if ends_inside_quote(trimmed, false, quote) {
-                self.open_quote = Some((role, quote));
-            }
-        }
-    }
-
-    fn push_line(&mut self, role: BlockRole, line_no: usize, text: &str) {
-        let slot = match role {
-            BlockRole::Run => &mut self.run_lines,
-            BlockRole::Script => &mut self.script_lines,
-            BlockRole::Other => return,
-        };
-        slot.push((line_no, text.to_string()));
-    }
-
-    fn pop_until(&mut self, scope: usize, is_item: bool) {
+    pub(super) fn pop_until(&mut self, scope: usize, is_item: bool) {
         while let Some(frame) = self.frames.last() {
             if frame.indent > scope
                 || (frame.indent == scope && !(is_item && frame.kind == Kind::Steps))
@@ -154,7 +160,8 @@ impl Scanner<'_> {
         // `pop_until` and `finish` only call this while `frames` is non-empty.
         if let Some(frame) = self.frames.pop() {
             if frame.kind == Kind::Step {
-                self.flush_step();
+                detail::end_step(self);
+                detail::flush_step(self);
             }
         }
     }
@@ -166,33 +173,32 @@ impl Scanner<'_> {
         }
     }
 
-    fn flush_step(&mut self) {
-        let uses = self.uses.take();
-        let run_lines = std::mem::take(&mut self.run_lines);
-        let script_lines = std::mem::take(&mut self.script_lines);
-        for (line, text) in run_lines {
-            for expr in expressions(&text) {
-                self.hits.push(Hit {
-                    line,
-                    expr,
-                    script: false,
-                });
-            }
-        }
-        if uses.as_deref().is_some_and(is_github_script) {
-            for (line, text) in script_lines {
-                for expr in expressions(&text) {
-                    self.hits.push(Hit {
-                        line,
-                        expr,
-                        script: true,
-                    });
-                }
-            }
-        }
+    pub(super) fn parent(&self) -> Option<Kind> {
+        self.frames.last().map(|frame| frame.kind)
     }
 
-    fn parent(&self) -> Option<Kind> {
-        self.frames.last().map(|frame| frame.kind)
+    // serde counts every sequence entry. Values this parser skips still occupy a step.
+    fn note_unparsed_item(&mut self, line: &str) {
+        let Some(scope) = item_scope(line) else {
+            return;
+        };
+        self.pop_until(scope, true);
+        if self.parent() == Some(Kind::Steps) {
+            detail::begin_step(self);
+            self.frames.push(Frame {
+                indent: scope,
+                kind: Kind::Step,
+            });
+        }
+    }
+}
+
+fn item_scope(line: &str) -> Option<usize> {
+    let indent = leading_indent(line);
+    let trimmed = line[indent..].trim_end();
+    if trimmed == "-" || trimmed.starts_with("- ") {
+        Some(indent)
+    } else {
+        None
     }
 }
