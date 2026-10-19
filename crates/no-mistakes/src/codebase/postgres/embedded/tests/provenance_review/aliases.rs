@@ -242,6 +242,35 @@ fn namespace_alias_in_another_function_is_downgraded_not_dropped() {
 }
 
 #[test]
+fn namespace_alias_captured_before_a_later_escape_is_downgraded() {
+    assert_sites(
+        "review-namespace-alias-escaped-later.ts",
+        &scoped_options(),
+        &[
+            site(8, "db.query('SELECT id FROM alias_escaped_later')", None),
+            site(
+                10,
+                "query('SELECT id FROM destructure_escaped_later')",
+                None,
+            ),
+        ],
+    );
+}
+
+#[test]
+fn namespace_alias_captured_before_a_loop_escape_is_downgraded() {
+    assert_sites(
+        "review-namespace-alias-escaped-loop.ts",
+        &scoped_options(),
+        &[site(
+            8,
+            "query('SELECT id FROM destructure_escaped_loop')",
+            None,
+        )],
+    );
+}
+
+#[test]
 fn two_named_import_aliases_share_one_export_origin() {
     let options =
         EmbeddedSqlOptions::configured("@example/db", &["connection".into(), "query".into()]);

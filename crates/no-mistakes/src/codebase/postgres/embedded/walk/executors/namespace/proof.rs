@@ -41,6 +41,29 @@ fn downgrade(call: &mut EmbeddedSqlCall) {
     call.recovered_placeholder_positions.clear();
 }
 
+pub(super) struct QueryCapture {
+    key: (u32, String),
+    origins: Vec<Origin>,
+    owner: u32,
+    event: u32,
+}
+
+pub(super) struct CapturedCall {
+    key: (u32, String),
+    span: (u32, u32),
+}
+
+fn captured_call(capture: &QueryCapture) -> MemberCall {
+    MemberCall {
+        sequence: 0,
+        span: (0, 0),
+        origins: capture.origins.clone(),
+        owner: capture.owner,
+        event: capture.event,
+        sql_looking: false,
+    }
+}
+
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn note_imported_alias_call(
         &mut self,
@@ -49,9 +72,13 @@ impl ScopeVisitor<'_> {
         let Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else {
             return;
         };
-        if self.uncertain_query_capture(name.name.as_str()) {
-            self.downgrade_latest_confirmed_call();
-        }
+        let Some(key) = self.capture_key(name.name.as_str()) else {
+            return;
+        };
+        self.member_query_proof.captured_calls.push(CapturedCall {
+            key,
+            span: (call.span.start, call.span.end),
+        });
     }
 
     fn capture_key(&self, name: &str) -> Option<(u32, String)> {
@@ -64,51 +91,30 @@ impl ScopeVisitor<'_> {
         Some((self.member_query_proof.scope_ids[index], name.to_string()))
     }
 
-    pub(in crate::codebase::postgres::embedded::walk) fn mark_uncertain_query_capture(
+    /// The binding event is the call event. Escapes are applied after the walk,
+    /// so a later other-function or loop write still reaches this capture.
+    pub(in crate::codebase::postgres::embedded::walk) fn note_query_capture(
         &mut self,
         name: &str,
+        receiver: &Expression<'_>,
     ) {
-        if let Some(key) = self.capture_key(name) {
-            self.member_query_proof.uncertain_captures.insert(key);
-        }
-    }
-
-    fn uncertain_query_capture(&self, name: &str) -> bool {
-        self.capture_key(name)
-            .is_some_and(|key| self.member_query_proof.uncertain_captures.contains(&key))
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn capture_is_uncertain(
-        &self,
-        receiver: &oxc_ast::ast::Expression<'_>,
-    ) -> bool {
-        let origins = self.receiver_origins(receiver);
-        if origins.is_empty() {
-            return false;
-        }
+        let Some(key) = self.capture_key(name) else {
+            return;
+        };
         let owner = self
             .member_query_proof
             .function_ids
             .last()
             .copied()
             .unwrap_or(0);
-        let call = MemberCall {
-            sequence: 0,
-            span: (0, 0),
+        let origins = self.receiver_origins(receiver);
+        let event = self.member_query_proof.next_event;
+        self.member_query_proof.captures.push(QueryCapture {
+            key,
             origins,
             owner,
-            event: self.member_query_proof.next_event,
-            sql_looking: false,
-        };
-        uncertain(&call, &self.member_query_proof)
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn downgrade_latest_confirmed_call(
-        &mut self,
-    ) {
-        if let Some(call) = self.calls.last_mut() {
-            downgrade(call);
-        }
+            event,
+        });
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn downgrade_escaped_member_calls(&mut self) {
@@ -117,15 +123,32 @@ impl ScopeVisitor<'_> {
             .calls
             .iter()
             .filter(|call| uncertain(call, &self.member_query_proof))
+            .map(|call| (call.span, call.sequence))
             .collect::<Vec<_>>();
-        if blocked.is_empty() {
-            return;
-        }
-        let spans = blocked.iter().map(|call| call.span).collect::<HashSet<_>>();
+        let mut spans = blocked
+            .iter()
+            .map(|(span, _)| *span)
+            .collect::<HashSet<_>>();
         let sequences = blocked
             .iter()
-            .map(|call| call.sequence)
+            .map(|(_, sequence)| *sequence)
             .collect::<HashSet<_>>();
+        let captures = self.member_query_proof.captures.len();
+        let mut uncertain_keys = HashSet::new();
+        for index in 0..captures {
+            let call = captured_call(&self.member_query_proof.captures[index]);
+            if uncertain(&call, &self.member_query_proof) {
+                uncertain_keys.insert(self.member_query_proof.captures[index].key.clone());
+            }
+        }
+        for captured in &self.member_query_proof.captured_calls {
+            if uncertain_keys.contains(&captured.key) {
+                spans.insert(captured.span);
+            }
+        }
+        if spans.is_empty() && sequences.is_empty() {
+            return;
+        }
         for (call, span) in self.calls.iter_mut().zip(&self.call_spans) {
             if spans.contains(span) {
                 downgrade(call);

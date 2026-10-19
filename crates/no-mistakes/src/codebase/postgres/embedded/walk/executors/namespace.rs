@@ -1,7 +1,7 @@
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 mod aggregate;
 mod arguments;
@@ -36,7 +36,8 @@ pub(crate) struct MemberQueryProof {
     pub(super) next_event: u32,
     pub(super) aliases: HashMap<(u32, String), Vec<Origin>>,
     pub(super) escapes: HashMap<Origin, Vec<Escape>>,
-    pub(super) uncertain_captures: HashSet<(u32, String)>,
+    captures: Vec<proof::QueryCapture>,
+    captured_calls: Vec<proof::CapturedCall>,
     pub(in crate::codebase::postgres::embedded::walk) calls: Vec<MemberCall>,
 }
 
