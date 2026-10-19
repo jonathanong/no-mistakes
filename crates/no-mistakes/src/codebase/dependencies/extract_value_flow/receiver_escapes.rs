@@ -16,12 +16,9 @@ impl ImportCollector {
         for (raw_index, argument) in call.arguments.iter().enumerate() {
             match argument {
                 Argument::SpreadElement(spread) => {
-                    let value = self.value_expression(&spread.argument);
-                    match array_entries(self, &value) {
-                        Some(entries) if open_at.is_none() => { let mut next = position; for (slot, value) in entries { let at = position + slot; extras.entry(at).or_default().push(value); next = next.max(at + 1); } position = next; }
-                        Some(entries) => open_vals.extend(entries.into_iter().map(|(_, value)| value)),
-                        None => { open_at.get_or_insert(position); }
-                    }
+                    // A literal is walked so a conditional element or a nested spread is not one opaque value. Named arrays stay on `array_entries`.
+                    if let Expression::ArrayExpression(array) = crate::codebase::ts_source::unwrap_ts_wrappers(&spread.argument) { for element in &array.elements { match element { oxc_ast::ast::ArrayExpressionElement::SpreadElement(_) => { open_at.get_or_insert(position); } oxc_ast::ast::ArrayExpressionElement::Elision(_) => { if open_at.is_none() { position += 1; } } other => { let values = other.as_expression().map_or_else(Vec::new, |expression| argument_values(self, expression)); if open_at.is_some() { open_vals.extend(values); } else { extras.entry(position).or_default().extend(values); position += 1; } } } } }
+                    else { let value = self.value_expression(&spread.argument); match array_entries(self, &value) { Some(entries) if open_at.is_none() => { let mut next = position; for (slot, value) in entries { let at = position + slot; extras.entry(at).or_default().push(value); next = next.max(at + 1); } position = next; } Some(entries) => open_vals.extend(entries.into_iter().map(|(_, value)| value)), None => { open_at.get_or_insert(position); } } }
                 }
                 other => {
                     let values = other.as_expression().map_or_else(Vec::new, |expression| argument_values(self, expression));

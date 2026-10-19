@@ -100,6 +100,50 @@ fn destructured_reduce_accumulator_still_passes_the_element() {
 }
 
 #[test]
+fn unknown_spread_opens_every_later_argument() {
+    unknown_replica("spread-unknown-then-argument");
+}
+
+#[test]
+fn known_literal_after_an_unknown_spread_stays_open() {
+    unknown_replica("spread-unknown-then-known");
+}
+
+#[test]
+fn named_array_after_an_unknown_spread_stays_open() {
+    unknown_replica("spread-unknown-then-named");
+}
+
+#[test]
+fn class_method_unknown_spread_opens_later_parameters() {
+    unknown_replica("class-method-unknown-spread");
+}
+
+#[test]
+fn conditional_inside_a_spread_literal_reaches_both_arms() {
+    unknown_replica("spread-element-conditional");
+}
+
+#[test]
+fn nested_spread_inside_a_spread_literal_opens_the_tail() {
+    unknown_replica("spread-nested-spread");
+}
+
+#[test]
+fn spread_of_a_conditional_that_is_not_replica_stays_known() {
+    let (built, root) = graph();
+    assert_export(&built, &root, "spread-element-other", "replica.get");
+    assert_export(&built, &root, "spread-element-other", "unrelated.get");
+}
+
+#[test]
+fn reduce_fallthrough_does_not_invent_a_write() {
+    let (built, root) = graph();
+    assert_export(&built, &root, "reduce-fallthrough", "replica.get");
+    assert_export(&built, &root, "reduce-fallthrough", "unrelated.get");
+}
+
+#[test]
 fn unrelated_object_assign_field_drops_the_previous_callee() {
     let (built, root) = graph();
     assert_unknown(
