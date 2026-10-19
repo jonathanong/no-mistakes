@@ -177,11 +177,12 @@ describe("browser routing policy contracts", () => {
           return true;
         });
         const containment = browserChildContainment(storybook);
+        expect(containment.watchdogMs).toBe(storybook ? 20000 : 15000);
         const observed = observeSdkChild(child, { ...containment, capture: () => terminate });
-        await vi.advanceTimersByTimeAsync(4999);
+        await vi.advanceTimersByTimeAsync(14999);
         expect(terminate).not.toHaveBeenCalled();
         if (storybook) {
-          await vi.advanceTimersByTimeAsync(15000);
+          await vi.advanceTimersByTimeAsync(5000);
           expect(terminate).not.toHaveBeenCalled();
         }
         await vi.advanceTimersByTimeAsync(1);
