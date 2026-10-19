@@ -159,10 +159,17 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
         },
     ));
     let literal = site(vec![SiteArg::Literal("a".into()), SiteArg::Scalar]);
-    assert_eq!(fixed.fill(&literal, owner).expect("static").sql, "TRUE");
+    assert_eq!(
+        fixed.fill(&literal, owner, owner).expect("static").sql,
+        "TRUE"
+    );
     // A builder argument means the helper's result includes the builder's text.
-    assert!(fixed.fill(&site(vec![SiteArg::Builder]), owner).is_none());
-    let filled = fixed.fill(&site(Vec::new()), owner).expect("no arguments");
+    assert!(fixed
+        .fill(&site(vec![SiteArg::Builder]), owner, owner)
+        .is_none());
+    let filled = fixed
+        .fill(&site(Vec::new()), owner, owner)
+        .expect("no arguments");
     assert!(filled
         .positions
         .iter()

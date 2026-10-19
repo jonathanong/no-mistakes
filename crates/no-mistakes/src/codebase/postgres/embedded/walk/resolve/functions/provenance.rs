@@ -19,7 +19,11 @@ pub(crate) struct RecoveredSql {
 impl RecoveredSql {
     pub(crate) fn with_source_file(mut self, path: &Path) -> Self {
         for position in &mut self.positions {
-            position.source_path = Some(path.to_path_buf());
+            // A spliced caller literal already names its own file. Stamping
+            // the helper over it would report the literal on the `${param}` line.
+            if position.source_path.is_none() {
+                position.source_path = Some(path.to_path_buf());
+            }
         }
         self
     }

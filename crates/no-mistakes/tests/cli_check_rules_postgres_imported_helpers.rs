@@ -154,6 +154,8 @@ fn same_file_helpers_splice_literal_identifiers_too() {
             // An optional call and a non-literal argument stay unanalyzable.
             ("src/caller.mts", 28, UNANALYZABLE),
             ("src/caller.mts", 35, UNANALYZABLE),
+            // A no-substitution template literal is not spliced.
+            ("src/caller.mts", 42, UNANALYZABLE),
         ])
     );
 }
@@ -261,7 +263,7 @@ fn an_imported_helper_after_a_conditional_fills_every_alternative() {
 fn non_literal_or_missing_arguments_stay_unanalyzable() {
     assert_eq!(
         required("imported-nonliteral-arg"),
-        unanalyzable(&[10, 18, 24, 30])
+        unanalyzable(&[10, 18, 24, 30, 37])
     );
 }
 
@@ -329,4 +331,34 @@ fn other_dml_rules_share_the_recovery_and_name_the_helper_module() {
         findings_of("postgres-bounded-statements", "imported-helper"),
         expect(&[("src/caller.mts", 7, "table:accounts")])
     );
+}
+
+#[test]
+fn a_spliced_caller_literal_is_credited_to_the_literal_not_the_placeholder() {
+    // `OFFSET` is written only in the caller's quoted string.
+    assert_eq!(
+        findings_of("postgres-no-offset", "imported-spliced-literal"),
+        expect(&[("src/caller.mts", 8, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "same-file-spliced-literal"),
+        expect(&[("src/caller.mts", 12, "offset")])
+    );
+}
+
+#[test]
+fn one_function_appending_one_helper_twice_merges_and_one_directive_suppresses_it() {
+    // Both appends are one statement of the same helper token, so one finding.
+    assert_eq!(
+        required("imported-repeated-helper"),
+        expect(&[("src/visibility-sql.mts", 2, VIEW)])
+    );
+    let report = run(REQUIRED, "imported-repeated-helper", true);
+    let suppressed = report["suppressed"].as_array().unwrap();
+    // Disabling one append suppresses the whole statement. Accounting stays on
+    // that append (line 22), not on the other call or the helper.
+    assert_eq!(suppressed.len(), 1, "{report}");
+    assert_eq!(suppressed[0]["file"], "src/caller.mts");
+    assert_eq!(suppressed[0]["line"], 22);
+    assert_eq!(suppressed[0]["directive"]["line"], 21);
 }

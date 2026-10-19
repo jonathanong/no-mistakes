@@ -18,7 +18,9 @@ pub(crate) mod template;
 mod unpublish;
 
 pub(crate) use sites::Sites;
-pub(crate) use summary::{BuilderHelper, HelperSummary, ImportedSite, PendingImportedSql, SiteArg};
+pub(crate) use summary::{
+    BuilderHelper, HelperSummary, ImportedSite, LiteralArg, PendingImportedSql, SiteArg,
+};
 
 #[cfg(test)]
 mod tests;

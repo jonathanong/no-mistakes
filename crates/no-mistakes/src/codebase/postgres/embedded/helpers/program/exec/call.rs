@@ -4,13 +4,13 @@ use super::super::Expr;
 use super::val::{empty_sql, Obj, Path, Text, Val};
 use super::{Callee, Machine, Outcome, Ret};
 use crate::codebase::postgres::embedded::helpers::split::compose;
-use crate::codebase::postgres::embedded::helpers::SiteArg;
+use crate::codebase::postgres::embedded::helpers::{LiteralArg, SiteArg};
 
 /// What a callee is told about an argument value. `None` for a value whose
 /// nature is unknown (a name the helper does not bind).
 fn site_arg(value: &Val) -> Option<SiteArg> {
     Some(match value {
-        Val::Str(text) => SiteArg::Literal(text.value.clone()),
+        Val::Str(text) => SiteArg::Literal(LiteralArg::bare(text.value.clone())),
         Val::Bool(value) => SiteArg::Bool(*value),
         Val::Null => SiteArg::Null,
         Val::Undef => SiteArg::Undefined,

@@ -121,8 +121,8 @@ fn default_value(machine: &mut Machine<'_>, param: &Param, path: &mut Path) -> O
 
 fn arg_value(arg: &SiteArg) -> Val {
     match arg {
-        SiteArg::Literal(text) => Val::Str(Text {
-            value: text.clone(),
+        SiteArg::Literal(literal) => Val::Str(Text {
+            value: literal.text.clone(),
             prov: None,
         }),
         SiteArg::Bool(value) => Val::Bool(*value),

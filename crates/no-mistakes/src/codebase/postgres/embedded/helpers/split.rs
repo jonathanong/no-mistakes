@@ -34,6 +34,7 @@ pub(crate) fn origin_at(
 }
 
 /// Where a cut-out marker was read from.
+#[derive(Clone)]
 pub(crate) struct Marker {
     pub(crate) line: u32,
     pub(crate) path: Option<PathBuf>,

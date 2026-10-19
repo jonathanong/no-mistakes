@@ -1,0 +1,15 @@
+0	Dynamic	Some("SELECT l.id FROM links l WHERE l.account_id = sql_placeholder_1 AND ")	[(1, 47)]	0
+1	Dynamic	Some("INSERT INTO links (id) VALUES (1) ")	[]	0
+2	Dynamic	None	[]	0
+3	Dynamic	Some("SELECT 1 WHERE ")	[]	0
+4	Dynamic	Some("SELECT 1 WHERE ")	[]	0
+5	Dynamic	Some("SELECT 1 FROM p WHERE true")	[]	0
+6	ImmutableLocal	Some("sql_placeholder_1 FROM links")	[(1, 1)]	0
+7	Dynamic	Some("SELECT 1 FROM p WHERE true")	[]	0
+8	Dynamic	Some("SELECT 2 SELECT 1 WHERE ")	[]	0
+9	Dynamic	None	[]	0
+10	Dynamic	Some("SELECT 1 WHERE ")	[]	0
+11	Dynamic	Some("SELECT 1 WHERE ")	[]	0
+12	Dynamic	Some("SELECT 1 WHERE ")	[]	0
+13	Dynamic	Some("SELECT 1 WHERE ")	[]	0
+14	Dynamic	Some("SELECT 1 WHERE ")	[]	0

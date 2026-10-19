@@ -18,7 +18,11 @@ Three fixed helper shapes recover directly:
   for example `` (col: string) => `(${col} IS NULL)` ``. A call that passes a
   string literal for **every** parameter has the literals spliced in as SQL
   text, so `ownerVisible('l.parent_id')` contributes `(l.parent_id IS NULL)`.
-  This works for same-file helpers too. A non-literal, missing, extra or
+  This works for same-file helpers too. A string literal is a quoted string
+  (`'l.parent_id'` or `"l.parent_id"`). A no-substitution template literal
+  (`` `l.parent_id` ``) is not one, on either path, so it is not spliced and
+  that call stays `Dynamic`. A helper whose arguments never reach the SQL
+  still accepts the template as a known non-text argument. A non-literal, missing, extra or
   spread argument, a default, rest, optional or destructured parameter, a
   parameter used anywhere but an interpolation of that template (including
   `col.length`, `col + '...'` or a local alias), a literal containing a
@@ -162,7 +166,11 @@ statement before the first hole, as before.
 
 #### Helper-line attribution and suppression
 
-Recovered SQL keeps the helper's physical lines. Findings from every rule that
+Recovered SQL keeps the helper's physical lines. A quoted string spliced into
+a `${param}` is the exception: those bytes are credited to the literal's own
+line and file. `tail('OFFSET 40')` reports `postgres-no-offset` on that
+literal, while an `OFFSET` the helper itself wrote stays on the helper's
+line. Findings from every rule that
 consumes embedded statement facts (all of the `postgres-*` DML rules, including
 `postgres-required-predicates`, `postgres-explicit-columns`,
 `postgres-no-offset`, `postgres-bounded-statements`, `postgres-sql-shape-policy`

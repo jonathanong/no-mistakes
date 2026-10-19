@@ -15,6 +15,16 @@ use std::path::{Path, PathBuf};
 /// Maximum number of re-export hops followed from the module a call imports.
 pub(crate) const MAX_REEXPORT_HOPS: u8 = 8;
 
+/// Owned decision for one module, so the hop can recurse without cloning
+/// `TsFileFacts`. Only the specifier strings the next hop needs are copied.
+enum Step {
+    Found(String),
+    Forward { specifier: String, imported: String },
+    Stars(Vec<String>),
+    Absent,
+    Unknown,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Located {
     /// Declared in `.0` under the local name `.1`.
@@ -77,13 +87,55 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Locator<'a, R> {
         if visiting.contains(&key) {
             return Located::Unknown;
         }
-        let Some(facts) = self.files.get(file).map(|file| file.ts.clone()) else {
+        if self.files.get(file).is_none() {
             return Located::Unknown;
-        };
+        }
         visiting.push(key);
-        let outcome = self.provider(file, name, hops, visiting, &facts);
+        let outcome = self.provider(file, name, hops, visiting);
         visiting.pop();
         outcome
+    }
+
+    /// The next hop, copied out of `&FileIdMap` before the recursive borrow.
+    fn step(&self, file: &Path, name: &str) -> Step {
+        let Some(facts) = self.files.get(file).map(|file| file.ts.as_ref()) else {
+            return Step::Unknown;
+        };
+        if let Some(binding) = facts
+            .exported_bindings
+            .iter()
+            .find(|binding| binding.exported == name)
+        {
+            if binding.local == "*" {
+                return Step::Unknown;
+            }
+            let forwarded = match &binding.specifier {
+                Some(specifier) => Some((specifier.clone(), binding.local.clone())),
+                None => facts
+                    .imported_bindings
+                    .iter()
+                    .find(|import| import.local == binding.local)
+                    .map(|import| (import.specifier.clone(), import.imported.clone())),
+            };
+            let Some((specifier, imported)) = forwarded else {
+                return Step::Found(binding.local.clone());
+            };
+            let namespace = facts.imported_bindings.iter().any(|import| {
+                import.local == binding.local && import.kind == ImportedBindingKind::Namespace
+            });
+            return if namespace {
+                Step::Unknown
+            } else {
+                Step::Forward {
+                    specifier,
+                    imported,
+                }
+            };
+        }
+        if name == "default" {
+            return Step::Absent;
+        }
+        Step::Stars(facts.star_reexport_specifiers.clone())
     }
 
     fn provider(
@@ -92,47 +144,30 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Locator<'a, R> {
         name: &str,
         hops: u8,
         visiting: &mut Vec<(PathBuf, String)>,
-        facts: &crate::codebase::ts_source::facts::TsFileFacts,
     ) -> Located {
-        if let Some(binding) = facts.exported_bindings.iter().find(|b| b.exported == name) {
-            if binding.local == "*" {
-                return Located::Unknown;
-            }
-            let forwarded = match &binding.specifier {
-                Some(specifier) => Some((specifier.as_str(), binding.local.as_str())),
-                None => facts
-                    .imported_bindings
-                    .iter()
-                    .find(|import| import.local == binding.local)
-                    .map(|import| (import.specifier.as_str(), import.imported.as_str())),
-            };
-            let Some((specifier, imported)) = forwarded else {
-                return Located::Found(file.to_path_buf(), binding.local.clone());
-            };
-            let namespace = facts.imported_bindings.iter().any(|import| {
-                import.local == binding.local && import.kind == ImportedBindingKind::Namespace
-            });
-            return if namespace {
-                Located::Unknown
-            } else {
-                self.forward(specifier, file, imported, hops, visiting)
-            };
-        }
-        if name == "default" {
-            return Located::Absent;
-        }
-        let mut found: Option<Located> = None;
-        for specifier in &facts.star_reexport_specifiers {
-            match self.forward(specifier, file, name, hops, visiting) {
-                Located::Absent => {}
-                Located::Unknown => return Located::Unknown,
-                provider => match &found {
-                    Some(existing) if *existing != provider => return Located::Unknown,
-                    _ => found = Some(provider),
-                },
+        match self.step(file, name) {
+            Step::Found(local) => Located::Found(file.to_path_buf(), local),
+            Step::Absent => Located::Absent,
+            Step::Unknown => Located::Unknown,
+            Step::Forward {
+                specifier,
+                imported,
+            } => self.forward(&specifier, file, &imported, hops, visiting),
+            Step::Stars(specifiers) => {
+                let mut found = None;
+                for specifier in specifiers {
+                    match self.forward(&specifier, file, name, hops, visiting) {
+                        Located::Absent => {}
+                        Located::Unknown => return Located::Unknown,
+                        provider => match &found {
+                            Some(existing) if *existing != provider => return Located::Unknown,
+                            _ => found = Some(provider),
+                        },
+                    }
+                }
+                found.unwrap_or(Located::Absent)
             }
         }
-        found.unwrap_or(Located::Absent)
     }
 
     fn forward(

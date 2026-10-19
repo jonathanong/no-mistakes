@@ -1,7 +1,7 @@
 //! What the walk summarizes for importers of this file.
 
 use super::*;
-use crate::codebase::postgres::embedded::helpers::BuilderHelper;
+use crate::codebase::postgres::embedded::helpers::{BuilderHelper, LiteralArg};
 
 fn summary(facts: &EmbeddedSqlFileFacts, name: &str) -> Option<HelperSummary> {
     facts.exported_helpers.get(name).cloned()
@@ -66,7 +66,7 @@ fn a_helper_body_can_call_a_literal_identifier_template() {
     let origin = Path::new("/exports.ts");
     let filled = summary(&facts, "viaArrow")
         .expect("viaArrow")
-        .fill(&literals(&[]), origin)
+        .fill(&literals(&[]), origin, origin)
         .expect("static");
     assert_eq!(filled.sql, "(l.x IS NULL)");
 }
@@ -78,7 +78,7 @@ fn parameters_are_spliced_wherever_they_are_interpolated() {
     let fill = |name: &str, args: &[&str]| {
         summary(&facts, name)
             .expect(name)
-            .fill(&literals(args), origin)
+            .fill(&literals(args), origin, origin)
             .map(|filled| filled.sql)
     };
     assert_eq!(fill("arrow", &["a.b"]).as_deref(), Some("(a.b IS NULL)"));
@@ -104,7 +104,7 @@ fn parameters_are_spliced_wherever_they_are_interpolated() {
         line: 1,
     };
     let template = summary(&facts, "arrow").expect("arrow");
-    assert!(template.fill(&scalar, origin).is_none());
+    assert!(template.fill(&scalar, origin, origin).is_none());
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn substituted_text_keeps_the_templates_physical_lines_and_module() {
     let origin = Path::new("/exports.ts");
     let filled = summary(&facts, "multiline")
         .expect("multiline")
-        .fill(&literals(&["a.b", "much.longer.column"]), origin)
+        .fill(&literals(&["a.b", "much.longer.column"]), origin, origin)
         .expect("filled");
     assert_eq!(
         filled.sql,
@@ -136,8 +136,51 @@ fn substituted_text_keeps_the_templates_physical_lines_and_module() {
     let module = Some(origin.to_path_buf());
     assert_eq!(line_of("(a.b"), (first, module.clone()));
     assert_eq!(line_of("OR much"), (first + 1, module.clone()));
+    // No caller location was recorded, so the spliced text keeps the template line.
     assert_eq!(line_of("much.longer"), (first + 1, module.clone()));
     assert_eq!(line_of("EXISTS"), (first + 2, module));
+}
+
+#[test]
+fn spliced_literals_are_credited_to_the_caller_not_the_placeholder() {
+    let facts = extract("exports.ts");
+    let helper = Path::new("/exports.ts");
+    let caller = Path::new("/caller.mts");
+    let site = ImportedSite {
+        local: "arrow".into(),
+        args: vec![SiteArg::Literal(LiteralArg {
+            text: "OFFSET 40".into(),
+            line: 12,
+            origin: 80,
+        })],
+        value_used: false,
+        line: 12,
+    };
+    let filled = summary(&facts, "arrow")
+        .expect("arrow")
+        .fill(&site, helper, caller)
+        .expect("filled");
+    assert_eq!(filled.sql, "(OFFSET 40 IS NULL)");
+    let line_of = |needle: &str| {
+        let offset = filled.sql.find(needle).expect(needle);
+        origin_at(
+            &filled.positions,
+            filled.line,
+            coordinate(&filled.sql, offset),
+        )
+    };
+    // The literal's bytes read from the caller. The helper's own text does not.
+    assert_eq!(line_of("OFFSET 40"), (12, Some(caller.to_path_buf())));
+    let source = std::fs::read_to_string(fixture("exports.ts")).expect("fixture");
+    let template_line = source
+        .lines()
+        .position(|line| line.contains("=> `(${column} IS NULL)`"))
+        .expect("arrow") as u32
+        + 1;
+    assert_eq!(
+        line_of("IS NULL"),
+        (template_line, Some(helper.to_path_buf()))
+    );
 }
 
 #[test]
@@ -161,13 +204,17 @@ fn a_statement_builder_helper_fills_only_a_matching_builder_call() {
         line: 1,
     };
     let filled = builder
-        .fill(&call(vec![SiteArg::Builder, SiteArg::Scalar]), origin)
+        .fill(
+            &call(vec![SiteArg::Builder, SiteArg::Scalar]),
+            origin,
+            origin,
+        )
         .expect("fills");
     assert_eq!(filled.sql, format!(" AND tier = {INTERNAL_PLACEHOLDER}1"));
     // A builder helper that appends nothing contributes no text.
     let unchanged = summary(&facts, "returnsBuilder").expect("returnsBuilder");
     let nothing = unchanged
-        .fill(&call(vec![SiteArg::Builder]), origin)
+        .fill(&call(vec![SiteArg::Builder]), origin, origin)
         .expect("fills");
     assert_eq!(nothing.sql, "");
     for wrong in [
@@ -176,6 +223,6 @@ fn a_statement_builder_helper_fills_only_a_matching_builder_call() {
         vec![SiteArg::Literal("x".into()), SiteArg::Scalar],
         vec![SiteArg::Builder, SiteArg::Builder],
     ] {
-        assert!(builder.fill(&call(wrong), origin).is_none());
+        assert!(builder.fill(&call(wrong), origin, origin).is_none());
     }
 }

@@ -70,7 +70,10 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
             .embedded_sql
             .iter()
             .find(|(known, _)| known == options)?;
-        embedded.exported_helpers.get(&local)?.fill(site, &origin)
+        embedded
+            .exported_helpers
+            .get(&local)?
+            .fill(site, &origin, from)
     }
 
     /// Every alternative text the helper called at `site` contributes.
