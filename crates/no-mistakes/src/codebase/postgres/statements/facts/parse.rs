@@ -76,6 +76,8 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     placeholder_positions: PlaceholderPositions<'_>,
     locations: SqlLocationDemand,
 ) -> SqlStatementFileFacts {
+    #[cfg(test)]
+    super::locations::work::statement_extraction();
     let prepared = PreparedSql::new(sql);
     let parsed = prepared.parse_policy();
     let parse_failed = parsed.is_err();

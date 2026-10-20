@@ -6,6 +6,7 @@ mod annotation;
 mod catalog;
 mod collect;
 mod conflict;
+pub(crate) use conflict::may_have_insert;
 pub mod dml;
 pub(crate) mod embedded;
 mod function_calls;

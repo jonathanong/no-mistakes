@@ -17,6 +17,9 @@ pub(super) fn record(
     prepared: &FxHashMap<(usize, usize), &SqlStatementFileFacts>,
     facts: &CheckFactMap,
 ) {
+    if !facts.wants_sql_verdicts() {
+        return;
+    }
     for (call_index, original) in embedded.calls.iter().enumerate() {
         let exempt = has_safe_directive(
             source,
@@ -141,3 +144,9 @@ fn judge(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod allocation_tests;
+
+#[cfg(test)]
+mod projection_tests;

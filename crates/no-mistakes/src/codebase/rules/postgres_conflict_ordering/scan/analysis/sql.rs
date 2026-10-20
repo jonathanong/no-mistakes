@@ -1,7 +1,8 @@
 use std::ops::Range;
 
 pub(in super::super) fn contains_insert_conflict(sql: &str) -> bool {
-    contains_keyword(sql, "insert")
+    crate::codebase::postgres::may_have_insert(sql)
+        && contains_keyword(sql, "insert")
         && contains_keyword(sql, "on")
         && contains_keyword(sql, "conflict")
 }

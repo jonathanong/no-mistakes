@@ -43,8 +43,12 @@ fn conflict_only_boundary_omits_unrequested_exact_location_families() {
         .iter()
         .all(|call| call.variants.is_empty() && call.sql_source_positions.is_empty()));
     let statements = prepared.postgres_statements(&ts, Some(&profile)).unwrap();
-    assert_eq!(statements.len(), 2);
+    assert_eq!(statements.len(), 1);
     let locations = statements[0].variant_locations.as_ref().unwrap();
+    assert_eq!(
+        locations.call_index, 1,
+        "irrelevant SELECT should not be prepared"
+    );
     assert!(
         locations.locking.is_empty(),
         "conflict-only demand collected locking metadata"
@@ -54,7 +58,7 @@ fn conflict_only_boundary_omits_unrequested_exact_location_families() {
         .keys()
         .all(|site| matches!(site, SqlFactSite::Origin | SqlFactSite::Conflict(_))));
     assert_eq!(
-        statements[1]
+        statements[0]
             .variant_locations
             .as_ref()
             .unwrap()

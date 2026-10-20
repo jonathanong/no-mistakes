@@ -15,6 +15,8 @@ mod sql_verdict_annotation_tests;
 #[cfg(test)]
 mod sql_verdict_catalog_coverage_tests;
 #[cfg(test)]
+mod sql_verdict_conflict_pruning_tests;
+#[cfg(test)]
 mod sql_verdict_consumer_recovery_tests;
 #[cfg(test)]
 mod sql_verdict_decision_coverage_tests;

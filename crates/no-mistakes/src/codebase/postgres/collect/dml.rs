@@ -87,6 +87,16 @@ pub(crate) fn embedded_call_facts_with_demand(
         })
         .filter_map(|(call, variant, call_index, variant_index)| {
             let sql = call.sql_text.as_deref()?;
+            // A conflict-only request must not construct unrelated SELECT facts.
+            // Preserve mapped/variant and general/bounds consumers' complete facts.
+            if demand == SqlLocationDemand::Conflicts
+                && !collect_bounds
+                && !variant
+                && call.sql_source_positions.is_empty()
+                && !super::super::conflict::may_have_insert(sql)
+            {
+                return None;
+            }
             // Variants and mapped SQL retain the pre-existing complete projection.
             let projection = if variant || !call.sql_source_positions.is_empty() {
                 SqlLocationDemand::Full

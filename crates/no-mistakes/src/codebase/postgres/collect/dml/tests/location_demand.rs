@@ -29,12 +29,14 @@ fn variants_and_source_mapped_calls_keep_the_complete_projection() {
             .calls
             .iter()
             .all(|call| !call.variants.is_empty() || !call.sql_source_positions.is_empty()));
-        let legacy_full = embedded_call_facts_with_locations(&file, true, false, true);
-        let conflict_demand =
-            embedded_call_facts_with_demand(&file, true, false, SqlLocationDemand::Conflicts);
-        assert_eq!(conflict_demand, legacy_full, "{name}");
-        assert!(conflict_demand
-            .iter()
-            .all(|fact| fact.variant_locations.is_some()));
+        for bounds in [false, true] {
+            let legacy_full = embedded_call_facts_with_locations(&file, bounds, false, true);
+            let conflict_demand =
+                embedded_call_facts_with_demand(&file, bounds, false, SqlLocationDemand::Conflicts);
+            assert_eq!(conflict_demand, legacy_full, "{name}");
+            assert!(conflict_demand
+                .iter()
+                .all(|fact| fact.variant_locations.is_some()));
+        }
     }
 }

@@ -60,6 +60,14 @@ pub struct SqlInsertSourceShape {
     pub relations: Option<Vec<SqlSourceRelation>>,
 }
 
+/// Recall-safe prefilter: quoted/commented text may retain extra calls, never
+/// discard a real INSERT, including one inside a data-modifying CTE.
+pub(crate) fn may_have_insert(sql: &str) -> bool {
+    sql.as_bytes()
+        .windows(b"insert".len())
+        .any(|word| word.eq_ignore_ascii_case(b"insert"))
+}
+
 pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>> {
     analyze_conflict_inserts_with_binds(sql, &[])
 }

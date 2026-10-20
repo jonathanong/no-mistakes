@@ -3,6 +3,7 @@ use std::cell::Cell;
 #[derive(Clone, Copy, Default, Debug)]
 pub(crate) struct Counts {
     pub full_walks: usize,
+    pub statement_extractions: usize,
     pub full_projections: usize,
     pub conflict_projections: usize,
 }
@@ -29,4 +30,8 @@ pub(crate) fn full_projection() {
 }
 pub(crate) fn conflict_projection() {
     record(|counts| counts.conflict_projections += 1);
+}
+
+pub(crate) fn statement_extraction() {
+    record(|counts| counts.statement_extractions += 1);
 }
