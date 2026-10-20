@@ -245,8 +245,9 @@ fn swift_project_policy_attributes_unprefixed_globs_to_an_empty_package() {
 }
 
 /// A trailing slash trims before the boundary check. `.` matches `./Tests/**`
-/// because the remainder starts with `/`. `clients/core` does not own
-/// `clients/core-extra/**`, so that include falls back to the first package.
+/// because the remainder starts with `/`, and it does not match `Tests/**`.
+/// A `*` inside the package segment misses, so `clients/core*/Tests/**` falls
+/// back to the first package. `""` and `"/"` both match every include.
 #[test]
 fn swift_project_policy_matches_trimmed_package_boundaries() {
     let cases = [
@@ -264,6 +265,26 @@ fn swift_project_policy_matches_trimmed_package_boundaries() {
             vec!["first".to_string(), "clients/core".to_string()],
             "clients/core-extra/**",
             "first",
+        ),
+        (
+            vec!["first".to_string(), "clients/core".to_string()],
+            "clients/core*/Tests/**",
+            "first",
+        ),
+        (
+            vec!["first".to_string(), ".".to_string()],
+            "Tests/**",
+            "first",
+        ),
+        (
+            vec!["clients/core".to_string(), "".to_string()],
+            "Tests/**",
+            "",
+        ),
+        (
+            vec!["clients/core".to_string(), "/".to_string()],
+            "other/**",
+            "",
         ),
     ];
 

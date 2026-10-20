@@ -426,7 +426,12 @@ tests:
 
 Use `tests.swift.projects` when a package needs named include/exclude policies.
 Project aliases affect discovery, while runnable Swift filters remain SwiftPM
-test targets derived from the selected test file.
+test targets derived from the selected test file. An include is attributed to
+the longest declared package that is a path prefix of the include (the package
+path followed by `/`). A wildcard inside the package segment, such as
+`clients/core*/Tests/**`, does not match, and the policy falls back to the
+first package. An empty or `/` package matches every include on the root
+boundary.
 
 When native tests are discoverable but the source/project change cannot be
 traced, `tests plan swift` falls back to framework-scoped discovered tests and
