@@ -155,8 +155,9 @@ executor stays silent. `typeof flag || read` and `new Runner() || read` are
 always the left side. `typeof flag ?? read`, `flag === 1 ?? read`,
 `` `x${flag}` ?? read ``, `[] ?? read`, `new Runner() ?? read`, and
 `!flag ?? read` stay silent. `typeof`, an untagged template, `new`, an array,
-object, or function literal, a comparison or other binary expression, and
-`!` or unary `+` `-` `~` are never nullish. `void` is always `undefined`, so
+object, or function literal, a comparison or other binary expression,
+`!` or unary `+` `-` `~`, an update expression, and dynamic `import()` are
+never nullish. `void` is always `undefined`, so
 it is not in that set. Literal operands are folded:
 `0 && read`, `1 || read`, and `0 ?? read` are silent because that executor is
 not the value. An untyped `client.query` under a configured module is not
@@ -182,6 +183,10 @@ run(`x${flag}` ?? read, account);
 run([] ?? read, account);
 run(new Runner() ?? read, account);
 run(!flag ?? read, account);
+run(flag++ ?? read, account);
+run(import("m") ?? read, account);
+const obj = { k: true };
+run(delete obj.k ?? read, account);
 run(0 ?? read, account);
 ```
 
