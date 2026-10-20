@@ -25,6 +25,13 @@ pub(super) use array_element_values::value as array_element_value;
 pub(super) use escaped_array_entries::{array_elements, assign_sources, copied_member};
 pub(super) use escaped_origin_absorb::absorb;
 
+type StoredArray = (
+    usize,
+    String,
+    u32,
+    std::sync::Arc<FxHashMap<String, ValueExpression>>,
+);
+
 #[derive(Default)]
 pub(in super::super) struct Side {
     /// `const api = new Api()` — write origins only, not a callable binding.
@@ -41,12 +48,7 @@ pub(in super::super) struct Side {
     /// `const a = arguments`.
     argument_aliases: FxHashSet<(usize, String)>,
     /// Array values from `let` bindings and later array assignments.
-    arrays: Vec<(
-        usize,
-        String,
-        u32,
-        std::sync::Arc<FxHashMap<String, ValueExpression>>,
-    )>,
+    arrays: Vec<StoredArray>,
     /// Call span `(start, end)`, method, and the raw argument values. Spread and
     /// conditional shapes are also stored in the escaped maps under that same span.
     methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>)>,
