@@ -155,12 +155,16 @@ fn job_span(lines: &[&str], job: &str) -> Option<(usize, usize)> {
         }
         let level = indent(line);
         if level < child {
-            break;
+            return start.map(|found| (found, index));
         }
-        if level == child && key_is(trimmed, job) {
-            if let Some(found) = start {
-                return Some((found, index));
-            }
+        if level != child {
+            continue;
+        }
+        // The next job key ends this job, so a repeated spec is not taken from it.
+        if let Some(found) = start {
+            return Some((found, index));
+        }
+        if key_is(trimmed, job) {
             start = Some(index);
         }
     }
@@ -168,10 +172,9 @@ fn job_span(lines: &[&str], job: &str) -> Option<(usize, usize)> {
 }
 
 fn key_is(trimmed: &str, job: &str) -> bool {
-    let Some((key, _)) = trimmed.split_once(':') else {
-        return false;
-    };
-    key.trim().trim_matches(['"', '\'']) == job
+    trimmed
+        .split_once(':')
+        .is_some_and(|(key, _)| key.trim().trim_matches(['"', '\'']) == job)
 }
 
 fn indent(line: &str) -> usize {

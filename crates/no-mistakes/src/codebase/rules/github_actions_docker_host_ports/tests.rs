@@ -457,5 +457,31 @@ fn shell_quotes_substitutions_and_joins_stay_one_command() {
     assert!(texts.contains(&"x"), "{texts:?}");
 }
 
+#[test]
+fn shell_option_flags_and_skipped_service_values_still_place_a_port() {
+    let hit = |script: &str| super::publish::publish_hits(script);
+    assert_eq!(hit("env --chdir=/tmp docker run -p 1:2 img").len(), 1);
+    assert_eq!(hit("bash -o errexit -c \"docker run -p 1:2 img\"").len(), 1);
+    assert!(hit("bash -e echo").is_empty());
+    assert!(hit("bash -cdocker").is_empty());
+
+    let source = "\
+on: push
+jobs:
+
+  # gap
+  build:
+    services:
+      pg: postgres
+      real:
+        ports: [\"1:2\"]
+concurrency: cancel
+";
+    let findings = check(WORKFLOW, source);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("service `real`"));
+    assert!(nth_line(source, findings[0].line).contains("1:2"));
+}
+
 #[path = "parser_edges_tests.rs"]
 mod parser_edges_tests;
