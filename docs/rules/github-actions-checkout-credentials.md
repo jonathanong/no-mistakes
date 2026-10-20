@@ -69,9 +69,9 @@ checkout name is `actions/checkout` with an optional ref and trailing slash.
 or organization whose default `GITHUB_TOKEN` can write. When it is true, a
 missing `permissions` key, including on `workflow_call`, is judged as write.
 An explicit permissions value is unchanged, and a `workflow_call` file that
-sets `contents: write` is still not a finding. Unknown option keys are
-rejected. Listing the rule is what turns it on. Product defaults do not
-enable it.
+sets `contents: write` is still not a finding. A null `permissions:` value
+stays unknown when the option is on. Unknown option keys are rejected.
+Listing the rule is what turns it on. Product defaults do not enable it.
 
 ```yaml
 rules:

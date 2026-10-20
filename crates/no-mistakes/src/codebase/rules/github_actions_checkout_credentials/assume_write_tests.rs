@@ -95,17 +95,18 @@ jobs:
     assert!(!proven[0].message.contains("assumeWriteWhenUnspecified"));
 }
 
-#[test]
-fn saved_fixture_reports_only_unspecified_permissions() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../test-cases/rules/github-actions-checkout-credentials/fixture/assume-unspecified",
-        ),
-    );
-    let config: NoMistakesConfig =
-        serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
-            .unwrap();
-    let files: Vec<PathBuf> = [
+fn assume_unspecified_root() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/github-actions-checkout-credentials/fixture/assume-unspecified",
+    ))
+}
+
+fn saved_config(root: &Path, name: &str) -> NoMistakesConfig {
+    serde_yaml::from_str(&std::fs::read_to_string(root.join(name)).unwrap()).unwrap()
+}
+
+fn assume_unspecified_files(root: &Path) -> Vec<PathBuf> {
+    [
         ".github/workflows/missing.yml",
         ".github/workflows/callable.yml",
         ".github/workflows/callable-write.yml",
@@ -114,12 +115,16 @@ fn saved_fixture_reports_only_unspecified_permissions() {
         ".github/workflows/token.yml",
         ".github/workflows/persist-false.yml",
         ".github/workflows/null-permissions.yml",
+        ".github/workflows/suppressed.yml",
         ".no-mistakes.yml",
+        ".no-mistakes.off.yml",
     ]
     .into_iter()
     .map(|name| root.join(name))
-    .collect();
-    let findings = super::super::check_with_files(&root, &config, &files).unwrap();
+    .collect()
+}
+
+fn finding_ids(findings: &[RuleFinding]) -> Vec<String> {
     let mut got: Vec<String> = findings
         .iter()
         .map(|finding| {
@@ -131,15 +136,11 @@ fn saved_fixture_reports_only_unspecified_permissions() {
         })
         .collect();
     got.sort();
-    assert_eq!(
-        got,
-        vec![
-            "callable.yml:build".to_string(),
-            "missing.yml:build".to_string(),
-            "write.yml:build".to_string(),
-        ]
-    );
-    for finding in &findings {
+    got
+}
+
+fn assert_checkout_lines(root: &Path, findings: &[RuleFinding]) {
+    for finding in findings {
         let line = std::fs::read_to_string(root.join(&finding.file))
             .unwrap()
             .lines()
@@ -151,14 +152,69 @@ fn saved_fixture_reports_only_unspecified_permissions() {
             "{line} for {}",
             finding.file
         );
+    }
+}
+
+#[test]
+fn saved_fixture_reports_only_unspecified_permissions() {
+    let root = assume_unspecified_root();
+    let files = assume_unspecified_files(&root);
+    let config = saved_config(&root, ".no-mistakes.yml");
+    let findings = super::super::check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(
+        finding_ids(&findings),
+        vec![
+            "callable.yml:build".to_string(),
+            "missing.yml:build".to_string(),
+            "suppressed.yml:build".to_string(),
+            "write.yml:build".to_string(),
+        ]
+    );
+    assert_checkout_lines(&root, &findings);
+    for finding in &findings {
         if finding.file.ends_with("write.yml") {
             assert!(finding
                 .message
                 .contains("workflow permissions grant contents: write"));
+            assert!(!finding.message.contains("assumeWriteWhenUnspecified"));
         } else {
             assert!(finding.message.contains("assumeWriteWhenUnspecified"));
         }
     }
+
+    let off = saved_config(&root, ".no-mistakes.off.yml");
+    let off_findings = super::super::check_with_files(&root, &off, &files).unwrap();
+    assert_eq!(
+        finding_ids(&off_findings),
+        vec!["write.yml:build".to_string()]
+    );
+    assert_checkout_lines(&root, &off_findings);
+    assert!(off_findings[0]
+        .message
+        .contains("workflow permissions grant contents: write"));
+    assert!(!off_findings[0]
+        .message
+        .contains("assumeWriteWhenUnspecified"));
+
+    let visible = crate::codebase::ts_source::discover_files(&root, &[]);
+    assert!(
+        visible.iter().any(|path| path.ends_with("suppressed.yml")),
+        "filtered run must see suppressed.yml, got {visible:?}"
+    );
+    let filtered =
+        crate::codebase::rules::run_filesystem_rules(&root, Some(&root.join(".no-mistakes.yml")))
+            .unwrap();
+    assert_eq!(
+        finding_ids(&filtered),
+        vec![
+            "callable.yml:build".to_string(),
+            "missing.yml:build".to_string(),
+            "write.yml:build".to_string(),
+        ]
+    );
+    assert!(filtered
+        .iter()
+        .all(|finding| !finding.file.ends_with("suppressed.yml")));
 }
 
 #[test]
