@@ -101,7 +101,6 @@ function staticKeyName(node) {
 }
 
 function remember(map, name, value) {
-  if (!name) return;
   if (map.has(name)) map.set(name, { ambiguous: true });
   else map.set(name, { ambiguous: false, value });
 }
@@ -109,18 +108,12 @@ function remember(map, name, value) {
 function collectTypes(context, program) {
   const aliases = new Map();
   const interfaces = new Map();
-  const classes = new Map();
-  const classList = [];
   walkAst(context, program, (node) => {
     if (node.type === "TSTypeAliasDeclaration")
       remember(aliases, node.id?.name, node.typeAnnotation);
     else if (node.type === "TSInterfaceDeclaration") remember(interfaces, node.id?.name, node);
-    else if (node.type === "ClassDeclaration" || node.type === "ClassExpression") {
-      classList.push(node);
-      if (node.type === "ClassDeclaration") remember(classes, node.id?.name, node);
-    }
   });
-  return { aliases, interfaces, classes, classList };
+  return { aliases, interfaces };
 }
 
 function lookup(map, name) {
@@ -214,5 +207,4 @@ module.exports = {
   staticKeyName,
   typeLiteralFlag,
   unwrapType,
-  walkAst,
 };

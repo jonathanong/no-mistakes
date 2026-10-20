@@ -2,10 +2,7 @@
 
 const { findContainingFunction } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
-const { propertyName } = require("./module-mock-helpers");
 const { annotationContract, combine } = require("./postgres-no-async-sql-builder-types");
-
-const PROMISE_USES = new Set(["then", "catch", "finally"]);
 
 function declarationExported(node) {
   const parent = node?.parent;
@@ -61,22 +58,6 @@ function isInside(node, ancestor) {
   return false;
 }
 
-function isThenObject(node) {
-  const member = node.parent;
-  if (member?.type !== "MemberExpression" || member.object !== node || member.computed)
-    return false;
-  const name = propertyName(member.property);
-  return (
-    PROMISE_USES.has(name) &&
-    member.parent?.type === "CallExpression" &&
-    member.parent.callee === member
-  );
-}
-
-function isThenCall(node) {
-  return isThenObject(node);
-}
-
 function bindingResultContract(declarator, context, types, seen = new Set()) {
   if (seen.has(declarator)) return "unknown";
   let result = annotationContract(declarator.id.typeAnnotation, types);
@@ -114,6 +95,5 @@ module.exports = {
   exportContract,
   hasLaterWrite,
   isInside,
-  isThenCall,
   returnedPromiseContract,
 };

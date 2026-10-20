@@ -35,6 +35,22 @@ A constant string or a template with no substitutions is the same kind of
 return. A plain template with substitutions is not: it is not a trusted SQL
 tag, so the rule stays silent.
 
+A module-level `const` is folded the same way when its initializer is a string
+literal, a template with no substitutions, or another module-level `const` of
+that shape, including through a type assertion:
+
+```ts
+const Q = "SELECT 1";
+
+async function build() {
+  return Q;
+}
+```
+
+`let`, `var`, a conditional, a concatenation, a call, and a configured tag
+stored at module scope are not folded. The rule does not treat those
+expressions as SQL. A `const` inside another function is not module scope.
+
 ## Allowed
 
 Deleting `async` leaves the same `sql` tag. Callers that only `await` the
@@ -70,7 +86,9 @@ as `{ foo: string }`. `{ name: string }`, `{ call(t: any): any }`, and
 `{ then: any }` stay silent. A builder's call result passed to a parameter is
 judged as a Promise: `{ then(f: any): any }` stays silent and `{ name: string }`
 reports. An interface is judged the same way as the alias with that body. A direct
-`{}` argument and a property typed `{ f: () => {} }` stay silent. The same check applies to a bound local (`const query = build()`),
+`{}` argument stays silent. A class method, an interface member, and an object
+property stay silent too, including a property typed `{ f: () => {} }` or
+`{ f: () => { foo: string } }`. The same check applies to a bound local (`const query = build()`),
 including when that local is passed on, returned, or copied into another
 local. A use this file does not explicitly recognize, such as `instanceof` or
 a property, stays silent.
@@ -78,9 +96,11 @@ a property, stays silent.
 The rule also stays silent, with no report, when it cannot prove the rewrite.
 That includes any of these:
 
-- a return that is not a string, a template with no substitutions, or a tag
-  of a configured callee, on every path (a `names` entry does not skip this
-  check). A call such as `sql(id)` stays silent. A tag placeholder that is not
+- a return that is not a string, a template with no substitutions, a
+  module-level `const` of that shape, or a tag of a configured callee, on
+  every path (a `names` entry does not skip this check). A call such as
+  `sql(id)` stays silent. A `let`, a conditional, or a module-level tag stays
+  silent. A tag placeholder that is not
   an identifier, a literal, or already judged SQL, such as `${id.x}`, stays
   silent. A member read outside that placeholder, such as `id.x;`,
   `const x = id.x`, or `id.x ? "a" : "b"`, also stays silent
@@ -91,15 +111,19 @@ That includes any of these:
   callee of a judged tag is not one of these reads when it is a bare identifier
   or a member chain rooted outside the function, such as `(db.sql)`. A tag on
   a parameter or local, such as ``id.sql`SELECT 1` ``, stays silent
-- an exported builder, a return type or implemented interface it cannot
-  resolve, or an explicit `Promise<...>`, `any`, `unknown`, `object`, or
-  Promise-compatible type-literal return type
+- an exported builder, or an explicit `Promise<...>`, `any`, `unknown`,
+  `object`, or Promise-compatible type-literal return type, including a
+  same-file alias it cannot resolve
 - a builder passed to a same-file parameter whose type is a function returning
   a Promise, or whose result, directly or through a bound local, is passed to
   `.then`, `.catch`, or `.finally`
-- a class or object value that escapes this file
+- a class member, an interface member, or a function that is an object
+  property. The rule does not model class heritage, implemented interfaces, or
+  whether that object escapes
 
-Silence is not permission to delete `async`.
+Silence is not permission to delete `async`. To get a judged report, move the
+builder to a local (non-exported) `async function` that returns a literal, a
+module-level `const` string, or a configured tag.
 
 The rule does not report a function that actually waits:
 
@@ -124,6 +148,16 @@ async function buildQuery(id: string) {
   but the rule stays silent because the returned call is not the configured
   tag. Placeholders must be identifiers, literals, or already judged SQL;
   `${id.x}` stays silent because it can throw after `async` is removed.
+  A module-level `const` string or no-substitution template is judged SQL
+  even when `callees` is unset, but only for a function that entry already
+  selects. A call that appears before that const's initializer stays silent,
+  including a call through another function, because removing `async` would
+  throw before the rest of the module runs. An exported function is one of
+  those calls: it is hoisted, so another module can run it before the
+  initializer. A later declarator in the same
+  statement runs after the initializer and still reports.
+  A module-level binding that is not that
+  shape, including a module-level configured tag, is not judged SQL.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
   name (`import { sql as tag }` matches `sql`). Type-only and default imports
@@ -147,19 +181,21 @@ async function buildQuery(id: string) {
 Removal is suggested only when every one of these is true:
 
 - every return is a string literal, a template literal with no substitutions,
-  or a tag of a configured callee whose placeholders are identifiers, literals,
-  or already judged SQL, including both branches of a conditional and a
-  `const` / `let` binding that is not reassigned. A call such as `sql(id)` does
-  not qualify
+  a module-level `const` whose initializer is one of those or another such
+  const, or a tag of a configured callee whose placeholders are identifiers,
+  literals, or already judged SQL, including both branches of a conditional and
+  a `const` / `let` binding that is not reassigned. A call such as `sql(id)`
+  does not qualify. A module-level `let`, conditional, concatenation, call, or
+  configured tag does not qualify
 - the function has no `await`, `for await`, `await using`, or dynamic
   `import()` that it returns
 - the body has no `throw`, `new`, loop, `switch`, `try`, member read other
   than a judged tag whose callee is a bare name or a member rooted outside
   the function, destructured parameter, parameter default, or call other
   than a configured callee or tag
-- it is not an override or interface method required to return a Promise, a
-  same-file base class or interface can be checked when one is declared, and
-  no same-file subclass declares the same method
+- it is not a class member, an interface member, or an object property. Those
+  shapes abstain. The rule does not model heritage, implemented interfaces, or
+  object escape
 - it has no explicit `Promise<...>`, `any`, `unknown`, `object`, or
   Promise-compatible type-literal return type, including a same-file alias of
   `Promise` and `globalThis.Promise`
@@ -180,8 +216,7 @@ Removal is suggested only when every one of these is true:
   copied in ways this file can prove do not need a Promise. Any other use,
   including `instanceof`, a property, or an alias that later needs the
   Promise, stays silent
-- the function, its class, and its object are not exported, and those values
-  do not escape into an unresolved call
+- the function is not exported, and it is not passed to an unresolved call
 
 If any check fails, the rule reports nothing. It does not guess, and it does
 not tell you to keep `async`.

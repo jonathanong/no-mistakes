@@ -1,0 +1,499 @@
+import assert from "node:assert/strict";
+import { describe, it } from "vitest";
+import { ids } from "./postgres-no-async-sql-builder-helpers.mjs";
+
+describe("postgres-no-async-sql-builder", () => {
+  it("reports only when every path returns judged SQL", () => {
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return "SELECT 1";
+          else return "SELECT 2";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return "SELECT 1";
+          return "SELECT 2";
+        }
+        await build(false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean, other: boolean) {
+          if (flag) {
+            if (other) return "SELECT 1";
+          }
+          return "SELECT 2";
+        }
+        await build(false, false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) void flag;
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) {
+            const label = "kept";
+            void label;
+          }
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) {}
+          else {}
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) void flag;
+          else void flag;
+          return "SELECT 1";
+        }
+        await build(true);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) {}
+          else return "SELECT 1";
+          return "SELECT 2";
+        }
+        await build(false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) void flag;
+          else return "SELECT 1";
+          return "SELECT 2";
+        }
+        await build(false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean, other: boolean) {
+          if (flag) {
+            if (other) return "SELECT 1";
+          } else return "SELECT 2";
+          return "SELECT 3";
+        }
+        await build(false, false);
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          done: return "SELECT 1";
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          function nested() {}
+          class Box {}
+          ;
+          debugger;
+          return \`SELECT 1\`;
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          const query = "SELECT 1";
+          return query;
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          return (0, "SELECT 1");
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          return "SELECT 1" && "SELECT 2";
+        }
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const build = async () => "SELECT 1";
+        await build();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(
+        `
+          declare function sql(text: string): string;
+          async function build() { return sql("SELECT 1"); }
+          await build();
+        `,
+        { builders: [{ callees: ["sql"] }] },
+      ),
+      // A declared callee call is not a judged tag either.
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(flag: boolean) {
+          if (flag) return;
+          return "SELECT 1";
+        }
+        await build(false);
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        declare function loadSql(key: string): string;
+        async function build() {
+          return (0, loadSql("k"));
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          const left = right;
+          const right = left;
+          return left;
+        }
+        await build();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() {
+          let query = "SELECT 1";
+          query = "SELECT 2";
+          return query;
+        }
+        await build();
+      `),
+      [],
+    );
+  });
+
+  it("recalls a module-level string or constant template and ignores other module expressions", () => {
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = \`SELECT 1\`;
+        async function build() { return Q; }
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const INNER = "SELECT 1";
+        const Q = INNER;
+        async function build() { return Q; }
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        export const Q = "SELECT 1";
+        async function build() { return Q; }
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1" as string;
+        async function build() { return Q; }
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build(flag: boolean) { return flag ? Q : "SELECT 2"; }
+        read(build(true));
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = sql\`SELECT 1\`;
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = flag ? "SELECT 1" : "SELECT 2";
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT " + "1";
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = \`SELECT \${1}\`;
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        let Q = "SELECT 1";
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = 1;
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        Q = "SELECT 2";
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function outer() {
+          const Q = "SELECT 1";
+          async function build() { return Q; }
+          read(build());
+        }
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const { Q } = { Q: "SELECT 1" };
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        declare const Q: string;
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    // The call is after the initializer, so the hoisted function is still judged.
+    assert.deepEqual(
+      ids(`
+        async function build() { return Q; }
+        const Q = "SELECT 1";
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    // A later declarator in the same statement runs after Q's initializer.
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1", result = build();
+        async function build() { return Q; }
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const INNER = "SELECT 1", Q = INNER, result = build();
+        async function build() { return Q; }
+      `),
+      ["removeAsync"],
+    );
+    // build() runs before Q's initializer, still in the same statement.
+    assert.deepEqual(
+      ids(`
+        const result = build(), Q = "SELECT 1";
+        async function build() { return Q; }
+      `),
+      [],
+    );
+    // Calling the hoisted builder before the const throws once async is gone.
+    assert.deepEqual(
+      ids(`
+        async function build() { return Q; }
+        build();
+        after();
+        const Q = "SELECT 1";
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const build = async () => Q;
+        build();
+        const Q = "SELECT 1";
+      `),
+      [],
+    );
+    // later() is only called after the const, so the nested call is judged.
+    assert.deepEqual(
+      ids(`
+        function later() { build(); }
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        read(later());
+      `),
+      ["removeAsync"],
+    );
+    // An exported helper is hoisted, so a cyclic import can call it before the const.
+    assert.deepEqual(
+      ids(
+        'export function invoke() { build(); }\nconst Q = "SELECT 1";\nasync function build() { return Q; }\nread(invoke());',
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        'function invoke() { build(); }\nexport { invoke };\nconst Q = "SELECT 1";\nasync function build() { return Q; }',
+      ),
+      [],
+    );
+    // invoke() runs before the const even though its build reference is below it.
+    assert.deepEqual(
+      ids(`
+        invoke();
+        after();
+        const Q = "SELECT 1";
+        function invoke() { build(); }
+        async function build() { return Q; }
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        function invoke() { build(); }
+        async function build() { return Q; }
+        read(invoke());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build(id: string) { return id; }
+        read(build("SELECT 1"));
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        async function build() { return missingSql; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const A = B;
+        const B = A;
+        async function build() { return A; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        const Q = "SELECT 2";
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const INNER = call();
+        const Q = INNER;
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+  });
+});
