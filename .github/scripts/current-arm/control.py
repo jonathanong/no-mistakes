@@ -29,11 +29,10 @@ def main():
     common.save(output / 'provenance.json', {
         'sourceProof': proof, 'measurementMachine': machine, 'consumer': consumer,
         'purpose': 'merge-base-main annotation capacity control',
-        'collectionCapSeconds': 900, 'eligibleForGate': False,
-        'note': '900 seconds total is a stricter bound than 900 seconds without progress.'})
-    worker.CAP_SECONDS = 900
+        'collectionCapSeconds': 1800, 'noProgressSeconds': 900, 'eligibleForGate': False})
+    worker.CAP_SECONDS = 1800
     row = worker.sample(binary, root, root / '.no-mistakes.yml', '1', 'on',
-                        False, output, 'main-control', 0, heartbeat=True)
+                        False, output, 'main-control', 0, heartbeat=True, stall_seconds=900)
     common.save(output / 'sample.json', row)
     assert common.workload(root) == consumer
     common.save(output / 'outcome.json', {

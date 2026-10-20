@@ -8,6 +8,7 @@ import threading
 import time
 
 from common import CAP_SECONDS, digest
+from progress_clock import ProgressClock
 
 DIAGNOSTICS = ('[progress] ', '[timing] ', '[work] ', '[memory] ')
 
@@ -37,7 +38,7 @@ def cpu_seconds(pid):
 
 
 def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal,
-           heartbeat=False):
+           heartbeat=False, stall_seconds=None):
     tag = f'{ordinal}-{arm}'
     runtime = (output / ('runtime-' + tag)).resolve()
     runtime.mkdir(mode=0o700)
@@ -53,6 +54,8 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
     env.pop('RAYON_NUM_THREADS', None)
     stdout_path, stderr_path = output / (tag + '.json'), output / (tag + '.stderr')
     timeline, stop, deadline_hit = [], threading.Event(), threading.Event()
+    progress = ProgressClock() if stall_seconds is not None else None
+    stalled = threading.Event()
     if heartbeat:
         print(f'CAPACITY arm={arm} status=started capSeconds={CAP_SECONDS}', flush=True)
     with stdout_path.open('wb') as stdout, stderr_path.open('wb') as stderr:
@@ -71,6 +74,8 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
             while not stop.wait(0.1):
                 elapsed = time.monotonic() - started
                 cpu = cpu_seconds(process.pid)
+                if progress is not None:
+                    progress.observe(stderr_path)
                 if cpu is not None:
                     timeline.append([elapsed, cpu])
                 if heartbeat and elapsed - last_heartbeat >= 60:
@@ -82,11 +87,18 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
                     last_heartbeat = elapsed
 
         def deadline():
-            if not stop.wait(CAP_SECONDS):
+            while not stop.wait(0.1):
+                no_progress = progress.stalled_seconds() if progress else 0
+                stalled_now = stall_seconds is not None and no_progress >= stall_seconds
+                if not stalled_now and time.monotonic() - started < CAP_SECONDS:
+                    continue
                 deadline_hit.set()
+                if stalled_now:
+                    stalled.set()
                 if heartbeat:
                     print(f'CAPACITY arm={arm} status=cutoff '
                           f'elapsedSeconds={time.monotonic() - started:.1f} '
+                          f'noProgressSeconds={no_progress:.1f} '
                           f'cpuSeconds={cpu_seconds(process.pid)} '
                           f'rssKiB={rss_kib(process.pid)} '
                           f'lastDiagnostic={json.dumps(diagnostic_tail(stderr_path))}', flush=True)
@@ -98,6 +110,7 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
                         os.killpg(process.pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
+                return
 
         threads = [threading.Thread(target=target, daemon=True)
                    for target in (observe, deadline)]
@@ -157,6 +170,7 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
     return {'arm': arm, 'ordinal': ordinal, 'stdout': stdout_path.name,
             'command': command, 'exit': process.returncode,
             'orphanedDescendants': len(descendants), 'deadlineHit': deadline_hit.is_set(),
+            'noProgressCutoff': stalled.is_set(),
             'eligible': eligible, 'collectionCapSeconds': CAP_SECONDS,
             'wallSeconds': elapsed if eligible else None,
             'userSeconds': usage.ru_utime if eligible else None,

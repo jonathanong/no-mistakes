@@ -16,7 +16,7 @@ jobs:
   control:
     name: Main merge-base jobs1 full config capacity control
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 75
     steps:
       - name: Checkout isolated harness
         timeout-minutes: 2
@@ -51,8 +51,8 @@ jobs:
       - name: Restore unchanged original consumer
         timeout-minutes: 1
         run: tar -xzf prepared/fixture.tar.gz
-      - name: Observe main control and stop at 900 seconds
-        timeout-minutes: 16
+      - name: Observe main control with 900 seconds without phase or work progress
+        timeout-minutes: 31
         run: python3 -B harness/.github/scripts/current-arm/control.py
       - name: Retain exact binary provenance and raw capacity evidence
         if: ${{ always() }}
