@@ -79,3 +79,9 @@ jobs:
           path: target/cargo-timings
           if-no-files-found: warn
           retention-days: 7
+      - name: Delete owned Cargo outputs after artifact retention
+        if: always()
+        timeout-minutes: 3
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: rm -rf "$GITHUB_WORKSPACE/target" "$RUNNER_TEMP/probe-target-$VARIANT"
