@@ -1,0 +1,74 @@
+[
+  {
+    "arm": "base",
+    "wallSeconds": 2,
+    "cpuSeconds": 4,
+    "peakRssKiB": 8
+  },
+  {
+    "arm": "phases",
+    "wallSeconds": 1,
+    "cpuSeconds": 2,
+    "peakRssKiB": 4
+  },
+  {
+    "arm": "phases",
+    "wallSeconds": 1,
+    "cpuSeconds": 2,
+    "peakRssKiB": 4
+  },
+  {
+    "arm": "base",
+    "wallSeconds": 2,
+    "cpuSeconds": 4,
+    "peakRssKiB": 8
+  },
+  {
+    "arm": "base",
+    "wallSeconds": 2,
+    "cpuSeconds": 4,
+    "peakRssKiB": 8
+  },
+  {
+    "arm": "phases",
+    "wallSeconds": 1,
+    "cpuSeconds": 2,
+    "peakRssKiB": 4
+  },
+  {
+    "arm": "phases",
+    "wallSeconds": 1,
+    "cpuSeconds": 2,
+    "peakRssKiB": 4
+  },
+  {
+    "arm": "base",
+    "wallSeconds": 2,
+    "cpuSeconds": 4,
+    "peakRssKiB": 8
+  },
+  {
+    "arm": "base",
+    "wallSeconds": 2,
+    "cpuSeconds": 4,
+    "peakRssKiB": 8
+  },
+  {
+    "arm": "phases",
+    "wallSeconds": 1,
+    "cpuSeconds": 2,
+    "peakRssKiB": 4
+  },
+  {
+    "arm": "phases",
+    "wallSeconds": 1,
+    "cpuSeconds": 2,
+    "peakRssKiB": 4
+  },
+  {
+    "arm": "base",
+    "wallSeconds": 2,
+    "cpuSeconds": 4,
+    "peakRssKiB": 8
+  }
+]

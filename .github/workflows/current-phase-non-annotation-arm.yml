@@ -1,0 +1,74 @@
+name: Current phase ARM non-annotation cohort
+
+on:
+  push:
+    branches: [eval/2241-observable-capacity-arm]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: current-phase-non-annotation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    name: Non-annotation jobs=${{ matrix.jobs }} diagnostics=${{ matrix.diagnostics }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 140
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        jobs: ['1', '4', 'default']
+        diagnostics: ['off', 'on']
+    steps:
+      - name: Checkout isolated harness
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Download pinned freshly built production CLI pair
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 12204356184
+          run-id: 39282454396
+          github-token: ${{ github.token }}
+          path: cli
+      - name: Download exact installed physical consumer
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 12158768554
+          run-id: 39189171362
+          github-token: ${{ github.token }}
+          path: prepared
+      - name: Restore unchanged original consumer
+        timeout-minutes: 1
+        run: tar -xzf prepared/fixture.tar.gz
+      - name: Prepare YAML validation dependency outside measurement
+        timeout-minutes: 2
+        run: python3 -m pip install --disable-pip-version-check --break-system-packages PyYAML==6.0.3
+      - name: Validate saved harness and cohort contracts
+        timeout-minutes: 1
+        run: python3 -B -m unittest discover -s harness/.github/scripts/current-arm -p 'test_*.py'
+      - name: Measure three BCCB blocks with original 600-second per-process cap
+        timeout-minutes: 121
+        env:
+          JOBS: ${{ matrix.jobs }}
+          DIAGNOSTICS: ${{ matrix.diagnostics }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B harness/.github/scripts/current-arm/cohort_measure.py "$JOBS" "$DIAGNOSTICS"
+      - name: Retain all raw samples, provenance, and parity
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: current-phase-non-annotation-${{ matrix.jobs }}-${{ matrix.diagnostics }}-${{ github.run_id }}
+          path: results/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7

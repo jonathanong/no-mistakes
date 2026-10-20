@@ -1,8 +1,7 @@
 name: Current phase ARM merge-base main control
 
 on:
-  push:
-    branches: [eval/2241-observable-capacity-arm]
+  workflow_dispatch:
 
 permissions:
   contents: read

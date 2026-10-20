@@ -1,0 +1,46 @@
+{
+  "original": {
+    "effects": {
+      "postgres": {
+        "functions": [
+          "read"
+        ]
+      }
+    },
+    "rules": [
+      {
+        "name": "keep production imports",
+        "rule": "no-internal-imports",
+        "options": {
+          "allow": []
+        }
+      },
+      {
+        "name": "runtime queries identify executed statements",
+        "rule": "postgres-require-query-annotation"
+      },
+      {
+        "name": "development runtime helper queries identify executed statements",
+        "rule": "postgres-require-query-annotation"
+      }
+    ]
+  },
+  "expected": {
+    "effects": {
+      "postgres": {
+        "functions": [
+          "read"
+        ]
+      }
+    },
+    "rules": [
+      {
+        "name": "keep production imports",
+        "rule": "no-internal-imports",
+        "options": {
+          "allow": []
+        }
+      }
+    ]
+  }
+}
