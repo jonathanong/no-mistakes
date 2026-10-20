@@ -22,7 +22,9 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
     let located = step_run_lines(source, action);
     let mut findings = Vec::new();
     if !action {
-        findings.extend(super::ports::service_findings(rel, source));
+        if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
+            findings.extend(super::ports::service_findings(rel, source, jobs));
+        }
     }
     for body in bodies(action, &value) {
         let lines = located

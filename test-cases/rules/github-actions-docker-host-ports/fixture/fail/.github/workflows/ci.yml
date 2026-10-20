@@ -235,3 +235,92 @@ jobs:
         - 8080:80
     steps:
       - run: echo ready
+  same-indent-ports:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres
+        ports:
+        - 6001:5432
+    steps:
+      - run: echo ok
+  flow-services:
+    runs-on: ubuntu-latest
+    services: { pg: { image: postgres, ports: ["6002:5432"] } }
+    steps:
+      - run: echo ok
+  flow-nested:
+    runs-on: ubuntu-latest
+    services:
+      pg: { image: postgres, ports: ["6003:5432"] }
+    steps:
+      - run: echo ok
+  flow-container:
+    runs-on: ubuntu-latest
+    container: { image: ubuntu, ports: ["6007:80"] }
+    steps:
+      - run: echo ok
+  service-options:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres
+        options: --publish 6010:5432
+    steps:
+      - run: echo ok
+  bash-c:
+    runs-on: ubuntu-latest
+    steps:
+      - run: bash -c "docker run -p 5434:5432 pg"
+  sh-c:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sh -c 'docker run -p 5435:5432 pg'
+  bash-lc:
+    runs-on: ubuntu-latest
+    steps:
+      - run: bash -lc "sudo docker run -p 5436:5432 pg"
+  sudo-sh-c:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo sh -c "docker run -p 5469:5432 pg"
+  eval-wrapper:
+    runs-on: ubuntu-latest
+    steps:
+      - run: eval "docker run -p 5449:5432 pg"
+  sudo-end:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo -- docker run -p 5440:5432 pg
+  sudo-user:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo --user=root docker run -p 5474:5432 pg
+  env-path:
+    runs-on: ubuntu-latest
+    steps:
+      - run: /usr/bin/env docker run -p 5473:5432 pg
+  env-chdir:
+    runs-on: ubuntu-latest
+    steps:
+      - run: env -C /tmp docker run -p 5445:5432 pg
+  env-split:
+    runs-on: ubuntu-latest
+    steps:
+      - run: env -S "A=1" docker run -p 5444:5432 pg
+  timeout-signal:
+    runs-on: ubuntu-latest
+    steps:
+      - run: timeout -s KILL 60 docker run -p 5446:5432 pg
+  docker-tls:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker --tls run -p 5441:5432 pg
+  docker-tlsverify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker --tlsverify run -p 5443:5432 pg
+  docker-short-context:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker -c ctx run -p 5442:5432 pg

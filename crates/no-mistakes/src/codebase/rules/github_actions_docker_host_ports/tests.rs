@@ -276,12 +276,31 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         ("docker-context", "5432:5432"),
         ("let-shift", "5432:5432"),
         ("quoted-arith", "5432:5432"),
+        ("bash-c", "5434:5432"),
+        ("sh-c", "5435:5432"),
+        ("bash-lc", "5436:5432"),
+        ("sudo-sh-c", "5469:5432"),
+        ("eval-wrapper", "5449:5432"),
+        ("sudo-end", "5440:5432"),
+        ("sudo-user", "5474:5432"),
+        ("env-path", "5473:5432"),
+        ("env-chdir", "5445:5432"),
+        ("env-split", "5444:5432"),
+        ("timeout-signal", "5446:5432"),
+        ("docker-tls", "5441:5432"),
+        ("docker-tlsverify", "5443:5432"),
+        ("docker-short-context", "5442:5432"),
         ("two", "5432:5432"),
         ("two", "6379:6379"),
         ("udp", "5432:5432/udp"),
     ] {
         expected.push(format!("ci.yml:{job}:1:{spec}"));
     }
+    expected.push("ci.yml:same-indent-ports:0:6001:5432".to_string());
+    expected.push("ci.yml:flow-services:0:6002:5432".to_string());
+    expected.push("ci.yml:flow-nested:0:6003:5432".to_string());
+    expected.push("ci.yml:flow-container:0:6007:80".to_string());
+    expected.push("ci.yml:service-options:0:6010:5432".to_string());
     expected.push("ci.yml:service-ports:0:5432:5432".to_string());
     expected.push("ci.yml:service-ports:0:9:9".to_string());
     expected.push("ci.yml:service-ports:0:6:6".to_string());
@@ -348,9 +367,15 @@ fn saved_fixtures_flag_only_literal_host_ports() {
 fn suppression_directives_hide_file_line_and_next_line() {
     let (root, config, files) = load_fixture("suppression");
     let raw = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(raw.len(), 6, "{raw:?}");
+    assert_eq!(raw.len(), 8, "{raw:?}");
     let findings = crate::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert!(findings.iter().any(|finding| {
+        finding.target.as_deref() == Some("service") && finding.message.contains("in `6011:5432`")
+    }));
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.message.contains("6008:5432")));
     let ci = findings
         .iter()
         .find(|finding| finding.file.ends_with("ci.yml"))
@@ -367,6 +392,53 @@ fn suppression_directives_hide_file_line_and_next_line() {
     let line = text.lines().nth(compact.line - 1).unwrap();
     assert!(line.contains("docker run -p 5432:5432"), "{line}");
     assert!(!line.trim_start().starts_with("echo"), "{line}");
+}
+
+#[test]
+fn flow_and_same_column_service_ports_use_the_parsed_value() {
+    let same = "\
+on: push
+jobs:
+  t:
+    services:
+      pg:
+        image: postgres
+        ports:
+        - 6001:5432
+    steps:
+      - run: echo
+";
+    let findings = check(WORKFLOW, same);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(nth_line(same, findings[0].line).contains("6001:5432"));
+    assert!(findings[0].message.contains("service `pg`"));
+
+    let quoted = "\
+on: push
+\"jobs\":
+  build:
+    services:
+      pg:
+        ports: [\"1:2\"]
+";
+    let findings = check(WORKFLOW, quoted);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("in `1:2`"));
+
+    let allocated = "\
+on: push
+jobs:
+  t:
+    container: { image: ubuntu, ports: [6004] }
+    steps:
+      - run: echo
+";
+    assert!(check(WORKFLOW, allocated).is_empty());
+    assert!(check(
+        WORKFLOW,
+        "on: push\njobs:\n  t:\n    steps:\n      - run: bash -c \"docker run -p $(echo 1:2) pg\"\n"
+    )
+    .is_empty());
 }
 
 #[test]

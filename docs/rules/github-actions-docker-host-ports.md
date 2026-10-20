@@ -10,7 +10,10 @@ the host port instead.
 
 The rule is opt-in. Listing it is what turns it on. It is off by default and
 is not part of a recommended or strict preset. It reports only a mapping it
-can judge. Dynamic or unparsed commands stay silent.
+can judge. A dynamic publish word stays silent. These forms are not judged:
+`podman` and `nerdctl`, an `ssh` remote command, and an unknown flag before
+`-p` or `--publish`. A literal command inside `bash -c`, `sh -c`, `zsh -c`,
+or `eval` is judged, including when `sudo` precedes that shell.
 
 ## What it catches
 
@@ -30,11 +33,17 @@ literal range (`5432`, `8000-8002`), including an IP prefix
 - Variable host ports: `$PORT:5432`, `${PORT}:5432`, and `${{ ... }}:5432`.
 
 The command word is `docker` (a path whose last segment is `docker` counts)
-followed by `run`, or `docker container run`. A leading `sudo`, assignment,
-or shell prefix (`if`, `time`, `exec`, `(`, and the same family) does not
-hide the command. Flags before the image are parsed when this rule knows
-them. An unknown `--name=value` flag is skipped. Any other unknown flag
-stops the scan, and publish flags already seen stay findings. A command
+followed by `run`, or `docker container run`. A leading `sudo` (including
+`--`, `--user`, and `--preserve-env`), `env` (including a path, `-C`, and
+`-S`), `timeout` (including `-s` and `-k`), `xargs`, an assignment, or a
+shell prefix (`if`, `time`, `exec`, `(`, and the same family) does not hide
+the command. `bash`, `sh`, and `zsh` with `-c` or `-lc`, and `eval`, are
+read again as a script when the operand is a literal word. Client globals
+before the subcommand (`--context`, `-c`, `--tls`, `--tlsverify`, `--host`,
+`-H`, `--config`, `--log-level`, `-l`, and the `--tls*` file flags) are
+skipped. Flags before the image are parsed when this rule knows them. An
+unknown `--name=value` flag is skipped. Any other unknown flag stops the
+scan, and publish flags already seen stay findings. A command
 substitution or backtick is judged when the publish word itself is literal;
 a substitution used as the publish value is not a finding. A heredoc body is
 not scanned, including when a space precedes the delimiter. A `docker run`
@@ -97,7 +106,11 @@ host port (`$PORT:5432`, `${PORT}:5432`, `${{ env.PORT }}:5432`) is not judged:
 the rule cannot tell whether the variable holds a fixed port. The same rewrite
 applies to `--publish`, `docker create`, and composite `runs.steps`. Literal
 `ports:` on a job `services:` entry or `container:` are judged the same way,
-as one scalar, a flow list, or a block list. An empty list item is not a publish.
+as one scalar, a flow list, a block list, or a block list written in the
+same column as `ports:`. A flow mapping (`services: { pg: { ports: [...] } }`)
+is judged too. `options:` on a service is read for `-p` and `--publish`.
+An empty list item is not a publish. A container port alone, including a
+flow list such as `ports: [6004]`, is not a finding.
 
 ## Suppression
 

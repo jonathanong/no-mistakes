@@ -1,81 +1,102 @@
 use super::mapping::{classify, Verdict};
-use super::ports_text::{inline_specs, list_spec};
+use super::publish::publish_hits;
 use super::runs::pin_message;
 use super::{RuleFinding, RULE_ID};
+use serde_yaml::{Mapping, Value};
 
-#[derive(Clone, Copy, PartialEq)]
-enum Role {
-    Jobs,
-    Job,
-    Services,
-    Service,
-    Container,
-    Ports,
-    Other,
-}
-
-struct Level {
-    indent: usize,
-    role: Role,
-}
-
-pub(super) fn service_findings(rel: &str, source: &str) -> Vec<RuleFinding> {
+/// Service and container ports come from the parsed workflow. A block sequence
+/// may sit in the same column as `ports:`, and a flow mapping is not a line
+/// of its own. The line scan only places the spec that the value already judged.
+pub(super) fn service_findings(rel: &str, source: &str, jobs: &Mapping) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    let mut stack: Vec<Level> = Vec::new();
-    let mut job = String::new();
-    let mut service = String::new();
-    for (offset, raw) in source.lines().enumerate() {
-        let line = offset + 1;
-        let trimmed = raw.trim();
-        if trimmed.is_empty() || trimmed.starts_with('#') {
-            continue;
-        }
-        let indent = raw.len() - raw.trim_start().len();
-        while stack.last().is_some_and(|level| level.indent >= indent) {
-            match stack.pop().map(|level| level.role) {
-                Some(Role::Job) => job.clear(),
-                Some(Role::Service) => service.clear(),
-                _ => {}
-            }
-        }
-        let Some((key, rest)) = mapping_key(trimmed) else {
-            if parent(&stack) == Some(Role::Ports) {
-                if let Some(spec) = list_spec(trimmed) {
-                    let place = described(&stack, &job, &service);
-                    note(&mut findings, rel, &job, place.as_deref(), &spec, line);
-                }
-            }
+    for (id, job) in jobs {
+        let Some(job) = job.as_mapping() else {
             continue;
         };
-        let role = role_for(parent(&stack), key, rest);
-        if role == Role::Job {
-            job = key.to_string();
-        }
-        if role == Role::Service {
-            service = key.to_string();
-        }
-        if role == Role::Ports {
-            let place = described(&stack, &job, &service);
-            for spec in inline_specs(rest) {
-                note(&mut findings, rel, &job, place.as_deref(), &spec, line);
+        let name = scalar_name(id);
+        if let Some(services) = map_get(job, "services").and_then(Value::as_mapping) {
+            for (service_id, service) in services {
+                let Some(service) = service.as_mapping() else {
+                    continue;
+                };
+                let place = format!("job `{name}` service `{}`", scalar_name(service_id));
+                note_ports(
+                    &mut findings,
+                    rel,
+                    source,
+                    &name,
+                    &place,
+                    map_get(service, "ports"),
+                );
+                note_options(
+                    &mut findings,
+                    rel,
+                    source,
+                    &name,
+                    &place,
+                    map_get(service, "options"),
+                );
             }
         }
-        stack.push(Level { indent, role });
+        if let Some(container) = map_get(job, "container").and_then(Value::as_mapping) {
+            let place = format!("job `{name}` container");
+            note_ports(
+                &mut findings,
+                rel,
+                source,
+                &name,
+                &place,
+                map_get(container, "ports"),
+            );
+        }
     }
     findings
+}
+
+fn note_ports(
+    findings: &mut Vec<RuleFinding>,
+    rel: &str,
+    source: &str,
+    job: &str,
+    place: &str,
+    ports: Option<&Value>,
+) {
+    let Some(ports) = ports else {
+        return;
+    };
+    for spec in port_specs(ports) {
+        note(findings, rel, source, job, place, &spec);
+    }
+}
+
+fn note_options(
+    findings: &mut Vec<RuleFinding>,
+    rel: &str,
+    source: &str,
+    job: &str,
+    place: &str,
+    options: Option<&Value>,
+) {
+    let Some(text) = options.and_then(Value::as_str) else {
+        return;
+    };
+    for hit in publish_hits(&format!("docker run {text} img")) {
+        note(findings, rel, source, job, place, &hit.spec);
+    }
 }
 
 fn note(
     findings: &mut Vec<RuleFinding>,
     rel: &str,
+    source: &str,
     job: &str,
-    place: Option<&str>,
+    place: &str,
     spec: &str,
-    line: usize,
 ) {
-    let (Verdict::Literal(host), Some(place)) = (classify(spec), place) else {
+    let Verdict::Literal(host) = classify(spec) else {
         return;
     };
+    let line = spec_line(source, job, spec);
     findings.push(RuleFinding {
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
@@ -86,45 +107,86 @@ fn note(
     });
 }
 
-fn described(stack: &[Level], job: &str, service: &str) -> Option<String> {
-    stack.iter().rev().find_map(|level| match level.role {
-        Role::Service => Some(format!("job `{job}` service `{service}`")),
-        Role::Container => Some(format!("job `{job}` container")),
+fn port_specs(value: &Value) -> Vec<String> {
+    match value {
+        Value::Sequence(items) => items.iter().filter_map(scalar_spec).collect(),
+        other => scalar_spec(other).into_iter().collect(),
+    }
+}
+
+fn scalar_spec(value: &Value) -> Option<String> {
+    match value {
+        Value::String(text) if !text.trim().is_empty() => Some(text.trim().to_string()),
+        Value::Number(number) => Some(number.to_string()),
         _ => None,
-    })
-}
-
-fn parent(stack: &[Level]) -> Option<Role> {
-    stack.last().map(|level| level.role)
-}
-
-fn role_for(parent: Option<Role>, key: &str, rest: &str) -> Role {
-    match parent {
-        None | Some(Role::Other) if key == "jobs" => Role::Jobs,
-        Some(Role::Jobs) => Role::Job,
-        Some(Role::Job) if key == "services" && opens_mapping(rest) => Role::Services,
-        Some(Role::Job) if key == "container" && opens_mapping(rest) => Role::Container,
-        Some(Role::Services) => Role::Service,
-        Some(Role::Service | Role::Container) if key == "ports" => Role::Ports,
-        _ => Role::Other,
     }
 }
 
-fn opens_mapping(rest: &str) -> bool {
-    let rest = rest.trim();
-    rest.is_empty()
-        || matches!(rest, "|" | ">" | "|-" | ">-" | "|+" | ">+")
-        || rest.starts_with('{')
+fn spec_line(source: &str, job: &str, spec: &str) -> usize {
+    let lines: Vec<&str> = source.lines().collect();
+    let (start, end) = job_span(&lines, job).unwrap_or((0, lines.len()));
+    lines[start..end]
+        .iter()
+        .position(|line| line.contains(spec))
+        .map(|offset| start + offset + 1)
+        .unwrap_or(start + 1)
 }
 
-fn mapping_key(trimmed: &str) -> Option<(&str, &str)> {
-    if trimmed.starts_with('-') {
-        return None;
+/// Lines belonging to one job, so a repeated spec is not taken from another job.
+fn job_span(lines: &[&str], job: &str) -> Option<(usize, usize)> {
+    let jobs_at = lines.iter().position(|line| {
+        let trimmed = line.trim();
+        trimmed == "jobs:" || trimmed.starts_with("jobs:")
+    })?;
+    let jobs_indent = indent(lines[jobs_at]);
+    let child = lines.iter().skip(jobs_at + 1).find_map(|line| {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            return None;
+        }
+        let level = indent(line);
+        (level > jobs_indent).then_some(level)
+    })?;
+    let mut start = None;
+    for (index, line) in lines.iter().enumerate().skip(jobs_at + 1) {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        let level = indent(line);
+        if level < child {
+            break;
+        }
+        if level == child && key_is(trimmed, job) {
+            if let Some(found) = start {
+                return Some((found, index));
+            }
+            start = Some(index);
+        }
     }
-    let (key, rest) = trimmed.split_once(':')?;
-    let key = key.trim().trim_matches(['"', '\'']);
-    if key.is_empty() || key.contains([' ', '{']) {
-        return None;
+    start.map(|found| (found, lines.len()))
+}
+
+fn key_is(trimmed: &str, job: &str) -> bool {
+    let Some((key, _)) = trimmed.split_once(':') else {
+        return false;
+    };
+    key.trim().trim_matches(['"', '\'']) == job
+}
+
+fn indent(line: &str) -> usize {
+    line.len() - line.trim_start().len()
+}
+
+fn scalar_name(key: &Value) -> String {
+    match key {
+        Value::String(name) if !name.is_empty() => name.clone(),
+        Value::Number(number) => number.to_string(),
+        Value::Bool(value) => value.to_string(),
+        _ => "job".to_string(),
     }
-    Some((key, rest.trim()))
+}
+
+fn map_get<'a>(map: &'a Mapping, key: &str) -> Option<&'a Value> {
+    map.get(Value::String(key.to_owned()))
 }
