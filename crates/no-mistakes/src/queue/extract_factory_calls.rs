@@ -11,8 +11,8 @@ pub(crate) fn note_factory_call(visitor: &mut QueueVisitor<'_>, call: &CallExpre
         return;
     };
     let local = id.name.as_str();
-    if let Some(&(queue_index, job_index)) = visitor.enqueue_factories.get(local) {
-        enqueue::note_enqueue(visitor, call, queue_index, job_index);
+    if let Some(&(queue_index, job_index, options)) = visitor.enqueue_factories.get(local) {
+        enqueue::note_enqueue(visitor, call, queue_index, job_index, options);
     }
     if let Some(&(name_index, processor_index)) = visitor.worker_factories.get(local) {
         enqueue::note_worker(visitor, call, name_index, processor_index);

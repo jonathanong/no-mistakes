@@ -76,7 +76,13 @@ fn analyze_project_inner<T>(
     let loaded_config = dataset.config(None).ok();
     let roles = loaded_config
         .as_ref()
-        .map(|config| config.queues.factories.clone())
+        .map(|config| {
+            config
+                .queues
+                .factories
+                .clone()
+                .with_project_wait_scopes(config)
+        })
         .unwrap_or_default();
     let files = visible_files
         .into_iter()

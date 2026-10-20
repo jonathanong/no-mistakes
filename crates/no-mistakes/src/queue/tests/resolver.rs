@@ -46,6 +46,7 @@ pub(super) fn extract_file_with_factories(
             program,
             factory_names,
             &crate::config::v2::schema::QueueFactoryRoles::default(),
+            path,
         )
     })
 }

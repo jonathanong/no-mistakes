@@ -1,4 +1,6 @@
-use crate::queue::extract_helpers::{binding_name, export_name, is_queue_package, static_string};
+use crate::queue::extract_helpers::{
+    binding_name, export_name, is_queue_package, static_string, JobFrame,
+};
 use crate::queue::extract_model::{FileFacts, ImportBinding};
 use crate::queue::extract_record::{record_enqueue, record_flow};
 use oxc_ast::ast::{CallExpression, Expression, ImportDeclarationSpecifier};
@@ -20,13 +22,16 @@ pub(super) struct QueueVisitor<'a> {
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,
-    pub enqueue_factories: HashMap<String, (usize, usize)>,
+    pub enqueue_factories: HashMap<String, (usize, usize, Option<usize>)>,
     pub worker_factories: HashMap<String, (usize, usize)>,
-    pub in_job: u32,
+    pub job_frames: Vec<JobFrame>,
+    pub record_waits: bool,
     pub current_case: Option<String>,
     pub namespace_imports: HashMap<String, String>,
     /// `(processor span start, end, worker index)` for factory and `new Worker` processors.
     pub processor_spans: Vec<(u32, u32, usize)>,
+    /// Indexes into `processor_spans` already claimed by an outer function.
+    pub claimed_processors: Vec<usize>,
     pub worker_stack: Vec<usize>,
 }
 
@@ -114,7 +119,11 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Expression::StaticMemberExpression(member) = &call.callee {
             let method = member.property.name.as_str();
-            if let Expression::Identifier(object) = &member.object {
+            if method == "addAndWait" || method == "waitUntilFinished" {
+                if self.record_waits {
+                    super::extract_factory::note_wait(self, call);
+                }
+            } else if let Expression::Identifier(object) = &member.object {
                 if method == "add" && self.flow_bindings.contains(object.name.as_str()) {
                     let recorded = self.facts.producers.len();
                     record_flow(
@@ -138,8 +147,6 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                     );
                     self.stamp_worker(recorded);
                     super::extract_factory::note_self_dedup(self, call, recorded);
-                } else if method == "addAndWait" || method == "waitUntilFinished" {
-                    super::extract_factory::note_wait(self, call);
                 }
             } else if method == "add" || method == "addBulk" {
                 if let Some(binding) = self.imported_member_binding(&member.object) {

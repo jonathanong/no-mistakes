@@ -1,4 +1,5 @@
 mod collisions;
+mod factory_detectors;
 mod factory_false_positives;
 mod factory_reexports;
 mod factory_roles;
@@ -6,6 +7,7 @@ mod lang;
 mod prepared;
 mod resolver;
 pub(crate) mod session_lang;
+mod wait_scopes;
 use super::*;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};

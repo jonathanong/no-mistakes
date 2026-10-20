@@ -3,6 +3,14 @@ use oxc_ast::ast::{Argument, BindingPattern, Expression, ModuleExportName, Templ
 use oxc_span::GetSpan;
 use std::collections::HashMap;
 
+/// The processor parameter the queue checks treat as the active job.
+#[derive(Debug, Default, Clone)]
+pub(super) struct JobFrame {
+    pub object: Option<String>,
+    pub name_idents: Vec<String>,
+    pub id_idents: Vec<String>,
+}
+
 pub(super) fn binding_name(pattern: &BindingPattern<'_>) -> Option<String> {
     if let BindingPattern::BindingIdentifier(id) = pattern {
         return Some(id.name.as_str().to_string());
