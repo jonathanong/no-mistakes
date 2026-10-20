@@ -188,7 +188,9 @@ remove `async` only when every return is a judged SQL string, a module-level
 (not a call such as `sql(id)`, and not a tag placeholder such as `${id.x}`)
 and the visible contract allows that synchronous return. Otherwise it
 abstains, including for a class member, an interface member, or an object
-property, and when a caller parameter or bound local is untyped,
+property. To get a judged report, move the builder to a local non-exported
+`async function` that returns a literal, a module-level `const` string, or a
+configured tag. It also abstains when a caller parameter or bound local is untyped,
 `Promise`-typed, `any`, `unknown`, `object`, a Promise-compatible type
 literal, or unresolved, and when the result is only tested for truthiness.
 See

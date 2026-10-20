@@ -24,6 +24,8 @@ function moduleConstInit(identifier, context, seen) {
   const binding = definition.node;
   if (binding.id.type !== "Identifier") return null;
   if (!atModuleScope(declaration)) return null;
+  // `declare const Q: string` has no initializer. Do not unwrap null.
+  if (!binding.init) return null;
   if (variable.references.some((reference) => reference.isWrite() && !reference.init)) return null;
   seen.add(variable);
   return unwrapExpression(binding.init);

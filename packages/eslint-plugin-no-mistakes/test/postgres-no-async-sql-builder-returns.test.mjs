@@ -355,6 +355,14 @@ describe("postgres-no-async-sql-builder", () => {
     );
     assert.deepEqual(
       ids(`
+        declare const Q: string;
+        async function build() { return Q; }
+        read(build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
         async function build(id: string) { return id; }
         read(build("SELECT 1"));
       `),

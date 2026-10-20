@@ -121,7 +121,9 @@ That includes any of these:
   property. The rule does not model class heritage, implemented interfaces, or
   whether that object escapes
 
-Silence is not permission to delete `async`.
+Silence is not permission to delete `async`. To get a judged report, move the
+builder to a local (non-exported) `async function` that returns a literal, a
+module-level `const` string, or a configured tag.
 
 The rule does not report a function that actually waits:
 
@@ -147,7 +149,8 @@ async function buildQuery(id: string) {
   tag. Placeholders must be identifiers, literals, or already judged SQL;
   `${id.x}` stays silent because it can throw after `async` is removed.
   A module-level `const` string or no-substitution template is judged SQL
-  even when `callees` is unset. A module-level binding that is not that
+  even when `callees` is unset, but only for a function that entry already
+  selects. A module-level binding that is not that
   shape, including a module-level configured tag, is not judged SQL.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
