@@ -31,7 +31,7 @@ class OrderingOnlyContract(unittest.TestCase):
     def test_pins_and_ordering_config_hash_match_provenance(self):
         self.assertEqual(SOURCES, {
             'base': '4d4deb9423111f6bd97f2501bdf508ef17536dc0',
-            'candidate': '7bfff833d8efb37c41b24c5503a1258f35e62ea3'})
+            'candidate': 'bcbbf58d69f8157aab60e5f1e61decf68ad278b5'})
         self.assertEqual(CONSUMER, 'f38a048f5eeff0438fc59a15e9eb742def575a36')
         self.assertEqual(ARTIFACT_ID, 12158768554)
         config = ROOT / 'fixtures/performance/current-verdict-arm/ordering-only.yml'
