@@ -136,6 +136,12 @@ pub(super) fn record_declarator(
     if is_const {
         visitor.note_const_object(init, scope_index, ident.name.as_str());
         visitor.note_text_const(init, scope_index, ident.name.as_str());
+        super::super::imported::constants::note_fragment_const(
+            visitor,
+            init,
+            scope_index,
+            ident.name.as_str(),
+        );
     }
 }
 

@@ -25,6 +25,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         resolve::hoist_vars(&program.body, self);
         resolve::record_statements(&program.body, self);
         walk::walk_program(self, program);
+        imported::constants::snapshot_exports(self, program);
         self.pop_scope();
     }
 

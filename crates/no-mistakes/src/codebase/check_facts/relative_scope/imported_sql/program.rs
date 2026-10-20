@@ -20,7 +20,7 @@ type Key = (usize, PathBuf, PathBuf, String, Vec<SiteArg>);
 
 /// State shared by every frame of one site's execution.
 pub(super) struct Shared<'a, R> {
-    files: &'a FileIdMap<CheckFileFacts>,
+    pub(super) files: &'a FileIdMap<CheckFileFacts>,
     locator: Locator<'a, R>,
     cache: FxHashMap<Key, Option<Vec<Outcome>>>,
 }
@@ -84,6 +84,10 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         from: &Path,
         site: &ImportedSite,
     ) -> Option<Vec<RecoveredSql>> {
+        if let Some(allow_fragment) = site.constant {
+            return super::constants::recovered(self, options, from, site, allow_fragment)
+                .map(|text| vec![text]);
+        }
         if let Some(text) = self.summary_text(options, from, site) {
             return Some(vec![text]);
         }
@@ -208,3 +212,7 @@ fn helper_program<R>(
         .find(|(known, _)| known == options)?;
     embedded.exported_programs.get(local).cloned()
 }
+
+#[cfg(test)]
+#[path = "program_tests.rs"]
+mod program_tests;

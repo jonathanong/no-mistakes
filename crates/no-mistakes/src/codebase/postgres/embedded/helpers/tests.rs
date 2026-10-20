@@ -151,6 +151,7 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
         args,
         value_used: false,
         line: 1,
+        constant: None,
     };
     let fixed = HelperSummary::Static(plain(
         "TRUE".into(),

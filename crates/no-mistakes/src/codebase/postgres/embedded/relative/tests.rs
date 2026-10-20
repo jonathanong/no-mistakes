@@ -43,6 +43,7 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         call_spans: vec![(0, 0); calls.len()],
         exported_helpers: Default::default(),
         exported_programs: Default::default(),
+        exported_constants: Default::default(),
         pending_imported: Vec::new(),
         imported_call_lines: Default::default(),
         source_comment_spans: Vec::new(),

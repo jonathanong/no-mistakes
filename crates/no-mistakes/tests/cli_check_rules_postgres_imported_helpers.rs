@@ -213,6 +213,32 @@ fn caller_directives_still_suppress_sql_reported_in_the_helper() {
 }
 
 #[test]
+fn module_level_string_constants_are_judged_and_computed_forms_stay_unanalyzable() {
+    let unknown = [
+        86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
+    ];
+    let mut rows = vec![("src/caller.mts", 74, "orders")];
+    rows.extend(
+        unknown
+            .into_iter()
+            .map(|line| ("src/caller.mts", line, UNANALYZABLE)),
+    );
+    assert_eq!(required("module-const-sql"), expect(&rows));
+    let report = run(REQUIRED, "module-const-sql", true);
+    let suppressed = report["suppressed"].as_array().unwrap();
+    assert!(
+        suppressed.iter().any(|entry| {
+            entry["file"] == "src/caller.mts"
+                && entry["line"].as_u64() == Some(81)
+                && entry["reason"].as_str().is_some_and(|reason| {
+                    reason.contains("orders") && reason.contains("account_id")
+                })
+        }),
+        "{report}"
+    );
+}
+
+#[test]
 fn an_iife_builder_with_a_conditional_and_several_imported_helpers_is_recovered() {
     // Both reads of the view: the CTE in the caller (inside the IIFE and
     // outside it) and the EXISTS in the helper reached through a paths alias.
