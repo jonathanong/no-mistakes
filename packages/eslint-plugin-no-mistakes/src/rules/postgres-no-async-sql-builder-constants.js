@@ -36,11 +36,12 @@ function moduleConstSqlDeclaration(identifier, context, seen = new Set()) {
   const variable = resolveVariable(identifier, context);
   const init = moduleConstInit(identifier, context, seen);
   if (!variable || !init) return null;
-  if (literalSql(init)) return variable.defs[0].parent;
+  // Later declarators in the same statement run after this initializer.
+  // The cutoff is this declarator, not the whole declaration or the chain.
+  const declarator = variable.defs[0].node;
+  if (literalSql(init)) return declarator;
   if (init.type !== "Identifier" || !moduleConstSqlDeclaration(init, context, seen)) return null;
-  // The call reads the outer binding. Its initializer runs only after that
-  // declaration, so the cutoff is this declaration, not the chain.
-  return variable.defs[0].parent;
+  return declarator;
 }
 
 function isModuleConstSql(identifier, context, seen = new Set()) {

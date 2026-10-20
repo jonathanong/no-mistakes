@@ -370,6 +370,29 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       ["removeAsync"],
     );
+    // A later declarator in the same statement runs after Q's initializer.
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1", result = build();
+        async function build() { return Q; }
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const INNER = "SELECT 1", Q = INNER, result = build();
+        async function build() { return Q; }
+      `),
+      ["removeAsync"],
+    );
+    // build() runs before Q's initializer, still in the same statement.
+    assert.deepEqual(
+      ids(`
+        const result = build(), Q = "SELECT 1";
+        async function build() { return Q; }
+      `),
+      [],
+    );
     // Calling the hoisted builder before the const throws once async is gone.
     assert.deepEqual(
       ids(`
