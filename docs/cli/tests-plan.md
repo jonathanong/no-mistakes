@@ -197,7 +197,7 @@ or `tests.dotnet.solutions`, and `tests.swift.packages`, are the source-graph
 inputs. If native tests are discoverable but the native source/project change
 cannot be traced, the plan falls back to the framework-scoped discovered tests
 and sets `fallback_triggered` with a `fallback_reason`. See the
-[unprovable-selection exception](../why.md#exception-unprovable-selections-widen-within-the-configured-scope).
+[unprovable-selection exception](../why.md#unprovable-selections).
 
 Example native workspace config:
 
@@ -311,7 +311,7 @@ project. When such a declaration is relevant, the plan conservatively selects
 the affected owner scope (or the discovered Vitest framework set when ownership
 cannot be determined) and sets `fallback_triggered` and `fallback_reason`. This
 safety fallback does not require `--global-config-fallback`. It is the
-[unprovable-selection exception](../why.md#exception-unprovable-selections-widen-within-the-configured-scope):
+[unprovable-selection exception](../why.md#unprovable-selections):
 widening stays inside that Vitest owner, or the discovered Vitest set when the
 owner is unknown, and never selects another framework. Its bounded helper
 closure follows ordinary static imports/re-exports and literal CommonJS
@@ -332,7 +332,7 @@ imports, type references, and `.csproj` `ProjectReference` edges. When native
 tests are discoverable but the source/project change cannot be traced, the plan
 falls back to the framework-scoped discovered tests and reports
 `fallback_triggered`/`fallback_reason`. That widening is the
-[unprovable-selection exception](../why.md#exception-unprovable-selections-widen-within-the-configured-scope)
+[unprovable-selection exception](../why.md#unprovable-selections)
 and stays inside the discovered Dotnet tests. It does not require
 `--global-config-fallback`. Command output uses `dotnet test
 <project.csproj> --no-restore`. If no project target owns the selected test,
@@ -343,7 +343,7 @@ tests directly and select dependent Swift tests through Swift graph edges and
 HTTP route edges. When native tests are discoverable but the source/project
 change cannot be traced, the plan falls back to the framework-scoped discovered
 tests and reports `fallback_triggered`/`fallback_reason`. That widening is the
-same [unprovable-selection exception](../why.md#exception-unprovable-selections-widen-within-the-configured-scope)
+same [unprovable-selection exception](../why.md#unprovable-selections)
 and stays inside the discovered Swift tests. It does not require
 `--global-config-fallback`.
 

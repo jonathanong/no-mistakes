@@ -60,7 +60,7 @@ rules above about soundness and unanalyzable reporting still apply. It keeps
 noise from code that cannot be the thing being checked, and it keeps runs fast
 on large repositories.
 
-### Exception: unprovable selections widen within the configured scope
+### Unprovable selections
 
 Recall inside a declared framework still comes first. When a Vitest setup
 declaration is dynamic, unresolved, or an unavailable inline `extends` target,
