@@ -57,6 +57,7 @@ fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>)
             calls,
             call_spans: Vec::new(),
             exported_helpers: Default::default(),
+            exported_constants: Default::default(),
             exported_programs: Default::default(),
             pending_imported: Vec::new(),
             imported_call_lines: Default::default(),

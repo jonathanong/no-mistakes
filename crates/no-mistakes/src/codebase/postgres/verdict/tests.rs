@@ -63,6 +63,7 @@ fn embedded(calls: Vec<EmbeddedSqlCall>) -> crate::codebase::postgres::EmbeddedS
         calls,
         call_spans,
         exported_helpers: Default::default(),
+        exported_constants: Default::default(),
         exported_programs: Default::default(),
         pending_imported: Vec::new(),
         imported_call_lines: Default::default(),

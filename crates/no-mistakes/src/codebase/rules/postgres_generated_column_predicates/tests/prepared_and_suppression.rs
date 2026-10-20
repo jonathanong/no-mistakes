@@ -68,6 +68,7 @@ fn verdict_recording_errors_when_embedded_path_has_no_statement_facts() {
             calls: Vec::new(),
             call_spans: Vec::new(),
             exported_helpers: Default::default(),
+            exported_constants: Default::default(),
             exported_programs: Default::default(),
             pending_imported: Vec::new(),
             imported_call_lines: Default::default(),
