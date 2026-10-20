@@ -66,7 +66,7 @@ fn detector_gaps_report_renamed_jobs_member_waits_and_wrapper_options() {
         "only a nested parameter named `job` dedups, check: {:?}",
         report.check
     );
-    for job in ["p2", "p3", "p8"] {
+    for job in ["p1", "p2", "p3", "p5", "p8"] {
         assert!(
             report.check.iter().any(|finding| {
                 finding.file.ends_with("workers/wrapped-processor.mts")
@@ -77,15 +77,6 @@ fn detector_gaps_report_renamed_jobs_member_waits_and_wrapper_options() {
             report.check
         );
     }
-    assert!(
-        report.check.iter().all(|finding| {
-            !(finding.file.ends_with("workers/wrapped-processor.mts")
-                && finding.kind == "self-dedup-enqueue"
-                && matches!(finding.job.as_deref(), Some("p1" | "p5")))
-        }),
-        "an identifier processor and an id alias stay unresolved, check: {:?}",
-        report.check
-    );
 
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);

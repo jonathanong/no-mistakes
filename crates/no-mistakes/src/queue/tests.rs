@@ -5,6 +5,7 @@ mod factory_reexports;
 mod factory_roles;
 mod lang;
 mod prepared;
+mod processor_identifiers;
 mod resolver;
 pub(crate) mod session_lang;
 mod wait_scopes;

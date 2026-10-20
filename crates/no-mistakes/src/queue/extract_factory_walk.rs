@@ -11,24 +11,24 @@ pub(crate) fn visit_function<'a>(
     func: &Function<'a>,
     flags: oxc_syntax::scope::ScopeFlags,
 ) {
+    let frames = visitor.job_frames.clone();
+    super::dedup::mask_parameters(visitor, &func.params);
     let worker = enter_worker(visitor, func.span);
-    let entered = enter_job(visitor, &func.params, func.span);
+    enter_job(visitor, &func.params, func.span);
     walk::walk_function(visitor, func, flags);
-    if entered {
-        visitor.job_frames.pop();
-    }
+    visitor.job_frames = frames;
     if worker {
         visitor.worker_stack.pop();
     }
 }
 
 pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunctionExpression<'a>) {
+    let frames = visitor.job_frames.clone();
+    super::dedup::mask_parameters(visitor, &arrow.params);
     let worker = enter_worker(visitor, arrow.span);
-    let entered = enter_job(visitor, &arrow.params, arrow.span);
+    enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
-    if entered {
-        visitor.job_frames.pop();
-    }
+    visitor.job_frames = frames;
     if worker {
         visitor.worker_stack.pop();
     }
@@ -50,7 +50,10 @@ fn enter_worker(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {
 
 pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStatement<'a>) {
     let tracks = visitor.tracks_job_name(&stmt.discriminant);
-    visitor.visit_expression(&stmt.discriminant);
+    super::super::extract_processor::note_switch(visitor, stmt);
+    if !tracks {
+        visitor.visit_expression(&stmt.discriminant);
+    }
     for case in &stmt.cases {
         let label = tracks
             .then(|| case_label(visitor, case.test.as_ref()))
@@ -75,9 +78,11 @@ fn enter_job(
     span: oxc_span::Span,
 ) -> bool {
     let processor = claim_processor(visitor, span);
-    let Some(frame) = job_frame(params, processor) else {
+    let Some(mut frame) = job_frame(params, processor) else {
         return false;
     };
+    frame.scope = span.start;
+    visitor.dispatch_scopes.insert(span.start);
     visitor.job_frames.push(frame);
     true
 }

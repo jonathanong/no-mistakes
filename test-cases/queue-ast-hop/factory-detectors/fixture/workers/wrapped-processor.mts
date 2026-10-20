@@ -2,7 +2,7 @@ import { createWorker } from "../lib.mts";
 import { queue } from "../queues.mts";
 
 // An identifier processor is declared before the worker call, so its span is
-// not inside the processor argument. An id alias is not the job token.
+// not inside the processor argument. Both it and a copied const id remain static.
 const handler = async (j) => {
   switch (j.name) {
     case "p1":

@@ -1,7 +1,11 @@
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
-use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectPropertyKind};
+use oxc_ast::ast::{
+    Argument, BindingIdentifier, BindingPattern, BlockStatement, CallExpression, Expression,
+    FormalParameters, ObjectPropertyKind, VariableDeclaration, VariableDeclarationKind,
+};
+use oxc_ast_visit::{walk, Visit};
 
 pub(crate) fn note_self_dedup(
     visitor: &mut QueueVisitor<'_>,
@@ -118,4 +122,64 @@ fn dedup_id_token(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {
         property.key.static_name().as_deref() == Some("id")
             && visitor.tracks_job_token(&property.value)
     })
+}
+
+pub(crate) fn visit_variable_declaration<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    decl: &VariableDeclaration<'a>,
+) {
+    for declarator in &decl.declarations {
+        let token = decl.kind == VariableDeclarationKind::Const
+            && declarator
+                .init
+                .as_ref()
+                .is_some_and(|expr| visitor.tracks_job_token(expr));
+        mask_pattern(visitor, &declarator.id);
+        if token {
+            if let (Some(name), Some(frame)) = (
+                crate::queue::extract_helpers::binding_name(&declarator.id),
+                visitor.job_frames.last_mut(),
+            ) {
+                frame.id_idents.push(name);
+            }
+        }
+        visitor.visit_variable_declarator(declarator);
+    }
+}
+
+pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockStatement<'a>) {
+    let frames = visitor.job_frames.clone();
+    walk::walk_block_statement(visitor, block);
+    visitor.job_frames = frames;
+}
+
+pub(super) fn mask_parameters(visitor: &mut QueueVisitor<'_>, params: &FormalParameters<'_>) {
+    for param in &params.items {
+        mask_pattern(visitor, &param.pattern);
+    }
+    if let Some(rest) = &params.rest {
+        mask_pattern(visitor, &rest.argument);
+    }
+}
+
+fn mask_pattern(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
+    struct Names(Vec<String>);
+    impl<'a> Visit<'a> for Names {
+        fn visit_binding_identifier(&mut self, id: &BindingIdentifier<'a>) {
+            self.0.push(id.name.to_string());
+        }
+    }
+    let mut names = Names(Vec::new());
+    names.visit_binding_pattern(pattern);
+    for frame in &mut visitor.job_frames {
+        if frame
+            .object
+            .as_ref()
+            .is_some_and(|name| names.0.contains(name))
+        {
+            frame.object = None;
+        }
+        frame.id_idents.retain(|name| !names.0.contains(name));
+        frame.name_idents.retain(|name| !names.0.contains(name));
+    }
 }

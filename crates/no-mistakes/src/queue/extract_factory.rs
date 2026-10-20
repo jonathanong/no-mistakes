@@ -4,7 +4,6 @@ use oxc_ast::ast::{
     Argument, CallExpression, Declaration, ExportAllDeclaration, ExportDeclaration,
     ExportFromDeclaration, ExportNamedDeclaration, Expression,
 };
-
 pub(super) fn note_named_import(
     visitor: &mut QueueVisitor<'_>,
     imported: &str,
@@ -39,7 +38,6 @@ pub(super) fn note_named_import(
             .insert(local.to_string(), (spec.name, spec.processor));
     }
 }
-
 pub(super) fn note_queue_binding(
     visitor: &mut QueueVisitor<'_>,
     name: &str,
@@ -74,7 +72,6 @@ pub(super) fn note_queue_binding(
         }
     }
 }
-
 pub(super) fn note_alias(visitor: &mut QueueVisitor<'_>, name: &str, local: &str) {
     if let Some(queue_name) = visitor.facts.queue_bindings.get(local).cloned() {
         visitor
@@ -94,7 +91,6 @@ pub(super) fn note_alias(visitor: &mut QueueVisitor<'_>, name: &str, local: &str
             .push((name.to_string(), local.to_string()));
     }
 }
-
 pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDeclaration<'_>) {
     if decl.export_kind.is_type() {
         return;
@@ -114,7 +110,6 @@ pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDecl
         visitor.facts.reexports.push((exported, local));
     }
 }
-
 pub(super) fn note_export_from(visitor: &mut QueueVisitor<'_>, decl: &ExportFromDeclaration<'_>) {
     if decl.export_kind.is_type() {
         return;
@@ -134,7 +129,6 @@ pub(super) fn note_export_from(visitor: &mut QueueVisitor<'_>, decl: &ExportFrom
         visitor.facts.reexports.push((exported.clone(), exported));
     }
 }
-
 pub(super) fn note_export_all(visitor: &mut QueueVisitor<'_>, decl: &ExportAllDeclaration<'_>) {
     // `export type *` and `export * as ns` do not re-export value names.
     if decl.export_kind.is_type() || decl.exported.is_some() {
@@ -145,7 +139,6 @@ pub(super) fn note_export_all(visitor: &mut QueueVisitor<'_>, decl: &ExportAllDe
         .star_exports
         .push(decl.source.value.to_string());
 }
-
 pub(super) fn note_exported_declaration(
     visitor: &mut QueueVisitor<'_>,
     decl: &ExportDeclaration<'_>,
@@ -180,7 +173,6 @@ fn queue_name_index(visitor: &QueueVisitor<'_>, imported: &str) -> Option<usize>
         .any(|name| name == imported)
         .then_some(0)
 }
-
 pub(super) fn identifier_arg(arg: &Argument<'_>) -> Option<String> {
     match arg.as_expression() {
         Some(Expression::Identifier(id)) => Some(id.name.as_str().to_string()),
@@ -192,9 +184,12 @@ pub(super) fn identifier_arg(arg: &Argument<'_>) -> Option<String> {
 mod calls;
 #[path = "extract_factory_dedup.rs"]
 mod dedup;
+#[path = "extract_factory_index.rs"]
+mod index;
 #[path = "extract_factory_walk.rs"]
 mod job_scope;
 
 pub(super) use calls::{note_factory_call, note_wait};
-pub(super) use dedup::note_self_dedup;
+pub(super) use dedup::{note_self_dedup, visit_block, visit_variable_declaration};
+pub(super) use index::processor_spans;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};

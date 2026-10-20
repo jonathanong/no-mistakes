@@ -1,0 +1,14 @@
+version: 2
+projects:
+  jobs:
+    type: server
+    root: .
+    queues:
+      enqueues: [workers/*.mts]
+      workers: [workers/*.mts]
+queues:
+  factories:
+    queue:
+      - { callee: createQueue, name: 0 }
+    worker:
+      - { callee: createWorker, name: 0, processor: 1 }
