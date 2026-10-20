@@ -9,6 +9,8 @@ use crate::codebase::postgres::embedded::{
 };
 use std::path::{Path, PathBuf};
 
+#[path = "tests/finalize.rs"]
+mod finalize;
 #[path = "tests/pending.rs"]
 mod pending;
 #[path = "tests/summaries.rs"]
