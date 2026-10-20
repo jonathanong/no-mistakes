@@ -63,6 +63,14 @@ class ScopedTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             REPORT['summarize'](fixture['rows'][:-1], fixture['scopes'])
 
+    def test_missing_fresh_launcher_or_a_dominating_floor_is_rejected(self):
+        fixture = json.loads((SAVED / 'matrix.json').read_text())
+        for field, value in (('freshInterpreter', False), ('VmRSSKiB', 999999999)):
+            changed = copy.deepcopy(fixture['rows'])
+            changed[0]['metadata']['sampler_launcher'][field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                REPORT['summarize'](changed, fixture['scopes'])
+
     def test_profile_cannot_change_for_a_whole_matched_cell(self):
         fixture = json.loads((SAVED / 'matrix.json').read_text())
         for field, value in (('target', 'different-target'), ('lto', 'different-profile'),

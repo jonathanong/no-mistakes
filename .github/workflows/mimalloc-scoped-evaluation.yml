@@ -24,7 +24,9 @@ jobs:
           persist-credentials: false
       - name: Check supplemental scope guards
         timeout-minutes: 2
-        run: python3 scripts/performance/mimalloc-scoped-tests.py
+        run: |
+          python3 scripts/performance/mimalloc-scoped-tests.py
+          python3 scripts/performance/mimalloc-sampler-tests.py
   build:
     needs: harness-tests
     uses: ./.github/workflows/mimalloc-evaluation-build.yml

@@ -181,4 +181,13 @@ pending; semantic preflight and harness tests are not allocator measurements.
 The owned `eval/2200-scoped-resources` branch starts this isolated collection.
 
 The wait4 sampler polls every 50 ms. Small wall changes in the short annotation
-control may reflect that timing granularity; CPU and RSS come from child rusage.
+control may reflect that timing granularity; CPU and RSS come from child resource accounting.
+
+The first scoped build, run39465222332, was cancelled before sampling after a
+separate annotation control exposed launcher RSS contamination. A long-lived
+Python launcher can carry earlier binary buffers into a later child's pre-exec
+RSS history. Every CLI/N-API sample now uses a fresh small Python worker that
+spawns exactly one native child, records its own current RSS/high-water mark,
+then exits. Artifact and sample hashing streams bounded chunks. A saved tiny
+child plus a retained 96 MiB controller allocation reproduces the old floor;
+the fresh-worker regression must pass before a replacement collection starts.

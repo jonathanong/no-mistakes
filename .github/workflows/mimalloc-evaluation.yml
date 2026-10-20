@@ -32,7 +32,7 @@ jobs:
       - name: Test saved measurement fixtures
         timeout-minutes: 2
         run: |
-          for suite in report evidence artifact adoption napi-measure; do
+          for suite in report evidence artifact adoption napi-measure sampler; do
             python3 "scripts/performance/mimalloc-$suite-tests.py"
           done
           node --test scripts/performance/mimalloc-napi-runner.test.js

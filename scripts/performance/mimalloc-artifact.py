@@ -5,6 +5,14 @@ from pathlib import Path
 import runpy
 
 
+def digest(path):
+    result = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            result.update(block)
+    return result.hexdigest()
+
+
 def verify_artifact(binary, variant, source, platform_name):
     binary_path = Path(binary).resolve()
     provenance_path = binary_path.parent / "provenance.json"
@@ -20,16 +28,16 @@ def verify_artifact(binary, variant, source, platform_name):
         if provenance.get(key) != value:
             raise ValueError(f"{variant} artifact {key}={provenance.get(key)!r}, expected {value!r}")
     recorded = provenance.get("no-mistakes", {})
-    digest = hashlib.sha256(binary_path.read_bytes()).hexdigest()
-    if recorded.get("sha256") != digest:
+    binary_digest = digest(binary_path)
+    if recorded.get("sha256") != binary_digest:
         raise ValueError(f"{variant} binary hash does not match its provenance")
     probe_path = binary_path.parent / "rayon-probe"
     probe_record = provenance.get("rayon-probe", {})
-    probe_digest = hashlib.sha256(probe_path.read_bytes()).hexdigest()
+    probe_digest = digest(probe_path)
     if probe_record.get("sha256") != probe_digest:
         raise ValueError(f"{variant} Rayon probe hash does not match its provenance")
     addon = binary_path.parent / "no-mistakes.node"
-    if provenance.get("no-mistakes.node", {}).get("sha256") != hashlib.sha256(addon.read_bytes()).hexdigest():
+    if provenance.get("no-mistakes.node", {}).get("sha256") != digest(addon):
         raise ValueError(f"{variant} addon hash does not match its provenance")
     if platform_name.startswith("linux"):
         tls = json.loads((binary_path.parent / "addon-tls.json").read_text())
@@ -67,6 +75,6 @@ def verify_pair(artifacts):
 
 def verify_probe(path, artifact):
     probe = Path(path).resolve()
-    if hashlib.sha256(probe.read_bytes()).hexdigest() != artifact.get("rayon-probe", {}).get("sha256"):
+    if digest(probe) != artifact.get("rayon-probe", {}).get("sha256"):
         raise ValueError("supplied CPU probe does not match artifact provenance")
     return probe

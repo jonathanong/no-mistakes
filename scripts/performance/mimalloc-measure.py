@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Run balanced allocator comparisons and preserve per-child wait4 evidence."""
 import argparse
-import hashlib
 import json
 import os
 import platform
@@ -64,7 +63,7 @@ def wait_child(child, timeout, grace=5):
         time.sleep(0.05)
 
 
-def measure(argv, cwd, output, sample, metadata, timeout, env=None):
+def measure_child(argv, cwd, output, sample, metadata, timeout, env=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     stdout_path, stderr_path = output / f"{sample}.stdout", output / f"{sample}.stderr"
@@ -82,15 +81,24 @@ def measure(argv, cwd, output, sample, metadata, timeout, env=None):
         "user_seconds": usage.ru_utime, "system_seconds": usage.ru_stime,
         "peak_rss_bytes": rss_bytes(usage.ru_maxrss), "ru_maxrss_raw": usage.ru_maxrss,
         "ru_maxrss_units": "bytes" if sys.platform == "darwin" else "KiB",
-        "stdout_sha256": hashlib.sha256(stdout_path.read_bytes()).hexdigest(),
-        "stderr_sha256": hashlib.sha256(stderr_path.read_bytes()).hexdigest(),
+        "stdout_sha256": ARTIFACT["digest"](stdout_path),
+        "stderr_sha256": ARTIFACT["digest"](stderr_path),
         "platform": platform.platform(), "machine": platform.machine(), "cpu_model": cpu_model(),
         "logical_cpus": os.cpu_count(), "available_cpus": available,
         "rayon_environment": os.environ.get("RAYON_NUM_THREADS"),
         "mimalloc_environment": mimalloc_environment(env),
-        "executable": str(executable), "executable_sha256": hashlib.sha256(executable.read_bytes()).hexdigest(),
+        "executable": str(executable), "executable_sha256": ARTIFACT["digest"](executable),
     }
     (output / f"{sample}.json").write_text(json.dumps(row, indent=2) + "\n")
+
+
+def measure(argv, cwd, output, sample, metadata, timeout, env=None):
+    # A fresh interpreter prevents the controller's earlier buffers from becoming
+    # the native child's pre-exec RSS floor on the next fork.
+    payload = dict(argv=argv, cwd=str(cwd), output=str(output), sample=sample,
+                   metadata=metadata, timeout=timeout, env=env)
+    worker = Path(__file__).with_name("mimalloc-sample-worker.py")
+    subprocess.run([sys.executable, str(worker)], input=json.dumps(payload), text=True, check=True)
 
 
 def command(binary, workload, root, jobs, diagnostics):

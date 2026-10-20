@@ -17,6 +17,10 @@ def summarize(rows, scopes):
     for row in rows:
         meta = row['metadata']
         assert meta['scope'] == 'supplemental-no-adoption'
+        launcher = meta['sampler_launcher']
+        assert launcher['freshInterpreter'] is True and type(launcher['pid']) is int
+        assert launcher['pid'] > 0 and type(launcher['VmRSSKiB']) is int and launcher['VmRSSKiB'] > 0
+        assert row['peak_rss_bytes'] > launcher['VmRSSKiB'] * 1024, 'launcher RSS dominates sample'
         workload = meta['workload']
         assert workload in CONTRACT['SCOPES']
         assert all(meta[key] == scopes[workload][key] for key in SCOPE_FIELDS)

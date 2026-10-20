@@ -32,3 +32,9 @@ observations, not an adoption or tail bound; the full gate stays blocked.
 
 The wait4 sampler polls at 50 ms; small wall changes on the short annotation
 control may reflect timing granularity. CPU and RSS use child rusage.
+
+Each native sample has its own fresh Python sampler worker. Its current resident
+size and high-water history are retained separately; native RSS must exceed the
+recorded launcher resident floor. Large artifact hashes stream bounded chunks.
+A saved tiny-child regression keeps a large controller allocation alive to prove
+that controller history does not become the next native sample's RSS peak.
