@@ -1,0 +1,13 @@
+import { unrelated, literal, mixed, computed, comparison, cases, inline, inlineLiteral, inlineMixed, ambiguous } from './queues';
+unrelated.add('real', {});
+literal.add('alpha', {});
+literal.add('beta', {});
+literal.add('unhandled', {});
+mixed.add('real', {});
+computed.add('real', {});
+comparison.add('real', {});
+cases.add('real', {});
+inline.add('real', {});
+inlineLiteral.add('alpha', {});
+inlineMixed.add('real', {});
+ambiguous.add('real', {});

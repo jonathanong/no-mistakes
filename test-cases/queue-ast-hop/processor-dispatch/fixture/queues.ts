@@ -1,0 +1,11 @@
+import { Queue } from 'bullmq';
+export const unrelated = new Queue('unrelated');
+export const literal = new Queue('literal');
+export const mixed = new Queue('mixed');
+export const computed = new Queue('computed');
+export const comparison = new Queue('comparison');
+export const cases = new Queue('cases');
+export const inline = new Queue('inline');
+export const inlineLiteral = new Queue('inline-literal');
+export const inlineMixed = new Queue('inline-mixed');
+export const ambiguous = new Queue('ambiguous');

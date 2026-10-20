@@ -6,6 +6,8 @@ use std::collections::HashMap;
 /// The processor parameter the queue checks treat as the active job.
 #[derive(Debug, Default, Clone)]
 pub(super) struct JobFrame {
+    /// Function identity for conservative imported-module dispatch summaries.
+    pub scope: u32,
     pub object: Option<String>,
     pub name_idents: Vec<String>,
     pub id_idents: Vec<String>,
@@ -95,54 +97,4 @@ pub(super) fn processor_specifier(
                 .find_map(|name| text.contains(name).then_some(name.clone()))
         });
     source.and_then(|name| namespace_imports.get(&name).cloned())
-}
-
-pub(super) fn collect_jobs_from_args(args: &[Argument<'_>], source: &str) -> Vec<String> {
-    let text = args
-        .iter()
-        .map(|arg| ast::span_text(source, arg.span()))
-        .collect::<Vec<_>>()
-        .join("\n");
-    collect_jobs_from_text(&text)
-}
-
-pub(super) fn collect_jobs_from_text(text: &str) -> Vec<String> {
-    let mut jobs = Vec::new();
-    for marker in ["job.name ===", "job.name===", "case ", "case\t", "name:"] {
-        let mut rest = text;
-        while let Some(index) = rest.find(marker) {
-            rest = &rest[index + marker.len()..];
-            let trimmed = rest.trim_start();
-            if let Some(value) = quoted_prefix(trimmed) {
-                jobs.push(value);
-            }
-        }
-    }
-    jobs
-}
-
-pub(super) fn quoted_prefix(text: &str) -> Option<String> {
-    let quote = text.chars().next()?;
-    if quote != '\'' && quote != '"' {
-        return None;
-    }
-    let rest = &text[quote.len_utf8()..];
-    let mut escaped = false;
-    let mut value = String::new();
-    for ch in rest.chars() {
-        if escaped {
-            value.push(ch);
-            escaped = false;
-            continue;
-        }
-        if ch == '\\' {
-            escaped = true;
-            continue;
-        }
-        if ch == quote {
-            return Some(value);
-        }
-        value.push(ch);
-    }
-    Some(value)
 }

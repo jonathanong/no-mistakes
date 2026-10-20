@@ -58,7 +58,12 @@ read it the same way they read `queue.add`'s third argument. A worker factory
 records the processor. The active job is a parameter named `job`, or otherwise
 the processor's first parameter, including `switch (task.name)` and
 `async ({ name, id }) =>`. A nested callback is a job only when one of its
-parameters is named `job`. The `enqueues` and `workers` globs scope the files
+parameters is named `job`. Worker job names come from literal job-name equality comparisons and
+`switch` labels on that job name. Unrelated object `name` properties, comments,
+strings, and other switches do not narrow a worker. Dynamic job-name dispatch
+keeps wildcard coverage, including when the processor also has literal branches.
+An imported module with multiple dispatching callables stays wildcard when the
+processor callable cannot be selected statically. The `enqueues` and `workers` globs scope the files
 that participate in a project. `waitScopes` limits `addAndWait` and
 `waitUntilFinished` findings, including `this.queue.addAndWait`, for that
 project. An empty list checks every file of the project, and a file outside

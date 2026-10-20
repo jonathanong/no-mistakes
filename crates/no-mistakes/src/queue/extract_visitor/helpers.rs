@@ -1,7 +1,5 @@
 use super::QueueVisitor;
-use crate::queue::extract_helpers::{
-    collect_jobs_from_args, export_name, is_queue_package, literal_expr, processor_specifier,
-};
+use crate::queue::extract_helpers::{export_name, is_queue_package, literal_expr, processor_specifier};
 use crate::queue::extract_model::{ImportBinding, WorkerSite};
 use crate::queue::source::line_number;
 use oxc_ast::ast::{
@@ -76,9 +74,6 @@ impl QueueVisitor<'_> {
             .arguments
             .first()
             .and_then(|arg| self.literal_arg(arg));
-        let mut jobs = collect_jobs_from_args(&new_expr.arguments, self.source);
-        jobs.sort();
-        jobs.dedup();
         let processor_specifier =
             processor_specifier(&new_expr.arguments, self.source, &self.namespace_imports);
         self.facts.workers.push(WorkerSite {
@@ -86,8 +81,8 @@ impl QueueVisitor<'_> {
             line: line_number(self.source, new_expr.span.start),
             queue_name,
             queue_name_import: None,
-            wildcard: jobs.is_empty(),
-            jobs,
+            wildcard: true,
+            jobs: Vec::new(),
             processor_specifier,
             processor_file: None,
         });
