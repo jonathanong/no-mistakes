@@ -71,16 +71,20 @@ function asPossible(part) {
 // `??` follows a left operand unless it is provably never nullish. A node type
 // missing from this set reports: silence is not the fallback. `void` is always
 // undefined and is chosen earlier by `isNullishLiteral`, so it never reaches
-// here. Every other unary (`typeof`, `!`, `+`, `-`, `~`, `delete`) is not nullish.
+// here. Every other unary (`typeof`, `!`, `+`, `-`, `~`, `delete`) is not
+// nullish. An update is always a number, and dynamic `import()` is always a
+// Promise.
 const NEVER_NULLISH = new Set([
   "ArrayExpression",
   "ArrowFunctionExpression",
   "BinaryExpression",
   "ClassExpression",
   "FunctionExpression",
+  "ImportExpression",
   "NewExpression",
   "ObjectExpression",
   "TemplateLiteral",
+  "UpdateExpression",
 ]);
 
 function mayBeNullish(node) {

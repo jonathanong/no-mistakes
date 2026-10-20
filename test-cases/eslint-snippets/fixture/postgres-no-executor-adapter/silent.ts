@@ -111,6 +111,10 @@ export function stored(
   run(new Runner() ?? read, account);
   run(!flag ?? read, account);
   run(+flag ?? read, account);
+  run(flag++ ?? read, account);
+  run(import("m") ?? read, account);
+  const obj = { k: true };
+  run(delete obj.k ?? read, account);
   run(new Runner() || read, account);
   run(read.bind(null, account), account);
   run(read.bind(null)(account), account);
