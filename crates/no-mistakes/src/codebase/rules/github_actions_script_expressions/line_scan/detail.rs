@@ -28,6 +28,7 @@ pub(crate) fn step_uses_lines(source: &str) -> Vec<StepUse> {
 pub(crate) fn step_run_lines(source: &str, action: bool) -> Vec<StepRun> {
     let lines: Vec<&str> = source.lines().collect();
     let mut scanner = Scanner::from_lines(&lines, action, action, true);
+    scanner.collect_runs = true;
     scanner.scan();
     scanner.runs
 }
@@ -116,22 +117,23 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
     let uses = scanner.uses.take();
     let run_lines = std::mem::take(&mut scanner.run_lines);
     let script_lines = std::mem::take(&mut scanner.script_lines);
-    if scanner.locate && !run_lines.is_empty() {
-        scanner.runs.push(StepRun {
-            job: scanner.job.clone(),
-            step: scanner.step,
-            item_line: scanner.item_line.unwrap_or(1),
-            lines: run_lines.clone(),
-        });
-    }
-    for (line, text) in run_lines {
-        for expr in expressions(&text) {
+    for (line, text) in &run_lines {
+        for expr in expressions(text) {
             scanner.hits.push(Hit {
-                line,
+                line: *line,
                 expr,
                 script: false,
             });
         }
+    }
+    if scanner.collect_runs && !run_lines.is_empty() {
+        stored_runs::note_stored_run_block();
+        scanner.runs.push(StepRun {
+            job: scanner.job.clone(),
+            step: scanner.step,
+            item_line: scanner.item_line.unwrap_or(1),
+            lines: run_lines,
+        });
     }
     if uses.as_deref().is_some_and(is_github_script) {
         for (line, text) in script_lines {
@@ -145,3 +147,14 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
         }
     }
 }
+
+#[cfg(test)]
+mod stored_runs;
+
+#[cfg(not(test))]
+mod stored_runs {
+    pub(super) fn note_stored_run_block() {}
+}
+
+#[cfg(test)]
+mod collect_runs_tests;
