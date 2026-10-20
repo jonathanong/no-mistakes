@@ -1,16 +1,27 @@
+# cspell:ignore mimalloc fullmatch jonathanong pathlib startswith venv
 name: Scoped mimalloc resources
 
 on:
-  push:
-    branches: [eval/2200-scoped-resources]
   workflow_dispatch:
+    inputs:
+      build_run:
+        description: Completed native build run to reuse (empty builds this source)
+        type: string
+      build_source:
+        description: Exact source SHA of reused binaries (required with build_run)
+        type: string
+      platform:
+        description: Native measurement hosts
+        type: choice
+        default: all
+        options: [all, linux-arm64, macos-arm64]
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: mimalloc-scoped-${{ github.ref }}
+  group: mimalloc-scoped-${{ github.ref }}-${{ inputs.platform || 'all' }}
   cancel-in-progress: false
 
 jobs:
@@ -27,34 +38,45 @@ jobs:
         run: |
           python3 scripts/performance/mimalloc-scoped-tests.py
           python3 scripts/performance/mimalloc-sampler-tests.py
+      - name: Validate reused build identity
+        env:
+          BUILD_RUN: ${{ inputs.build_run }}
+          BUILD_SOURCE: ${{ inputs.build_source }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          run, source = os.environ['BUILD_RUN'], os.environ['BUILD_SOURCE']
+          assert (not run and not source) or (re.fullmatch(r'[0-9]+', run) and re.fullmatch(r'[0-9a-f]{40}', source))
+          PY
   build:
     needs: harness-tests
+    if: inputs.build_run == ''
     uses: ./.github/workflows/mimalloc-evaluation-build.yml
   measure:
-    needs: build
+    needs: [harness-tests, build]
+    if: >-
+      always() && !cancelled() && needs.harness-tests.result == 'success' &&
+      (needs.build.result == 'success' || inputs.build_run != '')
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 170
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runner: ubuntu-22.04-arm
-            platform: linux-arm64
-            target: aarch64-unknown-linux-gnu
-          - runner: macos-15
-            platform: macos-arm64
-            target: aarch64-apple-darwin
+        include: ${{ fromJSON(inputs.platform == 'linux-arm64' && '[{"runner":"ubuntu-22.04-arm","platform":"linux-arm64","target":"aarch64-unknown-linux-gnu"}]' || inputs.platform == 'macos-arm64' && '[{"runner":"macos-15","platform":"macos-arm64","target":"aarch64-apple-darwin"}]' || '[{"runner":"ubuntu-22.04-arm","platform":"linux-arm64","target":"aarch64-unknown-linux-gnu"},{"runner":"macos-15","platform":"macos-arm64","target":"aarch64-apple-darwin"}]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         timeout-minutes: 3
         with:
           persist-credentials: false
+          ref: ${{ inputs.build_source || github.sha }}
       - name: Download verified native allocator pair
         timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: mimalloc-${{ matrix.target }}-*
           path: binaries
+          run-id: ${{ inputs.build_run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Download reviewed installed consumer
         timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -71,15 +93,42 @@ jobs:
           gh api repos/jonathanong/no-mistakes/actions/artifacts/12158768554 > prepared/artifact-origin.json
           python3 scripts/performance/mimalloc-scoped-origin.py prepared/artifact-origin.json
           tar -xzf prepared/fixture.tar.gz
-      - name: Install configuration validation dependency
+      - name: Record reused native build origin
+        if: inputs.build_run != ''
+        timeout-minutes: 2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN: ${{ inputs.build_run }}
+          BUILD_SOURCE: ${{ inputs.build_source }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN" > prepared/build-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN/jobs?per_page=100" > prepared/build-jobs.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads(Path('prepared/build-run.json').read_text())
+          jobs = json.loads(Path('prepared/build-jobs.json').read_text())['jobs']
+          assert run['id'] == int(os.environ['BUILD_RUN'])
+          assert run['repository']['full_name'] == os.environ['GITHUB_REPOSITORY']
+          assert run['head_sha'] == os.environ['BUILD_SOURCE']
+          assert run['status'] in ('in_progress', 'completed')
+          builds = [job for job in jobs if job['name'].startswith('build / Build ')]
+          assert len(builds) == 4 and all(job['conclusion'] == 'success' for job in builds)
+          PY
+      - name: Install and test isolated configuration dependency
         timeout-minutes: 3
-        run: python3 -m pip install --disable-pip-version-check --break-system-packages PyYAML==6.0.3
+        run: |
+          python3 -m pip --version
+          python3 -m venv "$RUNNER_TEMP/mimalloc-python"
+          "$RUNNER_TEMP/mimalloc-python/bin/python" -m pip install --disable-pip-version-check --only-binary=:all: --no-deps PyYAML==6.0.3
+          "$RUNNER_TEMP/mimalloc-python/bin/python" -c 'import sys, yaml; assert sys.prefix != sys.base_prefix; assert yaml.__version__ == "6.0.3"'
+          echo "$RUNNER_TEMP/mimalloc-python/bin" >> "$GITHUB_PATH"
       - name: Measure both scopes and all worker counts on this host
         timeout-minutes: 145
         env:
           PLATFORM: ${{ matrix.platform }}
           TARGET: ${{ matrix.target }}
-          SOURCE: ${{ github.sha }}
+          SOURCE: ${{ inputs.build_source || github.sha }}
           HOST_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.platform }}
           XDG_RUNTIME_DIR: ${{ runner.temp }}/mimalloc-runtime
         run: |
@@ -98,6 +147,7 @@ jobs:
           path: |
             scoped-results/
             prepared/artifact-origin.json
+            prepared/build-*.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
