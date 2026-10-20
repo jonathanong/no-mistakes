@@ -1,0 +1,24 @@
+{
+  "builder": {
+    "imageOS": "ubuntu24-arm64",
+    "imageVersion": "20261012.149.1",
+    "uname": [
+      "Linux",
+      "runnervmidgih",
+      "6.17.0-1022-azure",
+      "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+      "aarch64"
+    ]
+  },
+  "measurement": {
+    "imageOS": "ubuntu24-arm64",
+    "imageVersion": "unrecognized",
+    "uname": [
+      "Linux",
+      "runnervmidgih",
+      "6.17.0-1022-azure",
+      "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+      "aarch64"
+    ]
+  }
+}

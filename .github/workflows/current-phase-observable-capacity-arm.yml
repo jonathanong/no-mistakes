@@ -1,8 +1,7 @@
 name: Current phase ARM observable capacity retry
 
 on:
-  push:
-    branches: [eval/2241-observable-capacity-arm]
+  workflow_dispatch:
 
 permissions:
   contents: read

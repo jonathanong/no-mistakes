@@ -84,6 +84,12 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
         def deadline():
             if not stop.wait(CAP_SECONDS):
                 deadline_hit.set()
+                if heartbeat:
+                    print(f'CAPACITY arm={arm} status=cutoff '
+                          f'elapsedSeconds={time.monotonic() - started:.1f} '
+                          f'cpuSeconds={cpu_seconds(process.pid)} '
+                          f'rssKiB={rss_kib(process.pid)} '
+                          f'lastDiagnostic={json.dumps(diagnostic_tail(stderr_path))}', flush=True)
                 # The leader remains unreaped until this thread joins, so its
                 # process-group identity cannot be reused by another command.
                 try:

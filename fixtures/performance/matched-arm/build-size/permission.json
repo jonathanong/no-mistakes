@@ -1,0 +1,5 @@
+{
+  "code": 1,
+  "stdout": "4096\t/owned/target\n",
+  "stderr": "du: cannot read directory '/owned/target/release': Permission denied\n"
+}
