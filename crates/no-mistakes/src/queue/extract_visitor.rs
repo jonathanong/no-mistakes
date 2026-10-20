@@ -1,9 +1,7 @@
-use crate::queue::extract_helpers::{
-    binding_name, export_name, is_queue_package, static_string, JobFrame,
-};
-use crate::queue::extract_model::{FileFacts, ImportBinding};
+use crate::queue::extract_helpers::{binding_name, static_string, JobFrame};
+use crate::queue::extract_model::FileFacts;
 use crate::queue::extract_record::{record_enqueue, record_flow};
-use oxc_ast::ast::{CallExpression, Expression, ImportDeclarationSpecifier};
+use oxc_ast::ast::{CallExpression, Expression};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -37,47 +35,7 @@ pub(super) struct QueueVisitor<'a> {
 
 impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
-        let source = import.source.value.as_str().to_string();
-        if let Some(specifiers) = &import.specifiers {
-            for specifier in specifiers {
-                match specifier {
-                    ImportDeclarationSpecifier::ImportSpecifier(spec) => {
-                        let imported = export_name(&spec.imported);
-                        let local = spec.local.name.as_str().to_string();
-                        if is_queue_package(&source)
-                            && matches!(imported.as_str(), "Queue" | "TestQueue")
-                        {
-                            self.queue_classes.insert(local.clone());
-                        }
-                        if is_queue_package(&source)
-                            && matches!(imported.as_str(), "Worker" | "TestWorker")
-                        {
-                            self.worker_classes.insert(local.clone());
-                        }
-                        if is_queue_package(&source) && imported == "FlowProducer" {
-                            self.flow_classes.insert(local.clone());
-                        }
-                        super::extract_factory::note_named_import(self, &imported, &local, &source);
-                        self.facts.imports.push(ImportBinding {
-                            local,
-                            imported,
-                            source: source.clone(),
-                        });
-                    }
-                    ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
-                        self.facts.imports.push(ImportBinding {
-                            local: spec.local.name.as_str().to_string(),
-                            imported: "default".to_string(),
-                            source: source.clone(),
-                        });
-                    }
-                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
-                        self.namespace_imports
-                            .insert(spec.local.name.as_str().to_string(), source.clone());
-                    }
-                }
-            }
-        }
+        self.register_import(import);
         walk::walk_import_declaration(self, import);
     }
 

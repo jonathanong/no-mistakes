@@ -1,11 +1,61 @@
 use super::QueueVisitor;
-use crate::queue::extract_helpers::{collect_jobs_from_args, literal_expr, processor_specifier};
-use crate::queue::extract_model::WorkerSite;
+use crate::queue::extract_helpers::{
+    collect_jobs_from_args, export_name, is_queue_package, literal_expr, processor_specifier,
+};
+use crate::queue::extract_model::{ImportBinding, WorkerSite};
 use crate::queue::source::line_number;
-use oxc_ast::ast::{Argument, Expression, NewExpression};
+use oxc_ast::ast::{
+    Argument, Expression, ImportDeclaration, ImportDeclarationSpecifier, NewExpression,
+};
 use oxc_span::GetSpan;
 
 impl QueueVisitor<'_> {
+    pub(super) fn register_import(&mut self, import: &ImportDeclaration<'_>) {
+        let source = import.source.value.as_str().to_string();
+        if let Some(specifiers) = &import.specifiers {
+            for specifier in specifiers {
+                match specifier {
+                    ImportDeclarationSpecifier::ImportSpecifier(spec) => {
+                        let imported = export_name(&spec.imported);
+                        let local = spec.local.name.as_str().to_string();
+                        if is_queue_package(&source)
+                            && matches!(imported.as_str(), "Queue" | "TestQueue")
+                        {
+                            self.queue_classes.insert(local.clone());
+                        }
+                        if is_queue_package(&source)
+                            && matches!(imported.as_str(), "Worker" | "TestWorker")
+                        {
+                            self.worker_classes.insert(local.clone());
+                        }
+                        if is_queue_package(&source) && imported == "FlowProducer" {
+                            self.flow_classes.insert(local.clone());
+                        }
+                        super::super::extract_factory::note_named_import(
+                            self, &imported, &local, &source,
+                        );
+                        self.facts.imports.push(ImportBinding {
+                            local,
+                            imported,
+                            source: source.clone(),
+                        });
+                    }
+                    ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
+                        self.facts.imports.push(ImportBinding {
+                            local: spec.local.name.as_str().to_string(),
+                            imported: "default".to_string(),
+                            source: source.clone(),
+                        });
+                    }
+                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
+                        self.namespace_imports
+                            .insert(spec.local.name.as_str().to_string(), source.clone());
+                    }
+                }
+            }
+        }
+    }
+
     pub fn is_queue_constructor(&self, expr: &Expression<'_>) -> bool {
         matches!(expr, Expression::Identifier(id) if self.queue_classes.contains(id.name.as_str()))
     }

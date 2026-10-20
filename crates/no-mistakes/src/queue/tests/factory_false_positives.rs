@@ -63,6 +63,22 @@ fn shared_file_workers_and_other_queue_dedup_are_not_findings() {
 }
 
 #[test]
+fn top_level_enqueue_beside_workers_does_not_create_a_queue_cycle() {
+    let report = analyze_project(&fixture("factory-roles-false-positives"), None, &[]).unwrap();
+    assert!(report.producers.iter().any(|producer| {
+        producer.file.ends_with("top-level-add.mts") && producer.job.as_deref() == Some("x")
+    }));
+    assert!(
+        !report
+            .check
+            .iter()
+            .any(|finding| finding.kind == "queue-cycle"),
+        "a top-level enqueue beside two workers must not be attributed to either processor: {:?}",
+        report.check
+    );
+}
+
+#[test]
 fn cycle_edges_skip_a_missing_worker_and_an_unresolved_worker_queue() {
     let root = PathBuf::from("/repo");
     let file = PathBuf::from("/repo/workers/side.ts");
