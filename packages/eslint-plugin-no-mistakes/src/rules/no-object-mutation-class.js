@@ -95,6 +95,9 @@ function visitElement(state, element, classEnv, value) {
   if (element.type === "MethodDefinition" && visited.type === "fn") {
     visited.methodKind = element.kind;
     visited.staticMethod = Boolean(element.static);
+    if (!element.computed && element.key?.type === "Identifier") {
+      visited.methodName = element.key.name;
+    }
     value.items.push(visited);
     return decorated;
   }

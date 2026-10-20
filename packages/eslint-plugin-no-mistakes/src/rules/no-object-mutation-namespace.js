@@ -6,8 +6,8 @@ const { registerFn } = require("./no-object-mutation-fn");
 const { seedHoisted } = require("./no-object-mutation-syntax");
 const { child, createFresh, lookup, shared, unknown } = require("./no-object-mutation-values");
 
-function visitNamespace(state, node, scope) {
-  const sharing = sharesNamespace(node, scope);
+function visitNamespace(state, node, scope, exported = false) {
+  const sharing = exported || sharesNamespace(node, scope);
   const name = namespaceRoot(node.id);
   if (name) {
     bindNamespace(name, scope, sharing);
@@ -34,11 +34,15 @@ function namespaceRoot(id) {
 }
 
 function sharesNamespace(node, scope) {
-  // `declare module "fs"` is ambient. `namespace A.B` still follows the scope.
+  // `declare module "fs"` is ambient. `namespace A.B` is one public path.
+  // A bare nested namespace stays local until it is exported.
   if (node.id && node.id.type === "Literal") {
     return true;
   }
-  return Boolean(scope.isModule || scope.namespaceShared);
+  if (node.id && node.id.type === "TSQualifiedName") {
+    return Boolean(scope.isModule || scope.namespaceShared);
+  }
+  return Boolean(scope.isModule);
 }
 
 function bindNamespace(name, scope, sharing) {
@@ -63,7 +67,7 @@ function walkNamespace(state, body, scope, sharing) {
 function visitSharedExport(state, statement, scope) {
   const declaration = statement.declaration;
   if (declaration && declaration.type === "TSModuleDeclaration") {
-    visitNamespace(state, declaration, scope);
+    visitNamespace(state, declaration, scope, true);
     return;
   }
   if (declaration && declaration.type === "VariableDeclaration") {

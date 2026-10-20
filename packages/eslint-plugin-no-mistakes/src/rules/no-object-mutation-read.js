@@ -53,6 +53,11 @@ function readMember(tag, key) {
     if (tag.fields.has(key)) {
       return tag.fields.get(key);
     }
+    for (const item of tag.items) {
+      if (item.type === "fn" && item.methodName === key) {
+        return item;
+      }
+    }
   } else {
     // A computed key can name any field. Only an unescaped fresh tag reaches
     // here. Prefer a shared or already-escaped candidate over that object.

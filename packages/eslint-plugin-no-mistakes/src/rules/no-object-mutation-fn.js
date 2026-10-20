@@ -66,12 +66,16 @@ function walkFunctionBody(state, node, scope, tag) {
   fnEnv.ownerEnv = fnEnv;
   fnEnv.functionEnv = fnEnv;
   fnEnv.fnTag = tag;
-  fnEnv.inClass = Boolean(scope.inClass);
   fnEnv.pending = [];
-  // Arrows read the enclosing function's `arguments` and lexical `this`.
-  fnEnv.hasArguments = node.type === "ArrowFunctionExpression" ? Boolean(scope.hasArguments) : true;
-  fnEnv.receiver =
-    node.type === "ArrowFunctionExpression" ? scope.receiver || null : tag.receiver || null;
+  // Arrows keep the enclosing `this`. A nested function has its own.
+  const arrow = node.type === "ArrowFunctionExpression";
+  const classMethod =
+    !arrow &&
+    (node.parent?.type === "MethodDefinition" ||
+      node.parent?.type === "TSAbstractMethodDefinition");
+  fnEnv.inClass = arrow ? Boolean(scope.inClass) : classMethod;
+  fnEnv.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
+  fnEnv.receiver = arrow ? scope.receiver || null : tag.receiver || null;
   for (const param of node.params) {
     bindPattern(state, param, shared("parameter"), fnEnv, "param");
   }

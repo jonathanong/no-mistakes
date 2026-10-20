@@ -50,6 +50,15 @@ function visitNew(state, node, scope, role) {
 function visitCall(state, node, scope, role) {
   const mutation = mutationCall(node, scope);
   if (mutation) {
+    const thisArg = node.arguments[0];
+    if (
+      thisArg &&
+      thisArg.type !== "SpreadElement" &&
+      thisArg !== mutation.targetNode &&
+      !mutation.otherArgs.includes(thisArg)
+    ) {
+      visitArgument(state, thisArg, scope, "read");
+    }
     const target = api.visit(state, mutation.targetNode, scope, "read");
     const argRole = readOnlyFresh(target) ? "read" : "escape";
     const remembered = [];

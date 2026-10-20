@@ -173,6 +173,12 @@ describe("no-object-mutation escapes", () => {
           export const cell = {};
         }
         Outer.Inner.cell.a = 1;
+        namespace Outer {
+          namespace Hidden {
+            export const rows = {};
+          }
+          Hidden.rows.x = 1;
+        }
         declare module "fs" {
           export const path = {};
         }
@@ -257,6 +263,39 @@ describe("no-object-mutation escapes", () => {
         }
       `),
       ["mutation"],
+    );
+  });
+
+  it("reports nested this, called methods, and thisArg side effects", () => {
+    assert.deepEqual(
+      ids(`
+        function nested(box) {
+          class Local {
+            m() {
+              function mutate() {
+                this.x = 1;
+              }
+              mutate();
+              this.y = box;
+            }
+          }
+          new Local().m();
+        }
+        function called(box) {
+          class Writer {
+            m() {
+              box.a = 1;
+            }
+          }
+          sink(box);
+          new Writer().m();
+        }
+        function side(param) {
+          Object.assign.call((param.x = 1), {}, {});
+          Object.assign.apply((param.y = 1), [{}, {}]);
+        }
+      `),
+      repeated(4),
     );
   });
 
