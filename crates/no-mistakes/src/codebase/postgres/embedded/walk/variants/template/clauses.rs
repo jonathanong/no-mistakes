@@ -1,5 +1,5 @@
-//! Literal ternaries in an untagged template become SQL alternatives.
-//! Any other hole abstains for the whole template.
+//! Literal ternaries and logical clauses in an untagged template become SQL alternatives.
+//! A reached unknown branch abstains for the whole template.
 #[rustfmt::skip]
 mod literal {
 use super::super::super::super::ScopeVisitor;
@@ -11,6 +11,8 @@ use crate::codebase::postgres::embedded::{source_positions, EmbeddedSqlKind};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{ConditionalExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
+
+mod logic;
 
 pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(visitor: &ScopeVisitor<'_>, template: &TemplateLiteral<'_>, depth: u8, constraints: &[(u64, u32)]) -> Option<Vec<Recovered>> {
     if depth == 0 || effects::mutates_captured_fragment(visitor, template) { return None; }
@@ -30,17 +32,27 @@ pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(visitor: 
     Some(versions)
 }
 
-pub(in crate::codebase::postgres::embedded::walk::variants) fn observe_const(visitor: &mut ScopeVisitor<'_>, name: &str, init: Option<&Expression<'_>>, variants: Option<&[Recovered]>) {
-    let (Some(init), Some(stored)) = (init, variants) else { return };
-    if !visitor.declaring_const || !matches!(unwrap_ts_wrappers(init), Expression::ConditionalExpression(_)) || !plain(stored) || visitor.lookup(name).is_some_and(|binding| binding.builder_identity.is_some()) {
-        return;
+pub(in crate::codebase::postgres::embedded::walk::variants) fn observe_const(visitor: &mut ScopeVisitor<'_>, name: &str, init: Option<&Expression<'_>>, variants: Option<&[Recovered]>) -> Option<Vec<Recovered>> {
+    let init = init?;
+    if !visitor.declaring_const || !clause_init(init) || visitor.lookup(name).is_some_and(|binding| binding.builder_identity.is_some()) {
+        return None;
     }
-    let [constraints] = visitor.variant_paths.as_slice() else { return };
-    let Some(recovered) = clause(visitor, init, 8, constraints) else { return };
-    let Some(index) = scope_index(visitor, name) else { return };
-    if plain(&recovered) && same_sql(stored, &recovered) {
-        visitor.clause_unions.insert((index, name.to_string()));
+    let [constraints] = visitor.variant_paths.as_slice() else { return None };
+    let recovered = clause(visitor, init, 8, constraints)?;
+    let index = scope_index(visitor, name)?;
+    if let Some(stored) = variants {
+        // Keep a real walker snapshot. An absent-fragment artifact is not a clause union.
+        if plain(stored) && same_sql(stored, &recovered) {
+            visitor.clause_unions.insert((index, name.to_string()));
+        }
+        return None;
     }
+    visitor.clause_unions.insert((index, name.to_string()));
+    Some(recovered)
+}
+
+fn clause_init(init: &Expression<'_>) -> bool {
+    matches!(unwrap_ts_wrappers(init), Expression::ConditionalExpression(_) | Expression::LogicalExpression(_))
 }
 
 fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constraints: &[(u64, u32)]) -> Option<Vec<Recovered>> {
@@ -52,6 +64,7 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
         Expression::TemplateLiteral(template) => recover(visitor, template, depth - 1, constraints),
         Expression::Identifier(_) => constant(visitor, expr, constraints),
         Expression::ConditionalExpression(branch) => conditional(visitor, branch, depth, constraints),
+        Expression::LogicalExpression(branch) => logic::recover(visitor, branch, depth, constraints),
         _ => None,
     }
 }
