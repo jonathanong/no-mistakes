@@ -76,6 +76,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) literal_objects: super::const_literals::LiteralObjects,
     pub(super) declaring_const: bool,
     pub(super) clause_unions: crate::fx::FxHashSet<(usize, String)>,
+    pub(crate) exported_constants:
+        crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
 }
 pub(crate) struct CollectedCalls {
     pub(crate) calls: Vec<EmbeddedSqlCall>,
@@ -83,6 +85,7 @@ pub(crate) struct CollectedCalls {
     pub(crate) exported_helpers: crate::fx::FxHashMap<String, helpers::HelperSummary>,
     pub(crate) exported_programs:
         crate::fx::FxHashMap<String, std::sync::Arc<helpers::program::Program>>,
+    pub(crate) exported_constants: crate::fx::FxHashMap<String, helpers::ExportedConstant>,
     pub(crate) pending_imported: Vec<helpers::PendingImportedSql>,
     pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
     pub(crate) fragments: Vec<EmbeddedSqlFragment>,
@@ -154,6 +157,7 @@ pub(crate) fn collect_calls<'a>(
         literal_objects: super::const_literals::LiteralObjects::default(),
         declaring_const: false,
         clause_unions: crate::fx::fx_set(),
+        exported_constants: Default::default(),
     };
     visitor.visit_program(program);
     visitor.downgrade_escaped_member_calls();
@@ -182,6 +186,7 @@ pub(crate) fn collect_calls<'a>(
         call_spans: visitor.call_spans,
         exported_helpers: visitor.functions.exported_helpers(),
         exported_programs: visitor.functions.take_programs(),
+        exported_constants: visitor.exported_constants,
         pending_imported,
         pending_spans: visitor.pending_spans,
         fragments: visitor.fragments,

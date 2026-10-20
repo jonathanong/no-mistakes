@@ -95,6 +95,59 @@ fn caller_calls(
 }
 
 #[test]
+fn module_const_sql_inlines_literals_and_leaves_computed_dynamic() {
+    let calls = caller_calls(&run("module-const-sql"));
+    let mut analyzed = Vec::new();
+    let mut unknown = 0;
+    for call in &calls {
+        let sql = call.sql_text.clone().unwrap_or_default();
+        if call.is_unanalyzable() {
+            unknown += 1;
+            assert!(!sql.contains('\0'), "{sql}");
+            continue;
+        }
+        assert!(sql.contains("orders"), "{call:?}");
+        analyzed.push(sql);
+    }
+    assert_eq!(unknown, 13, "{calls:#?}");
+    assert!(analyzed
+        .iter()
+        .any(|sql| sql == "SELECT id FROM orders WHERE account_id = $1"));
+    assert!(analyzed
+        .iter()
+        .any(|sql| sql == "SELECT id, account_id FROM orders WHERE account_id = $1"));
+    assert!(analyzed
+        .iter()
+        .any(|sql| sql == "SELECT id FROM orders WHERE true AND account_id = $1"));
+    assert!(analyzed
+        .iter()
+        .any(|sql| sql == "SELECT id FROM orders WHERE true"));
+}
+
+#[test]
+fn a_constant_hole_without_its_import_record_is_not_inlined() {
+    // The walk already recorded the hole. Clearing the import makes the name
+    // look local, which the filler must refuse instead of splicing a guess.
+    let mut files = prepared("module-const-sql");
+    let caller = files
+        .keys()
+        .find(|path| path.ends_with("src/caller.mts"))
+        .expect("caller")
+        .clone();
+    Arc::make_mut(&mut files.get_mut(&caller).expect("caller").ts)
+        .imported_bindings
+        .clear();
+    let calls = Mutex::new(BTreeMap::new());
+    let resolve = resolver(&files, &calls);
+    project(&mut files, resolve);
+    let call = caller_calls(&files)
+        .into_iter()
+        .find(|call| call.line == 56)
+        .expect("imported const");
+    assert!(call.is_unanalyzable(), "{call:?}");
+}
+
+#[test]
 fn a_shared_export_is_located_once_however_many_calls_import_it() {
     let mut files = prepared("imported-shared-export");
     assert!(has_candidates(&files));

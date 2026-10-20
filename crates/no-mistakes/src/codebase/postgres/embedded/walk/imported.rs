@@ -14,6 +14,7 @@ use oxc_ast::ast::{
     CallExpression, Expression, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
 };
 mod args;
+pub(super) mod constants;
 use args::classify;
 
 /// Local names of named and default value imports. Namespace imports are
@@ -162,6 +163,7 @@ fn site_hole(
             args,
             value_used,
             line,
+            constant: None,
         },
     );
     plain(

@@ -28,6 +28,7 @@ pub struct EmbeddedSqlFileFacts {
     /// Lowered bodies of the same helpers, run per call site by the projection.
     pub(crate) exported_programs:
         crate::fx::FxHashMap<String, std::sync::Arc<super::helpers::program::Program>>,
+    pub(crate) exported_constants: crate::fx::FxHashMap<String, super::helpers::ExportedConstant>,
     /// Executor SQL that is complete once imported helpers resolve.
     pub(crate) pending_imported: Vec<super::helpers::PendingImportedSql>,
     /// Caller lines of the imported-helper calls completed into a call, by span.

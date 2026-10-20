@@ -22,6 +22,7 @@ pub(super) struct Splice {
 pub(super) struct LiteralObjects {
     frames: Vec<HashMap<String, Members>>,
     text_consts: Vec<HashSet<String>>,
+    pub(in crate::codebase::postgres::embedded::walk) fragment_consts: Vec<HashSet<String>>,
     poisoned: HashSet<String>,
     literals: RefCell<Vec<Splice>>,
     pub(super) read_spans: Vec<u32>,
@@ -32,10 +33,12 @@ impl LiteralObjects {
     pub(super) fn push_frame(&mut self) {
         self.frames.push(HashMap::new());
         self.text_consts.push(HashSet::new());
+        self.fragment_consts.push(HashSet::new());
     }
     pub(super) fn pop_frame(&mut self) {
         self.frames.pop();
         self.text_consts.pop();
+        self.fragment_consts.pop();
     }
     fn object<'a>(&'a self, scopes: &'a [HashMap<String, BindingState>], name: &str) -> Option<&'a Members> {
         for (frame, scope) in self.frames.iter().zip(scopes).rev() {
@@ -116,12 +119,7 @@ impl ScopeVisitor<'_> {
             Expression::StringLiteral(literal) => Some(literal.value.to_string()),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => unpublished_sql_text(expr),
             Expression::TemplateLiteral(template) => self.spliced_template(template, depth - 1),
-            Expression::Identifier(ident) => {
-                let name = ident.name.as_str();
-                if !self.literal_objects.is_text_const(&self.scopes, name) { return None; }
-                let binding = self.lookup(name)?;
-                (binding.kind == EmbeddedSqlKind::ImmutableLocal).then_some(binding.sql)?
-            }
+            Expression::Identifier(ident) => super::imported::constants::identifier_piece(self, ident),
             Expression::StaticMemberExpression(member) => self.spliced_member(member, placeholder),
             _ => None,
         }

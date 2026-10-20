@@ -37,8 +37,12 @@ spliced into that placeholder instead, including nested untagged templates up
 to depth 8. A constant object-literal member is spliced only when the binding
 is never referenced except as `X.member` reads, and is never exported or
 written (including a write after the read). A poisoned member keeps the proved
-SQL and substitutes `sql_placeholder_N` for that member. `let`, imported
-constants, spreads, computed keys or writes, nested members, numeric keys,
+SQL and substitutes `sql_placeholder_N` for that member. The same literal
+exported from another file is spliced when it is interpolated into an untagged
+template or passed to `.append`, including `as const`. An imported tagged
+fragment constant is spliced only by `.append`; an untagged template would
+stringify the statement object. `let`, reassigned bindings, computed
+initializers, spreads, computed keys or writes, nested members, numeric keys,
 getters, and methods stay unknown. `no-object-mutation` (#2219) keeps object
 members in this shape.
 
