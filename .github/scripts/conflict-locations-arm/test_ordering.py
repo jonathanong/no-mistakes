@@ -20,18 +20,18 @@ FIXTURE = ROOT / 'fixtures/performance/matched-arm/feature-delta'
 
 class OrderingOnlyContract(unittest.TestCase):
     def test_workflow_builds_the_pins_and_downloads_its_own_pair(self):
-        workflow = (ROOT / '.github/workflows/conflict-locations-ordering-arm.yml').read_text()
-        self.assertIn('branches: [eval/2238-conflict-locations-arm]', workflow)
+        workflow = (ROOT / '.github/workflows/conflict-ledger-gated-arm.yml').read_text()
+        self.assertIn('branches: [eval/2238-ledger-off-arm]', workflow)
         for source in SOURCES.values():
             self.assertIn('ref: ' + source, workflow)
         self.assertEqual(workflow.count('name: conflict-locations-arm-clis'), 2)
         self.assertIn('scripts/conflict-locations-arm/build.py', workflow)
-        self.assertIn('scripts/conflict-locations-arm/measure.py', workflow)
+        self.assertIn('scripts/conflict-locations-arm/measure_repeated.py', workflow)
 
     def test_pins_and_ordering_config_hash_match_provenance(self):
         self.assertEqual(SOURCES, {
-            'base': 'fbac9dc5857259ea8eff7820b0b0385ba2dea9ab',
-            'candidate': 'd7f0f0a184964de6cbd3a89a5afc4bf1a1a7dfeb'})
+            'base': '4d4deb9423111f6bd97f2501bdf508ef17536dc0',
+            'candidate': '882fba4fc13405a44751135627fa572a627202a7'})
         self.assertEqual(CONSUMER, 'f38a048f5eeff0438fc59a15e9eb742def575a36')
         self.assertEqual(ARTIFACT_ID, 12158768554)
         config = ROOT / 'fixtures/performance/current-verdict-arm/ordering-only.yml'
