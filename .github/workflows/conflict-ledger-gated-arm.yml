@@ -35,7 +35,7 @@ jobs:
         timeout-minutes: 2
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 882fba4fc13405a44751135627fa572a627202a7
+          ref: c8c592aa3e2e7341b745e2e59a59e3e28cd5ac34
           path: source-candidate
           persist-credentials: false
       - name: Update stable Rust once for both builds

@@ -24,7 +24,7 @@ def sample(binary, root, config, jobs, diagnostics, ledger, output, arm, ordinal
     tag = f'{ordinal}-{arm}'
     runtime = (output / ('runtime-' + tag)).resolve()
     runtime.mkdir(mode=0o700)
-    command = [str(binary), '--timeout', str(CAP_SECONDS)]
+    command = [str(binary), '--timeout', str(CAP_SECONDS), '--lock-timeout', '0']
     if jobs != 'default':
         command += ['--jobs', jobs]
     if diagnostics == 'on':
