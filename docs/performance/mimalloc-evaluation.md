@@ -157,3 +157,24 @@ non-Windows/75-minute Windows limits and 80/100-minute job limits.
 Prepared workloads preserve pinned Git inventories and native core settings,
 including tracked-but-ignored files. Credentials and remotes are removed before
 upload. No older local consumer fixture substitutes for the pinned snapshot.
+
+## Supplemental scopes
+
+The manual `mimalloc-scoped-evaluation.yml` workflow rebuilds both allocators and
+collects supplemental observations on native Linux ARM64 and macOS ARM64. It uses
+the reviewed 131-rule consumer cohort from #2241 (only the two annotation rule
+applications removed), at 1/4/max jobs, and a completing saved annotation density
+control at 1/max jobs. Diagnostics off/on are measured separately. All worker
+counts for each platform run on one host, with four adjacent allocator pairs per
+cell in AB, BA, BA, AB order. Actual automatic worker counts are recorded.
+
+The annotation control has 32 roots, 1,024 arguments per call, cyclic arguments,
+and 48 conditional joins. Its expected 32 findings and completed annotation phase
+are checked for every process. This bounded sample measures worker-count RSS
+scaling without claiming to represent the stalled production annotation project.
+Exact source, configuration, sibling ignore file, physical inventory, artifact,
+and report identities are retained with raw wall/CPU/peak-RSS observations.
+
+These explicitly scoped cells cannot fill any full hosted, many-core, or N-API
+adoption cell. The evaluator remains a draft with no adoption claim. Results are
+pending; semantic preflight and harness tests are not allocator measurements.

@@ -1,0 +1,14 @@
+{
+  "originalConfigSha256": "c9fe0bae7cb65b06cbe89b66773bac19b3176a8601f4860e857d42dce169897c",
+  "cohortConfigSha256": "b91522a8c0b3840029a60844a64ca7a4dae120a5903e9d708ec2377e61db4c66",
+  "originalRuleApplications": 133,
+  "cohortRuleApplications": 131,
+  "excludedRule": "postgres-require-query-annotation",
+  "excludedNames": [
+    "runtime queries identify executed statements",
+    "development runtime helper queries identify executed statements"
+  ],
+  "nonRulePayloadUnchanged": true,
+  "siblingGitignoreSha256": "116a90411abf2bb9f2efef56dd64f7ba8a02ab13cc4caa047c5bfcba55e68e57",
+  "configParentGitignorePreserved": true
+}

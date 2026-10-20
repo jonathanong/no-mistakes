@@ -1,0 +1,96 @@
+# OS
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build Artifacts
+dist/
+output/
+storybook-static/
+
+# Development
+.env
+.env.local
+.dev.vars
+.local/
+.worktree-num
+.valkey-port
+.initialized
+dev/certs/
+
+# AI
+.claude/settings.local.json
+.claude/ralph-loop.local.md
+.claude/worktrees
+.claude/scheduled_tasks.lock
+.claude/.cc-writes/
+agents.md
+!**/AGENTS.md
+!docs/development/postgresql/schema-snapshot/markdown/tables/agents.md
+# Agent instructions live in AGENTS.md. CLAUDE.md overrides AGENTS.md in Claude Code.
+CLAUDE.md
+Claude.md
+.serena/
+.claire/
+.codex/worktrees
+.cursor/worktrees
+.claude/plans
+.[jJ]ules/
+
+# Images
+*.png
+*.jpeg
+*.jpg
+*.webp
+*.gif
+*.tiff
+
+# Wrangler
+**/.wrangler/
+
+# Tests
+coverage/
+coverage-affected/
+coverage-changed/
+coverage-full/
+coverage-merge-input/
+coverage-html/
+playwright-report/
+playwright/screenshots/
+playwright/.auth/
+.playwright-snapshots/
+test-results/
+test-report.junit.xml
+.vitest-reports/
+
+# Logs
+*.log
+
+# Other Stuff
+*.bak
+
+# Tool caches
+.cache/
+
+# Lychee link checker cache
+.lycheecache
+
+# dependency-cruiser incremental cache
+.dependency-cruiser-cache/
+
+# Other unused harness dirs (Claude, Codex, Grok, and Cursor use first-class trees)
+.kilocode/
+.kiro/
+.qwen/
+.grok/worktrees/
+.worktrees/
+.agent-retrospectives/
+
+# Cloudflare Worker dev secrets
+cloudflare-worker/.dev.vars
+tmp/
+coverage-artifacts/
