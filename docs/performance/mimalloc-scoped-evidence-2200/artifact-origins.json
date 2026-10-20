@@ -1,0 +1,124 @@
+{
+  "artifacts": [
+    {
+      "id": 12291811550,
+      "node_id": "MDg6QXJ0aWZhY3QxMjI5MTgxMTU1MA==",
+      "name": "mimalloc-scoped-linux-arm64-39474778706",
+      "size_in_bytes": 643395,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12291811550",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12291811550/zip",
+      "expired": false,
+      "digest": "sha256:f099b452bab97c359ce7d73659d7955d1feee170cf81fbd1c56ffe8eee0b2095",
+      "created_at": "2026-10-20T19:13:34Z",
+      "updated_at": "2026-10-20T19:13:34Z",
+      "expires_at": "2026-10-27T18:26:43Z",
+      "workflow_run": {
+        "id": 39474778706,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "eval/2200-scoped-resources",
+        "head_sha": "04b8501eb0295d16d14b16862166185aa1c780ef"
+      }
+    },
+    {
+      "id": 12288130030,
+      "node_id": "MDg6QXJ0aWZhY3QxMjI4ODEzMDAzMA==",
+      "name": "mimalloc-aarch64-unknown-linux-gnu-system",
+      "size_in_bytes": 100376760,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12288130030",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12288130030/zip",
+      "expired": false,
+      "digest": "sha256:e8567a046bf84ef725d65e012ab90ef9a561e3924ca854fa7e6631f29ebda2f8",
+      "created_at": "2026-10-20T18:06:46Z",
+      "updated_at": "2026-10-20T18:06:46Z",
+      "expires_at": "2026-10-27T17:35:34Z",
+      "workflow_run": {
+        "id": 39467428353,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "eval/2200-scoped-resources",
+        "head_sha": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f"
+      }
+    },
+    {
+      "id": 12288005096,
+      "node_id": "MDg6QXJ0aWZhY3QxMjI4ODAwNTA5Ng==",
+      "name": "mimalloc-aarch64-unknown-linux-gnu-mimalloc",
+      "size_in_bytes": 100601521,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12288005096",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12288005096/zip",
+      "expired": false,
+      "digest": "sha256:dc402c8c9efef4a227e8d93116a87212bbd02f34ce82f71654cf97190f311887",
+      "created_at": "2026-10-20T18:06:57Z",
+      "updated_at": "2026-10-20T18:06:57Z",
+      "expires_at": "2026-10-27T17:35:34Z",
+      "workflow_run": {
+        "id": 39467428353,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "eval/2200-scoped-resources",
+        "head_sha": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f"
+      }
+    },
+    {
+      "id": 12291994265,
+      "node_id": "MDg6QXJ0aWZhY3QxMjI5MTk5NDI2NQ==",
+      "name": "mimalloc-scoped-macos-arm64-39467428353",
+      "size_in_bytes": 708799,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12291994265",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12291994265/zip",
+      "expired": false,
+      "digest": "sha256:1bf4d69ae762c0bc39ef9b9d40142ccdcdfa739da1cb914bdf7d8d28253cc65a",
+      "created_at": "2026-10-20T19:41:04Z",
+      "updated_at": "2026-10-20T19:41:04Z",
+      "expires_at": "2026-10-27T17:35:34Z",
+      "workflow_run": {
+        "id": 39467428353,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "eval/2200-scoped-resources",
+        "head_sha": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f"
+      }
+    },
+    {
+      "id": 12286918367,
+      "node_id": "MDg6QXJ0aWZhY3QxMjI4NjkxODM2Nw==",
+      "name": "mimalloc-aarch64-apple-darwin-system",
+      "size_in_bytes": 104152069,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12286918367",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12286918367/zip",
+      "expired": false,
+      "digest": "sha256:cd38105c6c8193a40b6cad901fb1562e333f17f9c51556f4693c7e825b25b6b8",
+      "created_at": "2026-10-20T18:13:06Z",
+      "updated_at": "2026-10-20T18:13:06Z",
+      "expires_at": "2026-10-27T17:35:34Z",
+      "workflow_run": {
+        "id": 39467428353,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "eval/2200-scoped-resources",
+        "head_sha": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f"
+      }
+    },
+    {
+      "id": 12287024838,
+      "node_id": "MDg6QXJ0aWZhY3QxMjI4NzAyNDgzOA==",
+      "name": "mimalloc-aarch64-apple-darwin-mimalloc",
+      "size_in_bytes": 104171292,
+      "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12287024838",
+      "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12287024838/zip",
+      "expired": false,
+      "digest": "sha256:e9528ce8e2872e496351283b9734e398e6ce6ed5077c3901eaece1e628de43fc",
+      "created_at": "2026-10-20T18:20:45Z",
+      "updated_at": "2026-10-20T18:20:45Z",
+      "expires_at": "2026-10-27T17:35:34Z",
+      "workflow_run": {
+        "id": 39467428353,
+        "repository_id": 1235521884,
+        "head_repository_id": 1235521884,
+        "head_branch": "eval/2200-scoped-resources",
+        "head_sha": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f"
+      }
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+  "buildRun": 39467428353,
+  "builds": [
+    {
+      "artifact": "mimalloc-aarch64-unknown-linux-gnu-system",
+      "provenance": {
+        "variant": "system",
+        "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+        "tree": "92b1fdf89b4516bf3e3fe5c2199e5ad90e7d809c",
+        "target": "aarch64-unknown-linux-gnu",
+        "lock": {
+          "path": "Cargo.lock",
+          "sha256": "27445dbb9d2cc06e68b1cf1a9648ebfce638f53aa63b7bf09846dcc0d969cae9"
+        },
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+        "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "features": "--no-default-features --features mermaid-validation",
+        "lto": "fat",
+        "codegenUnits": 1,
+        "build_flags": {
+          "RUSTFLAGS": null,
+          "CARGO_ENCODED_RUSTFLAGS": null,
+          "RUSTC_WRAPPER": "",
+          "CARGO_PROFILE_RELEASE_DEBUG": "0",
+          "CARGO_INCREMENTAL": "0",
+          "NO_MISTAKES_BUILD_NAPI": "1"
+        },
+        "runnerOS": "Linux",
+        "imageOS": "ubuntu22-arm64",
+        "imageVersion": "20261012.156.1",
+        "machine": "aarch64",
+        "no-mistakes": {
+          "bytes": 78316024,
+          "sha256": "07482ed32d5b2a6a4e986f656217b946f46c4cca42e159d93d5c4840b83fc9ee"
+        },
+        "no-mistakes.node": {
+          "bytes": 76756536,
+          "sha256": "c5167d91e6d8edaeb16d1d8301713576cf35af42cef4204fa5e3f0228fdf8029"
+        },
+        "rayon-probe": {
+          "bytes": 114654904,
+          "sha256": "96071d1fcf8ae022daa3c43b4a609a34d46f592abf0a96bbce7f62165e2ef004"
+        }
+      },
+      "addonTls": {
+        "addonSha256": "c5167d91e6d8edaeb16d1d8301713576cf35af42cef4204fa5e3f0228fdf8029",
+        "dynamicDumpSha256": "45fb5c9dee48924b1d74e2e611f5a6c1572da5a088518eb1f25e6429641fe0ac",
+        "command": [
+          "readelf",
+          "-d",
+          "no-mistakes.node"
+        ],
+        "staticTls": false
+      },
+      "addonDynamic": "\nDynamic section at offset 0x3236828 contains 30 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libz.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-aarch64.so.1]\n 0x000000000000000c (INIT)               0x1ad2d0\n 0x000000000000000d (FINI)               0x288d84c\n 0x0000000000000019 (INIT_ARRAY)         0x30f7578\n 0x000000000000001b (INIT_ARRAYSZ)       544 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x30f7798\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x228\n 0x0000000000000005 (STRTAB)             0x1660\n 0x0000000000000006 (SYMTAB)             0x250\n 0x000000000000000a (STRSZ)              2652 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x3246a48\n 0x0000000000000002 (PLTRELSZ)           5640 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x1abcc8\n 0x0000000000000007 (RELA)               0x2388\n 0x0000000000000008 (RELASZ)             1743168 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW NODELETE\n 0x000000006ffffffe (VERNEED)            0x2268\n 0x000000006fffffff (VERNEEDNUM)         4\n 0x000000006ffffff0 (VERSYM)             0x20bc\n 0x000000006ffffff9 (RELACOUNT)          72616\n 0x0000000000000000 (NULL)               0x0\n"
+    },
+    {
+      "artifact": "mimalloc-aarch64-unknown-linux-gnu-mimalloc",
+      "provenance": {
+        "variant": "mimalloc",
+        "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+        "tree": "92b1fdf89b4516bf3e3fe5c2199e5ad90e7d809c",
+        "target": "aarch64-unknown-linux-gnu",
+        "lock": {
+          "path": "Cargo.lock",
+          "sha256": "27445dbb9d2cc06e68b1cf1a9648ebfce638f53aa63b7bf09846dcc0d969cae9"
+        },
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+        "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "features": "default",
+        "lto": "fat",
+        "codegenUnits": 1,
+        "build_flags": {
+          "RUSTFLAGS": null,
+          "CARGO_ENCODED_RUSTFLAGS": null,
+          "RUSTC_WRAPPER": "",
+          "CARGO_PROFILE_RELEASE_DEBUG": "0",
+          "CARGO_INCREMENTAL": "0",
+          "NO_MISTAKES_BUILD_NAPI": "1"
+        },
+        "runnerOS": "Linux",
+        "imageOS": "ubuntu22-arm64",
+        "imageVersion": "20261012.156.1",
+        "machine": "aarch64",
+        "no-mistakes": {
+          "bytes": 78601704,
+          "sha256": "c7aba05d658f83da127b22661e8b5d8e4d27efef4b9a6b088205843ad38db430"
+        },
+        "no-mistakes.node": {
+          "bytes": 76698072,
+          "sha256": "5d0fddf9151781a41d4fb0c9bb3e16cb177f52866061049200110841242d5e2d"
+        },
+        "rayon-probe": {
+          "bytes": 114648616,
+          "sha256": "7db07c87e0314ffb10f62435b0e2953eef25ef3681fb13b3b7955f6d7e14e25b"
+        }
+      },
+      "addonTls": {
+        "addonSha256": "5d0fddf9151781a41d4fb0c9bb3e16cb177f52866061049200110841242d5e2d",
+        "dynamicDumpSha256": "e73ef774a9a436084fdf0ca5293102d246b0c66b14f69858daf58509f8deb680",
+        "command": [
+          "readelf",
+          "-d",
+          "no-mistakes.node"
+        ],
+        "staticTls": false
+      },
+      "addonDynamic": "\nDynamic section at offset 0x3222768 contains 30 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libz.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-aarch64.so.1]\n 0x000000000000000c (INIT)               0x1afff0\n 0x000000000000000d (FINI)               0x286a54c\n 0x0000000000000019 (INIT_ARRAY)         0x30df548\n 0x000000000000001b (INIT_ARRAYSZ)       552 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x30df770\n 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x228\n 0x0000000000000005 (STRTAB)             0x1720\n 0x0000000000000006 (SYMTAB)             0x250\n 0x000000000000000a (STRSZ)              2710 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x3232988\n 0x0000000000000002 (PLTRELSZ)           5904 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x1ae8e0\n 0x0000000000000007 (RELA)               0x2498\n 0x0000000000000008 (RELASZ)             1754184 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW NODELETE\n 0x000000006ffffffe (VERNEED)            0x2378\n 0x000000006fffffff (VERNEEDNUM)         4\n 0x000000006ffffff0 (VERSYM)             0x21b6\n 0x000000006ffffff9 (RELACOUNT)          73073\n 0x0000000000000000 (NULL)               0x0\n"
+    },
+    {
+      "artifact": "mimalloc-aarch64-apple-darwin-system",
+      "provenance": {
+        "variant": "system",
+        "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+        "tree": "92b1fdf89b4516bf3e3fe5c2199e5ad90e7d809c",
+        "target": "aarch64-apple-darwin",
+        "lock": {
+          "path": "Cargo.lock",
+          "sha256": "27445dbb9d2cc06e68b1cf1a9648ebfce638f53aa63b7bf09846dcc0d969cae9"
+        },
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+        "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "features": "--no-default-features --features mermaid-validation",
+        "lto": "thin",
+        "codegenUnits": 16,
+        "build_flags": {
+          "RUSTFLAGS": null,
+          "CARGO_ENCODED_RUSTFLAGS": null,
+          "RUSTC_WRAPPER": "",
+          "CARGO_PROFILE_RELEASE_DEBUG": "0",
+          "CARGO_INCREMENTAL": "0",
+          "NO_MISTAKES_BUILD_NAPI": "1"
+        },
+        "runnerOS": "macOS",
+        "imageOS": "macos15",
+        "imageVersion": "20260907.0337.1",
+        "machine": "arm64",
+        "no-mistakes": {
+          "bytes": 99042288,
+          "sha256": "7d64b340d3ecd759d78e9a1aa9b9d68c0e62353caf88c7c4c7749a15cffa6fe3"
+        },
+        "no-mistakes.node": {
+          "bytes": 93796720,
+          "sha256": "ac625d612fe7e1219e387c20f606c56d76d94acf0f93ede23c18fb535b858189"
+        },
+        "rayon-probe": {
+          "bytes": 105273216,
+          "sha256": "4c1248217d6adbb1efcb34be9391705f65b72ef1fb66fc88bf98877f98a3f0f4"
+        }
+      }
+    },
+    {
+      "artifact": "mimalloc-aarch64-apple-darwin-mimalloc",
+      "provenance": {
+        "variant": "mimalloc",
+        "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+        "tree": "92b1fdf89b4516bf3e3fe5c2199e5ad90e7d809c",
+        "target": "aarch64-apple-darwin",
+        "lock": {
+          "path": "Cargo.lock",
+          "sha256": "27445dbb9d2cc06e68b1cf1a9648ebfce638f53aa63b7bf09846dcc0d969cae9"
+        },
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+        "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "features": "default",
+        "lto": "thin",
+        "codegenUnits": 16,
+        "build_flags": {
+          "RUSTFLAGS": null,
+          "CARGO_ENCODED_RUSTFLAGS": null,
+          "RUSTC_WRAPPER": "",
+          "CARGO_PROFILE_RELEASE_DEBUG": "0",
+          "CARGO_INCREMENTAL": "0",
+          "NO_MISTAKES_BUILD_NAPI": "1"
+        },
+        "runnerOS": "macOS",
+        "imageOS": "macos15",
+        "imageVersion": "20260907.0337.1",
+        "machine": "arm64",
+        "no-mistakes": {
+          "bytes": 99240400,
+          "sha256": "ec29a17d09ed94fbf485f4cb12393ee77fbcbb6f69260dd969e817f8bcad668a"
+        },
+        "no-mistakes.node": {
+          "bytes": 93491664,
+          "sha256": "ed022d1dd70af8491144a95b91724382d873fa4f3d9197504d543d2b829358af"
+        },
+        "rayon-probe": {
+          "bytes": 105275040,
+          "sha256": "041687d9ea149ce9220c76213c9c4a48a339ee6e80e3d35407e8aa73c169819c"
+        }
+      }
+    }
+  ]
+}

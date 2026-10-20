@@ -1,0 +1,2183 @@
+{
+  "buildRun": 39467428353,
+  "linuxRun": 39474778706,
+  "linuxHarness": "04b8501eb0295d16d14b16862166185aa1c780ef",
+  "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+  "sourceTree": "92b1fdf89b4516bf3e3fe5c2199e5ad90e7d809c",
+  "scope": "supplemental-no-adoption",
+  "adopt": false,
+  "complete": true,
+  "verifiedHelpers": {
+    "scripts/performance/mimalloc-tls.py": "78d46e0619baa8264bc3377afc736cf95900b826a7d5f596475e1e25a9d971bf",
+    "scripts/performance/mimalloc-lock-tests.py": "73431a003f5e9a017bf1baed61ce972ad803d58e12dc869a795af99c63ff43f7",
+    "scripts/performance/mimalloc-configuration-tests.py": "89e323dc0e25e75b9676eadff1dd294d67cebba836f0dc730455098f0925d1ef",
+    "scripts/performance/mimalloc-tls-tests.py": "8064daee2da2c7a7fe5c5afd1716201d29535c4579501013a3fe7236e19efc83",
+    "scripts/performance/mimalloc-scoped-contract.py": "0a215dedbeb1227817771cedbb405f0f44dc6148e6fdefde01353e3e63149cc3",
+    "scripts/performance/mimalloc-scoped-report.py": "37b571d3304a15f6d93f3ac117c2042b263708dc4d4e32baa562dc55e6e38907",
+    "scripts/performance/mimalloc-sample-worker.py": "8f2bbb06c7ac5f22fb125195686f35ad2439afb3f09de1aed76e08906ed87b2c",
+    "scripts/performance/mimalloc-report-stats.py": "d689d4c3476b3e1b15a86a0512601448c2b2af5ba217e5100385a9cd4dab04b3",
+    "scripts/performance/mimalloc-adoption.py": "18fd64f474b346b22a2465dc2d5b1cc3fc7e38e5da205cffaa805518f7547d8e",
+    "scripts/performance/mimalloc-napi-measure.py": "d64498dcd9b0afc6bd7e9f94e09efd9ea588433c41e4f97ebe75549e75697694",
+    "scripts/performance/mimalloc-size.py": "1ccdab27c3e1081b7811e39426c364ca3c2dc13012dead8ac02e3439dce6d1c3",
+    "scripts/performance/mimalloc-lock.py": "be70ad397a5658d2e2db0107438a6167f47cd053a5245bf6e3126956752110bd",
+    "scripts/performance/mimalloc-evidence-tests.py": "72494f56bc739ee4d0286525269e0379c3c112cb1826ab01e398729911d2a29e",
+    "scripts/performance/mimalloc-adoption-tests.py": "f470723da7447538c956bd8f1f2dfe62705095e7d4399cc1acb35cf98b29d87f",
+    "scripts/performance/mimalloc-scoped-origin.py": "3aca1cc1a23050054d85af198bd768cfd4f0d800ce2c9f91b2c114bf8a3aae01",
+    "scripts/performance/mimalloc-adoption-rule.py": "87cd68639a1020ea3601ad3c1e6b8f6d8ab8fcd1cf739267711fef0cf63ddda5",
+    "scripts/performance/mimalloc-sampler-tests.py": "3d3501fc68b26649e06aa35adfdb053ee8f1123789428c7d6cf394b92250a75b",
+    "scripts/performance/mimalloc-napi-measure-tests.py": "cf3b89e3cebb867260014807c88491132d38c5bf1e277c868051fd95c0ba6924",
+    "scripts/performance/mimalloc-report-matrix.py": "3d97102cd4dd7341f4baefff0ec17237e4b3fd7a67517e7ed785e29ebf359780",
+    "scripts/performance/mimalloc-artifact.py": "88da451717392622d52097385bd4c5dd0c357a4ebd657d38a5840aed3c6f9677",
+    "scripts/performance/mimalloc-scoped-tests.py": "291f78e0f849f201a4b31a0ff672bc7e38f3da4857a1053ca6f831ffc0bd3094",
+    "scripts/performance/mimalloc-size-tests.py": "1ae2a35a9283ebafedb5f0c8db8dcedda548806bdbe91bb66f5e12fdfa9750c8",
+    "scripts/performance/mimalloc-report.py": "3b3070a15be671858cd3836a2b5acdb26bf4d5e253c6fac3a176c50a0c9d3324",
+    "scripts/performance/mimalloc-measure.py": "d3710282841a9f6cf9cc4df848dc2cc4074f02c273f7c7fd6d6a53a609bab0c4",
+    "scripts/performance/mimalloc-scoped-measure.py": "a2d7356a715db6a179bf72845414c4daaf88821c1e91308080d10b823db084e4",
+    "scripts/performance/mimalloc-artifact-tests.py": "8c81bbade1340c949debf13592f3f7bef7fdd815e780f19286d8f8d0ba430ef0",
+    "scripts/performance/mimalloc-report-tests.py": "92c4c16cebb5640fb5f132ad03553715a6a4ea8d15296f292c813ab65d9945fe",
+    "fixtures/performance/mimalloc-scoped/README.md": "318c54fc7d4a8770bd225419877aeb350232c5e4c7c112291fbf5205202ba06e",
+    "fixtures/performance/mimalloc-scoped/annotation/.no-mistakes.yml": "eb749ee8fb179989ef7d1d9498f9701876a7645be2c9d2a7563c7d0a678d72f4",
+    "fixtures/performance/mimalloc-scoped/annotation/contract.json": "fe2e1a10dccaddcdfcc4eaabc70fcbf2e209cc6e8a15285384959c089da0ea74",
+    "fixtures/performance/mimalloc-scoped/annotation/src/db.mts": "5794d50d9158a1578ab4a272f323bf6dd46e0f3ff507bca0668997e2546be0e2",
+    "fixtures/performance/mimalloc-scoped/annotation/src/dense.mts": "c3376f039d03cfb4a8e673e5a5336af14afd0bc19d8c2987b68b332f75df987f",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-00.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-01.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-02.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-03.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-04.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-05.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-06.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-07.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-08.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-09.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-10.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-11.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-12.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-13.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-14.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-15.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-16.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-17.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-18.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-19.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-20.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-21.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-22.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-23.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-24.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-25.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-26.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-27.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-28.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-29.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-30.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/src/entry-31.mts": "3b6988ab5c3c6ecc0533c6468f349531e38bd7749e29aaea7879400f278deb18",
+    "fixtures/performance/mimalloc-scoped/annotation/tsconfig.json": "88a90145ecf7e4d65df484b23b984b596f26f734eb7cf7b98de9a9d1a884ea48",
+    "fixtures/performance/mimalloc-scoped/consumer/config.yml": "b91522a8c0b3840029a60844a64ca7a4dae120a5903e9d708ec2377e61db4c66",
+    "fixtures/performance/mimalloc-scoped/consumer/consumer.gitignore": "116a90411abf2bb9f2efef56dd64f7ba8a02ab13cc4caa047c5bfcba55e68e57",
+    "fixtures/performance/mimalloc-scoped/consumer/contract.json": "3a068da85bef536c06d9fa43d2bcda0c42fe56c81779e67e8f58dbca342b6f55",
+    "scripts/performance/fixtures/mimalloc-scoped/annotation.stdout": "aab3144f91b51f35ad0a2adb1f6f277254211633b9b6a09a92f7a3a5045ab7b9"
+  },
+  "cells": [
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "annotation-workers",
+      "diagnostics": false,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              4.316223635999904,
+              4.3188902660003805,
+              4.31090865599981,
+              4.323017951000111
+            ],
+            "median": 4.317556951000142,
+            "max": 4.323017951000111
+          },
+          "cpu_seconds": {
+            "samples": [
+              4.296237,
+              4.288601,
+              4.286123000000001,
+              4.280190999999999
+            ],
+            "median": 4.287362,
+            "max": 4.296237
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              29765632,
+              29765632,
+              29765632,
+              29761536
+            ],
+            "median": 29765632.0,
+            "max": 29765632
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              3.8722534869998526,
+              3.8747009379999326,
+              3.862423306999972,
+              3.8750987780003925
+            ],
+            "median": 3.8734772124998926,
+            "max": 3.8750987780003925
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.849284,
+              3.858957,
+              3.850765,
+              3.850925
+            ],
+            "median": 3.850845,
+            "max": 3.858957
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              45805568,
+              45809664,
+              45805568,
+              45805568
+            ],
+            "median": 45805568.0,
+            "max": 45809664
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.8971392155640238,
+            0.8971519764006876,
+            0.8959650076612854,
+            0.8963873899954327
+          ],
+          "median": 0.8967633027797282
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8959664003638533,
+            0.8998172131191501,
+            0.8984261534258348,
+            0.8997086812247399
+          ],
+          "median": 0.8990674173252873
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.5388743635613045,
+            1.5390119719278932,
+            1.5388743635613045,
+            1.5390861546930912
+          ],
+          "median": 1.5389431677445988
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "annotation-workers",
+      "diagnostics": false,
+      "jobs": "max",
+      "effective_jobs": 4,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              1.1553812689999177,
+              1.154382399000042,
+              1.158989168000062,
+              1.1549062829999457
+            ],
+            "median": 1.1551437759999317,
+            "max": 1.158989168000062
+          },
+          "cpu_seconds": {
+            "samples": [
+              4.2994580000000004,
+              4.29815,
+              4.309285,
+              4.294333999999999
+            ],
+            "median": 4.2988040000000005,
+            "max": 4.309285
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              33914880,
+              33665024,
+              33845248,
+              33583104
+            ],
+            "median": 33755136.0,
+            "max": 33914880
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              1.057057603999965,
+              1.0539316710001003,
+              1.0543770919998678,
+              1.0546638969999549
+            ],
+            "median": 1.0545204944999114,
+            "max": 1.057057603999965
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.877159,
+              3.874122,
+              3.875158,
+              3.8799200000000003
+            ],
+            "median": 3.8761585,
+            "max": 3.8799200000000003
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              96096256,
+              104353792,
+              98062336,
+              93863936
+            ],
+            "median": 97079296.0,
+            "max": 104353792
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.9148993776876266,
+            0.9129831431188186,
+            0.9097385213869501,
+            0.9132030126811636
+          ],
+          "median": 0.9130930778999911
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.9017785497613884,
+            0.9013463932156859,
+            0.899257765499381,
+            0.9034974922770331
+          ],
+          "median": 0.9015624714885371
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            2.8334541062801932,
+            3.099768828324614,
+            2.8973738351688247,
+            2.7949749969508475
+          ],
+          "median": 2.865413970724509
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "annotation-workers",
+      "diagnostics": true,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              4.321538270000019,
+              4.323367491999761,
+              4.321651833000033,
+              4.317741944999852
+            ],
+            "median": 4.321595051500026,
+            "max": 4.323367491999761
+          },
+          "cpu_seconds": {
+            "samples": [
+              4.306855,
+              4.302089,
+              4.296343,
+              4.309626000000001
+            ],
+            "median": 4.304472,
+            "max": 4.309626000000001
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              30035968,
+              29904896,
+              30035968,
+              30035968
+            ],
+            "median": 30035968.0,
+            "max": 30035968
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              3.865122693000103,
+              3.8624279749997186,
+              3.8720206269999835,
+              3.8668042979998063
+            ],
+            "median": 3.8659634954999547,
+            "max": 3.8720206269999835
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.851199,
+              3.855883,
+              3.8473759999999997,
+              3.846973
+            ],
+            "median": 3.8492875,
+            "max": 3.855883
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              53194752,
+              53260288,
+              53846016,
+              53198848
+            ],
+            "median": 53229568.0,
+            "max": 53846016
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.8943858532577766,
+            0.8933841460729408,
+            0.8959584845390192,
+            0.8955616957325917
+          ],
+          "median": 0.8949737744951842
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8942021498285873,
+            0.896281550660621,
+            0.8955001963297622,
+            0.8926466008883369
+          ],
+          "median": 0.8948511730791747
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.771035047047593,
+            1.7809889056293657,
+            1.7927178508114006,
+            1.7711714168825856
+          ],
+          "median": 1.7760801612559756
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "annotation-workers",
+      "diagnostics": true,
+      "jobs": "max",
+      "effective_jobs": 4,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              1.156189307999739,
+              1.157795293000163,
+              1.1540030609999121,
+              1.1596022070002618
+            ],
+            "median": 1.156992300499951,
+            "max": 1.1596022070002618
+          },
+          "cpu_seconds": {
+            "samples": [
+              4.311154,
+              4.314402,
+              4.30285,
+              4.293766000000001
+            ],
+            "median": 4.307002000000001,
+            "max": 4.314402
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              34181120,
+              34164736,
+              33992704,
+              34246656
+            ],
+            "median": 34172928.0,
+            "max": 34246656
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              1.055273445000239,
+              1.0546698190000825,
+              1.0557451680001577,
+              1.0545073079997564
+            ],
+            "median": 1.0549716320001608,
+            "max": 1.0557451680001577
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.874015,
+              3.874913,
+              3.879461,
+              3.8815749999999998
+            ],
+            "median": 3.877187,
+            "max": 3.8815749999999998
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              96161792,
+              89714688,
+              91828224,
+              96149504
+            ],
+            "median": 93988864.0,
+            "max": 96161792
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.9127168342578007,
+            0.9109294409611441,
+            0.9148547379808364,
+            0.909369869800117
+          ],
+          "median": 0.9118231376094724
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.898602787095984,
+            0.8981344343897485,
+            0.9016026587029526,
+            0.9040024537899828
+          ],
+          "median": 0.9001027228994682
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            2.813301378070701,
+            2.625944131399113,
+            2.7014098084106517,
+            2.8075589044372684
+          ],
+          "median": 2.7544843564239603
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "consumer-non-annotation",
+      "diagnostics": false,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              92.28140206199998,
+              93.88597481400001,
+              93.23689226800002,
+              91.37021941399996
+            ],
+            "median": 92.759147165,
+            "max": 93.88597481400001
+          },
+          "cpu_seconds": {
+            "samples": [
+              91.803006,
+              93.854895,
+              93.19958600000001,
+              91.35095199999999
+            ],
+            "median": 92.501296,
+            "max": 93.854895
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              5976043520,
+              5993029632,
+              5969600512,
+              5990350848
+            ],
+            "median": 5983197184.0,
+            "max": 5993029632
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              70.32720741300002,
+              70.42822734599997,
+              71.41292857400003,
+              70.61112592699999
+            ],
+            "median": 70.51967663649998,
+            "max": 71.41292857400003
+          },
+          "cpu_seconds": {
+            "samples": [
+              70.290224,
+              70.416522,
+              71.396779,
+              70.598856
+            ],
+            "median": 70.507689,
+            "max": 71.396779
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6078287872,
+              6082740224,
+              6083317760,
+              6084968448
+            ],
+            "median": 6083028992.0,
+            "max": 6084968448
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.7620951333807232,
+            0.7501464141532023,
+            0.7659299536575156,
+            0.7728024117689793
+          ],
+          "median": 0.7640125435191194
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.7656636428658992,
+            0.7502701057840404,
+            0.7660632634140669,
+            0.7728310921160406
+          ],
+          "median": 0.765863453139983
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0171090373853235,
+            1.0149691554203215,
+            1.0190493899501998,
+            1.0157950013948833
+          ],
+          "median": 1.0164520193901034
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "consumer-non-annotation",
+      "diagnostics": false,
+      "jobs": "4",
+      "effective_jobs": 4,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              46.94022469099991,
+              43.48116748799998,
+              47.344573966999974,
+              43.86719868
+            ],
+            "median": 45.40371168549996,
+            "max": 47.344573966999974
+          },
+          "cpu_seconds": {
+            "samples": [
+              89.53099,
+              90.45430599999999,
+              89.072309,
+              88.587384
+            ],
+            "median": 89.3016495,
+            "max": 90.45430599999999
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              7266164736,
+              7237996544,
+              7024418816,
+              7289634816
+            ],
+            "median": 7252080640.0,
+            "max": 7289634816
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              36.15498491000005,
+              37.811930308,
+              36.248893296000006,
+              36.60302486499995
+            ],
+            "median": 36.42595908049998,
+            "max": 37.811930308
+          },
+          "cpu_seconds": {
+            "samples": [
+              71.450537,
+              72.179317,
+              71.862998,
+              70.768062
+            ],
+            "median": 71.6567675,
+            "max": 72.179317
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6197747712,
+              6198689792,
+              6218551296,
+              6219112448
+            ],
+            "median": 6208620544.0,
+            "max": 6219112448
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.7702345940609064,
+            0.8696162613029057,
+            0.7656398665930787,
+            0.834405340810788
+          ],
+          "median": 0.8023199674358472
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.798053690682969,
+            0.797964410892722,
+            0.806793927392182,
+            0.7988503419403377
+          ],
+          "median": 0.7984520163116533
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            0.852959977812427,
+            0.8564096092500152,
+            0.8852762710895853,
+            0.8531445819960263
+          ],
+          "median": 0.8547770956230207
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "consumer-non-annotation",
+      "diagnostics": false,
+      "jobs": "max",
+      "effective_jobs": 4,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              47.370416935999856,
+              47.09729002900008,
+              43.51569650900001,
+              48.056309403999876
+            ],
+            "median": 47.23385348249997,
+            "max": 48.056309403999876
+          },
+          "cpu_seconds": {
+            "samples": [
+              88.40229,
+              88.72742199999999,
+              89.63692,
+              90.840877
+            ],
+            "median": 89.182171,
+            "max": 90.840877
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6960484352,
+              6981079040,
+              7237074944,
+              6958780416
+            ],
+            "median": 6970781696.0,
+            "max": 7237074944
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              37.889633587999924,
+              36.59280775900015,
+              36.440954207000004,
+              37.45079313500014
+            ],
+            "median": 37.021800447000146,
+            "max": 37.889633587999924
+          },
+          "cpu_seconds": {
+            "samples": [
+              71.211113,
+              70.49843399999999,
+              70.246007,
+              71.296291
+            ],
+            "median": 70.8547735,
+            "max": 71.296291
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6198378496,
+              6259613696,
+              6267461632,
+              6187290624
+            ],
+            "median": 6228996096.0,
+            "max": 6267461632
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.7998585623426323,
+            0.7769620658952605,
+            0.837420910853701,
+            0.7793106378635684
+          ],
+          "median": 0.7895846001031004
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8055347095646505,
+            0.7945506858071454,
+            0.7836726987049533,
+            0.784848114136987
+          ],
+          "median": 0.7896993999720662
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            0.8905096517053416,
+            0.8966541791224297,
+            0.8660213802533755,
+            0.8891343387950352
+          ],
+          "median": 0.8898219952501885
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "consumer-non-annotation",
+      "diagnostics": true,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              91.01553065100006,
+              93.01313908099996,
+              94.211807163,
+              92.18464624199987
+            ],
+            "median": 92.59889266149992,
+            "max": 94.211807163
+          },
+          "cpu_seconds": {
+            "samples": [
+              91.03557,
+              93.00522500000001,
+              94.167852,
+              92.169852
+            ],
+            "median": 92.58753850000001,
+            "max": 94.167852
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6011916288,
+              5996625920,
+              5996867584,
+              5996937216
+            ],
+            "median": 5996902400.0,
+            "max": 6011916288
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              70.5399637449998,
+              70.21662324800013,
+              70.10751501899995,
+              69.86236798899995
+            ],
+            "median": 70.16206913350004,
+            "max": 70.5399637449998
+          },
+          "cpu_seconds": {
+            "samples": [
+              70.522917,
+              70.196148,
+              70.064007,
+              69.840898
+            ],
+            "median": 70.1300775,
+            "max": 70.522917
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6094290944,
+              6097596416,
+              6093901824,
+              6098300928
+            ],
+            "median": 6095943680.0,
+            "max": 6098300928
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.7750321647355546,
+            0.7549108001489164,
+            0.744147863523134,
+            0.7578525365883569
+          ],
+          "median": 0.7563816683686366
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.7746743058784605,
+            0.7547548860830129,
+            0.7440331866123484,
+            0.7577412405956776
+          ],
+          "median": 0.7562480633393452
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0137018967087787,
+            1.0168378847283508,
+            1.016180820843684,
+            1.0169025801586782
+          ],
+          "median": 1.0165093527860174
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "consumer-non-annotation",
+      "diagnostics": true,
+      "jobs": "4",
+      "effective_jobs": 4,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              43.630873087000055,
+              44.120348363000176,
+              45.909049892999974,
+              47.67267088399967
+            ],
+            "median": 45.014699128000075,
+            "max": 47.67267088399967
+          },
+          "cpu_seconds": {
+            "samples": [
+              89.356365,
+              90.759556,
+              89.983684,
+              90.259574
+            ],
+            "median": 90.121629,
+            "max": 90.759556
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              7345324032,
+              7255621632,
+              7213928448,
+              6935244800
+            ],
+            "median": 7234775040.0,
+            "max": 7345324032
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              39.603673959999924,
+              37.427667101000225,
+              38.08354194200001,
+              36.99828841899989
+            ],
+            "median": 37.75560452150012,
+            "max": 39.603673959999924
+          },
+          "cpu_seconds": {
+            "samples": [
+              72.92199600000001,
+              72.584772,
+              72.383936,
+              71.458884
+            ],
+            "median": 72.484354,
+            "max": 72.92199600000001
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6221729792,
+              6220820480,
+              6231027712,
+              6241882112
+            ],
+            "median": 6226378752.0,
+            "max": 6241882112
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.9076984061499322,
+            0.8483085127312252,
+            0.8295432388768915,
+            0.776090110600822
+          ],
+          "median": 0.8389258758040583
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8160806004138599,
+            0.7997479846640061,
+            0.8044117864745347,
+            0.7917042019276537
+          ],
+          "median": 0.8020798855692703
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            0.8470327197132425,
+            0.8573793942842691,
+            0.8637495862226772,
+            0.9000233289530025
+          ],
+          "median": 0.8605644902534731
+        }
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "measurementRun": 39474778706,
+      "workload": "consumer-non-annotation",
+      "diagnostics": true,
+      "jobs": "max",
+      "effective_jobs": 4,
+      "automatic_jobs": 4,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              46.75084640999967,
+              42.313829824000095,
+              44.53495740000017,
+              45.700400235000416
+            ],
+            "median": 45.11767881750029,
+            "max": 46.75084640999967
+          },
+          "cpu_seconds": {
+            "samples": [
+              89.134183,
+              90.517748,
+              88.08802200000001,
+              88.739843
+            ],
+            "median": 88.937013,
+            "max": 90.517748
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              7379202048,
+              7340122112,
+              7353229312,
+              7266320384
+            ],
+            "median": 7346675712.0,
+            "max": 7379202048
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              36.89986114400017,
+              38.48762908499975,
+              38.636650098000246,
+              38.12357180700019
+            ],
+            "median": 38.30560044599997,
+            "max": 38.636650098000246
+          },
+          "cpu_seconds": {
+            "samples": [
+              71.098041,
+              72.27172,
+              71.774593,
+              71.87342600000001
+            ],
+            "median": 71.8240095,
+            "max": 72.27172
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              6253035520,
+              6193262592,
+              6193340416,
+              6236610560
+            ],
+            "median": 6214975488.0,
+            "max": 6253035520
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.7892875525801722,
+            0.909575645718787,
+            0.8675578097218546,
+            0.8342065192199918
+          ],
+          "median": 0.8508821644709232
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.797651794261692,
+            0.7984259617241031,
+            0.8148053659327257,
+            0.8099341126848738
+          ],
+          "median": 0.8041800372044885
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            0.8473864083576317,
+            0.8437547083685356,
+            0.8422612913611799,
+            0.8582900602253434
+          ],
+          "median": 0.8455705583630837
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "annotation-workers",
+      "diagnostics": false,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              3.7875361249998605,
+              3.327409166999132,
+              3.268141958000342,
+              3.1033701669994116
+            ],
+            "median": 3.297775562499737,
+            "max": 3.7875361249998605
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.458724,
+              3.189235,
+              3.158594,
+              3.0470099999999998
+            ],
+            "median": 3.1739145,
+            "max": 3.458724
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              32866304,
+              32587776,
+              33341440,
+              33816576
+            ],
+            "median": 33103872.0,
+            "max": 33816576
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              3.245696124999995,
+              2.9626834579994465,
+              2.7527924169999096,
+              3.3163180419996934
+            ],
+            "median": 3.1041897914997207,
+            "max": 3.3163180419996934
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.1897640000000003,
+              2.770403,
+              2.663602,
+              3.224691
+            ],
+            "median": 2.9800835,
+            "max": 3.224691
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              33177600,
+              33226752,
+              33243136,
+              33226752
+            ],
+            "median": 33226752.0,
+            "max": 33243136
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.8569412984807147,
+            0.890387478457115,
+            0.8423111518338829,
+            1.0686182645127948
+          ],
+          "median": 0.8736643884689148
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.9222372181185894,
+            0.8686732084653529,
+            0.8432872347633156,
+            1.0583132316598896
+          ],
+          "median": 0.8954552132919711
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0094715852442673,
+            1.0196078431372548,
+            0.9970515970515971,
+            0.9825581395348837
+          ],
+          "median": 1.0032615911479321
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "annotation-workers",
+      "diagnostics": false,
+      "jobs": "max",
+      "effective_jobs": 3,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              1.2870609169995078,
+              1.4210256249998565,
+              1.3447370410003714,
+              1.2750181250003152
+            ],
+            "median": 1.3158989789999396,
+            "max": 1.4210256249998565
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.4957939999999996,
+              3.54667,
+              3.513947,
+              3.425693
+            ],
+            "median": 3.5048705,
+            "max": 3.54667
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              34684928,
+              34996224,
+              34586624,
+              34652160
+            ],
+            "median": 34668544.0,
+            "max": 34996224
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              1.161687499999971,
+              1.3947543340000266,
+              1.211229500000627,
+              1.3305398339998646
+            ],
+            "median": 1.2708846670002458,
+            "max": 1.3947543340000266
+          },
+          "cpu_seconds": {
+            "samples": [
+              2.967354,
+              3.106019,
+              3.052255,
+              3.151809
+            ],
+            "median": 3.0791370000000002,
+            "max": 3.151809
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              38567936,
+              40435712,
+              41549824,
+              40878080
+            ],
+            "median": 40656896.0,
+            "max": 41549824
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.9025893682702939,
+            0.981512443873183,
+            0.9007184773460052,
+            1.0435458193973013
+          ],
+          "median": 0.9420509060717385
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8488354863015384,
+            0.8757564137627689,
+            0.8686115641470973,
+            0.9200500453484887
+          ],
+          "median": 0.8721839889549331
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.1119508738781294,
+            1.155430711610487,
+            1.201326385599242,
+            1.1796690307328606
+          ],
+          "median": 1.1675498711716736
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "annotation-workers",
+      "diagnostics": true,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              3.1560536670003785,
+              2.856694917000823,
+              2.8552457080004388,
+              2.7726219590003893
+            ],
+            "median": 2.855970312500631,
+            "max": 3.1560536670003785
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.128494,
+              2.817803,
+              2.8215909999999997,
+              2.654639
+            ],
+            "median": 2.8196969999999997,
+            "max": 3.128494
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              33849344,
+              33751040,
+              33177600,
+              33849344
+            ],
+            "median": 33800192.0,
+            "max": 33849344
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              2.7756588329993974,
+              2.634511250000287,
+              3.0320840000003955,
+              2.517607415999919
+            ],
+            "median": 2.705085041499842,
+            "max": 3.0320840000003955
+          },
+          "cpu_seconds": {
+            "samples": [
+              2.617323,
+              2.603825,
+              2.877074,
+              2.4323349999999997
+            ],
+            "median": 2.6105739999999997,
+            "max": 2.877074
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              35504128,
+              35536896,
+              35618816,
+              35815424
+            ],
+            "median": 35577856.0,
+            "max": 35815424
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.8794713670498128,
+            0.9222235228276314,
+            1.0619345268620677,
+            0.9080240484381035
+          ],
+          "median": 0.9151237856328674
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8366079653660835,
+            0.9240621150591436,
+            1.0196637287260981,
+            0.9162582935005474
+          ],
+          "median": 0.9201602042798456
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0488867376573088,
+            1.0529126213592233,
+            1.0735802469135802,
+            1.058083252662149
+          ],
+          "median": 1.0554979370106863
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "annotation-workers",
+      "diagnostics": true,
+      "jobs": "max",
+      "effective_jobs": 3,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              1.3666517920000842,
+              1.4115709999996398,
+              1.3431141250002838,
+              1.3482913339994411
+            ],
+            "median": 1.3574715629997627,
+            "max": 1.4115709999996398
+          },
+          "cpu_seconds": {
+            "samples": [
+              3.462908,
+              3.5110569999999997,
+              3.5807420000000003,
+              3.656443
+            ],
+            "median": 3.5458995,
+            "max": 3.656443
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              35586048,
+              35504128,
+              35241984,
+              35487744
+            ],
+            "median": 35495936.0,
+            "max": 35586048
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              1.4020768330001374,
+              1.1145369580008264,
+              1.3056894999999713,
+              1.3264021669992871
+            ],
+            "median": 1.3160458334996292,
+            "max": 1.4020768330001374
+          },
+          "cpu_seconds": {
+            "samples": [
+              2.941664,
+              2.9170439999999997,
+              3.291388,
+              3.180923
+            ],
+            "median": 3.0612934999999997,
+            "max": 3.291388
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              40615936,
+              39534592,
+              40452096,
+              41484288
+            ],
+            "median": 40534016.0,
+            "max": 41484288
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            1.0259210438294666,
+            0.7895720144442687,
+            0.9721359307420696,
+            0.9837652542531561
+          ],
+          "median": 0.9779505924976128
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8494779532115782,
+            0.8308164749247876,
+            0.919191608890001,
+            0.8699501127188364
+          ],
+          "median": 0.8597140329652073
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.1413443830570902,
+            1.1135209967697277,
+            1.1478382147838215,
+            1.1689750692520775
+          ],
+          "median": 1.1445912989204559
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "consumer-non-annotation",
+      "diagnostics": false,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              125.885038958,
+              129.25542220800003,
+              121.01290329099993,
+              147.85451549999993
+            ],
+            "median": 127.57023058300001,
+            "max": 147.85451549999993
+          },
+          "cpu_seconds": {
+            "samples": [
+              115.749208,
+              118.724437,
+              111.077719,
+              136.113573
+            ],
+            "median": 117.23682249999999,
+            "max": 136.113573
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3319922688,
+              3630989312,
+              3638378496,
+              3591520256
+            ],
+            "median": 3611254784.0,
+            "max": 3638378496
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              140.95642404199998,
+              131.52628783300003,
+              119.72416637499998,
+              127.81205100000011
+            ],
+            "median": 129.66916941650007,
+            "max": 140.95642404199998
+          },
+          "cpu_seconds": {
+            "samples": [
+              123.652085,
+              115.585211,
+              107.00055699999999,
+              113.493836
+            ],
+            "median": 114.5395235,
+            "max": 123.652085
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3556392960,
+              3693871104,
+              3683319808,
+              3856515072
+            ],
+            "median": 3688595456.0,
+            "max": 3856515072
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            1.1197234016746689,
+            1.0175688229260176,
+            0.9893504173443313,
+            0.8644446912411016
+          ],
+          "median": 1.0034596201351744
+        },
+        "cpu_seconds": {
+          "samples": [
+            1.0682758624145403,
+            0.9735587206869636,
+            0.963294510936077,
+            0.8338171829491244
+          ],
+          "median": 0.9684266158115202
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0712276442022977,
+            1.0173180878809482,
+            1.0123520167155253,
+            1.0737834669196977
+          ],
+          "median": 1.044272866041623
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "consumer-non-annotation",
+      "diagnostics": false,
+      "jobs": "4",
+      "effective_jobs": 4,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              85.05884216699997,
+              72.73415358300008,
+              73.99776462500017,
+              76.90396774999999
+            ],
+            "median": 75.45086618750008,
+            "max": 85.05884216699997
+          },
+          "cpu_seconds": {
+            "samples": [
+              131.614115,
+              116.598162,
+              120.14939700000001,
+              121.963635
+            ],
+            "median": 121.056516,
+            "max": 131.614115
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3840950272,
+              3959504896,
+              3881074688,
+              3871096832
+            ],
+            "median": 3876085760.0,
+            "max": 3959504896
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              67.00952829199991,
+              61.43453295900008,
+              69.75769141599994,
+              78.59443041600002
+            ],
+            "median": 68.38360985399993,
+            "max": 78.59443041600002
+          },
+          "cpu_seconds": {
+            "samples": [
+              100.78887499999999,
+              90.303543,
+              101.614172,
+              114.10564600000001
+            ],
+            "median": 101.2015235,
+            "max": 114.10564600000001
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3888267264,
+              3873685504,
+              4039147520,
+              4023992320
+            ],
+            "median": 3956129792.0,
+            "max": 4039147520
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.7878020272182521,
+            0.8446449148390032,
+            0.9426999824861234,
+            1.0219814752796033
+          ],
+          "median": 0.8936724486625633
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.7657907740366601,
+            0.7744851329646174,
+            0.8457318516546528,
+            0.9355710495181618
+          ],
+          "median": 0.8101084923096351
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0123190847704888,
+            0.9783257265102268,
+            1.0407291394027407,
+            1.039496683920719
+          ],
+          "median": 1.025907884345604
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "consumer-non-annotation",
+      "diagnostics": false,
+      "jobs": "max",
+      "effective_jobs": 3,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              84.4425345420002,
+              89.53307483300023,
+              82.84710120799991,
+              89.8349203329999
+            ],
+            "median": 86.98780468750022,
+            "max": 89.8349203329999
+          },
+          "cpu_seconds": {
+            "samples": [
+              133.976494,
+              138.629589,
+              128.498738,
+              131.412961
+            ],
+            "median": 132.6947275,
+            "max": 138.629589
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3911434240,
+              3769630720,
+              3813605376,
+              3717480448
+            ],
+            "median": 3791618048.0,
+            "max": 3911434240
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              80.47560033400009,
+              80.23630166700013,
+              77.22350320799978,
+              81.07675845800031
+            ],
+            "median": 80.35595100050011,
+            "max": 81.07675845800031
+          },
+          "cpu_seconds": {
+            "samples": [
+              121.18069,
+              118.890667,
+              114.7792,
+              123.029591
+            ],
+            "median": 120.03567849999999,
+            "max": 123.029591
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3908632576,
+              3761160192,
+              3860135936,
+              3847667712
+            ],
+            "median": 3853901824.0,
+            "max": 3908632576
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.9530220850248516,
+            0.8961638122745063,
+            0.932120763213172,
+            0.9025082691392741
+          ],
+          "median": 0.9173145161762231
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.9044921715894432,
+            0.8576139326215558,
+            0.8932321187465669,
+            0.9362059119876311
+          ],
+          "median": 0.898862145168005
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            0.9992837246319141,
+            0.9977529554937413,
+            1.012201199498204,
+            1.0350202955526075
+          ],
+          "median": 1.005742462065059
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "consumer-non-annotation",
+      "diagnostics": true,
+      "jobs": "1",
+      "effective_jobs": 1,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              128.41087770900003,
+              116.68194254199989,
+              104.7519977500001,
+              119.44480216700003
+            ],
+            "median": 118.06337235449996,
+            "max": 128.41087770900003
+          },
+          "cpu_seconds": {
+            "samples": [
+              118.43033,
+              108.585398,
+              98.143299,
+              111.895482
+            ],
+            "median": 110.24044,
+            "max": 118.43033
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3844702208,
+              3922935808,
+              4077633536,
+              3972972544
+            ],
+            "median": 3947954176.0,
+            "max": 4077633536
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              124.8407941659998,
+              114.78671629100018,
+              97.98020479200022,
+              106.25527583300027
+            ],
+            "median": 110.52099606200022,
+            "max": 124.8407941659998
+          },
+          "cpu_seconds": {
+            "samples": [
+              114.934536,
+              105.806047,
+              90.745535,
+              98.356759
+            ],
+            "median": 102.081403,
+            "max": 114.934536
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3891445760,
+              3946921984,
+              4142252032,
+              4150493184
+            ],
+            "median": 4044587008.0,
+            "max": 4150493184
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.9721979663507119,
+            0.9837573303142642,
+            0.9353540447585414,
+            0.889576389305254
+          ],
+          "median": 0.9537760055546267
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.9704822742620071,
+            0.9744040078022278,
+            0.9246228313560155,
+            0.8790056331318185
+          ],
+          "median": 0.9475525528090113
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0121579122312092,
+            1.0061143432301607,
+            1.0158470582090091,
+            1.044682070674788
+          ],
+          "median": 1.014002485220109
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "consumer-non-annotation",
+      "diagnostics": true,
+      "jobs": "4",
+      "effective_jobs": 4,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              82.01551095900004,
+              71.60353075000012,
+              68.84676512500027,
+              70.73842483300041
+            ],
+            "median": 71.17097779150026,
+            "max": 82.01551095900004
+          },
+          "cpu_seconds": {
+            "samples": [
+              125.749495,
+              117.50028800000001,
+              117.616721,
+              120.54160100000001
+            ],
+            "median": 119.079161,
+            "max": 125.749495
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              4026286080,
+              4029235200,
+              4012425216,
+              3922411520
+            ],
+            "median": 4019355648.0,
+            "max": 4029235200
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              95.68575737499987,
+              93.05439133299978,
+              64.08202562500037,
+              74.34344929100007
+            ],
+            "median": 83.69892031199993,
+            "max": 95.68575737499987
+          },
+          "cpu_seconds": {
+            "samples": [
+              147.83294999999998,
+              143.93213599999999,
+              104.89427500000001,
+              107.645285
+            ],
+            "median": 125.7887105,
+            "max": 147.83294999999998
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              4069752832,
+              4030251008,
+              4138762240,
+              4124622848
+            ],
+            "median": 4097187840.0,
+            "max": 4138762240
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            1.1666787935130178,
+            1.2995782520542765,
+            0.9307921077867798,
+            1.050962747142171
+          ],
+          "median": 1.1088207703275943
+        },
+        "cpu_seconds": {
+          "samples": [
+            1.1756146615141476,
+            1.2249513465022313,
+            0.8918313153790438,
+            0.893013566328856
+          ],
+          "median": 1.0343141139215017
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.0107957435553114,
+            1.000252109382942,
+            1.0314864495159228,
+            1.0515528080031746
+          ],
+          "median": 1.0211410965356171
+        }
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "measurementRun": 39467428353,
+      "workload": "consumer-non-annotation",
+      "diagnostics": true,
+      "jobs": "max",
+      "effective_jobs": 3,
+      "automatic_jobs": 3,
+      "samplesPerAllocator": 4,
+      "resources": {
+        "system": {
+          "wall_seconds": {
+            "samples": [
+              79.72950008400039,
+              67.4732851660001,
+              93.32321379200039,
+              93.27840487499998
+            ],
+            "median": 86.50395247950019,
+            "max": 93.32321379200039
+          },
+          "cpu_seconds": {
+            "samples": [
+              129.548717,
+              114.334404,
+              153.443313,
+              149.91133000000002
+            ],
+            "median": 139.73002350000002,
+            "max": 153.443313
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              3720544256,
+              4004773888,
+              3946053632,
+              3926392832
+            ],
+            "median": 3936223232.0,
+            "max": 4004773888
+          }
+        },
+        "mimalloc": {
+          "wall_seconds": {
+            "samples": [
+              73.40844841699982,
+              64.23983445900012,
+              70.5621807080006,
+              84.50856454200039
+            ],
+            "median": 71.9853145625002,
+            "max": 84.50856454200039
+          },
+          "cpu_seconds": {
+            "samples": [
+              113.251668,
+              103.455636,
+              111.38257899999999,
+              132.570207
+            ],
+            "median": 112.3171235,
+            "max": 132.570207
+          },
+          "peak_rss_bytes": {
+            "samples": [
+              4108402688,
+              4036362240,
+              4061822976,
+              4186357760
+            ],
+            "median": 4085112832.0,
+            "max": 4186357760
+          }
+        }
+      },
+      "pairedRatios": {
+        "wall_seconds": {
+          "samples": [
+            0.92071878463629,
+            0.9520780602419917,
+            0.7561053444352036,
+            0.9059820936608872
+          ],
+          "median": 0.9133504391485886
+        },
+        "cpu_seconds": {
+          "samples": [
+            0.8742013863402444,
+            0.9048513166693027,
+            0.7258874748096712,
+            0.8843241334727668
+          ],
+          "median": 0.8792627599065056
+        },
+        "peak_rss_bytes": {
+          "samples": [
+            1.104247767346004,
+            1.0078876742815999,
+            1.029338005713147,
+            1.0662096074242222
+          ],
+          "median": 1.0477738065686846
+        }
+      }
+    }
+  ]
+}

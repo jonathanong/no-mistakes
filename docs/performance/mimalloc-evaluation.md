@@ -190,4 +190,8 @@ RSS history. Every CLI/N-API sample now uses a fresh small Python worker that
 spawns exactly one native child, records its own current RSS/high-water mark,
 then exits. Artifact and sample hashing streams bounded chunks. A saved tiny
 child plus a retained 96 MiB controller allocation reproduces the old floor;
-the fresh-worker regression must pass before a replacement collection starts.
+the fresh-worker regression passed before the completed scoped collection.
+
+The [completed scoped evidence](mimalloc-scoped-evidence-2200/README.md) retains
+all 160 native resource observations and the 20-cell tables. Annotation RSS
+scales worse under mimalloc in these controls; this draft claims no adoption.

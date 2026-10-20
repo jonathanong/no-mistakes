@@ -1,0 +1,12 @@
+{
+  "source": "8c4ca1d58a6d0322780333c743a2cf98f5e3b80f",
+  "scope": "supplemental-no-adoption",
+  "sha256": {
+    "README.md": "9b914505a39ad576572b1bb0e1d49405c958f7911813163395e7145395468390",
+    "artifact-origins.json": "5f5b8d172c09e741bf706a657b7237d25f8a7c5e30ea86dbafb056543b7b40f9",
+    "build-proofs.json": "81432287c9c7cccf3d51f65cb1585c6ffe09b85f920d8f5fcc2cdb8968fa826a",
+    "samples.json": "3343fb0d4983b0cc5a0f09a3e37780e53cf5f3b94bab0d696a94937688d6ab6a",
+    "summary.json": "7816769be939f6717408ee1202c47ad0e217673a1b4dcc2cdf3eca7894351d8d",
+    "tables.md": "91c0e79ee5366e9ea864564fb4c19bf9c92de993fe22644e73cb502108805d91"
+  }
+}
