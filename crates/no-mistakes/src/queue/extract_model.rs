@@ -14,6 +14,8 @@ pub(crate) struct ProducerSite {
     pub line: usize,
     pub binding: String,
     pub job: Option<String>,
+    /// Local name of an imported string constant used as the job name.
+    pub job_import: Option<String>,
     pub raw_job: Option<String>,
     /// Index of the factory or `new Worker` processor that contains this enqueue.
     pub worker_index: Option<usize>,
@@ -54,9 +56,16 @@ pub(crate) struct FileFacts {
     pub exported_strings: HashMap<String, String>,
     /// Named imports that may be a string constant or a queue binding.
     pub string_imports: HashMap<String, (String, String)>,
+    /// `export { imported as exported } from`. Kept off `string_imports` so a
+    /// same-named local import is not overwritten.
+    pub export_from: HashMap<String, (String, String)>,
     /// Local queue binding whose name argument is an imported identifier.
     pub pending_queue_bindings: HashMap<String, String>,
     /// `(exported name, local binding)` aliases of a queue object.
     pub reexports: Vec<(String, String)>,
+    /// `export * from` specifiers. Lookup copies queue exports through these.
+    pub star_exports: Vec<String>,
+    /// Static `job.name` / `case` names in this file, used when it is an imported processor.
+    pub referenced_jobs: Vec<String>,
     pub checks: Vec<LocalCheck>,
 }

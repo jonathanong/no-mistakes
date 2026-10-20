@@ -9,6 +9,7 @@ fn site(worker_index: Option<usize>) -> ProducerSite {
         line: 4,
         binding: "leaf".to_string(),
         job: Some("ping".to_string()),
+        job_import: None,
         raw_job: None,
         worker_index,
         self_dedup: false,

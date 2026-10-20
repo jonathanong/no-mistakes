@@ -22,10 +22,19 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalProducer> {
     let mut out = Vec::new();
-    for (path, facts) in facts {
-        let local = local_queues(path, facts, queue_defs, definitions, resolver, remapper);
-        for site in &facts.producers {
-            let queue = local.get(&site.binding).cloned();
+    for (path, file) in facts {
+        let local = local_queues(path, file, queue_defs, definitions, resolver, remapper);
+        for site in &file.producers {
+            let queue = local.get(&site.binding).cloned().or_else(|| {
+                crate::queue::factory_resolve::binding_queue(
+                    facts,
+                    resolver,
+                    remapper,
+                    path,
+                    &site.binding,
+                    definitions,
+                )
+            });
             out.push(InternalProducer {
                 site: site.clone(),
                 queue,
@@ -42,8 +51,8 @@ pub(super) fn resolve_workers<R: ImportResolverFacade>(
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalWorker> {
     let mut out = Vec::new();
-    for (path, facts) in facts {
-        for site in &facts.workers {
+    for (path, file) in facts {
+        for site in &file.workers {
             let queue = site.queue_name.as_ref().and_then(|name| {
                 definitions.get(name).map(|file| QueueKey {
                     queue_file: file.clone(),
@@ -56,10 +65,30 @@ pub(super) fn resolve_workers<R: ImportResolverFacade>(
                 .as_ref()
                 .and_then(|spec| resolver.resolve(spec, path))
                 .and_then(|path| remapper.remap(&path));
+            adopt_processor_jobs(&mut site, facts);
             out.push(InternalWorker { site, queue });
         }
     }
     out
+}
+
+fn adopt_processor_jobs(
+    site: &mut crate::queue::extract::WorkerSite,
+    facts: &HashMap<PathBuf, FileFacts>,
+) {
+    if !site.jobs.is_empty() {
+        return;
+    }
+    let Some(file) = &site.processor_file else {
+        return;
+    };
+    // `processor_file` is remapped from `facts.keys()`.
+    let jobs = facts[file].referenced_jobs.clone();
+    if jobs.is_empty() {
+        return;
+    }
+    site.jobs = jobs;
+    site.wildcard = false;
 }
 
 fn local_queues<R: ImportResolverFacade>(
@@ -90,16 +119,16 @@ fn local_queues<R: ImportResolverFacade>(
         let Some(resolved) = remapper.remap(&resolved) else {
             continue;
         };
-        if let Some(exports) = queue_defs.get(&resolved) {
-            if let Some(queue_name) = exports.get(&import.imported) {
-                map.insert(
-                    import.local.clone(),
-                    QueueKey {
-                        queue_file: definitions.get(queue_name).cloned().unwrap_or(resolved),
-                        queue_name: queue_name.clone(),
-                    },
-                );
-            }
+        // `resolved` is a remapped fact path, and `queue_defs` is built from those keys.
+        let exports = &queue_defs[&resolved];
+        if let Some(queue_name) = exports.get(&import.imported) {
+            map.insert(
+                import.local.clone(),
+                QueueKey {
+                    queue_file: definitions.get(queue_name).cloned().unwrap_or(resolved),
+                    queue_name: queue_name.clone(),
+                },
+            );
         }
     }
     map

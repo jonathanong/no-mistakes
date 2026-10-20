@@ -14,6 +14,7 @@ connected. `check` is empty when the graph is consistent. Findings use these
 | --- | --- |
 | `unmatched-producer` | A job is enqueued and no worker handles it. |
 | `unmatched-worker` | A worker handles a job that no producer enqueues. |
+| `unmatched-worker-unresolved-producers` | A producer for this handler did not resolve, so the handler is not known to be dead. The message names those producer lines. A producer with neither a resolved queue nor a resolved job is listed on every unmatched worker. |
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job (`job.id` or `job.deduplicationId`). The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | `addAndWait` or `waitUntilFinished` waits on a job result and holds a worker or request slot. Return control instead of blocking on the result. |
 | `debounce-ttl` | `deduplication: { mode: "debounce", ttl }` sets a `ttl` that debounce mode ignores. Remove `ttl`, or use a mode that reads it. |

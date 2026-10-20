@@ -9,8 +9,13 @@ A list of names is the queue-factory form. Each name is a call whose first
 argument is the queue name. Wrappers that hide the queue object, the job name,
 or the worker processor use
 the object form. Indexes are zero-based argument positions. Queue names may be
-string literals or imported string constants, and a later binding may alias a
-queue object (`export const adminImports = background`).
+string literals, no-substitution template literals, same-file constants, or
+imported string constants. A queue object may be aliased
+(`export const adminImports = background`), re-exported
+(`export { queue as alias } from "./queues"` or `export * from "./queues"`),
+or passed as a namespace member (`queues.email`). A producer whose job does
+not resolve abstains: [`queues check`](../cli/queues-check.md) does not report
+that queue's handlers as dead.
 
 ```yaml
 queues:
@@ -52,6 +57,8 @@ checks. The `enqueues` and `workers` globs scope the files that participate in
 a project; `cluster` gives producers and workers a shared queue namespace.
 Empty lists disable that side of the relationship. A non-empty glob that
 matches no file is reported by [`queues check`](../cli/queues-check.md).
+A producer whose queue and job both failed to resolve is listed on every
+unmatched worker, so that finding can be broader than the handler's own queue.
 Language test/graph frontends likewise
 require explicit `tests.<language>` package or module roots; no repository-wide
 queue scan is enabled by default.
