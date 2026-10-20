@@ -89,9 +89,9 @@ pub(super) fn scan_with_sources(
                 }
                 continue;
             };
-            // Conflict-only preparation omits exact statements without INSERT,
-            // including SELECT-rooted WITH statements. Dynamic SQL stays above.
-            if !crate::codebase::postgres::may_have_insert(sql) {
+            // Conflict-only preparation omits exact statements without a possible
+            // INSERT conflict, including ordinary INSERTs. Dynamic SQL stays above.
+            if !crate::codebase::postgres::may_have_insert_conflict(sql) {
                 continue;
             }
             let statement = statements.get(&(call_index, variant_index)).copied();

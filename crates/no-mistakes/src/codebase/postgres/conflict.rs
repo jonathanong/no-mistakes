@@ -68,6 +68,16 @@ pub(crate) fn may_have_insert(sql: &str) -> bool {
         .any(|word| word.eq_ignore_ascii_case(b"insert"))
 }
 
+/// A conflict-only request can omit ordinary INSERTs, including malformed ones:
+/// without CONFLICT text the existing policy has no clause to analyze.
+pub(crate) fn may_have_insert_conflict(sql: &str) -> bool {
+    may_have_insert(sql)
+        && sql
+            .as_bytes()
+            .windows(b"conflict".len())
+            .any(|word| word.eq_ignore_ascii_case(b"conflict"))
+}
+
 pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>> {
     analyze_conflict_inserts_with_binds(sql, &[])
 }

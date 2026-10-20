@@ -87,13 +87,13 @@ pub(crate) fn embedded_call_facts_with_demand(
         })
         .filter_map(|(call, variant, call_index, variant_index)| {
             let sql = call.sql_text.as_deref()?;
-            // A conflict-only request must not construct unrelated SELECT facts.
-            // Preserve mapped/variant and general/bounds consumers' complete facts.
+            // Ordering rejects opaque tails before consulting prepared statements.
+            // Keep all facts for variants and general/bounds consumers.
             if demand == SqlLocationDemand::Conflicts
                 && !collect_bounds
                 && !variant
-                && call.sql_source_positions.is_empty()
-                && !super::super::conflict::may_have_insert(sql)
+                && (call.kind == EmbeddedSqlKind::Dynamic
+                    || !super::super::conflict::may_have_insert_conflict(sql))
             {
                 return None;
             }
@@ -111,8 +111,8 @@ pub(crate) fn embedded_call_facts_with_demand(
             );
             if call.kind == EmbeddedSqlKind::Dynamic {
                 // Recovered interpolation text can prove OFFSET syntax and write
-                // targets. Ordering also needs the one prepared parse's locations
-                // to preserve its existing prefix diagnostics without reparsing.
+                // targets for general consumers. Conflict-only opaque calls were
+                // omitted above because ordering rejects the tail before lookup.
                 let locations = exact_locations
                     .then(|| facts.variant_locations.take())
                     .flatten();

@@ -8,7 +8,11 @@ use crate::codebase::postgres::{
 };
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 
-const INSERT_SQL: &str = "INSERT INTO items (id) VALUES (1)";
+fn insert_sql() -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/source/conflict-required-preparation.sql");
+    std::fs::read_to_string(path).unwrap()
+}
 
 fn compiled(unanalyzable_sql: &str) -> super::super::CompiledOptions {
     super::super::compile_options(&super::super::Options {
@@ -106,11 +110,12 @@ fn opaque_inline_sql_continues_after_the_unanalyzable_finding() {
 
 #[test]
 fn missing_statement_facts_for_an_insert_without_variants() {
+    let insert_sql = insert_sql();
     // A text-less call is a chunk boundary. The later insert still has to
     // fail closed when its prepared statement row was not indexed.
     let error = scan(
         &compiled("ignore"),
-        vec![call(None, Vec::new()), call(Some(INSERT_SQL), Vec::new())],
+        vec![call(None, Vec::new()), call(Some(&insert_sql), Vec::new())],
     )
     .expect_err("missing facts");
     let message = error.to_string();
@@ -123,9 +128,10 @@ fn missing_statement_facts_for_an_insert_without_variants() {
 
 #[test]
 fn missing_statement_facts_for_an_insert_variant() {
+    let insert_sql = insert_sql();
     let error = scan(
         &compiled("ignore"),
-        vec![call(Some(INSERT_SQL), vec![variant(INSERT_SQL)])],
+        vec![call(Some(&insert_sql), vec![variant(&insert_sql)])],
     )
     .expect_err("missing variant facts");
     assert!(

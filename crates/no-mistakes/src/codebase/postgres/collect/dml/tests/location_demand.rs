@@ -5,7 +5,7 @@ use crate::codebase::postgres::{
 };
 
 #[test]
-fn variants_and_source_mapped_calls_keep_the_complete_projection() {
+fn variants_and_general_source_mapped_calls_keep_the_complete_projection() {
     for name in [
         "variants-placeholders.ts",
         "source-position-interpolation.ts",
@@ -33,6 +33,11 @@ fn variants_and_source_mapped_calls_keep_the_complete_projection() {
             let legacy_full = embedded_call_facts_with_locations(&file, bounds, false, true);
             let conflict_demand =
                 embedded_call_facts_with_demand(&file, bounds, false, SqlLocationDemand::Conflicts);
+            if name == "source-position-interpolation.ts" && !bounds {
+                // Source mapping alone does not create a conflict-policy demand.
+                assert!(conflict_demand.is_empty());
+                continue;
+            }
             assert_eq!(conflict_demand, legacy_full, "{name}");
             assert!(conflict_demand
                 .iter()

@@ -15,7 +15,7 @@ fn omitted_non_insert_facts_preserve_valid_and_malformed_policy_verdicts() {
     let mut malformed = 0;
     for call in &embedded.calls {
         let sql = call.sql_text.as_deref().unwrap();
-        if crate::codebase::postgres::may_have_insert(sql) {
+        if crate::codebase::postgres::may_have_insert_conflict(sql) {
             continue;
         }
         let full = crate::codebase::postgres::extract_sql_statement_facts(sql);

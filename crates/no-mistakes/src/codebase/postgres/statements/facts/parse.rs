@@ -160,3 +160,6 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
 
 #[cfg(test)]
 mod location_demand_tests;
+
+#[cfg(test)]
+mod mapped_demand_tests;
