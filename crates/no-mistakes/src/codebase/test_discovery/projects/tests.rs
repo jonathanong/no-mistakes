@@ -221,6 +221,76 @@ fn swift_project_policy_matches_an_exact_package_glob() {
     assert_eq!(exact.config.as_deref(), Some("clients/core"));
 }
 
+/// `"/"` trims to `""`. An empty package is a boundary, so `Tests/**` belongs
+/// to that root package instead of the earlier `clients/core` entry.
+#[test]
+fn swift_project_policy_attributes_unprefixed_globs_to_an_empty_package() {
+    let root = Path::new("");
+    let mut config = NoMistakesConfig::default();
+    config.tests.swift.packages = vec!["clients/core".to_string(), "/".to_string()];
+    config.tests.swift.projects.insert(
+        "root-tests".to_string(),
+        TestProjectPolicy {
+            include: vec!["Tests/**".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let projects = runner_projects(root, &config, TestRunner::Swift).unwrap();
+    let root_tests = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("root-tests"))
+        .expect("root tests policy");
+    assert_eq!(root_tests.config.as_deref(), Some(""));
+}
+
+/// A trailing slash trims before the boundary check. `.` matches `./Tests/**`
+/// because the remainder starts with `/`. `clients/core` does not own
+/// `clients/core-extra/**`, so that include falls back to the first package.
+#[test]
+fn swift_project_policy_matches_trimmed_package_boundaries() {
+    let cases = [
+        (
+            vec!["other".to_string(), "clients/core/".to_string()],
+            "clients/core/Tests/**",
+            "clients/core",
+        ),
+        (
+            vec!["other".to_string(), ".".to_string()],
+            "./Tests/**",
+            ".",
+        ),
+        (
+            vec!["first".to_string(), "clients/core".to_string()],
+            "clients/core-extra/**",
+            "first",
+        ),
+    ];
+
+    for (packages, include, expected) in cases {
+        let root = Path::new("");
+        let mut config = NoMistakesConfig::default();
+        config.tests.swift.packages = packages;
+        config.tests.swift.projects.insert(
+            "policy".to_string(),
+            TestProjectPolicy {
+                include: vec![include.to_string()],
+                ..Default::default()
+            },
+        );
+        let projects = runner_projects(root, &config, TestRunner::Swift).unwrap();
+        let policy = projects
+            .iter()
+            .find(|project| project.policy_name.as_deref() == Some("policy"))
+            .expect(include);
+        assert_eq!(
+            policy.config.as_deref(),
+            Some(expected),
+            "{include} should resolve to {expected}"
+        );
+    }
+}
+
 #[test]
 fn swift_projects_lossy_uses_swift_project_loader() {
     let root = Path::new("");
