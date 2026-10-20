@@ -1,6 +1,7 @@
 "use strict";
 
 const { traverse, unwrapExpression } = require("./async-ast");
+const { isModuleConstSql } = require("./postgres-no-async-sql-builder-constants");
 const {
   calleeMatches,
   localInitializer,
@@ -96,9 +97,11 @@ function isJudgedReturn(node, builders, context, func, seen) {
   }
   if (current.type !== "Identifier" || seen.has(current)) return false;
   const initializer = localInitializer(current, func, context);
-  if (!initializer) return false;
-  seen.add(current);
-  return isJudgedReturn(initializer, builders, context, func, seen);
+  if (initializer) {
+    seen.add(current);
+    return isJudgedReturn(initializer, builders, context, func, seen);
+  }
+  return isModuleConstSql(current, context);
 }
 
 function statementCompletion(statement) {

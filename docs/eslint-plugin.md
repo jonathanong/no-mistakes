@@ -183,10 +183,12 @@ of `{ names?: string[], callees?: string[], source?: string }`. `names` selects
 async functions by local name. `callees` selects async functions that return
 those calls or tagged templates. `source`, when set, limits `callees` to a
 named import or namespace member from that exact module. The rule tells you to
-remove `async` only when every return is a judged SQL string or configured tag
+remove `async` only when every return is a judged SQL string, a module-level
+`const` string or no-substitution template, or a configured tag
 (not a call such as `sql(id)`, and not a tag placeholder such as `${id.x}`)
 and the visible contract allows that synchronous return. Otherwise it
-abstains, including when a caller parameter or bound local is untyped,
+abstains, including for a class member, an interface member, or an object
+property, and when a caller parameter or bound local is untyped,
 `Promise`-typed, `any`, `unknown`, `object`, a Promise-compatible type
 literal, or unresolved, and when the result is only tested for truthiness.
 See
