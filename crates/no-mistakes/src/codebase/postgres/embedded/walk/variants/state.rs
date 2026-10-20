@@ -37,12 +37,13 @@ impl ScopeVisitor<'_> {
             variants
         };
         if let oxc_ast::ast::BindingPattern::BindingIdentifier(id) = &declaration.id {
-            super::template::clauses::observe_const(
+            let variants = super::template::clauses::observe_const(
                 self,
                 id.name.as_str(),
                 declaration.init.as_ref(),
                 variants.as_deref(),
-            );
+            )
+            .or(variants);
             self.set_variants(id.name.as_str(), variants);
         }
     }
