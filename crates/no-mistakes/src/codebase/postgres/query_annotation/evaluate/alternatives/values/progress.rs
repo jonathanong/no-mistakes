@@ -40,7 +40,7 @@ impl Walk {
             }
             _ => {}
         }
-        if self.nodes % INTERVAL == 0 {
+        if self.nodes.is_multiple_of(INTERVAL) {
             self.observer
                 .increment("postgres.annotation.prefix_nodes", INTERVAL);
             self.emit();
@@ -72,7 +72,7 @@ impl Drop for Walk {
             .increment("postgres.annotation.prefix_nodes", self.nodes % INTERVAL);
         self.observer
             .increment("postgres.annotation.prefix_containers", self.containers);
-        if self.nodes >= INTERVAL && self.nodes % INTERVAL != 0 {
+        if self.nodes >= INTERVAL && !self.nodes.is_multiple_of(INTERVAL) {
             self.emit();
         }
     }
