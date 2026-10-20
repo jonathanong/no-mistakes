@@ -153,6 +153,16 @@ impl<'a> Visit<'a> for Collector<'_> {
         walk::walk_assignment_target(self, target);
     }
 
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        property: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.index
+            .writes
+            .push((self.index.scope, property.binding.name.to_string()));
+        walk::walk_assignment_target_property_identifier(self, property);
+    }
+
     fn visit_new_expression(&mut self, expr: &NewExpression<'a>) {
         self.index.worker(&expr.callee, &expr.arguments, true);
         walk::walk_new_expression(self, expr);

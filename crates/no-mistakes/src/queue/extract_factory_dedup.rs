@@ -2,10 +2,10 @@ use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{
-    Argument, BindingIdentifier, BindingPattern, BlockStatement, CallExpression, Expression,
-    FormalParameters, ObjectPropertyKind, VariableDeclaration, VariableDeclarationKind,
+    Argument, BindingIdentifier, BindingPattern, CallExpression, Expression, FormalParameters,
+    ObjectPropertyKind, VariableDeclaration, VariableDeclarationKind,
 };
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::Visit;
 
 pub(crate) fn note_self_dedup(
     visitor: &mut QueueVisitor<'_>,
@@ -147,12 +147,6 @@ pub(crate) fn visit_variable_declaration<'a>(
     }
 }
 
-pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockStatement<'a>) {
-    let frames = visitor.job_frames.clone();
-    walk::walk_block_statement(visitor, block);
-    visitor.job_frames = frames;
-}
-
 pub(super) fn mask_parameters(visitor: &mut QueueVisitor<'_>, params: &FormalParameters<'_>) {
     for param in &params.items {
         mask_pattern(visitor, &param.pattern);
@@ -162,7 +156,7 @@ pub(super) fn mask_parameters(visitor: &mut QueueVisitor<'_>, params: &FormalPar
     }
 }
 
-fn mask_pattern(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
+pub(super) fn mask_pattern(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
     struct Names(Vec<String>);
     impl<'a> Visit<'a> for Names {
         fn visit_binding_identifier(&mut self, id: &BindingIdentifier<'a>) {

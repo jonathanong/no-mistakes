@@ -188,8 +188,11 @@ mod dedup;
 mod index;
 #[path = "extract_factory_walk.rs"]
 mod job_scope;
+#[path = "extract_factory_scope.rs"]
+mod scope;
 
 pub(super) use calls::{note_factory_call, note_wait};
-pub(super) use dedup::{note_self_dedup, visit_block, visit_variable_declaration};
+pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::processor_spans;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};
+pub(super) use scope::{visit_block, visit_body, visit_catch, visit_class};

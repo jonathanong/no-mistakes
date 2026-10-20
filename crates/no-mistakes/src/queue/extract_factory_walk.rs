@@ -13,6 +13,9 @@ pub(crate) fn visit_function<'a>(
 ) {
     visitor.dispatch_scopes.insert(func.span.start);
     let frames = visitor.job_frames.clone();
+    if let Some(id) = &func.id {
+        super::scope::mask_name(visitor, id.name.as_str());
+    }
     super::dedup::mask_parameters(visitor, &func.params);
     let worker = enter_worker(visitor, func.span);
     enter_job(visitor, &func.params, func.span);
@@ -40,8 +43,8 @@ fn enter_worker(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {
     let Some(index) = visitor
         .processor_spans
         .iter()
-        .rev()
-        .find(|record| span.start >= record.0 && span.end <= record.1)
+        .filter(|record| span.start >= record.0 && span.end <= record.1)
+        .min_by_key(|record| record.1.saturating_sub(record.0))
         .map(|record| record.2)
     else {
         return false;
