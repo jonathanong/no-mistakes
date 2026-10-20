@@ -1,3 +1,4 @@
+import sql from "sql-template-strings";
 import { write } from "@app/db";
 import "./sloppy.cjs";
 

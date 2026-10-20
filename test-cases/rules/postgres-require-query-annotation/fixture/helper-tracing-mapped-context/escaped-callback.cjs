@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 // Escaped invocation objects still carry subsequently assigned callbacks.
 function forward(callback) {
   const query = sql``;

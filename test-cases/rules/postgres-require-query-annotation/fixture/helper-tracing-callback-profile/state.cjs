@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 const database = require("@app/db");
 const builder = sql`/* builder snapshot */ SELECT 1`;
 builder.append(" WHERE TRUE");

@@ -54,6 +54,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.invalidate_opaque_builders(&live_before);
             }
         }
+        // The binding is the configured tag, not a value that should shadow it
+        // when this scope is copied into a callee or a branch frame.
+        if self.files[path].facts.trusted_tags.contains(name) {
+            self.scopes[*env].remove(name);
+        }
     }
     pub(super) fn append_step(
         &mut self,

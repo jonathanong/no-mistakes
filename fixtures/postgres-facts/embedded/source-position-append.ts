@@ -1,4 +1,4 @@
-import { query } from "@example/db";
+import sql from "sql-template-strings"; import { query } from "@example/db";
 const statement = sql`SELECT id FROM orders`;
 
 // The appended clause belongs to this later physical line.

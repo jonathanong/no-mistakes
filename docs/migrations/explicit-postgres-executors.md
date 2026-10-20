@@ -255,7 +255,10 @@ With that option the tag is trusted the same way as a default import from
 `sql-template-strings`: interpolations are placeholders and the SQL is analyzed.
 `import { sql as dbSql }` trusts the local binding `dbSql`. `import sql from
 "@example/db"` does not. `@example/db/sql` matches `module: "@example/db"`;
-`@example/dbx` does not.
+`@example/dbx` does not. An identifier named `sql` is not a tag by itself.
+Trust comes from a configured `trustedSqlTags` import, or from
+`sql-template-strings`: a default import under any local name, or a named
+`sql` import whose local name is still `sql`.
 
 `postgres-cursor-call-contract` uses the same list for named imports, in addition
 to its default-import `sqlTagModules` list. The ESLint runtime rules accept the

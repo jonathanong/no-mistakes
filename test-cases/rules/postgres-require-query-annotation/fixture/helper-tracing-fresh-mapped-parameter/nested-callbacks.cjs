@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 // Opaque mapped reads preserve callbacks inside promises and aggregates.
 function forward(parameter) {
   const query = sql``;

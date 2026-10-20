@@ -1,11 +1,8 @@
+import sql from "sql-template-strings";
 import { query } from "@example/db";
 
-const sql = "SELECT id FROM topics".append(sql` AND active`);
+const statement = "SELECT id FROM topics".append(sql` AND active`);
 
 export function load() {
-  return query(sql);
-}
-
-function sql(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return strings.join("");
+  return query(statement);
 }

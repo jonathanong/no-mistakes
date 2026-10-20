@@ -182,6 +182,8 @@ mod compose_classification_tests;
 #[cfg(test)]
 mod conditional_clause_tests;
 #[cfg(test)]
+mod configured_sql_tag_tests;
+#[cfg(test)]
 mod const_splice_tests;
 #[cfg(test)]
 mod dml_kind_tests;

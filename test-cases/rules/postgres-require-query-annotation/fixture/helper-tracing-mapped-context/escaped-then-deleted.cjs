@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 // Deletion disconnects future mapping, but cannot undo a prior opaque update.
 function forward(statement) {
   const ignored = opaque(arguments);

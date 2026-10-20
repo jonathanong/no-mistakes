@@ -8,8 +8,8 @@ use std::collections::HashSet;
 pub(in crate::codebase::postgres::embedded) mod fragments;
 use fragments::interpolates_sql_fragment;
 
-/// Local names that the tag check trusts, plus file-wide bindings that hold
-/// a SQL fragment (see [`fragments::collect_fragment_bindings`]).
+/// Local names of configured parameterized SQL tags, plus file-wide bindings
+/// that hold a SQL fragment (see [`fragments::collect_fragment_bindings`]).
 #[derive(Default)]
 pub(crate) struct SqlTagNames {
     /// Default imports from `sql-template-strings`, or configured named
@@ -40,19 +40,17 @@ impl SqlTagNames {
 }
 
 /// `is_shadowed` reports whether a name is currently bound to something
-/// other than the global trusted SQL tag (e.g. a same-file helper's own
-/// parameter named `sql`) — matching the tag purely by spelling, as
-/// [`is_sql_tag`] alone does, would trust a caller-controlled tag function
-/// passed in under that name.
+/// other than a configured SQL tag, such as a parameter that rebinds an
+/// imported tag. Spelling alone never trusts a caller-controlled function.
 ///
-/// A tagged template with interpolated values is untrusted unless the tag
-/// is really the trusted SQL concatenation tag: the unshadowed identifier
-/// `sql`, a default import from `sql-template-strings` under any local
-/// name, or a configured named import recorded in `imported_sql_tags`.
-/// That tag parameterizes interpolated values instead of splicing them
-/// into the text, which is what makes trusting its quasi text safe even
-/// though the call has arguments. Nothing else — `String.raw` included —
-/// offers that guarantee, so any other tag with interpolations is untrusted.
+/// A tagged template is trusted only when the tag identifier is recorded in
+/// `imported_sql_tags`: a default import from `sql-template-strings`, a
+/// named `sql` import from that module whose local name is still `sql`, or a
+/// `trustedSqlTags` import. An identifier merely spelled `sql` is unknown.
+/// Its template stays unanalyzable and the call remains a candidate.
+/// A configured tag parameterizes interpolated values instead of splicing
+/// them into the text. Nothing else — `String.raw` included — offers that
+/// guarantee, so any other tag with interpolations is untrusted.
 ///
 /// The trusted tag is also untrusted when an interpolation splices another
 /// SQL fragment (a nested trusted template, a call on the tag such as
@@ -60,13 +58,10 @@ impl SqlTagNames {
 /// quasi text would read that fragment as a bind value, so the composed
 /// statement is not recoverable and must classify as dynamic.
 ///
-/// A tagged template with zero interpolated values carries no runtime data
-/// at all, so the only question left is whether the tag returns its quasi
-/// text unchanged. The unshadowed `sql` tag and the built-in `String.raw`
-/// both do so deterministically; any other tag — same-spelled-but-shadowed
-/// `sql` included — is an arbitrary function that can ignore its template
-/// argument and return something else entirely, so its quasi text can't be
-/// trusted either.
+/// A tagged template with zero interpolated values is still untrusted unless
+/// the tag is one of those configured bindings or the built-in `String.raw`.
+/// A local helper spelled `sql` can ignore its template argument, so its
+/// quasi text is not the statement.
 pub(super) fn interpolating_untrusted_tag(
     expr: &Expression<'_>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
@@ -137,8 +132,7 @@ pub(in crate::codebase::postgres::embedded) fn is_sql_tag(
         return false;
     };
     let name = ident.name.as_str();
-    !is_shadowed(name)
-        && (ident.name.eq_ignore_ascii_case("sql") || imported_sql_tags.contains(name))
+    !is_shadowed(name) && imported_sql_tags.contains(name)
 }
 
 /// Whether `imported` from `source` is a configured parameterized tag.

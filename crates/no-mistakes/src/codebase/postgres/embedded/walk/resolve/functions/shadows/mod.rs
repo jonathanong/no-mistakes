@@ -20,10 +20,9 @@ use std::collections::HashSet;
 /// referencing its own top-level declaration by name.
 ///
 /// The callable-helper-shape exemption never applies to a binding spelled
-/// `sql` (case-insensitively) or `String`: those are the only names
-/// [`crate::codebase::postgres::embedded::tags`] will treat as a trusted
-/// tagged-template tag, and a callable rebinding of either is exactly the
-/// shape that can ignore its template arguments and return arbitrary text.
+/// `sql` (case-insensitively) or `String`. The spelling does not grant trust.
+/// It only stops a same-file helper from standing in for a configured import
+/// or for the intrinsic `String.raw` tag.
 ///
 /// Default imports from `sql-template-strings`, and configured named
 /// `trustedSqlTags` imports, are the opposite: they *are* the trusted tag,
@@ -175,10 +174,10 @@ pub(super) fn is_trusted_tag_name(name: &str) -> bool {
     name.eq_ignore_ascii_case("sql") || name == "String"
 }
 
-/// A `function sql()` / `function String()` is a tag shadow unless it looks
-/// like an in-file tagged-template implementation (it takes parameters and
-/// does not return a static SQL fragment). Zero-arg helpers, including
-/// `return process.env.SQL`, must not keep the intrinsic tag trusted.
+/// A `function sql()` / `function String()` shadows that name unless it looks
+/// like an in-file tagged-template implementation. Zero-arg helpers, including
+/// `return process.env.SQL`, must not leave a configured import or `String.raw`
+/// trusted under that spelling. The spelling itself is not a trusted tag.
 fn record_function_tag_shadow(function: &Function<'_>, shadows: &mut TagShadows) {
     let Some(id) = function.id.as_ref() else {
         return;

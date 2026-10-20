@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 function forward(parameter) {
   const ignored = (arguments = ["SELECT 1"]);
   return parameter;
