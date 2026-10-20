@@ -1,6 +1,6 @@
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{BlockStatement, CatchClause, Class, FunctionBody, Statement};
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::walk;
 
 pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockStatement<'a>) {
     let frames = visitor.job_frames.clone();

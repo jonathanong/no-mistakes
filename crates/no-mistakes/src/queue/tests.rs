@@ -97,10 +97,8 @@ fn prepared_catalog_keeps_symlinked_queue_producers_and_workers_in_one_namespace
                     .queue_file
                     .as_deref()
                     .is_some_and(|path| path.ends_with("/src/queues.ts"))
-                && worker
-                    .processor_file
-                    .as_deref()
-                    .is_some_and(|path| path.ends_with("/src/processors.ts"))
+                // An inline namespace dispatch is the processor, not the imported helper file.
+                && worker.processor_file.is_none()
         }),
         "{report:#?}"
     );
@@ -331,7 +329,7 @@ fn alternate_syntaxes_and_dynamic_sites_are_recorded() {
     assert!(report
         .workers
         .iter()
-        .any(|worker| worker.processor_file.as_deref() == Some("processor.ts")));
+        .any(|worker| worker.file == "worker.ts" && worker.processor_file.is_none()));
     assert!(report
         .producers
         .iter()

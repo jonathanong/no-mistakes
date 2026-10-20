@@ -173,4 +173,13 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_identifier_reference(&mut self, id: &oxc_ast::ast::IdentifierReference<'a>) {
         super::extract_processor::visit_identifier(self, id);
     }
+    fn visit_function_body(&mut self, body: &oxc_ast::ast::FunctionBody<'a>) {
+        super::extract_factory::visit_body(self, body);
+    }
+    fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+        super::extract_factory::visit_catch(self, clause);
+    }
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        super::extract_factory::visit_class(self, class);
+    }
 }

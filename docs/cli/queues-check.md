@@ -29,6 +29,10 @@ Worker job names come from dispatches on the processor's job name, such as
 `task.name === "send"` or `switch (task.name)`. Unrelated objects such as
 `{ name: "metadata" }` do not declare jobs. A processor with dynamic dispatch
 stays a wildcard, so its literal branches do not exclude other job names.
+Imported processor summaries stay open when a module has multiple callables
+and the processor cannot be selected soundly. `processorFile` identifies a
+direct imported processor argument; an inline callback that calls an imported
+helper does not adopt that helper module's job names.
 
 ## Suppression
 
