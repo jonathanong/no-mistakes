@@ -27,15 +27,20 @@ fn short_origins_do_not_panic() {
         super::rewrite_impl(&placeholder, &[], 1, false),
         Vec::<u32>::new()
     );
+}
 
-    if cfg!(debug_assertions) {
-        let prefixed_panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            rewrite(&prefixed, &[9], 0, true);
-        }));
-        let placeholder_panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            rewrite(&placeholder, &[], 1, false);
-        }));
-        assert!(prefixed_panic.is_err());
-        assert!(placeholder_panic.is_err());
-    }
+#[test]
+#[cfg(debug_assertions)]
+#[should_panic(expected = "assertion")]
+fn rewrite_asserts_on_short_prefixed_origins() {
+    let prefixed = format!("SELECT {INTERNAL_PLACEHOLDER}1");
+    rewrite(&prefixed, &[9], 0, true);
+}
+
+#[test]
+#[cfg(debug_assertions)]
+#[should_panic(expected = "assertion")]
+fn rewrite_asserts_on_empty_origins() {
+    let placeholder = format!("{INTERNAL_PLACEHOLDER}1 tail");
+    rewrite(&placeholder, &[], 1, false);
 }
