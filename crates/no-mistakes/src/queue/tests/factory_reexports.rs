@@ -118,3 +118,77 @@ fn star_target_outside_the_fact_set_does_not_invent_a_queue() {
         report.edges
     );
 }
+
+#[test]
+fn unresolved_queue_producers_do_not_make_handlers_dead() {
+    let report = analyze_project(&fixture("factory-reexports"), None, &[]).unwrap();
+    for job in ["nsjob", "dfltjob", "ext", "cyc"] {
+        let finding = report
+            .check
+            .iter()
+            .find(|finding| finding.job.as_deref() == Some(job));
+        let Some(finding) = finding else {
+            panic!("{job} should abstain, check: {:?}", report.check);
+        };
+        assert_eq!(
+            finding.kind, "unmatched-worker-unresolved-producers",
+            "{job} check: {:?}",
+            report.check
+        );
+        assert!(
+            finding.message.contains("enq/unresolved.mts:"),
+            "{job} message should name the producer, check: {:?}",
+            report.check
+        );
+    }
+}
+
+#[test]
+fn a_second_name_on_a_visited_file_still_resolves() {
+    let report = analyze_project(&fixture("factory-reexports"), None, &[]).unwrap();
+    assert!(
+        report.edges.iter().any(|edge| {
+            edge.kind == EdgeKind::QueueEnqueue && edge.to.ends_with("#viaSecondName")
+        }),
+        "the later name on a file visited under another name should resolve, edges: {:?}",
+        report.edges
+    );
+}
+
+#[test]
+fn an_export_from_does_not_replace_a_same_named_import() {
+    let report = analyze_project(&fixture("factory-reexports"), None, &[]).unwrap();
+    let queue_of = |file: &str, job: &str| {
+        report.producers.iter().find_map(|producer| {
+            (producer.file.ends_with(file) && producer.job.as_deref() == Some(job))
+                .then_some(producer.queue_name.as_deref())
+                .flatten()
+        })
+    };
+    assert_eq!(
+        queue_of("enq/clash.mts", "fromImport"),
+        Some("keptName"),
+        "the local import should keep its queue, producers: {:?}",
+        report.producers
+    );
+    assert_eq!(
+        queue_of("enq/clash-user.mts", "fromExport"),
+        Some("exportedName"),
+        "the re-export should keep its own queue, producers: {:?}",
+        report.producers
+    );
+    assert!(
+        report.edges.iter().any(|edge| {
+            edge.kind == EdgeKind::QueueEnqueue && edge.to.ends_with("#fromImport")
+        }),
+        "the local import should enqueue, edges: {:?}",
+        report.edges
+    );
+    assert!(
+        report.edges.iter().any(|edge| {
+            edge.kind == EdgeKind::QueueEnqueue && edge.to.ends_with("#fromExport")
+        }),
+        "the re-export should enqueue, edges: {:?}",
+        report.edges
+    );
+}

@@ -56,6 +56,9 @@ pub(crate) struct FileFacts {
     pub exported_strings: HashMap<String, String>,
     /// Named imports that may be a string constant or a queue binding.
     pub string_imports: HashMap<String, (String, String)>,
+    /// `export { imported as exported } from`. Kept off `string_imports` so a
+    /// same-named local import is not overwritten.
+    pub export_from: HashMap<String, (String, String)>,
     /// Local queue binding whose name argument is an imported identifier.
     pub pending_queue_bindings: HashMap<String, String>,
     /// `(exported name, local binding)` aliases of a queue object.

@@ -2,7 +2,6 @@ use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{CallExpression, Expression};
-use oxc_span::GetSpan;
 
 #[path = "extract_factory_enqueue.rs"]
 mod enqueue;

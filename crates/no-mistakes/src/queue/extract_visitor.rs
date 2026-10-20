@@ -1,13 +1,8 @@
-use crate::queue::extract_helpers::{
-    binding_name, collect_jobs_from_args, export_name, is_queue_package, processor_specifier,
-    static_string,
-};
-use crate::queue::extract_model::{FileFacts, ImportBinding, WorkerSite};
+use crate::queue::extract_helpers::{binding_name, export_name, is_queue_package, static_string};
+use crate::queue::extract_model::{FileFacts, ImportBinding};
 use crate::queue::extract_record::{record_enqueue, record_flow};
-use crate::queue::source::line_number;
 use oxc_ast::ast::{CallExpression, Expression, ImportDeclarationSpecifier};
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -118,8 +113,8 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Expression::StaticMemberExpression(member) = &call.callee {
+            let method = member.property.name.as_str();
             if let Expression::Identifier(object) = &member.object {
-                let method = member.property.name.as_str();
                 if method == "add" && self.flow_bindings.contains(object.name.as_str()) {
                     let recorded = self.facts.producers.len();
                     record_flow(
@@ -146,6 +141,21 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
                 } else if method == "addAndWait" || method == "waitUntilFinished" {
                     super::extract_factory::note_wait(self, call);
                 }
+            } else if method == "add" || method == "addBulk" {
+                if let Some(binding) = self.imported_member_binding(&member.object) {
+                    let recorded = self.facts.producers.len();
+                    record_enqueue(
+                        &binding,
+                        method,
+                        self.path,
+                        self.source,
+                        &self.const_strings,
+                        &mut self.facts,
+                        call,
+                    );
+                    self.stamp_worker(recorded);
+                    super::extract_factory::note_self_dedup(self, call, recorded);
+                }
             }
         }
         super::extract_factory::note_factory_call(self, call);
@@ -153,32 +163,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_new_expression(&mut self, new_expr: &oxc_ast::ast::NewExpression<'a>) {
-        if self.is_worker_constructor(&new_expr.callee) {
-            let queue_name = new_expr
-                .arguments
-                .first()
-                .and_then(|arg| self.literal_arg(arg));
-            let mut jobs = collect_jobs_from_args(&new_expr.arguments, self.source);
-            jobs.sort();
-            jobs.dedup();
-            let processor_specifier =
-                processor_specifier(&new_expr.arguments, self.source, &self.namespace_imports);
-            self.facts.workers.push(WorkerSite {
-                file: self.path.to_path_buf(),
-                line: line_number(self.source, new_expr.span.start),
-                queue_name,
-                queue_name_import: None,
-                wildcard: jobs.is_empty(),
-                jobs,
-                processor_specifier,
-                processor_file: None,
-            });
-            if let Some(arg) = new_expr.arguments.get(1) {
-                let span = arg.span();
-                let index = self.facts.workers.len() - 1;
-                self.processor_spans.push((span.start, span.end, index));
-            }
-        }
+        self.note_constructed_worker(new_expr);
         walk::walk_new_expression(self, new_expr);
     }
 

@@ -67,9 +67,8 @@ fn pending_updates<R: ImportResolverFacade>(
             if file.queue_exports.contains_key(exported) {
                 continue;
             }
-            let queue_name = file.queue_bindings.get(local).cloned().or_else(|| {
-                follow::lookup(facts, resolver, remapper, path, local, follow::Want::Queue)
-            });
+            let queue_name =
+                follow::reexport_queue(facts, resolver, remapper, path, file, exported, local);
             if let Some(queue_name) = queue_name {
                 updates.push(Update::Export {
                     file: path.clone(),

@@ -129,7 +129,7 @@ pub(super) fn note_export_from(visitor: &mut QueueVisitor<'_>, decl: &ExportFrom
         // The exported name is not a local binding. Lookup follows it through `specifier`.
         visitor
             .facts
-            .string_imports
+            .export_from
             .insert(exported.clone(), (specifier.to_string(), imported));
         visitor.facts.reexports.push((exported.clone(), exported));
     }

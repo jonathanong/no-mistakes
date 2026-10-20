@@ -21,38 +21,59 @@ pub(super) fn unmatched_workers(
                 queue_file: job.queue_file.clone(),
                 queue_name: job.queue_name.clone(),
             };
-            if let Some(lines) = unresolved.get(&queue) {
-                out.push(unresolved_worker(root, worker, &job, lines));
-            } else {
+            let mut lines = unresolved.by_queue.get(&queue).cloned().unwrap_or_default();
+            if let Some(job_lines) = unresolved.by_job.get(&job.job) {
+                lines.extend(job_lines.iter().cloned());
+            }
+            lines.extend(unresolved.any_queue.iter().cloned());
+            lines.sort();
+            lines.dedup();
+            if lines.is_empty() {
                 out.push(worker.unmatched(root, &job));
+            } else {
+                out.push(unresolved_worker(root, worker, &job, &lines));
             }
         }
     }
     out
 }
 
-fn unresolved_locations(
-    root: &Path,
-    producers: &[InternalProducer],
-) -> HashMap<QueueKey, Vec<String>> {
-    let mut out: HashMap<QueueKey, Vec<String>> = HashMap::new();
+struct UnresolvedLocations {
+    by_queue: HashMap<QueueKey, Vec<String>>,
+    by_job: HashMap<String, Vec<String>>,
+    any_queue: Vec<String>,
+}
+
+fn unresolved_locations(root: &Path, producers: &[InternalProducer]) -> UnresolvedLocations {
+    let mut out = UnresolvedLocations {
+        by_queue: HashMap::new(),
+        by_job: HashMap::new(),
+        any_queue: Vec::new(),
+    };
     for producer in producers {
-        if producer.site.job.is_some() {
-            continue;
-        }
-        let Some(queue) = &producer.queue else {
-            continue;
-        };
-        out.entry(queue.clone()).or_default().push(format!(
+        let line = format!(
             "{}:{}",
             relative_string(root, &producer.site.file),
             producer.site.line
-        ));
+        );
+        match (&producer.queue, producer.site.job.as_deref()) {
+            (Some(queue), None) => out.by_queue.entry(queue.clone()).or_default().push(line),
+            // An unresolved queue may feed this job on any queue definition.
+            (None, Some(job)) => out.by_job.entry(job.to_string()).or_default().push(line),
+            (None, None) => out.any_queue.push(line),
+            (Some(_), Some(_)) => {}
+        }
     }
-    for lines in out.values_mut() {
+    for lines in out.by_queue.values_mut() {
         lines.sort();
         lines.dedup();
     }
+    for lines in out.by_job.values_mut() {
+        lines.sort();
+        lines.dedup();
+    }
+    out.any_queue.sort();
+    out.any_queue.dedup();
     out
 }
 
