@@ -119,8 +119,10 @@ is a direct write or delete of `.query`, a mutator builtin (`Object.assign`,
 holder or a return, or a same-file helper that writes the parameter. A same-file
 `new` constructor and a tagged template are that same helper, and
 `new Proxy(executor, ...)` replaces the target. A same-file
-alias, assignment, destructure, or parameter also counts. Only passing the
-binding to a function or constructor declared elsewhere is non-mutating. Passing
+alias, assignment, destructure, or parameter also counts. A constructor, tag,
+or helper declared in another module is non-mutating, and so is any other
+function declared elsewhere. Move the constructor, tag, or helper that touches
+`.query` into an imported module, or stop passing the executor into it. Passing
 the module object itself still can. `const { query } = ns` captures that
 function: an escape already in effect at the binding downgrades later calls
 through the local, and an escape after the binding does not rewrite them. A

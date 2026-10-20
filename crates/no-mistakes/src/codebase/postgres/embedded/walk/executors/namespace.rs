@@ -1,6 +1,6 @@
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Argument, CallExpression, Expression};
+use oxc_ast::ast::{CallExpression, Expression};
 use std::collections::HashMap;
 
 mod aggregate;
@@ -180,31 +180,6 @@ impl ScopeVisitor<'_> {
                     in_loop: self.loop_depth > 0,
                     mutates_member,
                 });
-        }
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn revoke_namespace_arguments(
-        &mut self,
-        callee: &Expression<'_>,
-        arguments: &[Argument<'_>],
-    ) {
-        for (index, argument) in arguments.iter().enumerate() {
-            if let Some(expression) = argument.as_expression() {
-                self.revoke_namespace_expression(callee, index, expression);
-            }
-        }
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn revoke_namespace_expression(
-        &mut self,
-        callee: &Expression<'_>,
-        index: usize,
-        expression: &Expression<'_>,
-    ) {
-        if self.namespace_argument_mutates(callee, index) {
-            self.revoke_query_receiver(expression);
-        } else {
-            self.revoke_passed_argument(expression);
         }
     }
 }
