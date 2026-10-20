@@ -11,3 +11,7 @@ query(`WITH inserted AS (
   ON CONFLICT (id) DO NOTHING
   RETURNING id
 ) SELECT id FROM inserted`);
+
+// Non-INSERT WITH prefixes must not demand conflict facts after pruning.
+query("WITH v AS (SELECT id FROM items) SELECT id FROM v");
+query("WITH (");

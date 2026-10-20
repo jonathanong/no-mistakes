@@ -38,5 +38,5 @@ fn omitted_non_insert_facts_preserve_valid_and_malformed_policy_verdicts() {
             assert_eq!(after.survives_unknown, before.survives_unknown, "{mode}");
         }
     }
-    assert_eq!(malformed, 1, "exercise the saved malformed SELECT control");
+    assert_eq!(malformed, 2, "exercise the saved malformed SELECT control");
 }

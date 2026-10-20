@@ -40,14 +40,14 @@ fn conflict_pruning_preserves_non_insert_reports_and_cte_findings_in_every_mode(
         } else {
             expected = Some(plain_json);
         }
-        assert_eq!(evidence.sql_verdicts.len(), 3);
+        assert_eq!(evidence.sql_verdicts.len(), 5);
         assert_eq!(
             evidence
                 .sql_verdicts
                 .iter()
                 .filter(|verdict| verdict.status == SqlVerdictStatus::ProvenClear)
                 .count(),
-            2,
+            4,
         );
         assert_eq!(
             evidence

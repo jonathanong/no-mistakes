@@ -80,7 +80,7 @@ fn conflict_only_demand_skips_irrelevant_statement_extractions() {
         &source,
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
-    assert_eq!(file.calls.len(), 5);
+    assert_eq!(file.calls.len(), 7);
     assert!(file
         .calls
         .iter()
@@ -105,8 +105,8 @@ fn conflict_only_demand_skips_irrelevant_statement_extractions() {
     for demand in [SqlLocationDemand::None, SqlLocationDemand::Full] {
         work::begin();
         let full = embedded_call_facts_with_demand(&file, false, false, demand);
-        assert_eq!(work::finish().statement_extractions, 5);
-        assert_eq!(full.len(), 5);
+        assert_eq!(work::finish().statement_extractions, 7);
+        assert_eq!(full.len(), 7);
         assert!(
             full[4].parse_failed,
             "the saved SELECT control must be malformed"
@@ -114,6 +114,6 @@ fn conflict_only_demand_skips_irrelevant_statement_extractions() {
     }
     work::begin();
     let bounds = embedded_call_facts_with_demand(&file, true, false, SqlLocationDemand::Conflicts);
-    assert_eq!(work::finish().statement_extractions, 5);
-    assert_eq!(bounds.len(), 5);
+    assert_eq!(work::finish().statement_extractions, 7);
+    assert_eq!(bounds.len(), 7);
 }
