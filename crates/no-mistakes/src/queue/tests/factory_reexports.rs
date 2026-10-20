@@ -122,7 +122,7 @@ fn star_target_outside_the_fact_set_does_not_invent_a_queue() {
 #[test]
 fn unresolved_queue_producers_do_not_make_handlers_dead() {
     let report = analyze_project(&fixture("factory-reexports"), None, &[]).unwrap();
-    for job in ["nsjob", "dfltjob", "ext", "cyc"] {
+    for (job, line) in [("nsjob", 5), ("dfltjob", 6), ("ext", 7), ("cyc", 8)] {
         let finding = report
             .check
             .iter()
@@ -136,8 +136,10 @@ fn unresolved_queue_producers_do_not_make_handlers_dead() {
             report.check
         );
         assert!(
-            finding.message.contains("enq/unresolved.mts:"),
-            "{job} message should name the producer, check: {:?}",
+            finding
+                .message
+                .contains(&format!("enq/unresolved.mts:{line}")),
+            "{job} message should name the producer line, check: {:?}",
             report.check
         );
     }

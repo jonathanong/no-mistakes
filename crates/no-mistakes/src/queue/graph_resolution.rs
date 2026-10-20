@@ -82,6 +82,7 @@ fn adopt_processor_jobs(
     let Some(file) = &site.processor_file else {
         return;
     };
+    // `processor_file` is remapped from `facts.keys()`.
     let jobs = facts[file].referenced_jobs.clone();
     if jobs.is_empty() {
         return;
@@ -118,6 +119,7 @@ fn local_queues<R: ImportResolverFacade>(
         let Some(resolved) = remapper.remap(&resolved) else {
             continue;
         };
+        // `resolved` is a remapped fact path, and `queue_defs` is built from those keys.
         let exports = &queue_defs[&resolved];
         if let Some(queue_name) = exports.get(&import.imported) {
             map.insert(

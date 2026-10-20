@@ -57,6 +57,8 @@ checks. The `enqueues` and `workers` globs scope the files that participate in
 a project; `cluster` gives producers and workers a shared queue namespace.
 Empty lists disable that side of the relationship. A non-empty glob that
 matches no file is reported by [`queues check`](../cli/queues-check.md).
+A producer whose queue and job both failed to resolve is listed on every
+unmatched worker, so that finding can be broader than the handler's own queue.
 Language test/graph frontends likewise
 require explicit `tests.<language>` package or module roots; no repository-wide
 queue scan is enabled by default.
