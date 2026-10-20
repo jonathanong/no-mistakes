@@ -312,6 +312,43 @@ fn swift_project_policy_matches_trimmed_package_boundaries() {
     }
 }
 
+/// The project key is a package match on its own. An include outside that
+/// package does not fall back to the first package. A longer include prefix
+/// still wins over a shorter key.
+#[test]
+fn swift_project_policy_keeps_a_package_named_by_the_project_key() {
+    let outside = named_policy_package(
+        vec!["first".to_string(), "clients/core".to_string()],
+        "clients/core",
+        "other/Tests/**",
+    );
+    assert_eq!(outside.as_deref(), Some("clients/core"));
+
+    let longer = named_policy_package(
+        vec!["clients".to_string(), "clients/core".to_string()],
+        "clients",
+        "clients/core/Tests/**",
+    );
+    assert_eq!(longer.as_deref(), Some("clients/core"));
+}
+
+fn named_policy_package(packages: Vec<String>, name: &str, include: &str) -> Option<String> {
+    let mut config = NoMistakesConfig::default();
+    config.tests.swift.packages = packages;
+    config.tests.swift.projects.insert(
+        name.to_string(),
+        TestProjectPolicy {
+            include: vec![include.to_string()],
+            ..Default::default()
+        },
+    );
+    runner_projects(Path::new(""), &config, TestRunner::Swift)
+        .unwrap()
+        .into_iter()
+        .find(|project| project.policy_name.as_deref() == Some(name))
+        .and_then(|project| project.config)
+}
+
 #[test]
 fn swift_projects_lossy_uses_swift_project_loader() {
     let root = Path::new("");
