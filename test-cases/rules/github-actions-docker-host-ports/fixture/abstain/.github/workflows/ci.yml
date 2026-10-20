@@ -49,3 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: docker run -p pre$PORT:5432 postgres
+  dyn-publish-value:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -p $(echo 5432:5432) postgres

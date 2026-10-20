@@ -1,4 +1,4 @@
-<!-- cspell:ignore nerdctl setsid tlsverify -->
+<!-- cspell:ignore nerdctl podman setsid tlsverify -->
 
 # `github-actions-docker-host-ports`
 
@@ -13,10 +13,10 @@ the host port instead.
 The rule is opt-in. Listing it is what turns it on. It is off by default and
 is not part of a recommended or strict preset. It reports only a mapping it
 can judge. A dynamic publish word stays silent. These forms are not judged:
-`podman` and `nerdctl`, an `ssh` remote command, an unknown flag before
-`-p` or `--publish`, and a YAML merge key (`<<`), which is not applied. A
-literal command inside `bash -c`, `sh -c`, `zsh -c`, or `eval` is judged,
-including when `sudo` precedes that shell.
+an `ssh` remote command, an unknown flag before `-p` or `--publish`, and a
+YAML merge key (`<<`), which is not applied. A literal command inside
+`bash -c`, `sh -c`, `zsh -c`, or `eval` is judged, including when `sudo`
+precedes that shell.
 
 ## What it catches
 
@@ -35,8 +35,9 @@ literal range (`5432`, `8000-8002`), including an IP prefix
   `0:5432`, `127.0.0.1:0:5432`, and a container port alone (`5432`).
 - Variable host ports: `$PORT:5432`, `${PORT}:5432`, and `${{ ... }}:5432`.
 
-The command word is `docker` (a path whose last segment is `docker` counts)
-followed by `run`, or `docker container run`. A leading `sudo` (including
+The command word is `docker`, `podman`, or `nerdctl` (a path whose last
+segment is one of those counts) followed by `run` or `create`, including
+`container run` and `container create`. A leading `sudo` (including
 `--`, `--user`, `--preserve-env`, and boolean flags such as `-i`), `env`
 (including a path, `-C`, and `-S`), `timeout` (including `-s` and `-k`),
 `xargs`, an assignment, or a shell prefix (`if`, `time`, `exec`, `setsid`,
@@ -138,5 +139,5 @@ that step line, so `no-mistakes-disable-next-line` above the step applies.
 rejects untrusted expressions inside `run` scripts.
 [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
 flags a checkout that persists a write token. This rule judges literal host
-ports on `docker run` and `docker create` publish mappings, and on job
-`services:` and `container:` `ports:`.
+ports on `docker`, `podman`, and `nerdctl` `run` and `create` publish
+mappings, and on job `services:` and `container:` `ports:`.

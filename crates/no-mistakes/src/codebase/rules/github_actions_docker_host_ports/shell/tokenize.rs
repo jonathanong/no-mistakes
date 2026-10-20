@@ -18,8 +18,6 @@ struct Tok<'a> {
     open: bool,
     word_dynamic: bool,
     quote: Option<char>,
-    subst: i32,
-    backtick: bool,
     command: Command,
     commands: Vec<Command>,
     pending_heredocs: Vec<(String, bool)>,
@@ -36,8 +34,6 @@ impl<'a> Tok<'a> {
             open: false,
             word_dynamic: false,
             quote: None,
-            subst: 0,
-            backtick: false,
             command: Command::default(),
             commands: Vec::new(),
             pending_heredocs: Vec::new(),
@@ -48,7 +44,7 @@ impl<'a> Tok<'a> {
         while self.index < self.chars.len() {
             self.step();
         }
-        if self.quote.is_some() || self.backtick || self.subst > 0 {
+        if self.quote.is_some() {
             self.command.dynamic = true;
         }
         self.flush_word();
