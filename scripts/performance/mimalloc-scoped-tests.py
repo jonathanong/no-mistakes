@@ -14,6 +14,12 @@ SAVED = HERE / 'fixtures/mimalloc-scoped'
 
 
 class ScopedTests(unittest.TestCase):
+    def test_saved_cohort_config_and_sibling_ignore_are_exact(self):
+        root = CONTRACT['SAVED'] / 'consumer'
+        proof = json.loads((root / 'contract.json').read_text())
+        self.assertEqual(CONTRACT['digest'](root / 'config.yml'), proof['cohortConfigSha256'])
+        self.assertEqual(CONTRACT['digest'](root / 'consumer.gitignore'), proof['siblingGitignoreSha256'])
+
     def test_saved_annotation_sources_are_exact(self):
         root = CONTRACT['SAVED'] / 'annotation'
         proof = json.loads((root / 'contract.json').read_text())

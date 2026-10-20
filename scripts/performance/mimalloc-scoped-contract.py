@@ -50,6 +50,7 @@ def prepare(consumer, output):
     config.write_bytes((SAVED / 'consumer/config.yml').read_bytes())
     (output / '.gitignore').write_bytes((SAVED / 'consumer/consumer.gitignore').read_bytes())
     assert digest(config) == proof['cohortConfigSha256']
+    assert digest(output / '.gitignore') == proof['siblingGitignoreSha256']
     import yaml
     original = yaml.safe_load((consumer / '.no-mistakes.yml').read_text())
     selected = yaml.safe_load(config.read_text())
