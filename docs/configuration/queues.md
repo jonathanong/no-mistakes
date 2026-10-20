@@ -56,11 +56,13 @@ enqueue factory records a producer at the wrapper call. `options` is the
 argument index of that call's options object; self-dedup and debounce checks
 read it the same way they read `queue.add`'s third argument. A worker factory
 records the processor. The active job is a parameter named `job`, or otherwise
-the callback's first parameter, including `switch (task.name)` and
-`async ({ name, id }) =>`. The `enqueues` and `workers` globs scope the files
+the processor's first parameter, including `switch (task.name)` and
+`async ({ name, id }) =>`. A nested callback is a job only when one of its
+parameters is named `job`. The `enqueues` and `workers` globs scope the files
 that participate in a project. `waitScopes` limits `addAndWait` and
-`waitUntilFinished` findings, including `this.queue.addAndWait`; an empty list
-checks every scanned file. `cluster` gives producers and workers a shared
+`waitUntilFinished` findings, including `this.queue.addAndWait`, for that
+project. An empty list checks every file of the project, and a file outside
+every project stays checked. `cluster` gives producers and workers a shared
 queue namespace. Two factories with the same callee and different argument
 indexes are a configuration error.
 Empty lists disable that side of the relationship. A non-empty glob that

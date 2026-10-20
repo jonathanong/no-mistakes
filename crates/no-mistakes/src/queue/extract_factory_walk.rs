@@ -12,7 +12,7 @@ pub(crate) fn visit_function<'a>(
     flags: oxc_syntax::scope::ScopeFlags,
 ) {
     let worker = enter_worker(visitor, func.span);
-    let entered = enter_job(visitor, &func.params);
+    let entered = enter_job(visitor, &func.params, func.span);
     walk::walk_function(visitor, func, flags);
     if entered {
         visitor.job_frames.pop();
@@ -24,7 +24,7 @@ pub(crate) fn visit_function<'a>(
 
 pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunctionExpression<'a>) {
     let worker = enter_worker(visitor, arrow.span);
-    let entered = enter_job(visitor, &arrow.params);
+    let entered = enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
     if entered {
         visitor.job_frames.pop();
@@ -69,22 +69,37 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
     }
 }
 
-fn enter_job(visitor: &mut QueueVisitor<'_>, params: &FormalParameters<'_>) -> bool {
-    let Some(frame) = job_frame(params) else {
+fn enter_job(
+    visitor: &mut QueueVisitor<'_>,
+    params: &FormalParameters<'_>,
+    span: oxc_span::Span,
+) -> bool {
+    let processor = visitor
+        .processor_spans
+        .iter()
+        .any(|record| record.0 == span.start && record.1 == span.end);
+    let Some(frame) = job_frame(params, processor) else {
         return false;
     };
     visitor.job_frames.push(frame);
     true
 }
 
-fn job_frame(params: &FormalParameters<'_>) -> Option<JobFrame> {
+/// A parameter named `job` is the job in any function. The first-parameter
+/// fallback applies only to the processor itself, so a nested callback such as
+/// `items.map((item) => queue.add(..., { jobId: item.id }))` is not a self-dedup.
+fn job_frame(params: &FormalParameters<'_>, processor: bool) -> Option<JobFrame> {
     let named = params
         .items
         .iter()
         .find(|param| binding_name(&param.pattern).as_deref() == Some("job"));
-    let pattern = named
-        .map(|param| &param.pattern)
-        .or_else(|| params.items.first().map(|param| &param.pattern))?;
+    let pattern = if let Some(param) = named {
+        &param.pattern
+    } else if processor {
+        &params.items.first()?.pattern
+    } else {
+        return None;
+    };
     frame_from_pattern(pattern)
 }
 

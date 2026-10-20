@@ -56,6 +56,16 @@ fn detector_gaps_report_renamed_jobs_member_waits_and_wrapper_options() {
         report.check
     );
     assert!(count(&report.check, "workers/disabled.mts", "self-dedup-enqueue") >= 1);
+    assert_eq!(
+        count(
+            &report.check,
+            "workers/nested-callback.mts",
+            "self-dedup-enqueue"
+        ),
+        1,
+        "only a nested parameter named `job` dedups, check: {:?}",
+        report.check
+    );
 
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);
@@ -112,21 +122,48 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
         .to_string();
     assert!(worker_err.contains("conflicting worker"), "{worker_err}");
 
-    let ok_yaml = "version: 2\nprojects:\n  jobs:\n    root: services\n    queues:\n      waitScopes: [\"workers/**\", \"services/already/**\", \"services\"]\nqueues:\n  factories:\n    enqueue:\n      - { callee: enqueueJob, queue: 0, job: 1, options: 3 }\n";
+    let ok_yaml = "version: 2\nprojects:\n  jobs:\n    root: services\n    queues:\n      waitScopes: [\"workers/**\", \"services/already/**\", \"services\"]\n  web:\n    root: apps/web\nqueues:\n  factories:\n    enqueue:\n      - { callee: enqueueJob, queue: 0, job: 1, options: 3 }\n";
     let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(ok_yaml).unwrap();
     let roles = config
         .queues
         .factories
         .clone()
         .with_project_wait_scopes(&config);
+    let jobs = roles
+        .wait_scopes
+        .iter()
+        .find(|project| project.root == "services")
+        .unwrap();
     assert_eq!(
-        roles.wait_scopes,
+        jobs.scopes,
         vec![
             "services".to_string(),
             "services/already/**".to_string(),
             "services/workers/**".to_string(),
         ]
     );
+    let web = roles
+        .wait_scopes
+        .iter()
+        .find(|project| project.root == "apps/web")
+        .unwrap();
+    assert!(web.scopes.is_empty());
+    assert!(crate::queue::extract::waits_in_scope(
+        Path::new("/repo/apps/web/page.mts"),
+        &roles.wait_scopes
+    ));
+    assert!(!crate::queue::extract::waits_in_scope(
+        Path::new("/repo/services/routes/a.mts"),
+        &roles.wait_scopes
+    ));
+    assert!(crate::queue::extract::waits_in_scope(
+        Path::new("/repo/services/workers/a.mts"),
+        &roles.wait_scopes
+    ));
+    assert!(crate::queue::extract::waits_in_scope(
+        Path::new("/repo/other/a.mts"),
+        &roles.wait_scopes
+    ));
     let mut other = roles.clone();
     other.enqueue[0].job = 9;
     let mut merged = roles.clone();
@@ -162,20 +199,28 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
         });
     assert!(queue_roles.merge(&other).is_err());
 
+    let routes = crate::config::v2::schema::ProjectWaitScopes {
+        root: String::new(),
+        scopes: vec!["routes/**".to_string()],
+    };
+    let broken = crate::config::v2::schema::ProjectWaitScopes {
+        root: String::new(),
+        scopes: vec!["[".to_string()],
+    };
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("routes/a.mts"),
         &[]
     ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("/repo/routes/a.mts"),
-        &["routes/**".to_string()]
+        std::slice::from_ref(&routes)
     ));
     assert!(!crate::queue::extract::waits_in_scope(
         Path::new("/repo/workers/a.mts"),
-        &["routes/**".to_string()]
+        std::slice::from_ref(&routes)
     ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("anywhere.mts"),
-        &["[".to_string()]
+        std::slice::from_ref(&broken)
     ));
 }

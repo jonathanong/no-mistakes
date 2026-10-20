@@ -19,7 +19,9 @@ mod rule_targets;
 mod string_or_list;
 mod tests_config;
 
-pub use queues::{EnqueueFactory, QueueFactoryRoles, QueueNameFactory, WorkerFactory};
+pub use queues::{
+    EnqueueFactory, ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, WorkerFactory,
+};
 
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use effects::{EffectKindConfig, EffectReturnedMemberConfig, EffectTargetConfig};

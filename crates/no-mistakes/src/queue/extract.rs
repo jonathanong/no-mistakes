@@ -43,7 +43,39 @@ pub(crate) fn extract_program_with_factories(
     visitor.facts
 }
 
-pub(crate) fn waits_in_scope(path: &Path, scopes: &[String]) -> bool {
+pub(crate) fn waits_in_scope(
+    path: &Path,
+    projects: &[crate::config::v2::schema::ProjectWaitScopes],
+) -> bool {
+    let Some(project) = containing_project(path, projects) else {
+        return true;
+    };
+    scopes_match(path, &project.scopes)
+}
+
+fn containing_project<'a>(
+    path: &Path,
+    projects: &'a [crate::config::v2::schema::ProjectWaitScopes],
+) -> Option<&'a crate::config::v2::schema::ProjectWaitScopes> {
+    projects
+        .iter()
+        .filter(|project| root_contains(path, &project.root))
+        .max_by_key(|project| project.root.len())
+}
+
+fn root_contains(path: &Path, root: &str) -> bool {
+    let root = root.trim().trim_matches('/');
+    if root.is_empty() || root == "." {
+        return true;
+    }
+    let path = path.to_string_lossy().replace('\\', "/");
+    path == root
+        || path.starts_with(&format!("{root}/"))
+        || path.contains(&format!("/{root}/"))
+        || path.ends_with(&format!("/{root}"))
+}
+
+fn scopes_match(path: &Path, scopes: &[String]) -> bool {
     if scopes.is_empty() {
         return true;
     }

@@ -8,10 +8,15 @@ pub struct QueueFactoryRoles {
     pub queue: Vec<QueueNameFactory>,
     pub enqueue: Vec<EnqueueFactory>,
     pub worker: Vec<WorkerFactory>,
-    /// Project `queues.waitScopes`, prefixed like other project globs.
-    /// Empty means every scanned file.
-    pub wait_scopes: Vec<String>,
+    /// Each project's `queues.waitScopes`, prefixed like other project globs.
+    /// An empty scope list means every file of that project.
+    pub wait_scopes: Vec<ProjectWaitScopes>,
 }
+
+#[path = "queues_wait.rs"]
+mod wait;
+
+pub use wait::ProjectWaitScopes;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueueNameFactory {
@@ -46,16 +51,9 @@ impl QueueFactoryRoles {
         names
     }
 
-    /// Copy project wait scopes onto the roles the extractor already receives.
+    /// Copy each project's wait scopes onto the roles the extractor receives.
     pub fn with_project_wait_scopes(mut self, config: &super::NoMistakesConfig) -> Self {
-        for project in config.projects.values() {
-            for scope in &project.queues.wait_scopes {
-                self.wait_scopes
-                    .push(prefix_scope(project.root.as_deref(), scope));
-            }
-        }
-        self.wait_scopes.sort();
-        self.wait_scopes.dedup();
+        wait::attach(&mut self.wait_scopes, config);
         self
     }
 
@@ -70,7 +68,7 @@ impl QueueFactoryRoles {
         self.queue.extend(other.queue.clone());
         self.enqueue.extend(other.enqueue.clone());
         self.worker.extend(other.worker.clone());
-        self.wait_scopes.extend(other.wait_scopes.clone());
+        wait::merge(&mut self.wait_scopes, &other.wait_scopes);
         self.dedup_callees();
         Ok(())
     }
@@ -94,24 +92,7 @@ impl QueueFactoryRoles {
             .sort_by(|left, right| left.callee.cmp(&right.callee));
         self.worker
             .dedup_by(|left, right| left.callee == right.callee);
-        self.wait_scopes.sort();
-        self.wait_scopes.dedup();
-    }
-}
-
-fn prefix_scope(root: Option<&str>, glob: &str) -> String {
-    let glob = glob.trim_start_matches("./");
-    let Some(root) = root
-        .map(str::trim)
-        .map(|root| root.trim_start_matches("./").trim_end_matches('/'))
-        .filter(|root| !root.is_empty() && *root != ".")
-    else {
-        return glob.to_string();
-    };
-    if glob == root || glob.starts_with(&format!("{root}/")) {
-        glob.to_string()
-    } else {
-        format!("{root}/{glob}")
+        wait::dedup(&mut self.wait_scopes);
     }
 }
 
