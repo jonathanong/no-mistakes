@@ -27,7 +27,10 @@ fn mapped_non_insert_conflict_requests_omit_work_and_preserve_requested_facts() 
     work::begin();
     let narrow =
         embedded_call_facts_with_demand(&embedded, false, false, SqlLocationDemand::Conflicts);
-    assert_eq!(work::finish().statement_extractions, 3);
+    let narrow_work = work::finish();
+    assert_eq!(narrow_work.statement_extractions, 3);
+    assert_eq!(narrow_work.general_fact_collections, 0);
+    assert_eq!(narrow_work.full_walks, 0);
     assert_eq!(narrow.len(), 3);
     assert_eq!(
         narrow
@@ -48,7 +51,12 @@ fn mapped_non_insert_conflict_requests_omit_work_and_preserve_requested_facts() 
     // Keep actual conflict sites and quoted/comment false positives unchanged.
     let complete =
         embedded_call_facts_with_demand(&embedded, false, false, SqlLocationDemand::Full);
-    assert_eq!(narrow, complete[4..7]);
+    let expected: Vec<_> = complete[4..7]
+        .iter()
+        .cloned()
+        .map(super::policy_projection_tests::policy_only)
+        .collect();
+    assert_eq!(narrow, expected);
     for (demand, bounds) in [
         (SqlLocationDemand::None, false),
         (SqlLocationDemand::Full, false),
@@ -56,7 +64,9 @@ fn mapped_non_insert_conflict_requests_omit_work_and_preserve_requested_facts() 
     ] {
         work::begin();
         let facts = embedded_call_facts_with_demand(&embedded, bounds, false, demand);
-        assert_eq!(work::finish().statement_extractions, 11);
+        let complete_work = work::finish();
+        assert_eq!(complete_work.statement_extractions, 11);
+        assert_eq!(complete_work.general_fact_collections, 11);
         assert_eq!(facts.len(), 11);
         assert!(facts[1].parse_failed && facts[3].parse_failed);
     }

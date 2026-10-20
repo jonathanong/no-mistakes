@@ -7,3 +7,6 @@ pub(crate) fn full_projection() {}
 pub(crate) fn conflict_projection() {}
 #[inline(always)]
 pub(crate) fn statement_extraction() {}
+
+#[inline(always)]
+pub(crate) fn general_fact_collection() {}

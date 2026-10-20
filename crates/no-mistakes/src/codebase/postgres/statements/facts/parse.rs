@@ -1,4 +1,5 @@
 //! One prepared SQL parse feeds every requested statement projection.
+use super::sources::StatementProjection;
 use super::SqlStatementFileFacts;
 use crate::codebase::postgres::conflict::ConflictChunks;
 use crate::codebase::postgres::parse::{
@@ -26,6 +27,7 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
         collect_bounds,
         None,
         SqlLocationDemand::None,
+        StatementProjection::Complete,
     )
 }
 
@@ -40,6 +42,7 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         collect_bounds,
         Some(recovered_placeholder_positions),
         SqlLocationDemand::None,
+        StatementProjection::Complete,
     )
 }
 
@@ -53,6 +56,7 @@ pub(crate) fn extract_sql_variant_statement_facts(
         collect_bounds,
         Some(positions),
         SqlLocationDemand::Full,
+        StatementProjection::Complete,
     )
 }
 
@@ -67,6 +71,21 @@ pub(crate) fn extract_sql_statement_facts_with_location_demand(
         collect_bounds,
         Some(positions),
         demand,
+        StatementProjection::Complete,
+    )
+}
+
+/// Prepare only the fields consumed by the sole conflict-ordering policy.
+pub(crate) fn extract_sql_conflict_policy_facts(
+    sql: &str,
+    positions: &[(u32, u32)],
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        false,
+        Some(positions),
+        SqlLocationDemand::Conflicts,
+        StatementProjection::ConflictPolicy,
     )
 }
 
@@ -75,17 +94,19 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
     locations: SqlLocationDemand,
+    projection: StatementProjection,
 ) -> SqlStatementFileFacts {
     super::locations::work::statement_extraction();
     let prepared = PreparedSql::new(sql);
     let parsed = prepared.parse_policy();
     let parse_failed = parsed.is_err();
     match parsed {
-        Ok(statements) => super::extract_from_parsed_and_sources(
+        Ok(statements) => super::projection::extract(
             sql,
             &prepared,
             &statements,
             super::StatementSources {
+                projection,
                 locations,
                 ..Default::default()
             },
@@ -112,11 +133,12 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 .into_iter()
                 .map(|located| (located.statement, located.source))
                 .unzip();
-            super::extract_from_parsed_and_sources(
+            super::projection::extract(
                 sql,
                 &prepared,
                 &statements,
                 super::StatementSources {
+                    projection,
                     locations,
                     tokens: Some(&sources),
                     recovery: Some(&recovery),
@@ -151,6 +173,7 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
             tokens: None,
             recovery: None,
             policy,
+            ..Default::default()
         },
         parse_failed,
         collect_bounds,
@@ -163,3 +186,6 @@ mod location_demand_tests;
 
 #[cfg(test)]
 mod mapped_demand_tests;
+
+#[cfg(test)]
+mod policy_projection_tests;

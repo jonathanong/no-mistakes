@@ -3,7 +3,8 @@ use crate::codebase::postgres::embedded::{EmbeddedSqlFileFacts, EmbeddedSqlKind}
 use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use crate::codebase::postgres::statement_facts::SqlStatementFileFacts;
 use crate::codebase::postgres::statements::{
-    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_location_demand,
+    extract_sql_conflict_policy_facts, extract_sql_statement_facts_with_bounds,
+    extract_sql_statement_facts_with_location_demand,
 };
 use crate::codebase::postgres::types::{PostgresFactError, PostgresSchemaOptions};
 use crate::codebase::ts_source::SourceStore;
@@ -89,26 +90,30 @@ pub(crate) fn embedded_call_facts_with_demand(
             let sql = call.sql_text.as_deref()?;
             // Ordering rejects opaque tails before consulting prepared statements.
             // Keep all facts for variants and general/bounds consumers.
-            if demand == SqlLocationDemand::Conflicts
-                && !collect_bounds
-                && !variant
+            let conflict_only =
+                demand == SqlLocationDemand::Conflicts && !collect_bounds && !variant;
+            if conflict_only
                 && (call.kind == EmbeddedSqlKind::Dynamic
                     || !super::super::conflict::may_have_insert_conflict(sql))
             {
                 return None;
             }
-            // Variants and mapped SQL retain the pre-existing complete projection.
+            // General consumers and variants retain the complete projection.
             let projection = if variant || !call.sql_source_positions.is_empty() {
                 SqlLocationDemand::Full
             } else {
                 demand
             };
-            let mut facts = extract_sql_statement_facts_with_location_demand(
-                sql,
-                collect_bounds,
-                &call.recovered_placeholder_positions,
-                projection,
-            );
+            let mut facts = if conflict_only {
+                extract_sql_conflict_policy_facts(sql, &call.recovered_placeholder_positions)
+            } else {
+                extract_sql_statement_facts_with_location_demand(
+                    sql,
+                    collect_bounds,
+                    &call.recovered_placeholder_positions,
+                    projection,
+                )
+            };
             if call.kind == EmbeddedSqlKind::Dynamic {
                 // Recovered interpolation text can prove OFFSET syntax and write
                 // targets for general consumers. Conflict-only opaque calls were
