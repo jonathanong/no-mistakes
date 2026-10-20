@@ -7,6 +7,9 @@ The CLI and N-API library use mimalloc for Rust allocations when the default
 enables `local_dynamic_tls` and does not enable `override` or `v2`. Rust-library
 consumers with their own global allocator can use
 `--no-default-features --features mermaid-validation`.
+Library unit tests leave global allocator registration to allocation-count test
+guards; production CLI/addon and compiled-library integration tests retain the
+selected allocator. Compiler guards cover both test modes and both feature modes.
 
 This PR remains a draft. The rebased analyzer has not been measured. Collection
 [39335249661](https://github.com/jonathanong/no-mistakes/actions/runs/39335249661)

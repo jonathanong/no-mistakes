@@ -37,6 +37,14 @@ jobs:
           done
           node --test scripts/performance/mimalloc-napi-runner.test.js
           bash scripts/performance/mimalloc-build-tests.sh
+      - name: Install stable Rust for allocator configuration guards
+        timeout-minutes: 3
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # 2026.10.09
+        with:
+          toolchain: stable
+      - name: Verify production and unit-test allocator registration
+        timeout-minutes: 2
+        run: python3 scripts/performance/mimalloc-configuration-tests.py
   build:
     needs: harness-tests
     uses: ./.github/workflows/mimalloc-evaluation-build.yml

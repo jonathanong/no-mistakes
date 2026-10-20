@@ -1,6 +1,8 @@
 extern crate self as no_mistakes;
 
-#[cfg(feature = "mimalloc")]
+// Library unit tests reserve the allocator for scoped allocation-count guards.
+// Production CLI/addon builds and compiled-library integration tests retain mimalloc.
+#[cfg(all(feature = "mimalloc", not(test)))]
 #[global_allocator]
 static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
