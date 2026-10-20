@@ -2,8 +2,15 @@ use crate::codebase::postgres::embedded::placeholders;
 
 /// Rewrites generated markers while keeping authored SQL byte identities stable.
 ///
-/// A short origin list is a caller bug. Index with `get` so that bug cannot panic.
+/// Callers pass one origin per SQL byte. Debug builds assert that length so a
+/// short list cannot hide in release output. Release builds still index with
+/// `get` and drop the missing span.
 pub(crate) fn rewrite(sql: &str, origins: &[u32], offset: u32, publish: bool) -> Vec<u32> {
+    debug_assert_eq!(origins.len(), sql.len());
+    rewrite_impl(sql, origins, offset, publish)
+}
+
+fn rewrite_impl(sql: &str, origins: &[u32], offset: u32, publish: bool) -> Vec<u32> {
     let mut out = Vec::new();
     let mut at = 0;
     let mut seen = 0;
