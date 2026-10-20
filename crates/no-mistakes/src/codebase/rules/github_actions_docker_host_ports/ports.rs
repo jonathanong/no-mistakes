@@ -14,6 +14,8 @@ pub(super) fn service_findings(rel: &str, source: &str, jobs: &Mapping) -> Vec<R
             continue;
         };
         let name = scalar_name(id);
+        // Same spec later in this job must not reuse an earlier service's line.
+        let mut placed = Vec::new();
         if let Some(services) = map_get(job, "services").and_then(Value::as_mapping) {
             for (service_id, service) in services {
                 let Some(service) = service.as_mapping() else {
@@ -27,6 +29,7 @@ pub(super) fn service_findings(rel: &str, source: &str, jobs: &Mapping) -> Vec<R
                     &name,
                     &place,
                     map_get(service, "ports"),
+                    &mut placed,
                 );
                 note_options(
                     &mut findings,
@@ -35,6 +38,7 @@ pub(super) fn service_findings(rel: &str, source: &str, jobs: &Mapping) -> Vec<R
                     &name,
                     &place,
                     map_get(service, "options"),
+                    &mut placed,
                 );
             }
         }
@@ -47,6 +51,7 @@ pub(super) fn service_findings(rel: &str, source: &str, jobs: &Mapping) -> Vec<R
                 &name,
                 &place,
                 map_get(container, "ports"),
+                &mut placed,
             );
         }
     }
@@ -60,12 +65,13 @@ fn note_ports(
     job: &str,
     place: &str,
     ports: Option<&Value>,
+    placed: &mut Vec<String>,
 ) {
     let Some(ports) = ports else {
         return;
     };
     for spec in port_specs(ports) {
-        note(findings, rel, source, job, place, &spec);
+        note(findings, rel, source, job, place, &spec, placed);
     }
 }
 
@@ -76,12 +82,13 @@ fn note_options(
     job: &str,
     place: &str,
     options: Option<&Value>,
+    placed: &mut Vec<String>,
 ) {
     let Some(text) = options.and_then(Value::as_str) else {
         return;
     };
     for hit in publish_hits(&format!("docker run {text} img")) {
-        note(findings, rel, source, job, place, &hit.spec);
+        note(findings, rel, source, job, place, &hit.spec, placed);
     }
 }
 
@@ -92,11 +99,14 @@ fn note(
     job: &str,
     place: &str,
     spec: &str,
+    placed: &mut Vec<String>,
 ) {
     let Verdict::Literal(host) = classify(spec) else {
         return;
     };
-    let line = spec_line(source, job, spec);
+    let skip = placed.iter().filter(|seen| seen.as_str() == spec).count();
+    let line = spec_line(source, job, spec, skip);
+    placed.push(spec.to_string());
     findings.push(RuleFinding {
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
@@ -122,13 +132,15 @@ fn scalar_spec(value: &Value) -> Option<String> {
     }
 }
 
-fn spec_line(source: &str, job: &str, spec: &str) -> usize {
+fn spec_line(source: &str, job: &str, spec: &str, skip: usize) -> usize {
     let lines: Vec<&str> = source.lines().collect();
     let (start, end) = job_span(&lines, job).unwrap_or((0, lines.len()));
     lines[start..end]
         .iter()
-        .position(|line| contains_token(line, spec))
-        .map(|offset| start + offset + 1)
+        .enumerate()
+        .filter(|(_, line)| contains_token(line, spec))
+        .nth(skip)
+        .map(|(offset, _)| start + offset + 1)
         .unwrap_or(start + 1)
 }
 

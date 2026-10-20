@@ -4,7 +4,7 @@ use super::wrappers::{skip_adjusted, skip_env, skip_sudo, skip_xargs};
 
 const LEADING: &[&str] = &[
     "if", "then", "elif", "else", "do", "while", "until", "!", "{", "(", "time", "exec", "command",
-    "nohup",
+    "nohup", "setsid",
 ];
 
 pub(super) fn command_text(text: &str) -> &str {

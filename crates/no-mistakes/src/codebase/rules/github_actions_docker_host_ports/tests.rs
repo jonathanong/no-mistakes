@@ -73,6 +73,7 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/actions/node/action.yaml",
             ".github/workflows/broken.yml",
             ".github/workflows/ci.yml",
+            ".github/workflows/merge.yml",
             ".github/workflows/nested/old.yml",
             ".no-mistakes.yml",
         ],
@@ -81,6 +82,7 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".github/workflows/ci.yml",
             ".github/workflows/compact.yml",
             ".github/workflows/disabled.yml",
+            ".github/workflows/duplicate.yml",
             ".no-mistakes.yml",
         ],
         other => panic!("unknown fixture scenario {other}"),
@@ -367,9 +369,28 @@ fn saved_fixtures_flag_only_literal_host_ports() {
 fn suppression_directives_hide_file_line_and_next_line() {
     let (root, config, files) = load_fixture("suppression");
     let raw = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(raw.len(), 8, "{raw:?}");
+    assert_eq!(raw.len(), 10, "{raw:?}");
+    let duplicate: Vec<_> = raw
+        .iter()
+        .filter(|finding| finding.file.ends_with("duplicate.yml"))
+        .collect();
+    assert_eq!(duplicate.len(), 2, "{duplicate:?}");
+    assert!(duplicate
+        .iter()
+        .any(|finding| { finding.line == 8 && finding.message.contains("service `a`") }));
+    assert!(duplicate
+        .iter()
+        .any(|finding| { finding.line == 12 && finding.message.contains("service `b`") }));
     let findings = crate::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert_eq!(findings.len(), 4, "{findings:?}");
+    assert!(findings.iter().any(|finding| {
+        finding.file.ends_with("duplicate.yml")
+            && finding.line == 8
+            && finding.message.contains("service `a`")
+    }));
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.message.contains("service `b`")));
     assert!(findings.iter().any(|finding| {
         finding.target.as_deref() == Some("service") && finding.message.contains("in `6011:5432`")
     }));

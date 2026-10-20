@@ -7,8 +7,10 @@ pub(super) fn skip_sudo(words: &[Word], mut index: usize) -> usize {
         if text == "--" {
             return index + 1;
         }
-        if matches!(text, "-E" | "-n" | "-H" | "--preserve-env")
-            || text.starts_with("--preserve-env=")
+        if matches!(
+            text,
+            "-E" | "-n" | "-H" | "-i" | "-s" | "-S" | "-k" | "-A" | "-b" | "-P" | "--preserve-env"
+        ) || text.starts_with("--preserve-env=")
             || text.starts_with("--user=")
             || text.starts_with("--group=")
             || text.starts_with("--chdir=")
@@ -160,7 +162,8 @@ pub(super) fn shell_operand(words: &[Word], mut index: usize) -> Option<&Word> {
         if !text.starts_with('-') {
             return None;
         }
-        index += if text == "-o" || text == "--rcfile" {
+        // `-O extglob` takes the next word, same as `-o` and `--rcfile`.
+        index += if matches!(text, "-o" | "--rcfile" | "-O") {
             2
         } else {
             1

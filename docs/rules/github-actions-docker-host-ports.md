@@ -1,4 +1,4 @@
-<!-- cspell:ignore nerdctl tlsverify -->
+<!-- cspell:ignore nerdctl setsid tlsverify -->
 
 # `github-actions-docker-host-ports`
 
@@ -13,9 +13,10 @@ the host port instead.
 The rule is opt-in. Listing it is what turns it on. It is off by default and
 is not part of a recommended or strict preset. It reports only a mapping it
 can judge. A dynamic publish word stays silent. These forms are not judged:
-`podman` and `nerdctl`, an `ssh` remote command, and an unknown flag before
-`-p` or `--publish`. A literal command inside `bash -c`, `sh -c`, `zsh -c`,
-or `eval` is judged, including when `sudo` precedes that shell.
+`podman` and `nerdctl`, an `ssh` remote command, an unknown flag before
+`-p` or `--publish`, and a YAML merge key (`<<`), which is not applied. A
+literal command inside `bash -c`, `sh -c`, `zsh -c`, or `eval` is judged,
+including when `sudo` precedes that shell.
 
 ## What it catches
 
@@ -36,11 +37,12 @@ literal range (`5432`, `8000-8002`), including an IP prefix
 
 The command word is `docker` (a path whose last segment is `docker` counts)
 followed by `run`, or `docker container run`. A leading `sudo` (including
-`--`, `--user`, and `--preserve-env`), `env` (including a path, `-C`, and
-`-S`), `timeout` (including `-s` and `-k`), `xargs`, an assignment, or a
-shell prefix (`if`, `time`, `exec`, `(`, and the same family) does not hide
-the command. `bash`, `sh`, and `zsh` with `-c` or `-lc`, and `eval`, are
-read again as a script when the operand is a literal word. Client globals
+`--`, `--user`, `--preserve-env`, and boolean flags such as `-i`), `env`
+(including a path, `-C`, and `-S`), `timeout` (including `-s` and `-k`),
+`xargs`, an assignment, or a shell prefix (`if`, `time`, `exec`, `setsid`,
+`(`, and the same family) does not hide the command. `bash`, `sh`, and `zsh`
+with `-c`, `-lc`, or `-O`, and `eval`, are read again as a script when the
+operand is a literal word. Client globals
 before the subcommand (`--context`, `-c`, `--tls`, `--tlsverify`, `--host`,
 `-H`, `--config`, `--log-level`, `-l`, and the `--tls*` file flags) are
 skipped. Flags before the image are parsed when this rule knows them. An
