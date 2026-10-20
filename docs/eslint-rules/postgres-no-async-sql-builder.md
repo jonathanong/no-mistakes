@@ -150,7 +150,9 @@ async function buildQuery(id: string) {
   `${id.x}` stays silent because it can throw after `async` is removed.
   A module-level `const` string or no-substitution template is judged SQL
   even when `callees` is unset, but only for a function that entry already
-  selects. A module-level binding that is not that
+  selects. A call that appears before that const's initializer stays silent,
+  because removing `async` would throw before the rest of the module runs.
+  A module-level binding that is not that
   shape, including a module-level configured tag, is not judged SQL.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported

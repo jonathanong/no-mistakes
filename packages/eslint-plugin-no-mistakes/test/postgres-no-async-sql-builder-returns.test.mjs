@@ -361,6 +361,43 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       [],
     );
+    // The call is after the initializer, so the hoisted function is still judged.
+    assert.deepEqual(
+      ids(`
+        async function build() { return Q; }
+        const Q = "SELECT 1";
+        read(build());
+      `),
+      ["removeAsync"],
+    );
+    // Calling the hoisted builder before the const throws once async is gone.
+    assert.deepEqual(
+      ids(`
+        async function build() { return Q; }
+        build();
+        after();
+        const Q = "SELECT 1";
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const build = async () => Q;
+        build();
+        const Q = "SELECT 1";
+      `),
+      [],
+    );
+    // A helper declared before the const may run before initialization.
+    assert.deepEqual(
+      ids(`
+        function later() { build(); }
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        read(later());
+      `),
+      [],
+    );
     assert.deepEqual(
       ids(`
         async function build(id: string) { return id; }

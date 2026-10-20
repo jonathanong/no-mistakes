@@ -1,7 +1,11 @@
 "use strict";
 
 const { traverse, unwrapExpression } = require("./async-ast");
-const { isModuleConstSql } = require("./postgres-no-async-sql-builder-constants");
+const { blockCompletion } = require("./postgres-no-async-sql-builder-completion");
+const {
+  moduleConstSqlDeclaration,
+  moduleConstsAreReady,
+} = require("./postgres-no-async-sql-builder-constants");
 const {
   calleeMatches,
   localInitializer,
@@ -48,31 +52,37 @@ function isConfiguredSqlCall(node, builders, context) {
   );
 }
 
-function isSafePlaceholder(node, builders, context, func, seen) {
+function isSafePlaceholder(node, builders, context, func, seen, consts) {
   const current = unwrapExpression(node);
   if (current.type === "Literal" || isConstantTemplate(current)) return true;
-  if (current.type !== "Identifier") return isJudgedReturn(current, builders, context, func, seen);
+  if (current.type !== "Identifier") {
+    return isJudgedReturn(current, builders, context, func, seen, consts);
+  }
   if (seen.has(current)) return false;
   const initializer = localInitializer(current, func, context);
-  if (!initializer) return true;
+  if (!initializer) {
+    const declaration = moduleConstSqlDeclaration(current, context);
+    if (declaration) consts.push(declaration);
+    return true;
+  }
   seen.add(current);
-  const safe = isSafePlaceholder(initializer, builders, context, func, seen);
+  const safe = isSafePlaceholder(initializer, builders, context, func, seen, consts);
   seen.delete(current);
   return safe;
 }
 
-function isJudgedReturn(node, builders, context, func, seen) {
+function isJudgedReturn(node, builders, context, func, seen, consts) {
   const current = unwrapExpression(node);
   if (current.type === "ConditionalExpression") {
     return (
-      isJudgedReturn(current.consequent, builders, context, func, seen) &&
-      isJudgedReturn(current.alternate, builders, context, func, seen)
+      isJudgedReturn(current.consequent, builders, context, func, seen, consts) &&
+      isJudgedReturn(current.alternate, builders, context, func, seen, consts)
     );
   }
   if (current.type === "LogicalExpression") {
     return (
-      isJudgedReturn(current.left, builders, context, func, seen) &&
-      isJudgedReturn(current.right, builders, context, func, seen)
+      isJudgedReturn(current.left, builders, context, func, seen, consts) &&
+      isJudgedReturn(current.right, builders, context, func, seen, consts)
     );
   }
   if (current.type === "SequenceExpression") {
@@ -82,6 +92,7 @@ function isJudgedReturn(node, builders, context, func, seen) {
       context,
       func,
       seen,
+      consts,
     );
   }
   if (isStringLiteral(current) || isConstantTemplate(current)) return true;
@@ -92,59 +103,28 @@ function isJudgedReturn(node, builders, context, func, seen) {
     isConfiguredSqlCall(current, builders, context)
   ) {
     return current.quasi.expressions.every((expression) =>
-      isSafePlaceholder(expression, builders, context, func, seen),
+      isSafePlaceholder(expression, builders, context, func, seen, consts),
     );
   }
   if (current.type !== "Identifier" || seen.has(current)) return false;
   const initializer = localInitializer(current, func, context);
   if (initializer) {
     seen.add(current);
-    return isJudgedReturn(initializer, builders, context, func, seen);
+    return isJudgedReturn(initializer, builders, context, func, seen, consts);
   }
-  return isModuleConstSql(current, context);
-}
-
-function statementCompletion(statement) {
-  if (statement.type === "ReturnStatement" || statement.type === "ThrowStatement") return "returns";
-  if (statement.type === "BlockStatement") return blockCompletion(statement.body);
-  if (statement.type === "LabeledStatement") return statementCompletion(statement.body);
-  if (statement.type === "IfStatement") {
-    const whenTrue = statementCompletion(statement.consequent);
-    if (!statement.alternate) return whenTrue === "returns" || whenTrue === "may" ? "may" : "next";
-    const whenFalse = statementCompletion(statement.alternate);
-    if (whenTrue === "returns" && whenFalse === "returns") return "returns";
-    if (whenTrue === "falls" || whenTrue === "next") {
-      return whenFalse === "falls" || whenFalse === "next" ? "next" : "may";
-    }
-    return "may";
-  }
-  if (
-    statement.type === "ExpressionStatement" ||
-    statement.type === "VariableDeclaration" ||
-    statement.type === "FunctionDeclaration" ||
-    statement.type === "ClassDeclaration" ||
-    statement.type === "EmptyStatement" ||
-    statement.type === "DebuggerStatement"
-  ) {
-    return "next";
-  }
-  return "may";
-}
-
-function blockCompletion(statements) {
-  for (let index = 0; index < statements.length; index += 1) {
-    const completion = statementCompletion(statements[index]);
-    if (completion === "returns") return "returns";
-    if (completion === "may") {
-      return blockCompletion(statements.slice(index + 1)) === "returns" ? "returns" : "may";
-    }
-  }
-  return "falls";
+  const declaration = moduleConstSqlDeclaration(current, context);
+  if (!declaration) return false;
+  consts.push(declaration);
+  return true;
 }
 
 function returnsJudgedSql(context, func, builders) {
+  const consts = [];
   if (func.body.type !== "BlockStatement") {
-    return isJudgedReturn(func.body, builders, context, func, new Set());
+    return (
+      isJudgedReturn(func.body, builders, context, func, new Set(), consts) &&
+      moduleConstsAreReady(func, consts, context)
+    );
   }
   if (blockCompletion(func.body.body) !== "returns") return false;
   let judged = true;
@@ -152,11 +132,14 @@ function returnsJudgedSql(context, func, builders) {
   traverse(context, func.body, (node) => {
     if (!judged || node.type !== "ReturnStatement") return;
     seenReturn = true;
-    if (!node.argument || !isJudgedReturn(node.argument, builders, context, func, new Set())) {
+    if (
+      !node.argument ||
+      !isJudgedReturn(node.argument, builders, context, func, new Set(), consts)
+    ) {
       judged = false;
     }
   });
-  return judged && seenReturn;
+  return judged && seenReturn && moduleConstsAreReady(func, consts, context);
 }
 
 function parameterCanThrow(param) {
