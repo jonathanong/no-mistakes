@@ -1,0 +1,389 @@
+{
+  "count": 288,
+  "cells": [
+    {
+      "jobs": "1",
+      "diagnostics": "off",
+      "ledger": "off",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.4960498029347671,
+            "cpuSeconds": 0.45595980712928214,
+            "peakRssKiB": 0.0030679055390780974
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.6684541496631455,
+            "cpuSeconds": 1.6687469250549425,
+            "peakRssKiB": 0.034077079107497354
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 1.149022006037333,
+            "cpuSeconds": 1.148829932955997,
+            "peakRssKiB": 0.07570592106229679
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 5.618346202990154,
+            "cpuSeconds": 5.616419320340582,
+            "peakRssKiB": 0.10734545769182091
+          }
+        }
+      }
+    },
+    {
+      "jobs": "1",
+      "diagnostics": "off",
+      "ledger": "on",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.3859689559344903,
+            "cpuSeconds": -0.3875576534324891,
+            "peakRssKiB": -0.0016221573818882746
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.2328622212207874,
+            "cpuSeconds": 1.2313997244773112,
+            "peakRssKiB": 0.02677043138252788
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 1.0519423192819288,
+            "cpuSeconds": 1.0533670641018917,
+            "peakRssKiB": 0.11578306448408367
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.916909425174529,
+            "cpuSeconds": 1.9195875701818688,
+            "peakRssKiB": 0.1373834404275076
+          }
+        }
+      }
+    },
+    {
+      "jobs": "1",
+      "diagnostics": "on",
+      "ledger": "off",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.02765079052782597,
+            "cpuSeconds": -0.02487406270386683,
+            "peakRssKiB": 0.019752948817410482
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 0.5687604836125182,
+            "cpuSeconds": 0.5671926297849961,
+            "peakRssKiB": 0.05953487369716459
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.006042307355080823,
+            "cpuSeconds": 0.009154585333818558,
+            "peakRssKiB": 0.08805636749649921
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.514145221248142,
+            "cpuSeconds": 1.512394533436412,
+            "peakRssKiB": 0.12008713048301534
+          }
+        }
+      }
+    },
+    {
+      "jobs": "1",
+      "diagnostics": "on",
+      "ledger": "on",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.08657333784340045,
+            "cpuSeconds": -0.07935976517511693,
+            "peakRssKiB": -0.002332323335903682
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.5803694674551783,
+            "cpuSeconds": 1.5581733014031096,
+            "peakRssKiB": 0.03661504663033943
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 1.147844579811197,
+            "cpuSeconds": 1.1460985942202795,
+            "peakRssKiB": 0.09748786010787362
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 2.103611158676877,
+            "cpuSeconds": 2.104723793769492,
+            "peakRssKiB": 0.11904248901146719
+          }
+        }
+      }
+    },
+    {
+      "jobs": "4",
+      "diagnostics": "off",
+      "ledger": "off",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.11179955540573754,
+            "cpuSeconds": 0.26631277726462305,
+            "peakRssKiB": 0.040148581117079495
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.2941424457042272,
+            "cpuSeconds": 1.8461099548897186,
+            "peakRssKiB": 0.17302400618590674
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.1646538263752125,
+            "cpuSeconds": 0.4799284181330484,
+            "peakRssKiB": 0.07407627375481951
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 3.0521378711755753,
+            "cpuSeconds": 1.8471624277986765,
+            "peakRssKiB": 0.30324899394935656
+          }
+        }
+      }
+    },
+    {
+      "jobs": "4",
+      "diagnostics": "off",
+      "ledger": "on",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.5341269294494522,
+            "cpuSeconds": -0.43677100539823804,
+            "peakRssKiB": -0.025251372553514173
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 2.032297704422481,
+            "cpuSeconds": 1.0708821021287007,
+            "peakRssKiB": 0.16868966835514865
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 1.534662042397587,
+            "cpuSeconds": 1.2844084633721036,
+            "peakRssKiB": 0.6902499451375369
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 6.0363453590828176,
+            "cpuSeconds": 4.328636113292861,
+            "peakRssKiB": 0.7969954989822448
+          }
+        }
+      }
+    },
+    {
+      "jobs": "4",
+      "diagnostics": "on",
+      "ledger": "off",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.3505768300303265,
+            "cpuSeconds": -0.7349597610462203,
+            "peakRssKiB": -0.028813224508069297
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 3.0393904382093884,
+            "cpuSeconds": 1.4449308057082,
+            "peakRssKiB": 0.1890058056877697
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.34167080360904173,
+            "cpuSeconds": 0.3372692374540631,
+            "peakRssKiB": 0.15508233595005194
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 4.441548707658538,
+            "cpuSeconds": 2.124424010243442,
+            "peakRssKiB": 0.32304447396360736
+          }
+        }
+      }
+    },
+    {
+      "jobs": "4",
+      "diagnostics": "on",
+      "ledger": "on",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.5549527241886695,
+            "cpuSeconds": -0.7613511662454738,
+            "peakRssKiB": 0.020854640856636058
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 3.3206579129090086,
+            "cpuSeconds": 3.55924352827679,
+            "peakRssKiB": 0.164155952913414
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.46232460309857765,
+            "cpuSeconds": 0.900917766515095,
+            "peakRssKiB": 0.5680979100413394
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 2.2093508676201967,
+            "cpuSeconds": 2.5708554896892055,
+            "peakRssKiB": 0.6740722580706571
+          }
+        }
+      }
+    },
+    {
+      "jobs": "default",
+      "diagnostics": "off",
+      "ledger": "off",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -1.539927502586878,
+            "cpuSeconds": -0.4586939321123769,
+            "peakRssKiB": -0.025216827380086793
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 7.606802132140089,
+            "cpuSeconds": 1.1936361502386639,
+            "peakRssKiB": 0.3107453346368638
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.8367410630272853,
+            "cpuSeconds": 0.5357585641878179,
+            "peakRssKiB": 0.12943993933800155
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 3.720780644546484,
+            "cpuSeconds": 3.4744270532854227,
+            "peakRssKiB": 0.37116348879340233
+          }
+        }
+      }
+    },
+    {
+      "jobs": "default",
+      "diagnostics": "off",
+      "ledger": "on",
+      "withinSpread": false,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": -0.03252018553861665,
+            "cpuSeconds": -0.1303789255956885,
+            "peakRssKiB": 0.022785643919566907
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.857688119519274,
+            "cpuSeconds": 0.9169217205597713,
+            "peakRssKiB": 0.12952688100225096
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 2.239428816434889,
+            "cpuSeconds": 1.4155982200979411,
+            "peakRssKiB": 0.6271610244413731
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 3.608390104616843,
+            "cpuSeconds": 2.2973787973318283,
+            "peakRssKiB": 0.7755709461393145
+          }
+        }
+      }
+    },
+    {
+      "jobs": "default",
+      "diagnostics": "on",
+      "ledger": "off",
+      "withinSpread": true,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.27797527157386775,
+            "cpuSeconds": 0.4311966110182382,
+            "peakRssKiB": -0.034333617076115486
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 1.6998283161891559,
+            "cpuSeconds": 2.2564321978733926,
+            "peakRssKiB": 0.2122567594518343
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.7322542509942928,
+            "cpuSeconds": 0.3773016357009921,
+            "peakRssKiB": 0.049436933379184055
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 4.156893806776352,
+            "cpuSeconds": 1.1763962608250633,
+            "peakRssKiB": 0.18294757326824396
+          }
+        }
+      }
+    },
+    {
+      "jobs": "default",
+      "diagnostics": "on",
+      "ledger": "on",
+      "withinSpread": false,
+      "stages": {
+        "aa": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 0.10512930639105707,
+            "cpuSeconds": 0.2529861393911592,
+            "peakRssKiB": -0.07056479933567801
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 2.8430298896189976,
+            "cpuSeconds": 0.8165425570420215,
+            "peakRssKiB": 0.27324090779603516
+          }
+        },
+        "bccb": {
+          "meanPairPercentDelta": {
+            "wallSeconds": 2.848241560049203,
+            "cpuSeconds": 2.0285264013495916,
+            "peakRssKiB": 0.608737863204234
+          },
+          "maxAbsolutePairPercentDelta": {
+            "wallSeconds": 9.628556726280157,
+            "cpuSeconds": 5.869589466443537,
+            "peakRssKiB": 0.8435838161287013
+          }
+        }
+      }
+    }
+  ]
+}

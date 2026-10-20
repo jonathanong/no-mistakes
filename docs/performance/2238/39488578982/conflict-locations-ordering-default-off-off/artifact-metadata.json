@@ -1,0 +1,20 @@
+{
+  "id": 12296614286,
+  "node_id": "MDg6QXJ0aWZhY3QxMjI5NjYxNDI4Ng==",
+  "name": "conflict-locations-ordering-default-off-off",
+  "size_in_bytes": 124721,
+  "url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12296614286",
+  "archive_download_url": "https://api.github.com/repos/jonathanong/no-mistakes/actions/artifacts/12296614286/zip",
+  "expired": false,
+  "digest": "sha256:01376019f58548459c31898b46eeff8dc4c60bc6cd739f2c339620b1f1dd18c7",
+  "created_at": "2026-10-20T20:46:31Z",
+  "updated_at": "2026-10-20T20:46:31Z",
+  "expires_at": "2026-10-27T20:02:31Z",
+  "workflow_run": {
+    "id": 39488578982,
+    "repository_id": 1235521884,
+    "head_repository_id": 1235521884,
+    "head_branch": "eval/2238-ledger-off-arm",
+    "head_sha": "510a88d5102b230b4fb626051c4141f670aedf10"
+  }
+}
