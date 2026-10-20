@@ -108,14 +108,20 @@ fn processor_binding(
     call: &CallExpression<'_>,
     processor_index: usize,
 ) -> Option<String> {
-    let arg = call.arguments.get(processor_index)?;
-    if let Some(name) = identifier_arg(arg) {
-        if let Some((specifier, _)) = visitor.facts.string_imports.get(&name) {
-            return Some(specifier.clone());
-        }
-        if let Some(specifier) = visitor.namespace_imports.get(&name) {
-            return Some(specifier.clone());
+    let expr = call
+        .arguments
+        .get(processor_index)?
+        .as_expression()?
+        .get_inner_expression();
+    if let Expression::Identifier(id) = expr {
+        if let Some(import) = visitor
+            .facts
+            .imports
+            .iter()
+            .find(|import| import.local == id.name.as_str())
+        {
+            return Some(import.source.clone());
         }
     }
-    processor_specifier(&call.arguments, visitor.source, &visitor.namespace_imports)
+    processor_specifier(expr, &visitor.namespace_imports)
 }

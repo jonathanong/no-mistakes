@@ -80,17 +80,19 @@ impl QueueVisitor<'_> {
             .arguments
             .get(1)
             .and_then(Argument::as_expression)
-            .and_then(|expr| match expr.get_inner_expression() {
-                Expression::Identifier(id) => self
-                    .facts
-                    .imports
-                    .iter()
-                    .find(|import| import.local == id.name.as_str())
-                    .map(|import| import.source.clone()),
-                _ => None,
-            })
-            .or_else(|| {
-                processor_specifier(&new_expr.arguments, self.source, &self.namespace_imports)
+            .and_then(|expr| {
+                let expr = expr.get_inner_expression();
+                if let Expression::Identifier(id) = expr {
+                    if let Some(import) = self
+                        .facts
+                        .imports
+                        .iter()
+                        .find(|import| import.local == id.name.as_str())
+                    {
+                        return Some(import.source.clone());
+                    }
+                }
+                processor_specifier(expr, &self.namespace_imports)
             });
         self.facts.workers.push(WorkerSite {
             file: self.path.to_path_buf(),

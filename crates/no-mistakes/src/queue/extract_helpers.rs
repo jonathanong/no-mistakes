@@ -1,13 +1,9 @@
-use crate::ast;
-use oxc_ast::ast::{Argument, BindingPattern, Expression, ModuleExportName, TemplateLiteral};
-use oxc_span::GetSpan;
+use oxc_ast::ast::{BindingPattern, Expression, ModuleExportName, TemplateLiteral};
 use std::collections::HashMap;
 
 /// The processor parameter the queue checks treat as the active job.
 #[derive(Debug, Default, Clone)]
 pub(super) struct JobFrame {
-    /// Function identity for conservative imported-module dispatch summaries.
-    pub scope: u32,
     pub object: Option<String>,
     pub name_idents: Vec<String>,
     pub id_idents: Vec<String>,
@@ -83,18 +79,15 @@ fn no_substitution_template(template: &TemplateLiteral<'_>) -> Option<String> {
 }
 
 pub(super) fn processor_specifier(
-    args: &[Argument<'_>],
-    source: &str,
+    expr: &Expression<'_>,
     namespace_imports: &HashMap<String, String>,
 ) -> Option<String> {
-    let source = args
-        .iter()
-        .filter_map(Argument::as_expression)
-        .find_map(|expr| {
-            let text = ast::span_text(source, expr.span());
-            namespace_imports
-                .keys()
-                .find_map(|name| text.contains(name).then_some(name.clone()))
-        });
-    source.and_then(|name| namespace_imports.get(&name).cloned())
+    let mut root = expr.get_inner_expression();
+    while let Expression::StaticMemberExpression(member) = root {
+        root = member.object.get_inner_expression();
+    }
+    let Expression::Identifier(id) = root else {
+        return None;
+    };
+    namespace_imports.get(id.name.as_str()).cloned()
 }

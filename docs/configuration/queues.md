@@ -64,8 +64,10 @@ equality comparisons and
 `switch` labels on that job name. Unrelated object `name` properties, comments,
 strings, and other switches do not narrow a worker. Dynamic job-name dispatch
 keeps wildcard coverage, including when the processor also has literal branches.
-An imported module with multiple dispatching callables stays wildcard when the
-processor callable cannot be selected statically. The `enqueues` and `workers` globs scope the files
+An imported module with multiple callables stays wildcard when the processor
+callable cannot be selected statically. Only a direct imported processor argument
+contributes imported names; namespace references inside an inline processor do
+not narrow that processor. The `enqueues` and `workers` globs scope the files
 that participate in a project. `waitScopes` limits `addAndWait` and
 `waitUntilFinished` findings, including `this.queue.addAndWait`, for that
 project. An empty list checks every file of the project, and a file outside

@@ -11,6 +11,7 @@ pub(crate) fn visit_function<'a>(
     func: &Function<'a>,
     flags: oxc_syntax::scope::ScopeFlags,
 ) {
+    visitor.dispatch_scopes.insert(func.span.start);
     let frames = visitor.job_frames.clone();
     super::dedup::mask_parameters(visitor, &func.params);
     let worker = enter_worker(visitor, func.span);
@@ -23,6 +24,7 @@ pub(crate) fn visit_function<'a>(
 }
 
 pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunctionExpression<'a>) {
+    visitor.dispatch_scopes.insert(arrow.span.start);
     let frames = visitor.job_frames.clone();
     super::dedup::mask_parameters(visitor, &arrow.params);
     let worker = enter_worker(visitor, arrow.span);
@@ -78,11 +80,9 @@ fn enter_job(
     span: oxc_span::Span,
 ) -> bool {
     let processor = claim_processor(visitor, span);
-    let Some(mut frame) = job_frame(params, processor) else {
+    let Some(frame) = job_frame(params, processor) else {
         return false;
     };
-    frame.scope = span.start;
-    visitor.dispatch_scopes.insert(span.start);
     visitor.job_frames.push(frame);
     true
 }

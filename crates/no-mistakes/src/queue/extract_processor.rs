@@ -63,7 +63,7 @@ pub(super) fn visit_computed_member<'a>(
     member: &ComputedMemberExpression<'a>,
 ) {
     if let Expression::Identifier(object) = &member.object {
-        if literal_expr(&member.expression, &visitor.const_strings).as_deref() == Some("name")
+        if literal_expr(&member.expression, &visitor.const_strings).is_none_or(|key| key == "name")
             && visitor
                 .job_frames
                 .iter()
@@ -87,7 +87,6 @@ pub(super) fn visit_identifier(visitor: &mut QueueVisitor<'_>, id: &IdentifierRe
 }
 
 fn note_job(visitor: &mut QueueVisitor<'_>, job: String) {
-    note_scope(visitor);
     visitor.facts.referenced_jobs.push(job.clone());
     if let Some(&worker) = visitor.worker_stack.last() {
         visitor.dispatch_jobs.entry(worker).or_default().push(job);
@@ -95,16 +94,9 @@ fn note_job(visitor: &mut QueueVisitor<'_>, job: String) {
 }
 
 fn note_dynamic(visitor: &mut QueueVisitor<'_>) {
-    note_scope(visitor);
     visitor.facts.referenced_jobs_dynamic = true;
     if let Some(&worker) = visitor.worker_stack.last() {
         visitor.dispatch_dynamic_workers.insert(worker);
-    }
-}
-
-fn note_scope(visitor: &mut QueueVisitor<'_>) {
-    if let Some(frame) = visitor.job_frames.last() {
-        visitor.dispatch_scopes.insert(frame.scope);
     }
 }
 

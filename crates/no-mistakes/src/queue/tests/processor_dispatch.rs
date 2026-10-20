@@ -3,7 +3,14 @@ use super::*;
 #[test]
 fn metadata_text_and_unrelated_switches_do_not_narrow_workers() {
     let report = analyze_project(&fixture("processor-dispatch"), None, &[]).unwrap();
-    for name in ["unrelated", "inline", "ambiguous"] {
+    for name in [
+        "unrelated",
+        "inline",
+        "ambiguous",
+        "ambiguous-default",
+        "inline-namespace",
+        "factory-dynamic",
+    ] {
         let worker = report
             .workers
             .iter()
@@ -28,6 +35,9 @@ fn literal_processor_dispatch_remains_precise() {
     for (name, jobs) in [
         ("literal", vec!["alpha", "beta"]),
         ("inline-literal", vec!["alpha"]),
+        ("namespace-member", vec!["alpha", "beta"]),
+        ("factory-literal", vec!["alpha", "beta"]),
+        ("factory-default", vec!["alpha", "beta"]),
     ] {
         let worker = report
             .workers
@@ -52,7 +62,14 @@ fn literal_processor_dispatch_remains_precise() {
 #[test]
 fn nonliteral_dispatch_keeps_wildcard_after_a_literal_branch() {
     let report = analyze_project(&fixture("processor-dispatch"), None, &[]).unwrap();
-    for name in ["mixed", "computed", "comparison", "cases", "inline-mixed"] {
+    for name in [
+        "mixed",
+        "computed",
+        "computed-dynamic",
+        "comparison",
+        "cases",
+        "inline-mixed",
+    ] {
         let worker = report
             .workers
             .iter()
