@@ -287,6 +287,7 @@ fn empty_matching_patterns_fail_at_config_load() {
         ("multiline-start", "(?m)^"),
         ("star-or-qq", "a*|QQ"),
         ("qq-or-star", "QQ|a*"),
+        ("nested-empty-alt-under-star", "(?:(|b)c)*"),
     ] {
         let message = pattern_config_error(name);
         assert!(

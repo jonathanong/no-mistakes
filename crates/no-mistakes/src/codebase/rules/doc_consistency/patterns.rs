@@ -76,16 +76,30 @@ fn empty_match_hint(pattern: &str) -> Option<&'static str> {
     }
 }
 
+fn matches_empty(hir: &regex_syntax::hir::Hir) -> bool {
+    hir.properties().minimum_len() == Some(0)
+}
+
+/// An empty alternation branch hides a later alternative only when that branch
+/// is why this expression matches "". Recurse through a capture, and through a
+/// concatenation only when every element matches "". A repetition whose body is
+/// non-empty is not that path: `(?:(|b)c)*` is empty because of `*`.
 fn alternation_hides_later_branch(hir: &regex_syntax::hir::Hir) -> bool {
-    let kind = hir.kind();
-    let hides = matches!(
-        kind,
-        regex_syntax::hir::HirKind::Alternation(branches)
-            if branches
-                .iter()
-                .any(|branch| branch.properties().minimum_len() == Some(0))
-    );
-    hides || kind.subs().iter().any(alternation_hides_later_branch)
+    match hir.kind() {
+        regex_syntax::hir::HirKind::Alternation(branches) if branches.iter().any(matches_empty) => {
+            true
+        }
+        regex_syntax::hir::HirKind::Capture(capture) => {
+            alternation_hides_later_branch(&capture.sub)
+        }
+        regex_syntax::hir::HirKind::Concat(parts) if parts.iter().all(matches_empty) => {
+            parts.iter().any(alternation_hides_later_branch)
+        }
+        regex_syntax::hir::HirKind::Repetition(repetition) if matches_empty(&repetition.sub) => {
+            alternation_hides_later_branch(&repetition.sub)
+        }
+        _ => false,
+    }
 }
 
 fn compile_pattern(index: usize, pattern: &str) -> Result<Regex> {

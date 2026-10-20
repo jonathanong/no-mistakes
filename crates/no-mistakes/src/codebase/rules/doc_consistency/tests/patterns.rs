@@ -4,7 +4,7 @@ use crate::codebase::rules::suppression::SuppressionDirectiveKind;
 use crate::codebase::rules::{source_store_for_files, RuleFinding};
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
-use std::path::Path;
+use std::path::PathBuf;
 
 const PIN: &str = "Move this pin to versions.md.";
 const SECRET: &str = "Move this secret block to versions.md.";
@@ -75,13 +75,14 @@ fn config_with_rules(yamls: &[&str]) -> NoMistakesConfig {
     config
 }
 
-fn assert_error_without_reads(root: &Path, yaml: &str, needle: &str) {
-    let files = [root.join("CLAUDE.md")];
-    let sources = source_store_for_files(&files);
-    let error =
-        check_with_files_and_sources(root, &config_with_rule(yaml), &files, &sources).unwrap_err();
-    assert!(error.to_string().contains(needle), "{error}");
-    assert_eq!(sources.physical_read_count(), 0);
+fn saved_config_error(subpath: &str, files: &[PathBuf]) -> String {
+    let root = fixture_root(subpath);
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
+        .unwrap_or_else(|error| panic!("{subpath} config should load: {error}"));
+    let sources = source_store_for_files(files);
+    let error = check_with_files_and_sources(&root, &config, files, &sources).unwrap_err();
+    assert_eq!(sources.physical_read_count(), 0, "{error}");
+    error.to_string()
 }
 
 #[test]
@@ -306,68 +307,58 @@ fn empty_patterns_do_not_report_regex_matches() {
 
 #[test]
 fn invalid_patterns_fail_before_reads() {
-    let root = fixture_root("pass");
-    for (yaml, needle) in [
+    for (name, needle) in [
         (
-            "bannedPatterns:\n  - pattern: PIN\n    message: hi\n    files: []",
+            "no-files",
             "bannedPatterns[0].files must list at least one glob",
         ),
         (
-            "bannedPatterns:\n  - files: [\"docs/*.md\", \"\"]\n    pattern: PIN\n    message: hi",
+            "empty-glob",
             "bannedPatterns[0].files must not contain an empty glob",
         ),
         (
-            "bannedPatterns:\n  - files: [\"   \"]\n    pattern: PIN\n    message: hi",
+            "blank-glob",
             "bannedPatterns[0].files must not contain an empty glob",
         ),
         (
-            "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: \"\"\n    message: hi",
+            "empty-pattern",
             "bannedPatterns[0].pattern must not be empty",
         ),
         (
-            "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: PIN\n    message: \"\"",
+            "empty-message",
             "bannedPatterns[0].message must not be empty",
         ),
         (
-            "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: PIN\n    message: \"   \"",
+            "blank-message",
             "bannedPatterns[0].message must not be empty",
         ),
         (
-            "bannedPatterns:\n  - files: [\"[\"]\n    pattern: PIN\n    message: hi",
+            "invalid-glob",
             "bannedPatterns[0].files contains invalid glob",
         ),
         (
-            "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: PIN\n    message: hi\n  - files: [\"docs/*.md\"]\n    pattern: \"(\"\n    message: later",
+            "invalid-second",
             "bannedPatterns[1].pattern is an invalid regex",
         ),
     ] {
-        assert_error_without_reads(&root, yaml, needle);
+        let root = fixture_root(&format!("pattern-invalid/{name}"));
+        let message = saved_config_error(
+            &format!("pattern-invalid/{name}"),
+            &[root.join("CLAUDE.md")],
+        );
+        assert!(message.contains(needle), "{name}: {message}");
     }
 
+    let root = fixture_root("patterns-invalid");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let sources = source_store_for_files(&[]);
-    let error = check_with_files_and_sources(
-        &root,
-        &config_with_rule(
-            "bannedPatterns:\n  - files: [\"docs/*.md\"]\n    pattern: \"(\"\n    message: hi",
-        ),
-        &[],
-        &sources,
-    )
-    .unwrap_err();
-    assert!(error.to_string().contains("bannedPatterns[0]"));
-    assert!(error.to_string().contains("invalid regex"));
+    let error = check_with_files_and_sources(&root, &config, &[], &sources).unwrap_err();
+    let message = error.to_string();
+    assert!(message.contains("bannedPatterns[0]"), "{message}");
+    assert!(message.contains("invalid regex"), "{message}");
     assert_eq!(sources.physical_read_count(), 0);
-
-    let invalid_root = fixture_root("patterns-invalid");
-    let error = check(
-        &invalid_root,
-        &crate::config::v2::load_v2_config(
-            &invalid_root,
-            Some(&invalid_root.join(".no-mistakes.yml")),
-        )
-        .unwrap(),
-    )
-    .unwrap_err();
+    let error = check(&root, &config).unwrap_err();
     assert!(error.to_string().contains("bannedPatterns[0]"));
     assert!(error.to_string().contains("invalid regex"));
 }
