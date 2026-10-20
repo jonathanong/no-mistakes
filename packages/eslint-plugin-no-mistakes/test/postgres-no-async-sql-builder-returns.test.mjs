@@ -388,7 +388,7 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       [],
     );
-    // A helper declared before the const may run before initialization.
+    // later() is only called after the const, so the nested call is judged.
     assert.deepEqual(
       ids(`
         function later() { build(); }
@@ -396,7 +396,27 @@ describe("postgres-no-async-sql-builder", () => {
         async function build() { return Q; }
         read(later());
       `),
+      ["removeAsync"],
+    );
+    // invoke() runs before the const even though its build reference is below it.
+    assert.deepEqual(
+      ids(`
+        invoke();
+        after();
+        const Q = "SELECT 1";
+        function invoke() { build(); }
+        async function build() { return Q; }
+      `),
       [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        function invoke() { build(); }
+        async function build() { return Q; }
+        read(invoke());
+      `),
+      ["removeAsync"],
     );
     assert.deepEqual(
       ids(`

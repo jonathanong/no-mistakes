@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
+const { findContainingFunction, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { boundVariable, isInside } = require("./postgres-no-async-sql-builder-bindings");
 
@@ -47,17 +47,35 @@ function isModuleConstSql(identifier, context, seen = new Set()) {
   return moduleConstSqlDeclaration(identifier, context, seen) !== null;
 }
 
-// A hoisted call before the const throws once `async` is gone, instead of
-// rejecting a promise and letting the rest of the module run.
+// A call before the const throws once `async` is gone. A reference nested in
+// another function counts only when that function's own calls are after the
+// const; otherwise the helper may already have run.
+function referenceRunsAfter(reference, owner, cutoff, context, seen) {
+  if (reference.init || isInside(reference.identifier, owner)) return true;
+  const container = findContainingFunction(reference.identifier);
+  if (!container || container === owner) return reference.identifier.range[0] >= cutoff;
+  return functionRunsAfter(container, cutoff, context, seen);
+}
+
+function functionRunsAfter(func, cutoff, context, seen) {
+  const variable = boundVariable(func, context);
+  if (!variable || seen.has(variable)) return false;
+  seen.add(variable);
+  let ready = true;
+  for (const reference of variable.references) {
+    if (!referenceRunsAfter(reference, func, cutoff, context, seen)) {
+      ready = false;
+      break;
+    }
+  }
+  seen.delete(variable);
+  return ready;
+}
+
 function moduleConstsAreReady(func, declarations, context) {
   if (declarations.length === 0) return true;
-  const variable = boundVariable(func, context);
-  if (!variable) return false;
   const cutoff = Math.max(...declarations.map((declaration) => declaration.range[1]));
-  return variable.references.every((reference) => {
-    if (reference.init || isInside(reference.identifier, func)) return true;
-    return reference.identifier.range[0] >= cutoff;
-  });
+  return functionRunsAfter(func, cutoff, context, new Set());
 }
 
 module.exports = {
