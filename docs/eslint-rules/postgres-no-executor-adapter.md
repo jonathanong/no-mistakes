@@ -156,8 +156,8 @@ always the left side. `typeof flag ?? read`, `flag === 1 ?? read`,
 `` `x${flag}` ?? read ``, `[] ?? read`, `new Runner() ?? read`, and
 `!flag ?? read` stay silent. `typeof`, an untagged template, `new`, an array,
 object, or function literal, a comparison or other binary expression,
-`!` or unary `+` `-` `~`, an update expression, and dynamic `import()` are
-never nullish. `void` is always `undefined`, so
+`!` or unary `+` `-` `~`, `delete`, an update expression, and dynamic
+`import()` are never nullish. `void` is always `undefined`, so
 it is not in that set. Literal operands are folded:
 `0 && read`, `1 || read`, and `0 ?? read` are silent because that executor is
 not the value. An untyped `client.query` under a configured module is not

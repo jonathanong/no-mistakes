@@ -109,6 +109,9 @@ fn saved_fixture_reports_only_unspecified_permissions() {
         visible.iter().any(|path| path.ends_with("suppressed.yml")),
         "filtered run must see suppressed.yml, got {visible:?}"
     );
+    // null-permissions.yml and persist-false.yml are covered by their ABSENCE
+    // from the expected findings below (and above): they must stay silent.
+    // Do not drop them from the fixture or the file list.
     let filtered =
         crate::codebase::rules::run_filesystem_rules(&root, Some(&root.join(".no-mistakes.yml")))
             .unwrap();
@@ -123,6 +126,17 @@ fn saved_fixture_reports_only_unspecified_permissions() {
     assert!(filtered
         .iter()
         .all(|finding| !finding.file.ends_with("suppressed.yml")));
+
+    // Option-OFF parity through the same filesystem entry point.
+    let filtered_off = crate::codebase::rules::run_filesystem_rules(
+        &root,
+        Some(&root.join(".no-mistakes.off.yml")),
+    )
+    .unwrap();
+    assert_eq!(
+        finding_ids(&filtered_off),
+        vec!["write.yml:build".to_string()]
+    );
 }
 
 #[test]
