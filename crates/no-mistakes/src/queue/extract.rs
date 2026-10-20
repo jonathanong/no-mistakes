@@ -58,8 +58,10 @@ pub(crate) fn waits_in_scope(
 }
 
 fn repo_relative(path: &Path, root: &Path) -> String {
-    path.strip_prefix(root)
-        .unwrap_or(path)
+    let path = crate::codebase::ts_resolver::normalize_path(path);
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    path.strip_prefix(&root)
+        .unwrap_or(path.as_path())
         .to_string_lossy()
         .replace('\\', "/")
 }

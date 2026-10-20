@@ -179,6 +179,11 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
         repo,
         &roles.wait_scopes
     ));
+    assert!(!crate::queue::extract::waits_in_scope(
+        Path::new("/repo/./services/../services/routes/a.mts"),
+        Path::new("/repo/"),
+        &roles.wait_scopes
+    ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("/repo/services/workers/a.mts"),
         repo,
