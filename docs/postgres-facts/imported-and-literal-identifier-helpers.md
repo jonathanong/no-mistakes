@@ -19,10 +19,9 @@ Three fixed helper shapes recover directly:
   string literal for **every** parameter has the literals spliced in as SQL
   text, so `ownerVisible('l.parent_id')` contributes `(l.parent_id IS NULL)`.
   This works for same-file helpers too. A string literal is a quoted string
-  (`'l.parent_id'` or `"l.parent_id"`). A no-substitution template literal
-  (`` `l.parent_id` ``) is not one, on either path, so it is not spliced and
-  that call stays `Dynamic`. A helper whose arguments never reach the SQL
-  still accepts the template as a known non-text argument. A non-literal, missing, extra or
+  (`'l.parent_id'` or `"l.parent_id"`) or a no-substitution template
+  (`` `l.parent_id` ``), on either path. A template with substitutions is not
+  spliced, and that call stays `Dynamic`. A non-literal, missing, extra or
   spread argument, a default, rest, optional or destructured parameter, a
   parameter used anywhere but an interpolation of that template (including
   `col.length`, `col + '...'` or a local alias), a literal containing a

@@ -49,8 +49,8 @@ fn is_builder(visitor: &ScopeVisitor<'_>, name: &str) -> bool {
 /// A non-builder value. Objects nest only through `nested`, and never hold
 /// builders: a builder inside an object cannot be tracked.
 ///
-/// A string literal is a quoted `StringLiteral` only. A no-substitution
-/// template literal is not spliced, same as a same-file template helper.
+/// A quoted string and a no-substitution template are the same literal. A
+/// template with substitutions is not, same as a same-file template helper.
 fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) -> Option<SiteArg> {
     Some(match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => SiteArg::Literal(LiteralArg {
@@ -58,10 +58,16 @@ fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) 
             line: byte_offset_to_line(visitor.source, literal.span.start as usize),
             origin: literal.span.start + 1,
         }),
-        // A no-substitution template is not a string literal, so a template
-        // helper will not splice it. It is still a known value: a helper whose
-        // arguments never reach the SQL can be applied.
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => SiteArg::Scalar,
+        // Cooked text is the value a quoted string would have. An invalid
+        // escape has no cooked value, so the argument is not spliced.
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            let text = cooked_template(template)?;
+            SiteArg::Literal(LiteralArg {
+                text,
+                line: byte_offset_to_line(visitor.source, template.span.start as usize),
+                origin: template.span.start + 1,
+            })
+        }
         Expression::NumericLiteral(_) => SiteArg::Scalar,
         Expression::BooleanLiteral(literal) => SiteArg::Bool(literal.value),
         Expression::NullLiteral(_) => SiteArg::Null,
@@ -86,6 +92,11 @@ fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) 
         }
         _ => return None,
     })
+}
+
+fn cooked_template(template: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<String> {
+    let cooked = template.quasis.first()?.value.cooked.as_ref()?;
+    Some(cooked.as_str().to_string())
 }
 
 fn object_literal(

@@ -124,10 +124,19 @@ fn argument_shapes_decide_whether_a_hole_is_recorded() {
             SiteArg::Null,
         ])
     );
-    // A no-substitution template is not a string literal. The hole is recorded
-    // so a static helper can still run, but the argument cannot be spliced.
-    let backtick = pending_for(&facts, 11).map(|pending| pending.sites[0].1.args.clone());
-    assert_eq!(backtick, Some(vec![SiteArg::Scalar]));
+    // A no-substitution template is the same literal as a quoted string.
+    let backtick = pending_for(&facts, 11).map(|pending| {
+        pending.sites[0]
+            .1
+            .args
+            .iter()
+            .map(|arg| match arg {
+                SiteArg::Literal(literal) => SiteArg::Literal(literal.text.clone().into()),
+                other => other.clone(),
+            })
+            .collect::<Vec<_>>()
+    });
+    assert_eq!(backtick, Some(vec![SiteArg::Literal("l.template".into())]));
     // An object literal of classifiable values is recorded as such.
     let object = pending_for(&facts, 13).map(|pending| pending.sites[0].1.args.clone());
     assert_eq!(
@@ -240,4 +249,15 @@ fn only_value_imports_can_supply_a_hole() {
             None
         ]
     );
+}
+
+#[test]
+fn an_invalid_template_escape_is_not_spliced() {
+    let facts = extract("uncooked-template.ts");
+    assert!(facts.pending_imported.is_empty());
+    assert!(facts.calls.iter().all(|call| {
+        call.sql_text
+            .as_deref()
+            .is_none_or(|sql| !sql.contains("ORDER BY"))
+    }));
 }
