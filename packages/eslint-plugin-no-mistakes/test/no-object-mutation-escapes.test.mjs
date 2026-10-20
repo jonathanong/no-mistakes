@@ -228,6 +228,38 @@ describe("no-object-mutation escapes", () => {
     );
   });
 
+  it("runs a plain new and keeps field this on the instance", () => {
+    assert.deepEqual(
+      ids(`
+        function plainNew(box) {
+          function Writer() {
+            box.a = 1;
+          }
+          new Writer();
+        }
+        function plainNewLocal() {
+          const box = {};
+          function Writer() {
+            box.a = 1;
+          }
+          new Writer();
+          return box;
+        }
+        function fieldThis() {
+          const box = {
+            save() {
+              return class {
+                field = (this.ready = true);
+              };
+            },
+          };
+          return box.save();
+        }
+      `),
+      ["mutation"],
+    );
+  });
+
   it("reports a class or bind that escapes and keeps a local class", () => {
     assert.deepEqual(
       ids(`

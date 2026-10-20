@@ -32,6 +32,7 @@ function visitNew(state, node, scope, role) {
       visitArgument(state, argument, scope, "escape");
     }
     runConstruction(state, classTag);
+    invokeCallable(state, classTag);
     if (role === "escape") {
       api.releaseEscaping(state, tag);
     }
