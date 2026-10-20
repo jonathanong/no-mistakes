@@ -1,0 +1,117 @@
+name: Main A/A ordering-only ARM noise control
+
+on:
+  push:
+    branches: [eval/2238-main-aa-arm]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: conflict-locations-ordering-arm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Fresh matched production CLI pair
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 75
+    steps:
+      - name: Checkout isolated measurement harness
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Checkout exact frozen main base
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 350ada01a24c33f98696ee98de9b965dfbe6d671
+          path: source-base
+          persist-credentials: false
+      - name: Checkout exact #2238 candidate
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 350ada01a24c33f98696ee98de9b965dfbe6d671
+          path: source-candidate
+          persist-credentials: false
+      - name: Update stable Rust once for both builds
+        timeout-minutes: 3
+        run: rustup update stable && rustup default stable
+      - name: Test matched-arm and ordering-only harness invariants
+        timeout-minutes: 2
+        run: |
+          python3 -B -m unittest discover -s harness/.github/scripts/matched-arm -p 'test_*.py'
+          python3 -B -m unittest discover -s harness/.github/scripts/conflict-locations-arm -p 'test_*.py'
+      - name: Build both CLIs fresh from pinned source trees
+        timeout-minutes: 60
+        run: python3 -B harness/.github/scripts/conflict-locations-aa/build.py
+      - name: Retain both executables and full build provenance
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: conflict-locations-aa-clis
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
+
+  measure:
+    name: jobs ${{ matrix.jobs }} diagnostics ${{ matrix.diagnostics }} ledger ${{ matrix.ledger }} BCCB
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 260
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        jobs: ['1', '4', 'default']
+        diagnostics: ['off', 'on']
+        ledger: ['off']
+    steps:
+      - name: Checkout isolated measurement harness
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Download this run's fresh CLI pair
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: conflict-locations-aa-clis
+          path: cli
+      - name: Download the audited installed consumer snapshot
+        timeout-minutes: 2
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          artifact-ids: 12158768554
+          run-id: 39189171362
+          github-token: ${{ github.token }}
+          path: prepared
+      - name: Restore the exact physical consumer tree
+        timeout-minutes: 1
+        run: tar -xzf prepared/fixture.tar.gz
+      - name: Measure one ordering-only BCCB block with retained raw evidence
+        timeout-minutes: 245
+        env:
+          JOBS: ${{ matrix.jobs }}
+          DIAGNOSTICS: ${{ matrix.diagnostics }}
+          LEDGER: ${{ matrix.ledger }}
+          GITHUB_TOKEN: ${{ github.token }}
+          MATCHED_COLLECTION_CAP_SECONDS: '3600'
+        run: >-
+          python3 -B harness/.github/scripts/conflict-locations-aa/measure.py
+          "$JOBS" "$DIAGNOSTICS" "$LEDGER"
+      - name: Retain raw reports, stderr, timing, censored arms, and provenance
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: conflict-locations-aa-${{ matrix.jobs }}-${{ matrix.diagnostics }}-${{ matrix.ledger }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 7
