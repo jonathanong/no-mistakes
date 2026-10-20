@@ -160,7 +160,7 @@ upload. No older local consumer fixture substitutes for the pinned snapshot.
 
 ## Supplemental scopes
 
-The manual `mimalloc-scoped-evaluation.yml` workflow rebuilds both allocators and
+The dedicated `mimalloc-scoped-evaluation.yml` workflow rebuilds both allocators and
 collects supplemental observations on native Linux ARM64 and macOS ARM64. It uses
 the reviewed 131-rule consumer cohort from #2241 (only the two annotation rule
 applications removed), at 1/4/max jobs, and a completing saved annotation density
@@ -178,3 +178,7 @@ and report identities are retained with raw wall/CPU/peak-RSS observations.
 These explicitly scoped cells cannot fill any full hosted, many-core, or N-API
 adoption cell. The evaluator remains a draft with no adoption claim. Results are
 pending; semantic preflight and harness tests are not allocator measurements.
+The owned `eval/2200-scoped-resources` branch starts this isolated collection.
+
+The wait4 sampler polls every 50 ms. Small wall changes in the short annotation
+control may reflect that timing granularity; CPU and RSS come from child rusage.

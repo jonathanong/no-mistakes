@@ -85,6 +85,8 @@ def validate_report(row, stdout, stderr):
     workload = row['metadata']['workload']
     text = Path(stderr).read_text()
     if workload == 'annotation-workers':
+        expected = Path(__file__).parent / 'fixtures/mimalloc-scoped/annotation.stdout'
+        assert report == json.loads(expected.read_text()), 'annotation outcomes changed'
         assert len(report['rules']) == 32
         assert all(not report[key] for key in arrays if key != 'rules')
         if row['metadata']['diagnostics']:

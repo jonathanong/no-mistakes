@@ -17,6 +17,7 @@ saved. Arguments retain a cycle and a callback that reads the joined argument;
 all 32 unannotated callback queries must remain findings, with no warnings or
 advisories. This bounded synthetic project exercises annotation workers and
 completes; it does not represent the stalled production annotation project.
+The 34 TypeScript sources total 2,137,471 bytes with no JSX.
 The contract records exact input hashes and source bytes. Preflight at fixed main
 350ada01a confirmed 32 roots, 1,575,936 incoming dense slots copied, and a completed
 annotation phase. Those are semantic checks, not allocator performance results.
@@ -28,3 +29,6 @@ all job counts on one host, recording actual automatic Rayon workers for max.
 Wall time, summed user/system CPU, and wait4 peak RSS include startup and reporting.
 Censored samples are preserved and rejected. Four pairs provide exploratory
 observations, not an adoption or tail bound; the full gate stays blocked.
+
+The wait4 sampler polls at 50 ms; small wall changes on the short annotation
+control may reflect timing granularity. CPU and RSS use child rusage.

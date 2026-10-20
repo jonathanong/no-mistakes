@@ -1,6 +1,8 @@
 name: Scoped mimalloc resources
 
 on:
+  push:
+    branches: [eval/2200-scoped-resources]
   workflow_dispatch:
 
 permissions:

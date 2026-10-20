@@ -32,6 +32,8 @@ class ScopedTests(unittest.TestCase):
         row = {'exit': 1, 'timed_out': False, 'signal': None,
                'metadata': {'workload': 'annotation-workers', 'diagnostics': True}}
         CONTRACT['validate_report'](row, SAVED / 'annotation.stdout', SAVED / 'annotation.stderr')
+        with self.assertRaises(AssertionError):
+            CONTRACT['validate_report'](row, SAVED / 'annotation-unknown.stdout', SAVED / 'annotation.stderr')
         row['timed_out'] = True
         with self.assertRaises(AssertionError):
             CONTRACT['validate_report'](row, SAVED / 'annotation.stdout', SAVED / 'annotation.stderr')
@@ -60,6 +62,16 @@ class ScopedTests(unittest.TestCase):
                 REPORT['summarize'](changed, fixture['scopes'])
         with self.assertRaises(ValueError):
             REPORT['summarize'](fixture['rows'][:-1], fixture['scopes'])
+
+    def test_profile_cannot_change_for_a_whole_matched_cell(self):
+        fixture = json.loads((SAVED / 'matrix.json').read_text())
+        for field, value in (('target', 'different-target'), ('lto', 'different-profile'),
+                             ('codegenUnits', 999), ('platform', 'different-platform')):
+            changed = copy.deepcopy(fixture['rows'])
+            for row in changed[:8]:
+                row['metadata'][field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                REPORT['summarize'](changed, fixture['scopes'])
 
     def test_scoped_rows_cannot_fill_any_adoption_matrix(self):
         rows = json.loads((SAVED / 'matrix.json').read_text())['rows']

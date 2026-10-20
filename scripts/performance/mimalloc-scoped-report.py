@@ -32,7 +32,8 @@ def summarize(rows, scopes):
         groups[(workload, meta['diagnostics'], meta['jobs'])].append(row)
         hosts.add(tuple(row[key] for key in REPORT['HOST_FIELDS'] if key != 'cwd'))
         identities.add(tuple(json.dumps(meta[key], sort_keys=True) for key in
-                             ('source', 'tree', 'lock', 'rustc', 'cargo', 'build_flags')))
+                             ('source', 'tree', 'lock', 'rustc', 'cargo', 'build_flags',
+                              'target', 'lto', 'codegenUnits', 'platform')))
         binaries[meta['variant']].add(meta['artifact_sha256'])
         semantics[workload].add(tuple(row[key] for key in REPORT['SEMANTICS']) + (row['exit'],))
         defaults.add((meta['automatic_rayon_jobs'], meta['num_cpus_default']))
