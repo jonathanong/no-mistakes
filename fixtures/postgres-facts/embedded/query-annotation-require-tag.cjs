@@ -1,0 +1,13 @@
+const tag = require("sql-template-strings");
+const sql = require("other-package");
+const extra = require("sql-template-strings", "nope");
+const multi = require("sql-template-strings"), also = 1;
+let missing;
+const notCall = "sql-template-strings";
+const member = obj.require("sql-template-strings");
+const wrong = include("sql-template-strings");
+const computed = require(name);
+const { tag: nested } = require("sql-template-strings");
+require("sql-template-strings");
+tag`SELECT 1`;
+sql`SELECT 2`;

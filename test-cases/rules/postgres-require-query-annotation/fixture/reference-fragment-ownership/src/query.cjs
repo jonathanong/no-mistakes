@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 const database = require("@app/db");
 // The analyzers' established conventional global sql tag is intentionally unbound.
 

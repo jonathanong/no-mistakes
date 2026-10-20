@@ -1,3 +1,4 @@
+import sql from "sql-template-strings";
 import { query } from "@example/db";
 
 function buildSql() {
@@ -8,8 +9,4 @@ const text = buildSql();
 
 export function load() {
   return query(text);
-}
-
-function sql(strings: TemplateStringsArray, ..._values: unknown[]) {
-  return strings.join("");
 }

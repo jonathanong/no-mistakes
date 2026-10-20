@@ -1,4 +1,4 @@
-import { query } from "@data-stores/psql";
+import sql from "sql-template-strings"; import { query } from "@data-stores/psql";
 
 // Reused marker spellings remain ordinary identifiers when only source positions prove binds.
 query(sql`SELECT o.id

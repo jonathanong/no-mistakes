@@ -65,7 +65,7 @@ fn non_import_module_bindings_shadow_the_conventional_tag() {
 }
 
 #[test]
-fn conventional_tags_preserve_casing_without_trusting_unrelated_imports() {
+fn casing_variants_are_not_trusted_without_a_configured_import() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded/query-annotation-uppercase-tag.mts");
     let source = std::fs::read_to_string(&path).unwrap();
@@ -76,9 +76,9 @@ fn conventional_tags_preserve_casing_without_trusting_unrelated_imports() {
         )
     })
     .unwrap();
-    assert_eq!(
-        tags,
-        BTreeSet::from(["sql".into(), "SQL".into(), "sQl".into()])
+    assert!(
+        tags.is_empty(),
+        "a sql-shaped identifier with no configured import is unknown: {tags:?}"
     );
 }
 
@@ -105,8 +105,23 @@ fn named_default_and_type_only_imports_preserve_existing_tag_trust() {
     .unwrap();
     assert_eq!(
         tags,
-        BTreeSet::from(["sql", "SQL", "anyTag", "SqL", "sQL", "sqL"].map(str::to_string))
+        BTreeSet::from(["SQL", "anyTag", "sql"].map(str::to_string))
     );
+}
+
+#[test]
+fn commonjs_require_of_sql_template_strings_is_trusted_under_its_local_name() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/query-annotation-require-tag.cjs");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let tags = crate::ast::with_program(&path, &source, |program, _| {
+        collect(
+            program,
+            &super::super::super::EmbeddedSqlOptions::configured("", &[]),
+        )
+    })
+    .unwrap();
+    assert_eq!(tags, BTreeSet::from(["tag".to_string()]));
 }
 
 #[test]
@@ -118,9 +133,20 @@ fn canonical_module_tags_preserve_legacy_fallback_without_widening_shadows() {
         crate::ast::with_program(&path, &source, |program, _| legacy_local_tags(program)).unwrap();
     assert_eq!(
         tags.keys().map(String::as_str).collect::<Vec<_>>(),
-        vec!["SQL", "Sql", "String", "sql"]
+        vec!["String"]
     );
     for offset in tags.values() {
         assert!(source[*offset as usize..].starts_with("function"));
     }
+    let class_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/query-annotation-default-class-tag.mts");
+    let class_source = std::fs::read_to_string(&class_path).unwrap();
+    let class_tags = crate::ast::with_program(&class_path, &class_source, |program, _| {
+        legacy_local_tags(program)
+    })
+    .unwrap();
+    assert!(
+        class_tags.is_empty(),
+        "a default class is not the intrinsic String tag: {class_tags:?}"
+    );
 }

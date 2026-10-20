@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 // Unsupported binding writes happen after RHS reads and modeled mutation.
 function mutate(statement) {
   return statement.append('SELECT 1');

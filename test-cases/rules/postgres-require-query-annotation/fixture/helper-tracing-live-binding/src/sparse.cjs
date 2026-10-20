@@ -1,3 +1,4 @@
+const sql = require("sql-template-strings");
 function forward() {
   const query = sql``;
   // Sparse conditional callbacks must survive sidecar slot joins and traversal.

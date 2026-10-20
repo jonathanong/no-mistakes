@@ -9,13 +9,17 @@ call site.
 Supported argument shapes:
 
 - string literals
-- tagged templates, such as a `sql` tag applied to a template literal. The trusted tag is an identifier
-  spelled `sql` (case-insensitive) that is not lexically shadowed, a
-  default import from `sql-template-strings` under any local name, or a
-  `trustedSqlTags` named import (including a rename) from that module or a
-  subpath of it. Other `sql`-named imports, including `import * as sql`, a
-  default import from the configured module, and the same name from another
-  module, remain untrusted. The list defaults to empty.
+- tagged templates. A tag is trusted only when its binding is configured:
+  a default import from `sql-template-strings` under any local name, a named
+  import of `sql` from that module whose local name is still `sql`, or a
+  `trustedSqlTags`
+  named import (including a rename) from that module or a subpath of it. An
+  identifier spelled `sql` is not enough. A local helper, an import from an
+  unconfigured package, and a parameter that shadows the configured binding
+  stay unknown: the template is unanalyzable and the call remains a candidate.
+  Other `sql`-named imports, including `import * as sql`, a default import
+  from the configured module, and the same name from another module, remain
+  untrusted. `trustedSqlTags` defaults to empty.
   `String.raw` with no interpolations is trusted only when `String` is the
   intrinsic, not a local import, class, parameter, or callable rebinding.
 - template literals
