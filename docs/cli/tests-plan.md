@@ -91,9 +91,11 @@ the existing `package-manifest-no-baseline`, `lockfile-no-baseline`,
 `swift-resolved-no-baseline` warnings and add one structured marker.
 `.csproj`, `Directory.Packages.props`, NuGet lockfiles, `Package.swift`, and
 `Package.resolved` are different files with the same missing baseline, so they
-use `dependency-baseline-missing` rather than a second kind. `fallback_triggered: true` is not
-completeness: a scoped Vitest setup fallback can still select only its owning
-project.
+use `dependency-baseline-missing` rather than a second kind.
+`fallback_triggered: true` is not completeness: a scoped Vitest setup fallback
+can still select only its owning project. Diff-only mode, an explicit diff
+without `--head`, also needs `--head` before targeted comparison can read the
+new manifest, lockfile, or Swift or .NET dependency file.
 
 ```json
 "incomplete": [
@@ -194,7 +196,8 @@ that maps changed source files to test projects or targets. `tests.dotnet.projec
 or `tests.dotnet.solutions`, and `tests.swift.packages`, are the source-graph
 inputs. If native tests are discoverable but the native source/project change
 cannot be traced, the plan falls back to the framework-scoped discovered tests
-and sets `fallback_triggered` with a `fallback_reason`.
+and sets `fallback_triggered` with a `fallback_reason`. See the
+[unprovable-selection exception](../why.md#unprovable-selections).
 
 Example native workspace config:
 
@@ -304,12 +307,15 @@ direct `require('vitest/config')` namespace; ESM defaults and CommonJS
 Setup values are extracted statically from string and array forms. Dynamic
 expressions, unresolved literal modules, and unavailable static inline config
 `extends` targets produce a JSON warning with the declaring config, field, and
-project. When such a declaration is relevant, the
-plan conservatively selects the affected owner scope (or the discovered Vitest
-framework set when ownership cannot be determined) and sets
-`fallback_triggered`; this safety fallback does not require
-`--global-config-fallback`. Its bounded helper closure follows ordinary static
-imports/re-exports and literal CommonJS `require(...)` or
+project. When such a declaration is relevant, the plan conservatively selects
+the affected owner scope (or the discovered Vitest framework set when ownership
+cannot be determined) and sets `fallback_triggered` and `fallback_reason`. This
+safety fallback does not require `--global-config-fallback`. It is the
+[unprovable-selection exception](../why.md#unprovable-selections):
+widening stays inside that Vitest owner, or the discovered Vitest set when the
+owner is unknown, and never selects another framework. Its bounded helper
+closure follows ordinary static imports/re-exports and literal CommonJS
+`require(...)` or
 `require.resolve(...)` dependencies, retaining their edits and deletions as
 owner triggers. Static CommonJS setup bindings may use direct members or
 destructured aliases, and helpers may expose named values through
@@ -325,7 +331,10 @@ changed C# test files directly and select dependent C# tests through namespace
 imports, type references, and `.csproj` `ProjectReference` edges. When native
 tests are discoverable but the source/project change cannot be traced, the plan
 falls back to the framework-scoped discovered tests and reports
-`fallback_triggered`/`fallback_reason`. Command output uses `dotnet test
+`fallback_triggered`/`fallback_reason`. That widening is the
+[unprovable-selection exception](../why.md#unprovable-selections)
+and stays inside the discovered Dotnet tests. It does not require
+`--global-config-fallback`. Command output uses `dotnet test
 <project.csproj> --no-restore`. If no project target owns the selected test,
 the fallback command is `dotnet test --no-restore`.
 
@@ -333,7 +342,10 @@ the fallback command is `dotnet test --no-restore`.
 tests directly and select dependent Swift tests through Swift graph edges and
 HTTP route edges. When native tests are discoverable but the source/project
 change cannot be traced, the plan falls back to the framework-scoped discovered
-tests and reports `fallback_triggered`/`fallback_reason`.
+tests and reports `fallback_triggered`/`fallback_reason`. That widening is the
+same [unprovable-selection exception](../why.md#unprovable-selections)
+and stays inside the discovered Swift tests. It does not require
+`--global-config-fallback`.
 
 Cargo execution targets come from visible manifests, including the actual
 package name, `--manifest-path`, and `--lib`/`--bin`/`--test` selector. A filename
