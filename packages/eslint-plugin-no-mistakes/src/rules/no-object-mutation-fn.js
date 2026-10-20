@@ -66,8 +66,16 @@ function walkFunctionBody(state, node, scope, tag) {
   fnEnv.ownerEnv = fnEnv;
   fnEnv.functionEnv = fnEnv;
   fnEnv.fnTag = tag;
-  fnEnv.inClass = Boolean(scope.inClass);
   fnEnv.pending = [];
+  // Arrows keep the enclosing `this`. A nested function has its own.
+  const arrow = node.type === "ArrowFunctionExpression";
+  const classMethod =
+    !arrow &&
+    (node.parent?.type === "MethodDefinition" ||
+      node.parent?.type === "TSAbstractMethodDefinition");
+  fnEnv.inClass = arrow ? Boolean(scope.inClass) : classMethod;
+  fnEnv.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
+  fnEnv.receiver = arrow ? scope.receiver || null : tag.receiver || null;
   for (const param of node.params) {
     bindPattern(state, param, shared("parameter"), fnEnv, "param");
   }
@@ -82,24 +90,30 @@ function walkFunctionBody(state, node, scope, tag) {
   flushPending(state, fnEnv);
 }
 
-function visitClass(state, body, scope) {
-  const classEnv = child(scope);
-  classEnv.inClass = true;
-  for (const element of body.body) {
-    if (element.computed) {
-      api.visit(state, element.key, classEnv, "read");
-    }
-    for (const decorator of element.decorators ?? []) {
-      api.visit(state, decorator.expression, classEnv, "escape");
-    }
-    if (element.type === "StaticBlock") {
-      api.visit(state, element, classEnv, "read");
-    } else if (element.value) {
-      api.visit(state, element.value, classEnv, "read");
-    } else {
-      continue;
-    }
-  }
+function deferExpression(state, expression, scope) {
+  const tag = {
+    type: "fn",
+    deferred: [],
+    captured: [],
+    didEscape: false,
+    walked: true,
+    registered: true,
+    node: expression,
+    scope,
+    methodKind: "field",
+  };
+  const fnEnv = child(scope);
+  fnEnv.ownerEnv = fnEnv;
+  fnEnv.functionEnv = fnEnv;
+  fnEnv.fnTag = tag;
+  fnEnv.inClass = Boolean(scope.inClass);
+  fnEnv.pending = [];
+  fnEnv.hasArguments = Boolean(scope.hasArguments);
+  // A field's `this` is the instance, not an enclosing method receiver.
+  fnEnv.receiver = null;
+  api.visit(state, expression, fnEnv, "read");
+  flushPending(state, fnEnv);
+  return tag;
 }
 
 function callFunction(state, tag) {
@@ -172,6 +186,7 @@ function releaseEscaping(state, tag) {
   markEscaped(state, tag);
 }
 
+api.deferExpression = deferExpression;
 api.escapeNestedFunctions = escapeNestedFunctions;
 api.releaseEscaping = releaseEscaping;
 
@@ -180,6 +195,5 @@ module.exports = {
   escapeFunction,
   flushPending,
   registerFn,
-  visitClass,
   visitFunction,
 };

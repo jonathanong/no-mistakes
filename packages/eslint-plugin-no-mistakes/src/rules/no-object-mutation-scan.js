@@ -1,11 +1,13 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
-const { bindName, bindPattern } = require("./no-object-mutation-bind");
+const { bindPattern } = require("./no-object-mutation-bind");
 const { walkChildren } = require("./no-object-mutation-build");
 const { escapeExport } = require("./no-object-mutation-call");
+const { visitClassNode } = require("./no-object-mutation-class");
 const { visitExpression } = require("./no-object-mutation-expr");
-const { flushPending, registerFn, visitClass, visitFunction } = require("./no-object-mutation-fn");
+const { flushPending, registerFn, visitFunction } = require("./no-object-mutation-fn");
+const { visitNamespace } = require("./no-object-mutation-namespace");
 const { visitLoop } = require("./no-object-mutation-loop");
 const {
   seedClasses,
@@ -13,7 +15,8 @@ const {
   seedImports,
   TS_EXPRESSIONS,
 } = require("./no-object-mutation-syntax");
-const { child, lookup, rootEnv, unknown } = require("./no-object-mutation-values");
+const { markEscaped } = require("./no-object-mutation-write");
+const { child, rootEnv, unknown } = require("./no-object-mutation-values");
 
 // Escapes stick once seen, including on a conditional path: a later write is
 // not a straight-line local builder. Function bodies wait until the enclosing
@@ -38,6 +41,9 @@ function scanMutations(program, context, options) {
   for (const statement of program.body) {
     visit(state, statement, env, "read");
   }
+  for (const fresh of env.moduleFresh) {
+    markEscaped(state, fresh);
+  }
   flushPending(state, env);
   return state.violations;
 }
@@ -45,6 +51,9 @@ function scanMutations(program, context, options) {
 function visit(state, node, scope, role) {
   if (!node || typeof node.type !== "string") {
     return unknown();
+  }
+  if (node.type === "TSModuleDeclaration") {
+    return visitNamespace(state, node, scope);
   }
   if (node.type.startsWith("TS") && !TS_EXPRESSIONS.has(node.type)) {
     return unknown();
@@ -139,17 +148,7 @@ function visit(state, node, scope, role) {
       return visitFunction(state, node, scope, role);
     case "ClassDeclaration":
     case "ClassExpression":
-      if (node.id && !lookup(scope, node.id.name)) {
-        bindName(node.id.name, unknown(), scope, "local");
-      }
-      if (node.superClass) {
-        visit(state, node.superClass, scope, "read");
-      }
-      for (const decorator of node.decorators ?? []) {
-        visit(state, decorator.expression, scope, "escape");
-      }
-      visitClass(state, node.body, scope);
-      return unknown();
+      return visitClassNode(state, node, scope, role);
     default: {
       const expressed = visitExpression(state, node, scope, role);
       if (expressed !== undefined) {

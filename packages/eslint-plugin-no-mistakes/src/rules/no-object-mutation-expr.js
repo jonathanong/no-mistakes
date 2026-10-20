@@ -17,6 +17,9 @@ function visitExpression(state, node, scope, role) {
     case "Identifier":
       return visitIdentifier(state, node, scope, role);
     case "ThisExpression":
+      if (scope.receiver) {
+        return scope.receiver;
+      }
       return { type: "this", inClass: Boolean(scope.inClass) };
     case "Super":
     case "Literal":
@@ -102,9 +105,9 @@ function visitExpression(state, node, scope, role) {
     case "ArrayExpression":
       return visitArray(state, node, scope, role);
     case "NewExpression":
-      return visitNew(state, node, scope);
+      return visitNew(state, node, scope, role);
     case "CallExpression":
-      return visitCall(state, node, scope);
+      return visitCall(state, node, scope, role);
     case "ImportExpression":
       api.visit(state, node.source, scope, "read");
       return unknown();

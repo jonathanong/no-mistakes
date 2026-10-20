@@ -49,7 +49,12 @@ function shouldReport(state, target) {
     return false;
   }
   if (target.type === "this") {
-    return Boolean(target.inClass) && state.options.allowThis === false;
+    // Class `this` is the instance under construction. A plain function's
+    // `this` is whoever called it, which may be a shared object.
+    if (!target.inClass) {
+      return true;
+    }
+    return state.options.allowThis === false;
   }
   if (target.type === "fresh") {
     return true;

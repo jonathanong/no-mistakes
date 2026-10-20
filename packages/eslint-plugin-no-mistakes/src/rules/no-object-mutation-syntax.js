@@ -15,6 +15,7 @@ const ARRAY_METHODS = new Set([
   "unshift",
 ]);
 const OBJECT_METHODS = new Set(["assign", "defineProperties", "defineProperty", "setPrototypeOf"]);
+const REFLECT_METHODS = new Set(["defineProperty", "set"]);
 const TS_EXPRESSIONS = new Set([
   "TSAsExpression",
   "TSNonNullExpression",
@@ -101,17 +102,79 @@ function methodName(member) {
   if (member.property.type === "Identifier" && !member.computed) {
     return member.property.name;
   }
-  if (member.computed) {
-    return literalKey(member.property);
-  }
-  return null;
+  return member.computed ? literalKey(member.property) : null;
 }
 
-function isGlobalObject(node, scope) {
+function isGlobal(node, scope, name) {
   const target = unwrap(node);
-  return Boolean(
-    target?.type === "Identifier" && target.name === "Object" && !lookup(scope, "Object"),
-  );
+  return Boolean(target?.type === "Identifier" && target.name === name && !lookup(scope, name));
+}
+
+function firstArgument(node) {
+  const target = node.arguments[0];
+  if (!target || target.type === "SpreadElement") {
+    return null;
+  }
+  return target;
+}
+
+function argumentMutation(node) {
+  const target = firstArgument(node);
+  if (target) {
+    return { targetNode: target, otherArgs: node.arguments.slice(1) };
+  } else {
+    return null;
+  }
+}
+
+function objectMutation(node, scope, object, name) {
+  if (!OBJECT_METHODS.has(name) || !isGlobal(object, scope, "Object")) {
+    return null;
+  }
+  return argumentMutation(node);
+}
+
+// Array `.call`/`.apply` mutate the first argument. Object statics ignore
+// `this` and mutate their own first argument, which follows `thisArg`.
+function forwardedMutation(receiver, node, scope) {
+  const method = unwrap(receiver);
+  if (method.type !== "MemberExpression") {
+    return null;
+  }
+  const name = methodName(method);
+  if (!name) {
+    return null;
+  }
+  if (ARRAY_METHODS.has(name)) {
+    return argumentMutation(node);
+  }
+  if (!OBJECT_METHODS.has(name) || !isGlobal(method.object, scope, "Object")) {
+    return null;
+  }
+  return forwardedObjectTarget(node);
+}
+
+function forwardedObjectTarget(node) {
+  const forward = methodName(unwrap(node.callee));
+  if (forward === "call") {
+    const target = node.arguments[1];
+    if (!target || target.type === "SpreadElement") {
+      return null;
+    }
+    return { targetNode: target, otherArgs: node.arguments.slice(2) };
+  }
+  const list = unwrap(node.arguments[1]);
+  if (list?.type !== "ArrayExpression") {
+    return null;
+  }
+  if (list.elements.some((element) => !element || element.type === "SpreadElement")) {
+    return null;
+  }
+  const target = list.elements[0];
+  if (!target) {
+    return null;
+  }
+  return { targetNode: target, otherArgs: list.elements.slice(1) };
 }
 
 function mutationCall(node, scope) {
@@ -123,23 +186,23 @@ function mutationCall(node, scope) {
   if (!name) {
     return null;
   }
+  if (name === "call" || name === "apply") {
+    return forwardedMutation(callee.object, node, scope);
+  }
   if (ARRAY_METHODS.has(name)) {
     return { targetNode: callee.object, otherArgs: node.arguments };
   }
-  if (!OBJECT_METHODS.has(name) || !isGlobalObject(callee.object, scope)) {
-    return null;
+  if (REFLECT_METHODS.has(name) && isGlobal(callee.object, scope, "Reflect")) {
+    return argumentMutation(node);
   }
-  const target = node.arguments[0];
-  if (!target || target.type === "SpreadElement") {
-    return null;
-  }
-  return { targetNode: target, otherArgs: node.arguments.slice(1) };
+  return objectMutation(node, scope, callee.object, name);
 }
 
 module.exports = {
   ...seed,
   literalKey,
   memberKey,
+  methodName,
   mutationCall,
   rootIdentifier,
   staticKey,

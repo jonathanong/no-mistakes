@@ -34,6 +34,39 @@ rows.push(row);
 function write(box) {
   box.client.get = replica.get;
 }
+
+function touch(box, rows) {
+  arguments[0].b = 1;
+  const alias = arguments;
+  alias[0].c = 1;
+  Reflect.set(box, "a", 1);
+  Reflect.defineProperty(box, "b", { value: 1 });
+  Array.prototype.push.call(rows, 1);
+  [].push.apply(rows, [2]);
+}
+
+const cache = new Map();
+cache.get(1).ready = true;
+
+const tables = {};
+for (const row of Object.values(tables)) {
+  row.ready = true;
+}
+
+namespace Registry {
+  export const rows = {};
+}
+Registry.rows.users = "app.users";
+
+function publish() {
+  this.client = null;
+}
+
+const api = {
+  save() {
+    this.dirty = true;
+  },
+};
 ```
 
 A conditional escape counts: `if (cond) sink(box); box.a = 1` is still a write
@@ -61,24 +94,42 @@ class Client {
     this.host = host;
   }
 }
+
+function localClass(value) {
+  const box = {};
+  class Writer {
+    set() {
+      box.current = value;
+    }
+  }
+  new Writer().set();
+  return box;
+}
 ```
 
 The local object is created in that function and the writes finish before it
 is returned, passed to a call, stored on a shared object, or captured by a
 closure that itself escapes. Calling that closure does not escape the builder
-unless the call passes the object out. `Map` and `Set` are allowed. Class
-`this` writes are allowed unless `allowThis` is `false`.
+unless the call passes the object out. `Map` and `Set` are allowed. A value
+read back from a module-level map, from `Object.values`, or from `.get` is
+shared. Class `this` writes are allowed unless `allowThis` is `false`.
+`this` in a plain function is reported. `this` in an object method is reported
+when that object escapes, including a module-level object, and allowed while
+the object stays a local builder. A class that stays local is allowed, including
+`new` and a method call. Returning the class, `new` of it, or `fn.bind(...)`
+is an escape. A namespace's exported bindings are shared; a const that stays
+inside the namespace is still a local builder.
 
 ## Options
 
-| Option | Default | Effect |
-| --- | --- | --- |
-| `module` | `true` | Member writes and mutating calls on objects bound at module scope. |
-| `imported` | `true` | The same for imported bindings and their members. |
-| `parameters` | `true` | The same for parameters and values reached from them. |
-| `calls` | `true` | `Object.assign`, `Object.defineProperty`, `Object.defineProperties`, `Object.setPrototypeOf`, and `push`, `pop`, `shift`, `unshift`, `splice`, `sort`, `reverse`, `fill`, `copyWithin`. |
-| `allowThis` | `true` | Allow `this` writes inside a class body. |
-| `allow` | `[]` | Root names or dotted paths. `tables` allows `tables[key]`. `tables.users` allows `tables.users.id` but not a computed `tables[key]`. |
+| Option       | Default | Effect                                                                                                                                                                                                                                                                    |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `module`     | `true`  | Member writes and mutating calls on objects bound at module scope.                                                                                                                                                                                                        |
+| `imported`   | `true`  | The same for imported bindings and their members.                                                                                                                                                                                                                         |
+| `parameters` | `true`  | The same for parameters and values reached from them.                                                                                                                                                                                                                     |
+| `calls`      | `true`  | `Object.assign`, `Object.defineProperty`, `Object.defineProperties`, `Object.setPrototypeOf`, `Reflect.set`, `Reflect.defineProperty`, the same methods via `.call` / `.apply`, and `push`, `pop`, `shift`, `unshift`, `splice`, `sort`, `reverse`, `fill`, `copyWithin`. |
+| `allowThis`  | `true`  | Allow `this` writes inside a class body. Plain-function `this` stays reported.                                                                                                                                                                                            |
+| `allow`      | `[]`    | Root names or dotted paths. `tables` allows `tables[key]`. `tables.users` allows `tables.users.id` but not a computed `tables[key]`.                                                                                                                                      |
 
 ## Fix
 
