@@ -152,7 +152,9 @@ async function buildQuery(id: string) {
   even when `callees` is unset, but only for a function that entry already
   selects. A call that appears before that const's initializer stays silent,
   including a call through another function, because removing `async` would
-  throw before the rest of the module runs. A later declarator in the same
+  throw before the rest of the module runs. An exported function is one of
+  those calls: it is hoisted, so another module can run it before the
+  initializer. A later declarator in the same
   statement runs after the initializer and still reports.
   A module-level binding that is not that
   shape, including a module-level configured tag, is not judged SQL.

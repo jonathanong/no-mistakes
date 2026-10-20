@@ -2,7 +2,11 @@
 
 const { findContainingFunction, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
-const { boundVariable, isInside } = require("./postgres-no-async-sql-builder-bindings");
+const {
+  boundVariable,
+  declarationExported,
+  isInside,
+} = require("./postgres-no-async-sql-builder-bindings");
 
 // Module scope only folds string literals, no-substitution templates, and
 // const bindings of those. Other module expressions are not judged SQL.
@@ -58,9 +62,20 @@ function referenceRunsAfter(reference, owner, cutoff, context, seen) {
   return functionRunsAfter(container, cutoff, context, seen);
 }
 
+function hoistedExport(func, variable) {
+  // `export function` is callable while dependencies evaluate, before any
+  // const initializer. A missing local call is not proof of order.
+  if (func.type !== "FunctionDeclaration") return false;
+  if (declarationExported(func)) return true;
+  return variable.references.some(
+    (reference) => reference.identifier.parent?.type === "ExportSpecifier",
+  );
+}
+
 function functionRunsAfter(func, cutoff, context, seen) {
   const variable = boundVariable(func, context);
   if (!variable || seen.has(variable)) return false;
+  if (hoistedExport(func, variable)) return false;
   seen.add(variable);
   let ready = true;
   for (const reference of variable.references) {

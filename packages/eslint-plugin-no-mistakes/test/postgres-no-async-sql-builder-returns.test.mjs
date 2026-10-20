@@ -421,6 +421,19 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       ["removeAsync"],
     );
+    // An exported helper is hoisted, so a cyclic import can call it before the const.
+    assert.deepEqual(
+      ids(
+        'export function invoke() { build(); }\nconst Q = "SELECT 1";\nasync function build() { return Q; }\nread(invoke());',
+      ),
+      [],
+    );
+    assert.deepEqual(
+      ids(
+        'function invoke() { build(); }\nexport { invoke };\nconst Q = "SELECT 1";\nasync function build() { return Q; }',
+      ),
+      [],
+    );
     // invoke() runs before the const even though its build reference is below it.
     assert.deepEqual(
       ids(`
