@@ -1,4 +1,4 @@
-use crate::queue::extract_helpers::{binding_name, static_string, JobFrame};
+use crate::queue::extract_helpers::JobFrame;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::extract_record::{record_enqueue, record_flow};
 use oxc_ast::ast::{CallExpression, Expression};
@@ -6,6 +6,7 @@ use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+mod bindings;
 mod helpers;
 
 pub(super) struct QueueVisitor<'a> {
@@ -31,6 +32,9 @@ pub(super) struct QueueVisitor<'a> {
     /// Indexes into `processor_spans` already claimed by an outer function.
     pub claimed_processors: Vec<usize>,
     pub worker_stack: Vec<usize>,
+    pub dispatch_jobs: HashMap<usize, Vec<String>>,
+    pub dispatch_dynamic_workers: HashSet<usize>,
+    pub dispatch_scopes: HashSet<u32>,
 }
 
 impl<'a> Visit<'a> for QueueVisitor<'a> {
@@ -40,38 +44,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
-        let Some(name) = binding_name(&decl.id) else {
-            walk::walk_variable_declarator(self, decl);
-            return;
-        };
-        if let Some(init) = &decl.init {
-            if let Some(value) = static_string(init) {
-                self.const_strings.insert(name.clone(), value);
-            }
-        }
-        if let Some(Expression::NewExpression(new_expr)) = &decl.init {
-            if self.is_queue_constructor(&new_expr.callee) {
-                if let Some(queue_name) = new_expr
-                    .arguments
-                    .first()
-                    .and_then(|arg| self.literal_arg(arg))
-                {
-                    self.facts
-                        .queue_bindings
-                        .insert(name.clone(), queue_name.clone());
-                    self.facts.queue_exports.insert(name.clone(), queue_name);
-                }
-            } else if self.is_flow_constructor(&new_expr.callee) {
-                self.flow_bindings.insert(name.clone());
-            }
-        }
-        if let Some(Expression::CallExpression(call_expr)) = &decl.init {
-            super::extract_factory::note_queue_binding(self, &name, call_expr);
-        }
-        if let Some(Expression::Identifier(id)) = &decl.init {
-            super::extract_factory::note_alias(self, &name, id.name.as_str());
-        }
-        walk::walk_variable_declarator(self, decl);
+        self.note_variable(decl);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
@@ -169,5 +142,35 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
 
     fn visit_switch_statement(&mut self, stmt: &oxc_ast::ast::SwitchStatement<'a>) {
         super::extract_factory::visit_switch(self, stmt);
+    }
+
+    fn visit_variable_declaration(&mut self, decl: &oxc_ast::ast::VariableDeclaration<'a>) {
+        super::extract_factory::visit_variable_declaration(self, decl);
+    }
+
+    fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {
+        super::extract_factory::visit_block(self, block);
+    }
+
+    fn visit_binary_expression(&mut self, expr: &oxc_ast::ast::BinaryExpression<'a>) {
+        super::extract_processor::visit_binary(self, expr);
+    }
+
+    fn visit_static_member_expression(
+        &mut self,
+        member: &oxc_ast::ast::StaticMemberExpression<'a>,
+    ) {
+        super::extract_processor::visit_member(self, member);
+    }
+
+    fn visit_computed_member_expression(
+        &mut self,
+        member: &oxc_ast::ast::ComputedMemberExpression<'a>,
+    ) {
+        super::extract_processor::visit_computed_member(self, member);
+    }
+
+    fn visit_identifier_reference(&mut self, id: &oxc_ast::ast::IdentifierReference<'a>) {
+        super::extract_processor::visit_identifier(self, id);
     }
 }

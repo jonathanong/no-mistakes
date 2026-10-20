@@ -158,7 +158,7 @@ pub(super) fn mask_parameters(visitor: &mut QueueVisitor<'_>, params: &FormalPar
         mask_pattern(visitor, &param.pattern);
     }
     if let Some(rest) = &params.rest {
-        mask_pattern(visitor, &rest.argument);
+        mask_pattern(visitor, &rest.rest.argument);
     }
 }
 

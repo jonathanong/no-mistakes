@@ -5,6 +5,7 @@ export const background = createQueue(BACKGROUND_QUEUE_NAME, {
   priorityKind: "ranked",
 });
 export const other = createQueue("other");
+export const unattended = createQueue("unattended");
 export const adminImports = background;
 // These shapes stay: each one is a branch the role resolver has to ignore or
 // follow. A member callee and a missing name are not queue definitions, a

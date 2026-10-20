@@ -58,7 +58,9 @@ read it the same way they read `queue.add`'s third argument. A worker factory
 records the processor. The active job is a parameter named `job`, or otherwise
 the processor's first parameter, including `switch (task.name)` and
 `async ({ name, id }) =>`. A nested callback is a job only when one of its
-parameters is named `job`. Worker job names come from literal job-name equality comparisons and
+parameters is named `job`. Local named processor functions can be declared
+before the worker registration. Worker job names come from literal job-name
+equality comparisons and
 `switch` labels on that job name. Unrelated object `name` properties, comments,
 strings, and other switches do not narrow a worker. Dynamic job-name dispatch
 keeps wildcard coverage, including when the processor also has literal branches.

@@ -2,10 +2,12 @@ import {
   createBulkEnqueueFunction,
   createEnqueueFunction,
 } from "../lib/factory";
-import { adminImports, background } from "../queues";
+import { adminImports, background, unattended } from "../queues";
 
 export const enqueuePage = createEnqueueFunction(background, "page");
 export const enqueueDead = createEnqueueFunction(adminImports, "dead");
+// This queue has no wildcard worker, so its producer must remain unmatched.
+export const enqueueUnattended = createEnqueueFunction(unattended, "dead");
 export const enqueueOrphan = createBulkEnqueueFunction(
   background,
   "orphan",

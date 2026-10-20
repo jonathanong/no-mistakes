@@ -18,10 +18,17 @@ fn configured_factory_roles_resolve_aliases_and_name_dead_jobs() {
         report.edges
     );
     assert!(
-        kinds.contains(&"unmatched-producer"),
-        "dead and orphan producers should be unmatched, check: {:?}",
+        report.check.iter().any(|finding| {
+            finding.kind == "unmatched-producer"
+                && finding.queue_name.as_deref() == Some("unattended")
+        }),
+        "a producer without a worker should be unmatched, check: {:?}",
         report.check
     );
+    // Dynamic dispatch and unrelated switches cannot close the background workers.
+    assert!(!report.check.iter().any(|finding| {
+        finding.kind == "unmatched-producer" && finding.queue_name.as_deref() == Some("background")
+    }));
     assert!(
         report.check.iter().any(|finding| {
             finding.kind == "unmatched-worker-unresolved-producers"

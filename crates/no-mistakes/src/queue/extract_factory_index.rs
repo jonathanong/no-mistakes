@@ -10,7 +10,7 @@ use std::cell::Cell;
 mod model;
 use model::{Binding, Index};
 
-pub(super) fn processor_spans(
+pub(crate) fn processor_spans(
     program: &Program<'_>,
     roles: &crate::config::v2::schema::QueueFactoryRoles,
 ) -> Vec<(u32, u32, usize)> {

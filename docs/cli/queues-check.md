@@ -21,6 +21,15 @@ connected. `check` is empty when the graph is consistent. Findings use these
 | `empty-glob` | A configured `enqueues` or `workers` glob matches no file. Fix the glob or remove it. An empty list still disables that side and is not a finding. |
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
 
+Local processor functions declared before `createWorker("jobs", handler)` use
+the same job binding as inline callbacks. A local copy such as
+`const id = task.id` also counts when passed as `jobId: id`.
+
+Worker job names come from dispatches on the processor's job name, such as
+`task.name === "send"` or `switch (task.name)`. Unrelated objects such as
+`{ name: "metadata" }` do not declare jobs. A processor with dynamic dispatch
+stays a wildcard, so its literal branches do not exclude other job names.
+
 ## Suppression
 
 `queues check` findings use the rule id `queues-check`. A file directive
