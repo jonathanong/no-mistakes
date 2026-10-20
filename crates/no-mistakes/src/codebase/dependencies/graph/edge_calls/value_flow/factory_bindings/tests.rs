@@ -7,6 +7,11 @@ fn default_factory_and_alias_cycles_are_classified_conservatively() {
         std::sync::Arc::new(ValueExpression::Call(1, 2)),
     );
     assert!(index.factory_value(&fallback, &mut fx_set()));
+    let conditional = ValueExpression::Either(
+        std::sync::Arc::new(ValueExpression::Unknown),
+        std::sync::Arc::new(ValueExpression::Call(1, 2)),
+    );
+    assert!(!index.factory_value(&conditional, &mut fx_set()));
     let binding = ValueBinding {
         owner: None,
         name: "cycle".to_string(),

@@ -20,6 +20,9 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
+        if member && self.project_arguments_alias(scope, name, offset, receiver, completed_at) {
+            return;
+        }
         if !member
             || self
                 .receiver_conditional_region

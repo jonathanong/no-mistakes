@@ -50,7 +50,7 @@ impl ImportCollector {
         let Some(index) = head.as_deref().and_then(|text| text.parse().ok()) else {
             return false;
         };
-        let Some(owner) = self.current_function_id() else {
+        let Some(owner) = self.arguments_owner() else {
             return false;
         };
         let found = self
@@ -102,5 +102,35 @@ impl ImportCollector {
             type_reference: None,
         });
         (scope, name)
+    }
+
+    fn arguments_owner(&self) -> Option<CallableId> {
+        self.function_id_stack
+            .iter()
+            .rev()
+            .find(|(id, _)| !self.receiver_escapes.arrows.contains(id))
+            .map(|(id, _)| *id)
+    }
+
+    pub(in super::super) fn project_arguments_alias(
+        &mut self,
+        scope: usize,
+        name: &str,
+        offset: u32,
+        receiver: Option<&[Option<String>]>,
+        completed_at: u32,
+    ) -> bool {
+        let base = name.split_once('.').map_or(name, |(base, _)| base);
+        let Some(path) = receiver else {
+            return false;
+        };
+        if !self
+            .receiver_escapes
+            .argument_aliases
+            .contains(&(scope, base.to_string()))
+        {
+            return false;
+        }
+        self.project_arguments_member(offset, Some(path), completed_at)
     }
 }
