@@ -348,8 +348,16 @@ fn a_spliced_caller_literal_is_credited_to_the_literal_not_the_placeholder() {
         expect(&[("src/caller.mts", 8, "offset")])
     );
     assert_eq!(
+        findings_of("postgres-no-offset", "imported-spliced-backtick-escape"),
+        expect(&[("src/caller.mts", 9, "offset")])
+    );
+    assert_eq!(
         findings_of("postgres-no-offset", "same-file-spliced-backtick"),
         expect(&[("src/caller.mts", 12, "offset")])
+    );
+    assert_eq!(
+        findings_of("postgres-no-offset", "same-file-spliced-backtick-escape"),
+        expect(&[("src/caller.mts", 13, "offset")])
     );
 }
 
