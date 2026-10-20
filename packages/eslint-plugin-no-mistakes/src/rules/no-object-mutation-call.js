@@ -1,10 +1,12 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { constructInstance } = require("./no-object-mutation-class");
 const { callFunction, escapeFunction } = require("./no-object-mutation-fn");
+const { finishGet, visitKnownCall } = require("./no-object-mutation-invoke");
 const { mutationCall } = require("./no-object-mutation-syntax");
 const { readOnlyFresh } = require("./no-object-mutation-join");
-const { callable, lookup, unknown, unwrap } = require("./no-object-mutation-model");
+const { callable, lookup, shared, unknown, unwrap } = require("./no-object-mutation-model");
 const { considerWrite } = require("./no-object-mutation-write");
 
 function visitArgument(state, argument, scope, role) {
@@ -14,7 +16,7 @@ function visitArgument(state, argument, scope, role) {
   return api.visit(state, argument, scope, role);
 }
 
-function visitNew(state, node, scope) {
+function visitNew(state, node, scope, role) {
   const callee = unwrap(node.callee);
   let tag = unknown();
   if (
@@ -24,15 +26,18 @@ function visitNew(state, node, scope) {
   ) {
     tag = { type: "mapset" };
   } else {
-    api.visit(state, node.callee, scope, "read");
+    tag = constructInstance(scope, api.visit(state, node.callee, scope, "read"));
   }
   for (const argument of node.arguments) {
     visitArgument(state, argument, scope, "escape");
   }
+  if (role === "escape") {
+    api.releaseEscaping(state, tag);
+  }
   return tag;
 }
 
-function visitCall(state, node, scope) {
+function visitCall(state, node, scope, role) {
   const mutation = mutationCall(node, scope);
   if (mutation) {
     const target = api.visit(state, mutation.targetNode, scope, "read");
@@ -52,12 +57,16 @@ function visitCall(state, node, scope) {
     }
     return unknown();
   }
+  const known = visitKnownCall(state, node, scope, role);
+  if (known !== undefined) {
+    return known;
+  }
   const calleeTag = api.visit(state, node.callee, scope, "read");
   for (const argument of node.arguments) {
     visitArgument(state, argument, scope, "escape");
   }
   invokeCallable(state, calleeTag);
-  return unknown();
+  return finishGet(node, calleeTag) || unknown();
 }
 
 function invokeCallable(state, tag) {
@@ -96,7 +105,11 @@ function captureOuter(scope, tag, seen) {
 }
 
 function visitIdentifier(state, node, scope, role) {
-  const tag = lookup(scope, node.name)?.tag;
+  let tag = lookup(scope, node.name)?.tag;
+  // Unbound `arguments` is the function's parameter list, including through arrows.
+  if (!tag && node.name === "arguments" && scope.hasArguments) {
+    tag = shared("parameter");
+  }
   if (role === "escape") {
     api.releaseEscaping(state, tag);
   }

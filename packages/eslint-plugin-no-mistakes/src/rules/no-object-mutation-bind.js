@@ -5,13 +5,23 @@ const { considerWrite } = require("./no-object-mutation-write");
 const { literalKey, memberKey, staticKey } = require("./no-object-mutation-syntax");
 const { elementTag, freshCopy, readMember, shared } = require("./no-object-mutation-values");
 
+function moduleTag(tag) {
+  if (tag?.type === "mapset") {
+    // The map object stays mutable. Values read back out of it are shared.
+    tag.contents = shared("module");
+    return tag;
+  }
+  return shared("module");
+}
+
 function bindName(name, tag, scope, kind) {
   const target = kind === "var" ? scope.functionEnv : scope;
   if (target.isModule) {
-    target.cells.set(name, {
-      kind: "module",
-      tag: tag?.type === "mapset" ? tag : shared("module"),
-    });
+    // Escape after the module body so method walks see later bindings.
+    if (tag?.type === "fresh") {
+      target.moduleFresh.push(tag);
+    }
+    target.cells.set(name, { kind: "module", tag: moduleTag(tag) });
     return;
   }
   target.cells.set(name, { kind, tag });
@@ -50,7 +60,7 @@ function assignBinding(state, name, tag, scope) {
     api.releaseEscaping(state, tag);
   }
   if (cell.kind === "module") {
-    cell.tag = tag?.type === "mapset" ? tag : shared("module");
+    cell.tag = moduleTag(tag);
     return;
   }
   cell.tag = tag;

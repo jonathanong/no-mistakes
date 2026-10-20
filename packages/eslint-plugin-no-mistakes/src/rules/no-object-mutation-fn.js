@@ -68,6 +68,10 @@ function walkFunctionBody(state, node, scope, tag) {
   fnEnv.fnTag = tag;
   fnEnv.inClass = Boolean(scope.inClass);
   fnEnv.pending = [];
+  // Arrows read the enclosing function's `arguments` and lexical `this`.
+  fnEnv.hasArguments = node.type === "ArrowFunctionExpression" ? Boolean(scope.hasArguments) : true;
+  fnEnv.receiver =
+    node.type === "ArrowFunctionExpression" ? scope.receiver || null : tag.receiver || null;
   for (const param of node.params) {
     bindPattern(state, param, shared("parameter"), fnEnv, "param");
   }
@@ -80,26 +84,6 @@ function walkFunctionBody(state, node, scope, tag) {
     api.visit(state, body, fnEnv, "escape");
   }
   flushPending(state, fnEnv);
-}
-
-function visitClass(state, body, scope) {
-  const classEnv = child(scope);
-  classEnv.inClass = true;
-  for (const element of body.body) {
-    if (element.computed) {
-      api.visit(state, element.key, classEnv, "read");
-    }
-    for (const decorator of element.decorators ?? []) {
-      api.visit(state, decorator.expression, classEnv, "escape");
-    }
-    if (element.type === "StaticBlock") {
-      api.visit(state, element, classEnv, "read");
-    } else if (element.value) {
-      api.visit(state, element.value, classEnv, "read");
-    } else {
-      continue;
-    }
-  }
 }
 
 function callFunction(state, tag) {
@@ -180,6 +164,5 @@ module.exports = {
   escapeFunction,
   flushPending,
   registerFn,
-  visitClass,
   visitFunction,
 };

@@ -319,7 +319,7 @@ describe("no-object-mutation", () => {
           }
         }
       `),
-      repeated(3),
+      repeated(4),
     );
     // The escaped object is created inside the loop, so carried ranks stay
     // put and only the escape counter asks for another pass.
@@ -973,8 +973,8 @@ describe("no-object-mutation", () => {
       class Proto { }
       Proto.ready = true;
     `;
-    assert.deepEqual(ids(code), ["mutation"]);
-    assert.deepEqual(ids(code, { allowThis: false }), repeated(4));
+    assert.deepEqual(ids(code), repeated(3));
+    assert.deepEqual(ids(code, { allowThis: false }), repeated(6));
   });
 
   it("supports both suppression styles", () => {

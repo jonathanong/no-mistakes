@@ -11,6 +11,10 @@ function rootEnv() {
     inClass: false,
     fnTag: null,
     pending: [],
+    hasArguments: false,
+    namespaceShared: false,
+    receiver: null,
+    moduleFresh: [],
   };
   env.ownerEnv = env;
   env.functionEnv = env;
@@ -26,6 +30,9 @@ function child(scope) {
     ownerEnv: scope.ownerEnv,
     functionEnv: scope.functionEnv,
     fnTag: scope.fnTag,
+    hasArguments: Boolean(scope.hasArguments),
+    namespaceShared: Boolean(scope.namespaceShared),
+    receiver: scope.receiver || null,
   };
 }
 
