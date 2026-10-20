@@ -43,10 +43,10 @@ pub(super) fn note_enqueue(
         worker_index: visitor.worker_stack.last().copied(),
         self_dedup: false,
     });
-    if let Some(index) = options
-        && let Some(expr) = call.arguments.get(index).and_then(Argument::as_expression)
-    {
-        super::super::dedup::note_dedup_argument(visitor, call, expr, job, recorded);
+    if let Some(index) = options {
+        if let Some(expr) = call.arguments.get(index).and_then(Argument::as_expression) {
+            super::super::dedup::note_dedup_argument(visitor, call, expr, job, recorded);
+        }
     }
 }
 

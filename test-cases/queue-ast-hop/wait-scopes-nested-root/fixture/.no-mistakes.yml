@@ -1,0 +1,13 @@
+version: 2
+projects:
+  api:
+    type: server
+    root: api
+    queues:
+      enqueues: ["**/*.mts"]
+      waitScopes: ["routes/**"]
+  rest:
+    type: library
+    root: .
+    queues:
+      enqueues: ["lib/**/*.mts"]

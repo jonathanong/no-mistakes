@@ -74,14 +74,32 @@ fn enter_job(
     params: &FormalParameters<'_>,
     span: oxc_span::Span,
 ) -> bool {
-    let processor = visitor
-        .processor_spans
-        .iter()
-        .any(|record| record.0 == span.start && record.1 == span.end);
+    let processor = claim_processor(visitor, span);
     let Some(frame) = job_frame(params, processor) else {
         return false;
     };
     visitor.job_frames.push(frame);
+    true
+}
+
+/// The outermost function inside a processor argument is the processor, so a
+/// parenthesized, cast, or call-wrapped callback still gets the first-parameter
+/// fallback. A nested callback does not: its span was already claimed.
+fn claim_processor(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {
+    let Some(index) = visitor
+        .processor_spans
+        .iter()
+        .enumerate()
+        .filter(|(_, record)| span.start >= record.0 && span.end <= record.1)
+        .min_by_key(|(_, record)| record.1.saturating_sub(record.0))
+        .map(|(index, _)| index)
+    else {
+        return false;
+    };
+    if visitor.claimed_processors.contains(&index) {
+        return false;
+    }
+    visitor.claimed_processors.push(index);
     true
 }
 

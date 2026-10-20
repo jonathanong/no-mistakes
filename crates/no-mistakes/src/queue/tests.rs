@@ -7,6 +7,7 @@ mod lang;
 mod prepared;
 mod resolver;
 pub(crate) mod session_lang;
+mod wait_scopes;
 use super::*;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};

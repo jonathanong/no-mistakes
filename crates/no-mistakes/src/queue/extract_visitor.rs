@@ -30,6 +30,8 @@ pub(super) struct QueueVisitor<'a> {
     pub namespace_imports: HashMap<String, String>,
     /// `(processor span start, end, worker index)` for factory and `new Worker` processors.
     pub processor_spans: Vec<(u32, u32, usize)>,
+    /// Indexes into `processor_spans` already claimed by an outer function.
+    pub claimed_processors: Vec<usize>,
     pub worker_stack: Vec<usize>,
 }
 

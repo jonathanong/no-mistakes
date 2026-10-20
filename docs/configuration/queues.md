@@ -62,7 +62,9 @@ parameters is named `job`. The `enqueues` and `workers` globs scope the files
 that participate in a project. `waitScopes` limits `addAndWait` and
 `waitUntilFinished` findings, including `this.queue.addAndWait`, for that
 project. An empty list checks every file of the project, and a file outside
-every project stays checked. `cluster` gives producers and workers a shared
+every project stays checked. A project root matches only that directory:
+`root: api` covers `api/...` and does not cover `lib/api/...`.
+`cluster` gives producers and workers a shared
 queue namespace. Two factories with the same callee and different argument
 indexes are a configuration error.
 Empty lists disable that side of the relationship. A non-empty glob that

@@ -66,6 +66,26 @@ fn detector_gaps_report_renamed_jobs_member_waits_and_wrapper_options() {
         "only a nested parameter named `job` dedups, check: {:?}",
         report.check
     );
+    for job in ["p2", "p3", "p8"] {
+        assert!(
+            report.check.iter().any(|finding| {
+                finding.file.ends_with("workers/wrapped-processor.mts")
+                    && finding.kind == "self-dedup-enqueue"
+                    && finding.job.as_deref() == Some(job)
+            }),
+            "{job} should dedup through a wrapped processor, check: {:?}",
+            report.check
+        );
+    }
+    assert!(
+        report.check.iter().all(|finding| {
+            !(finding.file.ends_with("workers/wrapped-processor.mts")
+                && finding.kind == "self-dedup-enqueue"
+                && matches!(finding.job.as_deref(), Some("p1" | "p5")))
+        }),
+        "an identifier processor and an id alias stay unresolved, check: {:?}",
+        report.check
+    );
 
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);
@@ -148,20 +168,25 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
         .find(|project| project.root == "apps/web")
         .unwrap();
     assert!(web.scopes.is_empty());
+    let repo = Path::new("/repo");
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("/repo/apps/web/page.mts"),
+        repo,
         &roles.wait_scopes
     ));
     assert!(!crate::queue::extract::waits_in_scope(
         Path::new("/repo/services/routes/a.mts"),
+        repo,
         &roles.wait_scopes
     ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("/repo/services/workers/a.mts"),
+        repo,
         &roles.wait_scopes
     ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("/repo/other/a.mts"),
+        repo,
         &roles.wait_scopes
     ));
     let mut other = roles.clone();
@@ -209,18 +234,22 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
     };
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("routes/a.mts"),
+        repo,
         &[]
     ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("/repo/routes/a.mts"),
+        repo,
         std::slice::from_ref(&routes)
     ));
     assert!(!crate::queue::extract::waits_in_scope(
         Path::new("/repo/workers/a.mts"),
+        repo,
         std::slice::from_ref(&routes)
     ));
     assert!(crate::queue::extract::waits_in_scope(
         Path::new("anywhere.mts"),
+        repo,
         std::slice::from_ref(&broken)
     ));
 }

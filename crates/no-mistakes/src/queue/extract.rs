@@ -13,6 +13,7 @@ pub(crate) fn extract_program_with_factories(
     program: &Program<'_>,
     factory_names: &[String],
     roles: &crate::config::v2::schema::QueueFactoryRoles,
+    root: &Path,
 ) -> FileFacts {
     let mut visitor = QueueVisitor {
         path,
@@ -29,7 +30,8 @@ pub(crate) fn extract_program_with_factories(
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
         job_frames: Vec::new(),
-        record_waits: waits_in_scope(path, &roles.wait_scopes),
+        record_waits: waits_in_scope(path, root, &roles.wait_scopes),
+        claimed_processors: Vec::new(),
         current_case: None,
         namespace_imports: HashMap::new(),
         processor_spans: Vec::new(),
@@ -45,16 +47,25 @@ pub(crate) fn extract_program_with_factories(
 
 pub(crate) fn waits_in_scope(
     path: &Path,
+    root: &Path,
     projects: &[crate::config::v2::schema::ProjectWaitScopes],
 ) -> bool {
-    let Some(project) = containing_project(path, projects) else {
+    let relative = repo_relative(path, root);
+    let Some(project) = containing_project(&relative, projects) else {
         return true;
     };
-    scopes_match(path, &project.scopes)
+    scopes_match(Path::new(&relative), &project.scopes)
+}
+
+fn repo_relative(path: &Path, root: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
 }
 
 fn containing_project<'a>(
-    path: &Path,
+    path: &str,
     projects: &'a [crate::config::v2::schema::ProjectWaitScopes],
 ) -> Option<&'a crate::config::v2::schema::ProjectWaitScopes> {
     projects
@@ -63,16 +74,13 @@ fn containing_project<'a>(
         .max_by_key(|project| project.root.len())
 }
 
-fn root_contains(path: &Path, root: &str) -> bool {
+/// `root: api` matches `api/...` only. A later `lib/api/...` stays with its own project.
+fn root_contains(path: &str, root: &str) -> bool {
     let root = root.trim().trim_matches('/');
     if root.is_empty() || root == "." {
         return true;
     }
-    let path = path.to_string_lossy().replace('\\', "/");
-    path == root
-        || path.starts_with(&format!("{root}/"))
-        || path.contains(&format!("/{root}/"))
-        || path.ends_with(&format!("/{root}"))
+    path == root || path.starts_with(&format!("{root}/"))
 }
 
 fn scopes_match(path: &Path, scopes: &[String]) -> bool {
