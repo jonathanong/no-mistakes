@@ -63,10 +63,11 @@ struct Collector<'r> {
 }
 
 impl<'a> Visit<'a> for Collector<'_> {
-    fn enter_scope(&mut self, _: ScopeFlags, _: &Cell<Option<ScopeId>>) {
+    fn enter_scope(&mut self, flags: ScopeFlags, _: &Cell<Option<ScopeId>>) {
         let next = self.index.scopes.len();
         self.index.scopes.push(FxHashMap::default());
         self.index.parents.push(self.index.scope);
+        self.index.var_scopes.push(flags.is_var());
         self.index.scope = next;
     }
 
@@ -113,6 +114,9 @@ impl<'a> Visit<'a> for Collector<'_> {
     }
 
     fn visit_variable_declaration(&mut self, decl: &VariableDeclaration<'a>) {
+        if decl.kind == VariableDeclarationKind::Var {
+            self.index.hoist_variables(decl);
+        }
         let previous = self.index.immutable;
         self.index.immutable = decl.kind == VariableDeclarationKind::Const;
         walk::walk_variable_declaration(self, decl);

@@ -1,5 +1,6 @@
 use crate::fx::FxHashMap;
-use oxc_ast::ast::{Argument, Expression};
+use oxc_ast::ast::{Argument, BindingIdentifier, Expression, VariableDeclaration};
+use oxc_ast_visit::Visit;
 use oxc_span::Span;
 
 #[derive(Clone, Copy)]
@@ -15,6 +16,7 @@ pub(super) struct Index {
     pub scopes: Vec<FxHashMap<String, Binding>>,
     pub factories: FxHashMap<String, Binding>,
     pub parents: Vec<usize>,
+    pub var_scopes: Vec<bool>,
     pub scope: usize,
     pub immutable: bool,
     pub writes: Vec<(usize, String)>,
@@ -58,6 +60,26 @@ impl Index {
                 .collect();
             self.workers
                 .push((self.scope, id.name.to_string(), constructed, args));
+        }
+    }
+
+    pub fn hoist_variables(&mut self, declaration: &VariableDeclaration<'_>) {
+        struct Names(Vec<String>);
+        impl<'a> Visit<'a> for Names {
+            fn visit_binding_identifier(&mut self, id: &BindingIdentifier<'a>) {
+                self.0.push(id.name.to_string());
+            }
+        }
+        let mut names = Names(Vec::new());
+        for declarator in &declaration.declarations {
+            names.visit_binding_pattern(&declarator.id);
+        }
+        let mut scope = self.scope;
+        while scope != 0 && !self.var_scopes[scope] {
+            scope = self.parents[scope];
+        }
+        for name in names.0 {
+            self.scopes[scope].insert(name, Binding::Other);
         }
     }
 

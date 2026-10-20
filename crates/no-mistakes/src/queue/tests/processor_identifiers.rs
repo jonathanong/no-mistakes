@@ -17,7 +17,8 @@ fn named_processors_and_copied_const_tokens_keep_their_worker_ownership() {
             "constructed-token",
             "copied-dedup",
             "copied-id",
-            "function-token"
+            "function-token",
+            "scoped-token"
         ]
     );
     assert!(
@@ -86,4 +87,20 @@ fn identifier_processor_shadowing_and_mutation_do_not_borrow_another_body() {
         .unwrap();
     assert_eq!(facts.producers[0].worker_index, None);
     assert!(!facts.producers[0].self_dedup);
+    let source = std::fs::read_to_string(root.join("workers/scopes.mts")).unwrap();
+    let facts =
+        crate::ast::with_program(&root.join("workers/scopes.mts"), &source, |program, _| {
+            crate::queue::extract::extract_program_with_factories(
+                &root.join("workers/scopes.mts"),
+                &source,
+                program,
+                &[],
+                &roles,
+                &root,
+            )
+        })
+        .unwrap();
+    assert_eq!(facts.producers[0].worker_index, Some(0));
+    assert_eq!(facts.producers[1].worker_index, None);
+    assert!(!facts.producers[1].self_dedup);
 }
