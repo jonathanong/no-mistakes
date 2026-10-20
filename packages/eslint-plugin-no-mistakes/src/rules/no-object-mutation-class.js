@@ -86,11 +86,16 @@ function visitElement(state, element, classEnv, value) {
   if (!element.value) {
     return decorated;
   }
+  // Instance fields run on construction, after the class value may have escaped.
+  if (element.type === "PropertyDefinition" && !element.static) {
+    value.items.push(api.deferExpression(state, element.value, classEnv));
+    return decorated;
+  }
   const visited = api.visit(state, element.value, classEnv, "read");
-  if (element.type === "MethodDefinition") {
-    if (visited.type === "fn") {
-      value.items.push(visited);
-    }
+  if (element.type === "MethodDefinition" && visited.type === "fn") {
+    visited.methodKind = element.kind;
+    visited.staticMethod = Boolean(element.static);
+    value.items.push(visited);
     return decorated;
   }
   remember(value, visited);
@@ -113,6 +118,11 @@ function constructInstance(scope, tag) {
   }
   const instance = createFresh(scope);
   for (const item of tag.items) {
+    // Construction already ran the constructor and instance fields.
+    // Static methods are not reachable from the instance.
+    if (item.methodKind === "constructor" || item.methodKind === "field" || item.staticMethod) {
+      continue;
+    }
     instance.items.push(item);
   }
   return instance;

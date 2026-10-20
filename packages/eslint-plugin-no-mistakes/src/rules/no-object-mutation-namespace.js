@@ -12,6 +12,10 @@ function visitNamespace(state, node, scope) {
   if (name) {
     bindNamespace(name, scope, sharing);
   }
+  // `declare module "*.svg";` has no body. Walking it used to throw.
+  if (!node.body) {
+    return unknown();
+  }
   const bodyScope = child(scope);
   bodyScope.namespaceShared = sharing;
   walkNamespace(state, node.body, bodyScope, sharing);

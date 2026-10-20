@@ -86,6 +86,31 @@ function walkFunctionBody(state, node, scope, tag) {
   flushPending(state, fnEnv);
 }
 
+function deferExpression(state, expression, scope) {
+  const tag = {
+    type: "fn",
+    deferred: [],
+    captured: [],
+    didEscape: false,
+    walked: true,
+    registered: true,
+    node: expression,
+    scope,
+    methodKind: "field",
+  };
+  const fnEnv = child(scope);
+  fnEnv.ownerEnv = fnEnv;
+  fnEnv.functionEnv = fnEnv;
+  fnEnv.fnTag = tag;
+  fnEnv.inClass = Boolean(scope.inClass);
+  fnEnv.pending = [];
+  fnEnv.hasArguments = Boolean(scope.hasArguments);
+  fnEnv.receiver = scope.receiver || null;
+  api.visit(state, expression, fnEnv, "read");
+  flushPending(state, fnEnv);
+  return tag;
+}
+
 function callFunction(state, tag) {
   ensureWalked(state, tag);
   for (const write of tag.deferred) {
@@ -156,6 +181,7 @@ function releaseEscaping(state, tag) {
   markEscaped(state, tag);
 }
 
+api.deferExpression = deferExpression;
 api.escapeNestedFunctions = escapeNestedFunctions;
 api.releaseEscaping = releaseEscaping;
 

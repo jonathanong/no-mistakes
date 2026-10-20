@@ -26,7 +26,16 @@ function visitNew(state, node, scope, role) {
   ) {
     tag = { type: "mapset" };
   } else {
-    tag = constructInstance(scope, api.visit(state, node.callee, scope, "read"));
+    const classTag = api.visit(state, node.callee, scope, "read");
+    tag = constructInstance(scope, classTag);
+    for (const argument of node.arguments) {
+      visitArgument(state, argument, scope, "escape");
+    }
+    runConstruction(state, classTag);
+    if (role === "escape") {
+      api.releaseEscaping(state, tag);
+    }
+    return tag;
   }
   for (const argument of node.arguments) {
     visitArgument(state, argument, scope, "escape");
@@ -67,6 +76,27 @@ function visitCall(state, node, scope, role) {
   }
   invokeCallable(state, calleeTag);
   return finishGet(node, calleeTag) || unknown();
+}
+
+function runConstruction(state, tag, seen = new Set()) {
+  if (!tag || seen.has(tag)) {
+    return;
+  }
+  seen.add(tag);
+  if (tag.type === "union") {
+    for (const member of tag.members) {
+      runConstruction(state, member, seen);
+    }
+    return;
+  }
+  if (tag.type !== "fresh" || !tag.isClass) {
+    return;
+  }
+  for (const item of tag.items) {
+    if (item.methodKind === "constructor" || item.methodKind === "field") {
+      callFunction(state, item);
+    }
+  }
 }
 
 function invokeCallable(state, tag) {

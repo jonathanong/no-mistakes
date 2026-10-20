@@ -134,8 +134,8 @@ function objectMutation(node, scope, object, name) {
   return argumentMutation(node);
 }
 
-// `push.call(target)` and `push.apply(target, args)` mutate the first argument,
-// not the array the method was read from.
+// Array `.call`/`.apply` mutate the first argument. Object statics ignore
+// `this` and mutate their own first argument, which follows `thisArg`.
 function forwardedMutation(receiver, node, scope) {
   const method = unwrap(receiver);
   if (method.type !== "MemberExpression") {
@@ -148,7 +148,33 @@ function forwardedMutation(receiver, node, scope) {
   if (ARRAY_METHODS.has(name)) {
     return argumentMutation(node);
   }
-  return objectMutation(node, scope, method.object, name);
+  if (!OBJECT_METHODS.has(name) || !isGlobal(method.object, scope, "Object")) {
+    return null;
+  }
+  return forwardedObjectTarget(node);
+}
+
+function forwardedObjectTarget(node) {
+  const forward = methodName(unwrap(node.callee));
+  if (forward === "call") {
+    const target = node.arguments[1];
+    if (!target || target.type === "SpreadElement") {
+      return null;
+    }
+    return { targetNode: target, otherArgs: node.arguments.slice(2) };
+  }
+  const list = unwrap(node.arguments[1]);
+  if (list?.type !== "ArrayExpression") {
+    return null;
+  }
+  if (list.elements.some((element) => !element || element.type === "SpreadElement")) {
+    return null;
+  }
+  const target = list.elements[0];
+  if (!target) {
+    return null;
+  }
+  return { targetNode: target, otherArgs: list.elements.slice(1) };
 }
 
 function mutationCall(node, scope) {

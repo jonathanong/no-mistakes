@@ -13,6 +13,13 @@ function repeated(count) {
 }
 
 describe("no-object-mutation escapes", () => {
+  it("ignores an ambient module that has no body", () => {
+    assert.deepEqual(
+      ids(`declare module "*.svg";\ndeclare module "foo";`, undefined, "types.d.ts"),
+      [],
+    );
+  });
+
   it("reports arguments, aliases, and not a shadowed local builder", () => {
     assert.deepEqual(
       ids(`
@@ -61,7 +68,10 @@ describe("no-object-mutation escapes", () => {
           Array.prototype.push.call(rows, 1);
           [].push.apply(rows, [2]);
           rows.push.call(box, 3);
+          Object.assign.call(null, box, { c: 1 });
+          Object.assign.apply(null, [box, { c: 1 }]);
           Object.assign.call(box, { c: 1 });
+          Object.assign.apply(box, [{ c: 1 }]);
         }
         function local() {
           const box = {};
@@ -81,9 +91,12 @@ describe("no-object-mutation escapes", () => {
           Array.prototype.push.call();
           Array.prototype.push.apply();
           box.unknown.call(box, 1);
+          Object.assign.call(box);
+          Object.assign.apply(box, ...rows);
+          Object.assign.apply(box, [...rows]);
         }
       `),
-      repeated(6),
+      repeated(7),
     );
     assert.deepEqual(
       ids(
@@ -309,8 +322,50 @@ describe("no-object-mutation escapes", () => {
             }
           };
         }
+        function fieldLater() {
+          const box = {};
+          return class {
+            field = (box.ready = true);
+          };
+        }
+        function constructorLater() {
+          const box = {};
+          class Writer {
+            constructor() {
+              box.ready = true;
+            }
+          }
+          return Writer;
+        }
+        function constructorRan() {
+          const box = {};
+          class Writer {
+            constructor() {
+              box.ready = true;
+            }
+          }
+          return new Writer();
+        }
+        function staticLater() {
+          const box = {};
+          class Writer {
+            static save() {
+              box.ready = true;
+            }
+          }
+          return Writer;
+        }
+        function staticRan() {
+          const box = {};
+          class Writer {
+            static save() {
+              box.ready = true;
+            }
+          }
+          return new Writer();
+        }
       `),
-      repeated(9),
+      repeated(12),
     );
     assert.deepEqual(
       ids(`
