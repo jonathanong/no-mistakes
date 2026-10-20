@@ -1,13 +1,12 @@
 mod analysis;
 mod exact;
 mod gate;
+mod sql_sources;
 mod substitute;
 mod verdicts;
 
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::postgres::{
-    postgres_sql_paths, recovered_sql_needs_insert_check, EmbeddedSqlKind,
-};
+use crate::codebase::postgres::{recovered_sql_needs_insert_check, EmbeddedSqlKind};
 use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -150,24 +149,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    if let Some(sql_sources) = &opts.sql_sources {
-        for path in postgres_sql_paths(root, files, sql_sources)? {
-            let rel = relative_slash_path(root, &path);
-            let source = crate::codebase::rules::read_source(sources, &path).unwrap_or_default();
-            for (line, statement) in analysis::sql_statements(&source) {
-                if has_safe_directive(statement, 1, statement, &opts.safe_directive) {
-                    continue;
-                }
-                findings.extend(analysis::findings_for_sql(
-                    &rel,
-                    line as usize,
-                    statement,
-                    catalog,
-                    opts.fail_unanalyzable,
-                ));
-            }
-        }
-    }
+    sql_sources::scan(root, opts, files, sources, catalog, &mut findings)?;
     findings.sort();
     Ok(findings)
 }
