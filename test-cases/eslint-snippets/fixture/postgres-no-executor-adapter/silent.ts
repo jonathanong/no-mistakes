@@ -111,6 +111,8 @@ export function stored(
   run(new Runner() ?? read, account);
   run(!flag ?? read, account);
   run(+flag ?? read, account);
+  // Updates are numbers, import() is a Promise, and delete is a boolean.
+  // None of those are nullish, so `??` never selects `read`.
   run(flag++ ?? read, account);
   run(import("m") ?? read, account);
   const obj = { k: true };
