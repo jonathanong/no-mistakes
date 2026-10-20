@@ -1,7 +1,5 @@
 use super::super::identifier_arg;
-use crate::queue::extract_helpers::{
-    collect_jobs_from_args, literal_or_import, processor_specifier,
-};
+use crate::queue::extract_helpers::{literal_or_import, processor_specifier};
 use crate::queue::extract_model::{ProducerSite, WorkerSite};
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
@@ -68,19 +66,15 @@ pub(super) fn note_worker(
     } else {
         None
     };
-    let mut jobs = collect_jobs_from_args(&call.arguments, visitor.source);
-    jobs.sort();
-    jobs.dedup();
-    let wildcard = jobs.is_empty();
     visitor.facts.workers.push(WorkerSite {
         file: visitor.path.to_path_buf(),
         line: line_number(visitor.source, call.span.start),
         queue_name,
         queue_name_import,
-        jobs,
+        jobs: Vec::new(),
         processor_specifier: processor_binding(visitor, call, processor_index),
         processor_file: None,
-        wildcard,
+        wildcard: true,
     });
     if let Some(arg) = call.arguments.get(processor_index) {
         let span = arg.span();
@@ -114,14 +108,20 @@ fn processor_binding(
     call: &CallExpression<'_>,
     processor_index: usize,
 ) -> Option<String> {
-    let arg = call.arguments.get(processor_index)?;
-    if let Some(name) = identifier_arg(arg) {
-        if let Some((specifier, _)) = visitor.facts.string_imports.get(&name) {
-            return Some(specifier.clone());
-        }
-        if let Some(specifier) = visitor.namespace_imports.get(&name) {
-            return Some(specifier.clone());
+    let expr = call
+        .arguments
+        .get(processor_index)?
+        .as_expression()?
+        .get_inner_expression();
+    if let Expression::Identifier(id) = expr {
+        if let Some(import) = visitor
+            .facts
+            .imports
+            .iter()
+            .find(|import| import.local == id.name.as_str())
+        {
+            return Some(import.source.clone());
         }
     }
-    processor_specifier(&call.arguments, visitor.source, &visitor.namespace_imports)
+    processor_specifier(expr, &visitor.namespace_imports)
 }

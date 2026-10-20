@@ -1,6 +1,5 @@
 use super::fixture;
 use crate::codebase::ts_resolver::ImportResolver;
-use crate::queue::extract_helpers::quoted_prefix;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::resolver::{load_tsconfig_from_visible, TsConfig};
 use crate::queue::source::discover_source_files;
@@ -102,11 +101,6 @@ fn resolver_accepts_jsonc_tsconfig() {
         resolve_import("@queues", &current, &root, &tsconfig),
         Some(root.join("src/queues/index.ts").canonicalize().unwrap())
     );
-}
-
-#[test]
-fn quoted_prefix_returns_partial_value_when_closing_quote_is_absent() {
-    assert_eq!(quoted_prefix("\"partial"), Some("partial".to_string()));
 }
 
 #[test]

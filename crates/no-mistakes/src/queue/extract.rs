@@ -1,4 +1,3 @@
-use crate::queue::extract_helpers::collect_jobs_from_text;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
@@ -34,14 +33,14 @@ pub(crate) fn extract_program_with_factories(
         claimed_processors: Vec::new(),
         current_case: None,
         namespace_imports: HashMap::new(),
-        processor_spans: Vec::new(),
+        processor_spans: super::extract_factory::processor_spans(program, roles),
+        dispatch_dynamic_workers: HashSet::new(),
+        dispatch_jobs: HashMap::new(),
+        dispatch_scopes: HashSet::new(),
         worker_stack: Vec::new(),
     };
     visitor.visit_program(program);
-    let mut jobs = collect_jobs_from_text(source);
-    jobs.sort();
-    jobs.dedup();
-    visitor.facts.referenced_jobs = jobs;
+    super::extract_processor::finish(&mut visitor);
     visitor.facts
 }
 

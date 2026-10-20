@@ -83,12 +83,13 @@ fn adopt_processor_jobs(
         return;
     };
     // `processor_file` is remapped from `facts.keys()`.
-    let jobs = facts[file].referenced_jobs.clone();
+    let processor = &facts[file];
+    let jobs = processor.referenced_jobs.clone();
     if jobs.is_empty() {
         return;
     }
     site.jobs = jobs;
-    site.wildcard = false;
+    site.wildcard = processor.referenced_jobs_dynamic;
 }
 
 fn local_queues<R: ImportResolverFacade>(

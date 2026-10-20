@@ -113,6 +113,9 @@ pub(super) fn self_dedup_findings(
 }
 
 fn workers_by_file_index(workers: &[InternalWorker]) -> HashMap<(&Path, usize), &InternalWorker> {
+    // `worker_index` is the ordinal in a file's `FileFacts::workers` vector.
+    // Producer and worker resolution both flatten the same facts map in the
+    // same per-file order, so counting workers per file reconstructs that ordinal.
     let mut counts: HashMap<&Path, usize> = HashMap::new();
     let mut out = HashMap::new();
     for worker in workers {

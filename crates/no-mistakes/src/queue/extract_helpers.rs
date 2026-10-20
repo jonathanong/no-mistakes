@@ -1,6 +1,4 @@
-use crate::ast;
-use oxc_ast::ast::{Argument, BindingPattern, Expression, ModuleExportName, TemplateLiteral};
-use oxc_span::GetSpan;
+use oxc_ast::ast::{BindingPattern, Expression, ModuleExportName, TemplateLiteral};
 use std::collections::HashMap;
 
 /// The processor parameter the queue checks treat as the active job.
@@ -81,68 +79,15 @@ fn no_substitution_template(template: &TemplateLiteral<'_>) -> Option<String> {
 }
 
 pub(super) fn processor_specifier(
-    args: &[Argument<'_>],
-    source: &str,
+    expr: &Expression<'_>,
     namespace_imports: &HashMap<String, String>,
 ) -> Option<String> {
-    let source = args
-        .iter()
-        .filter_map(Argument::as_expression)
-        .find_map(|expr| {
-            let text = ast::span_text(source, expr.span());
-            namespace_imports
-                .keys()
-                .find_map(|name| text.contains(name).then_some(name.clone()))
-        });
-    source.and_then(|name| namespace_imports.get(&name).cloned())
-}
-
-pub(super) fn collect_jobs_from_args(args: &[Argument<'_>], source: &str) -> Vec<String> {
-    let text = args
-        .iter()
-        .map(|arg| ast::span_text(source, arg.span()))
-        .collect::<Vec<_>>()
-        .join("\n");
-    collect_jobs_from_text(&text)
-}
-
-pub(super) fn collect_jobs_from_text(text: &str) -> Vec<String> {
-    let mut jobs = Vec::new();
-    for marker in ["job.name ===", "job.name===", "case ", "case\t", "name:"] {
-        let mut rest = text;
-        while let Some(index) = rest.find(marker) {
-            rest = &rest[index + marker.len()..];
-            let trimmed = rest.trim_start();
-            if let Some(value) = quoted_prefix(trimmed) {
-                jobs.push(value);
-            }
-        }
+    let mut root = expr.get_inner_expression();
+    while let Expression::StaticMemberExpression(member) = root {
+        root = member.object.get_inner_expression();
     }
-    jobs
-}
-
-pub(super) fn quoted_prefix(text: &str) -> Option<String> {
-    let quote = text.chars().next()?;
-    if quote != '\'' && quote != '"' {
+    let Expression::Identifier(id) = root else {
         return None;
-    }
-    let rest = &text[quote.len_utf8()..];
-    let mut escaped = false;
-    let mut value = String::new();
-    for ch in rest.chars() {
-        if escaped {
-            value.push(ch);
-            escaped = false;
-            continue;
-        }
-        if ch == '\\' {
-            escaped = true;
-            continue;
-        }
-        if ch == quote {
-            return Some(value);
-        }
-        value.push(ch);
-    }
-    Some(value)
+    };
+    namespace_imports.get(id.name.as_str()).cloned()
 }

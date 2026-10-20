@@ -67,5 +67,7 @@ pub(crate) struct FileFacts {
     pub star_exports: Vec<String>,
     /// Static `job.name` / `case` names in this file, used when it is an imported processor.
     pub referenced_jobs: Vec<String>,
+    /// A job-name use outside a literal comparison or switch label keeps imported processors open.
+    pub referenced_jobs_dynamic: bool,
     pub checks: Vec<LocalCheck>,
 }

@@ -11,24 +11,29 @@ pub(crate) fn visit_function<'a>(
     func: &Function<'a>,
     flags: oxc_syntax::scope::ScopeFlags,
 ) {
-    let worker = enter_worker(visitor, func.span);
-    let entered = enter_job(visitor, &func.params, func.span);
-    walk::walk_function(visitor, func, flags);
-    if entered {
-        visitor.job_frames.pop();
+    visitor.dispatch_scopes.insert(func.span.start);
+    let frames = visitor.job_frames.clone();
+    if let Some(id) = &func.id {
+        super::scope::mask_name(visitor, id.name.as_str());
     }
+    super::dedup::mask_parameters(visitor, &func.params);
+    let worker = enter_worker(visitor, func.span);
+    enter_job(visitor, &func.params, func.span);
+    walk::walk_function(visitor, func, flags);
+    visitor.job_frames = frames;
     if worker {
         visitor.worker_stack.pop();
     }
 }
 
 pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunctionExpression<'a>) {
+    visitor.dispatch_scopes.insert(arrow.span.start);
+    let frames = visitor.job_frames.clone();
+    super::dedup::mask_parameters(visitor, &arrow.params);
     let worker = enter_worker(visitor, arrow.span);
-    let entered = enter_job(visitor, &arrow.params, arrow.span);
+    enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
-    if entered {
-        visitor.job_frames.pop();
-    }
+    visitor.job_frames = frames;
     if worker {
         visitor.worker_stack.pop();
     }
@@ -38,8 +43,8 @@ fn enter_worker(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {
     let Some(index) = visitor
         .processor_spans
         .iter()
-        .rev()
-        .find(|record| span.start >= record.0 && span.end <= record.1)
+        .filter(|record| span.start >= record.0 && span.end <= record.1)
+        .min_by_key(|record| record.1.saturating_sub(record.0))
         .map(|record| record.2)
     else {
         return false;
@@ -50,7 +55,10 @@ fn enter_worker(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {
 
 pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStatement<'a>) {
     let tracks = visitor.tracks_job_name(&stmt.discriminant);
-    visitor.visit_expression(&stmt.discriminant);
+    super::super::extract_processor::note_switch(visitor, stmt);
+    if !tracks {
+        visitor.visit_expression(&stmt.discriminant);
+    }
     for case in &stmt.cases {
         let label = tracks
             .then(|| case_label(visitor, case.test.as_ref()))

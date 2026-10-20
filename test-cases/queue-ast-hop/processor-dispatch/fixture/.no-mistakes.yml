@@ -1,0 +1,5 @@
+version: 2
+queues:
+  factories:
+    worker:
+      - { callee: makeWorker, name: 0, processor: 1 }

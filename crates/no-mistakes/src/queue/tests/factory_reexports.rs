@@ -194,3 +194,6 @@ fn an_export_from_does_not_replace_a_same_named_import() {
         report.edges
     );
 }
+
+#[path = "processor_dispatch.rs"]
+mod processor_dispatch;
