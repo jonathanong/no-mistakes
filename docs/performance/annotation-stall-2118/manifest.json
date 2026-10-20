@@ -2,7 +2,7 @@
   "purpose": "Diagnostic localization and saved reductions only; concurrent builds; not matched performance measurements or infinite-loop proof. Prototype source differs from final bounded activity implementation.",
   "prototypeRawSha256": "d83f34e4dab2e448435c4e62d0e4092d7b4d43ed3742b1ff78a5d92dce6c6ab2",
   "files": {
-    "README.md": "730cec26da27e4c43bc926460142a4938744ed1ce9de46afd9b82af4f9bfb515",
+    "README.md": "70eb2f01ae499e05d334bc0a398d5d47854f038603fe7b3c7bdf4baba0cd1dc5",
     "all-dependents.json": "8b55313a822d3a8aae9471a434c5869d7d28a6b8bf3ac8556e24204999aba40e",
     "all-dependents.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "all-impacted.json": "fb3a375b31cbe520241692455543f5d881313898a1579468bf6c26b68ebade32",
@@ -207,7 +207,8 @@
     "validation-configured-check.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
     "validation-dependents.json": "d2f08bcd85249c02d405b1bccc1caf4073db9af92e7d9dd28377663e5d5e107a",
     "validation-impacted-checks.json": "172b986b812ed6a2ab413601981cd67e96f7cf0e9859aaea58f81521b5f98d72",
-    "validation-test-plan.json": "a4e32207ee0b50a824dc7a1b330b4db0e6cf8aa94478495aab775a92ea9e254b"
+    "validation-test-plan.json": "a4e32207ee0b50a824dc7a1b330b4db0e6cf8aa94478495aab775a92ea9e254b",
+    "version-only-rebase.json": "bea951e591c61a768c0d813b2bbea5b6cbd4f414ba96d020c21a02f82ecf5a54"
   },
   "gzipExpandedSha256": {
     "prototype-progress.log.gz": "d83f34e4dab2e448435c4e62d0e4092d7b4d43ed3742b1ff78a5d92dce6c6ab2",

@@ -179,3 +179,9 @@ validation results do not establish runtime overhead or fix the underlying stall
 
 Compressed raw logs preserve their original bytes; expanded SHA-256 values are
 recorded in `manifest.json`.
+
+Main subsequently released version 0.94.0. The draft rebases onto `2b1cdb2c9`
+with byte-identical analyzer source and unchanged third-party Rust packages;
+`version-only-rebase.json` records all three patch-equivalent feature commits.
+Local native probes and full gates remain attributed to version 0.93.0 at
+`633724ce9`; the rebased version is not described as sampled.
