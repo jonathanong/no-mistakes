@@ -1,0 +1,14 @@
+on: push
+jobs:
+  dup:
+    runs-on: ubuntu-latest
+    services:
+      a:
+        image: x
+        ports: ["7002:5432"]
+      b:
+        image: x
+        # no-mistakes-disable-next-line github-actions-docker-host-ports
+        ports: ["7002:5432"]
+    steps:
+      - run: echo

@@ -1,0 +1,13 @@
+# A YAML merge key is not applied, so the anchor's host port stays silent.
+x-defaults: &d
+  image: postgres
+  ports:
+    - 7001:5432
+jobs:
+  m1:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        <<: *d
+    steps:
+      - run: echo

@@ -81,3 +81,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: docker run -p 127.0.0.1:0:5432 postgres
+  same-indent-allocated:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres
+        ports:
+        - 127.0.0.1::5432
+    steps:
+      - run: echo ok
+  flow-container-port:
+    runs-on: ubuntu-latest
+    container: { image: ubuntu, ports: [6004] }
+    steps:
+      - run: echo ok

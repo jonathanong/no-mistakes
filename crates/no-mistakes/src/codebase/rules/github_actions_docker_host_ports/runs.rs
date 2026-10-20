@@ -21,6 +21,11 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
     };
     let located = step_run_lines(source, action);
     let mut findings = Vec::new();
+    if !action {
+        if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
+            findings.extend(super::ports::service_findings(rel, source, jobs));
+        }
+    }
     for body in bodies(action, &value) {
         let lines = located
             .iter()
@@ -111,20 +116,22 @@ fn judge(rel: &str, body: &Body, located: Option<&StepRun>) -> Vec<RuleFinding> 
                 rule: RULE_ID.to_string(),
                 file: rel.to_string(),
                 line,
-                message: format!(
-                    "{rel}:{line}: {place} pins host port `{host}` in `{spec}`. \
-                     Hosted and shared runners collide when a docker run publish mapping \
-                     fixes the host port. Publish a Docker-allocated port \
-                     (`127.0.0.1::5432`, `::5432`, or the container port only) or a \
-                     variable host port (`$PORT:5432`, `${{PORT}}:5432`, `${{{{ ... }}}}:5432`).",
-                    host = hit.host,
-                    spec = hit.spec,
-                ),
+                message: pin_message(rel, line, &place, &hit.host, &hit.spec),
                 import: None,
                 target: Some(body.target.clone()),
             }
         })
         .collect()
+}
+
+pub(super) fn pin_message(rel: &str, line: usize, place: &str, host: &str, spec: &str) -> String {
+    format!(
+        "{rel}:{line}: {place} pins host port `{host}` in `{spec}`. \
+         Hosted and shared runners collide when a publish mapping \
+         fixes the host port. Publish a Docker-allocated port \
+         (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). \
+         A variable host port is not judged."
+    )
 }
 
 fn source_line(located: Option<&StepRun>, script: &str, script_line: usize, spec: &str) -> usize {

@@ -1,3 +1,5 @@
+<!-- cspell:ignore nerdctl setsid tlsverify -->
+
 # `github-actions-docker-host-ports`
 
 ## Why and when
@@ -10,7 +12,11 @@ the host port instead.
 
 The rule is opt-in. Listing it is what turns it on. It is off by default and
 is not part of a recommended or strict preset. It reports only a mapping it
-can judge. Dynamic or unparsed commands stay silent.
+can judge. A dynamic publish word stays silent. These forms are not judged:
+`podman` and `nerdctl`, an `ssh` remote command, an unknown flag before
+`-p` or `--publish`, and a YAML merge key (`<<`), which is not applied. A
+literal command inside `bash -c`, `sh -c`, `zsh -c`, or `eval` is judged,
+including when `sudo` precedes that shell.
 
 ## What it catches
 
@@ -30,11 +36,18 @@ literal range (`5432`, `8000-8002`), including an IP prefix
 - Variable host ports: `$PORT:5432`, `${PORT}:5432`, and `${{ ... }}:5432`.
 
 The command word is `docker` (a path whose last segment is `docker` counts)
-followed by `run`, or `docker container run`. A leading `sudo`, assignment,
-or shell prefix (`if`, `time`, `exec`, `(`, and the same family) does not
-hide the command. Flags before the image are parsed when this rule knows
-them. An unknown `--name=value` flag is skipped. Any other unknown flag
-stops the scan, and publish flags already seen stay findings. A command
+followed by `run`, or `docker container run`. A leading `sudo` (including
+`--`, `--user`, `--preserve-env`, and boolean flags such as `-i`), `env`
+(including a path, `-C`, and `-S`), `timeout` (including `-s` and `-k`),
+`xargs`, an assignment, or a shell prefix (`if`, `time`, `exec`, `setsid`,
+`(`, and the same family) does not hide the command. `bash`, `sh`, and `zsh`
+with `-c`, `-lc`, or `-O`, and `eval`, are read again as a script when the
+operand is a literal word. Client globals
+before the subcommand (`--context`, `-c`, `--tls`, `--tlsverify`, `--host`,
+`-H`, `--config`, `--log-level`, `-l`, and the `--tls*` file flags) are
+skipped. Flags before the image are parsed when this rule knows them. An
+unknown `--name=value` flag is skipped. Any other unknown flag stops the
+scan, and publish flags already seen stay findings. A command
 substitution or backtick is judged when the publish word itself is literal;
 a substitution used as the publish value is not a finding. A heredoc body is
 not scanned, including when a space precedes the delimiter. A `docker run`
@@ -57,7 +70,7 @@ rules:
 
 ## Valid example
 
-Let Docker choose the host port, or pass the host port in from the environment.
+Let Docker choose the host port.
 
 ```yaml
 jobs:
@@ -65,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: docker run -p 127.0.0.1::5432 postgres
-      - run: docker run -p "$PORT:5432" postgres
+      - run: docker run -p 0:5432 postgres
 ```
 
 A container port alone also asks Docker to allocate the host port:
@@ -92,10 +105,16 @@ Publish with a Docker-allocated host port:
       - run: docker run -p 127.0.0.1::5432 postgres
 ```
 
-`::5432` and a container port alone are the same fix. A variable host port
-(`$PORT:5432`, `${PORT}:5432`, `${{ env.PORT }}:5432`) is the fix when the
-port has to be chosen outside the script. The same rewrite applies to
-`--publish` and to composite `runs.steps`.
+`::5432`, `0:5432`, and a container port alone are the same fix. A variable
+host port (`$PORT:5432`, `${PORT}:5432`, `${{ env.PORT }}:5432`) is not judged:
+the rule cannot tell whether the variable holds a fixed port. The same rewrite
+applies to `--publish`, `docker create`, and composite `runs.steps`. Literal
+`ports:` on a job `services:` entry or `container:` are judged the same way,
+as one scalar, a flow list, a block list, or a block list written in the
+same column as `ports:`. A flow mapping (`services: { pg: { ports: [...] } }`)
+is judged too. `options:` on a service is read for `-p` and `--publish`.
+An empty list item is not a publish. A container port alone, including a
+flow list such as `ports: [6004]`, is not a finding.
 
 ## Suppression
 
@@ -118,5 +137,6 @@ that step line, so `no-mistakes-disable-next-line` above the step applies.
 [`github-actions-script-expressions`](github-actions-script-expressions.md)
 rejects untrusted expressions inside `run` scripts.
 [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
-flags a checkout that persists a write token. This rule only judges literal
-host ports on `docker run` publish mappings.
+flags a checkout that persists a write token. This rule judges literal host
+ports on `docker run` and `docker create` publish mappings, and on job
+`services:` and `container:` `ports:`.
