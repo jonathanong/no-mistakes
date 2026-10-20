@@ -29,7 +29,7 @@ fn command_hits(words: &[Word]) -> Vec<Hit> {
         return publish_hits(&operand.text)
             .into_iter()
             .map(|mut hit| {
-                hit.line = base + hit.line;
+                hit.line += base;
                 hit
             })
             .collect();

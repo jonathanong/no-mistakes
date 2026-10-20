@@ -1,3 +1,5 @@
+<!-- cspell:ignore nerdctl tlsverify -->
+
 # `github-actions-docker-host-ports`
 
 ## Why and when
