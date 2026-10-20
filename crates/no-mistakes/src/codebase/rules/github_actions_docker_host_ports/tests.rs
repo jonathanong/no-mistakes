@@ -481,6 +481,25 @@ concurrency: cancel
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(findings[0].message.contains("service `real`"));
     assert!(nth_line(source, findings[0].line).contains("1:2"));
+
+    let prefixed = "\
+on: push
+jobs:
+  build:
+    services:
+      pg:
+        ports:
+          - 15432:5432
+          - 5432:5432
+";
+    let findings = check(WORKFLOW, prefixed);
+    let short = findings
+        .iter()
+        .find(|finding| finding.message.contains("in `5432:5432`"))
+        .unwrap();
+    let line = nth_line(prefixed, short.line);
+    assert!(line.contains("- 5432:5432"), "{line}");
+    assert!(!line.contains("15432"), "{line}");
 }
 
 #[path = "parser_edges_tests.rs"]

@@ -125,8 +125,7 @@ fn xargs_flag_takes_value(text: &str) -> bool {
     }
     matches!(
         text,
-        "-I" | "-i"
-            | "-n"
+        "-I" | "-n"
             | "-P"
             | "-s"
             | "-a"
@@ -139,8 +138,6 @@ fn xargs_flag_takes_value(text: &str) -> bool {
             | "--max-chars"
             | "--delimiter"
             | "--arg-file"
-            | "--replace"
-            | "--eof"
     )
 }
 

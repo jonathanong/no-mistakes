@@ -127,9 +127,20 @@ fn spec_line(source: &str, job: &str, spec: &str) -> usize {
     let (start, end) = job_span(&lines, job).unwrap_or((0, lines.len()));
     lines[start..end]
         .iter()
-        .position(|line| line.contains(spec))
+        .position(|line| contains_token(line, spec))
         .map(|offset| start + offset + 1)
         .unwrap_or(start + 1)
+}
+
+/// `5432:5432` is not a match inside `15432:5432`. Suppression follows the line.
+fn contains_token(line: &str, spec: &str) -> bool {
+    let part =
+        |ch: char| ch.is_ascii_alphanumeric() || matches!(ch, '.' | ':' | '-' | '[' | ']' | '/');
+    line.match_indices(spec).any(|(at, _)| {
+        let before = line[..at].chars().next_back();
+        let after = line[at + spec.len()..].chars().next();
+        !before.is_some_and(part) && !after.is_some_and(part)
+    })
 }
 
 /// Lines belonging to one job, so a repeated spec is not taken from another job.

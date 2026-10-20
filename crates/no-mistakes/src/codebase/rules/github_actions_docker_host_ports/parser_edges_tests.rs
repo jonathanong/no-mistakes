@@ -67,6 +67,8 @@ fn parser_edges_cover_wrappers_hosts_and_yaml_shapes() {
     assert_eq!(hit("stdbuf -oL docker run -p 1:2 img").len(), 1);
     assert_eq!(hit("echo pg | xargs docker run -p 1:2 img").len(), 1);
     assert_eq!(hit("echo pg | xargs -n 1 docker run -p 1:2 img").len(), 1);
+    // `-i` does not consume the next word. `--replace` and `--eof` are the same.
+    assert_eq!(hit("echo pg | xargs -i docker run -p 1:2 img").len(), 1);
     assert_eq!(hit("echo pg | xargs -t docker run -p 1:2 img").len(), 1);
     assert_eq!(hit("docker --debug run -p 1:2 img").len(), 1);
     assert_eq!(hit("docker run -q -p 1:2 img").len(), 1);
