@@ -1,0 +1,35 @@
+{
+  "branches": {
+    "count": 0,
+    "covered": 0,
+    "notcovered": 0,
+    "percent": 0
+  },
+  "functions": {
+    "count": 26623,
+    "covered": 26444,
+    "percent": 99.3276490252789
+  },
+  "instantiations": {
+    "count": 80962,
+    "covered": 57382,
+    "percent": 70.87522541439193
+  },
+  "lines": {
+    "count": 249522,
+    "covered": 247859,
+    "percent": 99.33352570114057
+  },
+  "mcdc": {
+    "count": 0,
+    "covered": 0,
+    "notcovered": 0,
+    "percent": 0
+  },
+  "regions": {
+    "count": 369149,
+    "covered": 363677,
+    "notcovered": 5472,
+    "percent": 98.517671726051
+  }
+}

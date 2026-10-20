@@ -1,0 +1,16 @@
+[
+  "/tmp/nm-annotation-stall-gates/no-mistakes-exact",
+  "--timeout",
+  "0",
+  "--lock-timeout",
+  "0",
+  "check",
+  "--root",
+  "/tmp/nm-annotation-stall/fixtures/performance/annotation-shared-record-dag/shared-object-dag-12",
+  "--config",
+  "/tmp/nm-annotation-stall/fixtures/performance/annotation-shared-record-dag/shared-object-dag-12/.no-mistakes.yml",
+  "--format",
+  "json",
+  "--jobs",
+  "1"
+]

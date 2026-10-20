@@ -1,0 +1,1 @@
+["/tmp/nm-annotation-stall-evidence/no-mistakes-progress-v1", "--timeout", "0", "--lock-timeout", "0", "check", "--root", "/tmp/nm2119-consumer-12158768554/fixture", "--config", "/tmp/nm2119-consumer-12158768554/fixture/.no-mistakes.yml", "--format", "json", "--jobs", "1", "--progress", "--verbose-timings"]

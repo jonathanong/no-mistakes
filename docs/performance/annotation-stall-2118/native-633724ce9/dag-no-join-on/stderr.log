@@ -1,0 +1,56 @@
+[progress] {"elapsedMs":15.362654,"startedSpans":22,"completedSpans":22,"active":[],"completed":[{"label":"discovery","durationMs":5.5669450000000005,"parallel":false},{"label":"discovery.classify","durationMs":0.22838599999999998,"parallel":false},{"label":"discovery.inventory_classify","durationMs":0.04618,"parallel":false},{"label":"parse","durationMs":5.503153,"parallel":false},{"label":"analysis.react","durationMs":0.039472,"parallel":true},{"label":"analysis.queues","durationMs":0.003926,"parallel":true},{"label":"analysis.rules","durationMs":0.016599000000000003,"parallel":true},{"label":"analysis.integration","durationMs":0.0011870000000000001,"parallel":true},{"label":"analysis.codebase","durationMs":0.002315,"parallel":true},{"label":"analysis.filesystem_rules","durationMs":0.512033,"parallel":true},{"label":"filesystem_rule.postgres-require-query-annotation","durationMs":0.373056,"parallel":true},{"label":"invocation.dispatch","durationMs":14.289138999999999,"parallel":false},{"label":"invocation.prepare","durationMs":0.273866,"parallel":false},{"label":"postgres.annotation.evaluate","durationMs":2.0220809999999996,"parallel":false},{"label":"postgres.annotation.prepare","durationMs":0.097483,"parallel":false},{"label":"postgres.annotation.prepare.modules","durationMs":0.026094000000000003,"parallel":false},{"label":"postgres.annotation.prepare.roots","durationMs":0.024877,"parallel":false},{"label":"postgres.annotation.project","durationMs":2.163011,"parallel":false}]}
+[timing] discovery: 5.567ms
+[timing] discovery.classify: 0.228ms
+[timing] discovery.inventory_classify: 0.046ms
+[timing] parse: 5.503ms
+[timing] analysis.react: 0.039ms (parallel; non-additive)
+[timing] analysis.queues: 0.004ms (parallel; non-additive)
+[timing] analysis.rules: 0.017ms (parallel; non-additive)
+[timing] analysis.integration: 0.001ms (parallel; non-additive)
+[timing] analysis.codebase: 0.002ms (parallel; non-additive)
+[timing] analysis.filesystem_rules: 0.512ms (parallel; non-additive)
+[timing] filesystem_rule.postgres-require-query-annotation: 0.373ms (parallel; non-additive)
+[timing] invocation.dispatch: 14.289ms
+[timing] invocation.prepare: 0.274ms
+[timing] postgres.annotation.evaluate: 2.022ms
+[timing] postgres.annotation.prepare: 0.097ms
+[timing] postgres.annotation.prepare.modules: 0.026ms
+[timing] postgres.annotation.prepare.roots: 0.025ms
+[timing] postgres.annotation.project: 2.163ms
+[timing] total: 15.747ms
+[work] discovery.candidates: 3
+[work] discovery.requests: 1
+[work] discovery.roots: 1
+[work] manifest.cache_hits: 1
+[work] manifest.parses: 2
+[work] manifest.requests: 3
+[work] output.renders: 1
+[work] parse.files: 1
+[work] parse.files_after_extract: 1
+[work] parse.requests: 1
+[work] postgres.annotation.completed_activities: 3
+[work] postgres.annotation.module: 1
+[work] postgres.annotation.module_initializations_completed: 1
+[work] postgres.annotation.modules: 1
+[work] postgres.annotation.parallel_passes: 1
+[work] postgres.annotation.profiles: 1
+[work] postgres.annotation.reachability_walks: 1
+[work] postgres.annotation.root: 1
+[work] postgres.annotation.roots: 1
+[work] postgres.annotation.roots_completed: 1
+[work] postgres.annotation.snapshot: 1
+[work] postgres.annotation.target_resolutions: 2
+[work] resolver.computations: 2
+[work] resolver.requests: 2
+[work] resolver.scope_cache_requests: 2
+[work] resolver.scope_constructions: 1
+[work] resolver.unique_keys: 2
+[work] resolver.unresolved: 2
+[work] resolver.visible_canonicalize_calls: 3
+[work] resolver.visible_normalizations: 1
+[work] source.bytes: 1383
+[work] source.cache_hits: 2
+[work] source.reads: 3
+[work] source.requests: 5
+[work] workspace.builds: 1
+[memory] peak_rss_kib: 91760

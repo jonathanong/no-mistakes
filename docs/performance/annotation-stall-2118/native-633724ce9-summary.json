@@ -1,0 +1,92 @@
+[
+  {
+    "case": "dag-no-join-off",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "dag-no-join-on",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "dag-primitive-leaf-off",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "dag-primitive-leaf-on",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "dag-single-child-off",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "dag-single-child-on",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "excluded-stress",
+    "exit": -15,
+    "censored": true,
+    "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "case": "excluded-test-root-included-control-off",
+    "exit": 1,
+    "censored": false,
+    "reportSha256": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32"
+  },
+  {
+    "case": "excluded-test-root-included-control-on",
+    "exit": 1,
+    "censored": false,
+    "reportSha256": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32"
+  },
+  {
+    "case": "excluded-test-root-without-dag-off",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "excluded-test-root-without-dag-on",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "excluded-test-root-without-test-off",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "excluded-test-root-without-test-on",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "shared-object-dag-12-off",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "case": "shared-object-dag-12-on",
+    "exit": 0,
+    "censored": false,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  }
+]

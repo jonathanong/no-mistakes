@@ -1,0 +1,15 @@
+
+running 1 test
+test codebase::ts_source::tests::ignore_walk::ancestor_star_gitignore_does_not_hide_ad_hoc_directory_files ... FAILED
+
+failures:
+
+failures:
+    codebase::ts_source::tests::ignore_walk::ancestor_star_gitignore_does_not_hide_ad_hoc_directory_files
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12199 filtered out; finished in 0.00s
+
+
+thread 'codebase::ts_source::tests::ignore_walk::ancestor_star_gitignore_does_not_hide_ad_hoc_directory_files' (5) panicked at crates/no-mistakes/src/codebase/ts_source/tests/ignore_walk.rs:21:5:
+[]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

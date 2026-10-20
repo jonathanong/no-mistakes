@@ -1,0 +1,76 @@
+diff --git a/crates/no-mistakes/src/codebase/postgres/query_annotation.rs b/crates/no-mistakes/src/codebase/postgres/query_annotation.rs
+index 31d2c4c34..f3df6a6c8 100644
+--- a/crates/no-mistakes/src/codebase/postgres/query_annotation.rs
++++ b/crates/no-mistakes/src/codebase/postgres/query_annotation.rs
+@@ -5,6 +5,7 @@ mod evaluate;
+ mod exports;
+ mod expressions;
+ mod mapped_arguments;
++mod progress;
+ pub(crate) mod modules;
+ pub(crate) mod project;
+ mod statements;
+diff --git a/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/modules.rs b/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/modules.rs
+index 8c5cde220..6c9c5f758 100644
+--- a/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/modules.rs
++++ b/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/modules.rs
+@@ -13,6 +13,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+         if let Some(env) = self.modules.get(path) {
+             return *env;
+         }
++        super::super::progress::trace("postgres.annotation.module", path, None, || {
++            self.initialize_module(path)
++        })
++    }
++
++    fn initialize_module(&mut self, path: &Path) -> Environment {
+         let mut env = self.environment(fx_map());
+         // Publish before initialization: cycles and TDZ references share the
+         // reserved module bindings instead of recursively initializing again.
+diff --git a/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/run.rs b/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/run.rs
+index 80b2c820a..237e5d723 100644
+--- a/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/run.rs
++++ b/crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/run.rs
+@@ -14,7 +14,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+         let file = &self.files[path];
+         let globals = &file.facts.globals;
+         self.module_environment(path);
+-        self.prune_snapshot_state();
++        super::super::progress::trace("postgres.annotation.snapshot", path, None, || {
++            self.prune_snapshot_state()
++        });
+         let env = self.modules[path];
+         let unmodeled = &file.facts.unmodeled_calls;
+         let scopes = self.scopes.clone();
+@@ -139,7 +141,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+                     values.insert(name.clone(), Value::Unknown);
+                 }
+                 let mut env = self.environment(values);
+-                self.steps(&function.body, path, &mut env, 16, true);
++                super::super::progress::trace(
++                    "postgres.annotation.entrypoint",
++                    path,
++                    Some(function.start),
++                    || self.steps(&function.body, path, &mut env, 16, true),
++                );
+             }
+         }
+     }
+diff --git a/crates/no-mistakes/src/codebase/postgres/query_annotation/project/parallel.rs b/crates/no-mistakes/src/codebase/postgres/query_annotation/project/parallel.rs
+index c8885bc0a..c09b36a71 100644
+--- a/crates/no-mistakes/src/codebase/postgres/query_annotation/project/parallel.rs
++++ b/crates/no-mistakes/src/codebase/postgres/query_annotation/project/parallel.rs
+@@ -39,7 +39,12 @@ pub(super) fn evaluate(
+                         let events = crate::diagnostics::with_observer(observer.clone(), || {
+                             let mut evaluator =
+                                 evaluator::new(&files, resolve, untrusted_array_intrinsics);
+-                            evaluator.run(&path);
++                            super::super::progress::trace(
++                                "postgres.annotation.root",
++                                &path,
++                                None,
++                                || evaluator.run(&path),
++                            );
+                             evaluator.events
+                         });
+                         (path, events)

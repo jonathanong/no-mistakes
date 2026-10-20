@@ -1,0 +1,21 @@
+//! Opt-in locations for long-running annotation evaluation.
+use std::path::Path;
+
+pub(super) fn trace<T>(
+    label: &'static str,
+    path: &Path,
+    offset: Option<u32>,
+    operation: impl FnOnce() -> T,
+) -> T {
+    let Some(observer) = crate::diagnostics::current().filter(|observer| observer.detailed()) else {
+        return operation();
+    };
+    observer.increment(label, 1);
+    let location = match offset {
+        Some(offset) => format!("{label} {}:{offset}", path.display()),
+        None => format!("{label} {}", path.display()),
+    };
+    let result = observer.trace(&location, crate::diagnostics::TimingKind::Parallel, operation);
+    observer.increment("postgres.annotation.completed_activities", 1);
+    result
+}

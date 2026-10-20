@@ -1,0 +1,286 @@
+{
+  "base": "286a7cb60250f6816674323ba10700595d6bba5e",
+  "head": "633724ce929ff6fcafd06d7240e2dd0a644f676f",
+  "covered": 172,
+  "missing": 0,
+  "percentage": 100.0,
+  "floor": 98,
+  "files": [
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation.rs",
+      "covered": [],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/run.rs",
+      "covered": [
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        109
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/values.rs",
+      "covered": [
+        13,
+        15,
+        16,
+        17,
+        23,
+        36,
+        49,
+        67,
+        74,
+        82,
+        84,
+        85,
+        86
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/values/progress.rs",
+      "covered": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        50,
+        51,
+        52,
+        53,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/values/progress/tests.rs",
+      "covered": [],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/modules.rs",
+      "covered": [
+        16,
+        17,
+        18,
+        19,
+        21
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/run.rs",
+      "covered": [
+        17,
+        18,
+        19,
+        144,
+        146,
+        147,
+        148
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/progress.rs",
+      "covered": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        18,
+        19,
+        21,
+        22,
+        23,
+        25,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        35,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        44,
+        45,
+        46,
+        47,
+        48,
+        50,
+        52,
+        53,
+        54,
+        55,
+        56,
+        58,
+        60,
+        61
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/progress/tests.rs",
+      "covered": [],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/project.rs",
+      "covered": [
+        54,
+        55,
+        56,
+        57,
+        58,
+        59
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/project/parallel.rs",
+      "covered": [
+        42,
+        44,
+        45,
+        46
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/project/prepare.rs",
+      "covered": [
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        72,
+        73,
+        74
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/project/tests.rs",
+      "covered": [],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/query_annotation/project/tests/stall_progress.rs",
+      "covered": [],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/diagnostics/progress.rs",
+      "covered": [],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/diagnostics/progress/activity.rs",
+      "covered": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "missing": []
+    },
+    {
+      "file": "crates/no-mistakes/src/diagnostics/progress/activity/tests.rs",
+      "covered": [],
+      "missing": []
+    }
+  ],
+  "unrepresentedChangedFiles": [
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/values/progress/tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/progress/tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/project/tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/project/tests/stall_progress.rs",
+    "crates/no-mistakes/src/diagnostics/progress/activity/tests.rs"
+  ],
+  "note": "Unrepresented files require review against normal test/fixture exclusions and executable-source coverage; no custom filename exclusion is used.",
+  "numericGatePassed": true
+}

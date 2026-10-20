@@ -1,0 +1,1 @@
+{"changed_files":["crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/values/progress.rs"],"checks":[{"name":"jscpd","kind":"generic","command":["pnpm","run","lint:duplicates"],"files":["crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/alternatives/values/progress.rs"]}],"warnings":[],"fallback_triggered":false}

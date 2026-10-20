@@ -1,0 +1,16 @@
+[
+  "/tmp/nm-annotation-stall-evidence/no-mistakes-counters-633724ce9",
+  "--timeout",
+  "0",
+  "--lock-timeout",
+  "0",
+  "check",
+  "--root",
+  "/tmp/nm-annotation-stall/fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-dag",
+  "--config",
+  "/tmp/nm-annotation-stall/fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-dag/.no-mistakes.yml",
+  "--format",
+  "json",
+  "--jobs",
+  "1"
+]

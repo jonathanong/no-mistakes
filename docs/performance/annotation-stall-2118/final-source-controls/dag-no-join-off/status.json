@@ -1,0 +1,16 @@
+{
+  "exit": 0,
+  "censored": false,
+  "wallSeconds": 0.0510215429821983,
+  "cpuSeconds": 0.020453,
+  "peakRssKiB": 93956,
+  "performanceEligible": false,
+  "purpose": "Exact-source native diagnostic/report verification; coverage-instrumented debug binary; concurrent build load. Not a matched performance comparison.",
+  "source": "969906b87af6b2c34dee6e0366944ef733358886",
+  "binarySha256": "e794d41f1b454d47ae1354dbb5f1946d1a0035bd79bb87000c25afde65803661",
+  "inputs": {
+    ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+    "root.mts": "2767b7c4bd4a66721cbcc5f96625916aa1bf79a3293b401cde08d14217da706d",
+    "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+  }
+}

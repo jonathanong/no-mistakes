@@ -1,0 +1,206 @@
+{
+  "head": "633724ce929ff6fcafd06d7240e2dd0a644f676f",
+  "base": "286a7cb60250f6816674323ba10700595d6bba5e",
+  "phases": [
+    {
+      "name": "postgres-preflight",
+      "command": [
+        "psql",
+        "postgresql:///postgres?host=/tmp/nm-annotation-stall-pg18-socket&port=56311",
+        "-XAt",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+        "SELECT version(); SHOW standard_conforming_strings; SELECT count(*) FROM pg_available_extensions WHERE name IN ('citext','pg_stat_statements');"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 2.0084895960171707
+    },
+    {
+      "name": "build",
+      "command": [
+        "bash",
+        ".github/scripts/rust-validation.sh",
+        "build"
+      ],
+      "coverageEnvironment": true,
+      "exit": 0,
+      "wallSeconds": 168.8529216820025
+    },
+    {
+      "name": "test",
+      "command": [
+        "bash",
+        ".github/scripts/rust-validation.sh",
+        "test"
+      ],
+      "coverageEnvironment": true,
+      "exit": 0,
+      "wallSeconds": 98.4962267249939
+    },
+    {
+      "name": "lcov",
+      "command": [
+        "cargo",
+        "llvm-cov",
+        "report",
+        "--lcov",
+        "--output-path",
+        "/tmp/nm-annotation-stall-final-gates/coverage.lcov"
+      ],
+      "coverageEnvironment": true,
+      "exit": 0,
+      "wallSeconds": 8.049977058952209
+    },
+    {
+      "name": "json",
+      "command": [
+        "cargo",
+        "llvm-cov",
+        "report",
+        "--json",
+        "--output-path",
+        "/tmp/nm-annotation-stall-final-gates/coverage.json"
+      ],
+      "coverageEnvironment": true,
+      "exit": 0,
+      "wallSeconds": 8.059050541021861
+    },
+    {
+      "name": "floors",
+      "command": [
+        "cargo",
+        "llvm-cov",
+        "report",
+        "--fail-under-lines",
+        "98",
+        "--fail-under-functions",
+        "98",
+        "--fail-under-regions",
+        "98"
+      ],
+      "coverageEnvironment": true,
+      "exit": 0,
+      "wallSeconds": 8.06038105103653
+    },
+    {
+      "name": "patch",
+      "command": [
+        "python3",
+        "/tmp/nm-annotation-stall-final-gates/patch.py",
+        "/tmp/nm-annotation-stall",
+        "/tmp/nm-annotation-stall-final-gates",
+        "286a7cb60250f6816674323ba10700595d6bba5e",
+        "633724ce929ff6fcafd06d7240e2dd0a644f676f"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 2.012402340013068
+    },
+    {
+      "name": "crap",
+      "command": [
+        "cargo",
+        "crap",
+        "--lcov",
+        "/tmp/nm-annotation-stall-final-gates/coverage.lcov",
+        "--fail-above",
+        "--threshold",
+        "30",
+        "--missing",
+        "skip"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 2.0153467410127632
+    },
+    {
+      "name": "complexity",
+      "command": [
+        "cargo",
+        "crap",
+        "--workspace",
+        "--missing",
+        "optimistic",
+        "--fail-above",
+        "--threshold",
+        "30",
+        "--summary"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 2.0133606520248577
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--workspace",
+        "--all-targets",
+        "--all-features",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 88.43877748103114
+    },
+    {
+      "name": "doc",
+      "command": [
+        "bash",
+        ".github/scripts/rust-validation.sh",
+        "doc"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 90.60420168598648
+    },
+    {
+      "name": "cli-build",
+      "command": [
+        "cargo",
+        "build",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--bin",
+        "no-mistakes",
+        "--all-features"
+      ],
+      "coverageEnvironment": false,
+      "exit": 0,
+      "wallSeconds": 56.44203321397072
+    }
+  ],
+  "peakTargetBytes": 9630552106,
+  "limitBytes": 9800000000,
+  "warnBytes": 9300000000,
+  "features": "all-features",
+  "target": "/tmp/nm-annotation-stall-coverage-target",
+  "testThreads": 4,
+  "environmentRationale": "Initial /tmp fixture run failed existing ancestor-ignore test due to sandbox .git markers; unchanged binary passes exact test in clean /var/tmp. Full unchanged-source suite reruns there.",
+  "tempDir": "/var/tmp/nm-annotation-stall-validation-temp",
+  "pgData": "/tmp/nm-annotation-stall-pg18-data",
+  "pgSocket": "/tmp/nm-annotation-stall-pg18-socket",
+  "startedUtc": "2026-10-20T23:31:23Z",
+  "Cargo.lockSha256": "5a17a012a19343e0096c0e3a05e34489071934bb21b14a7f30d886a6fa42ceaf",
+  "Cargo.tomlSha256": "5a129f2bb649899a51778f2782a43bf30a494e980f3391831f69a1dd4b4aa782",
+  ".github/scripts/rust-validation.shSha256": "85613df1fa142aabf0b8ec016caed62a21b073f1667b9e4819206b2c9c591c99",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\n",
+  "llvmCov": "cargo-llvm-cov 0.8.7\n",
+  "latestTargetBytes": 2830266891,
+  "diskWarning": true,
+  "cliSha256": "069c2fb4ed36c35502bc8d5e3fb78fd25f0b2a83012af15dc649b9be1dd5b927",
+  "instrumentedTargetDeletedAfterExport": true,
+  "complete": true,
+  "scope": "--locked --workspace --all-features --lib --bins --tests, plus separate doctests",
+  "postgresStoppedAndDeleted": true,
+  "finishedUtc": "2026-10-20T23:40:20Z",
+  "targetDeleted": true
+}

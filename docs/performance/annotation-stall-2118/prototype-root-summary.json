@@ -1,0 +1,62 @@
+{
+  "completedDistinctRoots": 421,
+  "slowestCompletedRoots": [
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/mcp-tools/current-operations.boundary.test.mts",
+      "durationMs": 51084.827346,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/mcp-tools/user-route-audit.test.mts",
+      "durationMs": 39668.801139,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/test-helpers/api-fixtures/native-landing-page-cases.test.mts",
+      "durationMs": 270.079499,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/workers/ai-agents/processors/process-classifier-run.real-glide.mock.test.mts",
+      "durationMs": 133.478873,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/web/app/(communities)/communities/page.mock.test.tsx",
+      "durationMs": 87.459312,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/oauth/__tests__/authorization-broker-begin.test.mts",
+      "durationMs": 66.569492,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/communities/create-insert.mts",
+      "durationMs": 66.253663,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/communities/applications/answers.test.mts",
+      "durationMs": 57.241453,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/web/components/posts/__tests__/discuss-in-community-action.part-2.test.tsx",
+      "durationMs": 55.578663,
+      "parallel": true
+    },
+    {
+      "label": "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/copyright-notices/dsa-statement-payload.test.mts",
+      "durationMs": 51.170686,
+      "parallel": true
+    }
+  ],
+  "rootHeartbeatCounts": {
+    "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/web/test-helpers/components/posts/post-form.mock-support.tsx": 1,
+    "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/mcp-tools/current-operations.boundary.test.mts": 51,
+    "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/mcp-tools/user-route-audit.test.mts": 40,
+    "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/web/storybook/shared/home-navigation.stories.tsx": 1,
+    "postgres.annotation.root /tmp/nm2119-consumer-12158768554/fixture/backend/services/mcp-tools/post-descendants-tool.contract.test.mts": 14
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "temporaryDirectory": "/tmp",
+    "exit": 101,
+    "log": "env-control-tmp-ancestor.log"
+  },
+  {
+    "temporaryDirectory": "/home/jong/.cache/no-mistakes/nm-annotation-stall-test-temp",
+    "exit": 101,
+    "log": "env-control-isolated.log"
+  }
+]
