@@ -13,6 +13,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if let Some(env) = self.modules.get(path) {
             return *env;
         }
+        super::super::progress::trace("postgres.annotation.module", path, None, || {
+            self.initialize_module(path)
+        })
+    }
+
+    fn initialize_module(&mut self, path: &Path) -> Environment {
         let mut env = self.environment(fx_map());
         // Publish before initialization: cycles and TDZ references share the
         // reserved module bindings instead of recursively initializing again.

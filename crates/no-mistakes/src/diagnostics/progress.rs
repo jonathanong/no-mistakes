@@ -1,3 +1,4 @@
+mod activity;
 mod output;
 mod spans;
 use super::{InvocationObserver, TimingDiagnostic, TimingKind};

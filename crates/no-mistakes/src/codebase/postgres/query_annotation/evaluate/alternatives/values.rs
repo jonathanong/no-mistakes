@@ -2,6 +2,7 @@ use super::super::Value;
 use super::arena::Arena;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::{FxHashMap, FxHashSet};
+mod progress;
 
 fn prefixes<'a>(
     value: &'a Value,
@@ -9,13 +10,17 @@ fn prefixes<'a>(
     visited: &mut FxHashSet<u64>,
     found: &mut FxHashMap<u64, (&'a str, bool)>,
     definite: &FxHashSet<(u64, usize)>,
+    work: &mut Option<progress::Walk>,
 ) {
+    if let Some(work) = work {
+        work.visit(value);
+    }
     match value {
         Value::Prefix(text, complete, Some(id)) => {
             found.insert(*id, (text, *complete));
         }
         Value::Promise(value) | Value::Evaluated(value, _) => {
-            prefixes(value, arena, visited, found, definite)
+            prefixes(value, arena, visited, found, definite, work)
         }
         Value::Aggregate(values)
         | Value::References(values)
@@ -28,7 +33,7 @@ fn prefixes<'a>(
                 return;
             }
             for value in values {
-                prefixes(value, arena, visited, found, definite);
+                prefixes(value, arena, visited, found, definite, work);
             }
         }
         Value::Arguments(id) | Value::Array(id) if visited.insert(*id) => {
@@ -41,7 +46,7 @@ fn prefixes<'a>(
             ) {
                 // Removing a reference does not mutate the builder it held.
                 if !definite.contains(&(*id, index)) {
-                    prefixes(value, arena, visited, found, definite);
+                    prefixes(value, arena, visited, found, definite, work);
                 }
             }
         }
@@ -59,12 +64,14 @@ pub(super) fn changes(
 ) {
     let mut previous = FxHashMap::default();
     let mut current = FxHashMap::default();
+    let mut work = progress::Walk::new();
     prefixes(
         before,
         before_arena,
         &mut FxHashSet::default(),
         &mut previous,
         definite,
+        &mut work,
     );
     prefixes(
         after,
@@ -72,7 +79,11 @@ pub(super) fn changes(
         &mut FxHashSet::default(),
         &mut current,
         definite,
+        &mut work,
     );
+    if let Some(work) = &work {
+        work.complete();
+    }
     for (id, (text, complete)) in previous {
         // A reference disappearing from this binding is a rebind, not a mutation.
         // Opaque mutation of the referenced identity is tracked independently.

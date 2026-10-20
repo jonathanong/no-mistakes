@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@data-stores/psql'
+      unanalyzableSql: ignore
+      include: ['**/*.mts']
+      exclude: ['**/*.test.mts']

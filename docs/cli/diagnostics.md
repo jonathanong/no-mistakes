@@ -111,6 +111,24 @@ Unresolved, computed, and dynamic imports conservatively retain their modules
 and importers, including cycles. Executor-free callers that supply SQL literals
 to imported helpers remain roots.
 
+With `--progress`, annotation preparation separates module construction, root
+demand and evaluation. Live annotation activities name the current root,
+initializing module, entrypoint byte offset or legacy prefix-comparison binding.
+These activities increment span counts without retaining a completed timing for
+every location. Repeated registry initialization across roots therefore remains
+visible without an unbounded history of file or binding labels.
+
+`--verbose-timings` also counts annotation roots started/completed, module
+initializations, prefix walks, visited prefix nodes and container visits. With
+both flags, long prefix walks periodically emit
+`postgres.annotation.prefix_nodes_current_walk` and
+`postgres.annotation.prefix_unique_containers_current_walk` work lines through
+the bounded progress writer. These local counts reset for each comparison;
+distinct containers are immutable value identities, not bytes or allocations.
+They observe the existing traversal without skipping shared subtrees. Progress
+alone creates no prefix-walk work ledger. See the saved
+[shared-record reproduction](../../fixtures/performance/annotation-shared-record-dag/README.md).
+
 - **Seeds.** Configured executor and trusted-tag modules remain demand seeds.
   An empty `importSpecifier` is not a seed: `executorNames` without a module
   still selects calls, but a non-type import of an unrelated module does not.

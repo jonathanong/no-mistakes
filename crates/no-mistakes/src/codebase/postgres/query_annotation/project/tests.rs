@@ -423,3 +423,6 @@ mod profile_lifetimes;
 #[cfg(feature = "test-instrumentation")]
 #[path = "tests/project_scope.rs"]
 mod project_scope;
+#[cfg(feature = "test-instrumentation")]
+#[path = "tests/stall_progress.rs"]
+mod stall_progress;
