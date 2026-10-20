@@ -3,9 +3,10 @@ use super::*;
 pub(in super::super) fn array_elements(
     collector: &ImportCollector,
     value: &ValueExpression,
+    before: u32,
 ) -> Option<Vec<ValueExpression>> {
     Some(
-        array_entries(collector, value)?
+        array_entries(collector, value, before)?
             .into_iter()
             .map(|(_, value)| value)
             .collect(),
@@ -15,27 +16,9 @@ pub(in super::super) fn array_elements(
 pub(in super::super) fn array_entries(
     collector: &ImportCollector,
     value: &ValueExpression,
+    before: u32,
 ) -> Option<Vec<(usize, ValueExpression)>> {
-    let items = match value {
-        ValueExpression::Array(items) => items.clone(),
-        ValueExpression::Named { name, scope, .. } => {
-            let indexes = collector
-                .value_binding_indexes
-                .get(&scope.unwrap_or(0))?
-                .get(name)?;
-            match &collector.value_flow.bindings[*indexes.last()?].value {
-                ValueExpression::Array(items) => items.clone(),
-                _ => return None,
-            }
-        }
-        _ => return None,
-    };
-    let mut entries = Vec::with_capacity(items.len());
-    for (key, value) in items.iter() {
-        entries.push((key.parse::<usize>().ok()?, value.clone()));
-    }
-    entries.sort_by_key(|(slot, _)| *slot);
-    Some(entries)
+    super::escaped_array_bindings::entries(collector, value, before)
 }
 
 pub(in super::super) fn copied_member(
@@ -55,13 +38,16 @@ pub(in super::super) fn assign_sources(
     collector: &ImportCollector,
     arguments: &[ValueExpression],
     raw: &[oxc_ast::ast::Argument<'_>],
+    before: u32,
 ) -> Vec<ValueExpression> {
     let mut sources = Vec::new();
     for (index, source) in arguments.iter().enumerate().skip(1) {
         if let Some(Argument::SpreadElement(spread)) = raw.get(index) {
-            if let Some(entries) =
-                array_entries(collector, &collector.value_expression(&spread.argument))
-            {
+            if let Some(entries) = array_entries(
+                collector,
+                &collector.value_expression(&spread.argument),
+                before,
+            ) {
                 sources.extend(entries.into_iter().map(|(_, value)| value));
                 continue;
             }

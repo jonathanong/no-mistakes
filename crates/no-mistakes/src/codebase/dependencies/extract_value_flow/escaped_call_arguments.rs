@@ -15,6 +15,7 @@ impl ImportCollector {
                     walk_spread_argument(
                         self,
                         &spread.argument,
+                        call.span.start,
                         &mut position,
                         &mut open_at,
                         &mut extras,
@@ -56,6 +57,7 @@ impl ImportCollector {
 fn walk_spread_argument(
     collector: &ImportCollector,
     expression: &Expression<'_>,
+    before: u32,
     position: &mut usize,
     open_at: &mut Option<usize>,
     extras: &mut FxHashMap<usize, Vec<ValueExpression>>,
@@ -71,6 +73,7 @@ fn walk_spread_argument(
                     walk_spread_argument(
                         collector,
                         &nested.argument,
+                        before,
                         position,
                         open_at,
                         extras,
@@ -98,7 +101,7 @@ fn walk_spread_argument(
         return;
     }
     let value = collector.value_expression(expression);
-    match super::escaped_array_entries::array_entries(collector, &value) {
+    match super::escaped_array_entries::array_entries(collector, &value, before) {
         Some(entries) if open_at.is_none() => {
             let mut next = *position;
             for (slot, value) in entries {

@@ -23,9 +23,12 @@ pub(in super::super) fn absorb(
                     | "findLastIndex"
                     | "flatMap"
             ) {
-                if let Some(items) = super::array_elements(collector, receiver) {
+                if let Some(items) = super::array_elements(collector, receiver, call.offset) {
                     for item in items {
                         push_slot(values, slots, owner, 0, item);
+                    }
+                    if let Some(array) = callback_array(collector, receiver, call.offset) {
+                        push_slot(values, slots, owner, 2, array);
                     }
                 }
             }
@@ -35,7 +38,8 @@ pub(in super::super) fn absorb(
                     if let Some(initial) = call.arguments.get(1) {
                         values.entry(key.clone()).or_default().push(initial.clone());
                     } else if let Some(items) =
-                        super::array_elements(collector, receiver).filter(|items| items.len() >= 2)
+                        super::array_elements(collector, receiver, call.offset)
+                            .filter(|items| items.len() >= 2)
                     {
                         // One element never invokes the callback. Two or more pass
                         // element 0 as the accumulator.
@@ -43,7 +47,7 @@ pub(in super::super) fn absorb(
                     }
                 }
                 if let Some(key) = parameters.and_then(|parameters| parameters.get(&1)) {
-                    if let Some(items) = super::array_elements(collector, receiver) {
+                    if let Some(items) = super::array_elements(collector, receiver, call.offset) {
                         values.entry(key.clone()).or_default().extend(items);
                     }
                 }
@@ -75,6 +79,26 @@ pub(in super::super) fn absorb(
             .or_default()
             .push(value.clone());
     }
+    super::escaped_higher_order::forward(collector, slots, values);
+}
+
+fn callback_array(
+    collector: &ImportCollector,
+    receiver: &ValueExpression,
+    before: u32,
+) -> Option<ValueExpression> {
+    if let ValueExpression::Array(_) = receiver {
+        return Some(receiver.clone());
+    }
+    let ValueExpression::Named { .. } = receiver else {
+        return None;
+    };
+    let entries = super::escaped_array_entries::array_entries(collector, receiver, before)?;
+    let mut fields = fx_map();
+    for (slot, value) in entries {
+        fields.entry(slot.to_string()).or_insert(value);
+    }
+    Some(ValueExpression::Array(std::sync::Arc::new(fields)))
 }
 
 fn apply_escaped(

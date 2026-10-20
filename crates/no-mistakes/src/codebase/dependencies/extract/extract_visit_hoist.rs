@@ -48,6 +48,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     owner_entered: bool,
 ) {
+    collector.note_arrow_scope();
     let enclosing_unreachable_binding_after = collector
         .collect_value_flow
         .then(|| collector.unreachable_value_binding_after.take());

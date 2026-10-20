@@ -25,6 +25,11 @@ pub enum ValueExpression {
         std::sync::Arc<ValueExpression>,
         std::sync::Arc<ValueExpression>,
     ),
+    /// Both arms of a conditional array element. Flow values stay Unknown.
+    Either(
+        std::sync::Arc<ValueExpression>,
+        std::sync::Arc<ValueExpression>,
+    ),
     Unknown,
 }
 

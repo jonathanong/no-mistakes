@@ -25,6 +25,8 @@ impl FlowFileIndex {
             ValueExpression::Default(value, fallback) => {
                 self.factory_value(value, visiting) || self.factory_value(fallback, visiting)
             }
+            // A conditional element used to be Unknown, which is not a factory.
+            ValueExpression::Either(_, _) => false,
             ValueExpression::Named {
                 name,
                 scope: Some(scope),
