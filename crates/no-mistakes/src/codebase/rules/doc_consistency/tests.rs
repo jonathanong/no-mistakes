@@ -287,6 +287,11 @@ fn empty_matching_patterns_fail_at_config_load() {
         ("multiline-start", "(?m)^"),
         ("star-or-qq", "a*|QQ"),
         ("qq-or-star", "QQ|a*"),
+        ("nested-empty-alt-under-star", "(?:(|b)c)*"),
+        // Concat of empty pieces. `()(|b)` reaches the hidden alternative
+        // through the all-empty concat; `()()` is empty with no alternation.
+        ("empty-concat-alt", "()(|b)"),
+        ("empty-concat", "()()"),
     ] {
         let message = pattern_config_error(name);
         assert!(
@@ -295,7 +300,7 @@ fn empty_matching_patterns_fail_at_config_load() {
         );
         let hides_alternative = matches!(
             name,
-            "optional-group" | "empty-alt" | "star-or-qq" | "qq-or-star"
+            "optional-group" | "empty-alt" | "star-or-qq" | "qq-or-star" | "empty-concat-alt"
         );
         assert_eq!(
             message.contains("hides later alternatives"),
