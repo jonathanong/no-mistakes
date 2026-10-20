@@ -14,8 +14,8 @@ Supported argument shapes:
   import of `sql` from that module whose local name is still `sql`, or a
   `trustedSqlTags`
   named import (including a rename) from that module or a subpath of it. An
-  identifier spelled `sql` is not enough. A local helper, an import from an
-  unconfigured package, and a parameter that shadows the configured binding
+  identifier spelled `sql` is not enough. A local helper, an import from a
+  package that is not configured, and a parameter that shadows the configured binding
   stay unknown: the template is unanalyzable and the call remains a candidate.
   Other `sql`-named imports, including `import * as sql`, a default import
   from the configured module, and the same name from another module, remain
