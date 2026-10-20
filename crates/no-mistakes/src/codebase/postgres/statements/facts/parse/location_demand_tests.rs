@@ -93,6 +93,15 @@ fn conflict_only_demand_skips_irrelevant_statement_extractions() {
     // Keep conservative quoted-text false positives and SELECT-rooted mutating CTEs.
     assert_eq!(narrow[0].variant_locations.as_ref().unwrap().call_index, 1);
     assert_eq!(narrow[1].variant_locations.as_ref().unwrap().call_index, 2);
+    assert_eq!(
+        narrow[1]
+            .variant_locations
+            .as_ref()
+            .unwrap()
+            .conflicts
+            .len(),
+        1
+    );
     for demand in [SqlLocationDemand::None, SqlLocationDemand::Full] {
         work::begin();
         let full = embedded_call_facts_with_demand(&file, false, false, demand);
