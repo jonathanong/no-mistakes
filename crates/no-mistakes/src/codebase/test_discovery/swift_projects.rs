@@ -150,6 +150,12 @@ fn package_matches_policy(project_name: &str, policy: &TestProjectPolicy, packag
 }
 
 fn glob_matches_package(glob: &str, package: &str) -> bool {
+    // `""` and `"/"` both trim to empty. `strip_prefix("")` returns the whole
+    // glob, and `Tests/**` does not start with `/`, so the root package has to
+    // match before that check. A `*` inside the package segment still misses.
+    if package.is_empty() {
+        return true;
+    }
     match glob.strip_prefix(package) {
         Some("") => true,
         Some(rest) => rest.starts_with('/'),
