@@ -37,6 +37,10 @@ pub(crate) fn finalize(walked: Walked<'_>, sites: &[ImportedSite]) -> Vec<Pendin
             continue;
         }
         let text = fragment.sql_text.take().unwrap_or_default();
+        // Defensive invariant (#2287): fragment placeholder positions are normally
+        // empty here (assigned later in embedded.rs). Keep the trim so positions
+        // never point past the cut; covered by
+        // trimmed_fragment_drops_placeholder_positions_past_the_hole.
         let Some((kept, cut)) = trimmed_prefix(&text) else {
             fragment.recovered_placeholder_positions.clear();
             continue;
