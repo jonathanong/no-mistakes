@@ -1,0 +1,5 @@
+{
+  "tracked": "version = 4\n\n[[package]]\nname = \"example\"\nversion = \"1.0.0\"\n",
+  "windows": "version = 4\r\n\r\n[[package]]\r\nname = \"example\"\r\nversion = \"1.0.0\"\r\n",
+  "changed": "version = 4\n\n[[package]]\nname = \"example\"\nversion = \"2.0.0\"\n"
+}

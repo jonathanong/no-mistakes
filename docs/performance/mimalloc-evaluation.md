@@ -8,8 +8,31 @@ enables `local_dynamic_tls` and does not enable `override` or `v2`. Rust-library
 consumers with their own global allocator can use
 `--no-default-features --features mermaid-validation`.
 
-This PR remains a draft. No eligible allocator resource measurements or release
-size deltas exist for this change. Historical runs on other SHAs cannot validate it.
+This PR remains a draft. The rebased analyzer has not been measured. Collection
+[39335249661](https://github.com/jonathanong/no-mistakes/actions/runs/39335249661)
+used `148b63f68`, before the rebase onto main `4d4deb942`. All 318 collected
+processes reached the 600-second cap; one CLI pair was missing after a workload
+download failed. Both allocators remained in `postgres.annotation.project` in
+the inspected diagnostic samples. These are censored failures, not runtime or
+memory improvements. No complete eligible wall/CPU/peak-RSS comparison exists
+at jobs 1, 4, or max on either platform. N-API jobs 1/max also timed out.
+
+The old collection's paired release bytes were verified independently against
+their hashes and provenance. They do not validate the rebased analyzer:
+
+| Target | CLI byte delta | Addon byte delta |
+| --- | ---: | ---: |
+| macOS arm64 | +193,248 (+0.196%) | −273,280 (−0.293%) |
+| Linux arm64 | +387,184 (+0.498%) | −20,200 (−0.027%) |
+| Linux x64 | +591,272 (+0.702%) | −158,104 (−0.193%) |
+| Windows x64 | −584,192 (−0.687%) | −557,568 (−0.737%) |
+
+The original size-summary step rejected Windows' CRLF checkout hash against
+the other targets' LF hash. The tracked lockfile reproduces both observed hashes;
+source/tree and each target's paired compiler/flags were identical. The release
+builder now verifies checkout bytes against the tracked lockfile, accepting only
+CRLF conversion, and records both canonical `lockSha256` and raw
+`lockFileSha256`. Saved LF/CRLF and changed-dependency fixtures guard this.
 
 ## Required evidence and adoption rule
 

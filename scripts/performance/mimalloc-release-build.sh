@@ -58,7 +58,7 @@ fi
 mimalloc_build "$variant" cargo tree --locked -p no-mistakes -e features > "$out/allocator-features.txt"
 python - "$out" "$target" "$binary" "$variant" <<'PY'
 from pathlib import Path
-import hashlib, json, os, platform, subprocess, sys
+import hashlib, json, os, platform, runpy, subprocess, sys
 out, target, binary, variant = Path(sys.argv[1]), *sys.argv[2:]
 def run(*args):
     return subprocess.check_output(args, text=True).strip()
@@ -70,6 +70,8 @@ artifacts = {}
 for name in (binary, "no-mistakes.node"):
     path = out / name
     artifacts[name] = {"bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+lock_identity = runpy.run_path('scripts/performance/mimalloc-lock.py')['lock_identity']
+lock = lock_identity(Path('Cargo.lock').read_bytes(), subprocess.check_output(['git', 'show', 'HEAD:Cargo.lock']))
 data = {
     "source": run("git", "rev-parse", "HEAD"), "tree": run("git", "rev-parse", "HEAD^{tree}"),
     "target": target, "features": "default" if variant == "mimalloc" else "--no-default-features --features mermaid-validation", "allocator": variant,
@@ -80,7 +82,7 @@ data = {
     "runner": {"os": os.environ.get("RUNNER_OS"), "image": os.environ.get("ImageOS"),
                "imageVersion": os.environ.get("ImageVersion"), "machine": platform.machine(),
                "cpu": cpu, "availableCpus": os.cpu_count()},
-    "lockSha256": hashlib.sha256(Path("Cargo.lock").read_bytes()).hexdigest(), "artifacts": artifacts,
+    **lock, "artifacts": artifacts,
     "manifestRewrite": 'crate-type = ["rlib", "cdylib"]',
 }
 (out / "provenance.json").write_text(json.dumps(data, indent=2) + "\n")

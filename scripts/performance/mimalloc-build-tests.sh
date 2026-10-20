@@ -17,3 +17,4 @@ done
 
 python3 "$root/scripts/performance/mimalloc-tls-tests.py"
 python3 "$root/scripts/performance/mimalloc-size-tests.py"
+python3 "$root/scripts/performance/mimalloc-lock-tests.py"
