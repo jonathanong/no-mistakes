@@ -421,3 +421,17 @@ fn imported_constructor_does_not_downgrade_executor_calls() {
         )],
     );
 }
+
+#[test]
+fn imported_tag_does_not_downgrade_executor_calls() {
+    let options = EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
+    assert_sites(
+        "review-imported-pool-indirect-write-tagged-import.ts",
+        &options,
+        &[site(
+            6,
+            "pool.query(\"SELECT id FROM users WHERE x = 1\")",
+            Some("SELECT id FROM users WHERE x = 1"),
+        )],
+    );
+}
