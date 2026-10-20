@@ -60,6 +60,19 @@ rules above about soundness and unanalyzable reporting still apply. It keeps
 noise from code that cannot be the thing being checked, and it keeps runs fast
 on large repositories.
 
+### Exception: unprovable selections widen within the configured scope
+
+Recall inside a declared framework still comes first. When a Vitest setup
+declaration is dynamic, unresolved, or an unavailable inline `extends` target,
+or when a Dotnet or Swift change cannot be traced to a project, the plan
+widens only within that framework. Owner scope is selected first. The
+framework's discovered tests are used only when ownership is unknown. The
+widening never spills into another framework or the rest of the repository.
+The plan sets `fallback_triggered` and `fallback_reason`, and it emits a
+warning that names the declaration. This does not require
+`--global-config-fallback`. Repository-wide and full-suite selection still
+need that explicit opt-in.
+
 ## Three jobs
 
 1. **Scope the change.** Callers, routes, queues, workflows, and named
@@ -72,11 +85,15 @@ on large repositories.
    duplicate public names.
 
 Graph queries such as `dependents`, `tests plan vitest`, and
-`playwright check` work without a custom config block on a conventional
-Next.js app. Express, Hono, Fastify, Koa, NestJS, and BullMQ / glide-mq
-graphs also run without config. Configuration adds custom Playwright roots,
-wrappers, and multi-app bindings, plus custom queue factories, Remix and
-language HTTP routes, language frontends, and repository rules.
+`playwright check` work without a custom config block when the checkout
+already uses the framework's own imports and file conventions. Next.js is
+recognized from `next.config.*` and the App Router directories `app/` and
+`src/app`. Express, Hono, Fastify, Koa, NestJS, and BullMQ / glide-mq graphs
+are recognized from those packages' imports. Built-in targets are those
+imports and file conventions. Nothing in that set is inferred from naming.
+Configuration adds custom Playwright roots, wrappers, and multi-app bindings,
+plus custom queue factories, Remix and language HTTP routes, language
+frontends, and repository rules.
 
 ## Mistakes this prevents
 

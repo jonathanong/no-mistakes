@@ -195,7 +195,8 @@ dependency declarations, `Package.resolved` pins, `.csproj` package references,
 such as `packages.net10.0-maccatalyst.arm64.lock.json`) changes seed their owning
 projects and downstream dependents. Unsupported dynamic declarations,
 malformed files, and missing revisions emit typed warnings and require explicit
-global fallback opt-in for full-suite selection.
+global fallback opt-in for full-suite selection. Diff-only mode also needs
+`--head` before the new file content can be compared.
 
 ## Breaking Change: Implicit Git Removed
 
