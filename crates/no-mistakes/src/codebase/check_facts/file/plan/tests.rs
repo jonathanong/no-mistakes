@@ -24,6 +24,32 @@ fn ts_source_preserves_missing_source() {
 }
 
 #[test]
+fn ts_extract_plan_clears_family_flags_outside_path_scope() {
+    let inside = PathBuf::from("src/in.ts");
+    let outside = PathBuf::from("src/out.ts");
+    let scope = crate::codebase::check_facts::family_scope::FamilyPathScope::Only(
+        std::sync::Arc::new([inside.clone()].into_iter().collect()),
+    );
+    let plan = CheckFactPlan {
+        react: true,
+        queue: true,
+        symbols: true,
+        react_paths: scope.clone(),
+        queue_paths: scope.clone(),
+        symbols_paths: scope,
+        ..CheckFactPlan::default()
+    };
+    let ts = ts_extract_plan(&plan, &outside, None);
+    assert!(!ts.react, "{ts:?}");
+    assert!(!ts.queue_project, "{ts:?}");
+    assert!(!ts.symbols, "{ts:?}");
+    let ts = ts_extract_plan(&plan, &inside, None);
+    assert!(ts.react);
+    assert!(ts.queue_project);
+    assert!(ts.symbols);
+}
+
+#[test]
 fn ts_extract_plan_mirrors_collected_ts_plan() {
     let path = Path::new("src/widget.ts");
     let plan = CheckFactPlan {
