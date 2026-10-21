@@ -21,7 +21,8 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
         return;
     }
     let roots = (0..scopes.len()).collect::<Vec<_>>();
-    let reachable = reachable::collect_from_roots(
+    // Peek at existing summaries; cold snapshots keep the shared raw visitor.
+    let reachable = reachable::collect_warm_from_roots(
         scopes,
         reachable::RootSeeds {
             environments: &roots,
@@ -92,3 +93,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "state/summary_tests.rs"]
+mod summary_tests;

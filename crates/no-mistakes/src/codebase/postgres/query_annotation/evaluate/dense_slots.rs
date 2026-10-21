@@ -36,6 +36,11 @@ impl Data {
 pub(in crate::codebase::postgres::query_annotation) struct DenseSlots(Arc<Data>);
 
 impl DenseSlots {
+    /// Borrow an existing summary without initializing cold snapshots.
+    pub(super) fn cached_references(&self) -> Option<&Edges> {
+        self.0.references.get()
+    }
+
     pub(super) fn references(&self) -> &Edges {
         self.0.references.get_or_init(|| {
             if let Some(observer) = crate::diagnostics::current() {
