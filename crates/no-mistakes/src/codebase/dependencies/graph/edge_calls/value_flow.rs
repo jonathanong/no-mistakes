@@ -44,6 +44,8 @@ struct ValueFlowResolution<'a, 'b> {
     cache: &'a ParameterCache,
     visiting: FxHashSet<(std::path::PathBuf, usize, String)>,
     calls_visiting: FxHashSet<(std::path::PathBuf, u32, u32)>,
+    // Immutable object/array fields retain identity throughout one projection.
+    fields_visiting: FxHashSet<usize>,
     default_origins: default_origins::Origins,
     acquisition_context: default_origins::Origins,
     invocation_read: Option<default_origins::InvocationRead>,

@@ -31,7 +31,7 @@ pub(in super::super) fn resolve_value_exports(
                 initializing: Vec::new(),
                 cache: &pass.parameter_cache,
                 visiting: fx_set(),
-                calls_visiting: fx_set(),
+                calls_visiting: fx_set(), fields_visiting: fx_set(),
                 default_origins: None,
                 acquisition_context: None,
                 invocation_read: None,

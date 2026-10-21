@@ -42,7 +42,7 @@ impl ValueFlowResolution<'_, '_> {
                         initializing: self.initializing.clone(),
                         used_parameters: fx_set(),
                         visiting: fx_set(),
-                        calls_visiting: fx_set(),
+                        calls_visiting: fx_set(), fields_visiting: fx_set(),
                         default_origins: None,
                         acquisition_context: None,
                         invocation_read: self.invocation_read.clone(),

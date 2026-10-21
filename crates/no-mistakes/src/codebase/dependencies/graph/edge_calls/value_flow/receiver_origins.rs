@@ -74,6 +74,12 @@ impl ValueFlowResolution<'_, '_> {
         file: &std::path::Path,
         expression: &ValueExpression,
     ) -> FlowValue {
+        // A binding guard ends before its object's fields are projected. Track
+        // the borrowed field itself so cyclic member initializers cannot reenter.
+        let field = std::ptr::from_ref(expression) as usize;
+        if !self.fields_visiting.insert(field) {
+            return FlowValue::Unknown;
+        }
         let context = self
             .default_origins
             .as_ref()
@@ -99,6 +105,7 @@ impl ValueFlowResolution<'_, '_> {
                 );
             }
         }
+        self.fields_visiting.remove(&field);
         value
     }
     pub(super) fn seal_receiver_acquisition(&mut self) {

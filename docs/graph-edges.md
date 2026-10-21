@@ -319,7 +319,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `(api as typeof api)["run"]()` resolve the same as `api.run()`. Dynamic
   computed members, dynamic callees, globals, ambiguous `export *` targets, and
   unresolved modules remain call-site facts or diagnostics, never guessed graph
-  edges. Call traversal is cycle-safe and reports each target once at its
+  edges. Cyclic object or array member initializers remain unresolved during
+  value projection; they do not abort analysis or prevent later independent
+  member reads from resolving. Call traversal is cycle-safe and reports each target once at its
   deterministic shortest path; `depth: 0` emits no targets and `depth: 1` is the
   direct-call boundary.
   Statically named iteration callbacks, including imported callbacks in

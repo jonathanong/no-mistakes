@@ -1,0 +1,12 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: src/acyclic.mts
+      traversal: direct
+      unknownCalls: ignore
+      targets:
+        - function:
+            file: src/acyclic.mts
+            symbol: target
