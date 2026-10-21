@@ -182,6 +182,7 @@ fn prepare_join_serial_time_does_not_exceed_its_wall_time() {
         })
         .map(|timing| timing.duration)
         .sum::<Duration>();
+    // serial covers only check.prepare; the branch kind assertions protect the fix.
     assert!(
         serial <= wall,
         "prepare serial {serial:?} exceeded wall {wall:?}: {:#?}",
