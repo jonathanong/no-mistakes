@@ -8,6 +8,8 @@ use crate::codebase::postgres::{
 use crate::fx::FxHashMap;
 use std::borrow::Cow;
 
+mod prefix;
+
 pub(super) fn record(
     file: &str,
     source: &str,
@@ -29,6 +31,7 @@ pub(super) fn record(
         );
         let mut statuses = Vec::new();
         let mut residual_reasons = Vec::new();
+        let mut positive_survives_unknown = false;
         for (version_index, version) in original.statement_calls().enumerate() {
             let judgment = judge(
                 file,
@@ -38,6 +41,8 @@ pub(super) fn record(
                 opts,
                 catalog,
             );
+            positive_survives_unknown |=
+                judgment.status == SqlVerdictStatus::Violation && judgment.survives_unknown;
             statuses.push(judgment.status);
             if let Some(reason) = judgment.reason {
                 residual_reasons.push(reason.to_string());
@@ -53,7 +58,7 @@ pub(super) fn record(
         let status = if exempt {
             SqlVerdictStatus::ProvenClear
         } else {
-            combine_sql_verdicts(&statuses, exhaustive, false)
+            combine_sql_verdicts(&statuses, exhaustive, positive_survives_unknown)
         };
         facts.record_sql_verdict(SqlObligationVerdict {
             profile: opts.embedded.clone(),
@@ -96,7 +101,8 @@ fn judge(
         return SqlBranchJudgment::clear();
     }
     if call.kind == EmbeddedSqlKind::Dynamic {
-        return SqlBranchJudgment::abstain("opaque-sql-tail");
+        // Conflict-only preparation omits this call. Judge the known prefix here.
+        return prefix::dynamic_prefix_judgment(call, catalog);
     }
     if !analysis::contains_insert_conflict(sql) {
         return if call.sql_text.is_some() {
@@ -119,18 +125,20 @@ fn judge(
     if inserts.is_empty() {
         return SqlBranchJudgment::abstain("unresolved-conflict-statement");
     }
+    let findings = analysis::findings_for_inserts(file, call.line as usize, &inserts, catalog);
     let mut uncertainty = false;
-    for (_, finding) in analysis::findings_for_inserts(file, call.line as usize, &inserts, catalog)
-    {
+    for (_, finding) in &findings {
         let target = finding.target.as_deref().unwrap_or_default();
         if matches!(
             target,
             "unresolved-arbiter" | "ambiguous-arbiter" | "unresolved-source-order"
         ) {
             uncertainty = true;
-        } else {
-            return SqlBranchJudgment::violation(false);
         }
+    }
+    // A later order finding keeps the branch dependent on an open tail.
+    if let Some(survives) = prefix::targetless_survives(&findings) {
+        return SqlBranchJudgment::violation(survives);
     }
     if statement.parse_failed && prepared_conflicts.unanalyzable {
         return SqlBranchJudgment::abstain("invalid-sql");

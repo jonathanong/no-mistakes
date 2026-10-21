@@ -7,9 +7,16 @@ use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::R
 use crate::codebase::postgres::embedded::EmbeddedSqlKind;
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{
-    BindingPattern, Declaration, ExportNamedDeclaration, Expression, IdentifierReference,
-    ImportOrExportKind, ModuleExportName, Program, Statement, VariableDeclarationKind,
+    Declaration, ExportNamedDeclaration, Expression, IdentifierReference, ImportOrExportKind,
+    Program, Statement, VariableDeclarationKind,
 };
+
+#[path = "default_export.rs"]
+mod default_export;
+#[path = "names.rs"]
+mod names;
+
+use names::{binding_name, local_name};
 
 pub(in crate::codebase::postgres::embedded::walk) fn note_fragment_const(
     visitor: &mut ScopeVisitor<'_>,
@@ -73,6 +80,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn snapshot_exports(
             }
             Statement::ExportNamedDeclaration(export) => {
                 record_named(visitor, export);
+            }
+            Statement::ExportDefaultDeclaration(export) => {
+                default_export::record(visitor, export);
             }
             _ => {}
         }
@@ -174,21 +184,6 @@ fn known_binding_sql(kind: EmbeddedSqlKind, sql: Option<String>) -> Option<Strin
             sql
         }
         EmbeddedSqlKind::Dynamic => None,
-    }
-}
-
-fn binding_name<'a>(pattern: &BindingPattern<'a>) -> Option<&'a str> {
-    match pattern {
-        BindingPattern::BindingIdentifier(ident) => Some(ident.name.as_str()),
-        _ => None,
-    }
-}
-
-fn local_name<'a>(name: &ModuleExportName<'a>) -> Option<&'a str> {
-    match name {
-        ModuleExportName::IdentifierReference(ident) => Some(ident.name.as_str()),
-        ModuleExportName::IdentifierName(ident) => Some(ident.name.as_str()),
-        ModuleExportName::StringLiteral(_) => None,
     }
 }
 

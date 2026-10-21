@@ -1,5 +1,5 @@
 use super::*;
-use no_mistakes::codebase::postgres::SqlVerdictStatus;
+use no_mistakes::codebase::postgres::{SqlEvidenceKind, SqlVerdictStatus};
 use std::path::PathBuf;
 
 #[test]
@@ -93,5 +93,64 @@ fn conflict_pruning_preserves_opaque_tail_reports_in_every_mode() {
             assert_eq!(row.residual_reasons, ["opaque-sql-tail"]);
             assert!(row.known_prefix.is_some());
         }
+    }
+}
+
+#[test]
+fn targetless_arbiter_in_an_opaque_prefix_stays_a_violation() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/conflict-targetless-opaque");
+    for mode in ["fail", "ignore", "advise"] {
+        let run = |include| {
+            run_all_with_sql_verdicts(
+                root.clone(),
+                Some(root.join(format!("{mode}.yml"))),
+                None,
+                false,
+                false,
+                include,
+            )
+            .unwrap()
+        };
+        let plain = run(false);
+        let evidence = run(true);
+        let mut evidence_json = json_value(&evidence);
+        evidence_json.as_object_mut().unwrap().remove("sqlVerdicts");
+        assert_eq!(json_value(&plain), evidence_json, "{mode}");
+        assert_eq!(plain.rules.len(), usize::from(mode == "fail") * 2, "{mode}");
+        assert_eq!(
+            plain.advisories.len(),
+            if mode == "advise" { 2 } else { 0 },
+            "{mode}"
+        );
+        assert!(plain
+            .rules
+            .iter()
+            .all(|finding| finding.target.as_deref() == Some("unanalyzable-sql")));
+        assert_eq!(evidence.sql_verdicts.len(), 2, "{mode}");
+        let violation = evidence
+            .sql_verdicts
+            .iter()
+            .find(|row| row.status == SqlVerdictStatus::Violation)
+            .expect("targetless prefix");
+        let prefix = violation.known_prefix.as_deref().unwrap_or("");
+        assert!(
+            prefix.contains("ON CONFLICT DO NOTHING") && !prefix.contains("ON CONFLICT (id)"),
+            "{prefix}"
+        );
+        assert_eq!(violation.evidence, Some(SqlEvidenceKind::VerifiedPrefix));
+        assert_eq!(violation.residual_reasons, ["opaque-sql-tail"]);
+        let abstain = evidence
+            .sql_verdicts
+            .iter()
+            .find(|row| row.status == SqlVerdictStatus::Abstain)
+            .expect("ordered prefix");
+        assert!(abstain
+            .known_prefix
+            .as_deref()
+            .unwrap_or("")
+            .contains("ON CONFLICT (id)"));
+        assert_eq!(abstain.residual_reasons, ["opaque-sql-tail"]);
+        assert_eq!(abstain.evidence, None);
     }
 }
