@@ -1,4 +1,6 @@
 use super::*;
+use crate::diagnostics::progress::output::ProgressOutput;
+use std::sync::Mutex;
 
 #[test]
 fn partial_snapshot_preserves_published_counts_and_completed_timings() {
@@ -25,6 +27,34 @@ fn basic_timings_do_not_create_work_counts() {
     let text = partial_snapshot(&observer);
     assert!(!text.contains("[PARTIAL work]"));
     assert!(!observer.progress_enabled());
+}
+
+#[test]
+fn abandoned_gate_skips_snapshot_publish() {
+    let observer = InvocationObserver::new(false);
+    let output = ProgressOutput::stderr();
+    let gate = Mutex::new(SnapshotPhase::Abandoned);
+    assert!(!publish_timeout_snapshot(&observer, &output, &gate));
+    assert_eq!(*gate.lock().unwrap(), SnapshotPhase::Abandoned);
+}
+
+#[test]
+fn unstarted_snapshot_takes_the_incomplete_line() {
+    let output = ProgressOutput::stderr();
+    let gate = Mutex::new(SnapshotPhase::Open);
+    abandon_timeout_snapshot(&gate, &output);
+    assert_eq!(*gate.lock().unwrap(), SnapshotPhase::Abandoned);
+}
+
+#[test]
+fn transition_loses_when_the_phase_already_changed() {
+    let gate = Mutex::new(SnapshotPhase::Abandoned);
+    assert!(!claim_transition(
+        &gate,
+        SnapshotPhase::Published,
+        SnapshotPhase::Finished
+    ));
+    assert_eq!(*gate.lock().unwrap(), SnapshotPhase::Abandoned);
 }
 
 #[test]

@@ -8,7 +8,7 @@ use std::time::Duration;
 const INCOMPLETE_LINE: &str =
     "[PARTIAL] timeout diagnostics incomplete: snapshot collection or delivery did not finish\n";
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum SnapshotPhase {
     Open,
     Published,
