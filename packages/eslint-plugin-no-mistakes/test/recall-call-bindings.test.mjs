@@ -275,6 +275,24 @@ describe("call-binding recall", () => {
       ),
       ["boundary", "boundary"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/dynamic-method-key.mjs"),
+        "module-mock-preserve-exports",
+        undefined,
+        "dynamic-method-key.mjs",
+      ),
+      ["preserve", "preserve", "preserve"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/dynamic-method-key.mjs"),
+        "module-mock-boundary",
+        undefined,
+        "dynamic-method-key.mjs",
+      ),
+      ["boundary", "boundary", "boundary"],
+    );
     assert.equal(
       messages(
         fixture("no-global-fetch-outside-helper/recall.mjs"),

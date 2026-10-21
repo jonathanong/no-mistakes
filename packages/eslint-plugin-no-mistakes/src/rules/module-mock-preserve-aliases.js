@@ -70,6 +70,7 @@ function createMockAliases(context, methods) {
       if (id.type === "ObjectPattern" && isFrameworkBinding(init, context)) {
         for (const property of id.properties) {
           if (property.type !== "Property") continue;
+          if (property.computed && property.key?.type === "Identifier") continue;
           const method = propertyName(property.key);
           if (!methods.has(method)) continue;
           recordPattern(property.value, frameworkMock(init, method, context));
