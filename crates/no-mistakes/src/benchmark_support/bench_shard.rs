@@ -16,6 +16,7 @@ pub const NATIVE_FRONTENDS: &str = "native-frontends";
 pub const GRAPH_FINALIZATION: &str = "graph-finalization";
 pub const GRAPH_PRODUCTION: &str = "graph-production";
 pub const QUERY: &str = "query";
+pub const QUERY_INDEXES: &str = "query-indexes";
 pub const GENERAL_MEMORY: &str = "general-memory";
 
 const NAMED_SHARDS: &[&str] = &[
@@ -29,6 +30,7 @@ const NAMED_SHARDS: &[&str] = &[
     GRAPH_FINALIZATION,
     GRAPH_PRODUCTION,
     QUERY,
+    QUERY_INDEXES,
 ];
 
 pub fn parse_bench_shard(value: Option<&str>) -> Result<BenchShard, String> {

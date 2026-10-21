@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub(super) fn bench_symbol_index_build_and_lookup(c: &mut Criterion) {
-    if !shard::should_run(shard::QUERY) {
+    if !shard::should_run(shard::QUERY_INDEXES) {
         return;
     }
     const IMPORTERS: usize = 1_024;
@@ -78,7 +78,7 @@ pub(super) fn bench_symbol_index_build_and_lookup(c: &mut Criterion) {
 }
 
 pub(super) fn bench_symbol_index_distinct_target_build(c: &mut Criterion) {
-    if !shard::should_run(shard::QUERY) {
+    if !shard::should_run(shard::QUERY_INDEXES) {
         return;
     }
     const DISTINCT_KEYS: usize = 2_048;
@@ -132,7 +132,7 @@ pub(super) fn bench_symbol_index_distinct_target_build(c: &mut Criterion) {
 }
 
 pub(super) fn bench_scoped_resolver_selection(c: &mut Criterion) {
-    if !shard::should_run(shard::QUERY) {
+    if !shard::should_run(shard::QUERY_INDEXES) {
         return;
     }
     const REQUESTS: usize = 1_024;

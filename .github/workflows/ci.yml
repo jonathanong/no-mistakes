@@ -970,6 +970,10 @@ jobs:
             mode: simulation
             filter: ""
             benchmark-shard: query
+          - name: CPU query indexes
+            mode: simulation
+            filter: ""
+            benchmark-shard: query-indexes
           - name: memory check
             mode: memory
             filter: ""
@@ -1014,6 +1018,10 @@ jobs:
             mode: memory
             filter: ""
             benchmark-shard: query
+          - name: memory query indexes
+            mode: memory
+            filter: ""
+            benchmark-shard: query-indexes
     env:
       BENCHMARK_FILTER: ${{ matrix.filter }}
       BENCHMARK_SELECTED: ${{ needs.changes.outputs.benchmark-scope == 'all' || contains(needs.changes.outputs.benchmark-scope, matrix.benchmark-shard) }}
