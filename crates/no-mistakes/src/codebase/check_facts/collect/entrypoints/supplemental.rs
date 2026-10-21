@@ -32,6 +32,8 @@ pub fn collect_check_facts_with_supplemental_call_sites(
             call_sites: &supplemental_call_sites,
         },
     );
+    // Every earlier inserter uses this call-site-enabled plan, so a present key
+    // already carries the call facts and only absent paths need the light pass.
     let missing = supplemental_call_sites
         .into_iter()
         .filter(|path| !facts.ts.contains_key(path))

@@ -129,7 +129,7 @@ fn supplemental_call_sources_collect_facts_once() {
     assert!(
         parse_attempts
             .get(&call_source)
-            .is_some_and(|count| *count <= 1),
+            .is_some_and(|count| *count == 1),
         "{parse_attempts:#?}"
     );
     assert_eq!(work.get("check.fact_collections"), Some(&1), "{work:#?}");
