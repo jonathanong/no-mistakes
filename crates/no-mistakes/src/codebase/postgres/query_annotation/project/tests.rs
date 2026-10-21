@@ -117,3 +117,6 @@ mod target_reuse;
 #[cfg(feature = "test-instrumentation")]
 #[path = "tests/reference_binding_index.rs"]
 mod reference_binding_index;
+
+#[path = "tests/root_scheduling.rs"]
+mod root_scheduling;
