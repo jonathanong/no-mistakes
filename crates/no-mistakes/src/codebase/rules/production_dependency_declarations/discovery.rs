@@ -17,7 +17,7 @@ pub(super) fn load_workspace(
     workspace_roots: &[PathBuf],
     files: &[PathBuf],
     sources: &SourceStore,
-    visible: &std::sync::OnceLock<PathSet>,
+    visible: &std::sync::OnceLock<HashSet<PathBuf>>,
 ) -> anyhow::Result<WorkspaceMap> {
     let mut roots: Vec<&Path> = Vec::new();
     for workspace_root in workspace_roots {
@@ -37,7 +37,7 @@ pub(super) fn load_workspace(
             };
             let Some(package) = workspaces::load_root_package_from_visible_sources(
                 package_root,
-                visible.get_or_init(|| workspaces::normalized_visible_files(files)),
+                visible.get_or_init(|| normalized_visible_files(files)),
                 sources,
             )?
             else {
@@ -49,6 +49,18 @@ pub(super) fn load_workspace(
     Ok(WorkspaceMap::from_packages(
         packages.into_values().collect(),
     ))
+}
+
+/// Keep the application's exact scoped visibility shared across package loading
+/// and reachability, retaining the manifest loader's standard hash semantics.
+fn normalized_visible_files(files: &[PathBuf]) -> HashSet<PathBuf> {
+    files
+        .iter()
+        .map(|path| {
+            workspaces::record_preparation!(visible_path);
+            normalize_path(path)
+        })
+        .collect()
 }
 
 /// The nearest workspace package (by ancestor directory) owning each file,

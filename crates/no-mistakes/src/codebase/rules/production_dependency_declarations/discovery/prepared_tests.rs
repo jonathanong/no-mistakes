@@ -120,3 +120,26 @@ fn saved_workspace_keeps_exact_dependency_findings() {
         Some("missing-runtime-dependency")
     );
 }
+
+#[test]
+fn prepared_visibility_keeps_the_application_scope_and_normalizes_members() {
+    let (root, _, sources) = fixture();
+    // The SourceStore also contains the higher-priority export and other packages.
+    // Only this application's explicit paths may answer entry resolution.
+    let files = vec![
+        root.join("packages/a/package.json"),
+        root.join("packages/a/src/../module.mts"),
+    ];
+    let visible = std::sync::OnceLock::new();
+    preparation_work::reset();
+    let workspace =
+        super::super::load_workspace(&[root.join("packages/a")], &files, &sources, &visible)
+            .unwrap();
+    let package = workspace.package_by_name("@fixture/duplicate").unwrap();
+    assert_eq!(package.entry, Some(root.join("packages/a/module.mts")));
+    let visible = visible.get().unwrap();
+    assert_eq!(visible.len(), files.len());
+    assert!(visible.contains(&root.join("packages/a/module.mts")));
+    assert!(!visible.contains(&root.join("packages/a/src/main.mts")));
+    assert_eq!(preparation_work::counts().visible_paths, files.len());
+}

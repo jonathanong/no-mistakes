@@ -7,7 +7,7 @@
 use super::specifier;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::TsFactLookup;
-use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_resolver::{normalize_path, VisiblePathLookup};
 use crate::codebase::workspaces::WorkspaceMap;
 use globset::GlobSet;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -65,7 +65,7 @@ pub(super) struct ReachabilityContext<'a> {
     pub(super) imports_by_file: &'a HashMap<PathBuf, Vec<FileImport>>,
     pub(super) owners: &'a HashMap<PathBuf, PathBuf>,
     pub(super) test_globset: &'a GlobSet,
-    pub(super) visible: &'a crate::fx::PathSet,
+    pub(super) visible: &'a dyn VisiblePathLookup,
 }
 
 /// Files of the package rooted at `package_dir` that are reachable from
@@ -101,7 +101,7 @@ fn resolve_target(
     workspace: &WorkspaceMap,
     file: &Path,
     import_specifier: &str,
-    visible: &crate::fx::PathSet,
+    visible: &dyn VisiblePathLookup,
 ) -> Option<PathBuf> {
     if specifier::is_relative(import_specifier) {
         resolve_relative(file, import_specifier, visible)
@@ -110,25 +110,29 @@ fn resolve_target(
     }
 }
 
-fn resolve_relative(file: &Path, specifier: &str, visible: &crate::fx::PathSet) -> Option<PathBuf> {
+fn resolve_relative(
+    file: &Path,
+    specifier: &str,
+    visible: &dyn VisiblePathLookup,
+) -> Option<PathBuf> {
     let dir = file.parent()?;
     try_resolve(&normalize_path(&dir.join(specifier)), visible)
 }
 
-fn try_resolve(candidate: &Path, visible: &crate::fx::PathSet) -> Option<PathBuf> {
-    if visible.contains(candidate) {
+fn try_resolve(candidate: &Path, visible: &dyn VisiblePathLookup) -> Option<PathBuf> {
+    if visible.contains_visible(candidate) {
         return Some(candidate.to_path_buf());
     }
     let base = candidate.to_string_lossy();
     for ext in RESOLVE_EXTENSIONS {
         let with_ext = PathBuf::from(format!("{base}{ext}"));
-        if visible.contains(&with_ext) {
+        if visible.contains_visible(&with_ext) {
             return Some(with_ext);
         }
     }
     for name in INDEX_BASENAMES {
         let index_path = candidate.join(name);
-        if visible.contains(&index_path) {
+        if visible.contains_visible(&index_path) {
             return Some(index_path);
         }
     }
