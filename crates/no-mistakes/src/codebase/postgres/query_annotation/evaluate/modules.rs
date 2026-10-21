@@ -23,6 +23,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     fn initialize_module(&mut self, path: &Path) -> Environment {
+        let module_id = self.module_ids().id(path);
         let mut env = self.environment(fx_map());
         // Publish before initialization: cycles and TDZ references share the
         // reserved module bindings instead of recursively initializing again.

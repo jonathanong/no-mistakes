@@ -10,7 +10,7 @@ fn compare(
     scopes: &[Scope],
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &CapturedBindings,
     returned: &[Value],
     transient: &[TransientRoot],
     prefix: &mut Prefix,
@@ -70,7 +70,7 @@ fn unchanged_scope_does_not_freeze_mutable_dense_sparse_or_auxiliary_edges() {
     objects.get_mut(&7).unwrap().push(callback(1));
     extras.insert(7, BTreeMap::from([(99, callback(2))]));
     mapped.insert(0, vec![(8, vec!["arg".into()])]);
-    captured.insert(0, FxHashMap::from_iter([("captured".into(), 3)]));
+    captured.insert(0, FxHashMap::from_iter([("captured".into(), 3)]).into());
     let found = compare(
         &scopes,
         Arena {

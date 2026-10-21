@@ -21,6 +21,20 @@ fn alternatives(value: Value, values: &mut Vec<Value>) {
 }
 
 pub(super) fn objects(joined: &mut ArgumentObjects, current: &ArgumentObjects) {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment(
+            "postgres.annotation.incoming_dense_slots_copied",
+            join_objects::<true>(joined, current) as u64,
+        );
+    } else {
+        join_objects::<false>(joined, current);
+    }
+}
+
+fn join_objects<const OBSERVED: bool>(
+    joined: &mut ArgumentObjects,
+    current: &ArgumentObjects,
+) -> usize {
     let mut copied_slots = 0;
     for (id, after) in current {
         // Canonical module objects created in an arm can survive into later arms.
@@ -43,7 +57,7 @@ pub(super) fn objects(joined: &mut ArgumentObjects, current: &ArgumentObjects) {
                     *entry.get_mut() = vec![Value::Failure("conditional-collection-shape")].into();
                     continue;
                 }
-                if entry.get().shared() {
+                if OBSERVED && entry.get().shared() {
                     copied_slots += entry.get().len();
                 }
                 for (before, after) in entry.get_mut().iter_mut().zip(after) {
@@ -51,7 +65,9 @@ pub(super) fn objects(joined: &mut ArgumentObjects, current: &ArgumentObjects) {
                         let mut values = Vec::new();
                         alternatives(before.clone(), &mut values);
                         alternatives(after.clone(), &mut values);
-                        copied_slots += 1;
+                        if OBSERVED {
+                            copied_slots += 1;
+                        }
                         // Differing dense slots are candidates, not an opaque
                         // aggregate. prefix() inspects Possible, so an
                         // unannotated arm stays a violation under ignore mode.
@@ -61,12 +77,7 @@ pub(super) fn objects(joined: &mut ArgumentObjects, current: &ArgumentObjects) {
             }
         }
     }
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment(
-            "postgres.annotation.incoming_dense_slots_copied",
-            copied_slots as u64,
-        );
-    }
+    copied_slots
 }
 
 pub(super) fn definite(

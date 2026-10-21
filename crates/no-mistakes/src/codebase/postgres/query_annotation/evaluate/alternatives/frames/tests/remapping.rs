@@ -103,8 +103,8 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
         (2, FxHashSet::from_iter(["dead".into()])),
     ]);
     let mut captured = FxHashMap::from_iter([
-        (1, FxHashMap::from_iter([("builder".into(), 0)])),
-        (2, FxHashMap::from_iter([("dead".into(), 2)])),
+        (1, FxHashMap::from_iter([("builder".into(), 0)]).into()),
+        (2, FxHashMap::from_iter([("dead".into(), 2)]).into()),
     ]);
     let indices = compact_from_roots(
         &mut scopes,

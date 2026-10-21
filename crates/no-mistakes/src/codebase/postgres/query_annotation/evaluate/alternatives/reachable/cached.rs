@@ -6,7 +6,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     returned: &[Value],
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &CapturedBindings,
     cached: (&mut Prefix, usize),
 ) -> Reachable {
     if let Some(observer) = crate::diagnostics::current() {
@@ -75,7 +75,7 @@ fn auxiliary(
     found: &mut Reachable,
     env: Environment,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &CapturedBindings,
 ) {
     if let Some(origins) = captured.get(&env) {
         found.pending_env.extend(origins.values().copied());

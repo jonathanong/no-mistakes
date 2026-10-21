@@ -10,7 +10,7 @@ fn parity(
     base: usize,
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &CapturedBindings,
     prefix: &mut Prefix,
 ) -> Reachable {
     let roots = (0..base).collect::<Vec<_>>();
@@ -56,7 +56,8 @@ fn removing_auxiliary_roots_drops_dead_cycles_without_changing_scope_bindings() 
         objects: &objects,
         extras: &Default::default(),
     };
-    let mut captured = FxHashMap::from_iter([(0, FxHashMap::from_iter([("source".into(), 1)]))]);
+    let mut captured =
+        FxHashMap::from_iter([(0, FxHashMap::from_iter([("source".into(), 1)]).into())]);
     let mut mapped = FxHashMap::from_iter([(0, vec![(8, vec!["mapped".into()])])]);
     let mut prefix = Prefix::default();
     let live = parity(&scopes, 1, arena, &mapped, &captured, &mut prefix);

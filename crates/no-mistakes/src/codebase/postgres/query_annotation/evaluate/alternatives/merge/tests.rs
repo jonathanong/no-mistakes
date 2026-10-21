@@ -55,3 +55,19 @@ fn divergent_shape_remains_unknown_after_later_single_slot_arms() {
     objects(&mut fresh, &joined);
     assert!(fresh[&7] == joined[&7]);
 }
+
+#[test]
+fn disabled_copy_ledger_does_no_counting_and_keeps_the_same_join() {
+    let original = ArgumentObjects::from_iter([(7, vec![Value::Unknown; 64])]);
+    let mut incoming = original.clone();
+    incoming.get_mut(&7).unwrap()[3] = Value::Prefix("SELECT 1".into(), false, None);
+    let mut off = original.clone();
+    let mut on = original.clone();
+    assert_eq!(join_objects::<false>(&mut off, &incoming), 0);
+    assert_eq!(join_objects::<true>(&mut on, &incoming), 65);
+    assert!(
+        off == on,
+        "disabling accounting must retain the same candidates"
+    );
+    assert!(original[&7].iter().all(|value| *value == Value::Unknown));
+}
