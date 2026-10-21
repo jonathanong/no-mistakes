@@ -1,6 +1,15 @@
 use super::*;
 use std::path::PathBuf;
 
+fn fixture(name: &str) -> String {
+    std::fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/markdown-mermaid-validation")
+            .join(name),
+    )
+    .expect("Mermaid Markdown fixture should be readable")
+}
+
 #[test]
 fn delimiter_and_line_helpers_cover_non_fence_and_crlf_edges() {
     assert!(opening_delimiter("plain text", usize::MAX, false).is_none());
@@ -44,11 +53,7 @@ fn opening_delimiter_retains_whitespace_indent_for_list_continuations() {
 
 #[test]
 fn overlapping_mdx_code_block_reuses_already_scanned_source() {
-    let source = std::fs::read_to_string(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/markdown-mermaid-validation/mdx-expression-fence-text.mdx"),
-    )
-    .expect("mdx-expression-fence-text fixture");
+    let source = fixture("mdx-expression-fence-text.mdx");
     let mermaid_at = source
         .find("```mermaid")
         .expect("saved fixture keeps a real Mermaid fence");
@@ -86,13 +91,14 @@ fn overlapping_mdx_code_block_reuses_already_scanned_source() {
 
 #[test]
 fn overlapping_recovery_records_the_fence_it_scans() {
-    // The scanned prefix is only the leading newline, so recovery's extract
-    // starts on the fence. Dropping the extracted fences leaves this empty.
-    let source = "\n```mermaid\nflowchart TD\n  Parsed --> Diagram\n```\n";
+    // The saved document starts with a newline, so the scanned prefix is only
+    // that newline and recovery's extract starts on the fence. Dropping the
+    // extracted fences leaves this empty.
+    let source = fixture("overlapping-recovery-fence.mdx");
     let fence_at = source
         .find("```mermaid")
         .expect("fence starts after the scanned newline");
-    let mut collector = MermaidFenceCollector::new_with_mdx_html_fallback(source);
+    let mut collector = MermaidFenceCollector::new_with_mdx_html_fallback(&source);
     collector.observe(&Event::Start(Tag::HtmlBlock), 0..fence_at);
     assert!(
         collector.recover_overlapping_mdx_code_block(0..source.len()),
@@ -101,7 +107,7 @@ fn overlapping_recovery_records_the_fence_it_scans() {
     let fences = collector.finish();
     assert_eq!(fences.len(), 1, "{fences:?}");
     assert_eq!(fences[0].fence_offset, fence_at);
-    assert_eq!(fences[0].fence_line, super::line_number(source, fence_at));
+    assert_eq!(fences[0].fence_line, super::line_number(&source, fence_at));
     assert!(fences[0].closed, "{fences:?}");
     assert!(
         fences[0].content.contains("Parsed --> Diagram"),
