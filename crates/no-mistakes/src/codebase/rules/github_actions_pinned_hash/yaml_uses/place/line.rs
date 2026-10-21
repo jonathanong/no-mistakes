@@ -46,10 +46,13 @@ impl Level {
 }
 
 pub(super) fn child_place(place: Place, key: &str) -> Place {
+    // Under `jobs`, every key is a job id, including a job named `steps` or `jobs`.
+    if place == Place::Jobs {
+        return Place::Job;
+    }
     match key {
         "jobs" => Place::Jobs,
         "steps" => Place::Steps,
-        _ if place == Place::Jobs => Place::Job,
         _ => Place::Root,
     }
 }

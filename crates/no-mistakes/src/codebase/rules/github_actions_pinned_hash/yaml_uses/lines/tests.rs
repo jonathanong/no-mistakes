@@ -275,6 +275,20 @@ fn anchor_only_step_and_plain_apostrophe_keep_the_action() {
 }
 
 #[test]
+fn job_named_steps_is_still_a_job() {
+    let block = [
+        "jobs:",
+        "  steps:",
+        "    uses: owner/repo/.github/workflows/reuse.yml@v4",
+    ];
+    let classified = action_uses_lines(&block);
+    assert_eq!(classified.lines, vec![3], "{classified:?}");
+    assert!(!classified.rejected_uses[2], "{classified:?}");
+    let flow = ["jobs: { steps: { uses: owner/repo/.github/workflows/reuse.yml@v4 } }"];
+    assert_eq!(action_uses_lines(&flow).lines, vec![1]);
+}
+
+#[test]
 fn steps_alias_repeats_the_anchored_action_line() {
     let lines = [
         "jobs:",

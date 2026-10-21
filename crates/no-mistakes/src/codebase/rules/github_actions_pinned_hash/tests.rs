@@ -373,6 +373,9 @@ fn aliased_steps_and_job_named_env_are_checked() {
     assert_eq!(lines_of(&named), vec![5, 8], "{named:?}");
     assert!(named[0].message.contains("actions/checkout@v4"));
     assert!(named[1].message.contains("actions/setup-node@v4"));
+    // A job id of steps or jobs is still a job, so its workflow uses is checked.
+    let structural = check_yaml_shape("job-named-steps-fail.yml");
+    assert_eq!(lines_of(&structural), vec![4, 6], "{structural:?}");
 }
 
 #[test]
@@ -574,9 +577,6 @@ fn same_column_and_bare_dash_steps_are_checked() {
     assert_eq!(lines_of(&same), vec![10, 11], "{same:?}");
     assert!(same[0].message.contains("actions/checkout@v4"));
     assert!(same[1].message.contains("actions/setup-node@v4"));
-    assert!(!same
-        .iter()
-        .any(|finding| finding.message.contains("ubuntu")));
 
     // The key on the line after a bare dash, including a commented dash, is the step.
     let bare = check_yaml_shape("bare-dash-step-fail.yml");

@@ -187,11 +187,14 @@ fn collect_in(value: &Value, place: Place, at_root: bool, out: &mut Vec<String>)
                 if place != Place::Jobs && matches!(key, "with" | "env") {
                     continue;
                 }
-                let next = match key {
-                    "jobs" => Place::Jobs,
-                    "steps" => Place::Steps,
-                    _ if place == Place::Jobs => Place::Job,
-                    _ => Place::Root,
+                let next = if place == Place::Jobs {
+                    Place::Job
+                } else {
+                    match key {
+                        "jobs" => Place::Jobs,
+                        "steps" => Place::Steps,
+                        _ => Place::Root,
+                    }
                 };
                 collect_in(child, next, false, out);
             }

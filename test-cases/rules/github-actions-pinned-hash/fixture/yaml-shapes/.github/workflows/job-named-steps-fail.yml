@@ -1,0 +1,6 @@
+# A job id of steps or jobs is still a job. The reusable workflow is checked.
+jobs:
+  steps:
+    uses: owner/repo/.github/workflows/reuse.yml@v4
+  jobs:
+    uses: owner/repo/.github/workflows/reuse.yml@v3
