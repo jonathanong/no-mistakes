@@ -1,19 +1,19 @@
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 mod initials;
 use super::{super::Environment, bindings};
+use crate::codebase::postgres::query_annotation::module_ids::ModuleId;
 use crate::fx::FxHashMap;
 pub(in crate::codebase::postgres::query_annotation) use initials::Initials;
-use std::path::PathBuf;
 
 #[derive(Default)]
-pub(super) struct States(FxHashMap<PathBuf, Scope>);
+pub(super) struct States(FxHashMap<ModuleId, Scope>);
 impl States {
-    pub fn restore(&self, scopes: &mut [Scope], modules: &FxHashMap<PathBuf, Environment>) {
+    pub fn restore(&self, scopes: &mut [Scope], modules: &FxHashMap<ModuleId, Environment>) {
         for (path, values) in &self.0 {
             scopes[modules[path]].clone_from(values);
         }
     }
-    pub fn remapped(&mut self, scopes: &[Scope], modules: &FxHashMap<PathBuf, Environment>) {
+    pub fn remapped(&mut self, scopes: &[Scope], modules: &FxHashMap<ModuleId, Environment>) {
         for (path, values) in &mut self.0 {
             values.clone_from(&scopes[modules[path]]);
         }
@@ -21,7 +21,7 @@ impl States {
     pub fn join(
         &mut self,
         scopes: &[Scope],
-        modules: &FxHashMap<PathBuf, Environment>,
+        modules: &FxHashMap<ModuleId, Environment>,
         original: usize,
         whole_sql: bool,
     ) {
@@ -29,7 +29,7 @@ impl States {
             if *env < original {
                 continue;
             }
-            match self.0.entry(path.clone()) {
+            match self.0.entry(*path) {
                 std::collections::hash_map::Entry::Vacant(entry) => {
                     entry.insert(scopes[*env].clone());
                 }

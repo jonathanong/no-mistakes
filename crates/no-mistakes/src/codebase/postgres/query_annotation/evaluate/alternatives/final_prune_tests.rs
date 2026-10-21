@@ -154,7 +154,17 @@ fn opaque_invalidations_retain_the_original_walk_fallback() {
 #[test]
 fn final_live_guard_keeps_captures_and_moved_transient_environments_conservative() {
     use query_annotation::evaluate::temporaries::TransientRoot;
-    let files = FxHashMap::default();
+    // Module initials refer to prepared catalog entries, including in guard tests.
+    let path = query_annotation::module_ids::tests::saved_paths().remove(0);
+    let facts = Default::default();
+    let files = FxHashMap::from_iter([(
+        path.clone(),
+        File {
+            facts: &facts,
+            module: std::sync::Arc::new(Module::new(TsFileFacts::default().into())),
+            executors: Default::default(),
+        },
+    )]);
     let mut evaluator = evaluator(&files);
     evaluator.scopes.push(Scope::default());
     let identity = FxHashMap::from_iter([(0, 0)]);
@@ -182,6 +192,6 @@ fn final_live_guard_keeps_captures_and_moved_transient_environments_conservative
     evaluator.scopes[0].insert("arguments".into(), Value::Arguments(7));
     evaluator.argument_objects.insert(7, vec![Value::Unknown]);
     evaluator.begin_alternative_module_snapshot(0);
-    evaluator.record_alternative_module_initial(Path::new("guard.mts"), 0);
+    evaluator.record_alternative_module_initial(&path, 0);
     assert!(!evaluator.can_reuse_final_live(1, true, true, &identity));
 }

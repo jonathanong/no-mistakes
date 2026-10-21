@@ -58,7 +58,10 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
 /// identities so later lookups continue to address their initialized frames.
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn compact_modules(
     scopes: &mut Vec<Scope>,
-    modules: &mut FxHashMap<std::path::PathBuf, Environment>,
+    modules: &mut FxHashMap<
+        crate::codebase::postgres::query_annotation::module_ids::ModuleId,
+        Environment,
+    >,
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,

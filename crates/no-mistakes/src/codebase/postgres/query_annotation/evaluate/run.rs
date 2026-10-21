@@ -17,7 +17,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         super::super::progress::trace("postgres.annotation.snapshot", path, None, || {
             self.prune_snapshot_state()
         });
-        let env = self.modules[path];
+        let env = self.modules[&self.module_ids().id(path)];
         let unmodeled = &file.facts.unmodeled_calls;
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();

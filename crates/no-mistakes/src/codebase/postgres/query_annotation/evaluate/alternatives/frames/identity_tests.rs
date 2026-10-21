@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 
 #[test]
 fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness() {
@@ -9,7 +10,7 @@ fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness()
     // Branch restoration can replace values while every frame ID stays fixed.
     // Capture identity must not short-circuit the rest of compaction.
     scopes[0].insert("arg".into(), Value::Arguments(8));
-    let mut objects = FxHashMap::from_iter([
+    let mut objects = ArgumentObjects::from_iter([
         (7, vec![Value::Arguments(7)]),
         (8, vec![Value::Arguments(8)]),
         (99, vec![Value::Arguments(99)]),

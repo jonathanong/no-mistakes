@@ -1,3 +1,6 @@
+mod argument_objects;
+mod dense_slots;
+pub(super) use argument_objects::ArgumentObjects;
 mod alternatives;
 mod atomic;
 mod callbacks;
@@ -13,8 +16,10 @@ mod delete;
 mod effects;
 mod index;
 mod mapped;
+pub(super) mod module_cache;
 mod modules;
 mod opaque;
+mod references;
 mod result;
 mod run;
 mod scope;
@@ -47,7 +52,7 @@ pub(super) struct Evaluator<'a, F> {
     pub untrusted_array_intrinsics: bool,
     pub events: ExecutionEvents,
     pub scopes: Vec<Scope>,
-    pub modules: FxHashMap<PathBuf, Environment>,
+    pub modules: module_cache::ModuleCache,
     pub active_module_initials: Vec<alternatives::modules::Initials>,
     pub transient_roots: Vec<temporaries::TransientRoot>,
     pub active_callback_functions: Option<FxHashSet<callbacks::CallbackIdentity>>,
@@ -60,7 +65,7 @@ pub(super) struct Evaluator<'a, F> {
     pub mapped_argument_owners: FxHashMap<u64, Environment>,
     pub mapped_parameter_indices: FxHashMap<u64, FxHashMap<String, usize>>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
-    pub argument_objects: FxHashMap<u64, Vec<Value>>,
+    pub argument_objects: ArgumentObjects,
     pub argument_extra_slots: FxHashMap<u64, BTreeMap<usize, Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
     pub recreated_argument_slots: FxHashSet<(u64, usize)>,

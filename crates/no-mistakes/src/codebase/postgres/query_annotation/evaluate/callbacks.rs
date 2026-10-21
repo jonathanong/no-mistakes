@@ -14,8 +14,12 @@ struct CallbackState {
     memo: memo::Memo,
 }
 
-pub(in crate::codebase::postgres::query_annotation) type CallbackIdentity =
-    (PathBuf, u32, Environment, Vec<String>);
+pub(in crate::codebase::postgres::query_annotation) type CallbackIdentity = (
+    super::super::module_ids::ModuleId,
+    u32,
+    Environment,
+    Vec<String>,
+);
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn opaque_callbacks_with_roots(&mut self, arguments: &[Value], depth: u8) {

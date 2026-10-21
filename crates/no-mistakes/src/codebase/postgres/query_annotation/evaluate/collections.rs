@@ -129,7 +129,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     pub(super) fn conditional_collection_shape(&self, id: u64) -> bool {
-        self.argument_objects[&id] == [Value::Failure("conditional-collection-shape")]
+        self.argument_objects[&id].as_slice() == [Value::Failure("conditional-collection-shape")]
     }
 }
 

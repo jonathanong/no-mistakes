@@ -76,3 +76,6 @@ fn completed_profile_releases_its_unique_module_while_another_root_is_running() 
         assert_eq!(result.len(), 2);
     });
 }
+
+#[path = "module_ids.rs"]
+mod module_ids;

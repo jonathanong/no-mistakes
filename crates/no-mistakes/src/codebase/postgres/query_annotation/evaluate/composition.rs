@@ -105,7 +105,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     let id = self.next_builder;
                     self.next_builder += 1;
                     self.argument_objects
-                        .insert(id, values.into_iter().collect());
+                        .insert(id, values.into_iter().collect::<Vec<_>>());
                     Value::Array(id)
                 }
             }

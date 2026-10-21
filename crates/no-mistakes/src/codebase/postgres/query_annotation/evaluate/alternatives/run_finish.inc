@@ -44,5 +44,5 @@
         self.untrusted_array_intrinsics = joined_untrusted;
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.
-        super::super::concat::alternative_result(returned, self.files[path].facts.precise_records)
+        super::super::concat::alternative_result(returned, precise_records)
 }

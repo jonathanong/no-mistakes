@@ -60,7 +60,11 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
     (
         (*evaluator.scopes[root]).clone(),
         evaluator.argument_objects.len(),
-        evaluator.argument_objects.values().map(Vec::len).sum(),
+        evaluator
+            .argument_objects
+            .values()
+            .map(|slots| slots.len())
+            .sum(),
     )
 }
 

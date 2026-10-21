@@ -6,7 +6,10 @@ use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-type Key = (PathBuf, Vec<(Environment, String, bool)>);
+type Key = (
+    super::super::super::module_ids::ModuleId,
+    Vec<(Environment, String, bool)>,
+);
 type RootValues = Vec<(Option<Value>, bool)>;
 #[derive(Default)]
 pub(super) struct Memo {
@@ -24,6 +27,7 @@ impl Memo {
 }
 
 struct Inputs<'a> {
+    module_ids: &'a super::super::super::module_ids::ModuleIds,
     captured: &'a CapturedBindings,
     scopes: &'a [Scope],
     fresh: &'a FxHashMap<Environment, crate::fx::FxHashSet<String>>,
@@ -58,7 +62,7 @@ impl Inputs<'_> {
                 )
             })
             .collect::<Vec<_>>();
-        let key = (path.to_path_buf(), names);
+        let key = (self.module_ids.id(path), names);
         (key, roots)
     }
 }
@@ -72,6 +76,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         memo: &mut Memo,
     ) -> Arc<Snapshot> {
         let (key, roots) = Inputs {
+            module_ids: self.module_ids(),
             captured: &self.captured_bindings,
             scopes: &self.scopes,
             fresh: &self.fresh_mapped_parameters,

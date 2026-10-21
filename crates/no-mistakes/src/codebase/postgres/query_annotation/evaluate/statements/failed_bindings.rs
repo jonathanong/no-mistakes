@@ -70,7 +70,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.failed_binding(child, path, env, unsupported, depth)
             }
             Expr::Array(children) => {
-                let values = children
+                let values: Vec<_> = children
                     .iter()
                     .map(|child| self.failed_binding(child, path, env, unsupported, depth))
                     .collect();

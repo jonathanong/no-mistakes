@@ -1,4 +1,4 @@
-use super::Value;
+use super::{references::Edges, Value};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::{
     ops::{Deref, DerefMut},
@@ -10,6 +10,7 @@ struct Bindings {
     values: FxHashMap<String, Value>,
     builders: OnceLock<FxHashSet<u64>>,
     contains_reference: OnceLock<bool>,
+    references: OnceLock<Edges>,
 }
 impl Clone for Bindings {
     fn clone(&self) -> Self {
@@ -17,6 +18,7 @@ impl Clone for Bindings {
             values: self.values.clone(),
             builders: OnceLock::new(),
             contains_reference: OnceLock::new(),
+            references: OnceLock::new(),
         }
     }
 }
@@ -39,6 +41,23 @@ impl Scope {
             .0
             .contains_reference
             .get_or_init(|| self.0.values.values().any(Value::contains_reference))
+    }
+
+    pub(super) fn same_bindings(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+
+    pub(super) fn references(&self) -> &Edges {
+        self.0.references.get_or_init(|| {
+            if let Some(observer) = crate::diagnostics::current() {
+                observer.increment("postgres.annotation.prefix_scope_scans", 1);
+                observer.increment(
+                    "postgres.annotation.prefix_binding_scans",
+                    self.len() as u64,
+                );
+            }
+            Edges::collect(self.values())
+        })
     }
 
     pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
@@ -86,6 +105,7 @@ impl From<FxHashMap<String, Value>> for Scope {
             values,
             builders: OnceLock::new(),
             contains_reference: OnceLock::new(),
+            references: OnceLock::new(),
         }))
     }
 }
@@ -100,6 +120,7 @@ impl DerefMut for Scope {
         let bindings = Arc::make_mut(&mut self.0);
         bindings.builders.take();
         bindings.contains_reference.take();
+        bindings.references.take();
         &mut bindings.values
     }
 }
@@ -120,3 +141,6 @@ impl<'a> IntoIterator for &'a mut Scope {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod reference_tests;

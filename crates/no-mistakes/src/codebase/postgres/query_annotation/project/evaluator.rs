@@ -13,7 +13,17 @@ pub(super) fn new<'a, F>(
         untrusted_array_intrinsics,
         events: Default::default(),
         scopes: Vec::new(),
-        modules: crate::fx::fx_map(),
+        modules: super::super::evaluate::module_cache::ModuleCache::with_ids(
+            files
+                .values()
+                .find_map(|file| file.module.module_ids.as_ref())
+                .map(std::sync::Arc::clone)
+                .unwrap_or_else(|| {
+                    std::sync::Arc::new(super::super::module_ids::ModuleIds::new(
+                        files.keys().cloned(),
+                    ))
+                }),
+        ),
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
         active_callback_functions: Default::default(),

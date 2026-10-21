@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 
 #[test]
 fn shared_containers_are_visited_once_per_reachability_collection() {
@@ -38,7 +39,8 @@ fn scalar_tree() -> Value {
     value
 }
 
-fn saved_function() -> std::sync::Arc<crate::codebase::postgres::query_annotation::Function> {
+pub(super) fn saved_function(
+) -> std::sync::Arc<crate::codebase::postgres::query_annotation::Function> {
     use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-callback-profile/reads.mts",
@@ -144,7 +146,7 @@ fn transient_roots_keep_private_environments_sparse_slots_and_argument_cycles() 
         Scope::default(),
         FxHashMap::from_iter([("args".into(), Value::Arguments(8))]).into(),
     ];
-    let objects = FxHashMap::from_iter([(8, vec![Value::Arguments(8)]), (99, vec![])]);
+    let objects = ArgumentObjects::from_iter([(8, vec![Value::Arguments(8)]), (99, vec![])]);
     let extras = FxHashMap::from_iter([(
         8,
         std::collections::BTreeMap::from_iter([(

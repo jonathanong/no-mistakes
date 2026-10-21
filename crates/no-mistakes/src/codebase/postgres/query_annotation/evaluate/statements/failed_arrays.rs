@@ -16,7 +16,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         // Metadata weakening preserves shared identity, sparse keys and array length.
         let dense = self.argument_objects[&id].clone();
         let extras = self.argument_extra_slots.get(&id).cloned();
-        let dense = dense
+        let dense: Vec<_> = dense
             .into_iter()
             .enumerate()
             .map(|(index, value)| {

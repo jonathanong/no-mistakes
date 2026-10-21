@@ -81,14 +81,15 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     else {
         panic!("saved installer function");
     };
+    let callback_id = evaluator.module_ids().id(&callback_path);
     let key = (
-        callback_path.clone(),
+        callback_id,
         function.start,
         captured,
         function.params.clone(),
     );
     let discarded_key = (
-        callback_path,
+        callback_id,
         function.start,
         discarded,
         function.params.clone(),
@@ -104,11 +105,15 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
     let seen = evaluator.active_callback_functions.as_ref().unwrap();
     assert_eq!(seen.len(), 1, "seen keys never keep discarded frames alive");
     let live = seen.iter().next().unwrap();
+    assert_eq!(
+        live.0, callback_id,
+        "module identity survives frame remapping"
+    );
     assert!(
         live.2 < captured,
         "captured environment key follows the module compaction mapping"
     );
-    let module = evaluator.modules[&path];
+    let module = evaluator.modules[&evaluator.module_ids().id(&path)];
     assert!(
         matches!(&evaluator.scopes[module]["installer"], super::super::super::Value::Function(_,_,env) if *env == live.2)
     );
