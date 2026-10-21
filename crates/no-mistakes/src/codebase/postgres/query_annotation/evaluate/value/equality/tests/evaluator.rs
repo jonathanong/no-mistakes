@@ -2,13 +2,24 @@ use super::super::{hooks, Value};
 use super::legacy;
 use crate::codebase::postgres::query_annotation::{
     self,
-    evaluate::{Evaluator, File},
+    evaluate::{alternatives::value_equality_test_support, Evaluator, File, Scope},
     modules::Module,
 };
 use crate::codebase::postgres::{extract_embedded_sql_from_program, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
 use std::{path::PathBuf, sync::Arc};
+fn scope_state(scopes: &[Scope]) -> Vec<std::collections::BTreeMap<String, String>> {
+    scopes
+        .iter()
+        .map(|scope| {
+            scope
+                .iter()
+                .map(|(name, value)| (name.clone(), legacy::describe(value)))
+                .collect()
+        })
+        .collect()
+}
 fn run() -> (Vec<String>, usize) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/annotation-shared-record-dag/value-equality/root.mts");
@@ -66,18 +77,45 @@ fn run() -> (Vec<String>, usize) {
         assert!(events.iter().all(|(_, value)| matches!(value, Value::Prefix(text, _, _)
             if text == sql && crate::codebase::postgres::sql_requires_query_annotation(text) == annotation)));
     }
-    (
-        evaluator
-            .events
+    let env = evaluator.module_environment(&path);
+    assert!(matches!(
+        evaluator.scopes[env].get("shared0"),
+        Some(Value::Record(_, _))
+    ));
+    let current = evaluator.scopes.clone();
+    let mut initial = current.clone();
+    assert!(initial[env].remove("shared0").is_some());
+    let current_before = scope_state(&current);
+    let initial_before = scope_state(&initial);
+    let evaluator_before = scope_state(&evaluator.scopes);
+    let mut joined = current.clone();
+    assert!(joined[env].same_bindings(&current[env]));
+    assert!(!joined[env].same_bindings(&initial[env]));
+    // A binding absent initially must stay unproven even when both arms share
+    // their entire fixture-derived scope. The three-scope guard cannot skip it.
+    value_equality_test_support::join(&mut joined, &current, &initial);
+    assert!(matches!(joined[env].get("shared0"), Some(Value::Unknown)));
+    assert_eq!(scope_state(&current), current_before);
+    assert_eq!(scope_state(&initial), initial_before);
+    assert_eq!(scope_state(&evaluator.scopes), evaluator_before);
+    assert!(current[env].same_bindings(&evaluator.scopes[env]));
+    assert!(!joined[env].same_bindings(&current[env]));
+    let mut expected_join = current_before;
+    expected_join[env].insert("shared0".into(), legacy::describe(&Value::Unknown));
+    assert_eq!(scope_state(&joined), expected_join);
+    let mut output = vec![format!(
+        "joined={:?};current={:?};initial={:?};evaluator={:?}",
+        scope_state(&joined),
+        scope_state(&current),
+        scope_state(&initial),
+        scope_state(&evaluator.scopes)
+    )];
+    output.extend(evaluator.events.iter().flat_map(|(key, events)| {
+        events
             .iter()
-            .flat_map(|(key, events)| {
-                events.iter().map(move |(generic, value)| {
-                    format!("{key:?}:{generic}:{}", legacy::describe(value))
-                })
-            })
-            .collect(),
-        evaluator.scopes.len(),
-    )
+            .map(move |(generic, value)| format!("{key:?}:{generic}:{}", legacy::describe(value)))
+    }));
+    (output, evaluator.scopes.len())
 }
 #[test]
 fn saved_evaluator_fixture_matches_legacy_with_real_identity_work() {
@@ -94,7 +132,7 @@ fn saved_evaluator_fixture_matches_legacy_with_real_identity_work() {
             findings = Some(optimized);
             assert!(
                 old_work > work,
-                "saved branches must exercise shared Value comparisons"
+                "real fixture-derived join must exercise shared Value comparisons"
             );
             eprintln!("value equality observed={observed}: fallback entries {old_work} -> {work}");
         });
