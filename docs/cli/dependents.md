@@ -44,8 +44,13 @@ dynamic paths are reported by test-impact diagnostics rather than guessed here.
 
 Key options match [`dependencies`](dependencies.md): `--root`, `--tsconfig`,
 `--depth`, `--filter`, `--target-module`, `--relationship`, `--test`,
-`--format`, `--json`, and `--timings`.
+`--symbols`, `--projection`, `--format`, `--json`, and `--timings`.
 `--candidate-include` / `--candidate-exclude` are not valid on `dependents`
 or `related`; they are import-only forward-closure inputs.
+
+`--symbols` walks symbol nodes in the dependency graph. Without it,
+`FILE#SYMBOL` still narrows through the export symbol index.
+`--projection paths` is only valid on `dependencies`. `dependents` and
+`related` stay on the graph projection.
 
 Node API: `dependents(options)`.

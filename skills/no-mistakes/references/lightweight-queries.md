@@ -103,6 +103,19 @@ One input returns the historical per-file result. Multiple inputs return sorted
 paths are checked once. The batch uses one visible-file inventory and one
 parallel union import-fact pass.
 
+## `import-usages [FILE]...`
+
+Direct string-literal import specifiers, including static imports, re-exports,
+dynamic `import()`, TypeScript `import("pkg")` type references, `require()`,
+and `require.resolve()`. Expression-free templates count as literals. Computed
+`import()` / `require()` / `require.resolve()` specifiers are omitted; use
+`resolve-check` when those rows must appear as `computed: true` / `unresolved`.
+
+```bash
+no-mistakes import-usages --root . --filter 'src/**' --format json
+no-mistakes import-usages src/index.mts --format json
+```
+
 ## `effects KIND --entry FILE`
 
 For opaque transaction factories, configure `effects.<kind>.returnedExecutors`

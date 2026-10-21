@@ -25,7 +25,9 @@ no-mistakes tests plan jest --changed-file src/value.ts --format commands
 Use this for agent test selection before running expensive suites. Inputs can
 come from `--base/--head`, `--from-git-diff`, `--changed-file`,
 `--changed-files`, `--diff`, `--diff-stdin`, `--diff-command`, or repeatable
-`--entrypoint`.
+`--entrypoint`. An `--entrypoint` of `file#export` requires `--symbols`. A
+named framework plan does not build symbol edges from that flag. Use
+`tests impact --symbols` when the entrypoint itself must be a symbol node.
 
 `--from-git-diff <base...head>` is single-argument sugar over `--base`/`--head`
 (conflicts with both): it parses a three-dot refspec and runs the identical
@@ -78,7 +80,7 @@ analysis follows the resolved target.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`,
-`--include-comment`, `--include-glob`, `--format`, and `--json`.
+`--include-comment`, `--include-glob`, `--symbols`, `--format`, and `--json`.
 
 ## Dependency manifests and lockfiles
 

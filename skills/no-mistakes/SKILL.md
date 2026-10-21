@@ -84,6 +84,7 @@ the repository docs.
 | File/module dependencies                               | `no-mistakes dependencies <file> --format json`                                                                        |
 | Files or named-export consumers                        | `no-mistakes dependents <file>[#SYMBOL] --format json`                                                                 |
 | Direct static importers                                | `no-mistakes importers <file> --format json`                                                                           |
+| Literal import specifiers                              | `no-mistakes import-usages --root . --filter 'src/**' --format json`                                                   |
 | Public API, imports, or signature blast radius         | `no-mistakes symbols <file> --include both --format json`; add `--mode signature-impact --symbol NAME`                 |
 | Named exports and their consumers                      | `no-mistakes exports-of <file> --format json`                                                                          |
 | Is an export unused?                                   | `no-mistakes dead-exports <file> [NAME...]`                                                                            |
@@ -91,14 +92,16 @@ the repository docs.
 | Tests for a changed file or diff                       | `no-mistakes tests plan <framework> --changed-file <file> --format json`; use `--from-git-diff base...head` for a diff |
 | Explain selected tests                                 | `no-mistakes tests why <test> --plan plan.json --format json`                                                          |
 | Exact runner commands                                  | `no-mistakes tests plan <framework> --changed-file <file> --format commands`                                           |
+| Runner command for one known test file                 | `no-mistakes tests targets <framework> <test-file> --format commands`                                                  |
 | Combined tests, lint, typecheck, and configured checks | `no-mistakes impacted-checks <file...> --format json`                                                                  |
 | Playwright coverage or related tests                   | `no-mistakes playwright check --json`; `no-mistakes playwright related <file> --json`                                  |
 | React callers and component traits                     | `no-mistakes react usages <file>#Component --format json`; `no-mistakes react analyze <glob> --format json`            |
 | Next.js page-to-API coupling                           | `no-mistakes fetches <route-or-file> --format json`                                                                    |
-| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`                   |
-| CI or workflow impact                                  | `no-mistakes ci impact <file> --format json`; `no-mistakes ci topology --format json`                                  |
+| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`; `no-mistakes server contracts --format json` |
+| CI or workflow impact                                  | `no-mistakes ci impact <file> --format json`; `no-mistakes ci env <NAME> --format json`; `no-mistakes ci topology --format json`; `no-mistakes ci topology-impact --root . --base "$BASE_SHA" --head "$HEAD_SHA" --entry-workflow ci.yml` |
 | Private CI planning artifacts (npm package)            | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>`                                      |
-| Terraform/OpenTofu or Swift                            | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes swift importers <file> --format json`        |
+| Terraform/OpenTofu or Swift                            | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes infra outputs <module-dir> --format json`; `no-mistakes infra test-for <file.tf> --format json`; `no-mistakes swift importers <file> --format json`; `no-mistakes swift test-targets <file> --json` |
+| Effective resolved config                              | `no-mistakes config resolve`                                                                                           |
 | Configured language graph                              | `no-mistakes dependents <file> --relationship <lang> --format json`                                                    |
 
 `tests plan` supports `vitest`, `playwright`, `jest`, `dotnet`, `swift`,
@@ -119,7 +122,8 @@ groups, limits, diffs, and deleted-file behavior.
   `FILE#SYMBOL` semantics.
 - [symbols.md](references/symbols.md) and
   [lightweight-queries.md](references/lightweight-queries.md): symbols,
-  importers, exports, call sites, and resolution checks.
+  importers, literal import specifiers, exports, call sites, and resolution
+  checks.
 - [tests.md](references/tests.md): planners, diffs, environments, fallbacks,
   explain output, and runner commands.
 - [playwright.md](references/playwright.md): selector, route, and assertion

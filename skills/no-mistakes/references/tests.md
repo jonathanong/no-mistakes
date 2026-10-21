@@ -25,7 +25,8 @@ and lockfile cases that `dependents --test` misses.
 Use `tests why` when you need to explain which dependency path connects a
 changed file to a selected test. Use `tests impact` when you have a fixed set
 of changed files and only need impacted test paths with no environment or group
-config applied.
+config applied. Use `tests targets` when the test file is already known and
+you need its runner command.
 
 ## `tests plan`
 
@@ -91,6 +92,10 @@ Key flags:
 - `--diff <FILE>` / `--diff-stdin` / `--diff-command <CMD>` — supply a diff
   directly.
 - `--entrypoint <FILE>` — treat a file as the root regardless of changes.
+  An `--entrypoint` of `file#export` requires `--symbols`.
+- `--symbols` — required for a `file#export` entrypoint. A named framework
+  plan does not build symbol edges from this flag. Use `tests impact --symbols`
+  when the entrypoint itself must be a symbol node.
 - `--environment <NAME>` — pick an env group from `testPlan.environments`.
 - `--include-glob <GLOB>` — for configured framework plans, scope discovered
   tests before planning. Use this when CI runs one package slice: limits,
@@ -232,6 +237,9 @@ Impacted tests for specific changed files (no `testPlan` config required).
 no-mistakes tests impact src/utils.mts --format paths
 ```
 
+Pass `--symbols`, then `file#symbol`, to start from an export. A `file#symbol`
+entrypoint without `--symbols` is an error.
+
 Formats: `json`, `paths`, `commands`, `markdown`, and `md`. Use `tests plan
 --format explain` when changed-file provenance needs a human-readable
 explanation; `tests impact` does not accept `explain`.
@@ -261,6 +269,19 @@ no-mistakes tests comment plan.json --out comment.md
 ```
 
 Node API: `testsComment(options)`.
+
+## `tests targets`
+
+Resolve the exact runner command for a known test file. `commands` prints
+shell-quoted commands, deduped by configured execution target, using the same
+project, package, and environment construction as `tests plan`.
+
+```sh
+no-mistakes tests targets vitest web/app/users/users.test.ts --format json
+no-mistakes tests targets playwright tests/e2e/login.spec.ts --format commands
+```
+
+Node API: `testsTargets(options)`.
 
 ## `testPlan` configuration
 
