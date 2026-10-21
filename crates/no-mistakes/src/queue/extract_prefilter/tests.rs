@@ -37,6 +37,16 @@ fn package_and_factory_needles_are_required_substrings() {
         &["createQueue".to_string()],
         &roles,
     ));
+    assert!(source_may_have_queue_facts(
+        "mail.add (\"job\", {});",
+        &["createQueue".to_string()],
+        &roles,
+    ));
+    assert!(source_may_have_queue_facts(
+        "mail.addBulk([{ name: 'send', data: {} }]);",
+        &["createQueue".to_string()],
+        &roles,
+    ));
 }
 
 #[test]

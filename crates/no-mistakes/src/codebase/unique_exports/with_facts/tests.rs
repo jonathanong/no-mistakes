@@ -191,6 +191,7 @@ fn shared_symbol_files_dedupes_workspace_and_analysis_paths() {
             Path::new("/repo/src/a.ts").to_path_buf(),
             Path::new("/repo/src/b.ts").to_path_buf(),
         ],
+        &crate::codebase::check_facts::CheckFactMap::default(),
     );
     assert_eq!(
         files,

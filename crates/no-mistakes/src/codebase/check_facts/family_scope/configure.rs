@@ -1,4 +1,4 @@
-use super::closure::{only_or_all, with_import_closure};
+use super::closure::with_import_closure;
 use super::rules::from_rule_ids;
 use super::FamilyPathScope;
 use crate::codebase::check_facts::CheckFactPlan;
@@ -34,8 +34,9 @@ pub fn configure_family_path_scopes(
         plan.boundary_paths = from_rule_ids(root, files, config, &[SERVER_ROUTE_CLIENT_BOUNDARY])?;
     }
     if plan.react {
-        plan.react_paths =
-            scoped_or_closure(root, files, sources, react_seeds(root, files, config));
+        // react_traits default targets expand from the repository root; frontend_root
+        // is only a fallback when that expansion is empty.
+        plan.react_paths = FamilyPathScope::All;
     }
     if plan.queue {
         plan.queue_paths = queue_scope(root, files, sources, plan);
@@ -88,28 +89,6 @@ fn scoped_or_closure(
             with_import_closure(root, files, sources, paths.as_ref().clone())
         }
     }
-}
-
-fn react_seeds(root: &Path, files: &[PathBuf], config: &NoMistakesConfig) -> FamilyPathScope {
-    let frontend = config
-        .frontend_root
-        .as_deref()
-        .or_else(|| {
-            config
-                .react_traits
-                .as_ref()
-                .and_then(|traits| traits.frontend_root.as_deref())
-        })
-        .map(|rel| normalize_path(&root.join(rel)));
-    let Some(frontend) = frontend else {
-        return FamilyPathScope::All;
-    };
-    let matched = files
-        .iter()
-        .filter(|path| path.starts_with(&frontend))
-        .map(|path| normalize_path(path))
-        .collect();
-    only_or_all(matched, files.len())
 }
 
 fn queue_scope(

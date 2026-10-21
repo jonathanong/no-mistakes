@@ -82,7 +82,7 @@ fn analyze_project_roots_with_facts(
     analysis_files.sort();
     analysis_files.dedup();
     let analysis_files = filter_source_files(&analysis_files);
-    let symbol_files = shared_symbol_files(&workspace_files, &analysis_files);
+    let symbol_files = shared_symbol_files(&workspace_files, &analysis_files, shared);
     let loaded_tsconfig = (resolution.tsconfig.is_none() && resolution.catalog.is_none())
         .then(|| {
             crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
