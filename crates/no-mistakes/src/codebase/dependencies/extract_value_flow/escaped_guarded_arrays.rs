@@ -124,7 +124,8 @@ pub(super) fn entries(
     value: &ValueExpression,
     before: u32,
 ) -> Option<Vec<(usize, ValueExpression, bool)>> {
-    let baseline = super::escaped_array_entries::array_entries(collector, value, before)?;
+    let (baseline, optional) =
+        super::escaped_array_bindings::guarded_entries(collector, value, before)?;
     let summary = match value {
         ValueExpression::Named { name, scope, .. } => collector
             .receiver_escapes
@@ -138,13 +139,14 @@ pub(super) fn entries(
         baseline
             .into_iter()
             .map(|(slot, value)| {
-                let possible = summary.is_some_and(|summary| {
-                    slot < summary.width
-                        && !summary
-                            .common
-                            .as_ref()
-                            .is_some_and(|common| common.contains_key(&slot.to_string()))
-                });
+                let possible = optional.contains(&slot)
+                    || summary.is_some_and(|summary| {
+                        slot < summary.width
+                            && !summary
+                                .common
+                                .as_ref()
+                                .is_some_and(|common| common.contains_key(&slot.to_string()))
+                    });
                 (slot, value, possible)
             })
             .collect(),

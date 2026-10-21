@@ -45,3 +45,65 @@ test(
     }
   },
 );
+
+test(
+  "compiled async guarded parameter captures retain the original unaffected method",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
+    );
+    const scenarios = [
+      [
+        "before",
+        [
+          [12, "replica.get"],
+          [14, "primary.get"],
+          [15, "replica.info"],
+          [16, "unrelated.get"],
+        ],
+      ],
+      [
+        "after",
+        [
+          [13, "untouched.get"],
+          [14, "primary.get"],
+          [15, "replica.info"],
+          [16, "unrelated.get"],
+        ],
+      ],
+      [
+        "destructure",
+        [
+          [12, "replica.get"],
+          [13, "untouched.get"],
+          [14, "primary.get"],
+          [15, "replica.info"],
+          [16, "unrelated.get"],
+        ],
+      ],
+    ];
+    const options = {
+      root,
+      config: join(root, "effects.yml"),
+      reports: scenarios.map(([suffix]) => ({
+        type: "effects",
+        kind: "receiver",
+        entry: `src/array-latest-guarded-parameter-${suffix}.mts`,
+      })),
+    };
+    const pending = cjs.analyzeProject(options);
+    assert.ok(pending instanceof Promise);
+    const batch = await pending;
+    for (const [index, [, expected]] of scenarios.entries()) {
+      assert.deepEqual(
+        batch.reports[index].result.callSites.map(({ line, callee }) => [line, callee]),
+        expected,
+      );
+    }
+    assert.deepEqual(await esm.analyzeProject(options), batch);
+  },
+);

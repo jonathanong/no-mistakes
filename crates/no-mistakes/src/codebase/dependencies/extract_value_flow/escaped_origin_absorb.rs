@@ -4,7 +4,7 @@ pub(in super::super) fn absorb(
     collector: &ImportCollector,
     slots: &FxHashMap<CallableId, FxHashMap<usize, (usize, String)>>,
     values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
-) {
+) -> super::super::parameter_call_origins::CaptureOrigins {
     for call in &collector.value_flow.calls {
         if let (ValueExpression::Member(receiver, method), Some(callback)) =
             (&call.callee, call.arguments.first())
@@ -76,13 +76,15 @@ pub(in super::super) fn absorb(
             apply_escaped(values, parameters, collector, *offset, *end);
         }
     }
-    for (scope, name, value) in &collector.receiver_escapes.reassigned {
+    let captures = super::super::parameter_call_origins::CaptureOrigins::new(collector, values);
+    for event in &collector.receiver_escapes.reassigned {
         values
-            .entry((*scope, name.clone()))
+            .entry(event.key.clone())
             .or_default()
-            .push(value.clone());
+            .push(event.value.clone());
     }
     super::escaped_higher_order::forward(collector, slots, values);
+    captures
 }
 
 fn callback_array(

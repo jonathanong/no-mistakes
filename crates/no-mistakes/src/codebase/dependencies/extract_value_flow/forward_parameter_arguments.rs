@@ -9,9 +9,10 @@ pub(super) fn expand(
     let (mut definite, mut possible, mut seen) = (Vec::new(), Vec::new(), fx_set());
     while let Some((source, uncertain)) = pending.pop() {
         let key = (source.0 .0 .0 .0, source.0 .0 .0 .1.clone());
-        let values = origins.values(&key);
+        let read = source.0 .2;
+        let values = origins.values_at(&key, read);
         let extra = origins.possible_values(&key);
-        if !seen.insert((key, uncertain)) || (values.is_none() && extra.is_none()) {
+        if !seen.insert((key, read, uncertain)) || (values.is_none() && extra.is_none()) {
             if uncertain {
                 possible.push(source);
             } else {

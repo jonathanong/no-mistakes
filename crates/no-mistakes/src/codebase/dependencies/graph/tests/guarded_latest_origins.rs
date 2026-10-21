@@ -37,8 +37,12 @@ fn guarded_latest_origins_keep_alias_method_and_open_tail_candidates() {
         possible(&built, &root, "array-latest-guarded-method", callee);
     }
     for file in ["array-latest-guarded-open", "array-latest-guarded-push"] {
-        // Moving the guarded literal cannot weaken a guaranteed push or suffix.
-        assert_unknown(&built, &root, file, "primary.get");
+        // The pushed tail is definite; an unknown prefix can shift the ordinary suffix.
+        if file == "array-latest-guarded-open" {
+            possible(&built, &root, file, "primary.get");
+        } else {
+            assert_unknown(&built, &root, file, "primary.get");
+        }
         assert_export(&built, &root, file, "primary.info");
     }
     for file in ["array-latest-guarded-alias", "array-latest-guarded-method"] {
@@ -76,11 +80,10 @@ fn guarded_latest_origins_do_not_weaken_direct_or_reset_writers() {
         "array-reassign-conditional-reset",
         "untouched.get",
     );
-    // Conditional pushes retain their existing definite projection.
+    // A valid no-push execution leaves replica's original method callable.
     for file in ["array-push-conditional", "array-push-loop"] {
-        for callee in ["replica.get", "untouched.get"] {
-            assert_unknown(&built, &root, file, callee);
-        }
+        possible(&built, &root, file, "replica.get");
+        assert_unknown(&built, &root, file, "untouched.get");
     }
 }
 
@@ -169,6 +172,30 @@ fn guarded_push_proof_excludes_replacement_initializer_calls() {
     let file = "array-latest-guarded-push-initializer";
     possible(&built, &root, file, "replica.get");
     for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn known_empty_prefix_cannot_send_the_suffix_to_the_first_parameter() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-empty-prefix";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, file, callee);
+    }
+    for callee in ["primary.get", "primary.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn literal_suffix_after_an_open_guarded_spread_remains_possible() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-open-literal";
+    for callee in ["replica.get", "untouched.get", "primary.get"] {
+        possible(&built, &root, file, callee);
+    }
+    for callee in ["primary.info", "unrelated.get"] {
         assert_export(&built, &root, file, callee);
     }
 }

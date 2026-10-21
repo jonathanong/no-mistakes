@@ -39,17 +39,20 @@ impl MemberArguments {
             .cloned()
             .map(|(reference, owner, interval)| (reference, owner, interval, Vec::new(), false))
             .collect();
-        while let Some(((receiver, reads, _), owner, interval, mut active, uncertain)) =
+        while let Some(((receiver, reads, root_read), owner, interval, mut active, uncertain)) =
             pending.pop()
         {
-            let values = self.origins.values(&receiver.0);
+            let values = self.origins.values_at(&receiver.0, root_read);
             let extra = self.origins.possible_values(&receiver.0);
-            if (values.is_none() && extra.is_none()) || active.contains(&receiver.0) {
+            if (values.is_none() && extra.is_none())
+                || active.contains(&(receiver.0.clone(), root_read))
+            {
                 continue;
             }
             if !visited.insert((
                 receiver.clone(),
                 reads.clone(),
+                root_read,
                 owner,
                 interval,
                 active.clone(),
@@ -57,7 +60,7 @@ impl MemberArguments {
             )) {
                 continue;
             }
-            active.push(receiver.0.clone());
+            active.push((receiver.0.clone(), root_read));
             for (values, added) in [(values, false), (extra, true)] {
                 for value in values.into_iter().flatten() {
                     let mut projected = Vec::new();

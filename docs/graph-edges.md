@@ -606,14 +606,35 @@ the same receiver in corresponding live slots retain definite-write behavior.
 Unchanged parameters captured within their owning function count as the same
 receiver; reassignment separates their identities, while uncertain or
 cross-function writes keep the conservative possible-origin behavior.
+For a proven unconditional parameter assignment from another named value in
+the same function, receiver projection uses the parameter's value when the
+array entry was captured. In `box = other; const args = [box]`, a later write
+through `args` affects `other`, not the original argument. In
+`const args = [box]; box = other`, the array still holds the original argument;
+the rebinding does not rewrite its stored entry. Assignment completion, rather
+than the start of its right-hand side, separates these captures.
 A later unconditional array assignment replaces these alternatives; unconditional
-pushes retain their existing write precision. Receiver writes recovered through
+pushes retain their existing write precision. When passed through a spread,
+conditional and repeated pushes provide possible receiver origins, preserving
+original methods alongside unknown evidence when the push may not execute.
+A suffix after an open prefix and guarded
+spread is also possible: it need not occupy a parameter that the callee writes.
+An arbitrary prefix can itself contain the same receiver, so it does not prove
+the suffix's receiver is untouched. Receiver writes recovered through
 these alternatives or explicit
 `super` calls retain previously reported call targets as possibilities
 alongside unknown evidence, rather than claiming one known callee or hiding the call.
 Array assignment and push discovery still use source-offset windows: writes in
 a function declared after its consumer can execute earlier at runtime, so this
 ordering remains an approximation.
+These projections do not prove correlations between separate guards or execute
+callbacks to establish their exact invocation state. For example,
+`if (flag) args = [box]; args.push(other); if (flag) args = [other]` can retain
+`box` as a possible origin even though the final array always starts with
+`other`. Foreign writes, nested captures, callback forwarding, and unsupported
+parameter assignments retain conservative origin unions. The saved controls
+record these limits; a possible candidate is not a claim that a concrete runtime
+path reaches it, and missing findings do not establish safety.
 Callable bodies can refer to receiver aliases declared later: pending writes
 reuse the completed binding facts and each initializer's acquisition coordinates.
 Uncalled, unavailable, and escaped writers retain conservative unknown targets;

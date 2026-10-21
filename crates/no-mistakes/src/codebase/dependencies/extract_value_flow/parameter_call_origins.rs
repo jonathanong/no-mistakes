@@ -1,9 +1,13 @@
 use super::*;
+#[path = "parameter_capture_origins.rs"]
+mod captures;
+pub(super) use captures::{CaptureOrigins, Reassignment};
 
 /// Call-site argument identities for bare parameters. Constructed on demand
 /// from the request's collected facts and shared by receiver-write projections.
 pub(in crate::codebase::dependencies) struct ParameterCallOrigins {
     values: FxHashMap<(usize, String), Vec<ValueExpression>>,
+    captures: captures::CaptureOrigins,
     possible: FxHashMap<(usize, String), Vec<ValueExpression>>,
 }
 
@@ -44,14 +48,25 @@ impl ParameterCallOrigins {
                     .push(parameter.default.clone());
             }
         }
-        super::receiver_escapes::absorb(collector, &slots, &mut values);
+        let captures = super::receiver_escapes::absorb(collector, &slots, &mut values);
         let mut possible = fx_map();
         super::receiver_escapes::absorb_possible(collector, &slots, &mut possible);
-        Self { values, possible }
+        Self {
+            values,
+            possible,
+            captures,
+        }
     }
 
     pub(super) fn possible_values(&self, key: &(usize, String)) -> Option<&[ValueExpression]> {
         self.possible.get(key).map(Vec::as_slice)
+    }
+    pub(super) fn values_at(
+        &self,
+        key: &(usize, String),
+        read: nested::RootRead,
+    ) -> Option<&[ValueExpression]> {
+        self.captures.at(key, read).or_else(|| self.values(key))
     }
     pub(super) fn values(&self, key: &(usize, String)) -> Option<&[ValueExpression]> {
         self.values.get(key).map(Vec::as_slice)

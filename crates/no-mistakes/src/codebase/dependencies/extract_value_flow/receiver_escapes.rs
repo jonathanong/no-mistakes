@@ -62,6 +62,7 @@ pub(in super::super) struct Side {
     /// Array values from `let` bindings and later array assignments.
     arrays: Vec<StoredArray>,
     guarded_arrays: bool,
+    optional_pushes: FxHashSet<u32>,
     pushes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     pending_possible: Vec<escaped_possible_arguments::Pending>,
     stable_bindings: FxHashMap<usize, FxHashSet<String>>,
@@ -79,7 +80,7 @@ pub(in super::super) struct Side {
     /// Values that can occupy every parameter at or after the index, because a
     /// spread ahead of them had no known elements.
     open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
-    reassigned: Vec<(usize, String, ValueExpression)>,
+    pub(super) reassigned: Vec<super::parameter_call_origins::Reassignment>,
     possible_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
     possible_open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
     pub(super) projecting_possible: bool,

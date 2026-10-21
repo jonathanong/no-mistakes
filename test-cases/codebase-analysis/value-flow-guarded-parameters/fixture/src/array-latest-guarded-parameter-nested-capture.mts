@@ -4,7 +4,8 @@ function replacement() {}
 function mutate(value) { value.client.get = replacement; }
 function run(box) {
   function consume() {
-    // Cross-context captures retain the existing conservative origin projection.
+    // This once-called helper always writes replica; possible origins record
+    // the existing conservative cross-context projection, not runtime alternatives.
     let args = [box];
     if (flag) { args = [box]; }
     mutate(...args);
