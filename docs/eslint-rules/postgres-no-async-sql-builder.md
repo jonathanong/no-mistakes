@@ -154,11 +154,16 @@ async function buildQuery(id: string) {
   including a call through another function, because removing `async` would
   throw before the rest of the module runs. An exported function is one of
   those calls: it is hoisted, so another module can run it before the
-  initializer. An arrow or function expression with no binding is not hoisted,
-  so it is ready when that expression starts at or after the const. A later declarator in the same
-  statement runs after the initializer and still reports.
-  A module-level binding that is not that
-  shape, including a module-level configured tag, is not judged SQL.
+  initializer. An arrow or function expression with no binding is not hoisted.
+  It is ready when that expression starts at or after the const and every
+  function that contains it is ready too. A callback nested in a hoisted or
+  exported function is judged by that function. A class method is judged by
+  its class: an export stays silent, and so does a call of that class before
+  the const. Returning the call from the callback, as in
+  `[1].map(() => build())`, is ready when that callback is. Removing
+  `async` returns the SQL string. A later declarator in the same statement
+  runs after the initializer and still reports. A module-level binding that
+  is not that shape, including a module-level configured tag, is not judged SQL.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
   name (`import { sql as tag }` matches `sql`). Type-only and default imports

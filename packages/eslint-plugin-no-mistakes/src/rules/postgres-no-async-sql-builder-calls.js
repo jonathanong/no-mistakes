@@ -43,6 +43,11 @@ function callResultContract(call, context, types, seen = new Set()) {
     if (parent.type === "AwaitExpression" && parent.argument === current) return "allows";
     if (parent.type === "ReturnStatement" && parent.argument === current)
       return returnedPromiseContract(parent, context, types);
+    if (parent.type === "ArrowFunctionExpression" && parent.body === current) {
+      // `() => build()` returns the promise. A discarded `[1].map` result does
+      // not observe it; a typed callback parameter still can.
+      return conciseBodyContract(parent, context, types, seen);
+    }
     if (parent.type === "CallExpression" && parent.arguments.includes(current)) {
       // This value is the builder's Promise, not the builder function.
       return argumentParameterContract(current, context, types, annotationContract);
@@ -92,6 +97,17 @@ function argumentParameterContract(argument, context, types, contractOf) {
   // a non-Promise, which would suggest a rewrite the call may not survive.
   if (binding?.type !== "Identifier" || !binding.typeAnnotation) return "unknown";
   return contractOf(binding.typeAnnotation, types);
+}
+
+function conciseBodyContract(func, context, types, seen) {
+  if (func.async) return "allows";
+  if (func.returnType) return annotationContract(func.returnType, types);
+  const parent = func.parent;
+  if (parent?.type !== "CallExpression" || !parent.arguments.includes(func)) return "unknown";
+  if (unwrapExpression(parent.callee)?.type === "Identifier") {
+    return argumentParameterContract(func, context, types, callableReturnContract);
+  }
+  return callResultContract(parent, context, types, seen);
 }
 
 function referenceUseContract(identifier, context, types) {

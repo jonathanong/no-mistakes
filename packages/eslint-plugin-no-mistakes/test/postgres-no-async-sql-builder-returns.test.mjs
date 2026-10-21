@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
+import { fixture } from "./helpers.mjs";
 import { ids } from "./postgres-no-async-sql-builder-helpers.mjs";
+
+function saved(name) {
+  return ids(fixture(`postgres-no-async-sql-builder/${name}`));
+}
 
 describe("postgres-no-async-sql-builder", () => {
   it("reports only when every path returns judged SQL", () => {
@@ -421,31 +426,75 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       ["removeAsync"],
     );
-    // The arrow has no binding and is not hoisted. A discarded call after the
-    // const is ready. Returning the promise from the arrow stays silent,
-    // because the caller may still need that promise. An arrow that starts
-    // before the const is not ready.
+    // Saved fixtures. The issue example returns the call from map and reports.
+    // A callback before the const stays silent. A callback inside a hoisted
+    // or exported function is judged by that function, not by its own position.
+    assert.deepEqual(saved("callback-after.ts"), ["removeAsync"]);
+    assert.deepEqual(saved("callback-before.ts"), []);
+    assert.deepEqual(saved("hoisted-early.ts"), []);
+    assert.deepEqual(saved("hoisted-after.ts"), ["removeAsync"]);
+    assert.deepEqual(saved("exported-init.ts"), []);
+    assert.deepEqual(saved("hoisted-class.ts"), []);
+    assert.deepEqual(saved("class-call-before.ts"), []);
+    assert.deepEqual(saved("class-call-after.ts"), ["removeAsync"]);
+    assert.deepEqual(saved("class-field-after.ts"), ["removeAsync"]);
+    assert.deepEqual(saved("exported-class.ts"), []);
+    assert.deepEqual(saved("exported-class-const.ts"), []);
+    assert.deepEqual(saved("exported-class-specifier.ts"), []);
+    assert.deepEqual(saved("exported-default-class.ts"), []);
+    assert.deepEqual(saved("anonymous-class.ts"), ["removeAsync"]);
+    assert.deepEqual(saved("cycle.ts"), []);
+    // A typed callback still decides. An unannotated callee stays unknown.
     assert.deepEqual(
       ids(`
+        function run(load: () => Promise<string>) { return load(); }
         const Q = "SELECT 1";
         async function build() { return Q; }
-        [1].map(() => { build(); });
-      `),
-      ["removeAsync"],
-    );
-    assert.deepEqual(
-      ids(`
-        const Q = "SELECT 1";
-        async function build() { return Q; }
-        [1].map(() => build());
+        run(() => build());
       `),
       [],
     );
     assert.deepEqual(
       ids(`
-        [1].map(() => { build(); });
+        function run(load: () => string) { return load(); }
         const Q = "SELECT 1";
         async function build() { return Q; }
+        run(() => build());
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        function run(load) { return load(); }
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        run(() => build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        [1].map((): Promise<string> => build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        [1].map(async () => build());
+      `),
+      ["removeAsync"],
+    );
+    // A bound arrow is not a callback argument, so its promise stays unknown.
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        const load = () => build();
+        read(load());
       `),
       [],
     );

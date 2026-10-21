@@ -72,23 +72,92 @@ function hoistedExport(func, variable) {
   );
 }
 
-function functionRunsAfter(func, cutoff, context, seen) {
-  const variable = boundVariable(func, context);
-  // An unbound arrow or function expression is not hoisted, so it cannot run
-  // before its own start. A named function still follows every call site.
-  if (!variable) return func.range[0] >= cutoff;
+function classOwner(func) {
+  const member = func.parent;
+  if (
+    (member?.type !== "MethodDefinition" && member?.type !== "PropertyDefinition") ||
+    member.value !== func
+  ) {
+    return null;
+  }
+  let owner = member.parent;
+  while (owner && owner.type !== "ClassDeclaration" && owner.type !== "ClassExpression") {
+    owner = owner.parent;
+  }
+  return owner;
+}
+
+function classVariable(owner, context) {
+  const parent = owner.parent;
+  // `const A = class {}` is the const binding. A class declaration's name also
+  // exists inside the class, and that inner binding has no outside calls.
+  if (
+    parent?.type === "VariableDeclarator" &&
+    parent.init === owner &&
+    parent.id.type === "Identifier"
+  ) {
+    return resolveVariable(parent.id, context);
+  }
+  if (owner.id?.type !== "Identifier") return null;
+  // A class declaration's outer binding lives on the enclosing scope.
+  return context.sourceCode
+    .getScope(owner.id)
+    .upper.variables.find((item) => item.name === owner.id.name);
+}
+
+function classIsExported(owner, variable) {
+  if (declarationExported(owner)) return true;
+  if (owner.parent?.type === "VariableDeclarator" && declarationExported(owner.parent.parent)) {
+    return true;
+  }
+  return (
+    variable?.references.some(
+      (reference) => reference.identifier.parent?.type === "ExportSpecifier",
+    ) ?? false
+  );
+}
+
+// One binding's call sites. A cycle is not ordered: the const may still be
+// in its temporal dead zone when the cycle runs.
+function referencesRunAfter(owner, variable, cutoff, context, seen) {
   if (seen.has(variable)) return false;
-  if (hoistedExport(func, variable)) return false;
   seen.add(variable);
   let ready = true;
   for (const reference of variable.references) {
-    if (!referenceRunsAfter(reference, func, cutoff, context, seen)) {
+    if (!referenceRunsAfter(reference, owner, cutoff, context, seen)) {
       ready = false;
       break;
     }
   }
   seen.delete(variable);
   return ready;
+}
+
+function classMemberRunsAfter(func, cutoff, context, seen) {
+  const owner = classOwner(func);
+  if (!owner) return true;
+  const variable = classVariable(owner, context);
+  // An export is not proof the method runs after the const.
+  if (classIsExported(owner, variable)) return false;
+  if (!variable) return true;
+  return referencesRunAfter(func, variable, cutoff, context, seen);
+}
+
+function unboundRunsAfter(func, cutoff, context, seen) {
+  // The expression is not hoisted, so it cannot run before its own start.
+  // A callback still runs whenever the enclosing function runs, and a class
+  // method runs whenever that class is constructed.
+  if (func.range[0] < cutoff) return false;
+  const outer = findContainingFunction(func);
+  if (outer) return functionRunsAfter(outer, cutoff, context, seen);
+  return classMemberRunsAfter(func, cutoff, context, seen);
+}
+
+function functionRunsAfter(func, cutoff, context, seen) {
+  const variable = boundVariable(func, context);
+  if (!variable) return unboundRunsAfter(func, cutoff, context, seen);
+  if (hoistedExport(func, variable)) return false;
+  return referencesRunAfter(func, variable, cutoff, context, seen);
 }
 
 function moduleConstsAreReady(func, declarations, context) {
