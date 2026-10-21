@@ -83,3 +83,22 @@ fn guarded_latest_origins_do_not_weaken_direct_or_reset_writers() {
         }
     }
 }
+
+#[test]
+fn guarded_latest_common_const_is_definite_before_its_declaration() {
+    let (built, root) = graph();
+    for file in [
+        "array-latest-guarded-deferred-const",
+        "array-latest-guarded-deferred-local-const",
+    ] {
+        assert_unknown(&built, &root, file, "replica.get");
+        for callee in [
+            "replica.info",
+            "primary.get",
+            "untouched.get",
+            "unrelated.get",
+        ] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}

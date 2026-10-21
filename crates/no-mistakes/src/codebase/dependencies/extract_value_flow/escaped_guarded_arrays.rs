@@ -15,6 +15,23 @@ pub(super) struct Summary {
 }
 
 impl ImportCollector {
+    pub(in super::super::super) fn note_predeclared_array_binding(
+        &mut self,
+        pattern: &BindingPattern<'_>,
+        kind: VariableDeclarationKind,
+    ) {
+        if self.collect_value_flow
+            && matches!(
+                kind,
+                VariableDeclarationKind::Const
+                    | VariableDeclarationKind::Using
+                    | VariableDeclarationKind::AwaitUsing
+            )
+        {
+            self.note_stable_array_binding(pattern);
+        }
+    }
+
     pub(in super::super::super) fn note_stable_array_binding(
         &mut self,
         pattern: &BindingPattern<'_>,
