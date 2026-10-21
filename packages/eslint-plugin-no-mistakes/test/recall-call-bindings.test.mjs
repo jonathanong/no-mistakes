@@ -97,6 +97,33 @@ describe("call-binding recall", () => {
     );
     assert.equal(
       messages(
+        fixture("require-options-on-imported-call/apply-method.mjs"),
+        "require-options-on-imported-call",
+        {
+          targets: [
+            {
+              receiverPatterns: ["client"],
+              calleeNamePatterns: ["apply"],
+              optionsPosition: 2,
+              requiredProperties: ["signal"],
+            },
+          ],
+        },
+        "apply-method.mjs",
+      ).length,
+      1,
+    );
+    assert.equal(
+      messages(
+        fixture("module-mock-boundary/dynamic-key.mjs"),
+        "module-mock-boundary",
+        undefined,
+        "dynamic-key.mjs",
+      ).length,
+      1,
+    );
+    assert.equal(
+      messages(
         fixture("no-argv-main-guard/recall.mjs"),
         "no-argv-main-guard",
         undefined,
@@ -213,6 +240,18 @@ describe("call-binding recall", () => {
     assert.deepEqual(
       messages(local, "server-require-nullable-fetch-wrapper", server, "backend/users.ts"),
       [],
+    );
+    assert.equal(
+      messages(
+        fixture("server-require-nullable-fetch-wrapper/named-call.ts"),
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^rpc\\.call$"],
+          requiredWrapperCallee: "nullableEntity",
+        },
+        "backend/users.ts",
+      ).length,
+      2,
     );
     assert.deepEqual(
       messages(

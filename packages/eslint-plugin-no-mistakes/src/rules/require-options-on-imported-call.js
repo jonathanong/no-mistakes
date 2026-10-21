@@ -13,7 +13,6 @@ const {
   visiblePropertyNames,
 } = require("./imported-call-options");
 const { shouldCheckOptionsFile } = require("./required-call-selector-compile");
-const { logicalCall } = require("./module-mock-helpers");
 const { createCallSelectors } = require("./required-call-selectors");
 
 // Same call and same requirement share one finding. A different property set,
@@ -90,26 +89,22 @@ module.exports = Object.assign(
         },
         CallExpression(node) {
           const resolved = matcher?.resolveCallTarget(node) || null;
-          const invoked = resolved ? { arguments: resolved.arguments } : logicalCall(node);
-          if (!invoked) return;
-          if (matcher) {
-            if (resolved) {
-              for (const target of matchingTargets(
-                optionTargets,
-                resolved.source,
-                resolved.calleeName,
-              )) {
-                reportMissing(
-                  context,
-                  node,
-                  target,
-                  resolved,
-                  suppressed,
-                  fallback,
-                  reported,
-                  invoked.arguments,
-                );
-              }
+          if (matcher && resolved) {
+            for (const target of matchingTargets(
+              optionTargets,
+              resolved.source,
+              resolved.calleeName,
+            )) {
+              reportMissing(
+                context,
+                node,
+                target,
+                resolved,
+                suppressed,
+                fallback,
+                reported,
+                resolved.arguments,
+              );
             }
           }
           for (const match of selectors.matches(node)) {

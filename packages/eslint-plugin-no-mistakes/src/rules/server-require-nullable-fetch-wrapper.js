@@ -55,7 +55,13 @@ function wrapperMatches(callee, wrapper, context) {
 function insideWrapper(node, wrapper, context) {
   let current = node.parent;
   while (current) {
-    const invoked = current.type === "CallExpression" ? logicalCall(current) : null;
+    if (current.type !== "CallExpression") {
+      if (isFunctionBoundary(current)) return false;
+      current = current.parent;
+      continue;
+    }
+    if (wrapperMatches(current.callee, wrapper, context)) return true;
+    const invoked = logicalCall(current);
     if (invoked && wrapperMatches(invoked.callee, wrapper, context)) return true;
     if (isFunctionBoundary(current)) return false;
     current = current.parent;
@@ -146,9 +152,13 @@ module.exports = Object.assign(
         "ArrowFunctionExpression:exit": exitFunction,
         CallExpression(node) {
           if (!currentFunctionChecked()) return;
+          const directName = spelledCallee(node.callee, context);
           const invoked = logicalCall(node);
-          const name = invoked ? spelledCallee(invoked.callee, context) : null;
-          if (!name || !getterPatterns.some((pattern) => pattern.test(name))) return;
+          const unwrappedName = invoked ? spelledCallee(invoked.callee, context) : null;
+          const name = [directName, unwrappedName].find(
+            (candidate) => candidate && getterPatterns.some((pattern) => pattern.test(candidate)),
+          );
+          if (!name) return;
           if (insideWrapper(node, options.requiredWrapperCallee, context)) return;
           context.report({
             node,

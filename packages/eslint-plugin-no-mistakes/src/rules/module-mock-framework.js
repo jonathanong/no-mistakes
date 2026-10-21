@@ -114,6 +114,7 @@ function frameworkImportMatches(def, importModule) {
 function patternKey(pattern, name) {
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
+    if (property.computed && property.key?.type === "Identifier") continue;
     const value =
       property.value.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value.type === "Identifier" && value.name === name) return propertyName(property.key);

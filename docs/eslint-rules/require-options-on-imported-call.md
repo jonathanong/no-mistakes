@@ -173,6 +173,8 @@ Spreads do not count as known keys.
 
 ## Limits
 
+A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding applies only when the direct callee is not itself a configured target.
+
 Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object.
 
 ## Suppression
