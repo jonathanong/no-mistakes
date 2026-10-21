@@ -3,5 +3,5 @@ export function widget() {
 }
 
 export function Button() {
-  return <button>Save</button>;
+  return <button data-pw="save">Save</button>;
 }

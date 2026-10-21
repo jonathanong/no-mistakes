@@ -24,7 +24,9 @@ describe("playwright-require-exported-component-attribute filters", () => {
   });
 
   it("applies componentNamePattern instead of the default PascalCase filter", () => {
+    // Button already has data-pw, so a default PascalCase run is silent.
+    // The configured run can report missing only if widget is selected.
     assert.deepEqual(run("pattern-widget.jsx", { componentNamePattern: "^widget$" }), ["missing"]);
-    assert.deepEqual(run("pattern-widget.jsx"), ["missing"]);
+    assert.deepEqual(run("pattern-widget.jsx"), []);
   });
 });
