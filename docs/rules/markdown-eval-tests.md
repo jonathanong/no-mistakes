@@ -20,25 +20,20 @@ exceptions, not Markdown paths or globs.
 A test that asserts rendered Markdown text without evaluating a shell fence
 passes.
 
-```md
-```js
-console.log(1)
+```ts
+// content.test.mts
+import { readFileSync } from "node:fs";
+const body = readFileSync("runbook.md", "utf8");
+expect(body).toContain("tofu apply");
 ```
-```
-
-
-## Related rules
-
-[`markdown-mermaid-validation`](markdown-mermaid-validation.md) validates a
-safe, declarative fence language; [`shellcheck-runner`](shellcheck-runner.md)
-checks real shell files.
 
 ## Counterexample
 
-```md
-```js eval
-throw new Error('no')
-```
+```ts
+// slow.test.mts
+import { execFileSync } from "node:child_process";
+execFileSync("bash", ["-c", "eval \"$block\""]);
+const doc = "runbook.md";
 ```
 
 ## Suppression
@@ -57,14 +52,14 @@ rules:
     scope: repository
     options:
       include: ["**/*.test.mts"]
-      allow:
-        - opentofu/reference-live-runbook-execution-safety.test.mts
+      allow: []
 ```
 
 A file matches only when all three heuristics are present in the whole file: a
 `.md` string literal, a `spawn`/`exec` of `bash`/`sh`/`zsh`, and `\beval\b`.
-`allow` is exact relative paths, not directory globs. Unused allow entries are
-findings.
+`allow` is exact relative paths, not directory globs, for example
+`opentofu/reference-live-runbook-execution-safety.test.mts`. Unused allow
+entries are findings.
 
 Counterexample: a test interpolates a markdown path, spawns bash, and calls
 `eval`.
@@ -86,3 +81,9 @@ expect(body).toContain("tofu apply");
 
 Use `no-mistakes-disable-file markdown-eval-tests` only when the file is the
 guard's own test fixture, not as a substitute for `allow`.
+
+## Related rules
+
+[`markdown-mermaid-validation`](markdown-mermaid-validation.md) validates a
+safe, declarative fence language; [`shellcheck-runner`](shellcheck-runner.md)
+checks real shell files.

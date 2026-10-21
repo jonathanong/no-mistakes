@@ -22,9 +22,9 @@ A `jest.config.ts` renamed to the configured replacement and absent from the
 selected scope passes.
 
 ```ts
+// proxy.ts
 export const proxy = true;
 ```
-
 
 ## Counterexample
 
@@ -45,12 +45,14 @@ rules:
   - rule: banned-renamed-files
     scope: repository
     options:
-      scope: web
       bannedBasenames:
         - name: middleware
           message: "rename middleware.{ts,mts,js} to proxy.ts"
       extensions: [".ts", ".mts", ".js"]
 ```
+
+A project `scope` such as `web` is optional. The examples below use repository
+scope so the banned basename is judged wherever it appears.
 
 By default a basename matches only `<name>.<ext>` where `<ext>` is one of
 `extensions`. The last dot is the extension boundary, so `middleware.ts` matches

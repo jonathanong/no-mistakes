@@ -111,7 +111,7 @@ jobs:
           persist-credentials: false
 ```
 
-## Counterexample and fix
+## Counterexample
 
 This checkout persists a contents write token because the input is omitted:
 
@@ -125,6 +125,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 ```
+
+## Fix
 
 Set the input to false:
 
