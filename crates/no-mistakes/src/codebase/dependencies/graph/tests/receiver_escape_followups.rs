@@ -458,5 +458,15 @@ fn guarded_inline_factory_keeps_the_returned_executor_candidate() {
     );
 }
 
+#[test]
+fn earlier_entries_of_later_spreads_follow_prior_open_shifts() {
+    guarded_array_keeps_both_origins("array-guarded-open-earlier-entry", true);
+}
+
+#[test]
+fn possible_foreign_forward_replay_does_not_become_definite() {
+    guarded_array_keeps_both_origins("array-guarded-foreign-forward", true);
+}
+
 #[path = "receiver_escape_union.rs"]
 mod union;
