@@ -23,3 +23,5 @@ const ordinary = {
   },
 };
 ordinary.extend().skip("ordinary object extend is not a test binding");
+// The second argument is fixture options, not test declaration details.
+base.extend({}, { annotation: { type: "skip" } });

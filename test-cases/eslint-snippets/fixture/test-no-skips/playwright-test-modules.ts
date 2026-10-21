@@ -1,4 +1,5 @@
 import { test } from "./fixtures";
+import defaultTest from "./fixtures";
 import { test as app } from "@app/test";
 import * as fixtures from "./fixtures";
 import { describe, helper } from "./fixtures";
@@ -15,3 +16,5 @@ describe.skip("named describe from a fixture module is not admitted", () => {});
 helper.test.skip("named non-test export is not a namespace");
 // Unlisted specifier stays silent even when other modules are configured.
 other.skip("unlisted module stays silent even when other modules are configured", async () => {});
+// A default import is not the exported `test`, so it stays silent when configured.
+defaultTest.skip("default import stays silent even when the specifier is configured", async () => {});

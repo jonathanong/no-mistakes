@@ -56,13 +56,23 @@ browser("dynamic annotation type is not resolved", { annotation: { type: dynamic
 browser("template issue is not a skip", { annotation: { type: `issue` } }, () => {});
 browser("substituted template is dynamic", { annotation: { type: `${annotationFlag}` } }, () => {});
 browser(
-  "a non-banned conditional branch stays unresolved",
+  "a literal non-annotation branch still reports the banned type",
   { annotation: { type: annotationFlag ? "skip" : "issue" } },
   () => {},
 );
 browser(
-  "a non-banned consequent stays unresolved",
+  "a literal non-annotation consequent still reports the banned type",
   { annotation: { type: annotationFlag ? "issue" : "fixme" } },
+  () => {},
+);
+browser(
+  "nested conditionals name each banned type once",
+  { annotation: { type: annotationFlag ? (annotationFlag ? "skip" : "fixme") : "skip" } },
+  () => {},
+);
+browser(
+  "a dynamic alternate stays unresolved",
+  { annotation: { type: annotationFlag ? "skip" : dynamicType } },
   () => {},
 );
 browser("tag does not skip the test", { tag: "@slow" }, () => {});

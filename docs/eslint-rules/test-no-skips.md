@@ -28,16 +28,18 @@ For Playwright, the rule also reports statically visible `skip` and `fixme`
 and annotation array. This rule only treats the Playwright `skip` and `fixme`
 annotation types as coverage-removing declarations; other annotation values
 are outside this rule's check. A no-substitution template literal is read like
-a string. A conditional type is reported when every branch is a banned `skip`
-or `fixme` literal. When those branches name different types, the finding names
-both. A modifier that does not itself skip the test, such as
-`only`, does not hide an annotation on that call. `skip` and `fixme` modifiers
-already remove the test, so an annotation on that same call is not reported
-again. This is syntax analysis, not runtime evaluation: mutable bindings,
-computed or spread properties, and other dynamic annotation values are not
-resolved and may not be reported. `test.describe.configure` and `tag` do not
-remove the test, so they are ignored. It does not prove aliased objects are
-immutable; mutation through another alias or a helper call is not tracked.
+a string. A conditional type is reported when every branch is a literal and at
+least one branch is a `skip` or `fixme` literal. The finding names each banned
+type once, in source order. Allowing `skip` still reports
+`cond ? "skip" : "fixme"`. A branch that is not a literal, including a dynamic
+value, leaves that conditional unreported. A modifier that does not itself skip
+the test, such as `only`, does not hide an annotation on that call. `skip` and
+`fixme` modifiers already remove the test, so an annotation on that same call
+is not reported again. This is syntax analysis, not runtime evaluation: mutable
+bindings, computed or spread properties, and other dynamic annotation values
+are not resolved and may not be reported. `test.describe.configure` and `tag`
+do not remove the test, so they are ignored. It does not prove aliased objects
+are immutable; mutation through another alias or a helper call is not tracked.
 `test.step.skip()` skips only a step, so this rule leaves it alone.
 
 ```ts
@@ -54,7 +56,9 @@ test("tagged", { tag: "@slow", annotation: { type: "issue" } }, async () => {});
 
 Same-file `const test = <binding>.extend(...)` (and chained
 `.extend().extend()`) remains the original Playwright or Vitest `test`
-binding, including declaration annotations. Cross-file fixture modules are not
+binding, including declaration annotations. Arguments passed to `extend` itself
+are fixture options, not test details, so an annotation object there is not a
+declaration skip. Cross-file fixture modules are not
 inferred and have no hardcoded path conventions: list their import specifiers
 in `testModules`. Only the exported `test` from those modules is admitted as
 Playwright's `test`. For namespace bindings, only `fixtures.test` is admitted;
@@ -118,16 +122,25 @@ declaration-annotation finding.
 ```
 
 `testModules` names import specifiers whose exported `test` is Playwright's,
-matching the specifier as written. It defaults to `[]`.
+matching the specifier as written. It defaults to `[]`. List every specifier
+form the tests use: `./fixtures` and `../fixtures` are different entries, and
+the option applies to the whole config scope rather than one directory.
+A default import stays silent even when its specifier is listed, because only
+the exported `test` binding is admitted.
 
 ```js
-"no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "@app/test"] }]
+"no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "../fixtures", "@app/test"] }]
 ```
 
 ```ts
 import { test } from "./fixtures";
+import { test as parent } from "../fixtures";
+import defaultTest from "./fixtures";
+
 test.skip("configured fixture skip", async () => {});
+parent.skip("parent specifier is a separate entry", async () => {});
 test("configured annotation skip", { annotation: { type: "skip" } }, async () => {});
+defaultTest.skip("default import is not the exported test", async () => {});
 ```
 
 A fixture module omitted from `testModules` stays silent:

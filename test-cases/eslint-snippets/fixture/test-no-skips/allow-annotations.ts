@@ -5,3 +5,9 @@ const mixedDetails = {
 };
 
 test("mixed skip and fixme declarations", mixedDetails, () => {});
+const flag = true;
+test(
+  "allowed skip still reports a banned fixme branch",
+  { annotation: { type: flag ? "skip" : "fixme" } },
+  () => {},
+);
