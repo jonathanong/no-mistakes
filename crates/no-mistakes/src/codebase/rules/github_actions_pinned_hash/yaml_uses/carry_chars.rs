@@ -185,6 +185,10 @@ impl Carry {
         let in_input = self.in_flow_input();
         self.value_key_is_input = !in_input && (self.token == "with" || self.token == "env");
         let action = self.place.note_key(&self.token);
+        self.key_was_steps = self.token == "steps";
+        if action {
+            self.bump_anchor_uses();
+        }
         if self.token == "uses" && !action && !in_input && self.place.nested() {
             self.rejected_uses = true;
         }

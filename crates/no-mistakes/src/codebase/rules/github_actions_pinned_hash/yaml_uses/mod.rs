@@ -183,7 +183,8 @@ fn collect_in(value: &Value, place: Place, at_root: bool, out: &mut Vec<String>)
                 let Some(key) = key.as_str() else {
                     continue;
                 };
-                if matches!(key, "with" | "env") {
+                // `jobs.env` is a job id. `with` and `env` are input maps only under a job or step.
+                if place != Place::Jobs && matches!(key, "with" | "env") {
                     continue;
                 }
                 let next = match key {

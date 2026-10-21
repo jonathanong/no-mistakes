@@ -54,6 +54,35 @@ impl Carry {
     pub(super) fn reset_anchor_state(&mut self) {
         self.clear_anchor_watch();
         self.anchors_with_uses.clear();
+        self.anchor_use_counts.clear();
+    }
+
+    pub(super) fn bump_anchor_uses(&mut self) {
+        if !self.block_anchor || self.anchor_name.is_empty() {
+            return;
+        }
+        if let Some(found) = self
+            .anchor_use_counts
+            .iter_mut()
+            .find(|(name, _)| name == &self.anchor_name)
+        {
+            found.1 += 1;
+            return;
+        }
+        self.anchor_use_counts.push((self.anchor_name.clone(), 1));
+    }
+
+    /// `steps: *name` repeats each action the anchor recorded. Once per alias.
+    pub(super) fn take_sequence_alias_hits(&mut self) -> usize {
+        if !(self.key_was_steps && self.alias) {
+            return 0;
+        }
+        self.key_was_steps = false;
+        self.anchor_use_counts
+            .iter()
+            .find(|(name, _)| name == &self.alias_name)
+            .map(|(_, count)| *count)
+            .unwrap_or(0)
     }
 
     pub(super) fn anchor_has_uses(&self) -> bool {
@@ -95,11 +124,12 @@ impl Carry {
             if self.reading_anchor {
                 self.anchor_name.push(ch);
             }
-            if self.step_alias {
+            if self.alias || self.step_alias {
                 self.alias_name.push(ch);
             }
             return true;
         }
+        let extra = self.take_sequence_alias_hits();
         let was_alias = self.alias && self.key_was_uses;
         let step_alias = self.step_alias && self.anchor_has_uses();
         self.skip_anchor = false;
@@ -110,6 +140,7 @@ impl Carry {
             *hits += 1;
             self.key_was_uses = false;
         }
+        *hits += extra;
         if !self.anchor_name.is_empty() && (ch == '{' || ch.is_whitespace()) {
             self.anchor_pending = true;
         } else if ch != '{' {

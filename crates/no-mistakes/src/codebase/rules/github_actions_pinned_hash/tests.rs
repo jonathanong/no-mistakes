@@ -359,9 +359,20 @@ fn block_header_accepts_one_chomp_or_indent() {
 fn non_string_job_id_still_checks_the_step_line() {
     // YAML reads `1` as a number, so the job is not walked by name. The step
     // line is still a `uses` hit.
-    let findings = run_on_workflow("jobs:\n  1:\n    steps:\n      - uses: actions/checkout@v4\n");
-    assert_eq!(findings.len(), 1, "{findings:?}");
+    let findings = check_yaml_shape("numeric-job-fail.yml");
+    assert_eq!(lines_of(&findings), vec![5], "{findings:?}");
     assert!(findings[0].message.contains("actions/checkout@v4"));
+}
+
+#[test]
+fn aliased_steps_and_job_named_env_are_checked() {
+    let aliased = check_yaml_shape("aliased-steps-fail.yml");
+    assert_eq!(lines_of(&aliased), vec![10], "{aliased:?}");
+    assert!(aliased[0].message.contains("actions/checkout@v4"));
+    let named = check_yaml_shape("job-named-env-fail.yml");
+    assert_eq!(lines_of(&named), vec![5, 8], "{named:?}");
+    assert!(named[0].message.contains("actions/checkout@v4"));
+    assert!(named[1].message.contains("actions/setup-node@v4"));
 }
 
 #[test]

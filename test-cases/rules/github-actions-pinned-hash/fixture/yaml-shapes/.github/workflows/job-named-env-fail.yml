@@ -1,0 +1,8 @@
+# A job id of env or with is not an input map.
+jobs:
+  env:
+    steps:
+      - { uses: actions/checkout@v4 }
+  with:
+    steps:
+      - { uses: actions/setup-node@v4 }

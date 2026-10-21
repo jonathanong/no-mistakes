@@ -15,6 +15,8 @@ pub(super) struct Carry {
     scalar: String,
     after_colon: bool,
     key_was_uses: bool,
+    /// The key just closed was `steps`, so `steps: *name` repeats that sequence.
+    key_was_steps: bool,
     flow_depth: i32,
     flow_input: Vec<bool>,
     value_key_is_input: bool,
@@ -33,6 +35,8 @@ pub(super) struct Carry {
     anchor_name: String,
     alias_name: String,
     anchors_with_uses: Vec<String>,
+    /// Action `uses` values inside a block anchor, so `steps: *name` can repeat them.
+    anchor_use_counts: Vec<(String, usize)>,
     block_header: bool,
     place: PlaceStack,
     rejected_uses: bool,
@@ -95,6 +99,8 @@ impl Carry {
             hits += 1;
         }
         if self.quote.is_none() {
+            // `steps: *name` with the name ending at EOL still repeats the sequence.
+            hits += self.take_sequence_alias_hits();
             // `&name` at the end of the line anchors the following block mapping.
             if self.reading_anchor && !self.anchor_name.is_empty() && self.anchor_depth == 0 {
                 self.block_anchor = true;
@@ -123,6 +129,7 @@ impl Carry {
         self.scalar.clear();
         self.after_colon = false;
         self.key_was_uses = false;
+        self.key_was_steps = false;
         self.skip_anchor = false;
         self.alias = false;
         self.block_header = false;

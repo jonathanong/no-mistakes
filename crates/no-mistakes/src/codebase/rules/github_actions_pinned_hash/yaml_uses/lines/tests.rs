@@ -275,6 +275,22 @@ fn anchor_only_step_and_plain_apostrophe_keep_the_action() {
 }
 
 #[test]
+fn steps_alias_repeats_the_anchored_action_line() {
+    let lines = [
+        "jobs:",
+        "  one:",
+        "    steps: &shared",
+        "      - uses: ./local",
+        "  two:",
+        "    steps: *shared",
+        "  three:",
+        "    steps:",
+        "      - { uses: actions/checkout@v4 }",
+    ];
+    assert_eq!(action_uses_lines(&lines).lines, vec![4, 6, 9], "{lines:?}");
+}
+
+#[test]
 fn plain_apostrophe_does_not_hide_the_version_comment() {
     let line = "- { name: Don't fail, uses: actions/checkout@sha } # v1";
     assert_eq!(super::super::version_comment(line), "# v1");
