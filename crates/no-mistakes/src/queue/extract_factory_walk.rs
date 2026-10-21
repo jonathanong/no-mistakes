@@ -11,7 +11,12 @@ pub(crate) fn visit_function<'a>(
     func: &Function<'a>,
     flags: oxc_syntax::scope::ScopeFlags,
 ) {
-    visitor.dispatch_scopes.insert(func.span.start);
+    // A top-level callable can be the imported processor. A nested callback
+    // counts only when it notes a job, so `.map((x) => x)` does not open the file.
+    if visitor.function_stack.is_empty() {
+        visitor.top_level_callables += 1;
+    }
+    visitor.function_stack.push(func.span.start);
     let frames = visitor.job_frames.clone();
     if let Some(id) = &func.id {
         super::scope::mask_name(visitor, id.name.as_str());
@@ -24,10 +29,14 @@ pub(crate) fn visit_function<'a>(
     if worker {
         visitor.worker_stack.pop();
     }
+    visitor.function_stack.pop();
 }
 
 pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunctionExpression<'a>) {
-    visitor.dispatch_scopes.insert(arrow.span.start);
+    if visitor.function_stack.is_empty() {
+        visitor.top_level_callables += 1;
+    }
+    visitor.function_stack.push(arrow.span.start);
     let frames = visitor.job_frames.clone();
     super::dedup::mask_parameters(visitor, &arrow.params);
     let worker = enter_worker(visitor, arrow.span);
@@ -37,6 +46,7 @@ pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunct
     if worker {
         visitor.worker_stack.pop();
     }
+    visitor.function_stack.pop();
 }
 
 fn enter_worker(visitor: &mut QueueVisitor<'_>, span: oxc_span::Span) -> bool {

@@ -14,9 +14,10 @@ The rule is opt-in. Listing it is what turns it on. It is off by default and
 is not part of a recommended or strict preset. It reports only a mapping it
 can judge. A dynamic publish word stays silent. These forms are not judged:
 an `ssh` remote command, an unknown flag before `-p` or `--publish`, and a
-YAML merge key (`<<`), which is not applied. A literal command inside
-`bash -c`, `sh -c`, `zsh -c`, or `eval` is judged, including when `sudo`
-precedes that shell.
+YAML merge key (`<<`), which is not applied. Engine-specific global flags
+before `run` (`podman --remote`, `nerdctl --namespace`) are not judged. A
+literal command inside `bash -c`, `sh -c`, `zsh -c`, or `eval` is judged,
+including when `sudo` precedes that shell.
 
 ## What it catches
 

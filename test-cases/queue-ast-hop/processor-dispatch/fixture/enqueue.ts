@@ -1,4 +1,4 @@
-import { unrelated, literal, mixed, computed, comparison, cases, inline, inlineLiteral, inlineMixed, ambiguous, inlineNamespace, ambiguousDefault, computedDynamic, namespaceMember, factoryDynamic, factoryLiteral, factoryDefault } from './queues';
+import { unrelated, literal, mixed, computed, comparison, cases, inline, inlineLiteral, inlineMixed, ambiguous, inlineNamespace, ambiguousDefault, computedDynamic, namespaceMember, factoryDynamic, factoryLiteral, factoryDefault, callback } from './queues';
 unrelated.add('real', {});
 literal.add('alpha', {});
 literal.add('beta', {});
@@ -21,3 +21,5 @@ factoryLiteral.add('alpha', {});
 factoryLiteral.add('beta', {});
 factoryDefault.add('alpha', {});
 factoryDefault.add('beta', {});
+callback.add('imp-a', {});
+callback.add('zzz', {});

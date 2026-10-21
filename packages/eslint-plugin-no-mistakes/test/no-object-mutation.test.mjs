@@ -6,7 +6,8 @@ import { join, resolve } from "node:path";
 import { describe, it } from "vitest";
 import { __dirname, lint, messages, plugin, require as loadCjs } from "./helpers.mjs";
 
-const { memberKey, mutationCall, staticKey } = loadCjs("../src/rules/no-object-mutation-syntax.js");
+const { memberKey, staticKey } = loadCjs("../src/rules/no-object-mutation-syntax.js");
+const { mutationCall } = loadCjs("../src/rules/no-object-mutation-forward.js");
 
 const RULE = "no-object-mutation";
 
@@ -65,6 +66,65 @@ describe("no-object-mutation", () => {
         {
           callee: objectAssign,
           arguments: [{ type: "SpreadElement", argument: { type: "Identifier", name: "rows" } }],
+        },
+        scope,
+      ),
+      null,
+    );
+    assert.equal(mutationCall({ callee: null, arguments: [] }, scope), null);
+    const bind = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: objectAssign,
+        property: { type: "Identifier", name: "bind" },
+      },
+      arguments: [{ type: "Literal", value: null }],
+    };
+    assert.equal(
+      mutationCall(
+        {
+          callee: bind,
+          arguments: [
+            { type: "Identifier", name: "box" },
+            { type: "ObjectExpression", properties: [] },
+          ],
+        },
+        scope,
+      )?.targetNode.name,
+      "box",
+    );
+    assert.equal(mutationCall({ callee: bind, arguments: [] }, scope), null);
+    const prebound = {
+      ...bind,
+      arguments: [
+        { type: "Literal", value: null },
+        { type: "Identifier", name: "box" },
+      ],
+    };
+    assert.equal(
+      mutationCall(
+        {
+          callee: prebound,
+          arguments: [{ type: "Identifier", name: "rows" }],
+        },
+        scope,
+      )?.targetNode.name,
+      "box",
+    );
+    const spreadBound = {
+      ...bind,
+      arguments: [
+        { type: "Literal", value: null },
+        { type: "SpreadElement", argument: { type: "Identifier", name: "box" } },
+      ],
+    };
+    assert.equal(
+      mutationCall(
+        {
+          callee: spreadBound,
+          arguments: [{ type: "Identifier", name: "rows" }],
         },
         scope,
       ),

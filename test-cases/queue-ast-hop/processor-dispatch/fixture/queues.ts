@@ -16,3 +16,4 @@ export const namespaceMember = new Queue('namespace-member');
 export const factoryDynamic = new Queue('factory-dynamic');
 export const factoryLiteral = new Queue('factory-literal');
 export const factoryDefault = new Queue('factory-default');
+export const callback = new Queue('callback');

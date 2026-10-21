@@ -332,6 +332,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: nerdctl run -p 5432:5432 postgres
+  podman-sudo-create:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo --preserve-env podman create -p 5433:5432 pg
+  nerdctl-container:
+    runs-on: ubuntu-latest
+    steps:
+      - run: nerdctl container run -p 5434:5432 pg
   arith-shift:
     runs-on: ubuntu-latest
     steps:

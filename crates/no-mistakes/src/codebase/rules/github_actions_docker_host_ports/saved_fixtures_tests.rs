@@ -74,6 +74,8 @@ fn saved_fixtures_flag_only_literal_host_ports() {
         ("udp", "5432:5432/udp"),
         ("podman", "5432:5432"),
         ("nerdctl", "5432:5432"),
+        ("podman-sudo-create", "5433:5432"),
+        ("nerdctl-container", "5434:5432"),
         ("arith-shift", "5432:5432"),
         ("dyn-after-publish", "5432:5432"),
     ] {

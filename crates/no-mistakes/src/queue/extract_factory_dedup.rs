@@ -5,6 +5,9 @@ use oxc_ast::ast::{
     Argument, BindingIdentifier, BindingPattern, CallExpression, Expression, FormalParameters,
     ObjectPropertyKind, VariableDeclaration, VariableDeclarationKind,
 };
+
+#[path = "extract_factory_dedup_ids.rs"]
+mod ids;
 use oxc_ast_visit::Visit;
 
 pub(crate) fn note_self_dedup(
@@ -141,6 +144,11 @@ pub(crate) fn visit_variable_declaration<'a>(
                 visitor.job_frames.last_mut(),
             ) {
                 frame.id_idents.push(name);
+            }
+        }
+        if let Some(init) = declarator.init.as_ref() {
+            if decl.kind == VariableDeclarationKind::Const {
+                ids::note_destructured_ids(visitor, &declarator.id, init);
             }
         }
         visitor.visit_variable_declarator(declarator);
