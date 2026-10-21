@@ -33,8 +33,7 @@ pub(super) fn evaluate(
                     roots,
                     untrusted_array_intrinsics,
                 } = profile;
-                let mut per_file = roots
-                    .into_par_iter()
+                let mut per_file = root_tasks(roots)
                     .map(|path| {
                         let events = crate::diagnostics::with_observer(observer.clone(), || {
                             let mut evaluator =
@@ -66,4 +65,10 @@ pub(super) fn evaluate(
             })
         })
         .collect()
+}
+
+// One root can initialize a large import graph; keep its siblings stealable
+// rather than folding several roots sequentially into one Rayon task.
+pub(super) fn root_tasks(roots: Vec<PathBuf>) -> impl IndexedParallelIterator<Item = PathBuf> {
+    roots.into_par_iter().with_max_len(1)
 }
