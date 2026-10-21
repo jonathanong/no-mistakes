@@ -62,5 +62,50 @@ fn overlapping_mdx_code_block_reuses_already_scanned_source() {
         !collector.recover_overlapping_mdx_code_block(source.len()..source.len()),
         "a range at the scanned end is not overlapping"
     );
-    let _ = collector.finish();
+    // The overlap predicate above only returns a boolean. The parsed document
+    // must still report the real fence once and ignore the tilde fence in the
+    // JavaScript template.
+    let fences = super::extract_mermaid_fences_with_mdx_html_fallback(&source);
+    assert_eq!(
+        fences.len(),
+        1,
+        "the real Mermaid fence is reported once: {fences:?}"
+    );
+    assert_eq!(fences[0].fence_offset, mermaid_at);
+    assert_eq!(
+        fences[0].fence_line,
+        super::line_number(&source, mermaid_at)
+    );
+    assert!(fences[0].closed, "{fences:?}");
+    assert!(
+        fences[0].content.contains("Parsed --> Diagram"),
+        "illustrative tilde fence must not replace the real diagram: {}",
+        fences[0].content
+    );
+}
+
+#[test]
+fn overlapping_recovery_records_the_fence_it_scans() {
+    // The scanned prefix is only the leading newline, so recovery's extract
+    // starts on the fence. Dropping the extracted fences leaves this empty.
+    let source = "\n```mermaid\nflowchart TD\n  Parsed --> Diagram\n```\n";
+    let fence_at = source
+        .find("```mermaid")
+        .expect("fence starts after the scanned newline");
+    let mut collector = MermaidFenceCollector::new_with_mdx_html_fallback(source);
+    collector.observe(&Event::Start(Tag::HtmlBlock), 0..fence_at);
+    assert!(
+        collector.recover_overlapping_mdx_code_block(0..source.len()),
+        "the code block starts inside the already scanned prefix"
+    );
+    let fences = collector.finish();
+    assert_eq!(fences.len(), 1, "{fences:?}");
+    assert_eq!(fences[0].fence_offset, fence_at);
+    assert_eq!(fences[0].fence_line, super::line_number(source, fence_at));
+    assert!(fences[0].closed, "{fences:?}");
+    assert!(
+        fences[0].content.contains("Parsed --> Diagram"),
+        "{}",
+        fences[0].content
+    );
 }
