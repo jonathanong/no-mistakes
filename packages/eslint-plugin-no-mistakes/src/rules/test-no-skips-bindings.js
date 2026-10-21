@@ -5,6 +5,7 @@ const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { unwrapExpression, isFunction } = require("./async-ast");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
+const CONFIGURED_NAMESPACE = "configured-test-module";
 // extend is a transparent Playwright/Vitest fixture wrapper, including chained .extend().
 const CHAIN = new Set(
   "skip skipIf runIf only todo fixme each for concurrent sequential fails fail serial parallel describe extend".split(
@@ -17,7 +18,7 @@ function admit(source, importedName, namespace, testModules) {
     return NAMES.has(importedName) ? { framework: source, name: importedName } : null;
   }
   if (!testModules.has(source) || importedName !== (namespace ? "*" : "test")) return null;
-  return namespace ? "@playwright/test" : { framework: "@playwright/test", name: "test" };
+  return namespace ? CONFIGURED_NAMESPACE : { framework: "@playwright/test", name: "test" };
 }
 function memberName(node) {
   return node.computed
@@ -112,7 +113,11 @@ function testBinding(node, context, visited = new Set()) {
   const name = memberName(node);
   if (NAMES.has(name) && node.object.type === "Identifier") {
     const framework = imported(node.object, context, true);
-    if (framework) return { framework, name };
+    if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))
+      return {
+        framework: framework === CONFIGURED_NAMESPACE ? "@playwright/test" : framework,
+        name,
+      };
   }
   if (!CHAIN.has(name)) return null;
   const binding = testBinding(node.object, context, visited);
