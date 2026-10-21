@@ -175,16 +175,6 @@ jobs:
         timeout-minutes: 1
         run: bash .github/scripts/rust-disk-usage.sh "before Clippy"
 
-      - name: Test standalone Rust library without a CLI build
-        timeout-minutes: 10
-        env:
-          CARGO_TARGET_DIR: ${{ runner.temp }}/standalone-lib-target
-          CARGO_INCREMENTAL: "0"
-        run: |
-          trap 'rm -rf "$CARGO_TARGET_DIR"' EXIT
-          env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
-          test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
-
       - name: Run Clippy
         timeout-minutes: 10
         run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
@@ -539,6 +529,16 @@ jobs:
           "$pg_bin/pg_ctl" -D "$RUNNER_TEMP/no-mistakes-postgres" -l "$RUNNER_TEMP/no-mistakes-postgres.log" -o "-k $RUNNER_TEMP -p 56225 -c listen_addresses=" start
           echo "NO_MISTAKES_TEST_POSTGRES_URL=postgresql://$USER@localhost/postgres?host=$RUNNER_TEMP&port=56225" >> "$GITHUB_ENV"
           echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"
+
+      - name: Test standalone Rust library without a CLI build
+        timeout-minutes: 10
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/standalone-lib-target
+          CARGO_INCREMENTAL: "0"
+        run: |
+          trap 'rm -rf "$CARGO_TARGET_DIR"' EXIT
+          env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
+          test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
 
       - name: Clean Rust coverage artifacts
         timeout-minutes: 2
