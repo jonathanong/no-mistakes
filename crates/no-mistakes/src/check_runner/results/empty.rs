@@ -12,6 +12,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         codebase: Vec::new(),
         warnings,
         analysis_warning_count: 0,
+        analysis_fallbacks: Vec::new(),
         advisories: Vec::new(),
         sql_verdicts: Vec::new(),
         include_sql_verdicts: false,

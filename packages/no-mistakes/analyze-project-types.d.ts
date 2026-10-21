@@ -55,7 +55,7 @@ type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
 type BatchedReactUsagesOptions = Pick<
   ProjectOptions,
-  "root" | "tsconfig" | "config" | "targets" | "include"
+  "root" | "tsconfig" | "config" | "targets" | "include" | "effort"
 > &
   Required<Pick<ProjectOptions, "target">>;
 type BatchedCheckOptions = Pick<
@@ -85,7 +85,7 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "serverRouteRelated"; id?: string } & BatchedServerRouteRelatedOptions)
   | ({ type: "reactAnalyze" | "reactCheck"; id?: string } & Pick<
       ProjectOptions,
-      "targets" | "depth" | "assertNoFetch"
+      "targets" | "depth" | "assertNoFetch" | "effort"
     >)
   | ({ type: "reactUsages"; id?: string } & BatchedReactUsagesOptions)
   | ({

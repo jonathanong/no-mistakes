@@ -25,4 +25,3 @@ struct SharedCheckContext {
     playwright_rules_enabled: bool,
     graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
 }
-

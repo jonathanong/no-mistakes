@@ -40,6 +40,20 @@ fn prepare(name: &str, support: &[RuleEffortSupport]) -> NoMistakesConfig {
     config
 }
 
+const PARTNER_NOTE: &str = "test-partner: requested effort low; effective effort max because this rule has no low implementation";
+const ADOPTER_FALLBACK: &str = "test-effort-adopter: effort low requires enabled partner `test-partner` covering this application's scope; falling back to max";
+fn assert_partner_fallback(config: &NoMistakesConfig) {
+    assert_eq!(
+        config.analysis_fallbacks,
+        vec![AnalysisFallback {
+            rule: "test-effort-adopter".into(),
+            partner: "test-partner".into(),
+            requested: Effort::Low,
+            effective: Effort::Max,
+        }]
+    );
+}
+
 #[test]
 fn low_adopter_requires_union_of_enabled_partner_scopes() {
     let config = prepare("covered.yml", ADOPTERS);
@@ -50,7 +64,8 @@ fn low_adopter_requires_union_of_enabled_partner_scopes() {
             unanalyzable: Unanalyzable::Advise,
         }
     );
-    assert!(config.analysis_warnings.is_empty());
+    assert_eq!(config.analysis_warnings, [PARTNER_NOTE, PARTNER_NOTE]);
+    assert!(config.analysis_fallbacks.is_empty());
     for name in ["missing.yml", "outside.yml"] {
         let config = prepare(name, ADOPTERS);
         assert_eq!(
@@ -60,25 +75,35 @@ fn low_adopter_requires_union_of_enabled_partner_scopes() {
                 .effort,
             Effort::Max
         );
-        assert_eq!(config.analysis_warnings.len(), 1);
-        assert!(config.analysis_warnings[0].contains("test-partner"));
-        assert!(config.analysis_warnings[0].contains("falling back to max"));
+        let expected = if name == "missing.yml" {
+            vec![ADOPTER_FALLBACK]
+        } else {
+            vec![ADOPTER_FALLBACK, PARTNER_NOTE]
+        };
+        assert_eq!(config.analysis_warnings, expected, "{name}");
+        assert_partner_fallback(&config);
     }
 }
 
 #[test]
-fn non_adopters_and_defaults_retain_max_without_new_warnings() {
-    for (name, support) in [("covered.yml", &[][..]), ("default.yml", ADOPTERS)] {
-        let config = prepare(name, support);
-        assert_eq!(
-            config
-                .effective_rule_analysis(&config.rules[0])
-                .unwrap()
-                .effort,
-            Effort::Max
-        );
-        assert!(config.analysis_warnings.is_empty());
-    }
+fn non_adopters_report_requested_low_while_defaults_stay_quiet() {
+    let config = prepare("covered.yml", &[]);
+    assert_eq!(
+        config
+            .effective_rule_analysis(&config.rules[0])
+            .unwrap()
+            .effort,
+        Effort::Max
+    );
+    assert_eq!(config.analysis_warnings, [
+        "selected-application: requested effort low; effective effort max because this rule has no low implementation",
+        PARTNER_NOTE,
+        PARTNER_NOTE,
+    ]);
+    assert!(config.analysis_fallbacks.is_empty());
+    let config = prepare("default.yml", ADOPTERS);
+    assert!(config.analysis_warnings.is_empty());
+    assert!(config.analysis_fallbacks.is_empty());
 }
 
 #[test]
@@ -91,7 +116,8 @@ fn partner_options_filters_and_project_roots_are_enforced() {
             .effort,
         Effort::Low
     );
-    assert!(config.analysis_warnings.is_empty());
+    assert_eq!(config.analysis_warnings, [PARTNER_NOTE]);
+    assert!(config.analysis_fallbacks.is_empty());
     let config = prepare("wrong-project.yml", ADOPTERS);
     assert_eq!(
         config
@@ -100,7 +126,8 @@ fn partner_options_filters_and_project_roots_are_enforced() {
             .effort,
         Effort::Max
     );
-    assert!(config.analysis_warnings[0].contains("test-partner"));
+    assert_eq!(config.analysis_warnings, [ADOPTER_FALLBACK, PARTNER_NOTE]);
+    assert_partner_fallback(&config);
 }
 
 #[path = "adopter_tests.rs"]
@@ -117,8 +144,8 @@ fn unknown_semantic_partner_scope_and_suppressions_fall_back_before_facts() {
                 .effort,
             Effort::Max
         );
-        assert_eq!(config.analysis_warnings.len(), 1);
-        assert!(config.analysis_warnings[0].contains("test-partner"));
+        assert_eq!(config.analysis_warnings, [ADOPTER_FALLBACK, PARTNER_NOTE]);
+        assert_partner_fallback(&config);
     }
 }
 
@@ -160,7 +187,8 @@ fn every_relevant_partner_suppression_form_disables_the_low_assumption() {
             Effort::Max,
             "{name}"
         );
-        assert_eq!(config.analysis_warnings.len(), 1);
+        assert_eq!(config.analysis_warnings, [ADOPTER_FALLBACK, PARTNER_NOTE]);
+        assert_partner_fallback(&config);
         assert_eq!(sources.physical_read_count(), 1);
     }
 }

@@ -1,6 +1,12 @@
 use super::{schema::RuleDef, NoMistakesConfig};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+mod legacy;
+use legacy::legacy_policy;
+pub(crate) use legacy::validate_low_alias;
+pub(super) use legacy::{legacy_sql_options, sql_policy_rule};
+mod fallback;
+pub use fallback::AnalysisFallback;
 
 #[derive(
     Clone,
@@ -46,6 +52,11 @@ impl NoMistakesConfig {
             .or(option(rule, "effort")?)
             .or(self.effort)
             .unwrap_or_default();
+        if rule.options.get("unanalyzable").is_some()
+            && (!legacy_sql_options(&rule.rule) || sql_policy_rule(&rule.rule))
+        {
+            validate_low_alias(rule)?;
+        }
         let unanalyzable = if let Some(shared) = option(rule, "unanalyzable")? {
             shared
         } else {
@@ -115,75 +126,6 @@ fn option<T: serde::de::DeserializeOwned>(rule: &RuleDef, key: &str) -> Result<O
                 .with_context(|| format!("{}: invalid options.{key}", rule.rule))
         })
         .transpose()
-}
-
-fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
-    if !sql_policy_rule(&rule.rule) {
-        if legacy_sql_options(&rule.rule) {
-            // Project scope historically copied this key to rules that ignored
-            // it. Those opaque payloads must remain valid at maximum effort.
-            return Ok(rule
-                .options
-                .get("unanalyzableSql")
-                .and_then(|value| serde_yaml::from_value(value.clone()).ok()));
-        }
-        return option(rule, "unanalyzableSql");
-    }
-    let Some(value) = rule
-        .options
-        .get("unanalyzableSql")
-        .and_then(serde_yaml::Value::as_str)
-    else {
-        return Ok(None);
-    };
-    let mode = if rule.rule == "postgres-require-query-annotation" {
-        match value {
-            "report" => Some(Unanalyzable::Report),
-            "advise" => Some(Unanalyzable::Advise),
-            "ignore" => Some(Unanalyzable::Ignore),
-            _ => None,
-        }
-    } else {
-        match value.trim().to_ascii_lowercase().as_str() {
-            "fail" | "" => Some(Unanalyzable::Report),
-            "advise" => Some(Unanalyzable::Advise),
-            "ignore" => Some(Unanalyzable::Ignore),
-            _ => None,
-        }
-    };
-    Ok(mode)
-}
-
-pub(crate) fn validate_low_alias(rule: &RuleDef) -> Result<()> {
-    if rule.options.get("unanalyzable").is_none()
-        && rule.options.get("unanalyzableSql").is_some()
-        && legacy_policy(rule)?.is_none()
-    {
-        anyhow::bail!("{}: invalid options.unanalyzableSql", rule.rule);
-    }
-    Ok(())
-}
-
-pub(super) fn legacy_sql_options(rule: &str) -> bool {
-    rule.starts_with("postgres-")
-}
-
-pub(super) fn sql_policy_rule(rule: &str) -> bool {
-    matches!(
-        rule,
-        "postgres-bounded-statements"
-            | "postgres-conflict-ordering"
-            | "postgres-explicit-columns"
-            | "postgres-generated-column-predicates"
-            | "postgres-idempotent-insert"
-            | "postgres-lock-ordering"
-            | "postgres-no-generated-column-writes"
-            | "postgres-no-offset"
-            | "postgres-require-query-annotation"
-            | "postgres-required-predicates"
-            | "postgres-sql-shape-policy"
-            | "postgres-sql-statement-policy"
-    )
 }
 
 #[cfg(test)]

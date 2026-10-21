@@ -19,6 +19,14 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     traversalDeclarations,
     /export interface CheckOptions extends ProjectOptions \{[\s\S]*?effort\?: Effort;[\s\S]*?includeSuppressed\?: boolean;/,
   );
+  assert.match(
+    traversalDeclarations,
+    /export interface ProjectOptions \{[\s\S]*?effort\?: Effort;/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
+    /export interface AnalysisFallback \{[\s\S]*?rule: string;[\s\S]*?partner: string;[\s\S]*?requested: Effort;[\s\S]*?effective: Effort;/,
+  );
   assert.doesNotMatch(
     traversalDeclarations,
     /export interface ProjectOptions \{[^}]*includeSuppressed/,
@@ -73,7 +81,11 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include" \| "effort"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "reactAnalyze" \| "reactCheck"; id\?: string \} & Pick<[\s\S]*?"targets" \| "depth" \| "assertNoFetch" \| "effort"/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -117,8 +129,24 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     /unprovenMemberQuerySql\?: number;/,
   );
   assert.match(
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
+    /analysisFallbacks\?: AnalysisFallback\[\];/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "report-types.d.ts"), "utf8"),
+    /export \* from "\.\/check-report-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/report-types";/,
+  );
+  assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
   );
 });
 

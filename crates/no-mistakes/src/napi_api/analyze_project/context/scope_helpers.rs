@@ -47,9 +47,8 @@ fn effective_scope(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> Result<EffectiveScope> {
-    let root = super::options::resolve_root(
-        string_option(request, "root")?.or(options.root.as_deref()),
-    );
+    let root =
+        super::options::resolve_root(string_option(request, "root")?.or(options.root.as_deref()));
     let root = root?;
     let inherited_root = super::options::resolve_root(options.root.as_deref())?;
     let request_tsconfig = string_option(request, "tsconfig")?;
@@ -71,7 +70,9 @@ fn effective_scope(
             string_option(request, "effort")?
                 .map(|value| serde_json::from_value(serde_json::Value::String(value.into())))
                 .transpose()?
-        } else { None },
+        } else {
+            None
+        },
     };
     Ok(EffectiveScope {
         key,
@@ -107,12 +108,17 @@ fn effective_path(root: &Path, value: Option<&str>) -> Option<PathBuf> {
 }
 
 fn requested_deadline_evidence(options: &AnalyzeProjectOptions) -> Result<bool> {
-    options.reports.iter().filter(|request| request.report_type == "check")
+    options
+        .reports
+        .iter()
+        .filter(|request| request.report_type == "check")
         .map(|request| -> Result<bool> {
             let raw = project_options(request, options)?;
             let parsed: ProjectOptions = serde_json::from_str(&raw)?;
             Ok(parsed.include_runner_config_deadlines)
-        }).collect::<Result<Vec<_>>>().map(|requests| requests.into_iter().any(|value| value))
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|requests| requests.into_iter().any(|value| value))
 }
 
 fn scope_graph_files(
@@ -131,10 +137,20 @@ fn scope_graph_files(
         .unwrap_or_else(|| traversal.graph_files().iter_visible().cloned().collect())
 }
 
-fn requested_check_effort(options: &AnalyzeProjectOptions) -> Result<Option<crate::config::v2::Effort>> {
-    options.reports.iter().find(|request| request.report_type == "check")
+fn requested_check_effort(
+    options: &AnalyzeProjectOptions,
+) -> Result<Option<crate::config::v2::Effort>> {
+    // Check requests are grouped by EffectiveScopeKey, which includes effort.
+    // All checks in this prepared scope therefore share the first check's
+    // override; different overrides prepare separate scopes.
+    options
+        .reports
+        .iter()
+        .find(|request| request.report_type == "check")
         .map(|request| -> Result<_> {
             let parsed: ProjectOptions = serde_json::from_str(&project_options(request, options)?)?;
             Ok(parsed.effort)
-        }).transpose().map(Option::flatten)
+        })
+        .transpose()
+        .map(Option::flatten)
 }

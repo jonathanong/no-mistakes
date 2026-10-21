@@ -38,7 +38,13 @@ rule cannot analyze (`report`, `advise`, or `ignore`); a rule's
 `options.unanalyzable` overrides it. The top-level and per-rule
 `unanalyzableSql` keys are aliases; legacy PostgreSQL rule parsers may retain
 their `fail` spelling, which maps to the shared `report` policy. The shared
-`report` value is translated to each legacy parser's expected spelling.
+`report` value is translated to each legacy parser's expected spelling. At a
+repository scope, and for rule applications that consume the shared policy,
+canonical `unanalyzable` takes precedence when both keys are set. The alias is
+still validated in those cases, so an invalid value remains a configuration
+error even when the canonical value is valid. Legacy PostgreSQL applications
+that historically ignored this per-rule payload continue to ignore it for
+compatibility.
 Rules that do not implement low effort continue to use their maximum analysis.
 When a low-effort rule requires a partner check that is missing or outside its
 configured scope, `check` warns and runs that rule at `max`.

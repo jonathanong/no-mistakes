@@ -35,19 +35,27 @@ test(
         config: join(root, `legacy-sql-${policy}.yml`),
       });
       assert.equal(JSON.stringify(legacy), encoded);
+      const lowExpected = {
+        ...expected,
+        warnings: [
+          ...expected.warnings,
+          "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation",
+        ],
+      };
       let defaultStdout;
       for (const effort of [undefined, "max", "low"]) {
         const requested = { ...options, ...(effort ? { effort } : {}) };
+        const expectedEffort = effort === "low" ? lowExpected : expected;
         for (const api of [cjs, esm])
-          assert.equal(JSON.stringify(await api.check(requested)), encoded);
+          assert.equal(JSON.stringify(await api.check(requested)), JSON.stringify(expectedEffort));
         const args = ["check", "--root", root, "--config", options.config, "--format", "json"];
         if (effort) args.push("--effort", effort);
         const child = spawnSync(cli, args, { encoding: "utf8", env: process.env });
         assert.equal(child.error, undefined);
         assert.equal(child.status, failures ? 1 : 0, child.stderr);
-        assert.deepEqual(JSON.parse(child.stdout), expected);
+        assert.deepEqual(JSON.parse(child.stdout), expectedEffort);
         if (effort === undefined) defaultStdout = child.stdout;
-        else assert.equal(child.stdout, defaultStdout);
+        else if (effort === "max") assert.equal(child.stdout, defaultStdout);
       }
       // Each report has a distinct override: sharing a prepared result must not
       // make the first report's effort become the next report's option.
@@ -62,7 +70,8 @@ test(
       const batchPending = cjs.analyzeProject(request);
       assert.ok(batchPending instanceof Promise);
       const batch = await batchPending;
-      for (const report of batch.reports) assert.equal(JSON.stringify(report.result), encoded);
+      for (const [index, report] of batch.reports.entries())
+        assert.deepEqual(report.result, index === 0 || index === 3 ? lowExpected : expected);
       assert.deepEqual(await esm.analyzeProject(request), batch);
     }
     const inherited = await cjs.check({ root, config: "project-no-policy.yml" });
@@ -80,5 +89,28 @@ test(
     ])
       for (const api of [cjs, esm]) assert.deepEqual(await api.check({ root, config }), inherited);
     await assert.rejects(cjs.check({ root, effort: "high" }), /effort|variant|high/i);
+    for (const config of [
+      "shared-invalid-annotation.yml",
+      "shared-invalid-sql.yml",
+      "shared-invalid-common.yml",
+    ]) {
+      for (const api of [cjs, esm])
+        await assert.rejects(api.check({ root, config }), /unanalyzableSql/);
+      const child = spawnSync(cli, ["check", "--root", root, "--config", join(root, config)], {
+        encoding: "utf8",
+        env: process.env,
+      });
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, 2, child.stderr);
+      assert.match(child.stderr, /unanalyzableSql/);
+    }
+    const precedence = await cjs.check({ root, config: "shared-valid-annotation.yml" });
+    assert.deepEqual(precedence, await cjs.check({ root, config: "sql-advise.yml" }));
+    // ProjectOptions already accepts effort outside check; those commands ignore it.
+    for (const api of [cjs, esm])
+      assert.deepEqual(
+        await api.resolveConfig({ root, effort: "low" }),
+        await api.resolveConfig({ root }),
+      );
   },
 );

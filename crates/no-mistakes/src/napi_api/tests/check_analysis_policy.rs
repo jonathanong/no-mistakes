@@ -19,6 +19,11 @@ fn async_check_options_preserve_sql_alias_and_default_effort_reports() {
         let default = execute(format!("sql-{mode}.yml"), None);
         assert_eq!(execute(format!("legacy-sql-{mode}.yml"), None), default);
         assert_eq!(execute(format!("sql-{mode}.yml"), Some("max")), default);
-        assert_eq!(execute(format!("sql-{mode}.yml"), Some("low")), default);
+        let mut low = execute(format!("sql-{mode}.yml"), Some("low"));
+        assert_eq!(low["warnings"], serde_json::json!([
+            "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation"
+        ]));
+        low["warnings"] = serde_json::json!([]);
+        assert_eq!(low, default);
     }
 }

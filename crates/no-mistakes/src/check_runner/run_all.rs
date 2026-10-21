@@ -67,6 +67,9 @@ pub(super) fn run_all_with_session_options(
             .warnings
             .extend(config.analysis_warnings.iter().cloned());
         results.analysis_warning_count = config.analysis_warnings.len();
+        results
+            .analysis_fallbacks
+            .clone_from(&config.analysis_fallbacks);
         results.include_suppressed = include_suppressed;
         results.include_sql_verdicts = include_sql_verdicts;
         results.runner_config_deadlines = runner_deadline_plan

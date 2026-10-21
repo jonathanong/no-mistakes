@@ -156,6 +156,8 @@ export type {
 } from "./symbol-traversal-types";
 
 export interface ProjectOptions {
+  /** Accepted by shared N-API options; applies to check reports and is ignored by other commands. */
+  effort?: Effort;
   /** Project root. Defaults to the current working directory. */
   root?: string;
   /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */

@@ -25,6 +25,12 @@ defaults to `report`; configure `ignore` to skip opaque executor arguments, or
 `advise` for a non-failing residual advisory. The legacy key keeps the same
 meaning. Other PostgreSQL rules keep their legacy `fail` spelling for
 `report`; setting the shared `report` policy translates to that spelling.
+For rule applications that consume the shared policy, when both
+`options.unanalyzable` and `options.unanalyzableSql` are present, the canonical
+`unanalyzable` value takes precedence and the alias is still validated. An
+invalid alias remains a configuration error even when the canonical key is
+valid. Legacy PostgreSQL applications that historically ignored this
+`unanalyzableSql` payload continue to ignore it for compatibility.
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).

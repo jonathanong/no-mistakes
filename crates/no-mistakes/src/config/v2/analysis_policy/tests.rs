@@ -172,3 +172,26 @@ fn inherited_ignored_postgres_alias_payloads_remain_opaque() {
         );
     }
 }
+
+#[test]
+fn canonical_policy_still_validates_explicit_aliases_before_overwriting() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/rule-analysis-policy/fixture");
+    for name in [
+        "shared-invalid-annotation.yml",
+        "shared-invalid-sql.yml",
+        "shared-invalid-common.yml",
+    ] {
+        let error =
+            super::super::load_v2_config(&root, Some(PathBuf::from(name).as_path())).unwrap_err();
+        assert!(
+            format!("{error:#}").contains("unanalyzableSql"),
+            "{name}: {error:#}"
+        );
+    }
+    let valid = config("shared-valid-annotation.yml");
+    assert_eq!(
+        valid.rules[0].options["unanalyzableSql"].as_str(),
+        Some("advise")
+    );
+}

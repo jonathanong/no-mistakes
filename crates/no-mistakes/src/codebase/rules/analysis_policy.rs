@@ -1,5 +1,5 @@
 mod diagnostics;
-use crate::config::v2::{schema::RuleDef, Effort, NoMistakesConfig};
+use crate::config::v2::{schema::RuleDef, AnalysisFallback, Effort, NoMistakesConfig};
 use anyhow::Result;
 pub use diagnostics::AnalysisDiagnostics;
 use std::path::{Path, PathBuf};
@@ -38,6 +38,7 @@ pub fn prepare_rule_analysis_with_support(
     config.materialize_analysis_defaults()?;
     let mut policies = Vec::new();
     let mut warnings = Vec::new();
+    let mut fallbacks = Vec::new();
     for rule in &config.rules {
         if !rule.enabled {
             policies.push(None);
@@ -72,10 +73,20 @@ pub fn prepare_rule_analysis_with_support(
                             "{}: effort low requires enabled partner `{partner}` covering this application's scope; falling back to max",
                             rule.name.as_deref().unwrap_or(&rule.rule)
                         ));
+                        fallbacks.push(AnalysisFallback {
+                            rule: rule.rule.clone(),
+                            partner: (*partner).to_owned(),
+                            requested: Effort::Low,
+                            effective: Effort::Max,
+                        });
                         policy.effort = Effort::Max;
                     }
                 }
             } else {
+                warnings.push(format!(
+                    "{}: requested effort low; effective effort max because this rule has no low implementation",
+                    rule.name.as_deref().unwrap_or(&rule.rule)
+                ));
                 policy.effort = Effort::Max;
             }
         }
@@ -85,6 +96,7 @@ pub fn prepare_rule_analysis_with_support(
         rule.resolved_analysis = policy;
     }
     config.analysis_warnings = warnings;
+    config.analysis_fallbacks = fallbacks;
     Ok(())
 }
 
