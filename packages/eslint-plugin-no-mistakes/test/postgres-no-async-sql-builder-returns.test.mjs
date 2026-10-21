@@ -421,6 +421,34 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       ["removeAsync"],
     );
+    // The arrow has no binding and is not hoisted. A discarded call after the
+    // const is ready. Returning the promise from the arrow stays silent,
+    // because the caller may still need that promise. An arrow that starts
+    // before the const is not ready.
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        [1].map(() => { build(); });
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        [1].map(() => build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        [1].map(() => { build(); });
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+      `),
+      [],
+    );
     // An exported helper is hoisted, so a cyclic import can call it before the const.
     assert.deepEqual(
       ids(

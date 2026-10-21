@@ -154,7 +154,8 @@ async function buildQuery(id: string) {
   including a call through another function, because removing `async` would
   throw before the rest of the module runs. An exported function is one of
   those calls: it is hoisted, so another module can run it before the
-  initializer. A later declarator in the same
+  initializer. An arrow or function expression with no binding is not hoisted,
+  so it is ready when that expression starts at or after the const. A later declarator in the same
   statement runs after the initializer and still reports.
   A module-level binding that is not that
   shape, including a module-level configured tag, is not judged SQL.

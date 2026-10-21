@@ -74,7 +74,10 @@ function hoistedExport(func, variable) {
 
 function functionRunsAfter(func, cutoff, context, seen) {
   const variable = boundVariable(func, context);
-  if (!variable || seen.has(variable)) return false;
+  // An unbound arrow or function expression is not hoisted, so it cannot run
+  // before its own start. A named function still follows every call site.
+  if (!variable) return func.range[0] >= cutoff;
+  if (seen.has(variable)) return false;
   if (hoistedExport(func, variable)) return false;
   seen.add(variable);
   let ready = true;
