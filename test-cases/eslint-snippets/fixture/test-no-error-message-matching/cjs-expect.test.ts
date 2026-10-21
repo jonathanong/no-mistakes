@@ -1,0 +1,12 @@
+const { expect } = require("vitest");
+
+declare const err: { message: string };
+
+test("cjs", () => {
+  expect(err.message).toBe("x");
+  // A parameter named expect is not the required matcher.
+  function helper(expect: (value: { message: string }) => { toBe(text: string): void }) {
+    expect(err.message).toBe("x");
+  }
+  helper(expect);
+});
