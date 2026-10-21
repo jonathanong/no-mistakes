@@ -140,7 +140,7 @@ impl ImportCollector {
         self.note_escaped_call(call);
         let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
         self.record_object_assign_providers(&callee, &arguments, &call.arguments, call.span.end);
-        self.value_flow.calls.push(ValueCall {
+        let value_call = ValueCall {
             context: self.current_function_id(),
             offset: call.span.start,
             end: call.span.end,
@@ -154,7 +154,9 @@ impl ImportCollector {
             once: self.current_function_id() == self.module_evaluation_owner
                 && self.repeat_depth == 0
                 && collect_helpers::direct_arrow(&call.callee),
-        });
+        };
+        self.note_array_push(&value_call);
+        self.value_flow.calls.push(value_call);
     }
 }
 

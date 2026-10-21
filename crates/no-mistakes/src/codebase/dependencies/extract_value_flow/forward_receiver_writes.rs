@@ -92,6 +92,8 @@ impl ImportCollector {
     }
 
     pub(in super::super) fn finish_forward_receiver_writes(&mut self) {
+        // Final aliases own argument recipients before either writer channel replays.
+        self.finish_possible_arguments();
         let Some(mut work) = self.forward_receiver_writes.take() else {
             return;
         };

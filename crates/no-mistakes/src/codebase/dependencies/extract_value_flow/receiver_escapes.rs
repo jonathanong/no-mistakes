@@ -56,6 +56,8 @@ pub(in super::super) struct Side {
     /// Array values from `let` bindings and later array assignments.
     arrays: Vec<StoredArray>,
     guarded_arrays: bool,
+    pushes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
+    pending_possible: Vec<escaped_possible_arguments::Pending>,
     /// Call span `(start, end)`, method, and the raw argument values. Spread and
     /// conditional shapes are also stored in the escaped maps under that same span.
     methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>, bool)>,
