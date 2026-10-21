@@ -48,7 +48,7 @@ function logicalCall(node) {
       continue;
     }
     if (callee?.type !== "MemberExpression") break;
-    const name = propertyName(callee.property);
+    const name = memberPropertyName(callee);
     if (name !== "call" && name !== "apply") break;
     if (name === "call") {
       if (args.some((arg) => arg?.type === "SpreadElement")) return null;

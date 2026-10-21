@@ -54,6 +54,22 @@ describe("call-binding recall", () => {
     );
     assert.equal(
       messages(
+        fixture("async-call-disposition/call-method.mjs"),
+        "async-call-disposition",
+        {
+          targets: [
+            {
+              sourceSpecifierPatterns: ["@app/jobs"],
+              calleeNamePatterns: ["call", "enqueueEmail"],
+            },
+          ],
+        },
+        "call-method.mjs",
+      ).length,
+      2,
+    );
+    assert.equal(
+      messages(
         fixture("async-try-catch-return-await/recall.mjs"),
         "async-try-catch-return-await",
         handlers,

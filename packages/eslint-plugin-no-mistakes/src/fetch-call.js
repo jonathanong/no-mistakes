@@ -49,6 +49,7 @@ function bindingVariable(node, context) {
 }
 
 function fetchCallee(node, context, seen) {
+  if (!node) return false;
   const visiting = seen || new Set();
   if (node.type === "MemberExpression") {
     if (memberPropertyName(node) !== "fetch") return false;
@@ -63,7 +64,10 @@ function fetchCallee(node, context, seen) {
     visiting.add(variable);
     const def = variable.defs[0];
     if (def.type !== "Variable" || def.parent?.kind !== "const") return false;
-    if (def.node.id.type === "Identifier") return fetchCallee(def.node.init, context, visiting);
+    if (def.node.id.type === "Identifier") {
+      if (!def.node.init) return false;
+      return fetchCallee(def.node.init, context, visiting);
+    }
     if (def.node.id.type !== "ObjectPattern") return false;
     for (const item of def.node.id.properties) {
       if (item.type === "Property") {

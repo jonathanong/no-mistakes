@@ -89,10 +89,10 @@ module.exports = Object.assign(
           selectors.record(node);
         },
         CallExpression(node) {
-          const invoked = logicalCall(node);
+          const resolved = matcher?.resolveCallTarget(node) || null;
+          const invoked = resolved ? { arguments: resolved.arguments } : logicalCall(node);
           if (!invoked) return;
           if (matcher) {
-            const resolved = matcher.resolveCallTarget(node);
             if (resolved) {
               for (const target of matchingTargets(
                 optionTargets,
@@ -121,7 +121,7 @@ module.exports = Object.assign(
               suppressed,
               fallback,
               reported,
-              invoked.arguments,
+              match.arguments,
             );
           }
         },

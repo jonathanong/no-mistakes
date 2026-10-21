@@ -187,9 +187,13 @@ function createTargetMatcher(context, optionKey = "targets") {
   }
 
   function resolveCallTarget(node) {
+    if (node?.type !== "CallExpression") return null;
+    const direct = resolveCallee(node.callee);
+    if (direct) return { ...direct, arguments: node.arguments };
     const invoked = logicalCall(node);
     if (!invoked) return null;
-    return resolveCallee(invoked.callee);
+    const forwarded = resolveCallee(invoked.callee);
+    return forwarded ? { ...forwarded, arguments: invoked.arguments } : null;
   }
 
   return {

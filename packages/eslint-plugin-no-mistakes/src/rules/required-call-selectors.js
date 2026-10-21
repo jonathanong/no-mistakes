@@ -147,13 +147,17 @@ function createCallSelectors(context, options) {
     },
     matches(node) {
       if (!hasTargets) return [];
+      const collect = (callee, args) => {
+        const found = [];
+        pushGlobals(callee, found);
+        pushMembers(callee, found);
+        return found.map((match) => ({ ...match, arguments: args }));
+      };
+      const direct = collect(unwrapExpression(node.callee), node.arguments);
+      if (direct.length) return direct;
       const invoked = logicalCall(node);
       if (!invoked) return [];
-      const found = [];
-      const callee = unwrapExpression(invoked.callee);
-      pushGlobals(callee, found);
-      pushMembers(callee, found);
-      return found;
+      return collect(unwrapExpression(invoked.callee), invoked.arguments);
     },
   };
 }
