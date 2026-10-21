@@ -110,6 +110,12 @@ callee names such as `navigateTo` or `navigation.navigateTo`, not helper-module
 paths. These names are not filesystem references. Negative selectors and empty
 values are ignored.
 
+## Counterexample
+
+```json
+{ "name": "app", "scripts": { "test": "vitest --config missing.config.ts" } }
+```
+
 ## Suppression
 
 JSON cannot carry directives, so narrow `files`, `keys`, or `presets` with

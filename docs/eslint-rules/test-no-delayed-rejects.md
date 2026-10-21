@@ -9,17 +9,21 @@ rejection as unhandled.
 ## Disallowed
 
 ```ts
-const update = updateCommunityAgentPrompt(input);
-await releaseLock();
-await expect(update).rejects.toMatchObject({ status: 403 });
+async function rejectsWhenLocked() {
+  const update = updateCommunityAgentPrompt(input);
+  await releaseLock();
+  await expect(update).rejects.toMatchObject({ status: 403 });
+}
 ```
 
 The rule also recognizes the literal computed form and clean `expect.soft`:
 
 ```ts
-const update = updateCommunityAgentPrompt(input);
-await releaseLock();
-await expect.soft(update)["rejects"].toThrow();
+async function rejectsWhenLockedSoft() {
+  const update = updateCommunityAgentPrompt(input);
+  await releaseLock();
+  await expect.soft(update)["rejects"].toThrow();
+}
 ```
 
 ## Allowed
@@ -28,17 +32,21 @@ Capture the rejection immediately, then assert the non-rejecting capture after
 coordination completes:
 
 ```ts
-const update = updateCommunityAgentPrompt(input);
-const rejection = update.catch((error: unknown) => error);
-await releaseLock();
-await expect(rejection).resolves.toMatchObject({ status: 403 });
+async function observesBeforeCoordination() {
+  const update = updateCommunityAgentPrompt(input);
+  const rejection = update.catch((error: unknown) => error);
+  await releaseLock();
+  await expect(rejection).resolves.toMatchObject({ status: 403 });
+}
 ```
 
 An assertion attached before any coordination await is also allowed:
 
 ```ts
-const update = updateCommunityAgentPrompt(input);
-await expect(update).rejects.toThrow();
+async function assertsImmediately() {
+  const update = updateCommunityAgentPrompt(input);
+  await expect(update).rejects.toThrow();
+}
 ```
 
 Directly awaiting the promise or passing it directly in an array to built-in

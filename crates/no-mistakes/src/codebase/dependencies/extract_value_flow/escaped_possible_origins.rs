@@ -8,6 +8,8 @@ pub(in super::super::super) fn absorb_possible(
     let side = &collector.receiver_escapes;
     if side.possible_escaped.is_empty()
         && side.possible_open.is_empty()
+        && side.guarded_escaped.is_empty()
+        && side.guarded_open.is_empty()
         && !side.methods.iter().any(|(_, _, _, _, possible)| *possible)
     {
         return;
@@ -45,7 +47,13 @@ fn apply(
     collector: &ImportCollector,
     call: (u32, u32),
 ) {
-    if let Some(extras) = collector.receiver_escapes.possible_escaped.get(&call) {
+    for extras in [
+        collector.receiver_escapes.possible_escaped.get(&call),
+        collector.receiver_escapes.guarded_escaped.get(&call),
+    ]
+    .into_iter()
+    .flatten()
+    {
         for (index, extra) in extras {
             if let Some(key) = parameters.get(index) {
                 values
@@ -55,7 +63,13 @@ fn apply(
             }
         }
     }
-    if let Some((start, extra)) = collector.receiver_escapes.possible_open.get(&call) {
+    for (start, extra) in [
+        collector.receiver_escapes.possible_open.get(&call),
+        collector.receiver_escapes.guarded_open.get(&call),
+    ]
+    .into_iter()
+    .flatten()
+    {
         for (index, key) in parameters {
             if index >= start {
                 values

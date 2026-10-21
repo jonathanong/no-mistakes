@@ -52,6 +52,10 @@ fn record_assignment_target_writes(
     offset: u32,
     completed_at: u32,
 ) {
+    let previous_completion = collector
+        .receiver_escapes
+        .parameter_completion
+        .replace((offset, completed_at));
     for (name, path, start) in extract_value_flow::write_targets::targets(target) {
         let previous = collector.assignment_target_start.replace(start);
         if !record_static_setter_assignment(collector, &name, offset)
@@ -70,6 +74,7 @@ fn record_assignment_target_writes(
         }
         collector.assignment_target_start = previous;
     }
+    collector.receiver_escapes.parameter_completion = previous_completion;
 }
 
 fn visit_assignment_expression_with_receiver_effects<'a>(

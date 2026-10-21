@@ -24,7 +24,7 @@ env:
 jobs:
   changes:
     name: Detect benchmark changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     outputs:
       benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
@@ -313,6 +313,7 @@ jobs:
           packages/no-mistakes/scripts/real-napi-api.test.js
           packages/no-mistakes/scripts/sql-verdicts-api.test.js
           packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js
+          packages/no-mistakes/scripts/guarded-array-receiver-api.test.js
           packages/no-mistakes/scripts/forward-receiver-alias-api.test.js
           packages/no-mistakes/scripts/lexical-member-replacement-api.test.js
           packages/no-mistakes/scripts/exported-value-receiver-api.test.js
@@ -468,7 +469,7 @@ jobs:
         run: |
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
-          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js --coverage=false
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js packages/no-mistakes/scripts/guarded-array-receiver-api.test.js --coverage=false
 
       - name: Report native job timing
         if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
@@ -483,6 +484,56 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
           WORKFLOW_NAME: ${{ github.workflow }}
         run: node .github/scripts/report-native-job-timing.cjs
+
+  tests-standalone-lib:
+    name: Standalone library tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          shared-key: standalone-lib
+
+      - name: Start isolated PostgreSQL for catalog fixtures
+        timeout-minutes: 5
+        run: |
+          # PostgreSQL 18 exactly: the committed catalog fixture uses VIRTUAL generated columns
+          # and PostgreSQL 18 deparse text, which differs between major versions. The package
+          # includes the contrib extensions that the extension-exclusion tests install.
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-18
+          pg_bin=/usr/lib/postgresql/18/bin
+          test -f /usr/share/postgresql/18/extension/citext.control
+          test -f /usr/share/postgresql/18/extension/pg_stat_statements.control
+          echo "$pg_bin" >> "$GITHUB_PATH"
+          "$pg_bin/initdb" -D "$RUNNER_TEMP/no-mistakes-postgres" --auth=trust --no-locale -E UTF8
+          "$pg_bin/pg_ctl" -D "$RUNNER_TEMP/no-mistakes-postgres" -l "$RUNNER_TEMP/no-mistakes-postgres.log" -o "-k $RUNNER_TEMP -p 56225 -c listen_addresses=" start
+          echo "NO_MISTAKES_TEST_POSTGRES_URL=postgresql://$USER@localhost/postgres?host=$RUNNER_TEMP&port=56225" >> "$GITHUB_ENV"
+          echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"
+
+      - name: Test standalone Rust library without a CLI build
+        timeout-minutes: 10
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/standalone-lib-target
+          CARGO_INCREMENTAL: "0"
+        run: |
+          trap 'rm -rf "$CARGO_TARGET_DIR"' EXIT
+          env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
+          test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
 
   tests:
     name: Rust tests and coverage
@@ -529,16 +580,6 @@ jobs:
           "$pg_bin/pg_ctl" -D "$RUNNER_TEMP/no-mistakes-postgres" -l "$RUNNER_TEMP/no-mistakes-postgres.log" -o "-k $RUNNER_TEMP -p 56225 -c listen_addresses=" start
           echo "NO_MISTAKES_TEST_POSTGRES_URL=postgresql://$USER@localhost/postgres?host=$RUNNER_TEMP&port=56225" >> "$GITHUB_ENV"
           echo "PGOPTIONS=-cstandard_conforming_strings=off" >> "$GITHUB_ENV"
-
-      - name: Test standalone Rust library without a CLI build
-        timeout-minutes: 10
-        env:
-          CARGO_TARGET_DIR: ${{ runner.temp }}/standalone-lib-target
-          CARGO_INCREMENTAL: "0"
-        run: |
-          trap 'rm -rf "$CARGO_TARGET_DIR"' EXIT
-          env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
-          test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
 
       - name: Clean Rust coverage artifacts
         timeout-minutes: 2
@@ -674,8 +715,9 @@ jobs:
       - javascript-tests
       - native-tests
       - tests
+      - tests-standalone-lib
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
 
     steps:
@@ -686,9 +728,10 @@ jobs:
           JAVASCRIPT_RESULT: ${{ needs.javascript-tests.result }}
           NATIVE_RESULT: ${{ needs.native-tests.result }}
           RUST_RESULT: ${{ needs.tests.result }}
+          STANDALONE_RESULT: ${{ needs.tests-standalone-lib.result }}
         run: |
-          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" ]]; then
-            echo "Quality checks, JavaScript tests, native tests, or Rust coverage failed." >&2
+          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" || "$STANDALONE_RESULT" != "success" ]]; then
+            echo "Quality checks, JavaScript tests, native tests, standalone library tests, or Rust coverage failed." >&2
             exit 1
           fi
 
@@ -927,6 +970,10 @@ jobs:
             mode: simulation
             filter: ""
             benchmark-shard: query
+          - name: CPU query indexes
+            mode: simulation
+            filter: ""
+            benchmark-shard: query-indexes
           - name: memory check
             mode: memory
             filter: ""
@@ -971,6 +1018,10 @@ jobs:
             mode: memory
             filter: ""
             benchmark-shard: query
+          - name: memory query indexes
+            mode: memory
+            filter: ""
+            benchmark-shard: query-indexes
     env:
       BENCHMARK_FILTER: ${{ matrix.filter }}
       BENCHMARK_SELECTED: ${{ needs.changes.outputs.benchmark-scope == 'all' || contains(needs.changes.outputs.benchmark-scope, matrix.benchmark-shard) }}
@@ -1174,7 +1225,7 @@ jobs:
       - bench
       - benchmark-shards
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
 
     steps:

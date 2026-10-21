@@ -1,5 +1,11 @@
 # `no-raw-ephemeral-port`
 
+## Counterexample
+
+```ts
+export const port = 0;
+```
+
 ## Suppression
 
 Use a next-line directive for a one-off bind or a file directive for the
@@ -25,6 +31,11 @@ and TypeScript forms, including Node `listen(0)` and `{ port: 0 }`.
 
 `server.listen(listenPort)` passes because an allocator supplies the port
 instead of a raw literal zero.
+
+```ts
+export const port = Number(process.env.PORT);
+```
+
 
 ## Related rules
 

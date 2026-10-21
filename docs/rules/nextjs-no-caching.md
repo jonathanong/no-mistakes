@@ -1,5 +1,13 @@
 # `nextjs-no-caching`
 
+## Counterexample
+
+```ts
+// app/page.tsx
+export const revalidate = 60;
+export default function Page() { return null; }
+```
+
 ## Suppression
 
 Use a line directive for a documented cache escape hatch or a file directive
@@ -26,6 +34,13 @@ analyzer.
 
 A selected server component with no cache directive, cached fetch, or configured
 cache helper passes.
+
+```ts
+// app/page.tsx
+export const dynamic = 'force-dynamic';
+export default function Page() { return null; }
+```
+
 
 ## Related rules
 

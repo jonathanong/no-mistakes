@@ -118,6 +118,11 @@ One `fn_reject_mutation()` that raises `'% is immutable', TG_TABLE_NAME`.
 because the called name is kept. The same body in `sql` and `plpgsql` does not
 match. `minTokens: 12` ignores the six-token always-raise copies.
 
+```sql
+CREATE FUNCTION add(a int, b int) RETURNS int LANGUAGE sql AS $$ SELECT a + b $$;
+```
+
+
 ## Counterexample
 
 `fn_reject_orders_update`, `fn_reject_invoices_update`, and
@@ -125,6 +130,12 @@ match. `minTokens: 12` ignores the six-token always-raise copies.
 including a copy that uses `USING ERRCODE`, a format argument, or `END;`.
 `NEW.title IS DISTINCT FROM OLD.title` matches `NEW.body IS DISTINCT FROM
 OLD.body` while `normalizeIdentifiers` is true.
+
+```sql
+CREATE FUNCTION add(a int, b int) RETURNS int LANGUAGE sql AS $$ SELECT a + b $$;
+CREATE FUNCTION plus(a int, b int) RETURNS int LANGUAGE sql AS $$ SELECT a + b $$;
+```
+
 
 ## Fix
 

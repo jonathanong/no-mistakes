@@ -25,6 +25,8 @@ const {
   replaceNative,
   measurementEnvironment,
   reportedSample,
+  TIMEOUT_ARGS,
+  terminateLeftoverCheckProcesses,
 } = require("./hosted-check-runtime.cjs");
 const { artifactBuilds } = require("./hosted-check-provenance.cjs");
 
@@ -87,8 +89,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
             "-f",
             "elapsed=%e\nuser=%U\nsystem=%S\nrss_kib=%M\nexit=%x",
             "timeout",
-            "--signal=TERM",
-            "--kill-after=5s",
+            ...TIMEOUT_ARGS,
             `${COLLECTION_DEADLINE_SECONDS}s`,
             "pnpm",
             ...checkArgs,
@@ -124,10 +125,36 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
       });
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
+      if (!successful(sample)) {
+        try {
+          writeFileSync(
+            `${prefix}.processes.txt`,
+            command("ps", ["-eo", "pid,ppid,pgid,etime,pcpu,rss,comm"], fixture),
+          );
+        } catch (error) {
+          writeFileSync(`${prefix}.processes.txt`, String(error));
+        }
+      }
+      try {
+        terminateLeftoverCheckProcesses({
+          psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
+          nativePath: native,
+        });
+      } catch (error) {
+        writeFileSync(`${prefix}.leftover-kill.txt`, String(error));
+      }
       console.log(JSON.stringify(sample));
       if (variant === "candidate" && !successful(sample)) failed = true;
     }
   } finally {
+    try {
+      terminateLeftoverCheckProcesses({
+        psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
+        nativePath: native,
+      });
+    } catch {
+      // Restore the consumer launcher even if leftover cleanup fails.
+    }
     replaceNative(original, native);
   }
   if (hashFile(join(fixture, ".no-mistakes.yml")) !== configBefore)
@@ -160,4 +187,11 @@ if (require.main === module) {
   }
 }
 
-module.exports = { CHECK_ARGS, COLLECTION_DEADLINE_SECONDS, parseTime, successful, aggregate };
+module.exports = {
+  CHECK_ARGS,
+  TIMEOUT_ARGS,
+  COLLECTION_DEADLINE_SECONDS,
+  parseTime,
+  successful,
+  aggregate,
+};

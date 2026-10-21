@@ -75,11 +75,21 @@ fails configuration.
 `CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()`.
 `order_events` has neither the column nor the trigger.
 
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, updated_at timestamptz);
+```
+
+
 ## Counterexample
 
 `orders` has `updated_at` and no `BEFORE UPDATE FOR EACH ROW` trigger executing
 `fn_touch_updated_at()`. A trigger that only runs `BEFORE UPDATE OF status` is
 also reported when it is the only candidate.
+
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, updated_at timestamptz);
+```
+
 
 ## Fix
 

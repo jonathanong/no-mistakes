@@ -36,6 +36,17 @@ are `private`, `type`, `license`, `requireScopedName`,
 A selected manifest containing each required field with the configured shape
 passes.
 
+```json
+{ "name": "@app/web", "version": "1.0.0", "private": true, "type": "module" }
+```
+
+
+## Counterexample
+
+```json
+{ "name": "web" }
+```
+
 ## Suppression and related rules
 
 JSON cannot contain directives, so narrow the configuration for exceptional

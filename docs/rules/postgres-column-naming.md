@@ -107,6 +107,11 @@ replaces the built-in finding text.
 fails `full-name`. `premium_accounts.id` and a self-reference
 `categories.parent_id` are skipped while `checkSelfReferences` is false.
 
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, user_id uuid NOT NULL);
+```
+
+
 ## Counterexample
 
 `invoices.due` (`timestamp with time zone`) does not match `_at$`.
@@ -118,6 +123,11 @@ and `item_id` referencing `articles.id` still fail target matching.
 `article_id` when `targetMatch` is `last-word`. `sessions.reviewer_user_id`
 (`uuid`) with no foreign key uses a reserved `_user_id` suffix.
 `comments.target_table` matches a forbidden table-name pattern.
+
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, userId uuid NOT NULL);
+```
+
 
 ## Fix
 

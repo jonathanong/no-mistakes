@@ -40,6 +40,12 @@ Fix: wrap the work as `() => _ = FooAsync()` so the delegate stays synchronous.
 - `allow` — path globs to skip
 - `message` — extra hint appended to the finding
 
+## Counterexample
+
+```cs
+class Bad { async void Run() { } }
+```
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line csharp-no-async-void-delegate` on the lambda

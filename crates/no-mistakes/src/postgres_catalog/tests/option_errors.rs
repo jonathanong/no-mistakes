@@ -20,11 +20,34 @@ fn rejects_empty_or_nul_search_path_schema_names() {
     }
 }
 
+struct RestoreEnvVar {
+    key: &'static str,
+    previous: Option<std::ffi::OsString>,
+}
+
+impl RestoreEnvVar {
+    fn set(key: &'static str, value: &str) -> Self {
+        let previous = std::env::var_os(key);
+        // The name is unique to this test. Restore on drop so a panic in
+        // `generate` cannot leave the empty value in the process.
+        std::env::set_var(key, value);
+        Self { key, previous }
+    }
+}
+
+impl Drop for RestoreEnvVar {
+    fn drop(&mut self) {
+        match self.previous.take() {
+            Some(value) => std::env::set_var(self.key, value),
+            None => std::env::remove_var(self.key),
+        }
+    }
+}
+
 #[test]
 fn rejects_an_empty_connection_environment_variable() {
     const VAR: &str = "NO_MISTAKES_TEST_EMPTY_PG_URL";
-    let previous = std::env::var_os(VAR);
-    std::env::set_var(VAR, "");
+    let _restore = RestoreEnvVar::set(VAR, "");
     let error = generate(&PostgresCatalogOptions {
         connection_env: VAR.into(),
         schema: "public".into(),
@@ -33,10 +56,6 @@ fn rejects_an_empty_connection_environment_variable() {
         current_database: None,
     })
     .unwrap_err();
-    match previous {
-        Some(value) => std::env::set_var(VAR, value),
-        None => std::env::remove_var(VAR),
-    }
     assert!(
         error
             .to_string()

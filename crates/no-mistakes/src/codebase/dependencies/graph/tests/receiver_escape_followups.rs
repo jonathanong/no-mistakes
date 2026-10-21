@@ -157,10 +157,11 @@ fn guarded_array_keeps_both_origins(file: &str, newly_recovered: bool) {
     let (built, root) = graph();
     if newly_recovered {
         assert_possible_export(&built, &root, file, "replica.get");
+        assert_possible_export(&built, &root, file, "untouched.get");
     } else {
         assert_unknown(&built, &root, file, "replica.get");
+        assert_unknown(&built, &root, file, "untouched.get");
     }
-    assert_unknown(&built, &root, file, "untouched.get");
     for callee in ["primary.get", "replica.info", "unrelated.get"] {
         assert_export(&built, &root, file, callee);
     }
@@ -233,8 +234,8 @@ fn guarded_array_effects_preserve_the_baseline_call_sites() {
         None,
     )
     .unwrap();
-    // These four matches were reported before the guarded origin was recovered.
-    // Widening that target to possible+unknown must not silence an existing effect.
+    // Keep all four earlier matches and recover the latest guarded origin too.
+    // Both guarded branches retain their exact original export plus Unknown.
     let observed = report
         .call_sites
         .iter()
@@ -244,6 +245,7 @@ fn guarded_array_effects_preserve_the_baseline_call_sites() {
         observed,
         [
             ("src/array-reassign-conditional.mts", 12, "replica.get"),
+            ("src/array-reassign-conditional.mts", 13, "untouched.get"),
             ("src/array-reassign-conditional.mts", 14, "primary.get"),
             ("src/array-reassign-conditional.mts", 15, "replica.info"),
             ("src/array-reassign-conditional.mts", 16, "unrelated.get"),
@@ -474,7 +476,7 @@ fn retained_possible_foreign_writes_keep_later_providers_possible() {
     for callee in ["primary.get", "replica.get"] {
         assert_possible_export(&built, &root, "array-guarded-foreign-provider", callee);
     }
-    assert_unknown(
+    assert_possible_export(
         &built,
         &root,
         "array-guarded-foreign-provider",

@@ -38,3 +38,6 @@ mod observer_tests;
 
 #[cfg(test)]
 mod reference_binding_tests;
+
+#[cfg(test)]
+pub(super) mod value_equality_test_support;

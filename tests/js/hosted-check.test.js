@@ -12,13 +12,19 @@ const {
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
+  TIMEOUT_ARGS,
   COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
 const { relativeLimits } = require("../../.github/scripts/hosted-check-budget.cjs");
-const { reportedSample } = require("../../.github/scripts/hosted-check-runtime.cjs");
+const {
+  reportedSample,
+  leftoverCheckPids,
+  terminateLeftoverCheckProcesses,
+  LEFTOVER_KILL_GRACE_MS,
+} = require("../../.github/scripts/hosted-check-runtime.cjs");
 const { cases, samplePair } = require("./hosted-check-fixtures.cjs");
 
 test("keeps the consumer's exact default command and separate collection cap", () => {
@@ -32,6 +38,63 @@ test("keeps the consumer's exact default command and separate collection cap", (
     "check",
   ]);
   assert.equal(COLLECTION_DEADLINE_SECONDS, 600);
+  assert.deepEqual(TIMEOUT_ARGS, ["--foreground", "--signal=TERM", "--kill-after=5s"]);
+  assert.equal(LEFTOVER_KILL_GRACE_MS, 5000);
+});
+
+test("kills leftover analyzers that timeout --foreground cannot reach", () => {
+  // Prefix binaries, pnpm exec, the npm shim, and the harness itself must stay unmatched.
+  const nativePath = "/tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes";
+  const leftover = readFileSync(
+    join(__dirname, "../../fixtures/hosted-check/leftover-processes.ps"),
+    "utf8",
+  );
+  const clean = readFileSync(
+    join(__dirname, "../../fixtures/hosted-check/leftover-processes-clean.ps"),
+    "utf8",
+  );
+  assert.deepEqual(leftoverCheckPids(leftover, nativePath, 4242), [77, 88]);
+  assert.throws(() => leftoverCheckPids(leftover, "", 4242), /nativePath/);
+
+  const signals = [];
+  const sleeps = [];
+  assert.deepEqual(
+    terminateLeftoverCheckProcesses({
+      psOutput: leftover,
+      nativePath,
+      selfPid: 4242,
+      kill: (pid, signal) => {
+        signals.push([pid, signal]);
+        if (pid === 77 && signal === "SIGTERM") throw new Error("ESRCH");
+        if (pid === 88 && signal === "SIGKILL") throw new Error("ESRCH");
+      },
+      sleep: (ms) => sleeps.push(ms),
+    }),
+    [77, 88],
+  );
+  assert.deepEqual(signals, [
+    [77, "SIGTERM"],
+    [88, "SIGTERM"],
+    [77, "SIGKILL"],
+    [88, "SIGKILL"],
+  ]);
+  assert.deepEqual(sleeps, [LEFTOVER_KILL_GRACE_MS]);
+  assert.deepEqual(
+    terminateLeftoverCheckProcesses({
+      psOutput: clean,
+      nativePath,
+      kill: () => {
+        throw new Error("should not kill");
+      },
+      sleep: () => {
+        throw new Error("should not sleep");
+      },
+    }),
+    [],
+  );
+
+  const measure = readFileSync(join(__dirname, "../../.github/scripts/hosted-check.cjs"), "utf8");
+  assert.equal(measure.split("terminateLeftoverCheckProcesses").length - 1, 3);
 });
 
 test("finds the published manifest without requesting a private package export", () => {
@@ -303,7 +366,7 @@ test("retains valid calibration proposals and reports every failed cohort", () =
   groups.delete(`${fixtures[1]}/auto/baseline`);
   const report = budgetReport(groups, budgets, false);
   assert.equal(report.failures.length, 3);
-  assert.ok(report.failures.some((failure) => failure.includes("Calibration requires")));
+  assert.ok(report.failures.some((failure) => failure.includes("Candidate did not complete")));
   assert.ok(report.failures.some((failure) => failure.includes("elapsed 50 exceeds")));
   assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/baseline`)));
   assert.equal(Object.keys(report.proposed).length, 5);

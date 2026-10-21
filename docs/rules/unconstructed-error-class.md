@@ -242,10 +242,14 @@ An abstract or shared base is satisfied when a subclass exists:
 ```ts
 export abstract class AppError extends Error {}
 export class ValidationError extends AppError {}
+
+export function fail() {
+  throw new ValidationError("invalid");
+}
 ```
 
-`AppError` is used because `ValidationError` extends it. `ValidationError` is
-reported until something constructs it.
+`AppError` is used because `ValidationError` extends it. Construct
+`ValidationError` so the subclass is not reported.
 
 ## Counterexample
 

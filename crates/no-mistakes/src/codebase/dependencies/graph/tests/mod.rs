@@ -182,3 +182,7 @@ mod opaque_entry_preparation;
 mod lexical_member_replacements;
 
 mod guarded_array_replay;
+mod guarded_latest_origins;
+
+#[path = "guarded_parameter_identity.rs"]
+mod guarded_parameter_identity;

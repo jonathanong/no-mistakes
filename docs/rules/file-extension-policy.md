@@ -19,10 +19,23 @@ and `bannedExtensions`; no implicit scope or banned-extension default exists.
 
 A `.ts` file under a scope banning `.js` and `.jsx` passes.
 
+```ts
+// src/app.ts
+export const ok = 1;
+```
+
+
 ## Related rules
 
 [`banned-paths`](banned-paths.md) bans specific path shapes and
 [`banned-renamed-files`](banned-renamed-files.md) bans migration names.
+
+## Counterexample
+
+```js
+// src/legacy.js
+export const bad = 1;
+```
 
 ## Suppression
 

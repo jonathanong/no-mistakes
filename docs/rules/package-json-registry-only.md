@@ -24,10 +24,21 @@ lockfile, is reported instead of passing with no findings.
 A scoped dependency and its lockfile resolution both pointing at the configured
 registry pass.
 
+```json
+{ "name": "@app/web", "version": "1.0.0" }
+```
+
+
 ## Related rules
 
 [`lockfile-allowlist`](lockfile-allowlist.md) limits lockfile formats and
 [`pnpm-release-age-policy`](pnpm-release-age-policy.md) governs pnpm policy.
+
+## Counterexample
+
+```json
+{ "name": "@app/web", "version": "1.0.0", "dependencies": { "left-pad": "file:../vendor/left-pad" } }
+```
 
 ## Suppression
 

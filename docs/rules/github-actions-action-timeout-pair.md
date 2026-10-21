@@ -17,6 +17,27 @@ unrelated composite actions are forbidden by default.
 The fixed workflow below is valid: every matching caller step has a literal
 `timeout-minutes`, and the third-party action receives a numeric nested timeout.
 
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        timeout-minutes: 5
+```
+
+
+## Counterexample
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+```
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line github-actions-action-timeout-pair` on the

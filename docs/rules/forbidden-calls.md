@@ -182,6 +182,12 @@ setTimeout(complete, 1);
 Counterexample: configuring a root without a target (and without
 `unknownCalls: finding`) is invalid; suppressions cannot hide that error.
 
+## Counterexample
+
+```ts
+setTimeout(() => {}, 0);
+```
+
 ## Fix
 
 Inject the behavior, use the repository's approved wrapper, or narrow the rule

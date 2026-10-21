@@ -8,13 +8,21 @@ ReactNode-like value can accidentally replace an intentional nullish render.
 ## Disallowed
 
 ```tsx
-return <section>{children ?? <EmptyState />}</section>;
+import type { ReactNode } from "react";
+
+export function Panel({ children }: { children: ReactNode }) {
+  return <section>{children ?? <EmptyState />}</section>;
+}
 ```
 
 ## Allowed
 
 ```tsx
-return <section>{children === undefined ? <EmptyState /> : children}</section>;
+import type { ReactNode } from "react";
+
+export function Panel({ children }: { children: ReactNode }) {
+  return <section>{children === undefined ? <EmptyState /> : children}</section>;
+}
 ```
 
 ## Options

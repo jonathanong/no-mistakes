@@ -1,4 +1,4 @@
-import { primary, replica, untouched, unrelated } from '@vendor/valkey';
+import { primary, replica, untouched, unrelated } from '@vendor/valkey'; // guarded-array-receiver-api.test.js locks lines 12–16.
 declare const flag: boolean;
 function replacement() {}
 let box = { client: primary };

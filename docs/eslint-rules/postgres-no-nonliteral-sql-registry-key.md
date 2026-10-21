@@ -66,6 +66,15 @@ the rule does not validate that key at runtime.
 
 ## Options
 
+```js
+{
+  "no-mistakes/postgres-no-nonliteral-sql-registry-key": [
+    "error",
+    { importSpecifier: "@example/db" },
+  ],
+}
+```
+
 `importSpecifier` selects the module whose named imports are executors.
 `executorNames` defaults to `["query", "read", "write"]` when `importSpecifier`
 is set, and must be set (use `[]` for no calls) when `importSpecifier` is

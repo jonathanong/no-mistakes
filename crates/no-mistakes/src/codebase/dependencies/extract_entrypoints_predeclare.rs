@@ -83,6 +83,7 @@ fn predeclare_variable_bindings(
             }
         }
         collector.add_binding_names(&declarator.id);
+        collector.note_predeclared_array_binding(&declarator.id, declaration.kind);
     }
 }
 

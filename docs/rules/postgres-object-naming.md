@@ -157,6 +157,11 @@ configuration errors.
 `account_people` ends in the irregular plural `people`. `orders_pkey` is
 skipped while `checkConstraintBackedIndexes` stays at its default `false`.
 
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY);
+```
+
+
 ## Counterexample
 
 ```text

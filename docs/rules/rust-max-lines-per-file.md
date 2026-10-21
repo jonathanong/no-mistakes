@@ -7,8 +7,8 @@ rules:
   - rule: rust-max-lines-per-file
     scope: repository
     options:
-      srcMax: 200
-      testMax: 500
+      srcMax: 3
+      testMax: 10
 ```
 
 Counterexample: a 900-line Rust source file. Blank lines and comments are ignored, but Rust string and raw-string literal contents still count as code lines because they are part of the file body.
@@ -42,6 +42,16 @@ pub fn parse(input: &str) -> Result<(), Error> { todo!() }
 
 One source file contains unrelated parsing, HTTP, storage, and hundreds of
 inline fixture lines beyond `srcMax`.
+
+```rust
+pub fn too_long() {
+    let a = 1;
+    let b = 2;
+    let c = 3;
+    let d = 4;
+}
+```
+
 
 ## Fix
 

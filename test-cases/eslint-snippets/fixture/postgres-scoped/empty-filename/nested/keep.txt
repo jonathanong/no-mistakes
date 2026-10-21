@@ -1,0 +1,1 @@
+The empty-filename child changes directory here so path.resolve("") walks up into package.json.
