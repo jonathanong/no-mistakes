@@ -13,6 +13,10 @@ function resolveVariable(node, context) {
 }
 
 function baseIdentifier(callee) {
+  if (callee?.type === "ChainExpression") return baseIdentifier(callee.expression);
+  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
+    return baseIdentifier(callee.expressions.at(-1));
+  }
   if (callee?.type === "Identifier") return callee;
   if (callee?.type === "CallExpression") return baseIdentifier(callee.callee);
   if (callee?.type === "MemberExpression") return baseIdentifier(callee.object);
@@ -51,6 +55,10 @@ function hasOwnProperty(callee, name) {
 // Recursively checks the whole callee chain (member accesses and call results) for a
 // non-computed property named `name`, e.g. `hasProperty(test.describe.only, "describe")`.
 function hasProperty(callee, name) {
+  if (callee?.type === "ChainExpression") return hasProperty(callee.expression, name);
+  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
+    return hasProperty(callee.expressions.at(-1), name);
+  }
   if (hasOwnProperty(callee, name)) return true;
   if (callee?.type === "MemberExpression") return hasProperty(callee.object, name);
   if (callee?.type === "CallExpression") return hasProperty(callee.callee, name);
@@ -66,7 +74,9 @@ function isDescribeBinding(
   isKnownTestCallee,
 ) {
   let current = node;
-  while (current?.type === "ChainExpression") current = current.expression;
+  while (current?.type === "ChainExpression" || current?.type === "SequenceExpression") {
+    current = current.type === "ChainExpression" ? current.expression : current.expressions.at(-1);
+  }
   if (current?.type === "Identifier") {
     return current.name === "describe" || testAliases.isDescribeAliasCall(current);
   }

@@ -35,6 +35,9 @@ function resolveFunctionCallback(context, node, callback) {
 
 function calleeHasProperty(callee, name) {
   while (callee?.type === "ChainExpression") callee = callee.expression;
+  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
+    return calleeHasProperty(callee.expressions.at(-1), name);
+  }
   if (!callee) return false;
   if (callee.type === "Identifier") return callee.name === name;
   if (callee.type === "CallExpression") return calleeHasProperty(callee.callee, name);
