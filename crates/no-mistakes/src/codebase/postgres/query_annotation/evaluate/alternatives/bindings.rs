@@ -2,6 +2,14 @@ use super::super::Value;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::FxHashMap;
 
+#[cfg(not(test))]
+#[macro_use]
+mod binding_scan_count;
+#[cfg(test)]
+#[path = "bindings/binding_scan_count/tests.rs"]
+#[macro_use]
+mod binding_scan_count;
+
 fn scalar(value: &Value) -> bool {
     match value {
         Value::Unknown | Value::Prefix(_, _, None) => true,
@@ -54,12 +62,18 @@ pub(super) fn join_with_sql(
     original: &[Scope],
     whole_sql: bool,
 ) {
+    legacy_join!(joined, current, original, whole_sql);
     for ((before, after), initial) in joined.iter_mut().zip(current).zip(original) {
+        // All three snapshots must agree: a name missing initially is unproven.
+        if before.same_bindings(after) && before.same_bindings(initial) {
+            continue;
+        }
         // Inspect shared snapshots before taking a mutable view: unchanged
         // branches must not clone every binding in the captured environment.
         let changed = before
             .iter()
             .filter(|(name, value)| {
+                record_join_binding!();
                 after.get(*name) != Some(*value) || !initial.contains_key(*name)
             })
             .map(|(name, _)| name.clone())
@@ -99,3 +113,11 @@ pub(super) fn join_with_sql(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod fixture_tests;
+#[cfg(test)]
+mod identity_tests;
+#[cfg(test)]
+#[path = "bindings/tests/legacy.rs"]
+mod legacy;
