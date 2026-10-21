@@ -1,5 +1,5 @@
 use super::{iteration, CompiledOptions, RuleFinding, RULE_ID};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::postgres_sql_paths;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
@@ -14,8 +14,9 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     let mut fragment_findings = fragments::Findings::default();
@@ -23,7 +24,7 @@ pub(super) fn scan(
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        let file = facts
+        let file = prepared
             .embedded_sql(path, &opts.embedded)
             .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
         if facts.wants_sql_verdicts() {
@@ -54,7 +55,7 @@ pub(super) fn scan(
             }
         }
         let source = crate::codebase::rules::read_source(sources, path);
-        for fragment in facts.postgres_fragments(path, &opts.embedded)? {
+        for fragment in prepared.postgres_fragments(path, &opts.embedded)? {
             let statements = &fragment.statements;
             let line_at =
                 |line: usize| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize;
@@ -116,7 +117,7 @@ pub(super) fn scan(
             .map(|path| (path, Some(&opts.embedded))),
     );
     for (path, profile) in projections {
-        for file in facts.postgres_statements(path, profile)? {
+        for file in prepared.postgres_statements(path, profile)? {
             let rel = relative_slash_path(root, &file.path);
             let source = crate::codebase::rules::read_source(sources, path);
             for (index, finding) in super::functions::located_findings(

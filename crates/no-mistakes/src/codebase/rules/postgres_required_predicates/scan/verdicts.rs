@@ -1,5 +1,5 @@
 use super::{columns, CompiledOptions};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     record_sql_policy_verdicts, EmbeddedSqlFileFacts, PartitionKeyElement, RelationKind,
     SchemaCatalog, SqlBranchJudgment, SqlRelationPredicateFact, SqlStatementFileFacts,
@@ -18,8 +18,9 @@ pub(super) fn record(
     opts: &CompiledOptions,
     embedded: &[&EmbeddedSqlFileFacts],
     catalog: Option<&SchemaCatalog>,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
+    let prepared = facts.prepared();
     let mut obligations = Vec::new();
     for relation in &opts.relations {
         for required in &relation.require {
@@ -47,7 +48,7 @@ pub(super) fn record(
             crate::codebase::postgres::SqlPolicyVerdictContext {
                 facts,
                 embedded: file,
-                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
+                statements: prepared.postgres_statements(&file.path, Some(&opts.embedded))?,
             },
             super::super::RULE_ID,
             &relative_slash_path(root, &file.path),

@@ -1,5 +1,6 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
@@ -82,7 +83,8 @@ pub(crate) fn check_with_files_sources_and_facts(
                 root,
                 &compiled,
                 &files,
-                view.as_ref().unwrap_or(facts),
+                view.as_ref()
+                    .map_or(facts as &dyn SqlFactContext, |view| view),
                 sources,
             )
         })

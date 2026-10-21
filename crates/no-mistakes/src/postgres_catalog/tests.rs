@@ -3,6 +3,8 @@ use crate::codebase::postgres::{CatalogCoverage, ResolvedArbiter, SchemaCatalog}
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::sync::Arc;
 
+mod option_errors;
+
 #[test]
 fn rejects_invalid_options_without_accessing_connection_secrets() {
     for (connection_env, schema) in [

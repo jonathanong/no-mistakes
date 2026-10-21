@@ -104,7 +104,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                         || {
                             let mut work = super::values::Walk::new();
                             for (before, after) in comparisons {
-                                for (name, value) in before {
+                                for (name, value) in before.reference_bindings() {
                                     // An arm can drop a name the other branch still has.
                                     if !precise_records {
                                         super::values::changes(

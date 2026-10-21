@@ -1,5 +1,5 @@
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     recovered_sql_may_select, EmbeddedSqlCall, OffsetUse, SqlOffsetFact,
 };
@@ -13,23 +13,24 @@ pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
     files: &[PathBuf],
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for path in files {
         let rel = relative_slash_path(root, path);
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);
-        let statements = match facts.postgres_statements(path, profile) {
+        let statements = match prepared.postgres_statements(path, profile) {
             Ok(statements) => statements,
-            Err(_) if rel.ends_with(".sql") && facts.postgres.sql_source_not_found(path) => {
+            Err(_) if rel.ends_with(".sql") && prepared.postgres.sql_source_not_found(path) => {
                 continue
             }
             Err(error) => return Err(error),
         };
         let embedded = profile
-            .map(|profile| facts.embedded_sql(path, profile))
+            .map(|profile| prepared.embedded_sql(path, profile))
             .transpose()?;
         if let Some(embedded) = embedded.filter(|_| facts.wants_sql_verdicts()) {
             crate::codebase::postgres::record_sql_policy_verdicts(

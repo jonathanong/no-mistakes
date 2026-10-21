@@ -116,7 +116,7 @@ impl ImportCollector {
             return;
         }
         let (arguments, spread_at) = self.value_arguments(&new.arguments);
-        self.value_flow.calls.push(ValueCall {
+        let value_call = ValueCall {
             context: self.current_function_id(),
             offset: new.span.start,
             end: new.span.end,
@@ -128,6 +128,8 @@ impl ImportCollector {
             spread_at,
             once: false,
             repeated: self.repeat_depth > self.call_repeat_base,
-        });
+        };
+        self.note_array_push(&value_call);
+        self.value_flow.calls.push(value_call);
     }
 }

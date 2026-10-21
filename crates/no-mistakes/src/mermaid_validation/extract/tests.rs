@@ -1,4 +1,5 @@
 use super::*;
+use std::path::PathBuf;
 
 #[test]
 fn delimiter_and_line_helpers_cover_non_fence_and_crlf_edges() {
@@ -39,4 +40,27 @@ fn opening_delimiter_retains_whitespace_indent_for_list_continuations() {
             .container_indent,
         0
     );
+}
+
+#[test]
+fn overlapping_mdx_code_block_reuses_already_scanned_source() {
+    let source = std::fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/markdown-mermaid-validation/mdx-expression-fence-text.mdx"),
+    )
+    .expect("mdx-expression-fence-text fixture");
+    let mermaid_at = source
+        .find("```mermaid")
+        .expect("saved fixture keeps a real Mermaid fence");
+    let mut collector = MermaidFenceCollector::new_with_mdx_html_fallback(&source);
+    collector.observe(&Event::Start(Tag::HtmlBlock), 0..mermaid_at);
+    assert!(
+        collector.recover_overlapping_mdx_code_block(mermaid_at - 1..source.len()),
+        "a later code-block range must overlap the already-scanned MDX prefix"
+    );
+    assert!(
+        !collector.recover_overlapping_mdx_code_block(source.len()..source.len()),
+        "a range at the scanned end is not overlapping"
+    );
+    let _ = collector.finish();
 }

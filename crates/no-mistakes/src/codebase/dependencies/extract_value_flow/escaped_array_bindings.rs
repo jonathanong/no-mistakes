@@ -112,43 +112,48 @@ fn append_pushes(
     found: &mut Vec<(usize, ValueExpression)>,
 ) {
     let mut next = found.iter().map(|(slot, _)| slot + 1).max().unwrap_or(0);
-    for call in &collector.value_flow.calls {
+    for index in collector
+        .receiver_escapes
+        .pushes
+        .get(&scope)
+        .and_then(|names| names.get(name))
+        .into_iter()
+        .flatten()
+    {
+        #[cfg(feature = "test-instrumentation")]
+        alternatives::record(1, 1);
+        let call = &collector.value_flow.calls[*index];
         if call.offset <= declared_at || call.offset >= before {
             continue;
         }
-        let Some(arguments) = push_arguments(call, scope, name) else {
-            continue;
-        };
-        for argument in arguments {
+        for argument in call.arguments.iter() {
+            #[cfg(feature = "test-instrumentation")]
+            alternatives::record(2, 1);
             flatten(argument, next, found);
             next += 1;
         }
     }
 }
 
-fn push_arguments<'a>(
-    call: &'a ValueCall,
-    scope: usize,
-    name: &str,
-) -> Option<&'a [ValueExpression]> {
-    let ValueExpression::Member(receiver, method) = &call.callee else {
-        return None;
-    };
-    if method != "push" {
-        return None;
+impl ImportCollector {
+    pub(in super::super::super) fn note_array_push(&mut self, call: &ValueCall) {
+        let ValueExpression::Member(receiver, method) = &call.callee else {
+            return;
+        };
+        if method != "push" {
+            return;
+        }
+        let ValueExpression::Named { name, scope, .. } = receiver.as_ref() else {
+            return;
+        };
+        self.receiver_escapes
+            .pushes
+            .entry(scope.unwrap_or(0))
+            .or_default()
+            .entry(name.clone())
+            .or_default()
+            .push(self.value_flow.calls.len());
     }
-    let ValueExpression::Named {
-        name: receiver_name,
-        scope: receiver_scope,
-        ..
-    } = receiver.as_ref()
-    else {
-        return None;
-    };
-    if receiver_name != name || receiver_scope.unwrap_or(0) != scope {
-        return None;
-    }
-    Some(call.arguments.as_slice())
 }
 
 fn flatten(value: &ValueExpression, slot: usize, found: &mut Vec<(usize, ValueExpression)>) {
@@ -163,4 +168,4 @@ fn flatten(value: &ValueExpression, slot: usize, found: &mut Vec<(usize, ValueEx
 
 #[path = "escaped_array_alternatives.rs"]
 mod alternatives;
-pub(super) use alternatives::additional_entries;
+pub(super) use alternatives::{Recipient, ReplayIndex};

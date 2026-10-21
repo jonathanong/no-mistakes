@@ -1,4 +1,5 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::statements::SqlStarProjectionFact;
 use crate::codebase::postgres::SchemaCatalog;
@@ -14,7 +15,7 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
+    prepared: Option<&dyn SqlFactContext>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let inputs = crate::codebase::rules::collect_prepared_sql_inputs(
         root,
@@ -22,7 +23,7 @@ pub(super) fn scan(
         &opts.schema,
         &opts.schema_catalog_path,
         &opts.embedded,
-        prepared,
+        prepared.map(|facts| facts.prepared()),
     )?;
     let catalog = inputs.catalog;
     let statements = inputs.statements;

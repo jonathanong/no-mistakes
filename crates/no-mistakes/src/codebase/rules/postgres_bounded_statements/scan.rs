@@ -1,5 +1,6 @@
 use super::evaluate::{offenders, variant_offenders};
 use super::{CompiledOptions, RuleFinding, RULE_ID};
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::SqlBoundKind;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
@@ -10,7 +11,7 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
+    prepared: Option<&dyn SqlFactContext>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let inputs = crate::codebase::rules::collect_prepared_sql_inputs(
         root,
@@ -18,7 +19,7 @@ pub(super) fn scan(
         &opts.schema,
         &opts.schema_catalog_path,
         &opts.embedded,
-        prepared,
+        prepared.map(|facts| facts.prepared()),
     )?;
     let catalog = inputs.catalog;
     let statements = inputs.statements;

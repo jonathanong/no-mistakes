@@ -654,6 +654,11 @@ not change this behavior. An escaped array spread keeps a later assignment that
 sits in a conditional or a loop, because the earlier array is still live when
 that guard does not run. A later unconditional assignment replaces it. A write
 in a function body that starts after the spread stays outside that window.
+Guarded spread replay shares array events and push positions within the request,
+and emits each distinct possible origin once per final consumer, argument
+position, and live array generation. It retains early and late known candidates
+alongside `has_unknown=true`; it neither caps the candidate set nor invents
+authored branch metadata.
 Module provider intervals and alias diamonds share one
 prepared root/member projection, and active writer summaries are shared within
 each immutable canonical incoming-call generation. Closed uncalled writers leave

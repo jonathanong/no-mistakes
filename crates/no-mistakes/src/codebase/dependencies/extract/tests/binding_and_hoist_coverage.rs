@@ -2,6 +2,7 @@ use super::*;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, Statement};
 use oxc_parser::Parser;
+use std::path::PathBuf;
 
 fn assignment_names(source: &str) -> Vec<String> {
     let allocator = Allocator::default();
@@ -19,6 +20,28 @@ fn assignment_names(source: &str) -> Vec<String> {
         names.extend(assignment_target_names(&assignment.left));
     }
     names
+}
+
+#[test]
+fn assignment_target_names_from_saved_fixture_cover_computed_and_nested_rest() {
+    let source = std::fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/extract/assignment-targets.ts"),
+    )
+    .expect("assignment-targets fixture");
+    let mut names = assignment_names(&source);
+    names.sort();
+    names.dedup();
+    assert!(
+        names.iter().any(|name| name == "obj.*"),
+        "computed member writes must report the object.* shape: {names:?}"
+    );
+    for expected in ["a", "b", "inner", "nested", "rest", "y"] {
+        assert!(
+            names.iter().any(|name| name == expected),
+            "missing {expected} in {names:?}"
+        );
+    }
 }
 
 #[test]
