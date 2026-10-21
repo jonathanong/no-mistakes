@@ -6,7 +6,7 @@ impl Carry {
         if let Some(active) = self.quote {
             return self.consume_quoted(ch, active, hits);
         }
-        if self.anchor_pending && !ch.is_whitespace() && ch != '{' {
+        if self.anchor_pending && !ch.is_whitespace() && !matches!(ch, '{' | '[') {
             self.clear_anchor_watch();
         }
         // `Don't` keeps the apostrophe. A quote starts a scalar only at its boundary.
@@ -143,6 +143,7 @@ impl Carry {
             if self.anchor_depth > self.flow_depth {
                 self.anchor_depth = 0;
                 self.anchor_name.clear();
+                self.flow_sequence_anchor = false;
             }
         }
         self.value_key_is_input = false;
@@ -183,7 +184,9 @@ impl Carry {
 
     fn finish_key(&mut self) {
         let in_input = self.in_flow_input();
-        self.value_key_is_input = !in_input && (self.token == "with" || self.token == "env");
+        // Under `jobs:`, `env` and `with` are job ids, not input mappings.
+        self.value_key_is_input =
+            !in_input && !self.place.at_jobs() && (self.token == "with" || self.token == "env");
         let action = self.place.note_key(&self.token);
         self.key_was_steps = self.token == "steps";
         if action {

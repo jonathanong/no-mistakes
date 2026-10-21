@@ -1,15 +1,28 @@
 pub(super) fn in_input_block(lines: &[&str], index: usize) -> bool {
     let own = indent_of(lines.get(index).copied().unwrap_or(""));
-    for prev in (0..index).rev() {
-        let trimmed = key_text(lines[prev]);
-        if trimmed.is_empty() || trimmed.starts_with('#') {
-            continue;
-        }
-        if indent_of(lines[prev]) < own {
-            return trimmed.starts_with("with:") || trimmed.starts_with("env:");
-        }
+    let Some(parent) = less_indented(lines, index, own) else {
+        return false;
+    };
+    if !is_input_key(key_text(lines[parent])) {
+        return false;
     }
-    false
+    // A job id may be `env` or `with`. That key sits directly under `jobs:`.
+    let parent_indent = indent_of(lines[parent]);
+    match less_indented(lines, parent, parent_indent) {
+        Some(grand) => !key_text(lines[grand]).starts_with("jobs:"),
+        None => true,
+    }
+}
+
+fn less_indented(lines: &[&str], index: usize, indent: usize) -> Option<usize> {
+    (0..index).rev().find(|&prev| {
+        let trimmed = key_text(lines[prev]);
+        !trimmed.is_empty() && !trimmed.starts_with('#') && indent_of(lines[prev]) < indent
+    })
+}
+
+fn is_input_key(trimmed: &str) -> bool {
+    trimmed.starts_with("with:") || trimmed.starts_with("env:")
 }
 
 fn indent_of(line: &str) -> usize {

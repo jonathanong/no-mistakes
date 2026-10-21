@@ -29,6 +29,8 @@ pub(super) struct Carry {
     reading_anchor: bool,
     anchor_pending: bool,
     block_anchor: bool,
+    /// `steps: &name [ ... ]` keeps counting action refs until `]` closes it.
+    flow_sequence_anchor: bool,
     step_alias: bool,
     anchor_depth: i32,
     anchor_indent: usize,

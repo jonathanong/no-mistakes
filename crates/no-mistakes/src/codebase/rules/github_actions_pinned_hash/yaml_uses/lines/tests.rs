@@ -290,6 +290,53 @@ fn anchor_only_step_and_plain_apostrophe_keep_the_action() {
 }
 
 #[test]
+fn job_named_env_or_with_keeps_the_reusable_workflow() {
+    let env_job = [
+        "jobs:",
+        "  env:",
+        "    uses: owner/repo/.github/workflows/reuse.yml@v4",
+    ];
+    assert_eq!(action_uses_lines(&env_job).lines, vec![3], "{env_job:?}");
+    let with_job = [
+        "jobs:",
+        "  with:",
+        "    uses: owner/repo/.github/workflows/reuse.yml@v4",
+    ];
+    assert_eq!(action_uses_lines(&with_job).lines, vec![3], "{with_job:?}");
+    let flow = ["jobs: { env: { uses: owner/repo/.github/workflows/reuse.yml@v4 } }"];
+    assert_eq!(action_uses_lines(&flow).lines, vec![1], "{flow:?}");
+    // A step `env` mapping is still an input, not an action line.
+    let input = [
+        "jobs:",
+        "  build:",
+        "    steps:",
+        "      - uses: actions/checkout@v4",
+        "        env:",
+        "          USES: 1",
+    ];
+    assert_eq!(action_uses_lines(&input).lines, vec![4], "{input:?}");
+}
+
+#[test]
+fn anchored_flow_sequence_repeats_each_action_line() {
+    let lines = [
+        "jobs:",
+        "  one:",
+        "    steps: &shared [{ uses: ./local }, { uses: actions/setup-node@v4 }]",
+        "  two:",
+        "    steps: *shared",
+        "  three:",
+        "    steps:",
+        "      - { uses: actions/checkout@v4 }",
+    ];
+    assert_eq!(
+        action_uses_lines(&lines).lines,
+        vec![3, 3, 5, 5, 8],
+        "{lines:?}"
+    );
+}
+
+#[test]
 fn job_named_steps_is_still_a_job() {
     let block = [
         "jobs:",
@@ -354,6 +401,48 @@ fn hash_inside_a_flow_value_keeps_the_version_comment() {
         findings
             .iter()
             .all(|finding| !finding.message.contains("trailing comment")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn job_named_env_reports_the_reusable_workflow() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let file = root.join(".github/workflows/job-named-env-workflow-fail.yml");
+    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
+    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    assert_eq!(lines, vec![5, 7], "{findings:?}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("actions/checkout")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn anchored_flow_sequence_keeps_the_later_action_line() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let file = root.join(".github/workflows/anchored-flow-steps-fail.yml");
+    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
+    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    assert_eq!(lines, vec![10], "{findings:?}");
+    assert!(
+        findings[0].message.contains("actions/checkout@v4"),
         "{findings:?}"
     );
 }

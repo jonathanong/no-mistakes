@@ -36,12 +36,10 @@ impl Carry {
             return;
         }
         self.anchor_pending = false;
-        if sequence {
-            self.anchor_name.clear();
-            self.anchor_depth = 0;
-        } else {
-            self.anchor_depth = self.flow_depth;
-        }
+        // A flow sequence (`steps: &name [ ... ]`) owns the actions inside it.
+        // Dropping the name here makes `steps: *name` shift later findings.
+        self.anchor_depth = self.flow_depth;
+        self.flow_sequence_anchor = sequence;
     }
 
     pub(super) fn clear_anchor_watch(&mut self) {
@@ -49,6 +47,7 @@ impl Carry {
         self.anchor_depth = 0;
         self.anchor_name.clear();
         self.block_anchor = false;
+        self.flow_sequence_anchor = false;
     }
 
     pub(super) fn reset_anchor_state(&mut self) {
@@ -58,7 +57,11 @@ impl Carry {
     }
 
     pub(super) fn bump_anchor_uses(&mut self) {
-        if !self.block_anchor || self.anchor_name.is_empty() {
+        let anchored = self.block_anchor || self.flow_sequence_anchor;
+        if !anchored || self.anchor_name.is_empty() {
+            return;
+        }
+        if self.flow_sequence_anchor && self.flow_depth < self.anchor_depth {
             return;
         }
         if let Some(found) = self

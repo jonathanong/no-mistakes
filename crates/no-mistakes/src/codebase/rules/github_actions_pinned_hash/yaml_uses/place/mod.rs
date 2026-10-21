@@ -174,6 +174,13 @@ impl PlaceStack {
         self.line_indent
     }
 
+    /// The open mapping is the `jobs:` map, so `env` and `with` are job ids.
+    pub(super) fn at_jobs(&self) -> bool {
+        self.levels
+            .last()
+            .is_some_and(|level| level.place == Place::Jobs)
+    }
+
     /// The current sequence item is a step. A root sequence counts.
     pub(super) fn item_is_step(&self) -> bool {
         self.item_place() == Place::Step
