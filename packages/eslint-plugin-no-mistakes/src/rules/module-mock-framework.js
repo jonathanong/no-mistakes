@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
+
 const FRAMEWORK_MODULES = new Set(["vitest", "@jest/globals"]);
 
 function propertyName(node) {
@@ -37,7 +39,7 @@ function frameworkRequireModule(def) {
 }
 
 function frameworkBindingModule(node, context, seen = new Set()) {
-  while (node?.type === "ChainExpression") node = node.expression;
+  node = unwrapExpression(node);
   if (node?.type === "MemberExpression") {
     const module = frameworkBindingModule(node.object, context, seen);
     const prop = memberPropertyName(node);

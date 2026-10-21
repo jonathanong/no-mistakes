@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./rules/async-ast");
 const { logicalCall, memberPropertyName, propertyName } = require("./rules/module-mock-helpers");
 
 const LOCAL_BINDING_TYPES = new Set([
@@ -49,6 +50,7 @@ function bindingVariable(node, context) {
 }
 
 function fetchCallee(node, context, seen) {
+  node = unwrapExpression(node);
   if (!node) return false;
   const visiting = seen || new Set();
   if (node.type === "MemberExpression") {

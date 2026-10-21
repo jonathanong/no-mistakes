@@ -187,6 +187,15 @@ describe("call-binding recall", () => {
     );
     assert.equal(
       messages(
+        fixture("nextjs-static-fetch-url/asserted-alias.ts"),
+        "nextjs-static-fetch-url",
+        undefined,
+        "asserted-alias.ts",
+      ).length,
+      1,
+    );
+    assert.equal(
+      messages(
         fixture("module-mock-boundary/recall.mjs"),
         "module-mock-boundary",
         undefined,
@@ -202,6 +211,15 @@ describe("call-binding recall", () => {
         "recall.mjs",
       ).length,
       3,
+    );
+    assert.equal(
+      messages(
+        fixture("module-mock-preserve-exports/asserted.ts"),
+        "module-mock-preserve-exports",
+        undefined,
+        "asserted.ts",
+      ).length,
+      2,
     );
     assert.equal(
       messages(

@@ -37,7 +37,7 @@ required export.
 
 ## Limits
 
-Another file's re-export is not visible here. `import { mock } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { vi as mock } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ vi } = vitest)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list, or an argument list that contains a spread, is not rewritten.
+Another file's re-export is not visible here. `import { mock } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { vi as mock } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ vi } = vitest)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list, or an argument list that contains a spread, is not rewritten. `const mocking = vi as typeof vi` is still `vi`, including `mocking.mock.apply(mocking, ["./local", factory] as const)`.
 
 ## Suppression
 

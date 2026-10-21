@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { isModuleMockMemberCall, memberPropertyName } = require("./module-mock-helpers");
 
 function unwrap(node) {
@@ -19,7 +20,7 @@ function matchDirectMockCallApply(node, context, methods) {
   if (name === "call") {
     return { factory: args[2], mock: direct, specifierNode: args[1] };
   }
-  const list = args[1];
+  const list = unwrapExpression(args[1]);
   if (
     list?.type === "ArrayExpression" &&
     list.elements.some((element) => !element || element.type === "SpreadElement")
