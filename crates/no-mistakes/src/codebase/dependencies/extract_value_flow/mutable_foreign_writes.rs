@@ -4,11 +4,14 @@ use mutation_projection::MutationInfo;
 #[path = "mutable_foreign_arguments.rs"]
 mod arguments;
 
+// Keep uncertainty in the identity: an ordinary and a recovered possible demand
+// for the same source must not promote each other during deferred replay.
 type WriteKey = (
     (usize, String),
     ValueMutationPath,
     (CallableId, CallableId),
     Option<String>,
+    bool,
     bool,
 );
 struct ForeignWrite {
@@ -69,6 +72,7 @@ impl ImportCollector {
             (writer, acquired),
             info.assigned_member.map(str::to_owned),
             info.has_assignment,
+            self.receiver_escapes.projecting_possible,
         ));
         write
             .and_modify(|write| {
@@ -107,7 +111,9 @@ impl ImportCollector {
         let empty_origins = ReceiverBindingOrigins::default();
         let mut arguments = None;
         let mut aliases = None;
-        for ((key, path, (owner, acquired), assigned, has_assignment), mut write) in pending {
+        for ((key, path, (owner, acquired), assigned, has_assignment, possible), mut write) in
+            pending
+        {
             let (index, possible_index) = providers
                 .entry((key.clone(), path.clone()))
                 .or_insert_with(|| {
@@ -164,7 +170,11 @@ impl ImportCollector {
                     info,
                 );
             }
-            self.replay_foreign(index, references, owner, info, &mut aliases);
+            if possible {
+                self.replay_possible_foreign(index, (owner != acquired).then_some(acquired), info);
+            } else {
+                self.replay_foreign(index, references, owner, info, &mut aliases);
+            }
         }
         self.foreign_receiver_writes = None;
     }

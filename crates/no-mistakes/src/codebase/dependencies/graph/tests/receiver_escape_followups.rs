@@ -468,5 +468,22 @@ fn possible_foreign_forward_replay_does_not_become_definite() {
     guarded_array_keeps_both_origins("array-guarded-foreign-forward", true);
 }
 
+#[test]
+fn retained_possible_foreign_writes_keep_later_providers_possible() {
+    let (built, root) = graph();
+    for callee in ["primary.get", "replica.get"] {
+        assert_possible_export(&built, &root, "array-guarded-foreign-provider", callee);
+    }
+    assert_unknown(
+        &built,
+        &root,
+        "array-guarded-foreign-provider",
+        "untouched.get",
+    );
+    for callee in ["replica.info", "unrelated.get"] {
+        assert_export(&built, &root, "array-guarded-foreign-provider", callee);
+    }
+}
+
 #[path = "receiver_escape_union.rs"]
 mod union;
