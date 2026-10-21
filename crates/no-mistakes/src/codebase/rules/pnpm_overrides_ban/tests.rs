@@ -86,6 +86,26 @@ fn fail_included_overrides_are_banned() {
 }
 
 #[test]
+fn selected_included_override_is_reported_without_the_root_file() {
+    let findings = findings_for("fail-included-selected");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "pnpm/security.yaml"
+                && finding
+                    .message
+                    .contains("top-level \"overrides\" is banned")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "pnpm-workspace.yaml"),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn excluded_included_override_file_is_not_reported() {
     let findings = findings_for("fail-included-excluded");
     assert!(

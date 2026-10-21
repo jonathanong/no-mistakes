@@ -439,6 +439,21 @@ fn included_scope_does_not_mark_an_existing_outside_package_unmatched() {
 }
 
 #[test]
+fn excluded_workspace_file_does_not_report_unmatched_patterns() {
+    let root = fixture_root("scoped-app");
+    let mut narrowed = config("packageRoots: [packages]\n");
+    narrowed.rules[0].include = vec!["packages/**".to_string()];
+    let files = files_named(&root, &["pnpm-workspace.yaml", "packages/api/package.json"]);
+    let findings = check_with_files(&root, &narrowed, &files).unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("apps/*") && finding.file != "package.json"),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn invalid_workspace_globs_fail_the_check() {
     let root = fixture_root("invalid-glob");
     let error = check_with_files(

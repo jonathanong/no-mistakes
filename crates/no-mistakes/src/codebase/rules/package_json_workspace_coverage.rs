@@ -106,13 +106,24 @@ fn scan(
         .collect();
     let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
     let covered_workspace_dirs = covered_workspace_dirs(root, files, &workspace_globs)?;
-    // Existence uses the unfiltered inventory. A narrowed include must not
-    // report a package that exists outside that include as unmatched.
-    for pattern in unmatched_patterns(&workspace_globs, &package_directories(root, all_files))? {
-        findings.push(config_finding(
-            &workspace_config_file(root, files),
-            &format!("workspace pattern \"{pattern}\" does not correspond to a package directory"),
-        ));
+    // Existence uses the unfiltered inventory. The finding is still owned by
+    // the workspace file, and a narrowed include must not report it when that
+    // file is outside the rule scope.
+    let owner = workspace_config_file(root, all_files);
+    let owner_path = crate::codebase::ts_resolver::normalize_path(&root.join(&owner));
+    let owner_in_scope = files
+        .iter()
+        .any(|candidate| crate::codebase::ts_resolver::normalize_path(candidate) == owner_path);
+    if owner_in_scope {
+        for pattern in unmatched_patterns(&workspace_globs, &package_directories(root, all_files))?
+        {
+            findings.push(config_finding(
+                &owner,
+                &format!(
+                    "workspace pattern \"{pattern}\" does not correspond to a package directory"
+                ),
+            ));
+        }
     }
     let allowlist: HashSet<String> = opts
         .allowlist

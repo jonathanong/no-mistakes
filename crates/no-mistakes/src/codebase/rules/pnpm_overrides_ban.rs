@@ -60,7 +60,7 @@ fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    files
+    let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(
             |path| match path.file_name().and_then(|name| name.to_str()) {
@@ -69,7 +69,21 @@ fn scan(
                 _ => Vec::new(),
             },
         )
-        .collect()
+        .collect();
+    // A selected included override file stays in scope when the root workspace
+    // file itself is filtered out.
+    let root_yaml = crate::codebase::ts_resolver::normalize_path(&root.join("pnpm-workspace.yaml"));
+    let root_selected = files
+        .iter()
+        .any(|candidate| crate::codebase::ts_resolver::normalize_path(candidate) == root_yaml);
+    if !root_selected {
+        if let Ok(source) = sources.read_path(&root_yaml) {
+            findings.extend(included::included_override_findings(
+                root, &root_yaml, &source, sources, files,
+            ));
+        }
+    }
+    findings
 }
 
 fn check_workspace(

@@ -22,10 +22,15 @@ pub(super) fn included_override_findings(
         return Vec::new();
     };
     let mut findings = Vec::new();
-    if resolved
-        .duplicates
-        .iter()
-        .any(|setting| setting == "overrides")
+    let root_selected = files.iter().any(|candidate| {
+        crate::codebase::ts_resolver::normalize_path(candidate)
+            == crate::codebase::ts_resolver::normalize_path(path)
+    });
+    if root_selected
+        && resolved
+            .duplicates
+            .iter()
+            .any(|setting| setting == "overrides")
     {
         findings.push(finding(
             root,
@@ -34,12 +39,14 @@ pub(super) fn included_override_findings(
             "setting \"overrides\" is claimed by more than one pnpm source",
         ));
     }
-    for issue in resolved
-        .load_errors
-        .iter()
-        .filter(|issue| issue.affects("overrides"))
-    {
-        findings.push(finding(root, path, 1, issue.message.clone()));
+    if root_selected {
+        for issue in resolved
+            .load_errors
+            .iter()
+            .filter(|issue| issue.affects("overrides"))
+        {
+            findings.push(finding(root, path, 1, issue.message.clone()));
+        }
     }
     for included in resolved.included_override_paths {
         let included_path = crate::codebase::ts_resolver::normalize_path(&included);
