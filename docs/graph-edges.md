@@ -620,11 +620,12 @@ candidates stay alongside unknown evidence even when a captured assignment can
 be selected; retaining that candidate does not assert that the original method
 runs on a concrete path.
 A later unconditional array assignment replaces these alternatives; unconditional
-pushes retain their existing write precision. When passed through a spread,
-conditional and repeated pushes provide possible receiver origins, preserving
+pushes at proven array lengths retain their existing write precision. When passed
+through a spread, conditional and repeated pushes provide possible receiver origins, preserving
 original methods alongside unknown evidence when the push may not execute.
-After a push makes the array length uncertain, the proven prefix remains fixed
-and later pushed values and trailing arguments become a possible open tail.
+After a push or guarded width change makes the array length uncertain, proven
+common slots remain fixed, while later pushed values and trailing arguments
+become a possible open tail. This also applies to varying widths without a push.
 This covers a later value shifting into an earlier parameter when the optional
 push is skipped, without enumerating combinations of branch lengths.
 Pushes written in another function are possible: this projection does not prove

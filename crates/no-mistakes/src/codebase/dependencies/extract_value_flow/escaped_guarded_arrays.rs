@@ -141,6 +141,7 @@ pub(super) fn entries(
     };
     let mut entries = Vec::new();
     let mut tail = Vec::new();
+    let mut minimum = 0;
     for (slot, value) in baseline {
         #[cfg(feature = "test-instrumentation")]
         tail_metrics::record(0);
@@ -149,19 +150,26 @@ pub(super) fn entries(
             tail_metrics::record(1);
             tail.push(value);
         } else {
-            let possible = summary.is_some_and(|summary| {
-                slot < summary.width
-                    && !summary
-                        .common
-                        .as_ref()
-                        .is_some_and(|common| common.contains_key(&slot.to_string()))
+            let common = summary.is_some_and(|summary| {
+                summary
+                    .common
+                    .as_ref()
+                    .is_some_and(|common| common.contains_key(&slot.to_string()))
             });
+            if common {
+                minimum = minimum.max(slot + 1);
+            }
+            let possible = !common && summary.is_some_and(|summary| slot < summary.width);
             entries.push((slot, value, possible));
         }
     }
     Some(Projection {
         entries,
-        tail: optional.map(|start| (start, tail)),
+        tail: optional.map(|start| (start, tail)).or_else(|| {
+            summary
+                .is_some_and(|summary| summary.length.is_none())
+                .then_some((minimum, Vec::new()))
+        }),
     })
 }
 

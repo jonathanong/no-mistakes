@@ -1,7 +1,6 @@
 const assert = require("node:assert/strict");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 test(
   "compiled async guarded array effects retain both receiver candidates",
@@ -122,6 +121,8 @@ test(
           "array-optional-push-after-empty-prefix",
           "array-optional-push-after-wide-prefix",
           "array-optional-push-conditional-helper",
+          "array-push-after-guarded-width-change",
+          "array-no-push-varying-width-suffix",
         ],
       ],
       [

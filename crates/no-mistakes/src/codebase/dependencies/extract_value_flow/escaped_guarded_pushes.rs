@@ -31,6 +31,7 @@ impl ImportCollector {
             && !self.receiver_write_is_conditional
             && call.context == summary.context
             && call.spread_at.is_none();
+        let positional = certain && summary.length.is_some();
         if certain {
             if let Some(length) = summary.length {
                 for (index, value) in call.arguments.iter().enumerate() {
@@ -49,6 +50,6 @@ impl ImportCollector {
             .entry(scope)
             .or_default()
             .insert(name.to_owned(), summary);
-        Some(certain)
+        Some(positional)
     }
 }

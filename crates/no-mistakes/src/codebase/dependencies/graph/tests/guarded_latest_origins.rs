@@ -305,3 +305,30 @@ fn deferred_pushes_keep_shifted_suffixes_and_receiver_candidates() {
         }
     }
 }
+
+#[test]
+fn pushes_after_guarded_width_changes_keep_both_runtime_candidates() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    let file = "array-push-after-guarded-width-change";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, file, callee);
+    }
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn varying_width_without_a_push_keeps_the_possible_suffix_receiver() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    let file = "array-no-push-varying-width-suffix";
+    possible(&built, &root, file, "untouched.get");
+    for callee in [
+        "replica.get",
+        "primary.get",
+        "replica.info",
+        "unrelated.get",
+    ] {
+        assert_export(&built, &root, file, callee);
+    }
+}
