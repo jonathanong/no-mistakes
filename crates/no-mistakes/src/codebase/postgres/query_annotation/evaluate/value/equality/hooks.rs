@@ -6,4 +6,9 @@ macro_rules! identity {
 macro_rules! fallback {
     () => {};
 }
-pub(super) use {fallback, identity};
+macro_rules! prefix {
+    ($a:expr, $b:expr, $c:expr, $a2:expr, $b2:expr, $c2:expr) => {
+        $b == $b2 && $c == $c2 && $a == $a2
+    };
+}
+pub(super) use {fallback, identity, prefix};

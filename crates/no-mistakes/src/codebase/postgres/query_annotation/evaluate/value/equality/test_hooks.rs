@@ -1,6 +1,7 @@
 use std::cell::Cell;
 thread_local! {
     static LEGACY: Cell<bool> = const { Cell::new(false) };
+    static SQL_COMPARISONS: Cell<usize> = const { Cell::new(0) };
     static FALLBACKS: Cell<usize> = const { Cell::new(0) };
 }
 pub(super) fn same_value(a: &super::Value, b: &super::Value) -> bool {
@@ -21,6 +22,34 @@ pub(super) fn measure<T>(legacy: bool, f: impl FnOnce() -> T) -> (T, usize) {
     let result = f();
     (result, FALLBACKS.get())
 }
+pub(super) fn compare_prefix(
+    a: &str,
+    b: &bool,
+    c: &Option<u64>,
+    a2: &str,
+    b2: &bool,
+    c2: &Option<u64>,
+) -> bool {
+    let sql = || {
+        SQL_COMPARISONS.set(SQL_COMPARISONS.get() + 1);
+        a == a2
+    };
+    if LEGACY.get() {
+        sql() && b == b2 && c == c2
+    } else {
+        b == b2 && c == c2 && sql()
+    }
+}
+pub(super) fn measure_sql<T>(legacy: bool, f: impl FnOnce() -> T) -> (T, usize) {
+    SQL_COMPARISONS.set(0);
+    let (result, _) = measure(legacy, f);
+    (result, SQL_COMPARISONS.get())
+}
+macro_rules! prefix {
+    ($a:expr, $b:expr, $c:expr, $a2:expr, $b2:expr, $c2:expr) => {
+        hooks::compare_prefix($a, $b, $c, $a2, $b2, $c2)
+    };
+}
 macro_rules! identity {
     ($a:expr, $b:expr) => {
         hooks::same_value($a, $b)
@@ -31,4 +60,4 @@ macro_rules! fallback {
         hooks::record_fallback()
     };
 }
-pub(super) use {fallback, identity};
+pub(super) use {fallback, identity, prefix};

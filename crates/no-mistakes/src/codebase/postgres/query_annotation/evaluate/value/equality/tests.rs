@@ -5,6 +5,7 @@ use std::sync::Arc;
 mod evaluator;
 #[path = "legacy.rs"]
 mod legacy;
+mod prefix_discriminants;
 
 fn function() -> Value {
     Value::Function(

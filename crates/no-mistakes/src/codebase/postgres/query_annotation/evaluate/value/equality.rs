@@ -38,7 +38,9 @@ impl PartialEq for Value {
 }
 fn composite(a: &Value, b: &Value) -> bool {
     match (a, b) {
-        (Value::Prefix(a, b, c), Value::Prefix(a2, b2, c2)) => a == a2 && b == b2 && c == c2,
+        (Value::Prefix(a, b, c), Value::Prefix(a2, b2, c2)) => {
+            hooks::prefix!(a, b, c, a2, b2, c2)
+        }
         (Value::Evaluated(a, b), Value::Evaluated(a2, b2)) => a == a2 && b == b2,
         (Value::Record(a, b), Value::Record(a2, b2)) => a == a2 && b == b2,
         (Value::Function(a, b, c), Value::Function(a2, b2, c2)) => a == a2 && b == b2 && c == c2,
