@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 const SKIP_OPEN_PRS: &[&str] = &[
-    // Open PR #2378 owns these check-rule implementations.
+    // Open PR #2425 owns these check-rule implementations.
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
 ];
