@@ -29,6 +29,18 @@ browser(
   { annotation: { type: annotationFlag ? "skip" : "fixme" } },
   () => {},
 );
+// Differing banned branches name both types. Reporting only the consequent
+// would hide a `fixme` selected when the flag is false.
+browser(
+  "the false branch is a different banned annotation",
+  { annotation: { type: annotationFlag ? "fixme" : "skip" } },
+  () => {},
+);
+browser(
+  "both conditional branches are the same annotation",
+  { annotation: { type: annotationFlag ? "skip" : "skip" } },
+  () => {},
+);
 browser.fixme("fixme already covers the declaration", { annotation: { type: "skip" } }, () => {});
 
 browser("custom annotation", { annotation: { type: "issue" } }, () => {});

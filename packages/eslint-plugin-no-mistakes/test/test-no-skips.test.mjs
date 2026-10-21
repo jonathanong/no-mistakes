@@ -40,12 +40,22 @@ describe(rule, () => {
         [26, "modifier"],
         [26, "annotation"],
         [29, "annotation"],
-        [32, "modifier"],
-        [39, "modifier"],
+        [36, "annotation"],
+        [41, "annotation"],
+        [44, "modifier"],
+        [51, "modifier"],
       ],
     );
     assert.equal(
       findings.find((item) => item.line === 29).message,
+      "Playwright 'skip or fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+    );
+    assert.equal(
+      findings.find((item) => item.line === 36).message,
+      "Playwright 'fixme or skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+    );
+    assert.equal(
+      findings.find((item) => item.line === 41).message,
       "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
     );
     assert.deepEqual(

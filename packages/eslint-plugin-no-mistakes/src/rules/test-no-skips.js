@@ -63,7 +63,9 @@ function annotationTypeName(node, context, banned, visited = new Set()) {
   const whenTrue = annotationTypeName(value.consequent, context, banned, new Set(visited));
   const whenFalse = annotationTypeName(value.alternate, context, banned, new Set(visited));
   if (!whenTrue || !whenFalse) return null;
-  return whenTrue;
+  // Name every banned type. The consequent alone would call a false
+  // `fixme` branch a `skip`.
+  return whenTrue === whenFalse ? whenTrue : `${whenTrue} or ${whenFalse}`;
 }
 
 function annotationFinding(node, context, banned) {

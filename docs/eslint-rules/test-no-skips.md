@@ -29,7 +29,8 @@ and annotation array. This rule only treats the Playwright `skip` and `fixme`
 annotation types as coverage-removing declarations; other annotation values
 are outside this rule's check. A no-substitution template literal is read like
 a string. A conditional type is reported when every branch is a banned `skip`
-or `fixme` literal. A modifier that does not itself skip the test, such as
+or `fixme` literal. When those branches name different types, the finding names
+both. A modifier that does not itself skip the test, such as
 `only`, does not hide an annotation on that call. `skip` and `fixme` modifiers
 already remove the test, so an annotation on that same call is not reported
 again. This is syntax analysis, not runtime evaluation: mutable bindings,
