@@ -78,6 +78,33 @@ What are you trying to find?
 ├─ Which CI workflows invoke a Rust binary through supported Cargo commands
 │   └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
 │
+├─ Direct string-literal import specifiers
+│   └─ no-mistakes import-usages --root . --filter 'src/**' --format json
+│
+├─ Client query params versus handler reads
+│   └─ no-mistakes server contracts --format json
+│
+├─ Exact runner command for one known test file
+│   └─ no-mistakes tests targets vitest web/app/users/users.test.ts --format commands
+│
+├─ Effective resolved config
+│   └─ no-mistakes config resolve
+│
+├─ Workflow env definitions and references
+│   └─ no-mistakes ci env GITHUB_TOKEN --format json
+│
+├─ Entry-workflow jobs affected between two revisions
+│   └─ no-mistakes ci topology-impact --root . --base "$BASE_SHA" --head "$HEAD_SHA" --entry-workflow ci.yml
+│
+├─ Terraform/OpenTofu module outputs
+│   └─ no-mistakes infra outputs infra/modules/network --format json
+│
+├─ Tests covering a Terraform/OpenTofu file
+│   └─ no-mistakes infra test-for infra/envs/prod/main.tf --format paths
+│
+├─ SwiftPM test targets covering a Swift file
+│   └─ no-mistakes swift test-targets swift-clients/core/Sources/CoreAPI/Endpoint.swift --json
+│
 └─ Which local GitHub Actions jobs/steps, scripts, or artifacts reach a file
     └─ no-mistakes dependents <file> --relationship workflow
 ```

@@ -63,8 +63,11 @@ virtual nodes. Empty `projects.*.trpc.routers` lists disable extraction;
 
 Key options: `--tsconfig`, `--depth`/`--max-depth`, repeatable `--filter`,
 repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
-repeatable `--candidate-include`, repeatable `--candidate-exclude`,
+`--symbols`, repeatable `--candidate-include`, repeatable `--candidate-exclude`,
 `--projection`, `--format`, `--json`, and `--timings`.
+
+`--symbols` includes exported symbol nodes. It is not valid together with
+`--candidate-include` or `--candidate-exclude`.
 
 `--candidate-include` / `--candidate-exclude` define the **initial** import-only
 candidate inventory before GraphFiles / fact preparation. They are not
