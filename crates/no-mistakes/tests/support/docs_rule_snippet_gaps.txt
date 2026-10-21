@@ -71,7 +71,6 @@ query-reached-per-item.md: Counterexample[0] run error:
 require-storybook-stories.md: Valid example[0] run error:
 require-storybook-stories.md: Counterexample[0] run error:
 required-companion-imports.md: Counterexample[0] expected 
-required-doc-section.md: Counterexample[0] expected 
 required-entrypoint-reachability.md: Valid example[0] expected 
 server-route-client-boundary.md: Counterexample[0] expected 
 shellcheck-runner.md: Counterexample[0] expected 
