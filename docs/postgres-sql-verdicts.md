@@ -25,6 +25,11 @@ same call and reach different verdicts.
   still failing check findings; their ledger row stays `abstain`
   (`unresolved-conflict-catalog-or-source`) because the catalog or source shape
   proves neither a violation nor a clear result.
+  A multi-row `ON CONFLICT DO NOTHING` with no conflict target is a `violation`
+  on a verified prefix: a trailing interpolation cannot add that target. The
+  row keeps `verified-prefix` evidence and `opaque-sql-tail` as residual
+  uncertainty. An order finding still abstains, because the tail can supply
+  the missing `ORDER BY`.
 
 `evidence` is `exact`, `exhaustive-union`, `verified-prefix`, or
 `policy-exemption` when a proof exists. A safe directive can prove the policy
