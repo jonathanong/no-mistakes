@@ -144,9 +144,14 @@ function classMemberRunsAfter(func, cutoff, context, seen) {
 }
 
 function unboundRunsAfter(func, cutoff, context, seen) {
-  // The expression is not hoisted, so it cannot run before its own start.
-  // A callback still runs whenever the enclosing function runs, and a class
-  // method runs whenever that class is constructed.
+  // `export default function () {}` is hoisted and has no binding. A cyclic
+  // import can call it before the const, so textual position is not readiness.
+  if (func.type === "FunctionDeclaration" && func.parent.type === "ExportDefaultDeclaration") {
+    return false;
+  }
+  // An arrow or function expression is not hoisted, so it cannot run before
+  // its own start. A callback still runs whenever the enclosing function runs,
+  // and a class method runs whenever that class is constructed.
   if (func.range[0] < cutoff) return false;
   const outer = findContainingFunction(func);
   if (outer) return functionRunsAfter(outer, cutoff, context, seen);

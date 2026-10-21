@@ -443,6 +443,11 @@ describe("postgres-no-async-sql-builder", () => {
     assert.deepEqual(saved("exported-class-specifier.ts"), []);
     assert.deepEqual(saved("exported-default-class.ts"), []);
     assert.deepEqual(saved("anonymous-class.ts"), ["removeAsync"]);
+    // Anonymous default function declarations are hoisted. A cycle can call
+    // them, and a callback inside them, before the const.
+    assert.deepEqual(saved("exported-default-fn.ts"), []);
+    assert.deepEqual(saved("exported-default-async-fn.ts"), []);
+    assert.deepEqual(saved("exported-default-fn-callback.ts"), []);
     assert.deepEqual(saved("cycle.ts"), []);
     // A typed callback still decides. An unannotated callee stays unknown.
     assert.deepEqual(
