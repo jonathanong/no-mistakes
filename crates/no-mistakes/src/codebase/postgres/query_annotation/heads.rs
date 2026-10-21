@@ -7,6 +7,7 @@ mod bindings;
 mod diagnostics;
 mod imports;
 mod syntax;
+mod tag_constants;
 #[cfg(test)]
 mod tests;
 pub(super) type Span = (u32, u32);
@@ -37,12 +38,16 @@ impl AnnotationHeads {
         }
     }
 }
-pub(crate) fn collect(program: &Program<'_>, ts: &TsFileFacts) -> AnnotationHeads {
+pub(crate) fn collect(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    executor_calls: impl Iterator<Item = Span>,
+) -> AnnotationHeads {
     if ts.parse_error.is_some() || ts.operational_error.is_some() || ts.fatal_parse_error {
         return AnnotationHeads::default();
     }
     let syntax = syntax::collect(program);
-    let bindings = bindings::Bindings::new(&syntax, ts);
+    let bindings = bindings::Bindings::new(&syntax, ts, executor_calls);
     AnnotationHeads {
         calls: syntax
             .calls

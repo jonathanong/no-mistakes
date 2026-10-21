@@ -97,7 +97,11 @@ pub(crate) fn collect_file_facts_from_program(
     };
     let query_annotation_heads = plan.query_annotation_heads.then(|| {
         Arc::new(crate::codebase::postgres::query_annotation::heads::collect(
-            program, &ts,
+            program,
+            &ts,
+            embedded_sql
+                .iter()
+                .flat_map(|(_, file)| file.call_spans.iter().copied()),
         ))
     });
     let symbols = ts.symbols.clone();

@@ -150,6 +150,13 @@ query(statement);
 Tag trust follows the actual named import binding, including configured module
 subpaths and import aliases. A shadowed tag, a tag absent from the configuration, and built-in
 default tag imports without an explicit matching configuration do not qualify.
+Default-import syntax is outside this named-import grammar.
+
+A tag-backed const must stay local and be used only as a direct argument to
+prepared executors. Repeated executor reads qualify. Property writes, receiver
+methods, helper escapes, aliases, returns, stores, and exports make it
+unanalyzable because a const binding does not make its builder immutable.
+Literal string consts retain their head when passed elsewhere.
 
 The first complete block comment must contain a nonempty name. Parentheses and
 TypeScript assertions do not add indirection. The const must resolve to the same

@@ -11,9 +11,14 @@ pub(super) struct Bindings<'a> {
     imports: FxHashMap<usize, HeadProof>,
     constants: &'a FxHashMap<Span, Head>,
     gaps: Option<Gaps>,
+    safe_tags: FxHashSet<Span>,
 }
 impl<'a> Bindings<'a> {
-    pub fn new(syntax: &'a Syntax, ts: &'a TsFileFacts) -> Self {
+    pub fn new(
+        syntax: &'a Syntax,
+        ts: &'a TsFileFacts,
+        executor_calls: impl Iterator<Item = Span>,
+    ) -> Self {
         let candidates = || {
             syntax
                 .calls
@@ -29,11 +34,13 @@ impl<'a> Bindings<'a> {
             imports: FxHashMap::default(),
             constants: &syntax.constants,
             gaps: None,
+            safe_tags: FxHashSet::default(),
         };
         let Some(module) = ts.module_bindings.as_deref().filter(|_| !wanted.is_empty()) else {
             return index;
         };
         index.gaps = Some(Gaps::new(module));
+        index.safe_tags = super::tag_constants::safe(syntax, module, executor_calls);
         // Index every possible owner once, retaining only relevant references.
         // A duplicate is ambiguous even if the other owner is invalid.
         for binding in &module.bindings {
@@ -82,7 +89,11 @@ impl<'a> Bindings<'a> {
                 };
                 match self.constants.get(&(owner.span.start, owner.span.end)) {
                     Some(Head::Literal) => HeadProof::Literal,
-                    Some(Head::Tag(span)) => self.tag(*span),
+                    Some(Head::Tag(tag))
+                        if self.safe_tags.contains(&(owner.span.start, owner.span.end)) =>
+                    {
+                        self.tag(*tag)
+                    }
                     _ => HeadProof::Unproven,
                 }
             }

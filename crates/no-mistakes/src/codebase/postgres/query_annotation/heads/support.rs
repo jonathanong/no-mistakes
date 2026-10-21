@@ -24,7 +24,7 @@ pub(super) fn fixture(name: &str) -> (String, TsFileFacts, AnnotationHeads) {
             None,
         );
         assert!(ts.module_bindings.is_some());
-        let heads = collect(program, &ts);
+        let heads = collect(program, &ts, executors(&path, &source, program).into_iter());
         (ts, heads)
     })
     .unwrap();
@@ -35,7 +35,10 @@ pub(super) fn recollect(name: &str, ts: &TsFileFacts) -> AnnotationHeads {
         .join("../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads")
         .join(name);
     let source = std::fs::read_to_string(&path).unwrap();
-    crate::ast::with_program(&path, &source, |program, _| collect(program, ts)).unwrap()
+    crate::ast::with_program(&path, &source, |program, _| {
+        collect(program, ts, executors(&path, &source, program).into_iter())
+    })
+    .unwrap()
 }
 pub(super) fn decisions(source: &str, heads: &AnnotationHeads) -> Vec<(Span, bool)> {
     decisions_for(source, heads, &EmbeddedSqlOptions::default())
@@ -90,4 +93,18 @@ pub(super) fn assert_markers_for(
         "every saved read call has an explicit oracle"
     );
     cursor
+}
+
+fn executors(
+    path: &std::path::Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+) -> Vec<Span> {
+    crate::codebase::postgres::extract_embedded_sql_from_program(
+        path,
+        program,
+        source,
+        &EmbeddedSqlOptions::configured("@bench/db", &[]),
+    )
+    .call_spans
 }

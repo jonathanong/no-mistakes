@@ -113,3 +113,12 @@ fn tag_ownership_fails_closed_for_missing_ambiguous_and_diagnostic_facts() {
         1
     );
 }
+
+#[test]
+fn tag_constants_reject_mutations_and_escapes_but_allow_executor_reads() {
+    let (source, _, heads) = fixture("tag-const-effects.mts");
+    assert_eq!(
+        assert_markers_for(&source, &heads, &options("@bench/tags", "sql")),
+        14
+    );
+}

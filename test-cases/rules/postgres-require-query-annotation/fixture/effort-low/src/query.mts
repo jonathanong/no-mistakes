@@ -41,9 +41,13 @@ function tagShadow(renamedTag: unknown) { read(renamedTag`/* shadow */ SELECT 1`
 { const renamedTag = helper; read(renamedTag`/* block shadow */ SELECT 1`); } // EXPECT_REPORT_SHADOW
 read(sql`/* open ${body} */ SELECT 1`); // EXPECT_REPORT_OPEN_TAG
 read(sql`/*  */ SELECT 1`); // EXPECT_REPORT_EMPTY_TAG
-const taggedAlias = taggedStatement;
+const aliasSource = renamedTag`/* alias source */ SELECT ${body}`;
+const taggedAlias = aliasSource;
 read(taggedAlias); // EXPECT_REPORT_TAG_ALIAS
 const openTag = sql`/* incomplete ${body} */ SELECT 1`;
 read(openTag); // EXPECT_REPORT_OPEN_CONST_TAG
 const wrongTag = unrelatedTag`/* unconfigured const */ SELECT 1`;
 read(wrongTag); // EXPECT_REPORT_UNCONFIGURED_CONST EXPECT_OTHER_TAG_ACCEPTED
+const changedTag = renamedTag`/* changed builder */ SELECT 1`;
+changedTag.text = "SELECT unsafe";
+read(changedTag); // EXPECT_REPORT_MUTATED_TAG

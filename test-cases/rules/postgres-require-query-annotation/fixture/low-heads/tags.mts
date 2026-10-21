@@ -1,3 +1,4 @@
+import { read } from "@bench/db";
 import { sql as named } from "@bench/tags";
 import { sql as subpath } from "@bench/tags/statements";
 import { sql as sibling } from "@bench/tags-other";
@@ -23,7 +24,8 @@ read(named`/* open ${value} */ SELECT 1`); // low: false
 read(named`${value} /* late head */ SELECT 1`); // low: false
 read(named`/* */ /* later */ SELECT 1`); // low: false
 read(named`SELECT ${value}`); // low: false
-const alias = tagged;
+const aliasSource = named`/* alias source */ SELECT ${value}`;
+const alias = aliasSource;
 read(alias); // low: false
 let mutable = named`/* let tag */ SELECT ${value}`;
 read(mutable); // low: false
