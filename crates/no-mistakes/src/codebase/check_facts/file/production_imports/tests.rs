@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::dependencies::extract::{
-    FULL_PROJECTION_FINALIZATIONS, RESOURCE_ROOT_CONSTRUCTIONS,
+    graph_call_recording_probe, FULL_PROJECTION_FINALIZATIONS, RESOURCE_ROOT_CONSTRUCTIONS,
 };
 
 #[test]
@@ -24,9 +24,12 @@ fn prepared_production_projection_does_not_finalize_unrequested_facts() {
 
     FULL_PROJECTION_FINALIZATIONS.with(|count| count.set(0));
     RESOURCE_ROOT_CONSTRUCTIONS.with(|count| count.set(0));
+    graph_call_recording_probe::reset();
     project(&session, &path, &source, &variants, &mut results);
     assert_eq!(FULL_PROJECTION_FINALIZATIONS.with(|count| count.get()), 0);
     assert_eq!(RESOURCE_ROOT_CONSTRUCTIONS.with(|count| count.get()), 0);
+    // Replacing the consumer projection with the full extractor must fail here.
+    assert_eq!(graph_call_recording_probe::counts(), (0, 0));
     let imports = results[0]
         .as_ref()
         .unwrap()

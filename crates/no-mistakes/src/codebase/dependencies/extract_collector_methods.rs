@@ -1,11 +1,21 @@
 fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &CallExpression<'_>) {
     collector.mark_call_namespace_head(&call.callee);
+    if collector.skip_expression_call_facts {
+        if !collector.local_binding_shadows("require") {
+            if is_require_resolve_callee(&call.callee) {
+                record_runtime_require_import(collector, call, ImportKind::RequireResolve);
+            } else if is_require_callee(&call.callee) {
+                record_runtime_require_import(collector, call, ImportKind::Require);
+            }
+        }
+        return;
+    }
     let require_callee = is_require_resolve_callee(&call.callee)
         .then_some("require.resolve")
         .or_else(|| is_require_callee(&call.callee).then_some("require"));
     if let Some(callee) = require_callee.filter(|_| !collector.local_binding_shadows("require")) {
         if collector.should_record_call(callee) {
-            collector.function_calls.push(FunctionCall {
+            collector.record_expression_call_fact(FunctionCall {
                 caller: collector.current_function(),
                 caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -38,7 +48,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
             }
             let target_identity = collector.call_target_identity(&callee);
             let callee_binding_scope = collector.callee_binding_scope(&callee);
-            collector.function_calls.push(FunctionCall {
+            collector.record_expression_call_fact(FunctionCall {
                 caller: collector.current_function(),
                 caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -84,7 +94,7 @@ fn record_callable_argument_transitions(
         if collector.call_target_identity(&callee) != CallTargetIdentity::RepositoryFunction {
             continue;
         }
-        collector.function_calls.push(FunctionCall {
+        collector.record_expression_call_fact(FunctionCall {
             caller: collector.current_function(),
             caller_id: collector.current_function_id(),
             syntactic_caller: collector.current_syntactic_caller(),
@@ -104,11 +114,14 @@ fn record_callable_argument_transitions(
 fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewExpression<'_>) {
     collector.record_value_new(new);
     collector.mark_namespace_head(&new.callee);
+    if collector.skip_expression_call_facts {
+        return;
+    }
     if let Some(callee) = simple_callee_name(&new.callee) {
         if collector.should_record_call(&callee) {
             let target_identity = collector.call_target_identity(&callee);
             let callee_binding_scope = collector.callee_binding_scope(&callee);
-            collector.function_calls.push(FunctionCall {
+            collector.record_expression_call_fact(FunctionCall {
                 caller: collector.current_function(),
                 caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -146,11 +159,14 @@ fn visit_tagged_template_expression_with_imports(
     tagged: &TaggedTemplateExpression<'_>,
 ) {
     collector.mark_namespace_head(&tagged.tag);
+    if collector.skip_expression_call_facts {
+        return;
+    }
     if let Some(callee) = simple_callee_name(&tagged.tag) {
         if collector.should_record_call(&callee) {
             let target_identity = collector.call_target_identity(&callee);
             let callee_binding_scope = collector.callee_binding_scope(&callee);
-            collector.function_calls.push(FunctionCall {
+            collector.record_expression_call_fact(FunctionCall {
                 caller: collector.current_function(),
                 caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -178,21 +194,5 @@ fn visit_tagged_template_expression_with_imports(
             tagged.quasi.span.start,
             InvocationKind::Call,
         );
-    }
-}
-
-impl ImportCollector {
-    fn record_unknown_call(&mut self, line: u32, offset: u32, invocation: InvocationKind) {
-        let caller = self.current_function();
-        if caller.is_none() {
-            self.has_unknown_top_level_call = true;
-        }
-        self.unknown_calls.push(UnknownCall {
-            caller,
-            caller_id: self.current_function_id(),
-            line,
-            offset,
-            invocation,
-        });
     }
 }

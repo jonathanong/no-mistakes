@@ -55,7 +55,7 @@ impl ImportCollector {
                     // Imported/global/unknown named iteration callbacks must have the
                     // same graph identity regardless of optional per-item demand.
                     if identity != CallTargetIdentity::RepositoryFunction {
-                        self.function_calls.push(FunctionCall { caller: self.current_function(), caller_id: self.current_function_id(), syntactic_caller: self.current_syntactic_caller(), callee: name.clone(), line: 0, offset: callback.span().start, is_callback: true, invocation: InvocationKind::Callback, target_identity: identity, callee_binding_scope: self.callee_binding_scope(&name), static_arg: None, static_cwd: None });
+                        self.record_expression_call_fact(FunctionCall { caller: self.current_function(), caller_id: self.current_function_id(), syntactic_caller: self.current_syntactic_caller(), callee: name.clone(), line: 0, offset: callback.span().start, is_callback: true, invocation: InvocationKind::Callback, target_identity: identity, callee_binding_scope: self.callee_binding_scope(&name), static_arg: None, static_cwd: None });
                     }
                     if self.collect_per_item_calls { self.per_item_calls.push(PerItemCall { offset: callback.span().start,
                         line: import_line_at(&self.line_starts, callback.span().start as usize),
@@ -70,6 +70,13 @@ impl ImportCollector {
 
 fn visit_call_expression_per_item<'a>(collector: &mut ImportCollector, call: &CallExpression<'a>) {
     collector.record_value_call(call);
+    if collector.skip_expression_call_facts {
+        with_conditional_execution(collector, call_has_execution_guard(call), |collector| {
+            visit_call_expression_with_imports(collector, call);
+        });
+        walk_call_with_execution(collector, call);
+        return;
+    }
     let iteration = collector.record_iteration_callback(call);
     let before = collector.function_calls.len();
     with_conditional_execution(collector, call_has_execution_guard(call), |collector| {

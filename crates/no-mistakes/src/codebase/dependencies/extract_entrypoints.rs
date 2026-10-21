@@ -20,7 +20,7 @@ pub(crate) fn extract_imports_from_program_with_source(
     program: &Program<'_>,
     source: &str,
 ) -> Vec<ExtractedImport> {
-    visit_import_facts(program, source, false, false, false,
+    visit_import_facts(program, source, false, false, false, true,
         #[cfg(feature = "test-instrumentation")] None).imports
 }
 
@@ -43,7 +43,7 @@ fn extract_import_facts_with_rhs_probe(
     program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
     #[cfg(feature = "test-instrumentation")] probe: Option<std::rc::Rc<std::cell::RefCell<extract_value_flow::inert_receiver_rhs::tests_support::Probe>>>,
 ) -> ImportFacts {
-    let mut collector = visit_import_facts(program, source, collect_resource_roots, collect_per_item_calls, collect_value_flow,
+    let mut collector = visit_import_facts(program, source, collect_resource_roots, collect_per_item_calls, collect_value_flow, false,
         #[cfg(feature = "test-instrumentation")] probe);
     if cfg!(test) {
         FULL_PROJECTION_FINALIZATIONS.with(|count| count.set(count.get() + 1));

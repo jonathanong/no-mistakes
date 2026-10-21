@@ -68,6 +68,9 @@ struct ImportCollector {
     value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     collect_value_flow: bool,
     collect_per_item_calls: bool,
+    /// Only import projection skips expression call/new/tag and iteration
+    /// callback records; synthetic class, getter, and membership facts remain.
+    skip_expression_call_facts: bool,
     per_item_calls: Vec<PerItemCall>,
     per_item_ranges: FxHashMap<Option<CallableId>, Vec<PerItemRange>>,
     unknown_calls: Vec<UnknownCall>,

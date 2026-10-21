@@ -5,6 +5,7 @@ fn visit_import_facts(
     collect_resource_roots: bool,
     collect_per_item_calls: bool,
     collect_value_flow: bool,
+    skip_expression_call_facts: bool,
     #[cfg(feature = "test-instrumentation")] probe: Option<
         std::rc::Rc<
             std::cell::RefCell<extract_value_flow::inert_receiver_rhs::tests_support::Probe>,
@@ -14,6 +15,7 @@ fn visit_import_facts(
     let mut collector = ImportCollector {
         collect_per_item_calls,
         collect_value_flow,
+        skip_expression_call_facts,
         line_starts: import_line_starts(source),
         collect_resource_roots,
         sloppy_script: program.source_type.is_javascript()
@@ -49,3 +51,5 @@ fn visit_import_facts(
     collector.visit_program(program);
     collector
 }
+
+include!("extract_graph_call_recording.rs");
