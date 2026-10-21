@@ -62,13 +62,17 @@ function measurementEnvironment(fixture, rootPackage, checkArgs, details) {
     nproc: command("nproc", [], fixture),
     rayonEnvironment: process.env.RAYON_NUM_THREADS || null,
     numCpus: cpuProbes.candidate,
-    rayonJobs: jobs === "auto" ? Number(process.env.RAYON_NUM_THREADS || cpuProbes.candidate) : Number(jobs),
-    rayonPolicy: jobs === "auto"
-      ? "automatic (--jobs omitted; exact source-built num_cpus::get probe)" : "explicit --jobs",
+    rayonJobs:
+      jobs === "auto" ? Number(process.env.RAYON_NUM_THREADS || cpuProbes.candidate) : Number(jobs),
+    rayonPolicy:
+      jobs === "auto"
+        ? "automatic (--jobs omitted; exact source-built num_cpus::get probe)"
+        : "explicit --jobs",
     node: process.version,
     pnpm: command("pnpm", ["--version"], fixture),
     launcher: JSON.parse(readFileSync(rootPackage, "utf8")).version,
-    wrapper: "One installed npm launcher for both source-built binaries; only its untracked native CLI is replaced",
+    wrapper:
+      "One installed npm launcher for both source-built binaries; only its untracked native CLI is replaced",
   };
 }
 

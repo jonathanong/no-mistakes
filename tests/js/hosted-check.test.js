@@ -1,8 +1,6 @@
 const assert = require("node:assert/strict");
-const { readFileSync, readdirSync, mkdtempSync, copyFileSync, linkSync, rmSync, statSync, cpSync } = require("node:fs");
+const { readFileSync, readdirSync } = require("node:fs");
 const { join } = require("node:path");
-const { tmpdir } = require("node:os");
-const { replaceNative } = require("../../.github/scripts/hosted-check-runtime.cjs");
 const { createRequire } = require("node:module");
 const {
   packageManifest,
@@ -19,17 +17,8 @@ const {
   successful,
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
-
-const { validateBuildPair, artifactBuilds } = require("../../.github/scripts/hosted-check-provenance.cjs");
 const { relativeLimits } = require("../../.github/scripts/hosted-check-budget.cjs");
-const fixture = (name) => JSON.parse(readFileSync(join(__dirname, "../../fixtures/hosted-check", name), "utf8"));
-const cases = fixture("metric-cases.json");
-function samplePair(values, variant, fixtureCommit = "consumer", jobs = "auto") {
-  const builds = fixture("source-pair.json"), provenance = builds[variant];
-  return values.map((sample) => ({ ...sample, variant, fixtureCommit, jobs,
-    fixtureTree: "consumer-tree", sourceCommit: provenance.commit, sourceTree: provenance.tree,
-    binarySha256: provenance.binarySha256, candidateCommit: builds.candidate.commit, provenance }));
-}
+const { cases, samplePair } = require("./hosted-check-fixtures.cjs");
 
 test("keeps the consumer's exact default command and separate collection cap", () => {
   assert.deepEqual(CHECK_ARGS, [
@@ -175,8 +164,6 @@ test("signals and missing numeric wrapper statuses never supply resource maxima"
   assert.equal(missing.rssMaxKiB, null);
 });
 
-
-
 // Constant and noisy measurements pin the actual calibration arithmetic, not a guessed percentage.
 test("calibrates wall/RSS headroom from six fresh samples and rejects slowed candidates", () => {
   const samples = cases.noisy;
@@ -250,12 +237,6 @@ test("calibrates completed runs beyond 180 seconds while enforcing measured budg
   );
 });
 
-
-
-
-
-
-
 test("retains valid calibration proposals and reports every failed cohort", () => {
   const fixtures = [
     "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
@@ -265,14 +246,15 @@ test("retains valid calibration proposals and reports every failed cohort", () =
   for (const commit of fixtures) {
     for (const jobs of ["1", "4", "auto"]) {
       for (const variant of ["baseline", "candidate"]) {
-        groups.set(
-          `${commit}/${jobs}/${variant}`,
-          samplePair(cases.noisy, variant, commit, jobs),
-        );
+        groups.set(`${commit}/${jobs}/${variant}`, samplePair(cases.noisy, variant, commit, jobs));
       }
     }
   }
-  const budgets = Object.fromEntries(fixtures.flatMap((commit) => ["1", "4", "auto"].map((jobs) => [`${commit}/${jobs}`, calibratedBudget(cases.noisy)])));
+  const budgets = Object.fromEntries(
+    fixtures.flatMap((commit) =>
+      ["1", "4", "auto"].map((jobs) => [`${commit}/${jobs}`, calibratedBudget(cases.noisy)]),
+    ),
+  );
   const calibration = budgetReport(groups, budgets, true);
   assert.deepEqual(calibration.failures, []);
   assert.equal(Object.keys(calibration.proposed).length, 6);
@@ -322,15 +304,33 @@ test("saved CPU-only 36x regression fails below the wall collection cap", () => 
   assert.equal(cases.cpuSlow36[0].elapsed, cases.healthy[0].elapsed);
   assert.equal(cases.cpuSlow36[0].rss_kib, cases.healthy[0].rss_kib);
   assert.throws(() => enforceBudget(cases.cpuSlow36, budget), /cpu 360 exceeds/);
-  assert.throws(() => pairedReport(samplePair(cases.healthy, "baseline"), samplePair(cases.cpuSlow36, "candidate"), budget), /cpuSeconds ratio 36 exceeds/);
+  assert.throws(
+    () =>
+      pairedReport(
+        samplePair(cases.healthy, "baseline"),
+        samplePair(cases.cpuSlow36, "candidate"),
+        budget,
+      ),
+    /cpuSeconds ratio 36 exceeds/,
+  );
 });
 
 test("frozen paired budgets reject release-relative wall, CPU and RSS regressions", () => {
   const budget = calibratedBudget(cases.healthy);
   const baseline = samplePair(cases.healthy, "baseline");
-  assert.ok(pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget).every((row) => row.status === "compared"));
-  assert.throws(() => pairedReport(baseline, samplePair(cases.wallSlow, "candidate"), budget), /wallSeconds ratio 2 exceeds/);
-  assert.throws(() => pairedReport(baseline, samplePair(cases.rssSlow, "candidate"), budget), /rssKiB ratio 2 exceeds/);
+  assert.ok(
+    pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget).every(
+      (row) => row.status === "compared",
+    ),
+  );
+  assert.throws(
+    () => pairedReport(baseline, samplePair(cases.wallSlow, "candidate"), budget),
+    /wallSeconds ratio 2 exceeds/,
+  );
+  assert.throws(
+    () => pairedReport(baseline, samplePair(cases.rssSlow, "candidate"), budget),
+    /rssKiB ratio 2 exceeds/,
+  );
   assert.equal(relativeLimits(budget).wallSeconds, 0.1);
   assert.equal(relativeLimits(budget).rssKiB, 0.02);
 });
@@ -339,118 +339,37 @@ test("censored baseline skips ratios without excusing an unhealthy candidate", (
   const budget = calibratedBudget(cases.healthy);
   const baseline = samplePair(cases.censored, "baseline");
   const report = pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget);
-  assert.ok(report.every((row) => row.status === "baseline-censored-or-failed" && row.ratios === null));
+  assert.ok(
+    report.every((row) => row.status === "baseline-censored-or-failed" && row.ratios === null),
+  );
   enforceBudget(cases.healthy, budget);
   assert.throws(() => enforceBudget(cases.cpuSlow36, budget), /cpu 360 exceeds/);
-  assert.throws(() => pairedReport(baseline, samplePair(cases.failed, "candidate"), budget), /Candidate did not complete/);
+  assert.throws(
+    () => pairedReport(baseline, samplePair(cases.failed, "candidate"), budget),
+    /Candidate did not complete/,
+  );
 });
 
 test("missing or zero CPU budgets fail closed", () => {
   const budget = calibratedBudget(cases.healthy);
   for (const invalid of [undefined, null, 0, NaN]) {
-    assert.throws(() => enforceBudget(cases.healthy, { ...budget, cpuSeconds: invalid }), /Invalid budget: cpuSeconds/);
-    assert.throws(() => relativeLimits({ ...budget, cpuSeconds: invalid }), /paired calibration: cpuSeconds/);
+    assert.throws(
+      () => enforceBudget(cases.healthy, { ...budget, cpuSeconds: invalid }),
+      /Invalid budget: cpuSeconds/,
+    );
+    assert.throws(
+      () => relativeLimits({ ...budget, cpuSeconds: invalid }),
+      /paired calibration: cpuSeconds/,
+    );
   }
-  assert.throws(() => calibratedBudget(cases.healthy, { wallSeconds: 0.1, rssKiB: 0.02 }), /Invalid floor: cpuSeconds/);
-  const proposed = calibratedBudget(cases.healthy, { wallSeconds: 0.1, cpuSeconds: 0.05, rssKiB: 0.02 });
+  assert.throws(
+    () => calibratedBudget(cases.healthy, { wallSeconds: 0.1, rssKiB: 0.02 }),
+    /Invalid floor: cpuSeconds/,
+  );
+  const proposed = calibratedBudget(cases.healthy, {
+    wallSeconds: 0.1,
+    cpuSeconds: 0.05,
+    rssKiB: 0.02,
+  });
   assert.equal(proposed.cpuSecondsMargin, 0.5);
-});
-
-test("source provenance rejects substituted main baselines and mismatched identities", () => {
-  const builds = fixture("source-pair.json");
-  validateBuildPair(builds);
-  const invalid = fixture("source-pair.json");
-  invalid.baseline.refs.baseline.kind = "main";
-  invalid.candidate.refs.baseline.kind = "main";
-  assert.throws(() => validateBuildPair(invalid), /latest stable release tag/);
-  assert.throws(() => validateBuildPair({ ...builds, baseline: { ...builds.baseline, commit: builds.candidate.commit } }), /baseline source\/binary identity/);
-  assert.throws(() => validateBuildPair({ ...builds, candidate: { ...builds.candidate, rustc: "other compiler" } }), /settings differ: rustc/);
-  assert.throws(() => validateBuildPair({ baseline: builds.baseline }), /Missing source-built/);
-  const candidate = samplePair(cases.healthy, "candidate");
-  candidate[0].binarySha256 = "0".repeat(64);
-  assert.throws(() => pairedReport(samplePair(cases.healthy, "baseline"), candidate, calibratedBudget(cases.healthy)), /Sample binary\/source identity/);
-});
-
-test("the latest release can legitimately be the same source and binary as main", () => {
-  const builds = fixture("source-pair.json");
-  for (const build of Object.values(builds)) {
-    build.refs.candidate.commit = builds.baseline.commit;
-    build.refs.candidate.tree = builds.baseline.tree;
-  }
-  builds.candidate.commit = builds.baseline.commit;
-  builds.candidate.tree = builds.baseline.tree;
-  builds.candidate.binarySha256 = builds.baseline.binarySha256;
-  validateBuildPair(builds);
-});
-
-test("stored healthy CPU budgets come from per-sample CPU sums in durable calibration", () => {
-  const calibration = JSON.parse(readFileSync(join(__dirname, "../../docs/development/hosted-check-calibration.json"), "utf8"));
-  const budgets = JSON.parse(readFileSync(join(__dirname, "../../.github/scripts/hosted-check-budgets.json"), "utf8"));
-  for (const [key, pairs] of Object.entries(calibration.cohorts)) {
-    const calculated = calibratedBudget(pairs.map((pair) => pair.current));
-    assert.equal(budgets[key].cpuSeconds, calculated.cpuSeconds);
-    assert.equal(budgets[key].cpuSecondsStddev, calculated.cpuSecondsStddev);
-    assert.equal(budgets[key].cpuSecondsMargin, 3 * calculated.cpuSecondsStddev);
-  }
-});
-
-test("binary swapping replaces a pnpm hardlink without mutating its store inode", () => {
-  const directory = mkdtempSync(join(tmpdir(), "hosted-check-swap-"));
-  const store = join(directory, "store"), native = join(directory, "native");
-  const source = join(__dirname, "../../fixtures/hosted-check/package-export/index.js");
-  const candidate = join(__dirname, "../../fixtures/hosted-check/package-export/package.json");
-  try {
-    copyFileSync(source, store);
-    linkSync(store, native);
-    assert.equal(statSync(store).ino, statSync(native).ino);
-    replaceNative(candidate, native);
-    assert.equal(readFileSync(store, "utf8"), readFileSync(source, "utf8"));
-    assert.equal(readFileSync(native, "utf8"), readFileSync(candidate, "utf8"));
-    assert.notEqual(statSync(store).ino, statSync(native).ino);
-    replaceNative(store, native);
-    assert.equal(readFileSync(native, "utf8"), readFileSync(source, "utf8"));
-  } finally { rmSync(directory, { recursive: true, force: true }); }
-});
-
-test("calibration proposals never replace reviewed absolute candidate budgets", () => {
-  const { FIXTURES } = require("../../.github/scripts/hosted-check-budget.cjs");
-  const groups = new Map(), budgets = {};
-  for (const commit of FIXTURES) for (const jobs of ["1", "4", "auto"]) {
-    const key = `${commit}/${jobs}`;
-    budgets[key] = calibratedBudget(cases.healthy);
-    groups.set(`${key}/baseline`, samplePair(cases.censored, "baseline", commit, jobs));
-    groups.set(`${key}/candidate`, samplePair(cases.healthy, "candidate", commit, jobs));
-  }
-  assert.deepEqual(budgetReport(groups, budgets, true).failures, []);
-  const key = `${FIXTURES[0]}/auto`;
-  groups.set(`${key}/candidate`, samplePair(cases.cpuSlow36, "candidate", FIXTURES[0]));
-  assert.ok(budgetReport(groups, budgets, true).failures.some((failure) => /cpu 360 exceeds/.test(failure)));
-  delete budgets[`${FIXTURES[1]}/1`];
-  assert.ok(budgetReport(groups, budgets, false).failures.some((failure) => /Missing calibrated budget/.test(failure)));
-});
-
-test("measurement cohorts reject mixed source selections and mismatched pairs", () => {
-  const { validateCohort } = require("../../.github/scripts/hosted-check-provenance.cjs");
-  const candidate = samplePair(cases.healthy, "candidate");
-  candidate[1].provenance = fixture("source-pair.json").candidate;
-  candidate[1].provenance.refs.harnessCommit = "0".repeat(40);
-  assert.throws(() => validateCohort(candidate), /Mixed source selections/);
-  const baseline = samplePair(cases.healthy, "baseline");
-  baseline[0].fixtureTree = "different-tree";
-  assert.throws(() => pairedReport(baseline, samplePair(cases.healthy, "candidate"), calibratedBudget(cases.healthy)), /Mismatched sample pair: fixtureTree/);
-  assert.throws(() => pairedReport([], samplePair(cases.healthy, "candidate"), calibratedBudget(cases.healthy)), /Missing baseline pair/);
-});
-
-test("artifact bytes and CPU probes must match their source provenance", () => {
-  const artifacts = join(__dirname, "../../fixtures/hosted-check/artifacts");
-  artifactBuilds(artifacts);
-  const directory = mkdtempSync(join(tmpdir(), "hosted-check-artifacts-"));
-  try {
-    cpSync(artifacts, directory, { recursive: true });
-    copyFileSync(join(directory, "candidate/no-mistakes"), join(directory, "baseline/no-mistakes"));
-    assert.throws(() => artifactBuilds(directory), /baseline binary hash/);
-    cpSync(artifacts, directory, { recursive: true });
-    copyFileSync(join(directory, "candidate/no-mistakes"), join(directory, "baseline/cpu-probe"));
-    assert.throws(() => artifactBuilds(directory), /baseline CPU probe hash/);
-  } finally { rmSync(directory, { recursive: true, force: true }); }
 });

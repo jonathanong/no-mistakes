@@ -8,7 +8,13 @@ const {
 } = require("./hosted-check-runtime.cjs");
 const { readFileSync, readdirSync, writeFileSync } = require("node:fs");
 const { join } = require("node:path");
-const { metricValue, calibratedBudget, enforceBudget, pairedReport, budgetReport } = require("./hosted-check-budget.cjs");
+const {
+  metricValue,
+  calibratedBudget,
+  enforceBudget,
+  pairedReport,
+  budgetReport,
+} = require("./hosted-check-budget.cjs");
 function parseTime(text, processExit) {
   const values = Object.fromEntries(
     text
@@ -53,7 +59,9 @@ function aggregate(samples) {
     resourceCount: resources.length,
     userMax: resources.length ? Math.max(...resources.map((sample) => sample.user)) : null,
     systemMax: resources.length ? Math.max(...resources.map((sample) => sample.system)) : null,
-    cpuMax: resources.length ? Math.max(...resources.map((sample) => metricValue(sample, "cpu"))) : null,
+    cpuMax: resources.length
+      ? Math.max(...resources.map((sample) => metricValue(sample, "cpu")))
+      : null,
     rssMaxKiB: resources.length ? Math.max(...resources.map((sample) => sample.rss_kib)) : null,
   };
 }

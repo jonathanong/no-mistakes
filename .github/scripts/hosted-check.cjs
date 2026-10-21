@@ -42,8 +42,12 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   const native = join(dirname(nativePackage), "bin", "no-mistakes");
   const original = join(output, "launcher-original-no-mistakes");
   copyFileSync(native, original);
-  const cpuProbes = Object.fromEntries(["baseline", "candidate"].map((variant) =>
-    [variant, Number(command(join(artifact, variant, "cpu-probe"), [], fixture))]));
+  const cpuProbes = Object.fromEntries(
+    ["baseline", "candidate"].map((variant) => [
+      variant,
+      Number(command(join(artifact, variant, "cpu-probe"), [], fixture)),
+    ]),
+  );
   if (!Object.values(cpuProbes).every((count) => Number.isInteger(count) && count > 0))
     throw new Error("Invalid source-built CPU probe result");
   const configBefore = hashFile(join(fixture, ".no-mistakes.yml"));
@@ -51,8 +55,13 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   if (!["1", "4", "auto"].includes(jobs)) throw new Error(`Invalid jobs: ${jobs}`);
   const checkArgs = jobs === "auto" ? CHECK_ARGS : [...CHECK_ARGS, "--jobs", jobs];
   const metadata = measurementEnvironment(fixture, rootPackage, checkArgs, {
-    jobs, fixtureCommit, fixtureTree, configSha256: configBefore,
-    sampleNumber, cpuProbes, builds,
+    jobs,
+    fixtureCommit,
+    fixtureTree,
+    configSha256: configBefore,
+    sampleNumber,
+    cpuProbes,
+    builds,
   });
   writeFileSync(join(output, "environment.json"), JSON.stringify(metadata, null, 2));
   writeFileSync(join(output, "cpu.txt"), command("lscpu", [], fixture));
@@ -96,7 +105,10 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         sourceTree: builds[variant].tree,
         provenance: builds[variant],
         numCpus: cpuProbes[variant],
-        rayonJobs: jobs === "auto" ? Number(process.env.RAYON_NUM_THREADS || cpuProbes[variant]) : Number(jobs),
+        rayonJobs:
+          jobs === "auto"
+            ? Number(process.env.RAYON_NUM_THREADS || cpuProbes[variant])
+            : Number(jobs),
         order,
         sampleNumber,
         fixtureCommit,
