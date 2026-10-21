@@ -1,14 +1,8 @@
 mod graph_files;
 use super::{
-<<<<<<< HEAD
-    any_codebase_rule_enabled, canonical_graph_requires_full_file_universe, rule_enabled,
-    try_canonical_graph_plan, PreparedRulesCheck, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
-    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
-=======
     any_codebase_rule_enabled, rule_enabled, try_canonical_graph_plan, PreparedRulesCheck,
-    FORBIDDEN_CALLS, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
+    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
     SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
->>>>>>> ca3b66837 (perf(check): scope family fact extract to include plus import closure.)
 };
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
