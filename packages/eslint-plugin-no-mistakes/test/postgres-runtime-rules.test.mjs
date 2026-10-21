@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { lint, messages, plugin, require } from "./helpers.mjs";
+import { fixture, lint, messages, plugin, require } from "./helpers.mjs";
 
 const helpers = require("../src/rules/postgres-runtime-helpers");
 
@@ -1192,8 +1192,18 @@ describe("postgres-no-unbounded-query-fanout", () => {
       Promise.all(bounded.map((id) => query("SELECT 1")));
       const chunks = chunkArray(ids);
       Promise.all(chunks.map((id) => query("SELECT 1")));
+      for (const ids of chunkArray(userIds, 50)) {
+        Promise.all(ids.map((id) => query("SELECT 1")));
+      }
     `;
     assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), []);
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-chunk.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      [],
+    );
   });
 
   it("ignores maps without executors and non-map Promise.all", () => {

@@ -59,6 +59,14 @@ function isChunkCall(node, chunkFunctionNames) {
   return Boolean(name && chunkFunctionNames.includes(name));
 }
 
+function forOfRightHandSide(node) {
+  let current = node;
+  while (current) {
+    if (current.type === "ForOfStatement") return current.right;
+    current = current.parent;
+  }
+}
+
 function isStaticallyBounded(source, chunkFunctionNames, context) {
   source = unwrapTs(source);
   if (!source) return false;
@@ -67,10 +75,13 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
   if (source.type === "CallExpression" && isChunkCall(source, chunkFunctionNames)) return true;
   if (source.type === "Identifier" && context) {
     const variable = resolveVariable(source, context);
-    const init = variable?.defs?.find(
-      (def) => def.type === "Variable" && def.node?.id?.type === "Identifier",
-    )?.node?.init;
+    const def = variable?.defs?.find(
+      (item) => item.type === "Variable" && item.node?.id?.type === "Identifier",
+    );
+    const init = def?.node?.init;
     if (init && init !== source) return isStaticallyBounded(init, chunkFunctionNames, null);
+    const iterated = forOfRightHandSide(def?.node);
+    if (iterated) return isStaticallyBounded(iterated, chunkFunctionNames, null);
   }
   return false;
 }
