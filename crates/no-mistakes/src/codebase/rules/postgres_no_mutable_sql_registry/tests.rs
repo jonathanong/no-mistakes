@@ -21,7 +21,16 @@ fn findings(scenario: &str) -> Vec<crate::codebase::rules::RuleFinding> {
 
 #[test]
 fn member_write_alias_and_array_assignment_reach_sql() {
-    for scenario in ["fail-member-write", "fail-alias", "fail-array"] {
+    for scenario in [
+        "fail-member-write",
+        "fail-alias",
+        "fail-array",
+        "fail-namespace",
+        "fail-reexport-alias",
+        "fail-export-star",
+        "fail-delete",
+        "fail-define-property",
+    ] {
         let found = findings(scenario);
         assert!(
             found.iter().any(|finding| {
@@ -43,7 +52,6 @@ fn literal_unrelated_prototype_bind_http_and_suppression_stay_silent() {
         "pass-bind-value",
         "pass-http-query",
         "pass-suppressed",
-        "pass-namespace",
         "pass-env-identifier",
         "pass-same-file-write",
     ] {

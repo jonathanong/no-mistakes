@@ -1,7 +1,8 @@
 //! Cross-file env/config identifier interpolations without a finite validator.
 use super::postgres_sql_cross_file::{
     check_applications, count, finding, identifier_placeholder, interpolations, is_process_env,
-    sql_calls, unique_export, walk_expression, Provenance, SqlCall,
+    is_process_specifier, sql_calls, unique_export, unique_namespace_member, walk_expression,
+    Provenance, SqlCall,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ValueExpression;
@@ -44,7 +45,7 @@ fn scan(
         if identifier_placeholder(call.call) != Some(true) {
             continue;
         }
-        for provenance in interpolations(&call) {
+        for provenance in interpolations(graph, facts, &call) {
             if let Some(finding) = identifier_finding(root, graph, facts, &call, &provenance) {
                 sinks += 1;
                 findings.push(finding);
@@ -75,20 +76,47 @@ fn identifier_finding(
                 Some(format!("process.env.{key}")),
             ))
         }
-        Provenance::Named(name) => {
-            if local_env_alias(facts, &call.file, name) {
-                return Some(message(root, call, "process.env", Some(name.clone())));
-            }
-            let unique = unique_export(graph, facts, &call.file, name)?;
-            if unique.producer == call.file
-                || !export_is_unbounded(facts, &unique.producer, &unique.exported)
-            {
-                return None;
-            }
-            let producer = relative_slash_path(root, &unique.producer);
-            Some(message(root, call, &producer, Some(name.clone())))
+        Provenance::Named(name) => named_finding(root, graph, facts, call, name),
+        Provenance::Namespace { local, exported } => {
+            let unique = unique_namespace_member(graph, facts, &call.file, local, exported)?;
+            imported_unbounded(root, facts, call, unique.producer, &unique.exported, local)
         }
     }
+}
+
+fn named_finding(
+    root: &Path,
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    call: &SqlCall<'_>,
+    name: &str,
+) -> Option<RuleFinding> {
+    if local_env_alias(facts, &call.file, name) || parameter(facts, &call.file, name) {
+        return Some(message(root, call, name, Some(name.to_string())));
+    }
+    if query_result_binding(facts, &call.file, name) {
+        return Some(message(root, call, name, Some(name.to_string())));
+    }
+    let unique = unique_export(graph, facts, &call.file, name)?;
+    if unique.producer == call.file {
+        return None;
+    }
+    imported_unbounded(root, facts, call, unique.producer, &unique.exported, name)
+}
+
+fn imported_unbounded(
+    root: &Path,
+    facts: &CheckFactMap,
+    call: &SqlCall<'_>,
+    producer: std::path::PathBuf,
+    exported: &str,
+    name: &str,
+) -> Option<RuleFinding> {
+    if !export_is_unbounded(facts, &producer, exported) {
+        return None;
+    }
+    let producer = relative_slash_path(root, &producer);
+    Some(message(root, call, &producer, Some(name.to_string())))
 }
 
 fn message(root: &Path, call: &SqlCall<'_>, producer: &str, import: Option<String>) -> RuleFinding {
@@ -107,9 +135,11 @@ fn message(root: &Path, call: &SqlCall<'_>, producer: &str, import: Option<Strin
 
 fn shadowed_process(facts: &CheckFactMap, file: &Path) -> bool {
     facts.get_ts_facts(file).is_some_and(|ts| {
-        ts.imported_bindings
-            .iter()
-            .any(|binding| !binding.is_type_only && binding.local == "process")
+        ts.imported_bindings.iter().any(|binding| {
+            !binding.is_type_only
+                && binding.local == "process"
+                && !is_process_specifier(&binding.specifier)
+        })
     })
 }
 
@@ -122,6 +152,27 @@ fn local_env_alias(facts: &CheckFactMap, file: &Path, name: &str) -> bool {
             .bindings
             .iter()
             .any(|binding| binding.name == name && expression_unbounded(&binding.value))
+    })
+}
+
+fn parameter(facts: &CheckFactMap, file: &Path, name: &str) -> bool {
+    facts.get_ts_facts(file).is_some_and(|ts| {
+        ts.value_flow
+            .parameters
+            .iter()
+            .any(|parameter| parameter.name == name)
+    })
+}
+
+fn query_result_binding(facts: &CheckFactMap, file: &Path, name: &str) -> bool {
+    facts.get_ts_facts(file).is_some_and(|ts| {
+        ts.value_flow.bindings.iter().any(|binding| {
+            binding.name == name
+                && matches!(
+                    binding.value,
+                    ValueExpression::Call(_, _) | ValueExpression::Awaited(_)
+                )
+        })
     })
 }
 

@@ -116,7 +116,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |
 | [`postgres-no-offset`](postgres-no-offset.md)                                 | Ban SQL OFFSET in executed PostgreSQL queries.                                  |
 | [`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md)     | Ban cross-file member writes that reach SQL identifier interpolations.          |
-| [`postgres-no-unbounded-sql-identifier`](postgres-no-unbounded-sql-identifier.md) | Ban unbounded env/config values interpolated as SQL identifiers.           |
+| [`postgres-no-unbounded-sql-identifier`](postgres-no-unbounded-sql-identifier.md) | Ban unbounded env/config/parameter/row values interpolated as SQL identifiers. |
 | [`postgres-array-columns`](postgres-array-columns.md)                        | Flag PostgreSQL array columns unless an allow entry or element type excuses them. |
 | [`postgres-key-column-types`](postgres-key-column-types.md) | Require configured types for primary-key and foreign-key columns. |
 | [`postgres-column-naming`](postgres-column-naming.md)                        | Check PostgreSQL column names against configured types, targets, and foreign keys. |

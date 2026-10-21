@@ -10,7 +10,6 @@ pub(crate) struct SqlCall<'a> {
     pub file: PathBuf,
     pub span: (u32, u32),
     pub call: &'a EmbeddedSqlCall,
-    pub source: Option<&'a str>,
 }
 
 pub(crate) fn sql_calls<'a>(
@@ -27,10 +26,6 @@ pub(crate) fn sql_calls<'a>(
         let Ok(sql) = facts.embedded_sql(path, &opts.embedded) else {
             continue;
         };
-        let source = facts
-            .ts
-            .get(path)
-            .and_then(|file| file.source.as_deref().or(file.ts.source.as_deref()));
         for (call, span) in sql.calls.iter().zip(sql.call_spans.iter()) {
             if sql
                 .unproven_member_query_spans
@@ -43,7 +38,6 @@ pub(crate) fn sql_calls<'a>(
                 file: path.clone(),
                 span: *span,
                 call,
-                source,
             });
         }
     }

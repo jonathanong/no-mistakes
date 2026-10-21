@@ -27,7 +27,18 @@ fn findings(scenario: &str) -> Vec<crate::codebase::rules::RuleFinding> {
 
 #[test]
 fn env_imported_config_and_type_assertions_are_unbounded() {
-    for scenario in ["fail-env", "fail-imported-config", "fail-type-assertion"] {
+    for scenario in [
+        "fail-env",
+        "fail-imported-config",
+        "fail-type-assertion",
+        "fail-identity-wrapper",
+        "fail-to-lowercase",
+        "fail-bracket-env",
+        "fail-imported-env",
+        "fail-imported-process",
+        "fail-request-params",
+        "fail-db-rows",
+    ] {
         let found = findings(scenario);
         assert!(
             found
@@ -46,7 +57,6 @@ fn switch_bind_http_and_suppression_stay_silent() {
         "pass-bind-value",
         "pass-http-query",
         "pass-suppressed",
-        "pass-imported-process",
         "pass-imported-literal",
     ] {
         assert!(
@@ -100,7 +110,6 @@ fn same_file_or_literal_exports_are_not_unbounded_identifier_sources() {
         file: file.clone(),
         span: (0, 1),
         call: &owned,
-        source: None,
     };
     assert!(identifier_finding(
         Path::new("/repo"),

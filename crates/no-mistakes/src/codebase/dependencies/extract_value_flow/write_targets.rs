@@ -1,6 +1,22 @@
 use super::*;
 use oxc_ast::ast::{AssignmentTargetMaybeDefault, AssignmentTargetProperty};
 type WriteTarget = (String, ValueMutationPath, u32);
+pub(in super::super) fn from_expression(expression: &Expression<'_>) -> Option<WriteTarget> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        Expression::StaticMemberExpression(member) => member_target(
+            &member.object,
+            Some(member.property.name.to_string()),
+            member.span.start,
+        ),
+        Expression::ComputedMemberExpression(member) => member_target(
+            &member.object,
+            static_key(&member.expression),
+            member.span.start,
+        ),
+        _ => None,
+    }
+}
+
 pub(in super::super) fn targets(target: &AssignmentTarget<'_>) -> Vec<WriteTarget> {
     #[cfg(feature = "test-instrumentation")]
     if matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_)) {

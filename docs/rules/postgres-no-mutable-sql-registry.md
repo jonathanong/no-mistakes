@@ -7,11 +7,14 @@ Flags a member write in one module that mutates an exported SQL identifier regis
 The request prepares embedded SQL, import edges, and value-flow mutations once. This rule borrows those facts and the canonical graph. Unknown provenance, HTTP `.query` collisions, and dynamic keys are not proven violations. There is no autofix.
 
 ```yaml
+projects:
+  app:
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
 rules:
   - rule: postgres-no-mutable-sql-registry
-    scope: repository
-    options:
-      importSpecifier: "@example/db"
+    projects: [app]
 ```
 
 ## Why and when
@@ -21,6 +24,8 @@ Use this when one module exports `const tables = {}` and another assigns `tables
 ## What it catches
 
 A uniquely imported export receives a known member write in another file, and a configured executor interpolates that binding into a recovered SQL relation (`FROM ${tables.users}`). Findings name the producer, the writer, and the SQL sink.
+
+Writes through a named re-export (`export { tables as registry } from "./tables"`), an `export *` barrel, or a namespace import (`import * as t` then `t.tables.users = ...`) are the same violation as a direct named import. `delete tables.users` and `Object.defineProperty(tables, ...)` are member mutations too.
 
 ## Valid example
 
@@ -57,9 +62,11 @@ export function list() {
 }
 ```
 
+`export { tables as registry } from "./tables"` then `registry.users = ...`, `export * from "./tables"` through an index, `import * as t` then `t.tables.users = ...`, `delete tables.users`, and `Object.defineProperty(tables, "users", { value: "app.users" })` are the same class of write.
+
 ## Fix
 
-Declare the complete literal registry in one module and import it. Do not assign members after export.
+Declare the complete literal registry in one module and import it. Do not assign, delete, or redefine members after export.
 
 ```ts
 export const tables = { users: "app.users" } as const;
@@ -67,7 +74,7 @@ export const tables = { users: "app.users" } as const;
 
 ## Options and defaults
 
-`importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
+`importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls when the rule does not inherit a project postgres block. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
 
 ## Suppression
 

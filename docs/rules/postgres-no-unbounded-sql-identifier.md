@@ -2,25 +2,30 @@
 
 A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, or `trustedSqlTags` on the rule. `include` and `exclude` may only narrow the project scope.
 
-Flags `process.env`, imported config, or a local alias of those values interpolated into a SQL relation without a runtime finite-domain validator. A TypeScript union, `satisfies`, or `as const` assertion around external data is not validation. Generated bind values remain allowed.
+Flags `process.env`, imported config, request parameters, query result rows, or a local alias of those values interpolated into a SQL relation without a runtime finite-domain validator. A TypeScript union, `satisfies`, or `as const` assertion around external data is not validation. Generated bind values remain allowed.
 
-The request prepares embedded SQL, import edges, and value-flow facts once. This rule borrows those facts and the canonical graph. Recovered switch/validator alternatives that splice literal schemas pass. Unknown provenance and HTTP `.query` collisions are not proven violations. There is no autofix.
+The request prepares embedded SQL, import edges, and value-flow facts once. This rule borrows those facts and the canonical graph. Recovered switch/validator alternatives that splice literal schemas pass. A call is a validator only when the callee is a proven finite helper (literal returns, typically a switch whose default throws). Identity wrappers, `String()`, and `.toLowerCase()` are not validators. Unknown provenance and HTTP `.query` collisions are not proven violations. There is no autofix.
 
 ```yaml
+projects:
+  app:
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
 rules:
   - rule: postgres-no-unbounded-sql-identifier
-    scope: repository
-    options:
-      importSpecifier: "@example/db"
+    projects: [app]
 ```
 
 ## Why and when
 
-Use this when `config.schema` or `process.env.SCHEMA` is concatenated into a relation. Agents otherwise treat the identifier as a closed set.
+Use this when `config.schema`, `process.env.SCHEMA`, a request parameter, or a database row is concatenated into a relation. Agents otherwise treat the identifier as a closed set.
 
 ## What it catches
 
-A configured executor interpolates `process.env.*`, a local alias of it, or a uniquely imported export whose initializer reads `process.env`, into a recovered SQL relation. Findings name the producer and the SQL sink and ask for a throwing switch.
+A configured executor interpolates `process.env.*` (including `process.env["SCHEMA"]`, `import { env } from "node:process"`, and `import { process } from "node:process"`), a local alias of it, a uniquely imported export whose initializer reads `process.env`, a function parameter (`req.params.schema`), or a query-result binding (`result.rows[0].schema`) into a recovered SQL relation. Findings name the producer and the SQL sink and ask for a throwing switch.
+
+A helper call around those values is reported unless the callee is a proven finite validator. Interpolations come from prepared template-expression facts, not a lexical `${...}` scan of the call span.
 
 ## Valid example
 
@@ -56,7 +61,7 @@ export function list() {
 }
 ```
 
-`const schema = process.env.SCHEMA as "app" | "public"` is the same violation.
+`const schema = process.env.SCHEMA as "app" | "public"` is the same violation. So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`, `${process.env["SCHEMA"]}`, `${env.SCHEMA}` after `import { env } from "node:process"`, `${req.params.schema}`, and `${result.rows[0].schema}`.
 
 ## Fix
 
@@ -64,7 +69,7 @@ Map accepted runtime values to literal schemas with a switch whose default throw
 
 ## Options and defaults
 
-`importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
+`importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls when the rule does not inherit a project postgres block. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
 
 ## Suppression
 

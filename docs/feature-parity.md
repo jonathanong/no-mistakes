@@ -59,8 +59,11 @@ structural PostgreSQL rules.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
-and env/config identifier interpolations through prepared import, value-flow,
-and embedded-SQL facts plus the canonical graph. CLI `check`, Node `check()`,
+(including re-export aliases, `export *` barrels, namespace imports, `delete`,
+and `Object.defineProperty`) and unbounded identifier interpolations
+(`process.env`, imported config, request parameters, query rows, and
+non-finite wrappers) through prepared import, value-flow, and embedded-SQL
+facts plus the canonical graph. CLI `check`, Node `check()`,
 and batched `analyzeProject()` share findings. Unknown provenance and HTTP
 `.query` collisions stay silent. See
 [mutable SQL registries](rules/postgres-no-mutable-sql-registry.md) and

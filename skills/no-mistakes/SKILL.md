@@ -173,10 +173,12 @@ for all 23 supported kinds and `bannedSettings` for named SET/set_config changes
 Unknown statement kinds or groups fail configuration validation. See the
 [statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
 
-To catch cross-file SQL identifier registries and unbounded env/config sources,
-enable `postgres-no-mutable-sql-registry` and
-`postgres-no-unbounded-sql-identifier` with `importSpecifier`. They use prepared
-import, value-flow, and embedded-SQL facts. Unknown provenance stays silent.
+To catch cross-file SQL identifier registries and unbounded env/config/parameter
+sources, enable `postgres-no-mutable-sql-registry` and
+`postgres-no-unbounded-sql-identifier`. Inherit `importSpecifier` from
+`projects.<name>.postgres` instead of restating it on the rule. They use
+prepared import, value-flow, and embedded-SQL facts. Unknown provenance stays
+silent.
 See [mutable SQL registries](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-mutable-sql-registry.md)
 and [unbounded SQL identifiers](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-unbounded-sql-identifier.md).
 

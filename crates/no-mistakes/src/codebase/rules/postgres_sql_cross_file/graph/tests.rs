@@ -1,7 +1,10 @@
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
-use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBinding};
+use crate::codebase::dependencies::extract::{
+    ExportedBinding, ImportedBinding, ImportedBindingKind,
+};
 use crate::codebase::dependencies::graph::test_support::{from_raw_maps, from_typed_maps};
+use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -117,4 +120,116 @@ fn unique_export_abstains_on_unproven_or_ambiguous_producers() {
     .collect();
     let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
     assert!(unique_export(&graph, &facts, &importer, "tables").is_none());
+
+    facts.ts.insert(
+        importer.clone(),
+        file_facts(TsFileFacts {
+            imported_bindings: vec![ImportedBinding {
+                specifier: "./tables".into(),
+                local: "t".into(),
+                imported: "*".into(),
+                kind: ImportedBindingKind::Namespace,
+                is_type_only: false,
+            }],
+            ..Default::default()
+        }),
+    );
+    assert!(unique_export(&graph, &facts, &importer, "t").is_none());
+}
+
+#[test]
+fn unique_export_follows_named_reexports_stars_and_namespace_members() {
+    let importer = PathBuf::from("/repo/src/query.ts");
+    let barrel = PathBuf::from("/repo/src/barrel.ts");
+    let producer = PathBuf::from("/repo/src/tables.ts");
+    let mut facts = CheckFactMap::default();
+    facts.ts.insert(
+        importer.clone(),
+        file_facts(TsFileFacts {
+            imported_bindings: vec![ImportedBinding {
+                specifier: "./barrel".into(),
+                local: "registry".into(),
+                imported: "registry".into(),
+                kind: ImportedBindingKind::Named,
+                is_type_only: false,
+            }],
+            ..Default::default()
+        }),
+    );
+    facts.ts.insert(
+        barrel.clone(),
+        file_facts(TsFileFacts {
+            exported_bindings: vec![ExportedBinding {
+                specifier: Some("./tables".into()),
+                local: "tables".into(),
+                exported: "registry".into(),
+            }],
+            ..Default::default()
+        }),
+    );
+    facts.ts.insert(
+        producer.clone(),
+        file_facts(TsFileFacts {
+            exported_bindings: vec![local_binding("tables")],
+            ..Default::default()
+        }),
+    );
+    let forward = [
+        (
+            NodeId::file(&importer),
+            vec![(NodeId::file(&barrel), EdgeKind::Import)],
+        ),
+        (
+            NodeId::file(&barrel),
+            vec![(NodeId::file(&producer), EdgeKind::Import)],
+        ),
+    ]
+    .into_iter()
+    .collect();
+    let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
+    let unique = unique_export(&graph, &facts, &importer, "registry").unwrap();
+    assert_eq!(unique.producer, producer);
+    assert_eq!(unique.exported, "registry");
+
+    facts.ts.insert(
+        importer.clone(),
+        file_facts(TsFileFacts {
+            imported_bindings: vec![named_import("tables")],
+            ..Default::default()
+        }),
+    );
+    facts.ts.insert(
+        barrel.clone(),
+        file_facts(TsFileFacts {
+            star_reexport_specifiers: vec!["./tables".into()],
+            ..Default::default()
+        }),
+    );
+    let unique = unique_export(&graph, &facts, &importer, "tables").unwrap();
+    assert_eq!(unique.producer, producer);
+    assert_eq!(unique.exported, "tables");
+
+    facts.ts.insert(
+        importer.clone(),
+        file_facts(TsFileFacts {
+            imported_bindings: vec![ImportedBinding {
+                specifier: "./tables".into(),
+                local: "t".into(),
+                imported: "*".into(),
+                kind: ImportedBindingKind::Namespace,
+                is_type_only: false,
+            }],
+            ..Default::default()
+        }),
+    );
+    let forward = [(
+        NodeId::file(&importer),
+        vec![(NodeId::file(&producer), EdgeKind::Import)],
+    )]
+    .into_iter()
+    .collect();
+    let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
+    let unique = unique_namespace_member(&graph, &facts, &importer, "t", "tables").unwrap();
+    assert_eq!(unique.producer, producer);
+    assert_eq!(unique.exported, "tables");
 }

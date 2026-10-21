@@ -7,14 +7,34 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_expression_with_annex_b_initializer(self, expression);
     }
 
-    fn visit_statement(&mut self, statement: &Statement<'a>) { visit_statement_with_type_binding(self, statement); }
+    fn visit_statement(&mut self, statement: &Statement<'a>) {
+        visit_statement_with_type_binding(self, statement);
+    }
 
-    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) { visit_if_with_execution(self, statement); }
-    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) { visit_logical_with_execution(self, expression); }
-    fn visit_conditional_expression(&mut self, expression: &oxc_ast::ast::ConditionalExpression<'a>) { visit_conditional_with_execution(self, expression); }
-    fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) { visit_binding_default_with_execution(self, pattern); }
-    fn visit_assignment_target_with_default(&mut self, target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>) { visit_target_default_with_execution(self, target); }
-    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) { visit_parameter_default_with_execution(self, parameter); }
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
+        visit_if_with_execution(self, statement);
+    }
+    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+        visit_logical_with_execution(self, expression);
+    }
+    fn visit_conditional_expression(
+        &mut self,
+        expression: &oxc_ast::ast::ConditionalExpression<'a>,
+    ) {
+        visit_conditional_with_execution(self, expression);
+    }
+    fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
+        visit_binding_default_with_execution(self, pattern);
+    }
+    fn visit_assignment_target_with_default(
+        &mut self,
+        target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>,
+    ) {
+        visit_target_default_with_execution(self, target);
+    }
+    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) {
+        visit_parameter_default_with_execution(self, parameter);
+    }
 
     fn visit_function(
         &mut self,
@@ -100,8 +120,12 @@ impl<'a> Visit<'a> for ImportCollector {
         with_repeat_execution(self, statement, visit_do_while_statement_per_item);
     }
 
-    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) { visit_try_with_receiver_execution(self, statement); }
-    fn visit_labeled_statement(&mut self, statement: &oxc_ast::ast::LabeledStatement<'a>) { visit_label_with_receiver_execution(self, statement); }
+    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) {
+        visit_try_with_receiver_execution(self, statement);
+    }
+    fn visit_labeled_statement(&mut self, statement: &oxc_ast::ast::LabeledStatement<'a>) {
+        visit_label_with_receiver_execution(self, statement);
+    }
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
     }
@@ -163,7 +187,9 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_ts_import_type_with_scope(self, import);
     }
 
-    fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) { self.visit_value_return(statement); }
+    fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) {
+        self.visit_value_return(statement);
+    }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.visit_receiver_call(call);
@@ -188,6 +214,18 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_unary_expression(&mut self, expression: &oxc_ast::ast::UnaryExpression<'a>) {
         if expression.operator == oxc_syntax::operator::UnaryOperator::Delete {
             self.invalidate_replacement_expression();
+            if self.collect_value_flow {
+                if let Some((name, path, start)) =
+                    extract_value_flow::write_targets::from_expression(&expression.argument)
+                {
+                    self.record_reassigned_callable_alias_path(
+                        &name,
+                        start,
+                        Some(&path),
+                        expression.span.end,
+                    );
+                }
+            }
         }
         walk::walk_unary_expression(self, expression);
     }
