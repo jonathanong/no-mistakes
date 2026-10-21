@@ -52,6 +52,15 @@ function wrapperMatches(callee, wrapper, context) {
   return calleePath(callee) === wrapper || spelledCallee(callee, context) === wrapper;
 }
 
+function argumentContains(argument, target) {
+  return (
+    argument?.range &&
+    target?.range &&
+    argument.range[0] <= target.range[0] &&
+    argument.range[1] >= target.range[1]
+  );
+}
+
 function insideWrapper(node, wrapper, context) {
   let current = node.parent;
   while (current) {
@@ -62,7 +71,13 @@ function insideWrapper(node, wrapper, context) {
     }
     if (wrapperMatches(current.callee, wrapper, context)) return true;
     const invoked = logicalCall(current);
-    if (invoked && wrapperMatches(invoked.callee, wrapper, context)) return true;
+    if (
+      invoked &&
+      wrapperMatches(invoked.callee, wrapper, context) &&
+      invoked.arguments.some((argument) => argumentContains(argument, node))
+    ) {
+      return true;
+    }
     if (isFunctionBoundary(current)) return false;
     current = current.parent;
   }

@@ -365,6 +365,15 @@ describe("call-binding recall", () => {
       ).length,
       6,
     );
+    assert.deepEqual(
+      messages(
+        fixture("server-require-nullable-fetch-wrapper/forwarded-this.ts"),
+        "server-require-nullable-fetch-wrapper",
+        server,
+        "backend/users.ts",
+      ),
+      ["wrapper", "wrapper"],
+    );
   });
 
   it("keeps a configured local wrapper and a forwarded allowed origin", () => {

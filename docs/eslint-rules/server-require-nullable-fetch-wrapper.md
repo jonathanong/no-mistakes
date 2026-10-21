@@ -42,7 +42,7 @@ wrapper, or narrow the configured getter/path policy.
 
 A callee whose own name is `call` or `apply`, such as `rpc.call("/users/1")` or `rpc.call(...args)`, is matched as that callee before forwarding is considered. `requiredWrapperCallee` matches the local binding, so `import { nullableEntity as wrap }` with `requiredWrapperCallee: "wrap"` still accepts `wrap(getUser())`. The imported name `nullableEntity` matches as well.
 
-Another file's re-export is not visible here. `import { get } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { serverApi as get } from "./server-api"` or `export * from "./server-api"`. A parameter default such as `function run({ get } = serverApi)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten.
+Another file's re-export is not visible here. `import { get } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { serverApi as get } from "./server-api"` or `export * from "./server-api"`. A parameter default such as `function run({ get } = serverApi)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten. `nullableEntity.call(serverApi.get("/users/1"))` and `nullableEntity.apply(serverApi.get("/users/1"), [])` use the getter only as `this`, so the fetch is still unwrapped. `nullableEntity.call(null, serverApi.get("/users/1"))` passes the getter through.
 
 ## Suppression
 
