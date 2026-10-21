@@ -26,15 +26,23 @@ function baseIdentifier(callee) {
 function createImportedTestAliases(context) {
   const importedTestCallees = new Map();
   const describeAliases = new Set(["describe"]);
+  const serialAliases = new Set();
   return {
-    add(local, imported) {
+    add(local, imported, serial = false) {
       importedTestCallees.set(local.name, resolveVariable(local, context));
       if (imported === "describe") describeAliases.add(local.name);
+      if (serial) serialAliases.add(local.name);
     },
     isDescribeAliasCall(callee) {
       const base = baseIdentifier(callee);
       return (
         base?.type === "Identifier" && describeAliases.has(base.name) && !this.isShadowed(callee)
+      );
+    },
+    isSerialAlias(callee) {
+      const base = baseIdentifier(callee);
+      return (
+        base?.type === "Identifier" && serialAliases.has(base.name) && !this.isShadowed(callee)
       );
     },
     isShadowed(callee) {
@@ -92,6 +100,7 @@ function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
   for (const specifier of node.specifiers) {
     if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {
       namespaces.add(specifier.local.name);
+      testAliases.add(specifier.local, "namespace");
     }
     if (
       specifier.type === "ImportDefaultSpecifier" &&

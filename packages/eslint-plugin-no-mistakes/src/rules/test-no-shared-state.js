@@ -97,7 +97,11 @@ module.exports = rule(
               isKnownTestCallee,
             )
           ) {
-            testAliases.add(declaration.id, "describe");
+            testAliases.add(
+              declaration.id,
+              "describe",
+              testAliases.hasProperty(declaration.init, "serial"),
+            );
           }
         }
         if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
@@ -138,7 +142,10 @@ module.exports = rule(
         const isShadowed = testAliases.isShadowed(node.callee);
         const isDescribe =
           !isShadowed && (isDescribeCall(node) || testAliases.isDescribeAliasCall(node.callee));
-        const isSerialSuite = isDescribe && testAliases.hasProperty(node.callee, "serial");
+        const isSerialSuite =
+          isDescribe &&
+          (testAliases.hasProperty(node.callee, "serial") ||
+            testAliases.isSerialAlias(node.callee));
         if (isDescribe) cleanupTracker.enterSuite(isSerialSuite);
         if (configureSerialMode(node)) cleanupTracker.markCurrentSuiteSerial();
         if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) {

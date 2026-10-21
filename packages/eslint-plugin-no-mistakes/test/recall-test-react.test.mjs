@@ -150,6 +150,24 @@ describe("test and react same-file recall", () => {
       ).length,
       1,
     );
+    assert.equal(
+      messages(
+        snippet("test-no-shared-state/shadow-namespace.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shadow-namespace.test.ts",
+      ).length,
+      2,
+    );
+    assert.deepEqual(
+      messages(
+        snippet("test-no-shared-state/serial-alias.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "serial-alias.test.ts",
+      ),
+      [],
+    );
   });
 
   it("reports delayed rejects through renamed expect and static keys", () => {
