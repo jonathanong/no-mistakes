@@ -100,7 +100,9 @@ impl CaptureOrigins {
             event.completed_at <= read.0
         });
         if index == 0 {
-            return Some((captures.initial.as_slice(), false));
+            // Forwarding through a reassigned callback can populate the legacy
+            // union after this snapshot. Missing initial facts prove no absence.
+            return (!captures.initial.is_empty()).then_some((captures.initial.as_slice(), false));
         }
         let event = &captures.events[index - 1];
         (event.certain && matches!(event.value, ValueExpression::Named { .. }))

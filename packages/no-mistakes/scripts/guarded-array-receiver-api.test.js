@@ -191,3 +191,6 @@ test(
     assert.deepEqual(await esm.analyzeProject(options), batch);
   },
 );
+
+// Register the saved default-callback controls in the existing native CI suite.
+require("./guarded-default-callback-api.test.js");

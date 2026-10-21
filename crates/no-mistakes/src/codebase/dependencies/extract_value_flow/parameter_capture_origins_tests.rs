@@ -70,3 +70,29 @@ fn capture_generations_use_indexed_completion_predecessors() {
     captures.foreign = true;
     assert!(origins.at(&key, (0, Some(CallableId(1)))).is_none());
 }
+
+#[test]
+fn missing_initial_origins_retain_later_forwarding_fallback() {
+    let key = (1, "box".to_string());
+    let mut origins = CaptureOrigins::default();
+    origins.bindings.insert(
+        key.clone(),
+        Captures {
+            initial: Vec::new(),
+            owner: CallableId(1),
+            foreign: false,
+            events: vec![Reassignment {
+                key: key.clone(),
+                value: named("replacement"),
+                completed_at: 10,
+                context: Some(CallableId(1)),
+                certain: true,
+                recovered: false,
+            }],
+        },
+    );
+    assert!(origins.at(&key, (9, Some(CallableId(1)))).is_none());
+    let (values, possible) = origins.at(&key, (10, Some(CallableId(1)))).unwrap();
+    assert!(!possible);
+    assert!(matches!(&values[0], ValueExpression::Named { name, .. } if name == "replacement"));
+}

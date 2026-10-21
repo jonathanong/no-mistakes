@@ -613,6 +613,8 @@ through `args` affects `other`, not the original argument. In
 `const args = [box]; box = other`, the array still holds the original argument;
 the rebinding does not rewrite its stored entry. Assignment completion, rather
 than the start of its right-hand side, separates these captures.
+Default callbacks forward their input origins before these snapshots are formed;
+parameter reassignment unions are added separately.
 Newly recovered destructuring writes remain possible evidence. Their method
 candidates stay alongside unknown evidence even when a captured assignment can
 be selected; retaining that candidate does not assert that the original method

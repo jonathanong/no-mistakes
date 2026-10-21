@@ -138,3 +138,19 @@ fn newly_recovered_pattern_writes_keep_the_previously_reported_candidate() {
         assert_export(&built, &root, file, callee);
     }
 }
+
+#[test]
+fn default_callbacks_seed_captures_before_parameter_reassignment_unions() {
+    let (built, root) = graph();
+    for (suffix, written, retained) in [
+        ("before", "untouched.get", "replica.get"),
+        ("after", "replica.get", "untouched.get"),
+    ] {
+        let file = format!("array-parameter-default-callback-{suffix}");
+        assert_unknown(&built, &root, &file, written);
+        assert_export(&built, &root, &file, retained);
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, &file, callee);
+        }
+    }
+}

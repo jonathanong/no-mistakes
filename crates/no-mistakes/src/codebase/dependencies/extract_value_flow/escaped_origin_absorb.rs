@@ -83,19 +83,27 @@ pub(in super::super) fn absorb(
             apply_escaped(values, parameters, collector, *offset, *end);
         }
     }
+    // Default callbacks are not call arguments. Recover their forwarded inputs
+    // before captures freeze the initial parameter generation.
+    super::escaped_higher_order::forward(collector, slots, values);
     let captures = super::super::parameter_call_origins::CaptureOrigins::new(collector, values);
+    let mut reassigned = false;
     for event in collector
         .receiver_escapes
         .reassigned
         .iter()
         .filter(|event| !event.recovered)
     {
+        reassigned = true;
         values
             .entry(event.key.clone())
             .or_default()
             .push(event.value.clone());
     }
-    super::escaped_higher_order::forward(collector, slots, values);
+    if reassigned {
+        // Preserve forwarding through callees recovered from reassignment facts.
+        super::escaped_higher_order::forward(collector, slots, values);
+    }
     captures
 }
 
