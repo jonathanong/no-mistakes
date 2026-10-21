@@ -92,10 +92,7 @@ fn exclude_roots_matches_the_whole_path_not_a_prefix() {
         root.path(),
         &config(root.path(), "root-exclusion-partial-path.yml"),
     );
-    assert!(
-        ok || !body.contains("excluded all configured roots"),
-        "{body}"
-    );
+    assert!(!body.contains("excluded all configured roots"), "{body}");
     let files: Vec<_> = rules(&report)
         .iter()
         .map(|finding| finding["file"].as_str().unwrap())
@@ -181,7 +178,7 @@ fn same_name_explicit_project_replaces_runner_include() {
 #[test]
 fn explicit_only_projects_union_without_runner_config() {
     let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
-    let (_, body, report) = check(root.path(), &config(root.path(), "explicit-only.yml"));
+    let (ok, body, report) = check(root.path(), &config(root.path(), "explicit-only.yml"));
     assert!(!ok, "{body}");
     assert!(rules(&report)
         .iter()
