@@ -1,1 +1,0 @@
-error: signature-impact could not analyze `fixtures/napi/derived-resolve-fact-parity/invalid-utf8.ts`: failed to read /tmp/nm-annotation-stall/fixtures/napi/derived-resolve-fact-parity/invalid-utf8.ts: invalid utf-8 sequence of 1 bytes from index 0

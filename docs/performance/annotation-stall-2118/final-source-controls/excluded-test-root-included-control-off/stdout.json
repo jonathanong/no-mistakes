@@ -1,1 +1,0 @@
-{"advisories":[],"codebase":[],"integration":[],"queues":[],"react":[],"rules":[{"file":"excluded.test.mts","line":4,"message":"excluded.test.mts:4: query execution must start with a /* name */ annotation","rule":"postgres-require-query-annotation","target":"annotation"}],"warnings":[]}

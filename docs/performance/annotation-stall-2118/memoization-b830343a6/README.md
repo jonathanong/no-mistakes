@@ -30,7 +30,7 @@ Exact-source validation at `b830343a6a3809e1d37df5fecb38931586337810` passes:
 Every configured Postgres fixture root compares identically: 523 complete reports
 and five intentional configuration errors across 528 roots. The two fixtures that
 require live-generated catalogs were also compared after private PostgreSQL
-catalog generation. `fixture-rows.json` records the original per-root report hashes;
+catalog generation. [original per-root records](https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/memoization-b830343a6/fixture-rows.json) records the original per-root report hashes;
 `generated-catalog-fixtures.json` supplies the two generated-catalog reports.
 The complete workspace golden suite covers fixtures without their own config.
 

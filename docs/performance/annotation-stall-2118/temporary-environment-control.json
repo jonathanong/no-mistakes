@@ -2,11 +2,11 @@
   {
     "temporaryDirectory": "/tmp",
     "exit": 101,
-    "log": "env-control-tmp-ancestor.log"
+    "logUrl": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/env-control-tmp-ancestor.log"
   },
   {
-    "temporaryDirectory": "/home/jong/.cache/no-mistakes/nm-annotation-stall-test-temp",
+    "temporaryDirectory": "isolated cache directory",
     "exit": 101,
-    "log": "env-control-isolated.log"
+    "logAvailable": false
   }
 ]

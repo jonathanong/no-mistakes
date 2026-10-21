@@ -8,5 +8,7 @@
     "patch-coverage.json": "998181982d0e4d3e4512f36d807242004b99a20017191636f4d4b6b025fc26c1",
     "validation.json": "c1c1a9c735966511fca45b4220e8776cd3e4a7e15cb8fcfa3a68d06ee9d3415e",
     "work-and-coverage.json": "cc3458f70bc588a32e2b425e5d5ad5226e419c02ac302998810ba31d56a4e4db"
-  }
+  },
+  "rawEvidence": "https://github.com/jonathanong/no-mistakes/issues/2118#issuecomment-6307927353",
+  "identityNote": "Historical original file hashes; originals are archived. Retained summary root prefixes are redacted; the parent manifest records current summary hashes."
 }

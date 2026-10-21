@@ -9,6 +9,9 @@ use crate::{
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    // demand::roots mirrors file reach through runtime import/re-export edges.
+    // Any new non-import route into another file must also be represented there
+    // before executor-free roots can safely be pruned.
     pub(super) fn module_environment(&mut self, path: &Path) -> Environment {
         if let Some(env) = self.modules.get(path) {
             return *env;

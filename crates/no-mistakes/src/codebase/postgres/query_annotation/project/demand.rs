@@ -21,6 +21,10 @@ struct Frame<'a> {
 /// Only prepared executor spans can emit events. Unresolved external loads
 /// invalidate values but cannot enter another catalog file, so they do not seed
 /// demand. All resolved runtime imports and re-exports remain reachability edges.
+/// Soundness invariant: events occur only at prepared executor spans, and the
+/// evaluator reaches another file only through these runtime import/re-export
+/// edges. An executor-free SCC with no path to an executor cannot emit an event.
+/// New non-import file reach must be mirrored here before pruning stays sound.
 /// Iterative Tarjan traversal needs no competing forward/reverse adjacency and
 /// keeps long import chains off the native stack. Completed SCCs are bottom-up.
 pub(super) fn roots<'a>(

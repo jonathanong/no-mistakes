@@ -1,235 +1,1075 @@
 {
-  "purpose": "Diagnostic localization and saved reductions only; concurrent builds; not matched performance measurements or infinite-loop proof. Prototype source differs from final bounded activity implementation.",
-  "prototypeRawSha256": "d83f34e4dab2e448435c4e62d0e4092d7b4d43ed3742b1ff78a5d92dce6c6ab2",
-  "files": {
-    "README.md": "16202d79822464a01aa385dcb575a0dc9ded8457063b2d94daff8f84e4cb92e8",
-    "all-dependents.json": "8b55313a822d3a8aae9471a434c5869d7d28a6b8bf3ac8556e24204999aba40e",
-    "all-dependents.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "all-impacted.json": "fb3a375b31cbe520241692455543f5d881313898a1579468bf6c26b68ebade32",
-    "all-impacted.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "baseline-root-events.jsonl": "53b8cac7e810f19793f5dd371e7c2ec67d5cbea6f47075f082b2e154f252f570",
-    "baseline-root-stack.log": "967413d076c07b2587440ac2457ffae06bbff60f40f706ba525dd23366508268",
-    "baseline-roots.gdb": "4d3f275bbefe959b2a894e5a1ee5622c89994d29088fd2b06d571300c149f8f7",
-    "env-control-tmp-ancestor.log": "5b01a0400a4816184ee680e196b88d4112df878a953b1ba22d91722722a76e91",
-    "excluded-root-events.jsonl": "8959a148984c9d4514a713b782606eb13b0941ea6ef2764091f887471b9297c7",
-    "excluded-root-proof.json": "5f3605f28c6f1dddaafd119dbfad8129a262a29b4ffd3b85eeb1644010fd6796",
-    "excluded-root-stack.log": "7b031d24c07ff8a2e9789529bd48bfc80ef90e8835d330e84ef7f1075cfdd742",
-    "final-configured-check.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-configured-check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-impact.json": "7030261922372ab33c4121afaec2024c8f24a22adda65d4ca5e4f0fb9337ed76",
-    "final-impact.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-consumer/argv.json": "6a58ceb8f83f516ac91ae45b156ccc1579c7bcd17af7594fec7b0cc512b74e74",
-    "final-source-consumer/resource.jsonl": "7ef7533830b38bb25203c392c06fc80a88e38d8cffbf061f2ddd94a28a946184",
-    "final-source-consumer/status.json": "bbc2b51557fbe3cd35143e61d3c210a1b93c21d9aa78e5849d89e4ab96c65138",
-    "final-source-consumer/stderr.log": "2ade7cf8e16e1cf5e42c2e18c145e1a36dd9c196d46a918a1a11e18ccbc7ad5d",
-    "final-source-consumer/stdout.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-control-summary.json": "b6518fb83c084dd9f55cdabb76def54157932414fc5cc4887fe961e484970e59",
-    "final-source-controls/dag-no-join-off/argv.json": "e9c28ff3a2731fb9e77e3fa90d587dc4345d6809032aee9bd26fe05b9e507083",
-    "final-source-controls/dag-no-join-off/resource.jsonl": "d9906d5f03c0106bf45d817eb2400ab52546cefe82e64a6951a84c3a61318ac0",
-    "final-source-controls/dag-no-join-off/status.json": "8efde1946c6be6b65305fa0828684bd0f8c2c0e36ff66cc7b759de439cef7128",
-    "final-source-controls/dag-no-join-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/dag-no-join-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/dag-no-join-on/argv.json": "82ab3ce8ba6b154f4e9011817fd1e2a439429660471f5a1c9c1e08fb0d042532",
-    "final-source-controls/dag-no-join-on/resource.jsonl": "f188c40188e821ab85e11d3950edb5c5a95b6e16d868d93edc5e09de3bb5cf42",
-    "final-source-controls/dag-no-join-on/status.json": "da726c002db09893c412e5c3322cfd6b98978131de6412abcf2fd0235e2eb63f",
-    "final-source-controls/dag-no-join-on/stderr.log": "6315a4260b9a4f8a90ce0ad2536ba48b73e6b017a76613645920571bb8f2594c",
-    "final-source-controls/dag-no-join-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/dag-primitive-leaf-off/argv.json": "6a4757fcebcedf4c0db8418491a70b5978df5fa4b4f47a3548693edc471b3a25",
-    "final-source-controls/dag-primitive-leaf-off/resource.jsonl": "6a060a86c8d28572de79fa1558c2af19c1ade90954ca206b412382ced9fb900a",
-    "final-source-controls/dag-primitive-leaf-off/status.json": "8816ce573a13adad5c2a9aa85725d88fe7175904a87a9864f002611473f3799a",
-    "final-source-controls/dag-primitive-leaf-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/dag-primitive-leaf-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/dag-primitive-leaf-on/argv.json": "9b60efe73fda0daceac4b0ab29a9f2f451807785418c93ac5ccbde0698652e61",
-    "final-source-controls/dag-primitive-leaf-on/resource.jsonl": "a8f5753874f57c65c6282b55f8e41422cc4af9d2bf3a4ce3ef221f34ee289791",
-    "final-source-controls/dag-primitive-leaf-on/status.json": "81ec05a973e352ca616604325f95675f262f18d921b4c57cbc5cb4ed094e47a1",
-    "final-source-controls/dag-primitive-leaf-on/stderr.log": "0d177669a9152c859457ef7a5393acfb6ec433c5bb05f81de3ebf7d7797a3bc7",
-    "final-source-controls/dag-primitive-leaf-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/dag-single-child-off/argv.json": "e02e7428b856cc0cf54ff5c53d2ce167d1f9ddfb3624750e048eb9ade0ef3bab",
-    "final-source-controls/dag-single-child-off/resource.jsonl": "f068b1a82a522a153399bb249774394042454f0503afc0ace362505969de59fc",
-    "final-source-controls/dag-single-child-off/status.json": "62e41914d22edb88dfd6c08b740a981b0415d16c9add379ea2bbaf3377939772",
-    "final-source-controls/dag-single-child-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/dag-single-child-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/dag-single-child-on/argv.json": "7c6bfc2c68d8f1d55343d390a2f19f3dbe11c8beb7f66e13e21014cba33c9938",
-    "final-source-controls/dag-single-child-on/resource.jsonl": "f0f6ec6f38937172caf9dc990d5478a6936a620c9621f086ecf1033417d660e2",
-    "final-source-controls/dag-single-child-on/status.json": "db07d95c09b157957d51a41540609c2c7ec37f2c91516bc9cfa10331aa991b5e",
-    "final-source-controls/dag-single-child-on/stderr.log": "9a5b4f383c9438ecf867ed137ee98b554cfd97b448110bf60c2282cad9cda2c7",
-    "final-source-controls/dag-single-child-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/excluded-test-root-included-control-off/argv.json": "43cdf494a139b1b7c6e58257c13e955eb1c01a0b46471404030929bf6208a142",
-    "final-source-controls/excluded-test-root-included-control-off/resource.jsonl": "fbd23214d797911dd045474b8d8856d2f4cb341324546c67138f7321b3901639",
-    "final-source-controls/excluded-test-root-included-control-off/status.json": "5ef37496b3ca1a01d1c42041439225fa4d22d50d956dbfc9de8e98ee91f3bf8a",
-    "final-source-controls/excluded-test-root-included-control-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/excluded-test-root-included-control-off/stdout.json": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
-    "final-source-controls/excluded-test-root-included-control-on/argv.json": "4ea84a38d0a272edbe34b8ca1de8365484969fe9a090b1715bed4f4b6775c191",
-    "final-source-controls/excluded-test-root-included-control-on/resource.jsonl": "d3e80bb98de2e8ab378f54042e936e4909dab8ed869698c875593c8a87f1520a",
-    "final-source-controls/excluded-test-root-included-control-on/status.json": "ffd68ba049c7aebc7b90ec421f28530d88ee85ff9819b2212c6515add003792c",
-    "final-source-controls/excluded-test-root-included-control-on/stderr.log": "4d3ab09a0dc3a3562e3fbaedb6cac7af1cf0fcfaa874b7d30bf4c8109ba0b35e",
-    "final-source-controls/excluded-test-root-included-control-on/stdout.json": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
-    "final-source-controls/excluded-test-root-without-dag-off/argv.json": "72cdf14a30ad2db4dd6f63f9c0da25eb7d159d8cd18e9d2605efc48a4801c0d9",
-    "final-source-controls/excluded-test-root-without-dag-off/resource.jsonl": "fdf005e0869fb408c1b27b992ad0d21ba329ac18465a6918d99a0319a3d0fe27",
-    "final-source-controls/excluded-test-root-without-dag-off/status.json": "56676afb6f58c3f544e47254e591507d24a75b102bde049866e0c1677106ca0d",
-    "final-source-controls/excluded-test-root-without-dag-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/excluded-test-root-without-dag-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/excluded-test-root-without-dag-on/argv.json": "eb14983e445607a2056a8892832c341eaba7516f649e181bbe4a34198d80b643",
-    "final-source-controls/excluded-test-root-without-dag-on/resource.jsonl": "4bb21c218acac63d6716a2a05e24e11f9113445fe9ef4b0c588e8cf2bea162aa",
-    "final-source-controls/excluded-test-root-without-dag-on/status.json": "3951a6cc6ef2ff0859eae3c6bdde6af74d0e7cc16e9792a2f876ecab3fcafd11",
-    "final-source-controls/excluded-test-root-without-dag-on/stderr.log": "4d5e1087e50b27f6403bc6afabaaaefe7a3fbf974a5d2b1c8dcdf629d27fc8cb",
-    "final-source-controls/excluded-test-root-without-dag-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/excluded-test-root-without-test-off/argv.json": "e4a05a72a1cd8f8ea7e59d2dd95097c9ba023f16862dff31dcfa0e50287606c2",
-    "final-source-controls/excluded-test-root-without-test-off/resource.jsonl": "7f88cc873c19aa9907697d2589349336965fa0628c4c73c4fc8212c77c7ad380",
-    "final-source-controls/excluded-test-root-without-test-off/status.json": "1c4f3d5b72cec3200422e9fd6e0fd8193537f9419284efdd1c90290dfba4039e",
-    "final-source-controls/excluded-test-root-without-test-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/excluded-test-root-without-test-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/excluded-test-root-without-test-on/argv.json": "b61f3bcd90106b324e08a307c9503c6e090c386184fbdac9ce4e1df6cac1ebd5",
-    "final-source-controls/excluded-test-root-without-test-on/resource.jsonl": "726212328cb49504bbbed99ae6debe0aa89d67398f89b276be14a849a4033578",
-    "final-source-controls/excluded-test-root-without-test-on/status.json": "7e96bda9d781db6396e6ab06e69287386ad203d3660b785ba7c06d4fcd7c407f",
-    "final-source-controls/excluded-test-root-without-test-on/stderr.log": "c07f9ed08d6c61a4fb579c0c80047d43ea36928ca4dbdeea5584e644607a99b6",
-    "final-source-controls/excluded-test-root-without-test-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/shared-object-dag-12-off/argv.json": "93b8fcad7a852c572ab5ba802348dc6597f900aa25f00eb25ad4e7d38cd035e5",
-    "final-source-controls/shared-object-dag-12-off/resource.jsonl": "e0900b8548be3b5a8867bd47092cca97bb890d9b4244a80c0d02fe31ecfcf072",
-    "final-source-controls/shared-object-dag-12-off/status.json": "395213d44f233a4a289c36b44249cbf8f66e0c5d5842fe4ca742e33f0a7a987c",
-    "final-source-controls/shared-object-dag-12-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "final-source-controls/shared-object-dag-12-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-controls/shared-object-dag-12-on/argv.json": "5f4106803f7aa0803db30cb70cdcef8380e07114d7176cf4ff9e642a99bbe53b",
-    "final-source-controls/shared-object-dag-12-on/resource.jsonl": "01d666f7d0187172ab81e8767faa03490b543b959736a65941a81bdbcc8a6b72",
-    "final-source-controls/shared-object-dag-12-on/status.json": "a122d59fa6da9b676165e2a2b72f4fb86d0ae9ddde42e8f06165363f9b3c032f",
-    "final-source-controls/shared-object-dag-12-on/stderr.log": "90830e7456d83940d4c93b4cceb74da2a44403708534b417950edd65d083a9b6",
-    "final-source-controls/shared-object-dag-12-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "final-source-excluded/argv.json": "8b41f7b920563f2c2ef26056045ed06d4f25005d3b5bbcfb179aedcc85233f18",
-    "final-source-excluded/resource.jsonl": "00fe95070185745b0eeab4a800db13d2fb66efc7fc9197170dc513d4ee49d79a",
-    "final-source-excluded/status.json": "689fff631c5217bfca30cc8aef9386a3ad65f612acb991fcbdf7a626687bf2a2",
-    "final-source-excluded/stderr.log": "bca5ab8f0c8e7cf4a6b5c82401aa96de3767102a848032241d0bb89cc6b4ba79",
-    "final-source-excluded/stdout.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "fixture-resolve-check-all.json": "93f41c1781c79483b45ec8f1ba602da1f34f5d2700b0309ae7002f09b7ade85b",
-    "native-633724ce9/dag-no-join-off/argv.json": "946b17764fa03f293986380cec32e3fbe63f01b922b8ca15eea47f198f2c9574",
-    "native-633724ce9/dag-no-join-off/resource.jsonl": "889dee930e7af62b3b595e7c8aa609e98fd9c7a40b188aeb139f1d560356e81f",
-    "native-633724ce9/dag-no-join-off/status.json": "901c9178ef8d7e2312985fa6f0f6b5615bc086f886631f96e1be535b9daeeb6f",
-    "native-633724ce9/dag-no-join-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/dag-no-join-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/dag-no-join-on/argv.json": "4d436800d4dfd33e0781fd0893d5416854cab0631bdcae64c5b86c1e7ffe9cb9",
-    "native-633724ce9/dag-no-join-on/resource.jsonl": "c515602f55a7a457741a100208896aef1b0a67ec9e263133f30b9029cd5d59af",
-    "native-633724ce9/dag-no-join-on/status.json": "afaa1633ebdd79965f7bafca8c02a06206eeee05278194bb3cc52585666c495e",
-    "native-633724ce9/dag-no-join-on/stderr.log": "469f23f77f93418a85d1466a419abc9dc59104bbe3542b71e8040c4590de20b4",
-    "native-633724ce9/dag-no-join-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/dag-primitive-leaf-off/argv.json": "fbe9e07af5bf6a982bfdf07d7dfb4bac11ffcb68848c99a4db6bbb2dfdbd1966",
-    "native-633724ce9/dag-primitive-leaf-off/resource.jsonl": "24e5288f65dc9c8a7a12ce4a67991d510b5a68330a08cb5897817db26f1a50a5",
-    "native-633724ce9/dag-primitive-leaf-off/status.json": "0289b1e9e5c47469a359be402fb5d50046230ac7f056d4dca4d746ca6342b3c2",
-    "native-633724ce9/dag-primitive-leaf-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/dag-primitive-leaf-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/dag-primitive-leaf-on/argv.json": "3639d726d3093190c3eaa982e19de3213af241d7c5b450f5f0d227285f888793",
-    "native-633724ce9/dag-primitive-leaf-on/resource.jsonl": "7e3554943b58d3889340d2f5aedd122c30ff9630bc88c4b56069c25ddf636676",
-    "native-633724ce9/dag-primitive-leaf-on/status.json": "a799dffb7d5ccbf8633053ea399ae654fee38deff30f77b9436e6b7c820b5386",
-    "native-633724ce9/dag-primitive-leaf-on/stderr.log": "40e1ad36160f7b3ab3b4f115d0415ade266a9831d99eb0486875f20ae598a321",
-    "native-633724ce9/dag-primitive-leaf-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/dag-single-child-off/argv.json": "b8ee5b36a9c9b37cf498703b2a684a8e4a8fe50e9766dc353bc49bb974dd8bb6",
-    "native-633724ce9/dag-single-child-off/resource.jsonl": "d82bac8b8320be92c9791ff448ffb05f17216a2f14b822f41bf64a2600daa1ac",
-    "native-633724ce9/dag-single-child-off/status.json": "c1d74d434301fc668e42cf14a3c11f6428189e9d79b7226d44e222b166ebdc29",
-    "native-633724ce9/dag-single-child-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/dag-single-child-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/dag-single-child-on/argv.json": "17fbb369e78c5ceb4cff1bb06abcbcd73885c4c1938e2b6043926db5f79246aa",
-    "native-633724ce9/dag-single-child-on/resource.jsonl": "81b1fc6344215aa7a1a222735fd7fe3c99553b1088567d0b947261cecdad8120",
-    "native-633724ce9/dag-single-child-on/status.json": "84f1da6c759b700bc6de6e4f216b383ad0028d058bc65877d5b28fe556d8a4ef",
-    "native-633724ce9/dag-single-child-on/stderr.log": "c0cd8415da5ec86a67789f8adece757657714e711d45c2f14da04127b1d75c08",
-    "native-633724ce9/dag-single-child-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/excluded-stress/argv.json": "56d487d5c5eb7f116cf615923bb40dd879a9f3d466b5740f1a8a0561cefbed92",
-    "native-633724ce9/excluded-stress/resource.jsonl": "2bb8e70658a94bfa2bd5396c036c80cf2fc96c6f3150b76f2be6cc591c63f605",
-    "native-633724ce9/excluded-stress/status.json": "508b929ea904decdd12625a689b7252d4c8c1d5d7dc1bd30bbc94da9bfd7e89b",
-    "native-633724ce9/excluded-stress/stderr.log": "f3ffae754fe86b2df7ba4cbd5fb80a9ae8b782957743b8f08a7a333a49a1269d",
-    "native-633724ce9/excluded-stress/stdout.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/excluded-test-root-included-control-off/argv.json": "9cbd4650045a5a147cba2d4951903d3cdcc376e57a369bf3cc0ec0c0244f67e5",
-    "native-633724ce9/excluded-test-root-included-control-off/resource.jsonl": "496f46ca87907de4fcaa097afa98ca45ac9925fa5e90699ecc7d93536ef37988",
-    "native-633724ce9/excluded-test-root-included-control-off/status.json": "76208b12a03a13aab6f142bacb252d26f0a4bb814afd1806536931b4ceee0ae4",
-    "native-633724ce9/excluded-test-root-included-control-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/excluded-test-root-included-control-off/stdout.json": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
-    "native-633724ce9/excluded-test-root-included-control-on/argv.json": "bd3bb1dfa03eed47e040f511240bd1073b2421ea31eb1b85646cfb2f5c6e1cd5",
-    "native-633724ce9/excluded-test-root-included-control-on/resource.jsonl": "25b6e5bf1e09edae2f8dfc493ace429a2eca53acb104d470cc2120296965c77c",
-    "native-633724ce9/excluded-test-root-included-control-on/status.json": "6347b4da47399eb8cc7838bced0896e29aa922d1635b0195acada725e4b85bfd",
-    "native-633724ce9/excluded-test-root-included-control-on/stderr.log": "caaf09fb9da5123985157864bca8d07467422bf43e94b2e3749e6ac3bae0a3ca",
-    "native-633724ce9/excluded-test-root-included-control-on/stdout.json": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
-    "native-633724ce9/excluded-test-root-without-dag-off/argv.json": "07d81f0bab75b21d853e6c9c4d3f72927e1cc29e7dcacace16fea78340f1b53b",
-    "native-633724ce9/excluded-test-root-without-dag-off/resource.jsonl": "81d52c01910c22f185c0d3d364d0f4ee0fa8df0feb386cf653e1a7d09d167667",
-    "native-633724ce9/excluded-test-root-without-dag-off/status.json": "823c68e4c2e30d25121b42d218e53193fa0a3808e4c6aa013dcee59b0e48df32",
-    "native-633724ce9/excluded-test-root-without-dag-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/excluded-test-root-without-dag-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/excluded-test-root-without-dag-on/argv.json": "9dcaf652691b9bedc4300b7e59b39e411f5435934e82307f3abb2188e1c5ac4c",
-    "native-633724ce9/excluded-test-root-without-dag-on/resource.jsonl": "488559335cb70a52115bff942e8e390dfcb58b4c040df12c932a63d05033a672",
-    "native-633724ce9/excluded-test-root-without-dag-on/status.json": "8b5180652d28549e4cb7326e79de8a7c314546e5e0c1bc753ed8a4e70668729c",
-    "native-633724ce9/excluded-test-root-without-dag-on/stderr.log": "c388403e3eaa0f6f670c7f3449c83bad7db819d2fe7ebdb2188e2722f1e225b9",
-    "native-633724ce9/excluded-test-root-without-dag-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/excluded-test-root-without-test-off/argv.json": "3a2a2211f145384a5d8ace3195af8b201d16fd90fa2997b9cb9cf17a6a70ce12",
-    "native-633724ce9/excluded-test-root-without-test-off/resource.jsonl": "585eb9e1ada9db97cdcda891c3d348b6f3e89e4f27c2f9fea910c60b05abe9d9",
-    "native-633724ce9/excluded-test-root-without-test-off/status.json": "308043a2f903214a5e8a04780ffcea5339326c736190836ecfd29bf9a732d4d6",
-    "native-633724ce9/excluded-test-root-without-test-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/excluded-test-root-without-test-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/excluded-test-root-without-test-on/argv.json": "2548016563742625914ea83acad5dc1fd5dcfba2de959fdcdd868f31da263d87",
-    "native-633724ce9/excluded-test-root-without-test-on/resource.jsonl": "264d62c6e8966f2cc62f586b2947304d7e77d314e84ef46b0d787b8316e8f51a",
-    "native-633724ce9/excluded-test-root-without-test-on/status.json": "d32133e233d7bfdf079c6bc9acc613f32727daa5298de9ed1e0b0cadc72ef032",
-    "native-633724ce9/excluded-test-root-without-test-on/stderr.log": "46c08f3c877729b9e2c67cde253218cf07b64d36e9736960253317ad75e33f33",
-    "native-633724ce9/excluded-test-root-without-test-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/shared-object-dag-12-off/argv.json": "d0d3207ab0bc22e2ce2628f0b5bac4d6663a5e37becb8300c8f8c5b5084f5201",
-    "native-633724ce9/shared-object-dag-12-off/resource.jsonl": "2d7edb031ad12b80f5d7862fe30e986d7ee064094c771be67772dc229be628bc",
-    "native-633724ce9/shared-object-dag-12-off/status.json": "a12070d0f819c8ef5843655221238d6718d8468a42019ceb6a2c92f6e3589bf4",
-    "native-633724ce9/shared-object-dag-12-off/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "native-633724ce9/shared-object-dag-12-off/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9/shared-object-dag-12-on/argv.json": "15a90ec9c60dcd8f244a0815239b7cf1c790ce44241ba6484993a32415137eb4",
-    "native-633724ce9/shared-object-dag-12-on/resource.jsonl": "ee3ea02b9df986700215a6e118541d1c53a53f523c70613074b0a54c7fad2761",
-    "native-633724ce9/shared-object-dag-12-on/status.json": "944ec4feec3879243d2f2eaa45772da7c6956fe9b8e78a7d0c2cb2c11cafe5ae",
-    "native-633724ce9/shared-object-dag-12-on/stderr.log": "7a40888da2c6c42fe755c020668a8bf9fcc3e147a3a4b3ddc771630578179280",
-    "native-633724ce9/shared-object-dag-12-on/stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "native-633724ce9-summary.json": "d8e0acf0d2bb839a95cf74df48b5488238bea1d073a0fd63119ede092409a84f",
-    "native-counter-probe-633724ce9.py": "9bdb82af1c651b331beb47a613627d97ba8c9d13046e43d9864d715be1a7cf1f",
-    "native-counter-probe.py": "75e942d8648af083cdd16886ec4bbbf9c55cf9826a4c4b4ab0cceeeec2b1bba7",
-    "prototype-argv.json": "4c9580f222cf8bcd44756e5530af8d617587b5793426a25f16e6c8837045cf9e",
-    "prototype-build-proof.json": "85da9bc4316dc9f0669e0f907027970213861c8d2c67dc8c6872a86d683a519b",
-    "prototype-progress.rs.txt": "fc4a30806e17ad0defc138424019a6f19b4c4114bee055ff912cec1c17896f62",
-    "prototype-resource.jsonl": "55adbee98c87b43ef0e32c296d037bb55db58d0e5ec526e1e586fa75884f5276",
-    "prototype-root-summary.json": "3b408c63f0e98f33a6dc35b2d9f203223411b8a310dfeb4e06366369388a31de",
-    "prototype-source.patch": "0bba14e5af9a8ed2656c6fe98fd4db7dedfe805b68ed5cc793ba20fe9f593caf",
-    "prototype-status.json": "db6eac7f855f928122fb5c61115cc9edb24635021487b5018179607985c911c6",
-    "shared-dag-proof.json": "c63de23853c38e984e39bd694c9dd3d9303ddd734b44fa9ea176fc3509202eb5",
-    "signature-impact.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "signature-impact.stderr": "5f620a23baf03da5f8dfc2efd33ab1b8c2632a68710255a57ea5af393bf9ab7a",
-    "temporary-environment-control.json": "c1b5da3aa5589d3c98c4dba31c2bbc26ba94f8961b8e89bb4f4e25f0ff5dda23",
-    "uninstrumented-control-off.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "uninstrumented-control-on.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "validation/build_size.py": "45a5b5811a2b2e7103817bf9888479cc8f53d4429ab59489241d4b33304159f5",
-    "validation/clippy.log": "da0f190d8522c5839d2ca55d807bd00fd582fca6ec64b6c1607eecb29d601f7a",
-    "validation/complexity.log": "722235db810522bfde71846ac3704834ebfe71046e1642f1e189fc0b59eef9c5",
-    "validation/crap.log": "f471e9e74aa4e5f54f216dbcb5a878c7b3ab6a478195ffcc8926aa2da942ce1f",
-    "validation/floors.log": "12d4f1b019951d5f0ab0fc5a696736093689e3d64fb90d4dff633010edf728c1",
-    "validation/patch-coverage.json": "9632f38f6f4ff34045a8192ce7eba7b63a94d19877ad3a4dfcfbb8bc0d925871",
-    "validation/patch.py": "d87fc6515a1604e10b641eb2f11244053e3c7b9ae270e8f3722820598198c2b3",
-    "validation/postgres-preflight.log": "1f30e4260768341f5b6b42677e4af33ca14ab6679b6e3111265f69374c3c97aa",
-    "validation/state.json": "2b7131a5084e0d5f7282128905b4293ef6d5ce22181daf6e497fde17031a8f97",
-    "validation/totals.json": "90933a8bf3aac01b3021efe9393ae635c092b471c30ac997663177b5b6e50709",
-    "validation-configured-check.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "validation-dependents.json": "d2f08bcd85249c02d405b1bccc1caf4073db9af92e7d9dd28377663e5d5e107a",
-    "validation-impacted-checks.json": "172b986b812ed6a2ab413601981cd67e96f7cf0e9859aaea58f81521b5f98d72",
-    "validation-test-plan.json": "a4e32207ee0b50a824dc7a1b330b4db0e6cf8aa94478495aab775a92ea9e254b",
-    "version-only-rebase.json": "bea951e591c61a768c0d813b2bbea5b6cbd4f414ba96d020c21a02f82ecf5a54",
-    "env-control-var-tmp.log.gz.b64": "920d37b38ef1b7fb9268ef345eef2bb275dbfd2c14741f7a03442265de7828f8",
-    "prototype-progress.log.gz.b64": "de9bc4eb870858bc0abf1a6b7d4b36eee2291e542528044d7f83fe4f222df34a",
-    "validation/doc.log.gz.b64": "09eb60e4323496e18a568fc71719fdd73932e321a9ba15f7d6ec6a25451e2b83"
-  },
-  "gzipExpandedSha256": {
-    "prototype-progress.log.gz": "d83f34e4dab2e448435c4e62d0e4092d7b4d43ed3742b1ff78a5d92dce6c6ab2",
-    "env-control-var-tmp.log.gz": "edb4984adf7e1588b79842b8d52024b3b75e8c40f3f2a45eab58a6bffa4dda59",
-    "validation/doc.log.gz": "d7e92102600469f0a510ddf868927a4aa2d0a8d66e31200a6de9249bcb827cd5"
-  },
-  "base64DecodedFiles": {
-    "env-control-var-tmp.log.gz": {
-      "storedAs": "env-control-var-tmp.log.gz.b64",
-      "encoding": "base64",
-      "decodedSha256": "1e55e9086879c12d343917a369fed9bae38cdd8762bfa98398f641627c72118b"
+  "rawEvidence": {
+    "issueComment": "https://github.com/jonathanong/no-mistakes/issues/2118#issuecomment-6307927353",
+    "sourceCommit": "2bb59a66b263a1b49f652d78c4cfdb5318f04782",
+    "archive": {
+      "source": "2bb59a66b263a1b49f652d78c4cfdb5318f04782",
+      "archive": "annotation-stall-2118-2bb59a66b-raw.zip",
+      "sha256": "febabd11b12b653f164a6e35dc31727c5a982135b11de07b14b8abe5da4f8c51",
+      "bytes": 5520519,
+      "originalBytes": 8637172,
+      "files": 216,
+      "verified": true
     },
-    "prototype-progress.log.gz": {
-      "storedAs": "prototype-progress.log.gz.b64",
-      "encoding": "base64",
-      "decodedSha256": "ab0b443082b98d69c71d674f40d1aae6e2006af8a4b2f5787403e40d1f07aeed"
+    "files": {
+      "all-dependents.json": {
+        "bytes": 3434,
+        "sha256": "8b55313a822d3a8aae9471a434c5869d7d28a6b8bf3ac8556e24204999aba40e",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/all-dependents.json"
+      },
+      "all-dependents.stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/all-dependents.stderr"
+      },
+      "all-impacted.json": {
+        "bytes": 5543,
+        "sha256": "fb3a375b31cbe520241692455543f5d881313898a1579468bf6c26b68ebade32",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/all-impacted.json"
+      },
+      "all-impacted.stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/all-impacted.stderr"
+      },
+      "baseline-root-events.jsonl": {
+        "bytes": 57992,
+        "sha256": "53b8cac7e810f19793f5dd371e7c2ec67d5cbea6f47075f082b2e154f252f570",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/baseline-root-events.jsonl"
+      },
+      "baseline-root-stack.log": {
+        "bytes": 16304,
+        "sha256": "967413d076c07b2587440ac2457ffae06bbff60f40f706ba525dd23366508268",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/baseline-root-stack.log"
+      },
+      "baseline-roots.gdb": {
+        "bytes": 1245,
+        "sha256": "4d3f275bbefe959b2a894e5a1ee5622c89994d29088fd2b06d571300c149f8f7",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/baseline-roots.gdb"
+      },
+      "env-control-tmp-ancestor.log": {
+        "bytes": 644,
+        "sha256": "5b01a0400a4816184ee680e196b88d4112df878a953b1ba22d91722722a76e91",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/env-control-tmp-ancestor.log"
+      },
+      "env-control-var-tmp.log.gz.b64": {
+        "bytes": 236,
+        "sha256": "920d37b38ef1b7fb9268ef345eef2bb275dbfd2c14741f7a03442265de7828f8",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/env-control-var-tmp.log.gz.b64"
+      },
+      "excluded-root-events.jsonl": {
+        "bytes": 373,
+        "sha256": "8959a148984c9d4514a713b782606eb13b0941ea6ef2764091f887471b9297c7",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/excluded-root-events.jsonl"
+      },
+      "excluded-root-stack.log": {
+        "bytes": 18541,
+        "sha256": "7b031d24c07ff8a2e9789529bd48bfc80ef90e8835d330e84ef7f1075cfdd742",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/excluded-root-stack.log"
+      },
+      "final-configured-check.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-configured-check.json"
+      },
+      "final-configured-check.stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-configured-check.stderr"
+      },
+      "final-impact.json": {
+        "bytes": 361,
+        "sha256": "7030261922372ab33c4121afaec2024c8f24a22adda65d4ca5e4f0fb9337ed76",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-impact.json"
+      },
+      "final-impact.stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-impact.stderr"
+      },
+      "final-source-consumer/argv.json": {
+        "bytes": 334,
+        "sha256": "6a58ceb8f83f516ac91ae45b156ccc1579c7bcd17af7594fec7b0cc512b74e74",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-consumer/argv.json"
+      },
+      "final-source-consumer/resource.jsonl": {
+        "bytes": 8593,
+        "sha256": "7ef7533830b38bb25203c392c06fc80a88e38d8cffbf061f2ddd94a28a946184",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-consumer/resource.jsonl"
+      },
+      "final-source-consumer/status.json": {
+        "bytes": 666,
+        "sha256": "bbc2b51557fbe3cd35143e61d3c210a1b93c21d9aa78e5849d89e4ab96c65138",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-consumer/status.json"
+      },
+      "final-source-consumer/stderr.log": {
+        "bytes": 97211,
+        "sha256": "2ade7cf8e16e1cf5e42c2e18c145e1a36dd9c196d46a918a1a11e18ccbc7ad5d",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-consumer/stderr.log"
+      },
+      "final-source-consumer/stdout.json": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-consumer/stdout.json"
+      },
+      "final-source-controls/dag-no-join-off/argv.json": {
+        "bytes": 387,
+        "sha256": "e9c28ff3a2731fb9e77e3fa90d587dc4345d6809032aee9bd26fe05b9e507083",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-off/argv.json"
+      },
+      "final-source-controls/dag-no-join-off/resource.jsonl": {
+        "bytes": 70,
+        "sha256": "d9906d5f03c0106bf45d817eb2400ab52546cefe82e64a6951a84c3a61318ac0",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-off/resource.jsonl"
+      },
+      "final-source-controls/dag-no-join-off/status.json": {
+        "bytes": 745,
+        "sha256": "8efde1946c6be6b65305fa0828684bd0f8c2c0e36ff66cc7b759de439cef7128",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-off/status.json"
+      },
+      "final-source-controls/dag-no-join-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-off/stderr.log"
+      },
+      "final-source-controls/dag-no-join-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-off/stdout.json"
+      },
+      "final-source-controls/dag-no-join-on/argv.json": {
+        "bytes": 426,
+        "sha256": "82ab3ce8ba6b154f4e9011817fd1e2a439429660471f5a1c9c1e08fb0d042532",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-on/argv.json"
+      },
+      "final-source-controls/dag-no-join-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "f188c40188e821ab85e11d3950edb5c5a95b6e16d868d93edc5e09de3bb5cf42",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-on/resource.jsonl"
+      },
+      "final-source-controls/dag-no-join-on/status.json": {
+        "bytes": 745,
+        "sha256": "da726c002db09893c412e5c3322cfd6b98978131de6412abcf2fd0235e2eb63f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-on/status.json"
+      },
+      "final-source-controls/dag-no-join-on/stderr.log": {
+        "bytes": 3651,
+        "sha256": "6315a4260b9a4f8a90ce0ad2536ba48b73e6b017a76613645920571bb8f2594c",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-on/stderr.log"
+      },
+      "final-source-controls/dag-no-join-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-no-join-on/stdout.json"
+      },
+      "final-source-controls/dag-primitive-leaf-off/argv.json": {
+        "bytes": 401,
+        "sha256": "6a4757fcebcedf4c0db8418491a70b5978df5fa4b4f47a3548693edc471b3a25",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-off/argv.json"
+      },
+      "final-source-controls/dag-primitive-leaf-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "6a060a86c8d28572de79fa1558c2af19c1ade90954ca206b412382ced9fb900a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-off/resource.jsonl"
+      },
+      "final-source-controls/dag-primitive-leaf-off/status.json": {
+        "bytes": 758,
+        "sha256": "8816ce573a13adad5c2a9aa85725d88fe7175904a87a9864f002611473f3799a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-off/status.json"
+      },
+      "final-source-controls/dag-primitive-leaf-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-off/stderr.log"
+      },
+      "final-source-controls/dag-primitive-leaf-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-off/stdout.json"
+      },
+      "final-source-controls/dag-primitive-leaf-on/argv.json": {
+        "bytes": 440,
+        "sha256": "9b60efe73fda0daceac4b0ab29a9f2f451807785418c93ac5ccbde0698652e61",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-on/argv.json"
+      },
+      "final-source-controls/dag-primitive-leaf-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "a8f5753874f57c65c6282b55f8e41422cc4af9d2bf3a4ce3ef221f34ee289791",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-on/resource.jsonl"
+      },
+      "final-source-controls/dag-primitive-leaf-on/status.json": {
+        "bytes": 746,
+        "sha256": "81ec05a973e352ca616604325f95675f262f18d921b4c57cbc5cb4ed094e47a1",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-on/status.json"
+      },
+      "final-source-controls/dag-primitive-leaf-on/stderr.log": {
+        "bytes": 3970,
+        "sha256": "0d177669a9152c859457ef7a5393acfb6ec433c5bb05f81de3ebf7d7797a3bc7",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-on/stderr.log"
+      },
+      "final-source-controls/dag-primitive-leaf-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-primitive-leaf-on/stdout.json"
+      },
+      "final-source-controls/dag-single-child-off/argv.json": {
+        "bytes": 397,
+        "sha256": "e02e7428b856cc0cf54ff5c53d2ce167d1f9ddfb3624750e048eb9ade0ef3bab",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-off/argv.json"
+      },
+      "final-source-controls/dag-single-child-off/resource.jsonl": {
+        "bytes": 68,
+        "sha256": "f068b1a82a522a153399bb249774394042454f0503afc0ace362505969de59fc",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-off/resource.jsonl"
+      },
+      "final-source-controls/dag-single-child-off/status.json": {
+        "bytes": 758,
+        "sha256": "62e41914d22edb88dfd6c08b740a981b0415d16c9add379ea2bbaf3377939772",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-off/status.json"
+      },
+      "final-source-controls/dag-single-child-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-off/stderr.log"
+      },
+      "final-source-controls/dag-single-child-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-off/stdout.json"
+      },
+      "final-source-controls/dag-single-child-on/argv.json": {
+        "bytes": 436,
+        "sha256": "7c6bfc2c68d8f1d55343d390a2f19f3dbe11c8beb7f66e13e21014cba33c9938",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-on/argv.json"
+      },
+      "final-source-controls/dag-single-child-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "f0f6ec6f38937172caf9dc990d5478a6936a620c9621f086ecf1033417d660e2",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-on/resource.jsonl"
+      },
+      "final-source-controls/dag-single-child-on/status.json": {
+        "bytes": 746,
+        "sha256": "db07d95c09b157957d51a41540609c2c7ec37f2c91516bc9cfa10331aa991b5e",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-on/status.json"
+      },
+      "final-source-controls/dag-single-child-on/stderr.log": {
+        "bytes": 3975,
+        "sha256": "9a5b4f383c9438ecf867ed137ee98b554cfd97b448110bf60c2282cad9cda2c7",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-on/stderr.log"
+      },
+      "final-source-controls/dag-single-child-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/dag-single-child-on/stdout.json"
+      },
+      "final-source-controls/excluded-test-root-included-control-off/argv.json": {
+        "bytes": 435,
+        "sha256": "43cdf494a139b1b7c6e58257c13e955eb1c01a0b46471404030929bf6208a142",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-off/argv.json"
+      },
+      "final-source-controls/excluded-test-root-included-control-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "fbd23214d797911dd045474b8d8856d2f4cb341324546c67138f7321b3901639",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-off/resource.jsonl"
+      },
+      "final-source-controls/excluded-test-root-included-control-off/status.json": {
+        "bytes": 842,
+        "sha256": "5ef37496b3ca1a01d1c42041439225fa4d22d50d956dbfc9de8e98ee91f3bf8a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-off/status.json"
+      },
+      "final-source-controls/excluded-test-root-included-control-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-off/stderr.log"
+      },
+      "final-source-controls/excluded-test-root-included-control-off/stdout.json": {
+        "bytes": 288,
+        "sha256": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-off/stdout.json"
+      },
+      "final-source-controls/excluded-test-root-included-control-on/argv.json": {
+        "bytes": 474,
+        "sha256": "4ea84a38d0a272edbe34b8ca1de8365484969fe9a090b1715bed4f4b6775c191",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-on/argv.json"
+      },
+      "final-source-controls/excluded-test-root-included-control-on/resource.jsonl": {
+        "bytes": 71,
+        "sha256": "d3e80bb98de2e8ab378f54042e936e4909dab8ed869698c875593c8a87f1520a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-on/resource.jsonl"
+      },
+      "final-source-controls/excluded-test-root-included-control-on/status.json": {
+        "bytes": 854,
+        "sha256": "ffd68ba049c7aebc7b90ec421f28530d88ee85ff9819b2212c6515add003792c",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-on/status.json"
+      },
+      "final-source-controls/excluded-test-root-included-control-on/stderr.log": {
+        "bytes": 3717,
+        "sha256": "4d3ab09a0dc3a3562e3fbaedb6cac7af1cf0fcfaa874b7d30bf4c8109ba0b35e",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-on/stderr.log"
+      },
+      "final-source-controls/excluded-test-root-included-control-on/stdout.json": {
+        "bytes": 288,
+        "sha256": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-included-control-on/stdout.json"
+      },
+      "final-source-controls/excluded-test-root-without-dag-off/argv.json": {
+        "bytes": 425,
+        "sha256": "72cdf14a30ad2db4dd6f63f9c0da25eb7d159d8cd18e9d2605efc48a4801c0d9",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-off/argv.json"
+      },
+      "final-source-controls/excluded-test-root-without-dag-off/resource.jsonl": {
+        "bytes": 70,
+        "sha256": "fdf005e0869fb408c1b27b992ad0d21ba329ac18465a6918d99a0319a3d0fe27",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-off/resource.jsonl"
+      },
+      "final-source-controls/excluded-test-root-without-dag-off/status.json": {
+        "bytes": 842,
+        "sha256": "56676afb6f58c3f544e47254e591507d24a75b102bde049866e0c1677106ca0d",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-off/status.json"
+      },
+      "final-source-controls/excluded-test-root-without-dag-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-off/stderr.log"
+      },
+      "final-source-controls/excluded-test-root-without-dag-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-off/stdout.json"
+      },
+      "final-source-controls/excluded-test-root-without-dag-on/argv.json": {
+        "bytes": 464,
+        "sha256": "eb14983e445607a2056a8892832c341eaba7516f649e181bbe4a34198d80b643",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-on/argv.json"
+      },
+      "final-source-controls/excluded-test-root-without-dag-on/resource.jsonl": {
+        "bytes": 70,
+        "sha256": "4bb21c218acac63d6716a2a05e24e11f9113445fe9ef4b0c588e8cf2bea162aa",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-on/resource.jsonl"
+      },
+      "final-source-controls/excluded-test-root-without-dag-on/status.json": {
+        "bytes": 842,
+        "sha256": "3951a6cc6ef2ff0859eae3c6bdde6af74d0e7cc16e9792a2f876ecab3fcafd11",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-on/status.json"
+      },
+      "final-source-controls/excluded-test-root-without-dag-on/stderr.log": {
+        "bytes": 3647,
+        "sha256": "4d5e1087e50b27f6403bc6afabaaaefe7a3fbf974a5d2b1c8dcdf629d27fc8cb",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-on/stderr.log"
+      },
+      "final-source-controls/excluded-test-root-without-dag-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-dag-on/stdout.json"
+      },
+      "final-source-controls/excluded-test-root-without-test-off/argv.json": {
+        "bytes": 427,
+        "sha256": "e4a05a72a1cd8f8ea7e59d2dd95097c9ba023f16862dff31dcfa0e50287606c2",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-off/argv.json"
+      },
+      "final-source-controls/excluded-test-root-without-test-off/resource.jsonl": {
+        "bytes": 68,
+        "sha256": "7f88cc873c19aa9907697d2589349336965fa0628c4c73c4fc8212c77c7ad380",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-off/resource.jsonl"
+      },
+      "final-source-controls/excluded-test-root-without-test-off/status.json": {
+        "bytes": 749,
+        "sha256": "1c4f3d5b72cec3200422e9fd6e0fd8193537f9419284efdd1c90290dfba4039e",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-off/status.json"
+      },
+      "final-source-controls/excluded-test-root-without-test-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-off/stderr.log"
+      },
+      "final-source-controls/excluded-test-root-without-test-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-off/stdout.json"
+      },
+      "final-source-controls/excluded-test-root-without-test-on/argv.json": {
+        "bytes": 466,
+        "sha256": "b61f3bcd90106b324e08a307c9503c6e090c386184fbdac9ce4e1df6cac1ebd5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-on/argv.json"
+      },
+      "final-source-controls/excluded-test-root-without-test-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "726212328cb49504bbbed99ae6debe0aa89d67398f89b276be14a849a4033578",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-on/resource.jsonl"
+      },
+      "final-source-controls/excluded-test-root-without-test-on/status.json": {
+        "bytes": 762,
+        "sha256": "7e96bda9d781db6396e6ab06e69287386ad203d3660b785ba7c06d4fcd7c407f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-on/status.json"
+      },
+      "final-source-controls/excluded-test-root-without-test-on/stderr.log": {
+        "bytes": 3690,
+        "sha256": "c07f9ed08d6c61a4fb579c0c80047d43ea36928ca4dbdeea5584e644607a99b6",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-on/stderr.log"
+      },
+      "final-source-controls/excluded-test-root-without-test-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/excluded-test-root-without-test-on/stdout.json"
+      },
+      "final-source-controls/shared-object-dag-12-off/argv.json": {
+        "bytes": 405,
+        "sha256": "93b8fcad7a852c572ab5ba802348dc6597f900aa25f00eb25ad4e7d38cd035e5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-off/argv.json"
+      },
+      "final-source-controls/shared-object-dag-12-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "e0900b8548be3b5a8867bd47092cca97bb890d9b4244a80c0d02fe31ecfcf072",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-off/resource.jsonl"
+      },
+      "final-source-controls/shared-object-dag-12-off/status.json": {
+        "bytes": 758,
+        "sha256": "395213d44f233a4a289c36b44249cbf8f66e0c5d5842fe4ca742e33f0a7a987c",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-off/status.json"
+      },
+      "final-source-controls/shared-object-dag-12-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-off/stderr.log"
+      },
+      "final-source-controls/shared-object-dag-12-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-off/stdout.json"
+      },
+      "final-source-controls/shared-object-dag-12-on/argv.json": {
+        "bytes": 444,
+        "sha256": "5f4106803f7aa0803db30cb70cdcef8380e07114d7176cf4ff9e642a99bbe53b",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-on/argv.json"
+      },
+      "final-source-controls/shared-object-dag-12-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "01d666f7d0187172ab81e8767faa03490b543b959736a65941a81bdbcc8a6b72",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-on/resource.jsonl"
+      },
+      "final-source-controls/shared-object-dag-12-on/status.json": {
+        "bytes": 747,
+        "sha256": "a122d59fa6da9b676165e2a2b72f4fb86d0ae9ddde42e8f06165363f9b3c032f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-on/status.json"
+      },
+      "final-source-controls/shared-object-dag-12-on/stderr.log": {
+        "bytes": 3974,
+        "sha256": "90830e7456d83940d4c93b4cceb74da2a44403708534b417950edd65d083a9b6",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-on/stderr.log"
+      },
+      "final-source-controls/shared-object-dag-12-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-controls/shared-object-dag-12-on/stdout.json"
+      },
+      "final-source-excluded/argv.json": {
+        "bytes": 440,
+        "sha256": "8b41f7b920563f2c2ef26056045ed06d4f25005d3b5bbcfb179aedcc85233f18",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-excluded/argv.json"
+      },
+      "final-source-excluded/resource.jsonl": {
+        "bytes": 13636,
+        "sha256": "00fe95070185745b0eeab4a800db13d2fb66efc7fc9197170dc513d4ee49d79a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-excluded/resource.jsonl"
+      },
+      "final-source-excluded/status.json": {
+        "bytes": 842,
+        "sha256": "689fff631c5217bfca30cc8aef9386a3ad65f612acb991fcbdf7a626687bf2a2",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-excluded/status.json"
+      },
+      "final-source-excluded/stderr.log": {
+        "bytes": 47338,
+        "sha256": "bca5ab8f0c8e7cf4a6b5c82401aa96de3767102a848032241d0bb89cc6b4ba79",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-excluded/stderr.log"
+      },
+      "final-source-excluded/stdout.json": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/final-source-excluded/stdout.json"
+      },
+      "fixture-resolve-check-all.json": {
+        "bytes": 4214,
+        "sha256": "93f41c1781c79483b45ec8f1ba602da1f34f5d2700b0309ae7002f09b7ade85b",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/fixture-resolve-check-all.json"
+      },
+      "memoization-b830343a6/fixture-rows.json": {
+        "bytes": 304095,
+        "sha256": "eec69db77b613de0d13a4e810aa9b64ce578b628cceb49d353a1a7ad877f3fa2",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/memoization-b830343a6/fixture-rows.json"
+      },
+      "native-633724ce9/dag-no-join-off/argv.json": {
+        "bytes": 403,
+        "sha256": "946b17764fa03f293986380cec32e3fbe63f01b922b8ca15eea47f198f2c9574",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-off/argv.json"
+      },
+      "native-633724ce9/dag-no-join-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "889dee930e7af62b3b595e7c8aa609e98fd9c7a40b188aeb139f1d560356e81f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-off/resource.jsonl"
+      },
+      "native-633724ce9/dag-no-join-off/status.json": {
+        "bytes": 746,
+        "sha256": "901c9178ef8d7e2312985fa6f0f6b5615bc086f886631f96e1be535b9daeeb6f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-off/status.json"
+      },
+      "native-633724ce9/dag-no-join-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-off/stderr.log"
+      },
+      "native-633724ce9/dag-no-join-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-off/stdout.json"
+      },
+      "native-633724ce9/dag-no-join-on/argv.json": {
+        "bytes": 442,
+        "sha256": "4d436800d4dfd33e0781fd0893d5416854cab0631bdcae64c5b86c1e7ffe9cb9",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-on/argv.json"
+      },
+      "native-633724ce9/dag-no-join-on/resource.jsonl": {
+        "bytes": 70,
+        "sha256": "c515602f55a7a457741a100208896aef1b0a67ec9e263133f30b9029cd5d59af",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-on/resource.jsonl"
+      },
+      "native-633724ce9/dag-no-join-on/status.json": {
+        "bytes": 758,
+        "sha256": "afaa1633ebdd79965f7bafca8c02a06206eeee05278194bb3cc52585666c495e",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-on/status.json"
+      },
+      "native-633724ce9/dag-no-join-on/stderr.log": {
+        "bytes": 3703,
+        "sha256": "469f23f77f93418a85d1466a419abc9dc59104bbe3542b71e8040c4590de20b4",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-on/stderr.log"
+      },
+      "native-633724ce9/dag-no-join-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-no-join-on/stdout.json"
+      },
+      "native-633724ce9/dag-primitive-leaf-off/argv.json": {
+        "bytes": 417,
+        "sha256": "fbe9e07af5bf6a982bfdf07d7dfb4bac11ffcb68848c99a4db6bbb2dfdbd1966",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-off/argv.json"
+      },
+      "native-633724ce9/dag-primitive-leaf-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "24e5288f65dc9c8a7a12ce4a67991d510b5a68330a08cb5897817db26f1a50a5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-off/resource.jsonl"
+      },
+      "native-633724ce9/dag-primitive-leaf-off/status.json": {
+        "bytes": 747,
+        "sha256": "0289b1e9e5c47469a359be402fb5d50046230ac7f056d4dca4d746ca6342b3c2",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-off/status.json"
+      },
+      "native-633724ce9/dag-primitive-leaf-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-off/stderr.log"
+      },
+      "native-633724ce9/dag-primitive-leaf-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-off/stdout.json"
+      },
+      "native-633724ce9/dag-primitive-leaf-on/argv.json": {
+        "bytes": 456,
+        "sha256": "3639d726d3093190c3eaa982e19de3213af241d7c5b450f5f0d227285f888793",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-on/argv.json"
+      },
+      "native-633724ce9/dag-primitive-leaf-on/resource.jsonl": {
+        "bytes": 68,
+        "sha256": "7e3554943b58d3889340d2f5aedd122c30ff9630bc88c4b56069c25ddf636676",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-on/resource.jsonl"
+      },
+      "native-633724ce9/dag-primitive-leaf-on/status.json": {
+        "bytes": 758,
+        "sha256": "a799dffb7d5ccbf8633053ea399ae654fee38deff30f77b9436e6b7c820b5386",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-on/status.json"
+      },
+      "native-633724ce9/dag-primitive-leaf-on/stderr.log": {
+        "bytes": 3980,
+        "sha256": "40e1ad36160f7b3ab3b4f115d0415ade266a9831d99eb0486875f20ae598a321",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-on/stderr.log"
+      },
+      "native-633724ce9/dag-primitive-leaf-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-primitive-leaf-on/stdout.json"
+      },
+      "native-633724ce9/dag-single-child-off/argv.json": {
+        "bytes": 413,
+        "sha256": "b8ee5b36a9c9b37cf498703b2a684a8e4a8fe50e9766dc353bc49bb974dd8bb6",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-off/argv.json"
+      },
+      "native-633724ce9/dag-single-child-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "d82bac8b8320be92c9791ff448ffb05f17216a2f14b822f41bf64a2600daa1ac",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-off/resource.jsonl"
+      },
+      "native-633724ce9/dag-single-child-off/status.json": {
+        "bytes": 759,
+        "sha256": "c1d74d434301fc668e42cf14a3c11f6428189e9d79b7226d44e222b166ebdc29",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-off/status.json"
+      },
+      "native-633724ce9/dag-single-child-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-off/stderr.log"
+      },
+      "native-633724ce9/dag-single-child-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-off/stdout.json"
+      },
+      "native-633724ce9/dag-single-child-on/argv.json": {
+        "bytes": 452,
+        "sha256": "17fbb369e78c5ceb4cff1bb06abcbcd73885c4c1938e2b6043926db5f79246aa",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-on/argv.json"
+      },
+      "native-633724ce9/dag-single-child-on/resource.jsonl": {
+        "bytes": 70,
+        "sha256": "81b1fc6344215aa7a1a222735fd7fe3c99553b1088567d0b947261cecdad8120",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-on/resource.jsonl"
+      },
+      "native-633724ce9/dag-single-child-on/status.json": {
+        "bytes": 746,
+        "sha256": "84f1da6c759b700bc6de6e4f216b383ad0028d058bc65877d5b28fe556d8a4ef",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-on/status.json"
+      },
+      "native-633724ce9/dag-single-child-on/stderr.log": {
+        "bytes": 3979,
+        "sha256": "c0cd8415da5ec86a67789f8adece757657714e711d45c2f14da04127b1d75c08",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-on/stderr.log"
+      },
+      "native-633724ce9/dag-single-child-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/dag-single-child-on/stdout.json"
+      },
+      "native-633724ce9/excluded-stress/argv.json": {
+        "bytes": 456,
+        "sha256": "56d487d5c5eb7f116cf615923bb40dd879a9f3d466b5740f1a8a0561cefbed92",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-stress/argv.json"
+      },
+      "native-633724ce9/excluded-stress/resource.jsonl": {
+        "bytes": 13650,
+        "sha256": "2bb8e70658a94bfa2bd5396c036c80cf2fc96c6f3150b76f2be6cc591c63f605",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-stress/resource.jsonl"
+      },
+      "native-633724ce9/excluded-stress/status.json": {
+        "bytes": 843,
+        "sha256": "508b929ea904decdd12625a689b7252d4c8c1d5d7dc1bd30bbc94da9bfd7e89b",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-stress/status.json"
+      },
+      "native-633724ce9/excluded-stress/stderr.log": {
+        "bytes": 46533,
+        "sha256": "f3ffae754fe86b2df7ba4cbd5fb80a9ae8b782957743b8f08a7a333a49a1269d",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-stress/stderr.log"
+      },
+      "native-633724ce9/excluded-stress/stdout.json": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-stress/stdout.json"
+      },
+      "native-633724ce9/excluded-test-root-included-control-off/argv.json": {
+        "bytes": 451,
+        "sha256": "9cbd4650045a5a147cba2d4951903d3cdcc376e57a369bf3cc0ec0c0244f67e5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-off/argv.json"
+      },
+      "native-633724ce9/excluded-test-root-included-control-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "496f46ca87907de4fcaa097afa98ca45ac9925fa5e90699ecc7d93536ef37988",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-off/resource.jsonl"
+      },
+      "native-633724ce9/excluded-test-root-included-control-off/status.json": {
+        "bytes": 855,
+        "sha256": "76208b12a03a13aab6f142bacb252d26f0a4bb814afd1806536931b4ceee0ae4",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-off/status.json"
+      },
+      "native-633724ce9/excluded-test-root-included-control-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-off/stderr.log"
+      },
+      "native-633724ce9/excluded-test-root-included-control-off/stdout.json": {
+        "bytes": 288,
+        "sha256": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-off/stdout.json"
+      },
+      "native-633724ce9/excluded-test-root-included-control-on/argv.json": {
+        "bytes": 490,
+        "sha256": "bd3bb1dfa03eed47e040f511240bd1073b2421ea31eb1b85646cfb2f5c6e1cd5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-on/argv.json"
+      },
+      "native-633724ce9/excluded-test-root-included-control-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "25b6e5bf1e09edae2f8dfc493ace429a2eca53acb104d470cc2120296965c77c",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-on/resource.jsonl"
+      },
+      "native-633724ce9/excluded-test-root-included-control-on/status.json": {
+        "bytes": 842,
+        "sha256": "6347b4da47399eb8cc7838bced0896e29aa922d1635b0195acada725e4b85bfd",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-on/status.json"
+      },
+      "native-633724ce9/excluded-test-root-included-control-on/stderr.log": {
+        "bytes": 3665,
+        "sha256": "caaf09fb9da5123985157864bca8d07467422bf43e94b2e3749e6ac3bae0a3ca",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-on/stderr.log"
+      },
+      "native-633724ce9/excluded-test-root-included-control-on/stdout.json": {
+        "bytes": 288,
+        "sha256": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-included-control-on/stdout.json"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-off/argv.json": {
+        "bytes": 441,
+        "sha256": "07d81f0bab75b21d853e6c9c4d3f72927e1cc29e7dcacace16fea78340f1b53b",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-off/argv.json"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-off/resource.jsonl": {
+        "bytes": 68,
+        "sha256": "81d52c01910c22f185c0d3d364d0f4ee0fa8df0feb386cf653e1a7d09d167667",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-off/resource.jsonl"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-off/status.json": {
+        "bytes": 842,
+        "sha256": "823c68e4c2e30d25121b42d218e53193fa0a3808e4c6aa013dcee59b0e48df32",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-off/status.json"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-off/stderr.log"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-off/stdout.json"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-on/argv.json": {
+        "bytes": 480,
+        "sha256": "9dcaf652691b9bedc4300b7e59b39e411f5435934e82307f3abb2188e1c5ac4c",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-on/argv.json"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "488559335cb70a52115bff942e8e390dfcb58b4c040df12c932a63d05033a672",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-on/resource.jsonl"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-on/status.json": {
+        "bytes": 842,
+        "sha256": "8b5180652d28549e4cb7326e79de8a7c314546e5e0c1bc753ed8a4e70668729c",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-on/status.json"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-on/stderr.log": {
+        "bytes": 3653,
+        "sha256": "c388403e3eaa0f6f670c7f3449c83bad7db819d2fe7ebdb2188e2722f1e225b9",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-on/stderr.log"
+      },
+      "native-633724ce9/excluded-test-root-without-dag-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-dag-on/stdout.json"
+      },
+      "native-633724ce9/excluded-test-root-without-test-off/argv.json": {
+        "bytes": 443,
+        "sha256": "3a2a2211f145384a5d8ace3195af8b201d16fd90fa2997b9cb9cf17a6a70ce12",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-off/argv.json"
+      },
+      "native-633724ce9/excluded-test-root-without-test-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "585eb9e1ada9db97cdcda891c3d348b6f3e89e4f27c2f9fea910c60b05abe9d9",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-off/resource.jsonl"
+      },
+      "native-633724ce9/excluded-test-root-without-test-off/status.json": {
+        "bytes": 761,
+        "sha256": "308043a2f903214a5e8a04780ffcea5339326c736190836ecfd29bf9a732d4d6",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-off/status.json"
+      },
+      "native-633724ce9/excluded-test-root-without-test-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-off/stderr.log"
+      },
+      "native-633724ce9/excluded-test-root-without-test-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-off/stdout.json"
+      },
+      "native-633724ce9/excluded-test-root-without-test-on/argv.json": {
+        "bytes": 482,
+        "sha256": "2548016563742625914ea83acad5dc1fd5dcfba2de959fdcdd868f31da263d87",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-on/argv.json"
+      },
+      "native-633724ce9/excluded-test-root-without-test-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "264d62c6e8966f2cc62f586b2947304d7e77d314e84ef46b0d787b8316e8f51a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-on/resource.jsonl"
+      },
+      "native-633724ce9/excluded-test-root-without-test-on/status.json": {
+        "bytes": 749,
+        "sha256": "d32133e233d7bfdf079c6bc9acc613f32727daa5298de9ed1e0b0cadc72ef032",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-on/status.json"
+      },
+      "native-633724ce9/excluded-test-root-without-test-on/stderr.log": {
+        "bytes": 3684,
+        "sha256": "46c08f3c877729b9e2c67cde253218cf07b64d36e9736960253317ad75e33f33",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-on/stderr.log"
+      },
+      "native-633724ce9/excluded-test-root-without-test-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/excluded-test-root-without-test-on/stdout.json"
+      },
+      "native-633724ce9/shared-object-dag-12-off/argv.json": {
+        "bytes": 421,
+        "sha256": "d0d3207ab0bc22e2ce2628f0b5bac4d6663a5e37becb8300c8f8c5b5084f5201",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-off/argv.json"
+      },
+      "native-633724ce9/shared-object-dag-12-off/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "2d7edb031ad12b80f5d7862fe30e986d7ee064094c771be67772dc229be628bc",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-off/resource.jsonl"
+      },
+      "native-633724ce9/shared-object-dag-12-off/status.json": {
+        "bytes": 759,
+        "sha256": "a12070d0f819c8ef5843655221238d6718d8468a42019ceb6a2c92f6e3589bf4",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-off/status.json"
+      },
+      "native-633724ce9/shared-object-dag-12-off/stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-off/stderr.log"
+      },
+      "native-633724ce9/shared-object-dag-12-off/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-off/stdout.json"
+      },
+      "native-633724ce9/shared-object-dag-12-on/argv.json": {
+        "bytes": 460,
+        "sha256": "15a90ec9c60dcd8f244a0815239b7cf1c790ce44241ba6484993a32415137eb4",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-on/argv.json"
+      },
+      "native-633724ce9/shared-object-dag-12-on/resource.jsonl": {
+        "bytes": 69,
+        "sha256": "ee3ea02b9df986700215a6e118541d1c53a53f523c70613074b0a54c7fad2761",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-on/resource.jsonl"
+      },
+      "native-633724ce9/shared-object-dag-12-on/status.json": {
+        "bytes": 746,
+        "sha256": "944ec4feec3879243d2f2eaa45772da7c6956fe9b8e78a7d0c2cb2c11cafe5ae",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-on/status.json"
+      },
+      "native-633724ce9/shared-object-dag-12-on/stderr.log": {
+        "bytes": 3980,
+        "sha256": "7a40888da2c6c42fe755c020668a8bf9fcc3e147a3a4b3ddc771630578179280",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-on/stderr.log"
+      },
+      "native-633724ce9/shared-object-dag-12-on/stdout.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-633724ce9/shared-object-dag-12-on/stdout.json"
+      },
+      "native-counter-probe-633724ce9.py": {
+        "bytes": 2701,
+        "sha256": "9bdb82af1c651b331beb47a613627d97ba8c9d13046e43d9864d715be1a7cf1f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-counter-probe-633724ce9.py"
+      },
+      "native-counter-probe.py": {
+        "bytes": 2694,
+        "sha256": "75e942d8648af083cdd16886ec4bbbf9c55cf9826a4c4b4ab0cceeeec2b1bba7",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/native-counter-probe.py"
+      },
+      "prototype-argv.json": {
+        "bytes": 308,
+        "sha256": "4c9580f222cf8bcd44756e5530af8d617587b5793426a25f16e6c8837045cf9e",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/prototype-argv.json"
+      },
+      "prototype-progress.log.gz.b64": {
+        "bytes": 6943285,
+        "sha256": "de9bc4eb870858bc0abf1a6b7d4b36eee2291e542528044d7f83fe4f222df34a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/prototype-progress.log.gz.b64"
+      },
+      "prototype-progress.rs.txt": {
+        "bytes": 737,
+        "sha256": "fc4a30806e17ad0defc138424019a6f19b4c4114bee055ff912cec1c17896f62",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/prototype-progress.rs.txt"
+      },
+      "prototype-resource.jsonl": {
+        "bytes": 8618,
+        "sha256": "55adbee98c87b43ef0e32c296d037bb55db58d0e5ec526e1e586fa75884f5276",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/prototype-resource.jsonl"
+      },
+      "prototype-source.patch": {
+        "bytes": 4031,
+        "sha256": "0bba14e5af9a8ed2656c6fe98fd4db7dedfe805b68ed5cc793ba20fe9f593caf",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/prototype-source.patch"
+      },
+      "signature-impact.json": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/signature-impact.json"
+      },
+      "signature-impact.stderr": {
+        "bytes": 249,
+        "sha256": "5f620a23baf03da5f8dfc2efd33ab1b8c2632a68710255a57ea5af393bf9ab7a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/signature-impact.stderr"
+      },
+      "uninstrumented-control-off.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/uninstrumented-control-off.json"
+      },
+      "uninstrumented-control-on.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/uninstrumented-control-on.json"
+      },
+      "validation-configured-check.json": {
+        "bytes": 97,
+        "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation-configured-check.json"
+      },
+      "validation-dependents.json": {
+        "bytes": 222,
+        "sha256": "d2f08bcd85249c02d405b1bccc1caf4073db9af92e7d9dd28377663e5d5e107a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation-dependents.json"
+      },
+      "validation-impacted-checks.json": {
+        "bytes": 459,
+        "sha256": "172b986b812ed6a2ab413601981cd67e96f7cf0e9859aaea58f81521b5f98d72",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation-impacted-checks.json"
+      },
+      "validation-test-plan.json": {
+        "bytes": 337,
+        "sha256": "a4e32207ee0b50a824dc7a1b330b4db0e6cf8aa94478495aab775a92ea9e254b",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation-test-plan.json"
+      },
+      "validation/build_size.py": {
+        "bytes": 940,
+        "sha256": "45a5b5811a2b2e7103817bf9888479cc8f53d4429ab59489241d4b33304159f5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/build_size.py"
+      },
+      "validation/clippy.log": {
+        "bytes": 8697,
+        "sha256": "da0f190d8522c5839d2ca55d807bd00fd582fca6ec64b6c1607eecb29d601f7a",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/clippy.log"
+      },
+      "validation/complexity.log": {
+        "bytes": 948,
+        "sha256": "722235db810522bfde71846ac3704834ebfe71046e1642f1e189fc0b59eef9c5",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/complexity.log"
+      },
+      "validation/crap.log": {
+        "bytes": 11763,
+        "sha256": "f471e9e74aa4e5f54f216dbcb5a878c7b3ab6a478195ffcc8926aa2da942ce1f",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/crap.log"
+      },
+      "validation/doc.log.gz.b64": {
+        "bytes": 2991,
+        "sha256": "09eb60e4323496e18a568fc71719fdd73932e321a9ba15f7d6ec6a25451e2b83",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/doc.log.gz.b64"
+      },
+      "validation/floors.log": {
+        "bytes": 799726,
+        "sha256": "12d4f1b019951d5f0ab0fc5a696736093689e3d64fb90d4dff633010edf728c1",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/floors.log"
+      },
+      "validation/patch.py": {
+        "bytes": 2683,
+        "sha256": "d87fc6515a1604e10b641eb2f11244053e3c7b9ae270e8f3722820598198c2b3",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/patch.py"
+      },
+      "validation/postgres-preflight.log": {
+        "bytes": 138,
+        "sha256": "1f30e4260768341f5b6b42677e4af33ca14ab6679b6e3111265f69374c3c97aa",
+        "url": "https://github.com/jonathanong/no-mistakes/raw/2bb59a66b263a1b49f652d78c4cfdb5318f04782/docs/performance/annotation-stall-2118/validation/postgres-preflight.log"
+      }
+    }
+  },
+  "redaction": "Local user/root prefixes in retained summaries are replaced by placeholders; original byte identities and records are preserved in the reviewed commit and local ZIP.",
+  "retainedFiles": {
+    "README.md": {
+      "bytes": 5303,
+      "sha256": "30fff99fe50823a711026cf65648c2943f49c07fc2514cfd4d3f6350d2b551d0"
     },
-    "validation/doc.log.gz": {
-      "storedAs": "validation/doc.log.gz.b64",
-      "encoding": "base64",
-      "decodedSha256": "0963d08c73ca131e0d98c2e5d507b7decda6773ebc559ec37344cb93b876a5c9"
+    "excluded-root-proof.json": {
+      "bytes": 12020,
+      "sha256": "5f3605f28c6f1dddaafd119dbfad8129a262a29b4ffd3b85eeb1644010fd6796"
+    },
+    "final-source-control-summary.json": {
+      "bytes": 2474,
+      "sha256": "b6518fb83c084dd9f55cdabb76def54157932414fc5cc4887fe961e484970e59"
+    },
+    "memoization-b830343a6/README.md": {
+      "bytes": 3072,
+      "sha256": "c11ba8bb774b8a705f34aa9a14ad0d79b9cf07f76b2f5333c7b16f7fef33cd3d"
+    },
+    "memoization-b830343a6/fixture-summary.json": {
+      "bytes": 880,
+      "sha256": "36f9ed470b7c86ee3970474b90eca909a3db0400df908fdf6458181e6a037094"
+    },
+    "memoization-b830343a6/generated-catalog-fixtures.json": {
+      "bytes": 3046,
+      "sha256": "3b6d11d27534b2e078a4d5259192254db1a7ddfe2345818289bb5a43717b6941"
+    },
+    "memoization-b830343a6/manifest.json": {
+      "bytes": 1015,
+      "sha256": "6a34185048aff30cac7e933179520b1aeff3bd577dca45434af242c58e475cae"
+    },
+    "memoization-b830343a6/patch-coverage.json": {
+      "bytes": 7913,
+      "sha256": "998181982d0e4d3e4512f36d807242004b99a20017191636f4d4b6b025fc26c1"
+    },
+    "memoization-b830343a6/validation.json": {
+      "bytes": 5613,
+      "sha256": "c1c1a9c735966511fca45b4220e8776cd3e4a7e15cb8fcfa3a68d06ee9d3415e"
+    },
+    "memoization-b830343a6/work-and-coverage.json": {
+      "bytes": 1000,
+      "sha256": "cc3458f70bc588a32e2b425e5d5ad5226e419c02ac302998810ba31d56a4e4db"
+    },
+    "native-633724ce9-summary.json": {
+      "bytes": 2640,
+      "sha256": "d8e0acf0d2bb839a95cf74df48b5488238bea1d073a0fd63119ede092409a84f"
+    },
+    "prototype-build-proof.json": {
+      "bytes": 1060,
+      "sha256": "85da9bc4316dc9f0669e0f907027970213861c8d2c67dc8c6872a86d683a519b"
+    },
+    "prototype-root-summary.json": {
+      "bytes": 2885,
+      "sha256": "26cf3be0af6d48626104e29fda08347e266ddbde70a39c4bcedf912e5838cd25"
+    },
+    "prototype-status.json": {
+      "bytes": 158,
+      "sha256": "db6eac7f855f928122fb5c61115cc9edb24635021487b5018179607985c911c6"
+    },
+    "shared-dag-proof.json": {
+      "bytes": 14286,
+      "sha256": "06ee12e68e53815ccf73cfd209d7f6337c6fd9fb68e333a487a0c210ec18164d"
+    },
+    "temporary-environment-control.json": {
+      "bytes": 341,
+      "sha256": "cee501911352cc75107dd0b1eb5dae45ab5f79e8b4b2f23d2a04f304b24b94cf"
+    },
+    "validation/patch-coverage.json": {
+      "bytes": 5493,
+      "sha256": "9632f38f6f4ff34045a8192ce7eba7b63a94d19877ad3a4dfcfbb8bc0d925871"
+    },
+    "validation/state.json": {
+      "bytes": 5694,
+      "sha256": "2b7131a5084e0d5f7282128905b4293ef6d5ce22181daf6e497fde17031a8f97"
+    },
+    "validation/totals.json": {
+      "bytes": 597,
+      "sha256": "90933a8bf3aac01b3021efe9393ae635c092b471c30ac997663177b5b6e50709"
+    },
+    "version-only-rebase.json": {
+      "bytes": 1004,
+      "sha256": "bea951e591c61a768c0d813b2bbea5b6cbd4f414ba96d020c21a02f82ecf5a54"
     }
   }
 }

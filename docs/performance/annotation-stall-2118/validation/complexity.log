@@ -1,9 +1,0 @@
-warning: could not analyze /tmp/nm-annotation-stall/crates/no-mistakes/src/codebase/dependencies/graph/builder_core/finish.rs: parsing /tmp/nm-annotation-stall/crates/no-mistakes/src/codebase/dependencies/graph/builder_core/finish.rs
-warning: could not analyze /tmp/nm-annotation-stall/crates/no-mistakes/src/codebase/dependencies/graph/builder_core/body.rs: parsing /tmp/nm-annotation-stall/crates/no-mistakes/src/codebase/dependencies/graph/builder_core/body.rs
-Per-crate summary:
-┌─────────────┬───────────┬────────┐
-│ Crate       ┆ Functions ┆ Crappy │
-╞═════════════╪═══════════╪════════╡
-│ no-mistakes ┆     17025 ┆      0 │
-└─────────────┴───────────┴────────┘
-✓ Analyzed: 17025 · Crappy: 0 (threshold 30)

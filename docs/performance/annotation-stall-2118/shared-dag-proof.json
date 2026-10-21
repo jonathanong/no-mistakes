@@ -3,7 +3,7 @@
   "binary": "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
   "binarySha256": "ddd82dd6d1c2829e1f6c0d446a558212ef67d6c51c55f70a30f8dd797d91c68c",
   "source": "350ada01a24c33f98696ee98de9b965dfbe6d671",
-  "fullActiveRoot": "/tmp/nm2119-consumer-12158768554/fixture/backend/services/mcp-tools/current-operations.boundary.test.mts",
+  "fullActiveRoot": "/tmp/nm2119-consumer-12158768554/fixture/<consumer-tools>/current-operations.boundary.test.mts",
   "fullActiveRootSha256": "df662175562a85c1904e78fb69f93a23008eb95c51ae18ff339eea5136598869",
   "minimalTrigger": "/tmp/nm-annotation-reducer/cases/shared-object-dag-30/root.mts",
   "minimalTriggerSha256": "9fd92f2a3cee15edb8d46b9ab0ff655c06f007e106388ef0c21a0ccba1cc3410",

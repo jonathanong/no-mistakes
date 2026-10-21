@@ -57,6 +57,9 @@ impl<'a, const OBSERVED: bool> Walk<'a, '_, OBSERVED> {
                 }
                 // A uniquely owned chain cannot be revisited. Forward writes
                 // directly instead of retaining overlapping ancestor summaries.
+                // is_shared uses Arc::strong_count as a shortcut for this
+                // single-threaded walk. Parallel walks over shared values must
+                // revisit that ownership assumption.
                 if !values.is_shared() {
                     for child in values {
                         self.visit(child, direct.as_deref_mut());
