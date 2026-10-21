@@ -186,6 +186,8 @@ mod configured_sql_tag_tests;
 #[cfg(test)]
 mod const_splice_tests;
 #[cfg(test)]
+mod default_export_constants_tests;
+#[cfg(test)]
 mod dml_kind_tests;
 #[cfg(test)]
 mod helper_body_tests;

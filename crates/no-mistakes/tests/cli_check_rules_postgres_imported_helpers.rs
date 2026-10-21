@@ -427,3 +427,22 @@ fn proven_throw_switches_are_judged_and_unproven_defaults_abstain() {
         ])
     );
 }
+
+#[test]
+fn default_exported_string_constants_are_spliced() {
+    // A string, template, parenthesized string, or `as const` default is the
+    // table token, so the finding is on that file. Bare and parenthesized
+    // identifier defaults are judged on the caller. A substitution stays
+    // unanalyzable.
+    assert_eq!(
+        required("default-export-const-sql"),
+        expect(&[
+            ("src/as-const-table.mts", 1, "orders"),
+            ("src/caller.mts", 1, "orders"),
+            ("src/caller.mts", 38, UNANALYZABLE),
+            ("src/paren-table.mts", 1, "orders"),
+            ("src/string-table.mts", 1, "orders"),
+            ("src/template-table.mts", 1, "orders"),
+        ])
+    );
+}
