@@ -71,6 +71,15 @@ else throw new Error("unknown access");
 
 ## Options
 
+```js
+{
+  "no-mistakes/postgres-no-correlated-sql-builder": [
+    "error",
+    { builderMethods: ["append"], tagNames: ["sql"] },
+  ],
+}
+```
+
 The rule reports nothing until both lists are non-empty. `builderMethods` is
 the method names that append SQL, such as `["append"]`. `tagNames` is the tag
 identifiers that produce SQL text, such as `["sql"]`. A string or untagged

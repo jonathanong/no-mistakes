@@ -25,6 +25,19 @@ There are no rule-specific options or defaults. It validates the active
 The fixed configuration below uses a tracked project root, removes the empty
 exclude, and puts the budget on a non-`direct` group.
 
+```yaml
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+```
+
+
+## Counterexample
+
+```yaml
+unknownKey: true
+```
+
 ## Suppression
 
 Fix configuration rather than suppressing it. For an intentional generated

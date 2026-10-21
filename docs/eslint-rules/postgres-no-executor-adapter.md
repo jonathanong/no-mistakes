@@ -192,6 +192,15 @@ run(0 ?? read, account);
 
 ## Options
 
+```js
+{
+  "no-mistakes/postgres-no-executor-adapter": [
+    "error",
+    { importSpecifier: "@example/db" },
+  ],
+}
+```
+
 - `importSpecifier` identifies the database module and defaults to empty.
   Configure your database module explicitly. Named executor imports must come
   from that exact module. A subpath such as `@example/db/read` does not match

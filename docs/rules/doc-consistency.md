@@ -88,6 +88,12 @@ For a regex hit, delete the match or move it to the owner file named in
 `message`, and narrow `files` so the pattern does not cover that owner. Do not
 suppress a pin that still belongs in the living document.
 
+```md
+# Title
+# Duplicate
+```
+
+
 ## Suppression
 
 Use a line directive for one text finding, a next-line directive for the

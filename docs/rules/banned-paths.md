@@ -19,6 +19,24 @@ There are no defaults or other rule-specific options.
 
 A repository without `web/pages/**` files passes the configuration below.
 
+```tsx
+// app/page.tsx
+export default function Home() {
+  return null;
+}
+```
+
+## Counterexample
+
+A repository keeps legacy route files such as `web/pages/index.tsx`.
+
+```tsx
+// web/pages/index.tsx
+export default function Home() {
+  return null;
+}
+```
+
 ## Related rules
 
 [`banned-renamed-files`](banned-renamed-files.md) is for legacy basenames;

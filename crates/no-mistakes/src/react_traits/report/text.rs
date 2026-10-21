@@ -1,40 +1,56 @@
 use crate::react_traits::report::types::{ComponentFacts, UsagesReport, Violation};
+use std::fmt::Write as _;
 
 pub fn print_results(results: &[ComponentFacts], depth: usize) {
-    for facts in results {
-        print_component(facts, depth, 0);
-        println!();
-    }
+    print!("{}", render_results(results, depth));
 }
 
-fn print_component(facts: &ComponentFacts, max_depth: usize, current_depth: usize) {
+fn render_results(results: &[ComponentFacts], depth: usize) -> String {
+    let mut out = String::new();
+    for facts in results {
+        render_component(&mut out, facts, depth, 0);
+        let _ = writeln!(out);
+    }
+    out
+}
+
+fn render_component(
+    out: &mut String,
+    facts: &ComponentFacts,
+    max_depth: usize,
+    current_depth: usize,
+) {
     let indent = "  ".repeat(current_depth);
-    println!("{}{}#{}", indent, facts.file, facts.name);
+    let _ = writeln!(out, "{}{}#{}", indent, facts.file, facts.name);
     let i2 = "  ".repeat(current_depth + 1);
-    println!("{}hasState: {}", i2, facts.has_state);
-    println!("{}hasProps: {}", i2, facts.has_props);
-    println!("{}passesProps: {}", i2, facts.passes_props);
-    println!("{}usesMemo: {}", i2, facts.uses_memo);
-    println!("{}usesContextProvider: {}", i2, facts.uses_context_provider);
-    println!("{}usesSuspense: {}", i2, facts.uses_suspense);
-    println!("{}hasFetch: {}", i2, !facts.fetches.is_empty());
-    println!("{}environment: {}", i2, facts.environment);
+    let _ = writeln!(out, "{i2}hasState: {}", facts.has_state);
+    let _ = writeln!(out, "{i2}hasProps: {}", facts.has_props);
+    let _ = writeln!(out, "{i2}passesProps: {}", facts.passes_props);
+    let _ = writeln!(out, "{i2}usesMemo: {}", facts.uses_memo);
+    let _ = writeln!(
+        out,
+        "{i2}usesContextProvider: {}",
+        facts.uses_context_provider
+    );
+    let _ = writeln!(out, "{i2}usesSuspense: {}", facts.uses_suspense);
+    let _ = writeln!(out, "{i2}hasFetch: {}", !facts.fetches.is_empty());
+    let _ = writeln!(out, "{i2}environment: {}", facts.environment);
     if !facts.children.is_empty() {
-        println!("{}children:", i2);
+        let _ = writeln!(out, "{i2}children:");
         for child in &facts.children {
-            println!("{}  {}#{}", i2, child.file, child.name);
+            let _ = writeln!(out, "{i2}  {}#{}", child.file, child.name);
         }
     }
     if !facts.dependencies.is_empty() {
-        println!("{}dependencies:", i2);
+        let _ = writeln!(out, "{i2}dependencies:");
         for dep in &facts.dependencies {
-            println!("{}  {}", i2, dep);
+            let _ = writeln!(out, "{i2}  {dep}");
         }
     }
     if let Some(agg) = &facts.inherited_from_children {
-        println!("{}inheritedFromChildren:", i2);
+        let _ = writeln!(out, "{i2}inheritedFromChildren:");
         let i3 = "  ".repeat(current_depth + 2);
-        println!("{}hasFetch: {}", i3, agg.has_fetch);
+        let _ = writeln!(out, "{i3}hasFetch: {}", agg.has_fetch);
     }
     if current_depth < max_depth {
         // In a full recursive implementation, child ComponentFacts would be resolved
@@ -46,33 +62,59 @@ fn print_component(facts: &ComponentFacts, max_depth: usize, current_depth: usiz
 mod tests;
 
 pub fn print_violations(violations: &[Violation]) {
-    for v in violations {
-        if let Some(detail) = &v.detail {
-            println!("{}#{}: {} {}", v.file, v.component, v.rule, detail);
+    print!("{}", render_violations(violations));
+}
+
+fn render_violations(violations: &[Violation]) -> String {
+    let mut out = String::new();
+    for violation in violations {
+        if let Some(detail) = &violation.detail {
+            let _ = writeln!(
+                out,
+                "{}#{}: {} {detail}",
+                violation.file, violation.component, violation.rule
+            );
         } else {
-            println!("{}#{}: {}", v.file, v.component, v.rule);
+            let _ = writeln!(
+                out,
+                "{}#{}: {}",
+                violation.file, violation.component, violation.rule
+            );
         }
     }
+    out
 }
 
 pub fn print_results_md(results: &[ComponentFacts]) {
-    println!("# React traits");
+    print!("{}", render_results_md(results));
+}
+
+fn render_results_md(results: &[ComponentFacts]) -> String {
+    let mut out = String::from("# React traits\n");
     for result in results {
-        println!(
+        let _ = writeln!(
+            out,
             "- `{}` `{}` ({})",
             result.file, result.name, result.environment
         );
     }
+    out
 }
 
 pub fn print_violations_md(violations: &[Violation]) {
-    println!("# React trait violations");
+    print!("{}", render_violations_md(violations));
+}
+
+fn render_violations_md(violations: &[Violation]) -> String {
+    let mut out = String::from("# React trait violations\n");
     for violation in violations {
-        println!(
+        let _ = writeln!(
+            out,
             "- `{}` `{}`: {}",
             violation.file, violation.component, violation.rule
         );
     }
+    out
 }
 
 fn target_label(report: &UsagesReport) -> String {
@@ -91,10 +133,16 @@ fn callsite_props(callsite: &crate::react_traits::report::types::Callsite) -> St
 }
 
 pub fn print_usages(report: &UsagesReport) {
-    println!("{}", target_label(report));
-    println!("  callsites:");
+    print!("{}", render_usages(report));
+}
+
+fn render_usages(report: &UsagesReport) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "{}", target_label(report));
+    let _ = writeln!(out, "  callsites:");
     for callsite in &report.callsites {
-        println!(
+        let _ = writeln!(
+            out,
             "    {}:{} <{}> [{}]",
             callsite.file,
             callsite.line,
@@ -102,25 +150,32 @@ pub fn print_usages(report: &UsagesReport) {
             callsite_props(callsite)
         );
     }
-    print_usages_section("stories", report.stories.as_deref());
-    print_usages_section("tests", report.tests.as_deref());
-    print_usages_section("propTypes", report.prop_types.as_deref());
+    render_usages_section(&mut out, "stories", report.stories.as_deref());
+    render_usages_section(&mut out, "tests", report.tests.as_deref());
+    render_usages_section(&mut out, "propTypes", report.prop_types.as_deref());
+    out
 }
 
-fn print_usages_section(label: &str, items: Option<&[String]>) {
+fn render_usages_section(out: &mut String, label: &str, items: Option<&[String]>) {
     if let Some(items) = items {
-        println!("  {label}:");
+        let _ = writeln!(out, "  {label}:");
         for item in items {
-            println!("    {item}");
+            let _ = writeln!(out, "    {item}");
         }
     }
 }
 
 pub fn print_usages_md(report: &UsagesReport) {
-    println!("# React usages: `{}`", target_label(report));
-    println!("## Callsites");
+    print!("{}", render_usages_md(report));
+}
+
+fn render_usages_md(report: &UsagesReport) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "# React usages: `{}`", target_label(report));
+    let _ = writeln!(out, "## Callsites");
     for callsite in &report.callsites {
-        println!(
+        let _ = writeln!(
+            out,
             "- `{}:{}` `<{}>` ({})",
             callsite.file,
             callsite.line,
@@ -128,16 +183,17 @@ pub fn print_usages_md(report: &UsagesReport) {
             callsite_props(callsite)
         );
     }
-    print_usages_md_section("Stories", report.stories.as_deref());
-    print_usages_md_section("Tests", report.tests.as_deref());
-    print_usages_md_section("Prop types", report.prop_types.as_deref());
+    render_usages_md_section(&mut out, "Stories", report.stories.as_deref());
+    render_usages_md_section(&mut out, "Tests", report.tests.as_deref());
+    render_usages_md_section(&mut out, "Prop types", report.prop_types.as_deref());
+    out
 }
 
-fn print_usages_md_section(label: &str, items: Option<&[String]>) {
+fn render_usages_md_section(out: &mut String, label: &str, items: Option<&[String]>) {
     if let Some(items) = items {
-        println!("## {label}");
+        let _ = writeln!(out, "## {label}");
         for item in items {
-            println!("- `{item}`");
+            let _ = writeln!(out, "- `{item}`");
         }
     }
 }

@@ -14,9 +14,9 @@ rules:
   - rule: agents-md-max-size
     scope: repository
     options:
-      maxLines: 200
-      maxChars: 12000
-      advisoryCharsRemaining: 500
+      maxLines: 3
+      maxChars: 80
+      advisoryCharsRemaining: 20
       filenames: [AGENTS.md, CLAUDE.md]
       roots: [.]
 ```
@@ -27,7 +27,8 @@ Use this rule when agent instruction files are part of the
 repository contract and must fit reliably in an agent context window. It checks
 only configured instruction filenames below the selected roots. `maxLines`
 defaults to `200`, `maxChars` to `12000`, and `filenames` to `AGENTS.md` and
-`CLAUDE.md`. `roots` defaults to the rule application roots; use it to limit
+`CLAUDE.md`. The configuration above uses a tight budget so the snippets stay
+short. `roots` defaults to the rule application roots; use it to limit
 the search further. Omit `advisoryCharsRemaining` to disable advisory findings.
 
 ## Valid example
@@ -35,7 +36,24 @@ the search further. Omit `advisoryCharsRemaining` to disable advisory findings.
 A short `AGENTS.md` that links to detailed repository docs rather
 than repeating their contents remains below both configured limits.
 
-Counterexample: adding a long local agent file that duplicates global policy.
+```md
+# AGENTS.md
+
+Follow [docs/why.md](docs/why.md) for analyzer policy.
+```
+
+## Counterexample
+
+Adding a long local agent file that duplicates global policy.
+
+```md
+# AGENTS.md
+line
+line
+line
+line
+line
+```
 
 Fix: move detailed reference material into docs and keep agent files concise.
 

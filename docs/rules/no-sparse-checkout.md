@@ -27,17 +27,29 @@ selection; common `include` and `exclude` add further rule-path scoping.
 ## Valid example
 
 ```yaml
-- uses: actions/checkout@v4
-  with:
-    fetch-depth: 0
+name: ci
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 ```
 
 ## Counterexample
 
 ```yaml
-- uses: actions/checkout@v4
-  with:
-    sparse-checkout: scripts
+name: ci
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
 ```
 
 ## Fix

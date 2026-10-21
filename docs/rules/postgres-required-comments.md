@@ -65,11 +65,22 @@ reports nothing for it.
 
 `COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment'`.
 
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY);
+COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment';
+```
+
+
 ## Counterexample
 
 `orders` has no comment, a comment made only of whitespace, or a comment
 shorter than `minLength`. The same applies to a selected column, view, or
 materialized view.
+
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY);
+```
+
 
 ## Fix
 

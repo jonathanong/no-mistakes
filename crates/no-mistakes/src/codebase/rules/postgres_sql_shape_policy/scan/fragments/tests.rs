@@ -28,6 +28,21 @@ fn complete_execution_filter_keeps_unrelated_fragment_origins() {
 }
 
 #[test]
+fn disabled_complete_execution_drops_only_its_own_append_site() {
+    // The disabled execution is the only append of this token, so its fragment
+    // finding must not leak. The call-site finding stays for suppression accounting.
+    let owned = findings("complete-suppression-owned");
+    let owned_lines = owned.iter().map(|finding| finding.line).collect::<Vec<_>>();
+    assert_eq!(owned_lines, [7], "{owned:#?}");
+
+    // The same token also feeds an unrelated builder. That finding stays on the
+    // token line while the disabled call stays on its own line.
+    let reuse = findings("complete-suppression-reuse");
+    let reuse_lines = reuse.iter().map(|finding| finding.line).collect::<Vec<_>>();
+    assert_eq!(reuse_lines, [2, 5], "{reuse:#?}");
+}
+
+#[test]
 fn host_suppressed_finite_fragments_still_scan_the_disabled_host() {
     let findings = findings("finite-fragments-host-suppressed");
     assert!(

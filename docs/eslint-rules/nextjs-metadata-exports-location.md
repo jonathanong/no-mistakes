@@ -9,7 +9,7 @@ not use.
 ## Disallowed
 
 ```ts
-// components/Card.tsx
+// app/components/Card.tsx
 export const metadata = { title: "Card" };
 ```
 

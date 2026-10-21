@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
 import { __dirname, fixture, messages, require } from "./helpers.mjs";
@@ -128,28 +129,22 @@ describe("scoped PostgreSQL executors", () => {
   });
 
   it("does not resolve a relative import when importSpecifier is not a package name", () => {
-    const name = "postgres-scoped/relative-inside/orders.ts";
-    const filename = fixtureFile(name);
-    assert.deepEqual(
-      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "@" }, filename),
-      [],
-    );
-    assert.deepEqual(
-      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "@/" }, filename),
-      [],
-    );
-    assert.deepEqual(
-      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "@scope/" }, filename),
-      [],
-    );
-    assert.deepEqual(
-      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "./db" }, filename),
-      [],
-    );
-    assert.deepEqual(
-      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "/abs/db" }, filename),
-      [],
-    );
+    // Each directory's package.json name is what packageName() would return
+    // without the matching guard, so that guard is the only rejection.
+    // A leading "/" needs no fixture: split("/")[0] is empty and `name || null`
+    // already returns null. A non-string package.json name needs none either:
+    // packageRoot only compares it with a string specifier.
+    assert.deepEqual(scopedPackage("package-name-slash", "@/db"), []);
+    assert.deepEqual(scopedPackage("package-name-empty", "@scope/"), []);
+    assert.deepEqual(scopedPackage("package-name-dot", "./db"), []);
+  });
+
+  it("does not treat an empty filename as the package root", () => {
+    const cwd = fixtureFile("postgres-scoped/empty-filename/nested");
+    const script = resolve(__dirname, "postgres-scoped-empty-filename.mjs");
+    const child = spawnSync(process.execPath, [script, cwd, ""], { encoding: "utf8" });
+    assert.equal(child.status, 0, child.stderr);
+    assert.equal(child.stdout, "0");
   });
 
   it("exposes scope lookups as range checks", () => {
@@ -165,6 +160,11 @@ describe("scoped PostgreSQL executors", () => {
 
 function fixtureFile(name) {
   return resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", name);
+}
+
+function scopedPackage(directory, importSpecifier) {
+  const name = `postgres-scoped/${directory}/orders.ts`;
+  return messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier }, fixtureFile(name));
 }
 
 const SCOPED_DEFAULTS = {

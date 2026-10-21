@@ -8,12 +8,14 @@ timeout keeps tests focused on observable readiness.
 ## Disallowed
 
 ```ts
+// e2e/status.spec.ts
 await expect(page.getByRole("status")).toHaveText("Done", { timeout: 30_000 });
 ```
 
 ## Allowed
 
 ```ts
+// e2e/status.spec.ts
 await expect(page.getByRole("status")).toHaveText("Done", { timeout: 5_000 });
 ```
 

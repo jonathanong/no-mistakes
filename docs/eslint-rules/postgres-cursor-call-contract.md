@@ -8,6 +8,8 @@ annotated static SQL lets review attribute that cost to one callsite.
 ## Disallowed
 
 ```ts
+import { runCursor } from "@app/db/cursors";
+
 const cursor = runCursor;
 cursor(sql);
 runCursor("SELECT * FROM users");
@@ -21,6 +23,15 @@ runCursor("/* users */ SELECT * FROM users");
 ```
 
 ## Options
+
+```js
+{
+  "no-mistakes/postgres-cursor-call-contract": [
+    "error",
+    { modules: ["@app/db/cursors"], executors: ["runCursor"] },
+  ],
+}
+```
 
 - `modules` and `executors` identify cursor imports and required executor names;
   either empty list disables the rule.

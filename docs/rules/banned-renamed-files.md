@@ -21,6 +21,18 @@ their documented simple-basename behavior.
 A `jest.config.ts` renamed to the configured replacement and absent from the
 selected scope passes.
 
+```ts
+export const proxy = true;
+```
+
+
+## Counterexample
+
+```ts
+// middleware.ts
+export const middleware = true;
+```
+
 ## Suppression and related rules
 
 Findings are on line 1, so use file suppression only for an intentional legacy

@@ -21,6 +21,17 @@ rule-specific options exist.
 The relational assertion in the fix below is valid because it compares values
 without restating the owned timeout literal.
 
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: pnpm test
+        timeout-minutes: 8
+```
+
+
 ## Related rules
 
 [`github-actions-job-timeouts`](github-actions-job-timeouts.md) owns the
@@ -59,6 +70,17 @@ trimmed source line.
 
 ```ts
 expect(step?.['timeout-minutes']).toBeLessThanOrEqual(job?.['timeout-minutes'])
+```
+
+## Counterexample
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: pnpm test --testTimeout=${{ inputs.ms }}
 ```
 
 ## Suppression

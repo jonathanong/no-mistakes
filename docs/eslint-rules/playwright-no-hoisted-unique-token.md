@@ -29,6 +29,7 @@ claims to handle and gets wrong.
 ## Disallowed
 
 ```ts
+// e2e/posts.spec.ts
 const suffix = randomSuffix();
 
 test.beforeAll(async () => {
@@ -39,6 +40,7 @@ test.beforeAll(async () => {
 ## Allowed
 
 ```ts
+// e2e/posts.spec.ts
 let suffix = "";
 
 test.beforeAll(async () => {
@@ -48,6 +50,7 @@ test.beforeAll(async () => {
 ```
 
 ```ts
+// e2e/posts.spec.ts
 // A same-named local re-declaration inside the hook shadows any outer token —
 // it is a different variable, so this is not the hazard the rule looks for.
 const suffix = randomSuffix();
@@ -59,6 +62,15 @@ test.beforeAll(async () => {
 ```
 
 ## Options
+
+```js
+{
+  "no-mistakes/playwright-no-hoisted-unique-token": [
+    "error",
+    { tokenFactories: ["randomSuffix"] },
+  ],
+}
+```
 
 - `tokenFactories` lists unique-token factory call names to track (for
   example `["randomSuffix"]`). It has no default, so the rule is inert until
