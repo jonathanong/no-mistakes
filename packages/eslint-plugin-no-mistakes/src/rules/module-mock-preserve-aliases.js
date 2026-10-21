@@ -1,6 +1,7 @@
 "use strict";
 
 const { collectPatternNames } = require("./ast-pattern-names");
+const { unwrapExpression } = require("./async-ast");
 const {
   frameworkBindingModule,
   expressionName,
@@ -99,14 +100,22 @@ function createMockAliases(context, methods) {
       }
       const mock = this.get(node.callee.object);
       if (!mock) return null;
+      const args = node.arguments ?? [];
+      if (args.some((arg) => arg?.type === "SpreadElement")) return null;
       if (memberPropertyName(node.callee) === "call") {
-        return { factory: node.arguments[2], mock, specifierNode: node.arguments[1] };
+        return { factory: args[2], mock, specifierNode: args[1] };
       }
-      const args = node.arguments[1];
+      const list = unwrapExpression(args[1]);
+      if (
+        list?.type === "ArrayExpression" &&
+        list.elements.some((element) => !element || element.type === "SpreadElement")
+      ) {
+        return null;
+      }
       return {
-        factory: args?.type === "ArrayExpression" ? args.elements[1] : undefined,
+        factory: list?.type === "ArrayExpression" ? list.elements[1] : undefined,
         mock,
-        specifierNode: args?.type === "ArrayExpression" ? args.elements[0] : undefined,
+        specifierNode: list?.type === "ArrayExpression" ? list.elements[0] : undefined,
       };
     },
   };

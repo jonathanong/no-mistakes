@@ -257,6 +257,24 @@ describe("call-binding recall", () => {
       ),
       ["preserve", "preserve"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/aliased-spread.mjs"),
+        "module-mock-preserve-exports",
+        undefined,
+        "aliased-spread.mjs",
+      ),
+      ["preserve", "preserve"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/aliased-spread.mjs"),
+        "module-mock-boundary",
+        undefined,
+        "aliased-spread.mjs",
+      ),
+      ["boundary", "boundary"],
+    );
     assert.equal(
       messages(
         fixture("no-global-fetch-outside-helper/recall.mjs"),
