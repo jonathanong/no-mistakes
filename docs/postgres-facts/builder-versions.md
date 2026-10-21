@@ -19,7 +19,9 @@ That clause expression is one alternative per reached arm, under the same
 reassignment, or anything else) or a cap overflow publishes no alternative.
 `&&` and `||` use string truthiness: only `""` is a falsy clause. A branch
 JavaScript will not evaluate is not part of the union, so `"AND id > $2" ||
-unknown` and `"" && unknown` stay the known string. A reached unknown arm,
+unknown` and an inline `"" && unknown` stay the known string. A `const`
+initialized with `"" && unknown` is stored as an absent fragment and still
+publishes nothing. A reached unknown arm,
 including `unknown || "AND id > $2"` and `unknown && "AND id > $2"`, publishes
 nothing. `??` keeps a proven string, including `""`, and does not take its
 fallback; an unknown left still publishes nothing. A non-string result is not
