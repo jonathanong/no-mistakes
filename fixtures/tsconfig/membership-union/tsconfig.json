@@ -1,0 +1,1 @@
+{"extends": "./base.json", "include": ["src"], "exclude": ["src/excluded.ts", "src/explicit.ts"], "references": [{"path": "./reference"}]}

@@ -104,16 +104,13 @@ fn covered_sources(
     if program_configs.is_empty() {
         return BTreeSet::new();
     }
-    TsConfigCatalog::project_source_membership(
+    TsConfigCatalog::project_source_union(
         root,
         program_configs,
         files,
         sources,
         &IndexedWorkspaceMap::default(),
     )
-    .into_values()
-    .flatten()
-    .collect()
 }
 
 fn under_node_modules(rel: &str) -> bool {

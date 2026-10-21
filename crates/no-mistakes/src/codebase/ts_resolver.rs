@@ -27,6 +27,9 @@ include!("ts_resolver/scoped_selection.rs");
 include!("ts_resolver/scoped_setup.rs");
 include!("ts_resolver/project_resolver.rs");
 
+#[cfg(any(test, feature = "test-instrumentation"))]
+mod catalog_membership_work;
+
 #[cfg(test)]
 mod scoped_test_support;
 
@@ -35,6 +38,8 @@ mod scoped_test_support;
 mod catalog_apply_own_errors;
 #[cfg(test)]
 mod catalog_coverage_tests;
+#[cfg(test)]
+mod catalog_membership_tests;
 #[cfg(test)]
 mod catalog_reference_tests;
 #[cfg(test)]
