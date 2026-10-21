@@ -49,6 +49,13 @@ describe("postgres-no-nonliteral-sql-registry-key", () => {
     assert.equal(check("bound-silent.ts").length, 0);
   });
 
+  it("suppresses a call or lookup without hiding another use of a shared initializer", () => {
+    const messages = check("bound-suppression.ts");
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].line, 15);
+    assert.equal(messages[0].messageId, "dynamicKey");
+  });
+
   it("emits a complete switch expression with deduplicated final values", () => {
     const [message] = check("duplicate-keys.ts");
     assert.match(message.message, /switch \(key\) \{/);
