@@ -9,9 +9,6 @@ forbidden-calls.md: Counterexample[0] run error:
 forbidden-dependencies.md: Counterexample[0] expected 
 forbidden-workspace-closure.md: Valid example[0] expected 
 integration-test-no-mocks.md: Counterexample[0] expected 
-markdown-child-links.md: Counterexample[0] expected 
-markdown-link-display-text.md: Counterexample[0] expected 
-markdown-structure-budget.md: Counterexample[0] expected 
 nextjs-redirect-destinations.md: Valid example[0] expected 
 nextjs-redirect-destinations.md: Counterexample[0] expected 
 no-mistakes-config.md: Counterexample[0] expected 
