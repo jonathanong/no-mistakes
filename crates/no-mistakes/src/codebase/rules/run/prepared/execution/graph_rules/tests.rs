@@ -51,6 +51,51 @@ fn propagates_forbidden_dependencies_fact_errors() {
     );
 }
 
+fn panic_without_graph(rule: &str) {
+    let config = invalid_filter_config(rule, "importSpecifier: \"@example/db\"");
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let _ = graph_rule_findings(GraphRuleRequest {
+        root: Path::new("/repo"),
+        config: &config,
+        config_path: None,
+        shared: &shared,
+        prepared_graph: None,
+        dependency_graph: None,
+        inferred_roots: None,
+        prepared_vitest_projects: None,
+        prepared_playwright_projects: None,
+    });
+}
+
+#[test]
+#[should_panic(expected = "postgres-no-mutable-sql-registry requires canonical graph")]
+fn mutable_registry_requires_canonical_graph() {
+    panic_without_graph("postgres-no-mutable-sql-registry");
+}
+
+#[test]
+#[should_panic(expected = "postgres-no-unbounded-sql-identifier requires canonical graph")]
+fn unbounded_identifier_requires_canonical_graph() {
+    panic_without_graph("postgres-no-unbounded-sql-identifier");
+}
+
+#[test]
+fn propagates_sql_cross_file_filter_errors() {
+    for rule in [
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
+    ] {
+        let error = error_from(&invalid_filter_config(
+            rule,
+            "importSpecifier: \"@example/db\"",
+        ));
+        assert!(
+            error.to_string().contains("include contains invalid glob"),
+            "{rule}: {error:#}"
+        );
+    }
+}
+
 #[test]
 fn propagates_required_entrypoint_reachability_errors() {
     let config = invalid_filter_config(

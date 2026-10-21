@@ -83,10 +83,11 @@ fn classify_interpolation(body: &str, out: &mut BTreeSet<Provenance>) {
         out.insert(Provenance::ProcessEnv(parts[2].to_string()));
         return;
     }
-    if let Some(name) = parts.first() {
-        if !name.is_empty() && is_ident(name) && *name != "process" {
+    match parts.first() {
+        Some(name) if !name.is_empty() && is_ident(name) && *name != "process" => {
             out.insert(Provenance::Named((*name).to_string()));
         }
+        _ => {}
     }
 }
 

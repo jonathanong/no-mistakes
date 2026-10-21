@@ -1,5 +1,15 @@
-use super::RULE_ID;
-use std::path::PathBuf;
+use super::{export_is_unbounded, identifier_finding, RULE_ID};
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::dependencies::extract::{
+    ExportedBinding, ImportedBinding, ImportedBindingKind,
+};
+use crate::codebase::dependencies::graph::test_support::from_raw_maps;
+use crate::codebase::postgres::EmbeddedSqlCall;
+use crate::codebase::rules::postgres_sql_cross_file::{Provenance, SqlCall};
+use crate::codebase::ts_source::facts::TsFileFacts;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 fn root(scenario: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -37,6 +47,7 @@ fn switch_bind_http_and_suppression_stay_silent() {
         "pass-http-query",
         "pass-suppressed",
         "pass-imported-process",
+        "pass-imported-literal",
     ] {
         assert!(
             findings(scenario).is_empty(),
@@ -44,4 +55,59 @@ fn switch_bind_http_and_suppression_stay_silent() {
             findings(scenario)
         );
     }
+}
+
+#[test]
+fn imported_config_without_prepared_producer_facts_is_not_unbounded() {
+    assert!(!export_is_unbounded(
+        &CheckFactMap::default(),
+        Path::new("/repo/src/config.ts"),
+        "config"
+    ));
+}
+
+#[test]
+fn same_file_or_literal_exports_are_not_unbounded_identifier_sources() {
+    let file = PathBuf::from("/repo/src/query.ts");
+    let mut facts = CheckFactMap::default();
+    facts.ts.insert(
+        file.clone(),
+        CheckFileFacts {
+            ts: Arc::new(TsFileFacts {
+                imported_bindings: vec![ImportedBinding {
+                    specifier: "./query".into(),
+                    local: "schema".into(),
+                    imported: "schema".into(),
+                    kind: ImportedBindingKind::Named,
+                    is_type_only: false,
+                }],
+                exported_bindings: vec![ExportedBinding {
+                    specifier: None,
+                    local: "schema".into(),
+                    exported: "schema".into(),
+                }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+        .into(),
+    );
+    let mut forward = HashMap::new();
+    forward.insert(file.clone(), vec![file.clone()]);
+    let graph = from_raw_maps(PathBuf::from("/repo"), forward, Default::default());
+    let owned = EmbeddedSqlCall::default();
+    let call = SqlCall {
+        file: file.clone(),
+        span: (0, 1),
+        call: &owned,
+        source: None,
+    };
+    assert!(identifier_finding(
+        Path::new("/repo"),
+        &graph,
+        &facts,
+        &call,
+        &Provenance::Named("schema".into()),
+    )
+    .is_none());
 }
