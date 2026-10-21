@@ -3,6 +3,7 @@ use super::*;
 #[derive(Default)]
 pub(super) struct Arguments {
     pub(super) position: usize,
+    pub(super) redirected: FxHashSet<usize>,
     pub(super) open_at: Option<usize>,
     pub(super) extras: FxHashMap<usize, Vec<ValueExpression>>,
     pub(super) open_vals: Vec<ValueExpression>,
@@ -19,6 +20,7 @@ impl Arguments {
                 self.open_vals.extend(values);
             }
         } else if values.len() != 1 || self.position != raw_index {
+            self.redirected.insert(raw_index);
             if !values.is_empty() {
                 self.extras.entry(self.position).or_default().extend(values);
             }

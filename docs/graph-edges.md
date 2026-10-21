@@ -625,6 +625,8 @@ After a push makes the array length uncertain, the proven prefix remains fixed
 and later pushed values and trailing arguments become a possible open tail.
 This covers a later value shifting into an earlier parameter when the optional
 push is skipped, without enumerating combinations of branch lengths.
+Fixed arguments before that tail keep their slots, including ordinary arguments
+between an earlier fixed spread and the spread that introduces uncertainty.
 A suffix after an open prefix and guarded
 spread is also possible: it need not occupy a parameter that the callee writes.
 An arbitrary prefix can itself contain the same receiver, so it does not prove

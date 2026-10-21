@@ -46,6 +46,13 @@ type StoredArray = (
 pub(super) struct UncertainSpread {
     pub(super) raw: usize,
     pub(super) shift: usize,
+    pub(super) redirected: FxHashSet<usize>,
+}
+impl UncertainSpread {
+    pub(super) fn skips(&self, index: usize) -> bool {
+        index >= self.raw.saturating_sub(self.shift)
+            || self.redirected.contains(&index.saturating_add(self.shift))
+    }
 }
 
 #[derive(Default)]

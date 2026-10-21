@@ -70,7 +70,7 @@ pub(in super::super) fn absorb(
                 .uncertain_spreads
                 .get(&(*offset, *end));
             for (index, argument) in arguments.iter().enumerate() {
-                if shifted.is_some_and(|start| index >= start.raw.saturating_sub(start.shift)) {
+                if shifted.is_some_and(|spread| spread.skips(index)) {
                     continue;
                 }
                 if let Some(key) = parameters.get(&index) {

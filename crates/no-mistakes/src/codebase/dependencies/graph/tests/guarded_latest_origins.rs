@@ -1,5 +1,5 @@
 use super::*;
-use receiver_escapes::{assert_export, assert_unknown, graph};
+use receiver_escapes::{assert_export, assert_unknown, graph, graph_for};
 
 pub(super) fn possible(built: &DepGraph, root: &Path, file: &str, callee: &str) {
     let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
@@ -226,4 +226,55 @@ fn optional_pushes_keep_later_pushes_and_suffixes_possible() {
             assert_export(&built, &root, file, callee);
         }
     }
+}
+
+#[test]
+fn fixed_arguments_before_the_optional_spread_keep_their_write_origins() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    for file in [
+        "array-optional-push-after-fixed-prefix",
+        "array-optional-push-after-fixed-prefix-call",
+        "array-optional-push-after-fixed-prefix-forwarded",
+    ] {
+        // Both runtime flag values overwrite this vendor method locally.
+        assert_unknown(&built, &root, file, "replica.get");
+        for callee in [
+            "untouched.get",
+            "primary.get",
+            "replica.info",
+            "unrelated.get",
+        ] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}
+
+#[test]
+fn empty_and_wide_prefixes_preserve_actual_argument_positions() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    for file in [
+        "array-optional-push-after-empty-prefix",
+        "array-optional-push-after-wide-prefix",
+    ] {
+        for callee in [
+            "replica.get",
+            "primary.get",
+            "replica.info",
+            "unrelated.get",
+        ] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+    possible(
+        &built,
+        &root,
+        "array-optional-push-after-empty-prefix",
+        "untouched.get",
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-optional-push-after-wide-prefix",
+        "untouched.get",
+    );
 }

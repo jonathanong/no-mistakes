@@ -16,13 +16,9 @@ pub(super) fn forward(
             let shifted = collector
                 .receiver_escapes
                 .uncertain_spreads
-                .get(&(call.offset, call.end))
-                .map(|spread| {
-                    call.spread_at
-                        .unwrap_or(spread.raw.saturating_sub(spread.shift))
-                });
+                .get(&(call.offset, call.end));
             for (index, argument) in call.arguments.iter().enumerate() {
-                if shifted.is_some_and(|start| index >= start) {
+                if shifted.is_some_and(|spread| spread.skips(index)) {
                     continue;
                 }
                 let Some(parameter) = parameters.get(&index) else {

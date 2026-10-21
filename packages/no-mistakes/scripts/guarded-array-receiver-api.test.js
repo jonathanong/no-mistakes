@@ -117,6 +117,10 @@ test(
     for (const [suite, entries] of [
       ["value-flow-guarded-parameters", ["array-parameter-destructure-unguarded"]],
       [
+        "value-flow-optional-prefixes",
+        ["array-optional-push-after-empty-prefix", "array-optional-push-after-wide-prefix"],
+      ],
+      [
         "value-flow-receiver-escapes",
         [
           "array-optional-push-then-push",
@@ -148,5 +152,42 @@ test(
       }
       assert.deepEqual(await esm.analyzeProject(options), batch);
     }
+  },
+);
+
+test(
+  "compiled async fixed prefixes preserve intervening write origins",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-optional-prefixes/fixture",
+    );
+    const options = {
+      root,
+      config: join(root, "effects.yml"),
+      reports: [
+        "array-optional-push-after-fixed-prefix",
+        "array-optional-push-after-fixed-prefix-call",
+        "array-optional-push-after-fixed-prefix-forwarded",
+      ].map((entry) => ({
+        type: "effects",
+        kind: "receiver",
+        entry: `src/${entry}.mts`,
+      })),
+    };
+    const pending = cjs.analyzeProject(options);
+    assert.ok(pending instanceof Promise);
+    const batch = await pending;
+    for (const { result } of batch.reports) {
+      // Both flag states replace replica.get locally: retaining a vendor edge is an over-claim.
+      assert.deepEqual(
+        result.callSites.map(({ callee }) => callee),
+        ["untouched.get", "primary.get", "replica.info", "unrelated.get"],
+      );
+    }
+    assert.deepEqual(await esm.analyzeProject(options), batch);
   },
 );
