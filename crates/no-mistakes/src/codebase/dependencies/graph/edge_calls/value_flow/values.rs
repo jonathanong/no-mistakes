@@ -82,7 +82,7 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Awaited(value) => self.value(path, value).awaited(),
             ValueExpression::Call(offset, end) => self.returned(path, *offset, *end),
             // A conditional element used to be Unknown. Keep that flow value.
-            ValueExpression::Either(_, _) | ValueExpression::Unknown => FlowValue::Unknown,
+            ValueExpression::Derived(_) | ValueExpression::Either(_, _) | ValueExpression::Unknown => FlowValue::Unknown,
         }
     }
     pub(super) fn callable(&self, path: &std::path::Path, id: CallableId) -> FlowValue {

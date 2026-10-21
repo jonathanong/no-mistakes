@@ -1,4 +1,5 @@
 use super::is_finite_validator;
+use super::RegistryRoutes;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{
     CallableId, ExportedBinding, ImportedBinding, ImportedBindingKind, ValueExpression,
@@ -28,6 +29,7 @@ fn member_callees_are_not_finite_validators() {
     assert!(!is_finite_validator(
         &graph,
         &CheckFactMap::default(),
+        &RegistryRoutes::new(&CheckFactMap::default()),
         &PathBuf::from("/repo/src/query.ts"),
         &callee
     ));
@@ -97,6 +99,7 @@ fn imported_literal_helpers_and_parse_errors_are_classified() {
     assert!(is_finite_validator(
         &graph,
         &facts,
+        &RegistryRoutes::new(&facts),
         &importer,
         &named("schemaOf")
     ));
@@ -114,6 +117,7 @@ fn imported_literal_helpers_and_parse_errors_are_classified() {
     assert!(!is_finite_validator(
         &graph,
         &facts,
+        &RegistryRoutes::new(&facts),
         &importer,
         &named("schemaOf")
     ));

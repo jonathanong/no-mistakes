@@ -1,4 +1,4 @@
-use super::unique_export;
+use super::{unique_export, RegistryRoutes};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::{CallableId, ValueExpression};
 use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
@@ -8,6 +8,7 @@ use std::path::Path;
 pub(crate) fn is_finite_validator(
     graph: &DepGraph,
     facts: &CheckFactMap,
+    routes: &RegistryRoutes<'_>,
     file: &Path,
     callee: &ValueExpression,
 ) -> bool {
@@ -15,7 +16,7 @@ pub(crate) fn is_finite_validator(
         return false;
     };
     callable_returns_literals(facts, file, name)
-        || unique_export(graph, facts, file, name).is_some_and(|unique| {
+        || unique_export(graph, facts, routes, file, name).is_some_and(|unique| {
             unique.producer != *file
                 && callable_returns_literals(facts, &unique.producer, &unique.exported)
         })

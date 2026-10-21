@@ -13,6 +13,7 @@ fn default_factory_and_alias_cycles_are_classified_conservatively() {
     );
     assert!(!index.factory_value(&conditional, &mut fx_set()));
     let binding = ValueBinding {
+        immutable: false,
         owner: None,
         name: "cycle".to_string(),
         scope: 0,

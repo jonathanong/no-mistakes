@@ -1,4 +1,5 @@
 use super::*;
+use oxc_ast::ast::ConditionalExpression;
 
 impl ImportCollector {
     pub(in super::super) fn value_expression(
@@ -23,11 +24,26 @@ impl ImportCollector {
                 ValueExpression::Call(templates::tag_offset(tagged), tagged.span.end)
             }
             Expression::TemplateLiteral(template) if !template.expressions.is_empty() => {
-                let mut fields = fx_map();
-                for (index, interpolation) in template.expressions.iter().enumerate() {
-                    fields.insert(index.to_string(), self.value_expression(interpolation));
-                }
-                ValueExpression::Array(std::sync::Arc::new(fields))
+                ValueExpression::Derived(
+                    template
+                        .expressions
+                        .iter()
+                        .map(|part| self.value_expression(part))
+                        .collect::<Vec<_>>()
+                        .into(),
+                )
+            }
+            Expression::ConditionalExpression(value) => self.conditional_value_expression(value),
+            Expression::BinaryExpression(value)
+                if value.operator == oxc_syntax::operator::BinaryOperator::Addition =>
+            {
+                ValueExpression::Derived(
+                    vec![
+                        self.value_expression(&value.left),
+                        self.value_expression(&value.right),
+                    ]
+                    .into(),
+                )
             }
             Expression::StaticMemberExpression(member) => ValueExpression::Member(
                 std::sync::Arc::new(self.value_expression(&member.object)),
@@ -105,4 +121,26 @@ impl ImportCollector {
             }),
         }
     }
+
+    fn conditional_value_expression(&self, value: &ConditionalExpression<'_>) -> ValueExpression {
+        let consequent = self.value_expression(&value.consequent);
+        let alternate = self.value_expression(&value.alternate);
+        if literal_conditional_arm(&value.consequent, &consequent)
+            && literal_conditional_arm(&value.alternate, &alternate)
+        {
+            // Preserve the existing finite-return proof without treating
+            // opaque templates or other Derived values as literals.
+            ValueExpression::Unknown
+        } else {
+            ValueExpression::Derived(vec![consequent, alternate].into())
+        }
+    }
+}
+
+fn literal_conditional_arm(expression: &Expression<'_>, value: &ValueExpression) -> bool {
+    let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
+    expression.is_literal()
+        || matches!(expression, Expression::TemplateLiteral(template) if template.expressions.is_empty())
+        || (matches!(expression, Expression::ConditionalExpression(_))
+            && matches!(value, ValueExpression::Unknown))
 }
