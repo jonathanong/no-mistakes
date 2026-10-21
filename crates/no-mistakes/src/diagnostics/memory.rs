@@ -1,19 +1,15 @@
 //! Process-lifetime memory diagnostics, sampled only at the verbose CLI boundary.
 
-pub(super) fn render(verbose: bool, output: &mut Option<String>) {
-    if let Some(memory) = diagnostic(verbose, peak_rss_kib) {
-        match output {
-            Some(output) => output.push_str(&memory),
-            None => eprint!("{memory}"),
-        }
-    }
+pub(super) fn memory_line(verbose: bool, rss: Option<u64>) -> Option<String> {
+    diagnostic(verbose, || rss)
 }
 
 fn diagnostic(verbose: bool, sample: impl FnOnce() -> Option<u64>) -> Option<String> {
-    verbose
-        .then(sample)
-        .flatten()
-        .map(|rss| format!("[memory] peak_rss_kib: {rss}\n"))
+    verbose.then(sample).flatten().map(format_peak_rss)
+}
+
+fn format_peak_rss(rss: u64) -> String {
+    format!("[memory] peak_rss_kib: {rss}\n")
 }
 
 #[cfg(unix)]

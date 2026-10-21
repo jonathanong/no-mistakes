@@ -38,10 +38,23 @@ impl ProgressOutput {
     }
 
     pub(in crate::diagnostics) fn emit(&self, text: String) {
-        let (completed, receiver) = mpsc::channel();
-        if self.sender.try_send(Message { text, completed }).is_ok() {
+        if let Some(receiver) = self.try_enqueue(text) {
             let _ = receiver.recv_timeout(OUTPUT_WAIT);
         }
+    }
+
+    /// Queue one chunk without waiting on the OS write. `None` means the
+    /// bounded queue was full or disconnected and the chunk was dropped.
+    pub(in crate::diagnostics) fn try_enqueue(&self, text: String) -> Option<mpsc::Receiver<()>> {
+        let (completed, receiver) = mpsc::channel();
+        self.sender
+            .try_send(Message { text, completed })
+            .ok()
+            .map(|()| receiver)
+    }
+
+    pub(in crate::diagnostics) fn flush_enqueued(&self, receiver: mpsc::Receiver<()>) {
+        let _ = receiver.recv_timeout(OUTPUT_WAIT);
     }
 }
 
