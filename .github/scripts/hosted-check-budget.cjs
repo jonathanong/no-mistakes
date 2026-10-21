@@ -131,7 +131,9 @@ function budgetReport(groups, budgets) {
       if (!values) continue;
       try {
         validateCohort([...(samples.baseline || []), ...values]);
-        proposed[key] = calibratedBudget(values);
+        // Propose only from completed successes. A timeout cohort must fail
+        // enforceBudget, not calibratedBudget's helper message.
+        if (values.every(successful)) proposed[key] = calibratedBudget(values);
         // Proposals never excuse an unhealthy candidate or replace reviewed limits.
         enforceBudget(values, budgets[key]);
         if (samples.baseline)

@@ -1,0 +1,5 @@
+    PID COMMAND         COMMAND
+      1 systemd         /sbin/init splash
+     42 node            node .github/scripts/hosted-check.cjs measure /tmp/fixture
+     55 pnpm            pnpm exec no-mistakes --timeout 0 --lock-timeout 0 check
+     99 node            node /tmp/fixture/node_modules/.bin/no-mistakes --timeout 0 check
