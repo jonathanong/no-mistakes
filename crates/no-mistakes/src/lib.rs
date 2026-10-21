@@ -1,5 +1,11 @@
 extern crate self as no_mistakes;
 
+// Unit tests reserve the allocator for scoped allocation-count guards.
+// CLI and N-API builds share this registration through the library.
+#[cfg(all(feature = "mimalloc", not(test)))]
+#[global_allocator]
+static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 pub mod ast;
 #[cfg(feature = "test-instrumentation")]
 #[doc(hidden)]

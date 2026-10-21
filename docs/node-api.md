@@ -3,6 +3,12 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+The native addon uses mimalloc for Rust allocations by default; Node.js and V8
+keep their own allocators. The dependency uses `local_dynamic_tls` for loading
+the addon through `dlopen` on Unix, without overriding the host's C allocator.
+Source builds can opt out with `--no-default-features --features mermaid-validation`
+on the Cargo invocation that builds the addon.
+
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {

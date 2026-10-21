@@ -197,6 +197,13 @@ Linux still runs the full suite and enforces the coverage gates. These defaults
 live in the workspace Cargo profiles, including release validation. For local
 debugging, use `CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
 
+Native CLI and N-API builds enable the `mimalloc` Cargo feature by default.
+To build with Rust's system allocator while retaining Mermaid validation, use
+`cargo build --release --no-default-features --features mermaid-validation`.
+Rust library consumers supplying their own global allocator should disable the
+default features and explicitly enable the other features they need. Unit tests
+retain their allocation-count instrumentation allocator.
+
 CI and release validation share `.github/scripts/rust-validation.sh`: `build` and
 `test` select the locked workspace, all features, libraries, binaries, and integration
 tests; `doc` runs documentation tests separately. Coverage instrumentation stays scoped to

@@ -1,5 +1,7 @@
 //! Contracts integration tests, linked in one harness.
 
+#[path = "allocator_configuration.rs"]
+mod allocator_configuration;
 #[path = "ci_complexity_gate.rs"]
 mod ci_complexity_gate;
 #[path = "docs_coverage.rs"]
