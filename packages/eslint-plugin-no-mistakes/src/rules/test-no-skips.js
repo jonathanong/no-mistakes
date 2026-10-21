@@ -50,6 +50,22 @@ function staticProperty(node, name, context) {
   return matches.length === 1 ? matches[0].value : null;
 }
 
+function annotationTypeName(node, context, banned, visited = new Set()) {
+  const value = constInitializer(node, context, visited);
+  if (!value?.type) return null;
+  if (value.type === "Literal")
+    return ANNOTATION_TYPES.has(value.value) && banned.has(value.value) ? value.value : null;
+  if (value.type === "TemplateLiteral" && value.expressions.length === 0) {
+    const cooked = value.quasis[0].value.cooked;
+    return ANNOTATION_TYPES.has(cooked) && banned.has(cooked) ? cooked : null;
+  }
+  if (value.type !== "ConditionalExpression") return null;
+  const whenTrue = annotationTypeName(value.consequent, context, banned, new Set(visited));
+  const whenFalse = annotationTypeName(value.alternate, context, banned, new Set(visited));
+  if (!whenTrue || !whenFalse) return null;
+  return whenTrue;
+}
+
 function annotationFinding(node, context, banned) {
   const annotations = staticProperty(node, "annotation", context);
   const resolved = constInitializer(annotations || {}, context, new Set());
@@ -57,16 +73,19 @@ function annotationFinding(node, context, banned) {
   for (const entry of entries) {
     if (!entry || entry.type === "SpreadElement") continue;
     const type = staticProperty(entry, "type", context);
-    if (type?.type === "Literal" && ANNOTATION_TYPES.has(type.value) && banned.has(type.value))
-      return type;
+    const name = type && annotationTypeName(type, context, banned);
+    if (name) return name;
   }
   return null;
 }
 
-function hasBannedModifier(node, banned) {
+// `skip` and `fixme` already remove the test. `only` does not, so an annotation
+// on the same call is still reported.
+function impliesSkippedDeclaration(node, banned) {
   let current = unwrapExpression(node);
   while (current?.type === "MemberExpression") {
-    if (banned.has(memberName(current))) return true;
+    const name = memberName(current);
+    if ((name === "skip" || name === "fixme") && banned.has(name)) return true;
     current = current.object;
   }
   return false;
@@ -117,16 +136,15 @@ module.exports = rule(
           !["test", "describe"].includes(binding.name)
         )
           return;
-        if (hasBannedModifier(node.callee, banned)) return;
+        if (impliesSkippedDeclaration(node.callee, banned)) return;
         const details = node.arguments[1];
         if (!details || details.type === "SpreadElement") return;
         const annotation = annotationFinding(details, context, banned);
         if (!annotation || suppressed(details)) return;
-        const name = annotation.value;
         context.report({
           node: details,
           messageId: "annotation",
-          data: { annotation: name },
+          data: { annotation },
         });
       },
     };

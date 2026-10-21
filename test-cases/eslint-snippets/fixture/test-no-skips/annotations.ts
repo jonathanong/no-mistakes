@@ -12,6 +12,8 @@ const namespaceTest = playwright.test;
 const describe = browser.describe;
 const serialDescribe = describe.serial;
 const parallelDescribe = describe.parallel;
+const templateSkip = `skip`;
+const annotationFlag = true;
 
 browser("details skip", { annotation: { type: "skip" } }, () => {});
 aliasedTest("const details alias", skipDetails, () => {});
@@ -19,6 +21,15 @@ describe("details fixme", { annotation: fixmeAnnotation }, () => {});
 serialDescribe("serial details skip", { annotation: skipAnnotation }, () => {});
 parallelDescribe("parallel details fixme", { annotation: [fixmeAnnotation] }, () => {});
 namespaceTest("namespace and const array alias", arrayAliasDetails, () => {});
+browser("template literal skip", { annotation: { type: `skip` } }, () => {});
+browser("aliased template skip", { annotation: { type: templateSkip } }, () => {});
+browser.only("only plus skip annotation", { annotation: { type: "skip" } }, () => {});
+browser(
+  "every conditional branch is banned",
+  { annotation: { type: annotationFlag ? "skip" : "fixme" } },
+  () => {},
+);
+browser.fixme("fixme already covers the declaration", { annotation: { type: "skip" } }, () => {});
 
 browser("custom annotation", { annotation: { type: "issue" } }, () => {});
 browser("step skip is local to the step", async () => {
@@ -30,6 +41,20 @@ let mutableDetails = { annotation: { type: "skip" } };
 browser("mutable details are not resolved", mutableDetails, () => {});
 const dynamicType = getAnnotationType();
 browser("dynamic annotation type is not resolved", { annotation: { type: dynamicType } }, () => {});
+browser("template issue is not a skip", { annotation: { type: `issue` } }, () => {});
+browser("substituted template is dynamic", { annotation: { type: `${annotationFlag}` } }, () => {});
+browser(
+  "a non-banned conditional branch stays unresolved",
+  { annotation: { type: annotationFlag ? "skip" : "issue" } },
+  () => {},
+);
+browser(
+  "a non-banned consequent stays unresolved",
+  { annotation: { type: annotationFlag ? "issue" : "fixme" } },
+  () => {},
+);
+browser("tag does not skip the test", { tag: "@slow" }, () => {});
+browser.describe.configure({ mode: "serial" });
 const spreadDetails = { annotation: { type: "skip" } };
 browser("spread details are not resolved", { ...spreadDetails }, () => {});
 const changedAnnotation = { type: "skip" };
@@ -47,3 +72,8 @@ browser("ambient details are not statically resolved", ambientDetails, () => {})
 const cyclicFirst = cyclicSecond;
 const cyclicSecond = cyclicFirst;
 browser("cyclic const aliases are not resolved", cyclicFirst, () => {});
+browser(
+  "unbound annotation type is dynamic",
+  { annotation: { type: undeclaredAnnotation } },
+  () => {},
+);

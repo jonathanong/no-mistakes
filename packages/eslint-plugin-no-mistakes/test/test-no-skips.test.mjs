@@ -29,14 +29,24 @@ describe(rule, () => {
     assert.deepEqual(
       findings.map(({ line, messageId }) => [line, messageId]),
       [
-        [16, "annotation"],
-        [17, "annotation"],
         [18, "annotation"],
         [19, "annotation"],
         [20, "annotation"],
         [21, "annotation"],
-        [28, "modifier"],
+        [22, "annotation"],
+        [23, "annotation"],
+        [24, "annotation"],
+        [25, "annotation"],
+        [26, "modifier"],
+        [26, "annotation"],
+        [29, "annotation"],
+        [32, "modifier"],
+        [39, "modifier"],
       ],
+    );
+    assert.equal(
+      findings.find((item) => item.line === 29).message,
+      "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
     );
     assert.deepEqual(
       messages(
