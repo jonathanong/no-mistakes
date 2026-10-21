@@ -29,7 +29,7 @@ function linterCwd(filename) {
   return process.cwd();
 }
 
-export function lint(code, rules, filename = "fixture.jsx", globals = {}) {
+export function lint(code, rules, filename = "fixture.jsx", globals = {}, sourceType = "module") {
   const linter = new Linter({
     configType: "flat",
     cwd: linterCwd(filename),
@@ -41,7 +41,7 @@ export function lint(code, rules, filename = "fixture.jsx", globals = {}) {
       files: ["**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}"],
       languageOptions: {
         ecmaVersion: 2024,
-        sourceType: "module",
+        sourceType,
         globals,
         ...(isTypeScript ? { parser: tsParser } : {}),
         parserOptions: { ecmaFeatures: { jsx: true } },
@@ -55,10 +55,17 @@ export function lint(code, rules, filename = "fixture.jsx", globals = {}) {
   );
 }
 
-export function messages(code, rule, option, filename = "fixture.jsx", globals = {}) {
+export function messages(
+  code,
+  rule,
+  option,
+  filename = "fixture.jsx",
+  globals = {},
+  sourceType = "module",
+) {
   const config =
     option === undefined
       ? { [`no-mistakes/${rule}`]: "error" }
       : { [`no-mistakes/${rule}`]: ["error", option] };
-  return lint(code, config, filename, globals).map((message) => message.messageId);
+  return lint(code, config, filename, globals, sourceType).map((message) => message.messageId);
 }

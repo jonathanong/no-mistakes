@@ -29,6 +29,19 @@ Rename a test containing `vi.mock` or `vi.doMock` to `*.mock.test.<ext>`, or
 remove the `.mock.test` suffix when it no longer mocks a module. `vi.fn` and
 `vi.spyOn` alone do not require the suffix.
 
+## Limits
+
+`import * as v from "vitest"` followed by `v.vi.mock`, a string or expression-free template key, optional chaining, `const { mock } = v`, and one `const` alias are the same module mock. Vitest's default import is not `vi`. A computed identifier key is not a static method name.
+
+A mock helper imported from another file is not visible here.
+
+```ts
+import { installMocks } from "./barrel";
+installMocks();
+```
+
+`barrel` may call `vi.mock` internally.
+
 ## Suppression
 
 ```ts

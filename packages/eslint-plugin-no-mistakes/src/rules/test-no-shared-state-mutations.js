@@ -16,6 +16,7 @@ function createMutationHandlers({
   depths,
   mutableTopLevel,
   registryReports,
+  suppressed = () => false,
   viMockTracker,
 }) {
   function reportIfShared(node, name) {
@@ -24,7 +25,8 @@ function createMutationHandlers({
       depths.test() > 0 &&
       depths.setup() === 0 &&
       !viMockTracker.isCaptured(name) &&
-      isModuleMutable({ context, mutableTopLevel, node, name })
+      isModuleMutable({ context, mutableTopLevel, node, name }) &&
+      !suppressed(node)
     ) {
       context.report({ node, messageId: "shared" });
     }

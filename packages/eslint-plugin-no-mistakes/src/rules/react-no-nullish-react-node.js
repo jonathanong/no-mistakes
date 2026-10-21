@@ -1,6 +1,8 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
+const { literalString } = require("./module-mock-helpers");
 const { createReactNodeFacts, keyName, typeAnnotation, typeName } = require("../react-node-types");
 
 function isObjectPattern(node) {
@@ -40,6 +42,7 @@ module.exports = rule(
     },
   },
   (context) => {
+    const suppressed = ruleSuppression(context, "react-no-nullish-react-node");
     const scopes = [];
     let facts = { aliases: new Map(), objectProps: new Map(), reactNodeNames: new Set() };
 
@@ -136,7 +139,9 @@ module.exports = rule(
       const type = typeAnnotation(node.id);
       if (isIdentifier(node.id)) {
         scope.bindings.add(node.id.name);
-        if (isReactNodeType(type)) defineReactNode(node.id.name, scope);
+        if (isReactNodeType(type) || expressionIsReactNode(node.init)) {
+          defineReactNode(node.id.name, scope);
+        }
         defineObjectType(node.id.name, type, scope);
       } else if (isObjectPattern(node.id)) {
         const initType = isIdentifier(node.init) ? objectProps(node.init.name) : null;
@@ -152,9 +157,10 @@ module.exports = rule(
     function expressionIsReactNode(node) {
       if (node && node.type === "ChainExpression") return expressionIsReactNode(node.expression);
       if (isIdentifier(node)) return variableIsReactNode(node.name);
-      if (node && node.type === "MemberExpression" && !node.computed && isIdentifier(node.object)) {
+      if (node && node.type === "MemberExpression" && isIdentifier(node.object)) {
+        const key = node.computed ? literalString(node.property) : keyName(node.property);
         const props = objectProps(node.object.name);
-        return Boolean(props && props.has(keyName(node.property)));
+        return Boolean(key && props && props.has(key));
       }
       return false;
     }
@@ -184,7 +190,7 @@ module.exports = rule(
       "BlockStatement:exit": popScope,
       VariableDeclarator: defineVariable,
       LogicalExpression(node) {
-        if (node.operator === "??" && expressionIsReactNode(node.left)) {
+        if (node.operator === "??" && expressionIsReactNode(node.left) && !suppressed(node)) {
           context.report({ node, messageId: "nullish" });
         }
       },

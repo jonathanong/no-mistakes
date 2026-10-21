@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+const { literalString } = require("./module-mock-helpers");
 const {
   isNonRejectingHandler,
   isNonRejectingHandlerOrAbsent,
@@ -9,9 +10,11 @@ const {
 const PROMISE_CHAIN_METHODS = new Set(["catch", "finally", "then"]);
 
 function literalPropertyName(member) {
+  if (!member?.property) return null;
+  if (member.computed && member.property.type === "Identifier") return null;
   if (!member.computed && member.property.type === "Identifier") return member.property.name;
-  if (member.computed && member.property.type === "Literal") return member.property.value;
-  return null;
+  if (!member.computed && typeof member.property.name === "string") return member.property.name;
+  return literalString(member.property);
 }
 
 function isPromiseChainMember(node) {
