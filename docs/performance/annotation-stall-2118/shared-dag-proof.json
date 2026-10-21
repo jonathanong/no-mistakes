@@ -1,0 +1,393 @@
+{
+  "scope": "saved research fixtures and capped correctness replays,not performanceclaims",
+  "binary": "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+  "binarySha256": "ddd82dd6d1c2829e1f6c0d446a558212ef67d6c51c55f70a30f8dd797d91c68c",
+  "source": "350ada01a24c33f98696ee98de9b965dfbe6d671",
+  "fullActiveRoot": "/tmp/nm2119-consumer-12158768554/fixture/<consumer-tools>/current-operations.boundary.test.mts",
+  "fullActiveRootSha256": "df662175562a85c1904e78fb69f93a23008eb95c51ae18ff339eea5136598869",
+  "minimalTrigger": "/tmp/nm-annotation-reducer/cases/shared-object-dag-30/root.mts",
+  "minimalTriggerSha256": "9fd92f2a3cee15edb8d46b9ab0ff655c06f007e106388ef0c21a0ccba1cc3410",
+  "sameLoopConfirmedByDebugger": true,
+  "gdbLogSha256": "9d14a6ec34a19697770755c23094274195674e54d487a1de71c2729163225d82",
+  "negativeControls": [
+    "dag-no-join",
+    "dag-primitive-leaf",
+    "dag-single-child"
+  ],
+  "originalRootWithoutDependenciesCompletes": true,
+  "rows": [
+    {
+      "case": "dag-gdb-prefixes",
+      "result": {
+        "argv": [
+          "gdb",
+          "--batch",
+          "-x",
+          "/tmp/nm-annotation-reducer/prefixes.gdb",
+          "--args",
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-30",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-30/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1"
+        ],
+        "exit": 0,
+        "scope": "capped debugger correctness sample,notperformanceeligible"
+      },
+      "statusSha256": "cf57223b8654b0facb7cc41a41ba68f39c3f3f2c551938f7345ec6e38448296e"
+    },
+    {
+      "case": "dag-no-join",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/dag-no-join",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/dag-no-join/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.007788636954501271,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "2767b7c4bd4a66721cbcc5f96625916aa1bf79a3293b401cde08d14217da706d",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "9140316b40ff5fba970c6adccde736803576f7df0812934c39da8b395165a8ec"
+    },
+    {
+      "case": "dag-primitive-leaf",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/dag-primitive-leaf",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/dag-primitive-leaf/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.007829766953364015,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "bc10461cea6069919c8db9539310e153c48ed4654cc36af13ab25eaee7cf2803",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "b4fc64732743cac47540d889e087f2f0d6be1ead4dce2c0cbc4f35d104f1f965"
+    },
+    {
+      "case": "dag-single-child",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/dag-single-child",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/dag-single-child/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.007978417968843132,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "4deda4e741295a9c9336ce0131ccd2976d906707f63a7ea63ac248e66f26e26b",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "690a88dd2b5e5bc72174cf00137b82b021b7b8046cef8e4db68ac971a86a6e3d"
+    },
+    {
+      "case": "original-root",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/original-root",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/original-root/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.015671728004235774,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "df662175562a85c1904e78fb69f93a23008eb95c51ae18ff339eea5136598869",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "bb6e2c7a7e5220e1efaad127b33a7374857c1ae5e25cceadcbe6b3095bb258b0"
+    },
+    {
+      "case": "shared-object-dag-12",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-12",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-12/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.008150015957653522,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "822cbc4b3d43a999f51b95288f39a6c0a28241dc9e9785a068b508554036d79c",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "9a9e805166b0928392ae181eae71e74dbf6f6e4b80c43b0db33ac80a51ebfec7"
+    },
+    {
+      "case": "shared-object-dag-22",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-22",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-22/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.315403931948822,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "1817f5c697051e4c4921cf42f5ed9c32fec25f6d952c1c383068a6360f841a20",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "3999660aba7cc9e9df478aa58a014fe8c776182609ec1eb574992771809735a3"
+    },
+    {
+      "case": "shared-object-dag-26",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-26",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-26/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 4.532442115014419,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "55dfed93fd896c2a89d39dff1adf5a45d282d574da8fee8bc27bb54de36cd36c",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "86070dfbbf87eb547fee225a2fcd9af6f109100e174904d9ca4a5e865af0e801"
+    },
+    {
+      "case": "shared-object-dag-30",
+      "result": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-30",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/shared-object-dag-30/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": -15,
+        "censored": true,
+        "limit": 10,
+        "elapsed": 10.004079957026988,
+        "files": {
+          ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+          "root.mts": "9fd92f2a3cee15edb8d46b9ab0ff655c06f007e106388ef0c21a0ccba1cc3410",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "statusSha256": "18480f09bea5eecdcd6626a7867f29009de9a7f6f4e2a6f1238ab9e2599e69c0"
+    }
+  ],
+  "noSharedConsumerEdits": true,
+  "noRustBuilds": true,
+  "initialRunnerSetupFailure": "Python conditional else10 typo; no nativechild launched; correctedbeforeallrecordedreplays",
+  "additionalNoBuilderTrigger": {
+    "fixture": "cases/dag-arguments-leaf/root.mts",
+    "sha256": "34fa58e2dcab94742f7bca833988a7783d7539452687bf32ea6aec0fc97812ec",
+    "status": {
+      "argv": [
+        "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+        "--timeout",
+        "0",
+        "--lock-timeout",
+        "0",
+        "check",
+        "--root",
+        "/tmp/nm-annotation-reducer/cases/dag-arguments-leaf",
+        "--config",
+        "/tmp/nm-annotation-reducer/cases/dag-arguments-leaf/.no-mistakes.yml",
+        "--format",
+        "json",
+        "--jobs",
+        "1",
+        "--progress",
+        "--verbose-timings"
+      ],
+      "exit": -15,
+      "censored": true,
+      "limit": 10,
+      "elapsed": 10.004171491018496,
+      "files": {
+        ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+        "root.mts": "34fa58e2dcab94742f7bca833988a7783d7539452687bf32ea6aec0fc97812ec",
+        "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+      },
+      "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+    },
+    "negativeControl": "dag-arguments-primitive-control",
+    "negativeStatus": {
+      "argv": [
+        "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+        "--timeout",
+        "0",
+        "--lock-timeout",
+        "0",
+        "check",
+        "--root",
+        "/tmp/nm-annotation-reducer/cases/dag-arguments-primitive-control",
+        "--config",
+        "/tmp/nm-annotation-reducer/cases/dag-arguments-primitive-control/.no-mistakes.yml",
+        "--format",
+        "json",
+        "--jobs",
+        "1",
+        "--progress",
+        "--verbose-timings"
+      ],
+      "exit": 0,
+      "censored": false,
+      "limit": 10,
+      "elapsed": 0.015763394010718912,
+      "files": {
+        ".no-mistakes.yml": "ffed974ff7e976c34590d68a909def3ca30bdb125bc453815e5ac6291f4029c9",
+        "root.mts": "30a0172c0738d4956fe2bdee57803238782a0a63f0f27bbea452af1cf0e425ac",
+        "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+      },
+      "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+    },
+    "samePrefixesLoopGdb": "/tmp/nm-annotation-reducer/results/gdb-dag-arguments-leaf/gdb.log",
+    "gdbSha256": "50d42a0a21e365d8b13a161439af35548b6e6427cc859048d1460e9d1cafba06"
+  },
+  "algorithmChanges": false,
+  "dedupSafety": "Not established: lastwriter found[id] semantics can change when shared A(oldprefix), distinct B(newprefix), shared A(oldprefix) is traversed; skipping secondA returnsnew instead ofold. Separatebefore/afterarenas andargumentvisited state also matter. Diagnosis/reduction only; nofixproposedorimplemented."
+}

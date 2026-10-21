@@ -1,0 +1,13 @@
+{
+  "sampledAndValidatedSource": "633724ce929ff6fcafd06d7240e2dd0a644f676f",
+  "oldPublishedHead": "12aff5958569ac04de06d2441fe10e20f2b7ed10",
+  "versionOnlyRebasedHeadBeforeNote": "9945d8e152c1483459600cfdad35d929b7125bf6",
+  "oldMain": "286a7cb60250f6816674323ba10700595d6bba5e",
+  "newMain": "2b1cdb2c9baacae3c1a5260cf2c4d45890e3bd79",
+  "oldPackageVersion": "0.93.0",
+  "newPackageVersion": "0.94.0",
+  "analyzerSourceByteIdentical": true,
+  "thirdPartyCargoPackageEntriesIdentical": true,
+  "rangeDiff": "1:  969906b87 = 1:  31cddaecf feat(diagnostics): expose annotation roots and prefix-walk progress\n2:  633724ce9 = 2:  260562d09 fix(diagnostics): use stable batch divisibility predicates\n3:  12aff5958 = 3:  9945d8e15 docs(perf): save annotation stall reduction and diagnostic evidence\n",
+  "limitation": "Native probes and full local gates remain explicitly at 0.93.0/633724ce9. Rebased 0.94.0 is not described as sampled; analyzer source and third-party Rust dependencies are unchanged."
+}

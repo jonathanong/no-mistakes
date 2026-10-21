@@ -1,5 +1,4 @@
 use super::*;
-use crate::codebase::postgres::TrustedSqlTag;
 use crate::codebase::ts_resolver::{load_tsconfig, ImportResolver};
 
 const FIXTURE: &str = "helper-tracing-resolved-external-roots";
@@ -13,7 +12,7 @@ fn root() -> PathBuf {
 }
 
 #[test]
-fn resolved_external_edges_do_not_hide_workspace_reexports_or_uncertain_imports() {
+fn resolved_external_edges_keep_only_reachable_executor_roots() {
     let mut files = prepared_fixture(
         FIXTURE,
         &[
@@ -53,12 +52,7 @@ fn resolved_external_edges_do_not_hide_workspace_reexports_or_uncertain_imports(
             )
         })
         .collect();
-    let options =
-        EmbeddedSqlOptions::configured("@app/db", &[]).with_trusted_sql_tags(&[TrustedSqlTag {
-            module: "@app/tags".into(),
-            name: "tag".into(),
-        }]);
-    let selected = super::super::demand::roots(&collected, &options, &|specifier, from| {
+    let selected = super::super::demand::roots(&collected, &|specifier, from| {
         resolver.resolve(specifier, from)
     })
     .into_iter()
@@ -69,10 +63,6 @@ fn resolved_external_edges_do_not_hide_workspace_reexports_or_uncertain_imports(
         BTreeSet::from([
             PathBuf::from("src/workspace-entry.mts"),
             PathBuf::from("src/external-then-workspace.mts"),
-            PathBuf::from("src/dynamic.mts"),
-            PathBuf::from("src/unresolved.mts"),
-            PathBuf::from("src/executor-source.mts"),
-            PathBuf::from("src/trusted-source.mts"),
             PathBuf::from("packages/builders/index.mts"),
             PathBuf::from("packages/executor.mts"),
         ])
@@ -89,15 +79,14 @@ fn public_check_prunes_external_only_root_and_preserves_the_workspace_finding() 
     assert_eq!(report["rules"].as_array().unwrap().len(), 1);
     assert_eq!(report["rules"][0]["file"], "packages/executor.mts");
     assert_eq!(report["rules"][0]["line"], 2);
-    // The previous implementation keeps nine roots: successful external
-    // resolution and a missing target were both treated as uncertainty.
+    // Only actual executor sinks and their prepared importers need evaluation.
     assert_eq!(diagnostics.work["postgres.annotation.modules"], 10);
-    assert_eq!(diagnostics.work["postgres.annotation.roots"], 8);
+    assert_eq!(diagnostics.work["postgres.annotation.roots"], 4);
 }
 
 #[cfg(all(unix, feature = "test-instrumentation"))]
 #[test]
-fn canonical_workspace_alias_without_exact_inventory_identity_stays_conservative() {
+fn canonical_workspace_alias_without_exact_inventory_identity_has_no_evaluator_edge() {
     let root = root().with_file_name("helper-tracing-resolved-external-alias");
     let config = load_tsconfig(&root.join("tsconfig.json")).unwrap();
     let resolver = ImportResolver::new(&config);
@@ -116,7 +105,7 @@ fn canonical_workspace_alias_without_exact_inventory_identity_stays_conservative
     assert_eq!(report["rules"].as_array().unwrap().len(), 1);
     assert_eq!(report["rules"][0]["file"], "linked.mts");
     // Resolver canonical membership alone does not identify a catalog source.
-    // The external-looking workspace edge must retain its importing root.
+    // The unmatched importer cannot enter the linked executor catalog file.
     assert_eq!(diagnostics.work["postgres.annotation.modules"], 2);
-    assert_eq!(diagnostics.work["postgres.annotation.roots"], 2);
+    assert_eq!(diagnostics.work["postgres.annotation.roots"], 1);
 }

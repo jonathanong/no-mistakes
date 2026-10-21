@@ -1,6 +1,5 @@
 use super::File;
 use crate::codebase::dependencies::extract::ImportKind;
-use crate::codebase::postgres::{embedded::from_configured_module, EmbeddedSqlOptions};
 use crate::fx::{fx_map, FxHashMap};
 use std::path::{Path, PathBuf};
 
@@ -19,11 +18,17 @@ struct Frame<'a> {
 /// Project reachability directly from the prepared module catalog. Annotation
 /// projection runs before DepGraph construction and also serves supplied-file
 /// extraction; rebuilding a codebase graph here would change resolver semantics.
+/// Only prepared executor spans can emit events. Unresolved external loads
+/// invalidate values but cannot enter another catalog file, so they do not seed
+/// demand. All resolved runtime imports and re-exports remain reachability edges.
+/// Soundness invariant: events occur only at prepared executor spans, and the
+/// evaluator reaches another file only through these runtime import/re-export
+/// edges. An executor-free SCC with no path to an executor cannot emit an event.
+/// New non-import file reach must be mirrored here before pruning stays sound.
 /// Iterative Tarjan traversal needs no competing forward/reverse adjacency and
 /// keeps long import chains off the native stack. Completed SCCs are bottom-up.
 pub(super) fn roots<'a>(
     files: &'a FxHashMap<PathBuf, File<'_>>,
-    options: &EmbeddedSqlOptions,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<&'a Path> {
     let mut visits: FxHashMap<&Path, Visit> = fx_map();
@@ -49,32 +54,12 @@ pub(super) fn roots<'a>(
                 if import.kind == ImportKind::Type {
                     continue;
                 }
-                // Configured SQL sources remain demand seeds even when their
-                // implementation resolves outside this profile's fact catalog.
-                // `from_configured_module` is true for an empty specifier, which
-                // is how executor names match any module. That must not seed
-                // every non-type import when `importSpecifier` is omitted.
-                if (!options.import_specifier.is_empty()
-                    && from_configured_module(&import.specifier, &options.import_specifier))
-                    || options.trusted_sql_tags.iter().any(|tag| {
-                        !tag.module.is_empty()
-                            && !tag.name.is_empty()
-                            && from_configured_module(&import.specifier, &tag.module)
-                    })
-                {
-                    visits.get_mut(path).unwrap().demanded = true;
-                    continue;
-                }
-                // Dynamic/computed imports are never grounds for pruning,
-                // even when their currently visible literal target resolves.
-                if import.computed || import.kind == ImportKind::Dynamic {
-                    visits.get_mut(path).unwrap().demanded = true;
-                }
+                // Computed loads have no evaluator module target. Their operand
+                // expressions still contribute any nested literal import edges.
                 if import.computed {
                     continue;
                 }
                 let Some(target) = module.target(&import.specifier, path, resolve) else {
-                    visits.get_mut(path).unwrap().demanded = true;
                     continue;
                 };
                 // A successfully resolved edge outside the prepared catalog
@@ -82,8 +67,6 @@ pub(super) fn roots<'a>(
                 // files are omitted from that catalog and are the same dead end
                 // only while a parse failure yields no query facts. If recovery
                 // later emits partial facts, this edge must stay conservative.
-                // Keep unresolved edges conservative without conflating these
-                // two outcomes.
                 let Some((target, _)) = files.get_key_value(target) else {
                     continue;
                 };

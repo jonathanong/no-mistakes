@@ -75,6 +75,12 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         .any(|slots| slots.contains_key(&1000)));
     assert!(!initial.mapped.is_empty());
     assert!(!initial.captured.is_empty());
+    for (reader, origins) in &initial.captured {
+        assert!(std::ptr::eq(
+            &**origins,
+            &*evaluator.captured_bindings[reader]
+        ));
+    }
     assert!(initial
         .fresh
         .values()
@@ -86,6 +92,12 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     let base = evaluator.scopes.len();
     let original_readers = evaluator.captured_binding_readers.clone();
     assert!(!original_readers.is_empty());
+    let capture_snapshot = initial.captured.clone();
+    let identity = initial.roots().map(|env| (env, env)).collect();
+    initial.remap(&identity);
+    for (reader, origins) in &initial.captured {
+        assert!(std::ptr::eq(&**origins, &*capture_snapshot[reader]));
+    }
     let offset = base + 5;
     let indices = initial
         .roots()
@@ -117,6 +129,12 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
     evaluator.disconnected_argument_slots.clear();
     evaluator.active_module_initials.push(initial);
     evaluator.restore_alternative_modules();
+    for (reader, origins) in &evaluator.active_module_initials.last().unwrap().captured {
+        assert!(std::ptr::eq(
+            &**origins,
+            &*evaluator.captured_bindings[reader]
+        ));
+    }
     evaluator.add_alternative_captured_readers(base);
     let readers = evaluator.captured_binding_readers.clone();
     assert!(readers.keys().any(|origin| *origin >= offset));

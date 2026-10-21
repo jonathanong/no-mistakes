@@ -1,0 +1,316 @@
+{
+  "binary": {
+    "path": "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+    "source": "350ada01a24c33f98696ee98de9b965dfbe6d671",
+    "sha256": "ddd82dd6d1c2829e1f6c0d446a558212ef67d6c51c55f70a30f8dd797d91c68c"
+  },
+  "scope": "Saved diagnosis/reduction; concurrent compilers; not performance eligible. No source or catalog modifications. Existing fixture/evidence unchanged.",
+  "conclusion": "Annotation exclude filters findings but the excluded source is still a demanded evaluator root. Its shared-record DAG triggers the same recursive prefixes loop class as the sampled consumer. No claim that this synthetic DAG is the exact consumer object provenance.",
+  "cases": {
+    "excluded-test-root": {
+      "status": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": -15,
+        "censored": true,
+        "limit": 10,
+        "elapsed": 10.003720371983945,
+        "files": {
+          ".no-mistakes.yml": "cd2bd4e47b387bfc70de71b9eaa45404fe9a3275807d8a20a0c0f6146c7515ff",
+          "excluded.test.mts": "9fd92f2a3cee15edb8d46b9ab0ff655c06f007e106388ef0c21a0ccba1cc3410",
+          "runtime.mts": "3fedf4450c5ea6fa53b21af5943cf4cbbe8eba921172687fe86a2895fc4ddf7b",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "work": {},
+      "report": null,
+      "evidence_sha256": {
+        "stderr.log": "f4d9cadf88f2b64d91bd8bc23402caca362b432212484002184d3069b9a92dac",
+        "stdout.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.json": "e0fb01a687a98e8f465c48466efc9d772cbc036fcc1ba54de19ce3f3052bdf81"
+      }
+    },
+    "excluded-test-root-without-test": {
+      "status": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root-without-test",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root-without-test/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.007862246013246477,
+        "files": {
+          ".no-mistakes.yml": "cd2bd4e47b387bfc70de71b9eaa45404fe9a3275807d8a20a0c0f6146c7515ff",
+          "runtime.mts": "3fedf4450c5ea6fa53b21af5943cf4cbbe8eba921172687fe86a2895fc4ddf7b",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "work": {
+        "discovery.candidates": 3,
+        "discovery.requests": 1,
+        "discovery.roots": 1,
+        "manifest.cache_hits": 1,
+        "manifest.parses": 2,
+        "manifest.requests": 3,
+        "output.renders": 1,
+        "parse.files": 1,
+        "parse.files_after_extract": 1,
+        "parse.requests": 1,
+        "postgres.annotation.modules": 1,
+        "postgres.annotation.parallel_passes": 1,
+        "postgres.annotation.reachability_walks": 1,
+        "postgres.annotation.roots": 1,
+        "postgres.annotation.target_resolutions": 2,
+        "resolver.computations": 2,
+        "resolver.requests": 2,
+        "resolver.scope_cache_requests": 2,
+        "resolver.scope_constructions": 1,
+        "resolver.unique_keys": 2,
+        "resolver.unresolved": 2,
+        "resolver.visible_canonicalize_calls": 3,
+        "resolver.visible_normalizations": 1,
+        "source.bytes": 429,
+        "source.cache_hits": 2,
+        "source.reads": 3,
+        "source.requests": 5,
+        "workspace.builds": 1
+      },
+      "report": {
+        "advisories": [],
+        "codebase": [],
+        "integration": [],
+        "queues": [],
+        "react": [],
+        "rules": [],
+        "warnings": []
+      },
+      "evidence_sha256": {
+        "stderr.log": "6f7f7220886aa5133aa2ab570a3e6f12a9f24bf8f0ddc625169f34f296a01194",
+        "stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "status.json": "5cf011c070e50c2799b53ff74612e511ffae1236c9c7a65c1491cf362d22389b"
+      }
+    },
+    "excluded-test-root-without-dag": {
+      "status": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root-without-dag",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root-without-dag/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 0,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.007949673978146166,
+        "files": {
+          ".no-mistakes.yml": "cd2bd4e47b387bfc70de71b9eaa45404fe9a3275807d8a20a0c0f6146c7515ff",
+          "excluded.test.mts": "76e806691a3d2ac7b3e26e3216b1334e5ca4e7097a3859dad584db83cca1e864",
+          "runtime.mts": "3fedf4450c5ea6fa53b21af5943cf4cbbe8eba921172687fe86a2895fc4ddf7b",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "work": {
+        "discovery.candidates": 4,
+        "discovery.requests": 1,
+        "discovery.roots": 1,
+        "manifest.cache_hits": 1,
+        "manifest.parses": 2,
+        "manifest.requests": 3,
+        "output.renders": 1,
+        "parse.files": 2,
+        "parse.files_after_extract": 2,
+        "parse.requests": 2,
+        "postgres.annotation.modules": 2,
+        "postgres.annotation.parallel_passes": 1,
+        "postgres.annotation.reachability_walks": 2,
+        "postgres.annotation.roots": 2,
+        "postgres.annotation.target_resolutions": 4,
+        "resolver.computations": 4,
+        "resolver.requests": 4,
+        "resolver.scope_cache_requests": 2,
+        "resolver.scope_constructions": 1,
+        "resolver.unique_keys": 4,
+        "resolver.unresolved": 4,
+        "resolver.visible_canonicalize_calls": 4,
+        "resolver.visible_normalizations": 1,
+        "source.bytes": 603,
+        "source.cache_hits": 2,
+        "source.reads": 4,
+        "source.requests": 6,
+        "workspace.builds": 1
+      },
+      "report": {
+        "advisories": [],
+        "codebase": [],
+        "integration": [],
+        "queues": [],
+        "react": [],
+        "rules": [],
+        "warnings": []
+      },
+      "evidence_sha256": {
+        "stderr.log": "f98b9e46490007e7d19fb332d5fcabe9ffecc34c808a82d2ec9b9467fa27903a",
+        "stdout.json": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "status.json": "f28a5f62365aaf7755a1a3885ec4912bc1473848895315bddc416ef7bbe29d5d"
+      }
+    },
+    "excluded-test-root-included-control": {
+      "status": {
+        "argv": [
+          "/tmp/nm2119-postfix-evidence/no-mistakes-baseline",
+          "--timeout",
+          "0",
+          "--lock-timeout",
+          "0",
+          "check",
+          "--root",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root-included-control",
+          "--config",
+          "/tmp/nm-annotation-reducer/cases/excluded-test-root-included-control/.no-mistakes.yml",
+          "--format",
+          "json",
+          "--jobs",
+          "1",
+          "--progress",
+          "--verbose-timings"
+        ],
+        "exit": 1,
+        "censored": false,
+        "limit": 10,
+        "elapsed": 0.007667057972867042,
+        "files": {
+          ".no-mistakes.yml": "84498ffd8f4cb7016f7fe10c69442c7eca23f49be59c959982236f7402875106",
+          "excluded.test.mts": "76e806691a3d2ac7b3e26e3216b1334e5ca4e7097a3859dad584db83cca1e864",
+          "runtime.mts": "3fedf4450c5ea6fa53b21af5943cf4cbbe8eba921172687fe86a2895fc4ddf7b",
+          "tsconfig.json": "3323125050536f443f7d9decd3fedc4138a69b7e959960da319c2366002f349d"
+        },
+        "scope": "correctness/reduction only; concurrent compilation; not performanceeligible"
+      },
+      "work": {
+        "discovery.candidates": 4,
+        "discovery.requests": 1,
+        "discovery.roots": 1,
+        "manifest.cache_hits": 1,
+        "manifest.parses": 2,
+        "manifest.requests": 3,
+        "output.renders": 1,
+        "parse.files": 2,
+        "parse.files_after_extract": 2,
+        "parse.requests": 2,
+        "postgres.annotation.modules": 2,
+        "postgres.annotation.parallel_passes": 1,
+        "postgres.annotation.reachability_walks": 2,
+        "postgres.annotation.roots": 2,
+        "postgres.annotation.target_resolutions": 4,
+        "resolver.computations": 4,
+        "resolver.requests": 4,
+        "resolver.scope_cache_requests": 2,
+        "resolver.scope_constructions": 1,
+        "resolver.unique_keys": 4,
+        "resolver.unresolved": 4,
+        "resolver.visible_canonicalize_calls": 4,
+        "resolver.visible_normalizations": 1,
+        "source.bytes": 588,
+        "source.cache_hits": 5,
+        "source.reads": 4,
+        "source.requests": 9,
+        "workspace.builds": 1
+      },
+      "report": {
+        "advisories": [],
+        "codebase": [],
+        "integration": [],
+        "queues": [],
+        "react": [],
+        "rules": [
+          {
+            "file": "excluded.test.mts",
+            "line": 4,
+            "message": "excluded.test.mts:4: query execution must start with a /* name */ annotation",
+            "rule": "postgres-require-query-annotation",
+            "target": "annotation"
+          }
+        ],
+        "warnings": []
+      },
+      "evidence_sha256": {
+        "stderr.log": "0489fe5e2075b2c5015e84d8dfb32b18ea443c63e48eb00cae7d91892b809cce",
+        "stdout.json": "02ab9632a698d68eec7639c7b0fbd353e7475b943d87a0b846eaa46f6be5ce32",
+        "status.json": "71b8eba9d701391d5979d9ae4d15639009e0f2a1d09e5a452e696356b2fc71bd"
+      }
+    }
+  },
+  "debugger": {
+    "root_events": [
+      {
+        "event": "started",
+        "path": "/tmp/nm-annotation-reducer/cases/excluded-test-root/runtime.mts",
+        "time": 276920.581394719
+      },
+      {
+        "event": "finished",
+        "path": "/tmp/nm-annotation-reducer/cases/excluded-test-root/runtime.mts",
+        "time": 276920.587942258
+      },
+      {
+        "event": "started",
+        "path": "/tmp/nm-annotation-reducer/cases/excluded-test-root/excluded.test.mts",
+        "time": 276920.588373996
+      }
+    ],
+    "recursive_prefixes_frames": 31,
+    "evidence_sha256": {
+      "root-events.jsonl": "8959a148984c9d4514a713b782606eb13b0941ea6ef2764091f887471b9297c7",
+      "gdb.log": "7b031d24c07ff8a2e9789529bd48bfc80ef90e8835d330e84ef7f1075cfdd742",
+      "status.json": "6f10fac7fae0e125824ce0b1dbefada4a72def53e471a732e6ca27100a3c040a"
+    }
+  },
+  "safety_caveat": "No algorithm fix. Global shared-container dedup is not proven semantics-preserving: found[id] uses last-writer ordering and identities may resolve via distinct before/after arenas.",
+  "scope_fix_caveat": "Do not drop excluded modules from dependency catalog: excluded files can be imports required by included runtime roots. Scope evaluator roots separately from the catalog."
+}

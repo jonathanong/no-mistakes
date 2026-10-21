@@ -88,23 +88,30 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut private_disconnected,
             );
             for (before, after) in scopes.iter().zip(&self.scopes) {
+                // With no reference in the entry scope, every previous prefix map
+                // is empty. New arm-local builders are rebinds, not mutations.
+                if !self.files[path].facts.precise_records && !before.contains_reference() {
+                    continue;
+                }
                 for (name, value) in before {
                     // An arm can drop a name the other branch still has.
                     if !self.files[path].facts.precise_records {
-                        super::values::changes(
-                            value,
-                            super::bindings::binding_or_unproven(after, name),
-                            super::arena::Arena {
-                                objects: &objects,
-                                extras: &extra_slots,
-                            },
-                            super::arena::Arena {
-                                objects: &self.argument_objects,
-                                extras: &self.argument_extra_slots,
-                            },
-                            &mut changed,
-                            &self.definite_deleted_argument_slots,
-                        );
+                        super::super::super::progress::binding(path, name, || {
+                            super::values::changes(
+                                value,
+                                super::bindings::binding_or_unproven(after, name),
+                                super::arena::Arena {
+                                    objects: &objects,
+                                    extras: &extra_slots,
+                                },
+                                super::arena::Arena {
+                                    objects: &self.argument_objects,
+                                    extras: &self.argument_extra_slots,
+                                },
+                                &mut changed,
+                                &self.definite_deleted_argument_slots,
+                            );
+                        });
                     }
                 }
             }

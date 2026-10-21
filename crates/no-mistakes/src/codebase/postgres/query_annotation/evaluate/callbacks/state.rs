@@ -1,5 +1,5 @@
 use super::super::{Environment, Evaluator, Function, Value};
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -32,7 +32,7 @@ pub(super) struct View<'a> {
     invalidated: &'a FxHashSet<u64>,
     fresh: &'a FxHashMap<Environment, FxHashSet<String>>,
     mapped: &'a FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &'a FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &'a CapturedBindings,
 }
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn callback_view(&self) -> View<'_> {

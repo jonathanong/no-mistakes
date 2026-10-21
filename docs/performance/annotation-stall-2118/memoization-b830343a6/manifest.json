@@ -1,0 +1,14 @@
+{
+  "source": "b830343a6a3809e1d37df5fecb38931586337810",
+  "files": {
+    "README.md": "e7bc1a20fdbc6dff98c0528dec090ef83af862c2daed2ff5ce9a679550d481d2",
+    "fixture-rows.json": "eec69db77b613de0d13a4e810aa9b64ce578b628cceb49d353a1a7ad877f3fa2",
+    "fixture-summary.json": "36f9ed470b7c86ee3970474b90eca909a3db0400df908fdf6458181e6a037094",
+    "generated-catalog-fixtures.json": "3b6d11d27534b2e078a4d5259192254db1a7ddfe2345818289bb5a43717b6941",
+    "patch-coverage.json": "998181982d0e4d3e4512f36d807242004b99a20017191636f4d4b6b025fc26c1",
+    "validation.json": "c1c1a9c735966511fca45b4220e8776cd3e4a7e15cb8fcfa3a68d06ee9d3415e",
+    "work-and-coverage.json": "cc3458f70bc588a32e2b425e5d5ad5226e419c02ac302998810ba31d56a4e4db"
+  },
+  "rawEvidence": "https://github.com/jonathanong/no-mistakes/issues/2118#issuecomment-6307927353",
+  "identityNote": "Historical original file hashes; originals are archived. Retained summary root prefixes are redacted; the parent manifest records current summary hashes."
+}

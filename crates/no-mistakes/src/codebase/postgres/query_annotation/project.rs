@@ -51,8 +51,12 @@ fn project_impl(
         .map(|(path, _)| (normalize_path(path), path.clone()))
         .collect::<FxHashMap<_, _>>();
     let profiles = {
-        let profiles = prepare::profiles(files, &resolve);
-        parallel::evaluate(profiles, &resolve, collect_executed)
+        let profiles = crate::perf_trace::trace("postgres.annotation.prepare", || {
+            prepare::profiles(files, &resolve)
+        });
+        crate::perf_trace::trace("postgres.annotation.evaluate", || {
+            parallel::evaluate(profiles, &resolve, collect_executed)
+        })
     };
     // Indexed profile collection preserves the historical overwrite order.
     for profile in profiles {

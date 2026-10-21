@@ -1,0 +1,8 @@
+{
+  "exit": -15,
+  "cutoff": true,
+  "wallSeconds": 120.24820271501085,
+  "cpuSeconds": 120.780108,
+  "peakRssKiB": 2600816,
+  "performanceEligible": false
+}

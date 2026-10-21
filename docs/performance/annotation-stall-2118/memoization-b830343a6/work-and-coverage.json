@@ -1,0 +1,28 @@
+{
+  "candidateSource": "b830343a6a3809e1d37df5fecb38931586337810",
+  "baselineBuiltSource": "633724ce9",
+  "baselinePublishedEquivalent": "e106b3d15bf94869aa00a7ddeb3a34d16a84dcf5",
+  "baselineBuiltAnalyzerTree": "04939d990a09242c8c9dbc1e9bee1e883fb25b5d",
+  "baselinePublishedAnalyzerTree": "04939d990a09242c8c9dbc1e9bee1e883fb25b5d",
+  "sourceIdentityVerified": true,
+  "fixture": "shared-object-dag-12",
+  "beforeVisits": 131012,
+  "afterVisits": 788,
+  "beforeContainers": 65476,
+  "afterContainers": 676,
+  "comparisonWalks": 30,
+  "reportsIdentical": true,
+  "fullTestsPassed": 13809,
+  "fullTestsIgnored": 3,
+  "coveragePercent": {
+    "lines": 99.33287923711835,
+    "functions": 99.327800518232,
+    "regions": 98.51716834675781
+  },
+  "changedExecutableLines": {
+    "covered": 272,
+    "missing": 0
+  },
+  "performanceClaim": false,
+  "note": "Deterministic work counts and exact-source correctness gates; full current vouchington native recovery and observer overhead remain unproven."
+}

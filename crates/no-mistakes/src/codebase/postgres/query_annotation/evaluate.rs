@@ -2,6 +2,7 @@ mod alternatives;
 mod atomic;
 mod callbacks;
 mod calls;
+mod captures;
 mod collections;
 mod composition;
 mod concat;
@@ -26,6 +27,7 @@ mod value;
 use super::modules::Module;
 use super::{Expr, Function, QueryAnnotationFileFacts};
 use crate::fx::{FxHashMap, FxHashSet};
+pub(super) use captures::CapturedBindings;
 use std::path::{Path, PathBuf};
 use std::{collections::BTreeMap, sync::Arc};
 pub(super) use value::Value;
@@ -53,7 +55,7 @@ pub(super) struct Evaluator<'a, F> {
     pub next_builder: u64,
     pub invalidated_builders: FxHashSet<u64>,
     pub builder_updates: FxHashMap<u64, Value>,
-    pub captured_bindings: FxHashMap<Environment, FxHashMap<String, Environment>>,
+    pub captured_bindings: CapturedBindings,
     pub captured_binding_readers: FxHashMap<Environment, FxHashMap<String, FxHashSet<Environment>>>,
     pub mapped_argument_owners: FxHashMap<u64, Environment>,
     pub mapped_parameter_indices: FxHashMap<u64, FxHashMap<String, usize>>,

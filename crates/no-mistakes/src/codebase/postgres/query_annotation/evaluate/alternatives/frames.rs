@@ -1,7 +1,7 @@
 use super::super::{Environment, Value};
 use super::arena::ArenaMut;
 use super::{freshness, reachable};
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
 use crate::fx::{FxHashMap, FxHashSet};
 
 struct Roots<'a> {
@@ -47,7 +47,7 @@ pub(super) fn compact(
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
-    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &mut CapturedBindings,
 ) -> Compaction {
     let original = cache.original;
     let mut roots = (0..original).collect::<Vec<_>>();
@@ -89,7 +89,7 @@ fn compact_from_roots(
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
-    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &mut CapturedBindings,
 ) -> Compaction {
     let reachable = reachable::collect_from_roots(
         scopes,

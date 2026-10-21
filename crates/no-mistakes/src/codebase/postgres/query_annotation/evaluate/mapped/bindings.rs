@@ -35,7 +35,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .or_default()
                     .insert(scope);
             }
-            self.captured_bindings.insert(scope, bindings);
+            self.captured_bindings.insert(scope, bindings.into());
         }
     }
 

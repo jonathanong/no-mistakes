@@ -1,0 +1,73 @@
+{
+  "name": "sparse_deleted_slots",
+  "nodes": [
+    [
+      [
+        "arguments",
+        1
+      ],
+      [
+        "prefix",
+        2,
+        "direct",
+        false
+      ]
+    ]
+  ],
+  "root": [
+    "node",
+    0
+  ],
+  "objects": {
+    "1": [
+      [
+        "prefix",
+        1,
+        "dense",
+        true
+      ],
+      [
+        "prefix",
+        1,
+        "deleted",
+        true
+      ]
+    ]
+  },
+  "extras": {
+    "1": {
+      "4": [
+        "prefix",
+        1,
+        "sparse",
+        false
+      ],
+      "9": [
+        "prefix",
+        1,
+        "deleted-extra",
+        true
+      ]
+    }
+  },
+  "definite": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      9
+    ]
+  ],
+  "expected": {
+    "1": [
+      "sparse",
+      false
+    ],
+    "2": [
+      "direct",
+      false
+    ]
+  }
+}

@@ -28,11 +28,16 @@ pub(super) fn profiles<'a>(
         .collect::<Vec<_>>();
     profiles.sort();
     profiles.dedup();
-    let modules = files
-        .into_iter()
-        .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
-        .map(|(path, file)| (path.clone(), Arc::new(Module::new(Arc::clone(&file.ts)))))
-        .collect::<FxHashMap<_, _>>();
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.annotation.profiles", profiles.len() as u64);
+    }
+    let modules = crate::perf_trace::trace("postgres.annotation.prepare.modules", || {
+        files
+            .into_iter()
+            .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
+            .map(|(path, file)| (path.clone(), Arc::new(Module::new(Arc::clone(&file.ts)))))
+            .collect::<FxHashMap<_, _>>()
+    });
     profiles
         .into_iter()
         .map(|options| {
@@ -64,7 +69,9 @@ pub(super) fn profiles<'a>(
             let untrusted_array_intrinsics = collected
                 .values()
                 .any(|file| file.facts.array_prototype_exposed);
-            let roots = demand::roots(&collected, &options, resolve);
+            let roots = crate::perf_trace::trace("postgres.annotation.prepare.roots", || {
+                demand::roots(&collected, resolve)
+            });
             if let Some(observer) = crate::diagnostics::current() {
                 observer.increment("postgres.annotation.roots", roots.len() as u64);
             }

@@ -39,7 +39,12 @@ pub(super) fn evaluate(
                         let events = crate::diagnostics::with_observer(observer.clone(), || {
                             let mut evaluator =
                                 evaluator::new(&files, resolve, untrusted_array_intrinsics);
-                            evaluator.run(&path);
+                            super::super::progress::trace(
+                                "postgres.annotation.root",
+                                &path,
+                                None,
+                                || evaluator.run(&path),
+                            );
                             evaluator.events
                         });
                         (path, events)

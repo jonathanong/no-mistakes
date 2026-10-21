@@ -72,23 +72,15 @@ impl Values {
         Arc::as_ptr(&self.0).cast()
     }
 
+    pub(super) fn is_shared(&self) -> bool {
+        Arc::strong_count(&self.0) > 1
+    }
+
     pub(super) fn contains_reference(&self) -> bool {
-        *self.0.contains_reference.get_or_init(|| {
-            fn references(value: &Value) -> bool {
-                match value {
-                    Value::Prefix(_, _, Some(_)) | Value::Arguments(_) | Value::Array(_) => true,
-                    Value::Promise(value) | Value::Evaluated(value, _) => references(value),
-                    Value::Aggregate(values)
-                    | Value::References(values)
-                    | Value::Object(values)
-                    | Value::Record(values, _)
-                    | Value::Joined(values)
-                    | Value::Possible(values) => values.contains_reference(),
-                    _ => false,
-                }
-            }
-            self.0.values.iter().any(references)
-        })
+        *self
+            .0
+            .contains_reference
+            .get_or_init(|| self.0.values.iter().any(Value::contains_reference))
     }
 }
 
@@ -171,6 +163,20 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     SlotDeletion,
 }
 impl Value {
+    pub(super) fn contains_reference(&self) -> bool {
+        match self {
+            Self::Prefix(_, _, Some(_)) | Self::Arguments(_) | Self::Array(_) => true,
+            Self::Promise(value) | Self::Evaluated(value, _) => value.contains_reference(),
+            Self::Aggregate(values)
+            | Self::References(values)
+            | Self::Object(values)
+            | Self::Record(values, _)
+            | Self::Joined(values)
+            | Self::Possible(values) => values.contains_reference(),
+            _ => false,
+        }
+    }
+
     pub(super) fn exposed(self) -> Self {
         let mut value = self;
         while let Self::Evaluated(inner, _) = value {

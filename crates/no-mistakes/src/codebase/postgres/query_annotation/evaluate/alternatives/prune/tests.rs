@@ -34,8 +34,8 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         ),
         // Mutually captured frames and argument cycles must remain finite.
         captured_bindings: FxHashMap::from_iter([
-            (1, FxHashMap::from_iter([("owner".into(), 2)])),
-            (2, FxHashMap::from_iter([("owner".into(), 1)])),
+            (1, FxHashMap::from_iter([("owner".into(), 2)]).into()),
+            (2, FxHashMap::from_iter([("owner".into(), 1)]).into()),
         ]),
         captured_binding_readers: Default::default(),
         mapped_argument_owners: Default::default(),

@@ -1,0 +1,6 @@
+{
+  "name": "reference_free_before",
+  "nodes": [],
+  "root": ["prefix", null, "SELECT plain", true],
+  "expected": {}
+}

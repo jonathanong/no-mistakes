@@ -1,0 +1,13 @@
+{
+  "base": "9844e3120a290e1a8f6f9b7c909dce864d05ad20",
+  "binarySha256": "c84d70ded290b30fbee489b67d01a26cf1c330ccdb46fde79e1e7aa69282f396",
+  "sourceSha256": {
+    "crates/no-mistakes/src/codebase/postgres/query_annotation.rs": "8caf6afdf2ea3fcb894e148589af8f728dd439c8bd700c63e7b56d535f594d37",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/modules.rs": "f3d99f9d1f7c454257d301bde912542b6be0fdc05554ecfb53507eeb5da13d68",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/evaluate/run.rs": "4ffea2dcc514875169bf3d65e1477c5673c9bdd63bf09d717acf7af3eef977b4",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/project/parallel.rs": "e01cc6fb65e16852e48befb57876a9d4dc625238a8a6b3503dab002c78908cf5",
+    "crates/no-mistakes/src/codebase/postgres/query_annotation/progress.rs": "fc4a30806e17ad0defc138424019a6f19b4c4114bee055ff912cec1c17896f62"
+  },
+  "profile": "release, default features, fat LTO, codegen-units=1, build jobs2",
+  "purpose": "instrumented localization, not matched performance evidence"
+}

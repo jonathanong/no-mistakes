@@ -14,7 +14,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let file = &self.files[path];
         let globals = &file.facts.globals;
         self.module_environment(path);
-        self.prune_snapshot_state();
+        super::super::progress::trace("postgres.annotation.snapshot", path, None, || {
+            self.prune_snapshot_state()
+        });
         let env = self.modules[path];
         let unmodeled = &file.facts.unmodeled_calls;
         let scopes = self.scopes.clone();
@@ -139,7 +141,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     values.insert(name.clone(), Value::Unknown);
                 }
                 let mut env = self.environment(values);
-                self.steps(&function.body, path, &mut env, 16, true);
+                super::super::progress::trace(
+                    "postgres.annotation.entrypoint",
+                    path,
+                    Some(function.start),
+                    || self.steps(&function.body, path, &mut env, 16, true),
+                );
             }
         }
     }

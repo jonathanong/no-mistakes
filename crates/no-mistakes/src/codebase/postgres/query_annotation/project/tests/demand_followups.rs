@@ -67,11 +67,11 @@ fn pnpm_workspace_package_imports_resolve_and_prune_dead_ends() {
     assert_eq!(finding["line"], 2);
     // Five modules: executor, its caller, the constants package, the dead-end
     // importer, and the unresolved importer. The dead-end package import
-    // resolves inside the catalog and is pruned. The missing package does not
-    // resolve and stays a root. A traced literal, not an unanalyzable parameter,
-    // is what keeps the caller.
+    // resolves inside the catalog and is pruned. The missing package has no
+    // evaluator target and is also pruned. A traced literal, rather than an
+    // unanalyzable parameter, is what keeps the caller.
     assert_eq!(diagnostics.work["postgres.annotation.modules"], 5);
-    assert_eq!(diagnostics.work["postgres.annotation.roots"], 3);
+    assert_eq!(diagnostics.work["postgres.annotation.roots"], 2);
 }
 
 #[test]

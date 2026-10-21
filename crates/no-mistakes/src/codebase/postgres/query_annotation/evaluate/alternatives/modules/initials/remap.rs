@@ -33,9 +33,7 @@ impl Initials {
         self.captured = std::mem::take(&mut self.captured)
             .into_iter()
             .map(|(id, mut values)| {
-                for origin in values.values_mut() {
-                    *origin = env(*origin);
-                }
+                values.remap(indices);
                 (env(id), values)
             })
             .collect();

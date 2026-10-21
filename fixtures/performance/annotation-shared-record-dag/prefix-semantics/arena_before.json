@@ -1,0 +1,31 @@
+{
+  "name": "arena_before",
+  "nodes": [
+    [
+      [
+        "arguments",
+        1
+      ]
+    ]
+  ],
+  "root": [
+    "node",
+    0
+  ],
+  "objects": {
+    "1": [
+      [
+        "prefix",
+        1,
+        "before",
+        true
+      ]
+    ]
+  },
+  "expected": {
+    "1": [
+      "before",
+      true
+    ]
+  }
+}

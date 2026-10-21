@@ -9,12 +9,14 @@ use std::{
 struct Bindings {
     values: FxHashMap<String, Value>,
     builders: OnceLock<FxHashSet<u64>>,
+    contains_reference: OnceLock<bool>,
 }
 impl Clone for Bindings {
     fn clone(&self) -> Self {
         Self {
             values: self.values.clone(),
             builders: OnceLock::new(),
+            contains_reference: OnceLock::new(),
         }
     }
 }
@@ -31,6 +33,14 @@ impl Eq for Bindings {}
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 
 impl Scope {
+    /// Argument/array identities remain references even when their current arena is empty.
+    pub(super) fn contains_reference(&self) -> bool {
+        *self
+            .0
+            .contains_reference
+            .get_or_init(|| self.0.values.values().any(Value::contains_reference))
+    }
+
     pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
         let builders = self.0.builders.get_or_init(|| {
             fn collect(
@@ -75,6 +85,7 @@ impl From<FxHashMap<String, Value>> for Scope {
         Self(Arc::new(Bindings {
             values,
             builders: OnceLock::new(),
+            contains_reference: OnceLock::new(),
         }))
     }
 }
@@ -88,6 +99,7 @@ impl DerefMut for Scope {
     fn deref_mut(&mut self) -> &mut Self::Target {
         let bindings = Arc::make_mut(&mut self.0);
         bindings.builders.take();
+        bindings.contains_reference.take();
         &mut bindings.values
     }
 }
