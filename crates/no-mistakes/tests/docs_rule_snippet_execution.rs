@@ -132,13 +132,54 @@ fn rule_docs_execute_valid_and_counterexample_snippets() {
         .lines()
         .filter(|line| !line.is_empty() && !line.starts_with('#'))
         .collect();
-    let unexpected: Vec<_> = failures
-        .into_iter()
-        .filter(|failure| !known.iter().any(|prefix| failure.starts_with(prefix)))
-        .collect();
+    let unexpected = unmatched_failures(&failures, &known);
+    let stale = unmatched_known_gaps(&failures, &known);
     assert!(
         unexpected.is_empty(),
         "rule documentation snippets must execute as documented (see #2416 for known gaps):\n{}",
         unexpected.join("\n")
+    );
+    assert!(
+        stale.is_empty(),
+        "known gap prefixes must still reproduce; remove them once the snippet behaves:\n{}",
+        stale.join("\n")
+    );
+}
+
+fn unmatched_failures(failures: &[String], known: &[&str]) -> Vec<String> {
+    failures
+        .iter()
+        .filter(|failure| !known.iter().any(|prefix| failure.starts_with(prefix)))
+        .cloned()
+        .collect()
+}
+
+fn unmatched_known_gaps<'a>(failures: &[String], known: &[&'a str]) -> Vec<&'a str> {
+    known
+        .iter()
+        .copied()
+        .filter(|prefix| !failures.iter().any(|failure| failure.starts_with(*prefix)))
+        .collect()
+}
+
+#[test]
+fn known_gap_prefixes_fail_once_they_stop_reproducing() {
+    let failures = ["banned-renamed-files.md: Counterexample[0] expected a finding".to_string()];
+    assert_eq!(
+        unmatched_known_gaps(
+            &failures,
+            &[
+                "banned-renamed-files.md: Counterexample[0] expected ",
+                "gone.md: Valid example[0] expected ",
+            ]
+        ),
+        ["gone.md: Valid example[0] expected "]
+    );
+    assert_eq!(
+        unmatched_failures(
+            &failures,
+            &["banned-renamed-files.md: Counterexample[0] expected "]
+        ),
+        [] as [String; 0]
     );
 }

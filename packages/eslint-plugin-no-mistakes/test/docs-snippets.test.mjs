@@ -9,7 +9,20 @@ import {
   rulePages,
   snippetFilename,
   sourceFences,
+  staleKnownRecallFailures,
 } from "./docs-snippets.mjs";
+
+describe("known recall failures stay listed only while they reproduce", () => {
+  it("treats a vanished miss as stale", () => {
+    assert.deepEqual(
+      staleKnownRecallFailures(["Disallowed ts hits=0 ids="], ["Disallowed ts hits=0 ids="]),
+      [],
+    );
+    assert.deepEqual(staleKnownRecallFailures([], ["Disallowed ts hits=0 ids="]), [
+      "Disallowed ts hits=0 ids=",
+    ]);
+  });
+});
 
 describe("eslint rule docs are executable", () => {
   it("documents every exported rule", () => {
@@ -52,6 +65,11 @@ describe("eslint rule docs are executable", () => {
       assert.deepEqual(
         failures.filter((failure) => !known.includes(failure)),
         [],
+      );
+      assert.deepEqual(
+        staleKnownRecallFailures(failures, known),
+        [],
+        `${page.ruleId} knownRecallFailures must still reproduce`,
       );
     });
   }
