@@ -96,7 +96,6 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
 }
 
 function staticPromiseMember(node) {
-  if (!node || node.type !== "MemberExpression") return null;
   if (!node.computed) return node.property?.name ?? null;
   const key = unwrapTs(node.property);
   if (key?.type === "Literal" && typeof key.value === "string") return key.value;

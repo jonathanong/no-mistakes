@@ -658,6 +658,15 @@ describe("postgres runtime helpers", () => {
     assert.equal(
       isPromiseAllCallee({
         type: "MemberExpression",
+        computed: false,
+        property: {},
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
         computed: true,
         property: { type: "Literal", value: "all" },
         object: { type: "Identifier", name: "Promise" },
