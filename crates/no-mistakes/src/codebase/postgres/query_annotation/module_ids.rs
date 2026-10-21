@@ -28,7 +28,10 @@ impl ModuleIds {
     }
 
     pub fn id(&self, path: &Path) -> ModuleId {
-        self.indices[path]
+        *self
+            .indices
+            .get(path)
+            .expect("module path missing from the request's identity table")
     }
 
     pub fn path(&self, id: ModuleId) -> &Path {

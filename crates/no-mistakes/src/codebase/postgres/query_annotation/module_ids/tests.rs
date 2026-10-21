@@ -67,3 +67,12 @@ fn compact_key_hash_work_is_independent_of_saved_path_length() {
         "old Path-key work is a required positive control"
     );
 }
+
+#[test]
+#[should_panic(expected = "module path missing from the request's identity table")]
+fn missing_saved_module_reports_the_identity_table_invariant() {
+    let mut paths = saved_paths();
+    let missing = paths.pop().unwrap();
+    // Keep the file real while deliberately omitting it from this request table.
+    ModuleIds::new(paths).id(&missing);
+}
