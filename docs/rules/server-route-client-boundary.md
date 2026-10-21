@@ -56,6 +56,17 @@ Use a narrower project or route glob for intentional mixed folders. A file
 directive is appropriate only for a legacy route-local helper with a documented
 bundle boundary.
 
+## Limitations
+
+Discovery skips any directory segment named `node_modules`, `dist`, `.git`,
+`.next`, `coverage`, `fixtures`, `target`, or `build`. A client call under
+one of those names is not seen.
+
+```ts
+// backend/api/users/build/client.ts
+fetch("/users");
+```
+
 ## Related rules
 
 [`required-entrypoint-reachability`](required-entrypoint-reachability.md)

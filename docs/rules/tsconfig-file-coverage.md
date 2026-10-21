@@ -24,10 +24,12 @@ rules:
       requiredBasename: tsconfig.dependency-cruiser.json
 ```
 
-Tracked `tsconfig.json` / `tsconfig.*.json` files (not under `node_modules`)
-are the candidate programs, including tsconfigs that a rule `include` filter
-would otherwise drop. Repositories with no tracked tsconfig produce no
-source-coverage findings, so fixtures without compiler config stay silent.
+Tracked `tsconfig.json` / `tsconfig.*.json` files are the candidate programs,
+including tsconfigs that a rule `include` filter would otherwise drop. Files
+under `node_modules`, `dist`, `.git`, `.next`, `coverage`, `fixtures`,
+`target`, or `build` are out of scope. Repositories with no tracked tsconfig
+produce no source-coverage findings, so fixtures without compiler config stay
+silent.
 Configured `allow` and `auxiliaryConfigs` entries are still validated.
 `auxiliaryConfigs` entries are not compiler programs: they must not declare
 `files`, `include`, `exclude`, or `references`, and their basename defaults to
@@ -108,6 +110,21 @@ with why it intentionally stays outside the program.
 
 Prefer a reasoned `allow` entry. Use a top-of-file file directive for a
 one-off generated file; findings point to line 1.
+
+## Limitations
+
+Discovery skips any directory segment named `node_modules`, `dist`, `.git`,
+`.next`, `coverage`, `fixtures`, `target`, or `build`. A tracked file under
+one of those names is not visible, so it is not reported as uncovered.
+`node_modules` was already out of scope; the other names are skipped the same
+way.
+
+```text
+fixtures/orphan.ts
+src/build/orphan.ts
+```
+
+Next to a tsconfig whose `include` is `["src"]`, neither file is a finding.
 
 ## Related rules
 

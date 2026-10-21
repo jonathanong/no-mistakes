@@ -65,6 +65,23 @@ Use `no-mistakes-disable-line playwright-prefer-test-id-locators` or
 `no-mistakes-disable-next-line` at the locator. Use the file directive only for
 a test file whose locators intentionally verify user-facing copy.
 
+## Limitations
+
+Playwright file discovery skips a directory segment named `.git`,
+`node_modules`, `target`, `dist`, `build`, `coverage`, or `test-results`,
+even when the file is tracked. A text locator whose only match lives under
+`src/components/build/` is not reported.
+
+```tsx
+// src/components/build/SaveButton.tsx
+<button data-pw="save-button">Save</button>
+```
+
+```ts
+// src/components/build/save.spec.ts
+await page.getByRole("button", { name: "Save" }).click();
+```
+
 ## Related rules
 
 [`playwright-coverage`](playwright-coverage.md) checks whether selectors are

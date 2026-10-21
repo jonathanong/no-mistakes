@@ -36,6 +36,17 @@ route handler or a Pages Router API route.
 export default function Page() { return null; }
 ```
 
+## Limitations
+
+The checker flags App Router route handlers and `pages/api` files, but
+discovery drops a path when a directory segment is `node_modules`, `dist`,
+`.git`, `.next`, `coverage`, `fixtures`, `target`, or `build`.
+
+```text
+app/build/route.ts
+```
+
+That route handler is not reported.
 
 ## Related rules
 

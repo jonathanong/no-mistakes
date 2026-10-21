@@ -28,7 +28,8 @@ must continue to point at real, intentionally named folders.
 
 Each configured alias prefix must map to the configured target root/folder and
 match the declared prefix policy. Missing targets and mismatched folder names
-are findings.
+are findings. An existing tsconfig that cannot be loaded is a finding, because
+its alias mappings were not checked. A missing tsconfig path is not.
 
 ## Options and defaults
 

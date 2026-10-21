@@ -66,6 +66,19 @@ Use `no-mistakes-disable-line playwright-unique-test-ids`,
 intentional compatibility alias. Prefer app scoping when the duplicate is
 cross-application rather than a true collision.
 
+## Limitations
+
+Playwright file discovery skips a directory segment named `.git`,
+`node_modules`, `target`, `dist`, `build`, `coverage`, or `test-results`,
+even when the file is tracked. Duplicate test IDs that live only under
+`src/components/build/` are not reported.
+
+```tsx
+// src/components/build/SaveButton.tsx and src/components/build/DeleteButton.tsx
+<button data-pw="save" />
+<button data-pw="save" />
+```
+
 ## Related rules
 
 [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md)

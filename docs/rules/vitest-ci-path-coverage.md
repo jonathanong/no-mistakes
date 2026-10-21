@@ -133,6 +133,13 @@ Findings point to workflow line 1, so use a top-of-file
 `no-mistakes-disable-file vitest-ci-path-coverage` directive only when another
 CI gate intentionally owns the coverage.
 
+## Limitations
+
+Discovery skips any directory segment named `node_modules`, `dist`, `.git`,
+`.next`, `coverage`, `fixtures`, `target`, or `build`, so those files are not
+compared with CI path filters. With a Vitest include of `src/**/*.test.ts`,
+`src/build/widget.test.ts` is not reported.
+
 ## Related rules
 
 [`vitest-project-mapping`](vitest-project-mapping.md) assigns each test to one

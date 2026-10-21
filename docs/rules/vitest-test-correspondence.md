@@ -71,6 +71,18 @@ rejected path onto the configured naming convention.
 Use a narrow exclude for generated or adapter-only sources. Use the file
 directive only when another test framework provides the coverage.
 
+## Limitations
+
+Discovery skips any directory segment named `node_modules`, `dist`, `.git`,
+`.next`, `coverage`, `fixtures`, `target`, or `build`. A source file under
+one of those names is not visible.
+
+```text
+src/build/users.ts
+```
+
+That file is not reported when it has no sibling test.
+
 ## Related rules
 
 [`vitest-project-mapping`](vitest-project-mapping.md) ensures each test has one

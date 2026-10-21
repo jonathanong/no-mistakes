@@ -41,6 +41,16 @@ export const dynamic = 'force-dynamic';
 export default function Page() { return null; }
 ```
 
+## Limitations
+
+Discovery drops a file when a directory segment is `node_modules`, `dist`,
+`.git`, `.next`, `coverage`, `fixtures`, `target`, or `build`. A caching
+directive that lives only there is not reported.
+
+```tsx
+// app/build/page.tsx
+export const revalidate = 60;
+```
 
 ## Related rules
 
