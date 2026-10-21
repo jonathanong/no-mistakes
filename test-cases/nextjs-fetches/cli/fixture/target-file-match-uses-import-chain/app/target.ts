@@ -1,1 +1,1 @@
-fetch('/api/targeted');
+export const helper = () => fetch('/api/targeted');

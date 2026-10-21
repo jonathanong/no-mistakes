@@ -7,7 +7,13 @@ fn test_cli_target_duplicates_are_deduplicated() {
 
     let mut cmd = fetches_cmd();
     cmd.arg("--root").arg(&root).arg(&page).arg(&page);
-    cmd.assert().success();
+    let assertion = cmd
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("- Total Routes: 1\n"))
+        .stdout(predicates::str::contains("- Total API Calls: 1\n"));
+    let stdout = String::from_utf8_lossy(&assertion.get_output().stdout);
+    assert_eq!(stdout.matches("### / (app/page.tsx)").count(), 1);
 }
 
 #[test]
@@ -64,11 +70,18 @@ fn test_cli_sorts_multiple_unsupported_fetches() {
 
     let mut cmd = fetches_cmd();
     cmd.arg("--root").arg(&root);
-    cmd.assert()
+    let assertion = cmd
+        .assert()
         .success()
         .stdout(predicates::str::contains("## Unsupported (Dynamic)"))
         .stdout(predicates::str::contains("### / (app/page.tsx)"))
         .stdout(predicates::str::contains("### /about (app/about/page.tsx)"));
+    let stdout = String::from_utf8_lossy(&assertion.get_output().stdout);
+    // Route headings use their own order; inspect only the unsupported table.
+    let (_, unsupported) = stdout.split_once("## Unsupported (Dynamic)").unwrap();
+    let root_row = unsupported.find("| / | app/page.tsx |").unwrap();
+    let about_row = unsupported.find("| /about | app/about/page.tsx |").unwrap();
+    assert!(root_row < about_row, "{unsupported}");
 }
 
 #[test]
