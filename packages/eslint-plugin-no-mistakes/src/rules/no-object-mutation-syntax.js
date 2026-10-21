@@ -102,6 +102,3 @@ module.exports = {
   unwrap,
   TS_EXPRESSIONS,
 };
-
-const { mutationCall } = require("./no-object-mutation-forward");
-module.exports.mutationCall = mutationCall;

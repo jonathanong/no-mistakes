@@ -23,7 +23,8 @@ connected. `check` is empty when the graph is consistent. Findings use these
 
 Local processor functions declared before `createWorker("jobs", handler)` use
 the same job binding as inline callbacks. A local copy such as
-`const id = task.id` and `const { id } = task` also count when passed as `jobId: id`. A defaulted binding does not.
+`const id = task.id` and `const { id } = task` also count when passed as
+`jobId: id`. A defaulted binding does not.
 
 Worker job names come from dispatches on the processor's job name, such as
 `task.name === "send"` or `switch (task.name)`. Unrelated objects such as

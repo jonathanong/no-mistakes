@@ -6,7 +6,8 @@ import { join, resolve } from "node:path";
 import { describe, it } from "vitest";
 import { __dirname, lint, messages, plugin, require as loadCjs } from "./helpers.mjs";
 
-const { memberKey, mutationCall, staticKey } = loadCjs("../src/rules/no-object-mutation-syntax.js");
+const { memberKey, staticKey } = loadCjs("../src/rules/no-object-mutation-syntax.js");
+const { mutationCall } = loadCjs("../src/rules/no-object-mutation-forward.js");
 
 const RULE = "no-object-mutation";
 
