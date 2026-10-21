@@ -4,6 +4,7 @@ use serde_yaml::Value;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
+mod carry;
 mod indent;
 mod lines;
 
@@ -28,10 +29,19 @@ pub(super) fn append_parsed_uses(
         collect_uses(document, &mut uses_values);
     }
     let source_lines: Vec<&str> = content.lines().collect();
-    // A block `uses` inside `with` or `env` is an input, not an action.
-    findings
-        .retain(|finding| !indent::in_input_block(&source_lines, finding.line.saturating_sub(1)));
-    let action_lines = lines::action_uses_lines(&source_lines);
+    let classified = lines::action_uses_lines(&source_lines);
+    // A `uses` inside `with` or `env` is an input. Block indent and a flow
+    // mapping that continues on a later line are both inputs.
+    findings.retain(|finding| {
+        let index = finding.line.saturating_sub(1);
+        let flow_input = classified
+            .flow_input_at_start
+            .get(index)
+            .copied()
+            .unwrap_or(false);
+        !indent::in_input_block(&source_lines, index) && !flow_input
+    });
+    let action_lines = classified.lines;
     for (uses_value, line_num) in uses_values.iter().zip(action_lines) {
         if seen_lines.contains(&line_num) {
             continue;

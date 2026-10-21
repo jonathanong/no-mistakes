@@ -1,38 +1,50 @@
+use super::carry::{Carry, LineKind};
 use super::indent::{in_input_block, is_ignorable, is_nested_key, is_value_line};
 
-/// Job and step `uses` lines, in document order. A root sequence counts as steps.
-/// Lines nested under `with` or `env` do not.
-pub(super) fn action_uses_lines(lines: &[&str]) -> Vec<usize> {
+/// Job and step `uses` lines, in document order, plus whether each source line
+/// opened inside a flow `with` or `env`. A root sequence counts as steps.
+pub(super) struct ClassifiedUses {
+    pub lines: Vec<usize>,
+    pub flow_input_at_start: Vec<bool>,
+}
+
+pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
     let mut found = Vec::new();
+    let mut flow_input_at_start = Vec::with_capacity(lines.len());
     // `{ uses:` with the ref on the next line stays open across blanks.
     let mut await_value = false;
+    let mut carry = Carry::default();
     for index in 0..lines.len() {
+        let mark = carry.scan_line(lines[index]);
+        flow_input_at_start.push(mark.starts_in_flow_input);
         if in_input_block(lines, index) {
             await_value = false;
             continue;
         }
         let value_here = is_value_line(lines[index]) && !is_nested_key(lines[index]);
+        let previous_in_flow = index > 0 && flow_input_at_start[index - 1];
         // `uses:` then `nested: true` is a mapping, not the action scalar.
         let continued = index > 0
             && bare_uses_key(lines[index - 1])
             && !in_input_block(lines, index - 1)
-            && value_here;
-        let kind = classify_uses_line(lines[index]);
-        if kind == LineUses::Present || continued || (await_value && value_here) {
+            && !previous_in_flow
+            && value_here
+            && !mark.starts_in_flow_input;
+        let in_flow_input = mark.starts_in_flow_input;
+        if mark.kind == LineKind::Present
+            || continued
+            || (await_value && value_here && !in_flow_input)
+        {
             found.push(index + 1);
         }
         if !is_ignorable(lines[index]) {
-            await_value = kind == LineUses::Awaits;
+            await_value = mark.kind == LineKind::Awaits;
         }
     }
-    found
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum LineUses {
-    None,
-    Present,
-    Awaits,
+    ClassifiedUses {
+        lines: found,
+        flow_input_at_start,
+    }
 }
 
 fn bare_uses_key(line: &str) -> bool {
@@ -41,144 +53,18 @@ fn bare_uses_key(line: &str) -> bool {
     matches!(trimmed, "uses:" | "\"uses\":" | "'uses':")
 }
 
-/// `Present` is a uses scalar on this line. `Awaits` is `{ uses:` whose ref
-/// starts on a later line.
-fn classify_uses_line(line: &str) -> LineUses {
-    let mut quote: Option<char> = None;
-    let mut token = String::new();
-    let mut scalar = String::new();
-    let mut after_colon = false;
-    let mut key_was_uses = false;
-    let mut flow_depth = 0_i32;
-    let mut flow_input: Vec<bool> = Vec::new();
-    // Set at `with:` / `env:` and consumed by the following `{` or `[`.
-    let mut value_key_is_input = false;
-    let mut skip_anchor = false;
-    let mut alias = false;
+#[cfg(test)]
+mod classify_tests {
+    use super::action_uses_lines;
 
-    for ch in line.chars() {
-        if let Some(active) = quote {
-            if ch == active {
-                quote = None;
-                if after_colon && finish_scalar(&scalar, key_was_uses) {
-                    return LineUses::Present;
-                }
-                if after_colon {
-                    scalar.clear();
-                    key_was_uses = false;
-                    after_colon = false;
-                }
-            } else if after_colon {
-                scalar.push(ch);
-            } else {
-                token.push(ch);
-            }
-            continue;
-        }
-        if matches!(ch, '"' | '\'') {
-            quote = Some(ch);
-            if !after_colon {
-                token.clear();
-            }
-            continue;
-        }
-        if ch == '#' {
-            break;
-        }
-        // `&anchor value` and `*alias` sit between `uses:` and the scalar.
-        // An alias is the whole scalar; a delimiter must not stay inside the name.
-        if skip_anchor {
-            let boundary = ch.is_whitespace() || matches!(ch, '}' | ']' | ',' | ':');
-            if !boundary {
-                continue;
-            }
-            if alias && key_was_uses {
-                return LineUses::Present;
-            }
-            skip_anchor = false;
-            alias = false;
-            if ch.is_whitespace() {
-                continue;
-            }
-        }
-        if after_colon && scalar.is_empty() && matches!(ch, '&' | '*') {
-            alias = ch == '*';
-            skip_anchor = true;
-            continue;
-        }
-        if matches!(ch, '{' | '[') {
-            let entering = flow_input.last().copied().unwrap_or(false) || value_key_is_input;
-            flow_input.push(entering);
-            value_key_is_input = false;
-            flow_depth += 1;
-            token.clear();
-            scalar.clear();
-            after_colon = false;
-            key_was_uses = false;
-            continue;
-        }
-        if matches!(ch, '}' | ']' | ',') {
-            if alias && key_was_uses {
-                return LineUses::Present;
-            }
-            if finish_scalar(&scalar, key_was_uses) {
-                return LineUses::Present;
-            }
-            if ch != ',' {
-                flow_depth -= 1;
-                flow_input.pop();
-            }
-            value_key_is_input = false;
-            token.clear();
-            scalar.clear();
-            after_colon = false;
-            key_was_uses = false;
-            continue;
-        }
-        if ch.is_whitespace() || (ch == '-' && !after_colon && flow_depth == 0 && token.is_empty())
-        {
-            if after_colon && !scalar.is_empty() {
-                if finish_scalar(&scalar, key_was_uses) {
-                    return LineUses::Present;
-                }
-                // A block value ends the line. Inside `{...}` another key may follow.
-                if flow_depth == 0 {
-                    return LineUses::None;
-                }
-                scalar.clear();
-                key_was_uses = false;
-                after_colon = false;
-            } else if !after_colon {
-                token.clear();
-            }
-            continue;
-        }
-        if ch == ':' && !after_colon {
-            let in_input = flow_input.last().copied().unwrap_or(false);
-            value_key_is_input = !in_input && (token == "with" || token == "env");
-            key_was_uses = token == "uses" && !in_input;
-            token.clear();
-            scalar.clear();
-            after_colon = true;
-            continue;
-        }
-        if after_colon {
-            value_key_is_input = false;
-            scalar.push(ch);
-        } else {
-            token.push(ch);
-        }
+    #[test]
+    fn flow_uses_on_one_line_is_an_action_line() {
+        let classified = action_uses_lines(&["- { uses: actions/checkout@v4 }"]);
+        assert_eq!(
+            classified.lines,
+            vec![1],
+            "{:?}",
+            classified.flow_input_at_start
+        );
     }
-    if (alias && key_was_uses) || finish_scalar(&scalar, key_was_uses) {
-        return LineUses::Present;
-    }
-    // `{ uses:` — the flow collection is still open and the ref is later.
-    if key_was_uses && scalar.is_empty() && flow_depth > 0 {
-        return LineUses::Awaits;
-    }
-    LineUses::None
-}
-
-fn finish_scalar(scalar: &str, key_was_uses: bool) -> bool {
-    key_was_uses && !scalar.is_empty()
 }

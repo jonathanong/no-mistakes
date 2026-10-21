@@ -449,4 +449,10 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     let broken = check_yaml_shape("flow-break-fail.yml");
     assert_eq!(lines_of(&broken), vec![3], "{broken:?}");
     assert!(broken[0].message.contains("actions/checkout@v4"));
+
+    // A flow `with` broken across lines is an input. Only the unpinned action fails.
+    let flow_input = check_yaml_shape("flow-with-break-fail.yml");
+    assert_eq!(lines_of(&flow_input), vec![11], "{flow_input:?}");
+    assert!(flow_input[0].message.contains("actions/checkout@v4"));
+    assert!(!flow_input[0].message.contains("de0fac2e"));
 }
