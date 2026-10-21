@@ -37,8 +37,6 @@ rules:
     include: ["**/*.md", "**/*.markdown", "**/*.mdx"]
 ```
 
-Compliant example:
-
 ````markdown
 ```mermaid
 flowchart TD
@@ -46,7 +44,10 @@ flowchart TD
 ```
 ````
 
-Counterexample:
+## Counterexample
+
+The finding reports the opening fence line. An unclosed Mermaid fence is
+reported separately, because its diagram boundary cannot be determined safely.
 
 ````markdown
 ```mermaid
@@ -55,13 +56,13 @@ flowchart TD
 ```
 ````
 
-The counterexample reports the opening fence line. An unclosed Mermaid fence is
-reported separately, because its diagram boundary cannot be determined safely.
 The language name is case-insensitive, and GFM fences using tildes, longer
 delimiters, block quotes, or list containers are validated. Other fenced code
 languages are ignored.
 
-Fix: complete the Mermaid statement or close the fence, then run
+## Fix
+
+Complete the Mermaid statement or close the fence, then run
 `no-mistakes check --format json` again.
 
 Suppression caveat: standard `no-mistakes-disable-file`,
@@ -79,15 +80,6 @@ without requiring a temporary Markdown file. Pass an `.mdx` file name to enable
 full recovery of Markdown fences nested directly inside MDX JSX blocks. When
 `file` is omitted, clear JSX component blocks are detected automatically while
 standard Markdown HTML blocks retain CommonMark semantics.
-
-## Counterexample
-
-```md
-```mermaid
-flowchart LR
-  A -> B
-```
-```
 
 ## Related rules
 

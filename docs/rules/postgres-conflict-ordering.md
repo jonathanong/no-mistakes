@@ -109,7 +109,7 @@ Here the catalog's unique index begins with `rss_feed_item_id` and then
 `lower(category_text)`. The final `category_text` tie-breaker is allowed after
 the required key prefix.
 
-## Counterexample and fix
+## Counterexample
 
 This target identifies the same unique-key set but reverses the lock order:
 
@@ -120,6 +120,8 @@ FROM unnest($1::uuid[], $2::uuid[]) AS input(left_id, right_id)
 ORDER BY input.left_id, input.right_id
 ON CONFLICT (right_id, left_id) DO NOTHING;
 ```
+
+## Fix
 
 Write both the target and source order in the catalog order:
 

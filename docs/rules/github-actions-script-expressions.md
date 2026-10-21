@@ -60,6 +60,14 @@ so every script expression is flagged.
 rules:
   - rule: github-actions-script-expressions
     scope: repository
+```
+
+An explicit `constantContexts` list replaces the default:
+
+```yaml
+rules:
+  - rule: github-actions-script-expressions
+    scope: repository
     options:
       constantContexts:
         - '^github\.ref$'
@@ -100,7 +108,7 @@ runs:
       run: echo "$NAME"
 ```
 
-## Counterexample and fix
+## Counterexample
 
 This `run` and this `actions/github-script` body expand attacker-controlled
 text before the script parser runs:
@@ -112,6 +120,8 @@ text before the script parser runs:
     script: |
       return "${{ github.event.issue.title }}"
 ```
+
+## Fix
 
 Pass the value through `env` and read it as data:
 

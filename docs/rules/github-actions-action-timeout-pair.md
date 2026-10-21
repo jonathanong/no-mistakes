@@ -14,28 +14,37 @@ unrelated composite actions are forbidden by default.
 
 ## Valid example
 
-The fixed workflow below is valid: every matching caller step has a literal
-`timeout-minutes`, and the third-party action receives a numeric nested timeout.
+Every matching caller step has a literal `timeout-minutes`, and the third-party
+action receives a numeric nested timeout.
 
 ```yaml
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  deploy:
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
-        timeout-minutes: 5
+      - uses: ./.github/actions/setup-aws
+        timeout-minutes: 2
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          action-timeout-s: 90
 ```
-
 
 ## Counterexample
 
+A workflow step calls the local wrapper without `timeout-minutes`, or a
+third-party call quotes the nested timeout number.
+
 ```yaml
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-aws
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          action-timeout-s: "90"
 ```
 
 ## Suppression
