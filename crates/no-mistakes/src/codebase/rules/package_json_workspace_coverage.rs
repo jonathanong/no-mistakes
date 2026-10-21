@@ -72,28 +72,38 @@ fn scan(
     }
 
     let mut findings = Vec::new();
-    if workspace_config_file(root, files) == "pnpm-workspace.yaml" {
+    // Conflict is a property of the workspace. Scope decides whether the
+    // diagnostic is reported, not whether coverage may guess past it.
+    let owner = workspace_config_file(root, all_files);
+    let owner_path = crate::codebase::ts_resolver::normalize_path(&root.join(&owner));
+    let owner_in_scope = files
+        .iter()
+        .any(|candidate| crate::codebase::ts_resolver::normalize_path(candidate) == owner_path);
+    if owner == "pnpm-workspace.yaml" {
         if let Some(resolved) = workspaces::resolve_pnpm_include_at_root(root, sources)? {
             if resolved.packages_invalid {
                 anyhow::bail!("pnpm-workspace.yaml packages field must be a list of strings");
             }
-            let config_file = "pnpm-workspace.yaml";
-            for issue in resolved
-                .load_errors
-                .iter()
-                .filter(|issue| issue.affects("packages"))
-            {
-                findings.push(config_finding(config_file, &issue.message));
+            if owner_in_scope {
+                for issue in resolved
+                    .load_errors
+                    .iter()
+                    .filter(|issue| issue.affects("packages"))
+                {
+                    findings.push(config_finding(&owner, &issue.message));
+                }
             }
             if resolved
                 .duplicates
                 .iter()
                 .any(|setting| setting == "packages")
             {
-                findings.push(config_finding(
-                    config_file,
-                    "setting \"packages\" is claimed by more than one pnpm source",
-                ));
+                if owner_in_scope {
+                    findings.push(config_finding(
+                        &owner,
+                        "setting \"packages\" is claimed by more than one pnpm source",
+                    ));
+                }
                 return Ok(findings);
             }
         }
@@ -109,11 +119,6 @@ fn scan(
     // Existence uses the unfiltered inventory. The finding is still owned by
     // the workspace file, and a narrowed include must not report it when that
     // file is outside the rule scope.
-    let owner = workspace_config_file(root, all_files);
-    let owner_path = crate::codebase::ts_resolver::normalize_path(&root.join(&owner));
-    let owner_in_scope = files
-        .iter()
-        .any(|candidate| crate::codebase::ts_resolver::normalize_path(candidate) == owner_path);
     if owner_in_scope {
         for pattern in unmatched_patterns(&workspace_globs, &package_directories(root, all_files))?
         {

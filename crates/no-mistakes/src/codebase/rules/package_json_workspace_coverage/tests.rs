@@ -360,6 +360,28 @@ fn duplicate_package_settings_do_not_guess_coverage() {
 }
 
 #[test]
+fn narrowed_scope_does_not_guess_coverage_for_duplicate_packages() {
+    let root = fixture_root("duplicate-packages");
+    let mut narrowed = config("packageRoots: [packages, services]\n");
+    narrowed.rules[0].include = vec!["packages/**".to_string()];
+    let findings = check_with_files(
+        &root,
+        &narrowed,
+        &files_named(
+            &root,
+            &[
+                "pnpm-workspace.yaml",
+                "pnpm/packages.yaml",
+                "packages/api/package.json",
+                "services/package.json",
+            ],
+        ),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn delegated_omitted_packages_do_not_fall_back_to_star() {
     let root = fixture_root("delegated-omitted");
     let findings = check_with_files(
