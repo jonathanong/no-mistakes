@@ -1,12 +1,20 @@
+mod graph_files;
 use super::{
+<<<<<<< HEAD
     any_codebase_rule_enabled, canonical_graph_requires_full_file_universe, rule_enabled,
     try_canonical_graph_plan, PreparedRulesCheck, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
     REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+=======
+    any_codebase_rule_enabled, rule_enabled, try_canonical_graph_plan, PreparedRulesCheck,
+    FORBIDDEN_CALLS, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
+    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+>>>>>>> ca3b66837 (perf(check): scope family fact extract to include plus import closure.)
 };
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
 };
 use anyhow::Result;
+use graph_files::standalone_graph_files;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -91,6 +99,13 @@ pub(super) fn run_check(
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
     let sources = snapshot.source_store_for(root);
+    crate::codebase::check_facts::configure_family_path_scopes(
+        root,
+        &files,
+        &config,
+        sources.as_ref(),
+        &mut fact_plan,
+    )?;
     let prepared_tsconfig_catalog = Arc::new(super::prepared_tsconfig_catalog(
         root,
         tsconfig_path,
@@ -145,22 +160,6 @@ pub(super) fn run_check(
         inferred_roots: Some(&inferred_roots),
         sources: Some(&sources),
     })
-}
-
-fn standalone_graph_files(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
-    visible_paths: &[std::path::PathBuf],
-    scoped_files: &[std::path::PathBuf],
-) -> Vec<std::path::PathBuf> {
-    if canonical_graph_requires_full_file_universe(config) {
-        crate::codebase::ts_source::discover_files_from_visible(root, &[], visible_paths)
-    } else if graph_plan.is_some() {
-        scoped_files.to_vec()
-    } else {
-        Vec::new()
-    }
 }
 
 #[cfg(test)]

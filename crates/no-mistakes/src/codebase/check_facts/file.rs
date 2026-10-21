@@ -73,10 +73,13 @@ fn collect_file_facts_from_source(
 ) -> Option<CheckFileFacts> {
     if plan.storybook && is_mdx_file(path) {
         let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+        let storybook =
+            crate::codebase::check_facts::family_scope::applies(&plan.storybook_paths, path)
+                .then(|| crate::codebase::storybook::extract_mdx_source(&source));
         return Some(CheckFileFacts {
             ts: Arc::new(ts_source(stored_source.clone())),
             source: stored_source,
-            storybook: Some(crate::codebase::storybook::extract_mdx_source(&source)),
+            storybook,
             // MDX is intentionally not sent through OXC, but every requested fact
             // family still needs an explicit entry for prepared consumers.
             server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),

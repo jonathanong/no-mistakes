@@ -19,19 +19,31 @@ pub struct CheckFactPlan {
     >,
     pub symbols: bool,
     #[doc(hidden)]
+    pub symbols_paths: super::FamilyPathScope,
+    #[doc(hidden)]
     pub legacy_symbol_paths: HashSet<PathBuf>,
     pub react: bool,
+    #[doc(hidden)]
+    pub react_paths: super::FamilyPathScope,
     pub react_usages: bool,
     pub queue: bool,
+    #[doc(hidden)]
+    pub queue_paths: super::FamilyPathScope,
     pub queue_factory_names: Vec<String>,
     pub queue_factory_roles: crate::config::v2::schema::QueueFactoryRoles,
     pub integration: bool,
+    #[doc(hidden)]
+    pub integration_paths: super::FamilyPathScope,
     pub integration_runner_configs:
         Option<Arc<crate::integration_tests::PreparedIntegrationRunnerConfigs>>,
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
     pub storybook: bool,
+    #[doc(hidden)]
+    pub storybook_paths: super::FamilyPathScope,
     pub server_route_client_boundary: bool,
+    #[doc(hidden)]
+    pub boundary_paths: super::FamilyPathScope,
     pub source: bool,
     pub raw_source: bool,
     pub postgres_schema: bool,
@@ -93,6 +105,7 @@ impl CheckFactPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.merge_location_demand(&other);
+        super::family_scope::include_scopes(self, &other);
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
         self.companion_import_plans =
@@ -133,11 +146,8 @@ impl CheckFactPlan {
         if self.query_annotation_catalog.is_none() {
             self.query_annotation_catalog = other.query_annotation_catalog;
         }
-        self.symbols |= other.symbols;
         self.legacy_symbol_paths.extend(other.legacy_symbol_paths);
-        self.react |= other.react;
         self.react_usages |= other.react_usages;
-        self.queue |= other.queue;
         self.queue_factory_names.extend(other.queue_factory_names);
         self.queue_factory_names.sort();
         self.queue_factory_names.dedup();
@@ -147,14 +157,11 @@ impl CheckFactPlan {
             merged.is_ok(),
             "conflicting queue factory roles: {merged:?}"
         );
-        self.integration |= other.integration;
         if self.integration_runner_configs.is_none() {
             self.integration_runner_configs = other.integration_runner_configs;
         }
         self.dynamic_imports |= other.dynamic_imports;
         self.nextjs_caching |= other.nextjs_caching;
-        self.storybook |= other.storybook;
-        self.server_route_client_boundary |= other.server_route_client_boundary;
         self.source |= other.source;
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;
