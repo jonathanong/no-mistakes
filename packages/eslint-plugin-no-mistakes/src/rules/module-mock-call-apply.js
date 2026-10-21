@@ -3,14 +3,9 @@
 const { unwrapExpression } = require("./async-ast");
 const { isModuleMockMemberCall, memberPropertyName } = require("./module-mock-helpers");
 
-function unwrap(node) {
-  while (node?.type === "ChainExpression") node = node.expression;
-  return node;
-}
-
 function matchDirectMockCallApply(node, context, methods) {
-  const callee = unwrap(node.callee);
-  const object = unwrap(callee?.object);
+  const callee = unwrapExpression(node.callee);
+  const object = unwrapExpression(callee?.object);
   const name = callee?.type === "MemberExpression" ? memberPropertyName(callee) : null;
   if (!["call", "apply"].includes(name) || object?.type !== "MemberExpression") return null;
   const direct = isModuleMockMemberCall({ callee: object }, context);

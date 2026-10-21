@@ -55,8 +55,7 @@ function fetchCallee(node, context, seen) {
   const visiting = seen || new Set();
   if (node.type === "MemberExpression") {
     if (memberPropertyName(node) !== "fetch") return false;
-    const object = node.object.type === "ChainExpression" ? node.object.expression : node.object;
-    return unboundRoot(object, context);
+    return unboundRoot(unwrapExpression(node.object), context);
   }
   if (node.type === "Identifier") {
     if (node.name === "fetch" && !isFetchShadowed(context?.sourceCode?.getScope?.(node)))
@@ -81,7 +80,7 @@ function fetchCallee(node, context, seen) {
           value.name === node.name &&
           propertyName(item.key) === "fetch"
         ) {
-          return unboundRoot(def.node.init, context);
+          return unboundRoot(unwrapExpression(def.node.init), context);
         }
       }
     }

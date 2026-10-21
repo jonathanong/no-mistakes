@@ -194,6 +194,24 @@ describe("call-binding recall", () => {
       ).length,
       1,
     );
+    assert.deepEqual(
+      messages(
+        fixture("nextjs-static-fetch-url/asserted-global.ts"),
+        "nextjs-static-fetch-url",
+        undefined,
+        "asserted-global.ts",
+      ),
+      ["dynamic", "dynamic"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("nextjs-static-fetch-url/asserted-global.ts"),
+        "nextjs-static-fetch-method",
+        undefined,
+        "asserted-global.ts",
+      ),
+      ["dynamic", "dynamic"],
+    );
     assert.equal(
       messages(
         fixture("module-mock-boundary/recall.mjs"),
@@ -220,6 +238,15 @@ describe("call-binding recall", () => {
         "asserted.ts",
       ).length,
       2,
+    );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/asserted-method.ts"),
+        "module-mock-preserve-exports",
+        undefined,
+        "asserted-method.ts",
+      ),
+      ["preserve", "preserve"],
     );
     assert.equal(
       messages(
