@@ -100,6 +100,8 @@ jobs:
         timeout-minutes: 8
 ```
 
+## Fix
+
 With both timeout relationship checks enabled, set a literal job timeout that
 is at least the longest step and strictly below the sum. Under the example cap
 of 10, valid values are 8 through 10. Use an `allow` entry with a higher cap
