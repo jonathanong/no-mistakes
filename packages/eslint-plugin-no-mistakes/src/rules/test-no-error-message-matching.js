@@ -134,7 +134,7 @@ module.exports = rule(
           (isMessageMember(node.left) && node.right.type === "Literal") ||
           (isMessageMember(node.right) && node.left.type === "Literal")
         ) {
-          context.report({ node, messageId: "message" });
+          if (!suppressed(node)) context.report({ node, messageId: "message" });
         }
       },
     };

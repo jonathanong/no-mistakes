@@ -11,6 +11,7 @@ describe("react same-file recall", () => {
       "iife",
       "iife",
       "iife",
+      "iife",
     ]);
   });
 
@@ -34,7 +35,7 @@ describe("react same-file recall", () => {
         undefined,
         "recall.tsx",
       ).length,
-      10,
+      12,
     );
   });
 });

@@ -32,6 +32,12 @@ function expectedIdentifier(rejects, context) {
   if (literalPropertyName(rejects) !== "rejects") return null;
   const expectation = unwrapExpression(rejects.object);
   if (expectation?.type !== "CallExpression") return null;
+  const callee = unwrapExpression(expectation.callee);
+  if (callee?.type === "MemberExpression") {
+    const name = literalPropertyName(callee);
+    // poll takes a function, and call/apply's first argument is this, not the promise.
+    if (name === "poll" || name === "call" || name === "apply") return null;
+  }
   if (
     expectation.arguments.length !== 1 ||
     !isExpectCallee(expectation.callee, context, new Set(), EXPECT_MODULES)

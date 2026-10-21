@@ -74,7 +74,7 @@ function createRuleHelpers(context, testCalleeNames, namespaces) {
       if (!calleeHasProperty(node.callee, "configure")) return false;
       if (
         node.callee.type !== "MemberExpression" ||
-        !isKnownTestCallee(node.callee.object, testCalleeNames) ||
+        !isKnownTestCallee(node.callee.object, testCalleeNames, namespaces) ||
         !calleeHasProperty(node.callee.object, "describe")
       ) {
         return false;

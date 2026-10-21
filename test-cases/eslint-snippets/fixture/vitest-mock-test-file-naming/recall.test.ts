@@ -18,11 +18,5 @@ function getVi() {
   return v.vi;
 }
 getVi().mock("./j");
-const { mock: install = v.vi.mock, ...rest } = v;
-install("./i");
-function getVi() {
-  return v.vi;
-}
-getVi().mock("./j");
 vitest.mock("./default-is-not-vi");
 v.vi[name]("./dynamic");

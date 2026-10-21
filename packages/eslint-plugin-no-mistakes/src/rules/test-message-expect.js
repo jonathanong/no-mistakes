@@ -46,8 +46,11 @@ function isExpectBinding(def, modules) {
 }
 
 function isNestedBinding(variable) {
-  const scopeType = variable?.scope?.type;
-  return Boolean(scopeType && scopeType !== "module" && scopeType !== "global");
+  const scope = variable?.scope;
+  const scopeType = scope?.type;
+  if (!scopeType || scopeType === "module" || scopeType === "global") return false;
+  // CommonJS wraps the program in a function scope whose block is the Program.
+  return !(scopeType === "function" && scope.block?.type === "Program");
 }
 
 function isNamespace(node, context, seen) {
@@ -76,7 +79,7 @@ function isExpectCallee(node, context, seen = new Set(), modules = null) {
   let callee = unwrap(node);
   if (callee?.type === "MemberExpression") {
     const name = memberName(callee);
-    if (!callee.computed && (name === "call" || name === "apply")) {
+    if (name === "call" || name === "apply") {
       return isExpectCallee(callee.object, context, seen, modules);
     }
     if (name === "soft" || name === "poll")
@@ -120,7 +123,7 @@ function expectArguments(node, context) {
   if (current?.type !== "CallExpression") return null;
   let callee = unwrap(current.callee);
   let args = current.arguments;
-  if (callee?.type === "MemberExpression" && !callee.computed) {
+  if (callee?.type === "MemberExpression") {
     const name = memberName(callee);
     if (name === "call") {
       callee = callee.object;

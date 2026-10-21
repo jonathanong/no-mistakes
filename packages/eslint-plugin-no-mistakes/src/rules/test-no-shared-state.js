@@ -102,6 +102,8 @@ module.exports = rule(
               "describe",
               testAliases.hasProperty(declaration.init, "serial"),
             );
+          } else {
+            testAliases.add(declaration.id, "test");
           }
         }
         if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;

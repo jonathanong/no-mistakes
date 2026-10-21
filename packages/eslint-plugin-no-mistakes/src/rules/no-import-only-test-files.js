@@ -20,23 +20,32 @@ function stringArgument(node) {
   return typeof source === "string" ? source : null;
 }
 
+function forwardedName(member) {
+  if (member?.type !== "MemberExpression") return null;
+  if (member.computed && member.property?.type === "Identifier") return null;
+  if (!member.computed && member.property?.type === "Identifier") return member.property.name;
+  return literalString(member.property);
+}
+
 function requireSource(call) {
-  if (call?.type !== "CallExpression") return null;
-  let callee = call.callee;
-  let args = call.arguments;
+  let current = call;
+  while (current?.type === "ChainExpression") current = current.expression;
+  if (current?.type !== "CallExpression") return null;
+  let callee = current.callee;
+  let args = current.arguments;
   while (callee?.type === "ChainExpression") callee = callee.expression;
   if (callee?.type === "SequenceExpression") callee = callee.expressions.at(-1);
-  if (callee?.type === "MemberExpression" && !callee.computed) {
-    if (callee.property?.name === "call") {
-      callee = callee.object;
-      args = args.slice(1);
-    } else if (callee.property?.name === "apply" && args[1]?.type === "ArrayExpression") {
-      callee = callee.object;
-      args = args[1].elements;
-    }
+  const name = forwardedName(callee);
+  if (name === "call") {
+    callee = callee.object;
+    args = args.slice(1);
+  } else if (name === "apply" && args[1]?.type === "ArrayExpression") {
+    callee = callee.object;
+    args = args[1].elements;
   }
+  while (callee?.type === "ChainExpression") callee = callee.expression;
   if (callee?.type !== "Identifier" || callee.name !== "require") return null;
-  return stringArgument(args[0]);
+  return stringArgument(args?.[0]);
 }
 
 function isTestRequire(statement) {
@@ -81,6 +90,7 @@ module.exports = Object.assign(
         if (statements.length === 0) return;
         if (
           suppressed(node) ||
+          statements.some((statement) => suppressed(statement)) ||
           !statements.every((statement) => isTestImport(statement) || isTestRequire(statement))
         ) {
           return;

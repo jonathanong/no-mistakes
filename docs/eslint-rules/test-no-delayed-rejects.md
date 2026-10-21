@@ -105,7 +105,7 @@ owns that separate error.
 
 ## Limits
 
-A renamed `expect`, `v.expect`, and `expect(promise)["rejects"]` or an expression-free template key are the same observer. A computed identifier key is not static.
+A renamed `expect`, `v.expect`, and `expect(promise)["rejects"]` or an expression-free template key are the same observer. A computed identifier key is not static. `expect.poll`, `expect.call`, and `expect.apply` are not `expect(promise)`.
 
 `expect` brought in through another file is not visible here.
 

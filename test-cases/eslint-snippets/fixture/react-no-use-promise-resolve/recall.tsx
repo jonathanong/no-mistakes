@@ -18,6 +18,8 @@ export function View() {
   taken(Promise.resolve(1));
   React.use.call(React, Promise.resolve(1));
   React.use.apply(React, [Promise.resolve(1)]);
+  React.use["call"](React, Promise.resolve(1));
+  React.use["apply"](React, [Promise.resolve(1)]);
   const { read } = React;
   read(Promise.resolve(1));
   React[method](Promise.resolve(1));

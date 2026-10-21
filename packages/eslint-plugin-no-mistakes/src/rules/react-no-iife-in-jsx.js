@@ -17,9 +17,10 @@ function unwrap(node) {
 function isFunctionCallee(node) {
   const current = unwrap(node);
   if (["ArrowFunctionExpression", "FunctionExpression"].includes(current?.type)) return true;
-  if (current?.type !== "MemberExpression" || current.computed) return false;
+  if (current?.type !== "MemberExpression") return false;
+  if (current.computed && current.property?.type === "Identifier") return false;
   const name =
-    current.property?.type === "Identifier"
+    !current.computed && current.property?.type === "Identifier"
       ? current.property.name
       : literalString(current.property);
   return (name === "call" || name === "apply") && isFunctionCallee(current.object);

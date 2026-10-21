@@ -31,6 +31,7 @@ const test = base.extend({});
 test.sequential("extended fixture", () => {});
 const { describe: cjsDescribe } = require("vitest");
 cjsDescribe.sequential("commonjs", () => {});
+test.sequential.each([1])("each", () => {});
 function shadowedNamespace(v) {
   const { it: nested } = v;
   nested.sequential("shadowed namespace", () => {});

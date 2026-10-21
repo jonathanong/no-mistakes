@@ -29,7 +29,7 @@ JSX return.
 
 ## Limits
 
-`(function () {}).call(null)`, `.apply`, a comma callee, and an optional call are the same inline invocation.
+`(function () {}).call(null)`, `.apply`, `["call"]`, a comma callee, and an optional call are the same inline invocation. A computed identifier key is not.
 
 A function imported from another file is not an inline function expression:
 

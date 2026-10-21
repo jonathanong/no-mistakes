@@ -89,8 +89,14 @@ function acceptsRunner(root, context, namespaces) {
   if (!variable || variable.defs.length === 0) return true;
   if (variable.defs.length !== 1) return false;
   const def = variable.defs[0];
-  const scopeType = variable.scope?.type;
-  const nested = Boolean(scopeType && scopeType !== "module" && scopeType !== "global");
+  const scope = variable.scope;
+  const scopeType = scope?.type;
+  const nested = Boolean(
+    scopeType &&
+    scopeType !== "module" &&
+    scopeType !== "global" &&
+    !(scopeType === "function" && scope.block?.type === "Program"),
+  );
   if (def.type === "Parameter" || (nested && def.type !== "ImportBinding")) return false;
   if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
@@ -144,18 +150,19 @@ function destructuredTest(node, context, namespaces) {
 }
 
 function isSequentialCall(node, context, roots, namespaces) {
-  const info = chainInfo(node.callee, context);
-  if (!info.root) return false;
-  const namespaceTest =
-    acceptsRunner(info.root, context, namespaces) &&
-    namespaces.has(info.root.name) &&
-    info.names.some((name) => TEST_NAMES.has(name));
-  const known =
-    (acceptsRunner(info.root, context, namespaces) && roots.has(info.root.name)) ||
-    namespaceTest ||
-    destructuredTest(info.root, context, namespaces);
-  if (!known) return false;
-  return info.names.includes("sequential") || hasSequentialOption(node);
+  const matches = (info) => {
+    if (!info.root) return false;
+    const accepted = acceptsRunner(info.root, context, namespaces);
+    const known =
+      (accepted && roots.has(info.root.name)) ||
+      (accepted &&
+        namespaces.has(info.root.name) &&
+        info.names.some((name) => TEST_NAMES.has(name))) ||
+      destructuredTest(info.root, context, namespaces);
+    return known && (info.names.includes("sequential") || hasSequentialOption(node));
+  };
+  // A const alias of a non-runner still keeps the local runner name.
+  return matches(chainInfo(node.callee, context)) || matches(chainInfo(node.callee, null));
 }
 
 module.exports = Object.assign(
@@ -185,6 +192,12 @@ module.exports = Object.assign(
         CallExpression(node) {
           if (!isTestFile(context.filename) && !usesVitestImport) return;
           if (!isSequentialCall(node, context, roots, namespaces) || suppressed(node)) return;
+          const inner = unwrap(node.callee);
+          if (
+            inner?.type === "CallExpression" &&
+            isSequentialCall(inner, context, roots, namespaces)
+          )
+            return;
           context.report({ node: node.callee, messageId: "sequential" });
         },
       };

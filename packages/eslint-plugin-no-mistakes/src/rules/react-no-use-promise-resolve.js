@@ -62,7 +62,7 @@ function isReactUse(node, context, useNames, seen = new Set()) {
   let callee = unwrap(node);
   if (callee?.type === "MemberExpression") {
     const name = staticName(callee.property, callee.computed);
-    if (!callee.computed && (name === "call" || name === "apply")) callee = unwrap(callee.object);
+    if (name === "call" || name === "apply") callee = unwrap(callee.object);
   }
   if (callee?.type === "Identifier") {
     if (seen.has(callee.name)) return false;
@@ -93,9 +93,8 @@ function isPromiseResolve(node) {
   let callee = unwrap(current.callee);
   if (
     callee?.type === "MemberExpression" &&
-    !callee.computed &&
-    (staticName(callee.property, false) === "call" ||
-      staticName(callee.property, false) === "apply")
+    (staticName(callee.property, callee.computed) === "call" ||
+      staticName(callee.property, callee.computed) === "apply")
   ) {
     callee = unwrap(callee.object);
   }
@@ -132,9 +131,8 @@ module.exports = Object.assign(
           const forwarded = unwrap(node.callee);
           const forwarding =
             forwarded?.type === "MemberExpression" &&
-            !forwarded.computed &&
-            (staticName(forwarded.property, false) === "call" ||
-              staticName(forwarded.property, false) === "apply");
+            (staticName(forwarded.property, forwarded.computed) === "call" ||
+              staticName(forwarded.property, forwarded.computed) === "apply");
           const resolvedArgument = forwarding
             ? staticName(forwarded.property, false) === "apply"
               ? node.arguments[1]?.elements?.[0]

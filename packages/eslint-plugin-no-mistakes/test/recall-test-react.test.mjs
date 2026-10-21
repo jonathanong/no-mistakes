@@ -13,7 +13,16 @@ describe("test and react same-file recall", () => {
         undefined,
         "recall.test.ts",
       ).length,
-      14,
+      15,
+    );
+    assert.deepEqual(
+      messages(
+        snippet("no-vitest-sequential/created-runner.test.ts"),
+        "no-vitest-sequential",
+        undefined,
+        "created-runner.test.ts",
+      ),
+      ["sequential"],
     );
     for (const name of [
       "renamed-fixture.test.ts",
@@ -54,6 +63,33 @@ describe("test and react same-file recall", () => {
         "no-import-only-test-files",
         undefined,
         "suppressed.test.js",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        snippet("no-import-only-test-files/forwarded.test.js"),
+        "no-import-only-test-files",
+        undefined,
+        "forwarded.test.js",
+      ),
+      ["aggregate"],
+    );
+    assert.deepEqual(
+      messages(
+        snippet("no-import-only-test-files/dynamic-forward.test.js"),
+        "no-import-only-test-files",
+        undefined,
+        "dynamic-forward.test.js",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        snippet("no-import-only-test-files/next-line.test.js"),
+        "no-import-only-test-files",
+        undefined,
+        "next-line.test.js",
       ),
       [],
     );
@@ -110,6 +146,35 @@ describe("test and react same-file recall", () => {
         ["message"],
       );
     }
+    assert.deepEqual(
+      messages(
+        snippet("test-no-error-message-matching/bracket-call.test.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "bracket-call.test.ts",
+      ),
+      ["message", "message"],
+    );
+    assert.deepEqual(
+      messages(
+        snippet("test-no-error-message-matching/binary-suppressed.test.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "binary-suppressed.test.ts",
+      ),
+      ["message"],
+    );
+    assert.deepEqual(
+      messages(
+        snippet("test-no-error-message-matching/commonjs.test.cjs"),
+        "test-no-error-message-matching",
+        undefined,
+        "commonjs.test.cjs",
+        {},
+        "commonjs",
+      ),
+      ["message"],
+    );
   });
 
   it("reports shared state inside aliased and namespace test calls", () => {
@@ -167,6 +232,24 @@ describe("test and react same-file recall", () => {
       ),
       [],
     );
+    assert.equal(
+      messages(
+        snippet("test-no-shared-state/shadow-test-alias.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shadow-test-alias.test.ts",
+      ).length,
+      1,
+    );
+    assert.deepEqual(
+      messages(
+        snippet("test-no-shared-state/namespace-serial.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "namespace-serial.test.ts",
+      ),
+      [],
+    );
   });
 
   it("reports delayed rejects through renamed expect and static keys", () => {
@@ -178,6 +261,15 @@ describe("test and react same-file recall", () => {
         "recall.ts",
       ).length,
       3,
+    );
+    assert.deepEqual(
+      messages(
+        snippet("test-no-delayed-rejects/poll.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "poll.ts",
+      ),
+      [],
     );
   });
 });

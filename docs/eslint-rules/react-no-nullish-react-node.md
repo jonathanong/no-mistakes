@@ -36,7 +36,7 @@ fallback; preserve an explicit `null` when it is meaningful.
 
 ## Limits
 
-`props["children"]`, `props[\`children\`]`, and `const node = children` are the same ReactNode value when the binding is declared in this file. A computed identifier key is not a static property name.
+`props["children"]`, ``props[`children`]``, and `const node = children` are the same ReactNode value when the binding is declared in this file. A computed identifier key is not a static property name.
 
 A prop type imported through another file's re-export is not visible here.
 

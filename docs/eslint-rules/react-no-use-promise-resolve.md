@@ -33,7 +33,7 @@ real asynchronous promise to `React.use`.
 
 ## Limits
 
-A default or namespace import of `react`, `const { use } = React`, a string or expression-free template key, optional chaining, a comma callee, and `Promise.resolve.call` are the same call. A computed identifier key is not static.
+A default or namespace import of `react`, `const { use } = React`, a string or expression-free template key, optional chaining, a comma callee, and `Promise.resolve.call` are the same call. `React.use["call"]` forwards the same way as `.call`. A computed identifier key is not static.
 
 `use` brought in through another file is not visible here.
 
