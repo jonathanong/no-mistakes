@@ -12,11 +12,11 @@ pub(super) fn lock_path() -> Result<PathBuf> {
     lock_file_path(cfg!(test) || std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some())
 }
 
-pub(super) fn lock_file_path(cargo_test_bin: bool) -> Result<PathBuf> {
+pub(super) fn lock_file_path(isolate_per_process: bool) -> Result<PathBuf> {
     // Unit-test helpers also spawn the current executable, without Cargo's
     // integration-test binary variable. Both harnesses need process isolation
     // from the user's lock and from parallel test subprocesses.
-    if cargo_test_bin {
+    if isolate_per_process {
         let directory = std::env::temp_dir().join("no-mistakes-test-locks");
         create_lock_directory(&directory)?;
         return Ok(directory.join(format!("{}.lock", std::process::id())));

@@ -91,9 +91,9 @@ non-SQL HTTP `.query({ resource: ... })` does not add to it.
 Parallel phase durations can overlap their enclosing phase and siblings. Never
 add lines marked `parallel; non-additive` to estimate total time; use `total`
 for wall time. `check.prepare` is the wall time of the overlapping catalog and
-independent preparation branches. `check.prepare.catalog` and
-`check.prepare.independent` are parallel, so they are not added to that wall
-time.
+independent preparation branches. With detailed timings, `check.prepare.catalog`
+and `check.prepare.independent` are reported as parallel, so they are not added
+to that wall time.
 
 For graph-finalization regressions, verbose `check` output separates
 `graph.forward_adjacency_normalization`, `graph.reverse_adjacency_normalization`,

@@ -43,6 +43,7 @@ fn test_cli_matches_explicit_target_file() {
         .stdout(predicates::str::contains("/api/explicit-target"));
 }
 
+// The saved fixture chain is intentionally a valid import-and-call path.
 #[test]
 fn test_cli_target_file_match_uses_import_chain() {
     let root = fixture("target-file-match-uses-import-chain");

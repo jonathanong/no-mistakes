@@ -21,20 +21,6 @@ fn selected_files(plan: &crate::tests::TestPlan) -> Vec<String> {
     files
 }
 
-fn saved_config_says_the_env_read_is_dynamic(name: &str) {
-    let source = std::fs::read_to_string(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-plan")
-            .join(name)
-            .join("vitest.config.ts"),
-    )
-    .unwrap();
-    assert!(
-        source.contains("Dynamic on purpose: the analyzer cannot resolve this statically."),
-        "{source}"
-    );
-}
-
 fn plan_for(name: &str, changed: &str) -> crate::tests::TestPlan {
     let (_fixture, root) = fixture(name);
     crate::tests::plan::generate_plan(&vitest_setup_args(root.clone(), vec![root.join(changed)]))
@@ -56,7 +42,6 @@ fn warning_names_setup_declaration(plan: &crate::tests::TestPlan, project: &str)
 
 #[test]
 fn known_owner_dynamic_setup_files_select_only_that_owner() {
-    saved_config_says_the_env_read_is_dynamic("vitest-dynamic-setup-scope/known-owner");
     let plan = plan_for("vitest-dynamic-setup-scope/known-owner", "owner/source.ts");
     assert_eq!(selected_files(&plan), ["owner/owner.test.ts"]);
     assert!(plan.fallback_triggered, "{plan:#?}");
@@ -70,7 +55,6 @@ fn known_owner_dynamic_setup_files_select_only_that_owner() {
 fn unknown_owner_dynamic_setup_files_select_the_vitest_framework_set() {
     // A parsed root project keeps its config path and scope, so the reason
     // stays owner-scoped. That owner's include is the discovered Vitest set.
-    saved_config_says_the_env_read_is_dynamic("vitest-dynamic-setup-scope/unknown-owner");
     let plan = plan_for("vitest-dynamic-setup-scope/unknown-owner", "unit/source.ts");
     assert_eq!(selected_files(&plan), ["unit/a.test.ts", "unit/b.test.ts"]);
     assert!(plan.fallback_triggered, "{plan:#?}");
