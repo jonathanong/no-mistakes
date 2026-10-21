@@ -52,11 +52,11 @@ describe(rule, () => {
     assert.deepEqual(
       findings.map(({ line, messageId }) => [line, messageId]),
       [
-        [7, "modifier"],
-        [8, "annotation"],
-        [9, "modifier"],
+        [8, "modifier"],
+        [9, "annotation"],
         [10, "modifier"],
-        [12, "modifier"],
+        [11, "modifier"],
+        [13, "modifier"],
       ],
     );
   });
@@ -101,6 +101,9 @@ describe(rule, () => {
         [41, "annotation"],
         [44, "modifier"],
         [51, "modifier"],
+        [60, "annotation"],
+        [65, "annotation"],
+        [70, "annotation"],
       ],
     );
     assert.equal(
@@ -114,6 +117,18 @@ describe(rule, () => {
     assert.equal(
       findings.find((item) => item.line === 41).message,
       "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+    );
+    assert.equal(
+      findings.find((item) => item.line === 60).message,
+      "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+    );
+    assert.equal(
+      findings.find((item) => item.line === 65).message,
+      "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+    );
+    assert.equal(
+      findings.find((item) => item.line === 70).message,
+      "Playwright 'skip or fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
     );
     assert.deepEqual(
       messages(
@@ -129,10 +144,13 @@ describe(rule, () => {
       { [`no-mistakes/${rule}`]: ["error", { allow: ["skip"] }] },
       "suite.spec.ts",
     );
+    const annotationMessage = (name) =>
+      `Playwright '${name}' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.`;
     assert.deepEqual(
-      allowSkip.map(({ message }) => message),
+      allowSkip.map(({ line, message }) => [line, message]),
       [
-        "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+        [7, annotationMessage("fixme")],
+        [11, annotationMessage("fixme")],
       ],
     );
     const allowFixme = lint(
@@ -141,9 +159,10 @@ describe(rule, () => {
       "suite.spec.ts",
     );
     assert.deepEqual(
-      allowFixme.map(({ message }) => message),
+      allowFixme.map(({ line, message }) => [line, message]),
       [
-        "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+        [7, annotationMessage("skip")],
+        [11, annotationMessage("skip")],
       ],
     );
     assert.deepEqual(

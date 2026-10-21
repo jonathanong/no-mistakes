@@ -6,6 +6,7 @@ const { unwrapExpression, isFunction } = require("./async-ast");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
 const CONFIGURED_NAMESPACE = "configured-test-module";
+const testModulesByContext = new WeakMap();
 // extend is a transparent Playwright/Vitest fixture wrapper, including chained .extend().
 const CHAIN = new Set(
   "skip skipIf runIf only todo fixme each for concurrent sequential fails fail serial parallel describe extend".split(
@@ -52,8 +53,16 @@ function patternBindingName(pattern, name) {
   }
   return null;
 }
+function testModulesFor(context) {
+  const cached = testModulesByContext.get(context);
+  if (cached) return cached;
+  const modules = new Set(options(context).testModules || []);
+  testModulesByContext.set(context, modules);
+  return modules;
+}
+
 function imported(node, context, namespace = false) {
-  const testModules = new Set(options(context).testModules || []);
+  const testModules = testModulesFor(context);
   const variable = resolveVariable(node, context);
   for (const def of variable?.defs || []) {
     let source = null;

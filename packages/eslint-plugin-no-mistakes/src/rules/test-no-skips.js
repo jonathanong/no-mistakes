@@ -50,22 +50,49 @@ function staticProperty(node, name, context) {
   return matches.length === 1 ? matches[0].value : null;
 }
 
+function annotationText(value) {
+  if (value.type === "Literal") return typeof value.value === "string" ? value.value : null;
+  if (value.type === "TemplateLiteral" && value.expressions.length === 0)
+    return value.quasis[0].value.cooked;
+  return null;
+}
+
+function isStaticLiteral(value) {
+  return (
+    value.type === "Literal" || (value.type === "TemplateLiteral" && value.expressions.length === 0)
+  );
+}
+
+function bannedAnnotation(value, banned) {
+  const text = annotationText(value);
+  return text && ANNOTATION_TYPES.has(text) && banned.has(text) ? text : null;
+}
+
 function annotationTypeName(node, context, banned, visited = new Set()) {
   const value = constInitializer(node, context, visited);
   if (!value?.type) return null;
-  if (value.type === "Literal")
-    return ANNOTATION_TYPES.has(value.value) && banned.has(value.value) ? value.value : null;
-  if (value.type === "TemplateLiteral" && value.expressions.length === 0) {
-    const cooked = value.quasis[0].value.cooked;
-    return ANNOTATION_TYPES.has(cooked) && banned.has(cooked) ? cooked : null;
+  if (value.type !== "ConditionalExpression") return bannedAnnotation(value, banned);
+  const names = new Set();
+  if (!collectBannedAnnotations(value, context, banned, visited, names)) return null;
+  return names.size ? [...names].join(" or ") : null;
+}
+
+// Every branch must be a literal. Banned annotation names are unique and stay
+// in source order. A non-annotation literal does not hide those names, and a
+// dynamic branch leaves the whole conditional unresolved.
+function collectBannedAnnotations(node, context, banned, visited, names) {
+  const value = constInitializer(node, context, visited);
+  if (!value?.type) return false;
+  if (value.type === "ConditionalExpression") {
+    return (
+      collectBannedAnnotations(value.consequent, context, banned, new Set(visited), names) &&
+      collectBannedAnnotations(value.alternate, context, banned, new Set(visited), names)
+    );
   }
-  if (value.type !== "ConditionalExpression") return null;
-  const whenTrue = annotationTypeName(value.consequent, context, banned, new Set(visited));
-  const whenFalse = annotationTypeName(value.alternate, context, banned, new Set(visited));
-  if (!whenTrue || !whenFalse) return null;
-  // Name every banned type. The consequent alone would call a false
-  // `fixme` branch a `skip`.
-  return whenTrue === whenFalse ? whenTrue : `${whenTrue} or ${whenFalse}`;
+  if (!isStaticLiteral(value)) return false;
+  const name = bannedAnnotation(value, banned);
+  if (name) names.add(name);
+  return true;
 }
 
 function annotationFinding(node, context, banned) {
@@ -135,6 +162,8 @@ module.exports = rule(
         context.report({ node: node.property, messageId: "modifier", data: { modifier } });
       },
       CallExpression(node) {
+        // extend's arguments are fixture options, not test declaration details.
+        if (node.callee.type === "MemberExpression" && memberName(node.callee) === "extend") return;
         const binding = testBinding(node.callee, context);
         if (
           binding?.framework !== "@playwright/test" ||
