@@ -448,6 +448,71 @@ fn anchored_flow_sequence_keeps_the_later_action_line() {
 }
 
 #[test]
+fn anchor_key_on_the_dash_line_is_still_a_step() {
+    let lines = [
+        "jobs:",
+        "  build:",
+        "    steps:",
+        "      - &checkout name: Checkout",
+        "        uses: actions/checkout@v4",
+    ];
+    let classified = action_uses_lines(&lines);
+    assert_eq!(classified.lines, vec![5], "{classified:?}");
+    assert!(!classified.rejected_uses[4], "{classified:?}");
+
+    let findings = yaml_shape_findings("anchor-key-same-line-fail.yml");
+    let found: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    assert_eq!(found, vec![6], "{findings:?}");
+    assert!(
+        findings[0].message.contains("actions/checkout@v4"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn nested_anchor_input_does_not_shift_the_pinned_step() {
+    let lines = [
+        "jobs:",
+        "  build:",
+        "    steps:",
+        "      - &script",
+        "        env:",
+        "          uses: ./local",
+        "        run: echo",
+        "      - *script",
+        "      - uses: actions/checkout@v4",
+    ];
+    assert_eq!(action_uses_lines(&lines).lines, vec![9], "{lines:?}");
+
+    let flow = [
+        "jobs:",
+        "  build:",
+        "    steps:",
+        "      - &flow",
+        "        env: { uses: ./local }",
+        "      - *flow",
+        "      - uses: actions/setup-node@v4",
+    ];
+    assert_eq!(action_uses_lines(&flow).lines, vec![7], "{flow:?}");
+
+    let findings = yaml_shape_findings("anchored-env-uses-pass.yml");
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+fn yaml_shape_findings(name: &str) -> Vec<super::super::super::RuleFinding> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let file = root.join(".github/workflows").join(name);
+    super::super::super::check_with_files(&root, &config, &[file]).unwrap()
+}
+
+#[test]
 fn matrix_next_line_value_does_not_steal_the_step_comment() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");

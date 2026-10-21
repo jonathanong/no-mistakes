@@ -29,6 +29,8 @@ pub(super) struct Carry {
     reading_anchor: bool,
     anchor_pending: bool,
     block_anchor: bool,
+    /// Place-stack depth of a block anchor's own mapping. Nested keys are deeper.
+    anchor_level: usize,
     /// `steps: &name [ ... ]` keeps counting action refs until `]` closes it.
     flow_sequence_anchor: bool,
     step_alias: bool,
@@ -106,6 +108,7 @@ impl Carry {
             // `&name` at the end of the line anchors the following block mapping.
             if self.reading_anchor && !self.anchor_name.is_empty() && self.anchor_depth == 0 {
                 self.block_anchor = true;
+                self.anchor_level = self.place.depth();
             }
             self.reset_token();
         } else {

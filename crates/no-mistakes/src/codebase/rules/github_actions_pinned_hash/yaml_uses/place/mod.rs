@@ -6,7 +6,9 @@
 /// step.
 mod line;
 
-use line::{anchor_only, child_place, is_block_key, split_line, Level, Place, Split};
+use line::{
+    anchor_only, child_place, is_block_key, split_line, without_leading_anchor, Level, Place, Split,
+};
 
 pub(super) struct PlaceStack {
     levels: Vec<Level>,
@@ -128,7 +130,8 @@ impl PlaceStack {
                 );
             }
         }
-        if is_block_key(split.body) {
+        // `- &checkout name:` is a step key. The anchor is not part of the key.
+        if is_block_key(without_leading_anchor(split.body)) {
             self.push_sequence_item(self.item_place(), split.key_indent);
         } else if self.in_sequence()
             && (split.body.is_empty() || split.body.starts_with('#') || anchor_only(split.body))
@@ -172,6 +175,10 @@ impl PlaceStack {
 
     pub(super) fn line_indent(&self) -> usize {
         self.line_indent
+    }
+
+    pub(super) fn depth(&self) -> usize {
+        self.levels.len()
     }
 
     /// The open mapping is the `jobs:` map, so `env` and `with` are job ids.

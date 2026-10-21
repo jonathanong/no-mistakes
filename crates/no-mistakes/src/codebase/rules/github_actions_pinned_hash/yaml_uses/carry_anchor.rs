@@ -24,9 +24,15 @@ impl Carry {
     }
 
     pub(super) fn note_anchor_uses(&mut self) {
-        let in_flow = self.anchor_depth > 0 && self.anchor_depth == self.flow_depth;
-        let in_block = self.block_anchor && self.flow_depth == 0;
-        if self.token == "uses" && (in_flow || in_block) && !self.anchor_name.is_empty() {
+        if self.token != "uses" || self.anchor_name.is_empty() {
+            return;
+        }
+        // A nested `env` or `with` key is a deeper mapping. Only the anchor's
+        // own `uses` field makes a later step alias an action line.
+        let own_block =
+            self.block_anchor && self.flow_depth == 0 && self.place.depth() == self.anchor_level;
+        let own_flow = self.anchor_depth > 0 && self.anchor_depth == self.flow_depth;
+        if own_block || own_flow {
             self.remember_anchor();
         }
     }

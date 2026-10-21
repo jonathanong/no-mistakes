@@ -97,6 +97,25 @@ pub(super) fn split_line(line: &str) -> Split<'_> {
     }
 }
 
+/// `&name key:` keeps the key. `&name` alone stays an anchor for the next line.
+pub(super) fn without_leading_anchor(text: &str) -> &str {
+    let trimmed = text.trim_start();
+    let Some(rest) = trimmed.strip_prefix('&') else {
+        return text;
+    };
+    let name_end = rest
+        .find(|ch: char| ch.is_whitespace() || matches!(ch, '#' | '{' | '['))
+        .unwrap_or(rest.len());
+    if name_end == 0 {
+        return text;
+    }
+    let tail = rest[name_end..].trim_start();
+    if tail.is_empty() || tail.starts_with(['#', '{', '[']) {
+        return text;
+    }
+    tail
+}
+
 /// `&name` alone, or `&name # note`, is an anchor for the following mapping.
 pub(super) fn anchor_only(text: &str) -> bool {
     let Some(rest) = text.trim_start().strip_prefix('&') else {
