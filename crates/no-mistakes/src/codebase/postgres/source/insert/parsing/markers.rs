@@ -1,13 +1,26 @@
 //! Delimit only conflict clauses paired with a top-level DO action.
-use super::keyword;
+use super::cte_target::{self, keyword, CtePredicate};
 use sqlparser::{
     keywords::Keyword,
     tokenizer::{Location, Token, TokenWithSpan},
 };
 
+pub(in crate::codebase::postgres::source) struct Preparation {
+    pub markers: Vec<Location>,
+    pub cte_predicates: Vec<CtePredicate>,
+}
+
 pub(in crate::codebase::postgres::source) fn prepare(
     tokens: &mut [TokenWithSpan],
-) -> Vec<Location> {
+    procedural: bool,
+) -> Preparation {
+    if procedural {
+        return Preparation {
+            markers: Vec::new(),
+            cte_predicates: Vec::new(),
+        };
+    }
+    let cte_predicates = cte_target::extract(tokens);
     let significant = tokens
         .iter()
         .enumerate()
@@ -48,7 +61,10 @@ pub(in crate::codebase::postgres::source) fn prepare(
         }
     }
     markers.reverse();
-    markers
+    Preparation {
+        markers,
+        cte_predicates,
+    }
 }
 
 fn eligible(tokens: &[TokenWithSpan], significant: &[usize]) -> Vec<bool> {

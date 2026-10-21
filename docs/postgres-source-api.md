@@ -648,9 +648,11 @@ typed on a top-level INSERT. RETURNING inserts in both forms expose the same
 column-source lineage. The nested insert's `columnSources` is omitted only when
 the CTE insert has no RETURNING clause. Top-level `insert.returning` carries the
 same item classes as `nestedStatements[].returning`.
-A conflict-target `WHERE` predicate inside a CTE still produces a parser
-diagnostic and leaves neighboring statements available. INSERT children also
-retain existing conflict diagnostics. Source locking clauses
+A column-target `WHERE` predicate inside a data-modifying CTE is a typed
+`onConflict.predicate`, including `DO NOTHING`, `DO UPDATE`, and `RETURNING`.
+A sibling CTE can read that insert. An expression arbiter inside a CTE still
+produces a parser diagnostic and leaves neighboring statements available.
+INSERT children also retain existing conflict diagnostics. Source locking clauses
 (such as `FOR UPDATE`, including inside nested source queries) have no typed
 projection and explicitly make the INSERT child and query incomplete.
 
@@ -675,9 +677,10 @@ PostgreSQL would reject its execution. No SQL is executed.
 
 Parser rejection is distinct from projection incompleteness: when the shared
 parser cannot represent a statement, the source report includes a diagnostic
-and no enclosing query facts for that rejected statement. For example, an
-ON CONFLICT target predicate inside a CTE currently exceeds that parser's
-nested INSERT support. Following valid statements are still collected.
+and no enclosing query facts for that rejected statement. A column-target
+`ON CONFLICT (columns) WHERE predicate` inside a CTE is represented. An
+expression arbiter in that position still exceeds the nested INSERT grammar.
+Following valid statements are still collected.
 
 MERGE ON and WHEN conditions are retained as typed predicates and query facts
 with clause `other` and non-mandatory context: they choose actions rather than

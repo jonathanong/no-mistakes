@@ -20,19 +20,22 @@ pub(in crate::codebase::postgres) fn recover(
     tokens: &[TokenWithSpan],
 ) -> Option<(Statement, Vec<SqlFunctionCallFact>, Option<PolicyArbiter>)> {
     let mut tokens = tokens.to_vec();
-    let markers = parsing::prepare(&mut tokens);
+    let prepared = parsing::prepare(&mut tokens, false);
+    let markers = prepared.markers;
     if markers.is_empty() {
         return None;
     }
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
-    let (statement, functions, arbiter) = parse_statement(&mut parser, &markers).ok()?;
+    let (statement, functions, arbiter) =
+        parse_statement(&mut parser, &markers, &prepared.cte_predicates).ok()?;
     (parser.peek_token().token == Token::EOF).then_some((statement, functions, arbiter))
 }
 
 pub(super) fn parse_statement(
     parser: &mut Parser<'_>,
     markers: &[Location],
+    cte_predicates: &[parsing::CtePredicate],
 ) -> Result<(Statement, Vec<SqlFunctionCallFact>, Option<PolicyArbiter>), ParserError> {
     let (mut statement, facts) = parsing::parse_policy(parser, markers)?;
     let mut functions = Vec::new();
@@ -70,6 +73,13 @@ pub(super) fn parse_statement(
                 Some(SqlFunctionClause::Where),
             );
         }
+    }
+    for predicate in cte_predicates {
+        function_calls::collect_expression(
+            &predicate.predicate.expression,
+            &mut functions,
+            Some(SqlFunctionClause::Where),
+        );
     }
     Ok((statement, functions, policy_arbiter))
 }

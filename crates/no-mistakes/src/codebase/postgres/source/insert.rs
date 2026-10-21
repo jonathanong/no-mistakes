@@ -9,6 +9,7 @@ use sqlparser::ast::{
 };
 use sqlparser::tokenizer::TokenWithSpan;
 mod column_sources;
+mod cte_projection;
 pub(super) mod parsing;
 mod provenance;
 mod returning;
@@ -25,20 +26,18 @@ pub(super) fn project(
     locations: &Locations<'_>,
     tokens: &[TokenWithSpan],
 ) -> PostgresSqlInsert {
-    project_inner(value, facts, locations, false, tokens)
+    project_inner(value, facts, locations, false, tokens, &[])
 }
 
-/// The query collector owns CTE sources and the public RETURNING list.
-pub(super) fn project_cte_core(value: &Insert, locations: &Locations<'_>) -> PostgresSqlInsert {
-    project_inner(value, None, locations, true, &[])
-}
+pub(super) use cte_projection::project_cte_core;
 
-fn project_inner(
+pub(super) fn project_inner(
     value: &Insert,
     facts: Option<&parsing::ConflictFacts>,
     locations: &Locations<'_>,
     cte_core: bool,
     tokens: &[TokenWithSpan],
+    cte_predicates: &[parsing::CtePredicate],
 ) -> PostgresSqlInsert {
     let table = match &value.table {
         TableObject::TableName(table) => Some(name(table)),
@@ -75,7 +74,7 @@ fn project_inner(
                 }
             }
             SetExpr::Select(_) | SetExpr::Query(_) | SetExpr::SetOperation { .. } => {
-                let facts = super::query::project(query, locations, tokens);
+                let facts = super::query::project(query, locations, tokens, cte_predicates);
                 complete &= facts.complete;
                 PostgresSqlInsertSource::Select {
                     query: Box::new(facts),

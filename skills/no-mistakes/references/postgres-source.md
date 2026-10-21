@@ -85,9 +85,11 @@ specified. Mixed array/composite targets retain ordered `target.indirection`
 steps, while nested call and argument spans include their closing delimiters.
 
 The extended conflict grammar applies to prepared outer INSERT clauses, including
-EXPLAIN/PREPARE wrappers. Expression arbiters and subscripted assignments inside
-data-modifying CTE INSERTs currently diagnose through the upstream grammar;
-neighboring statements remain available. Exact closing-delimiter spans apply
+EXPLAIN/PREPARE wrappers. A column-target `WHERE` inside a data-modifying CTE
+INSERT is projected, including `DO NOTHING`, `DO UPDATE`, and `RETURNING`.
+Expression arbiters and subscripted assignments inside data-modifying CTE
+INSERTs still diagnose through the upstream grammar; neighboring statements
+remain available. Exact closing-delimiter spans apply
 to the prepared conflict arbiters, assignment targets/RHS, and target/action
 predicates; AST-only nested conditional/CTE projections retain existing span limits.
 Operator classes expose optional ordered typed `parameters` (name and value),

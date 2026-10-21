@@ -9,8 +9,20 @@ impl Collector<'_, '_> {
     ) -> PostgresSqlQueryStatementKind {
         // Reuse conflict/modifier projection without creating another query collector.
         // RETURNING and source queries are projected below in this report's scopes.
-        let core =
-            crate::codebase::postgres::source::insert::project_cte_core(value, self.locations);
+        let prepared = self
+            .cte_predicates
+            .iter()
+            .find(|item| item.owns(value))
+            .map(|item| (item.facts(), item.predicate.expression.clone()));
+        let (conflict_facts, predicate) = match prepared {
+            Some((facts, expression)) => (Some(facts), Some(expression)),
+            None => (None, None),
+        };
+        let core = crate::codebase::postgres::source::insert::project_cte_core(
+            value,
+            conflict_facts.as_ref(),
+            self.locations,
+        );
         if !core.complete {
             self.unsupported(
                 scope,
@@ -142,6 +154,9 @@ impl Collector<'_, '_> {
             });
         }
         // Conflict actions are conditional; their predicates are not global row filters.
+        if let Some(expression) = &predicate {
+            self.nonpredicate(expression, scope, PostgresSqlQueryClause::Other, env);
+        }
         if let Some(OnInsert::OnConflict(conflict)) = &value.on {
             if let OnConflictAction::DoUpdate(update) = &conflict.action {
                 for assignment in &update.assignments {

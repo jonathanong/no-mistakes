@@ -36,12 +36,14 @@ struct Collector<'a, 's> {
     insert_source: bool,
     span_bounds: QuerySpanBounds,
     expression_delimiters: Vec<PostgresSqlSpan>,
+    cte_predicates: &'a [super::insert::parsing::CtePredicate],
 }
 
 pub(super) fn project(
     query: &Query,
     locations: &Locations<'_>,
     tokens: &[TokenWithSpan],
+    cte_predicates: &[super::insert::parsing::CtePredicate],
 ) -> PostgresSqlQuery {
     let mut collector = Collector {
         locations,
@@ -59,6 +61,7 @@ pub(super) fn project(
             &super::insert::spans::delimiters(tokens),
             locations,
         ),
+        cte_predicates,
     };
     collector.query(
         query,

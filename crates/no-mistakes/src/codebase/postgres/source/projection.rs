@@ -10,6 +10,7 @@ pub(super) fn project_parsed(
     locations: &Locations<'_>,
     recursive_views: &RecursiveViews,
     index_only: bool,
+    cte_predicates: &[super::insert::parsing::CtePredicate],
 ) -> PostgresSqlStatementKind {
     let tokens = if matches!(
         statement,
@@ -35,6 +36,7 @@ pub(super) fn project_parsed(
         recursive_views,
         index_only,
         &tokens,
+        cte_predicates,
     )
 }
 
@@ -45,6 +47,7 @@ pub(super) fn project(
     recursive_views: &RecursiveViews,
     index_only: bool,
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
+    cte_predicates: &[super::insert::parsing::CtePredicate],
 ) -> PostgresSqlStatementKind {
     if let Some(drop) = super::drop_facts::drop(statement) {
         return PostgresSqlStatementKind::Drop { drop };
@@ -54,7 +57,7 @@ pub(super) fn project(
             insert: Box::new(super::insert::project(value, None, locations, tokens)),
         },
         Statement::Query(query) => PostgresSqlStatementKind::Select {
-            query: super::query::project(query, locations, tokens),
+            query: super::query::project(query, locations, tokens, cte_predicates),
         },
         Statement::CreateTable(value) => {
             let definition_ranges = super::constraint_spans::table_ranges(tokens);

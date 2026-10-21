@@ -12,7 +12,8 @@ type ParsedPolicyProgram = (Vec<Statement>, Vec<SqlFunctionCallFact>, Vec<Policy
 pub(in crate::codebase::postgres) fn parse(
     mut tokens: Vec<TokenWithSpan>,
 ) -> Result<ParsedPolicyProgram, ParserError> {
-    let markers = parsing::prepare(&mut tokens);
+    let prepared = parsing::prepare(&mut tokens, false);
+    let markers = prepared.markers;
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
     if markers.is_empty() {
@@ -39,7 +40,8 @@ pub(in crate::codebase::postgres) fn parse(
         if delimiter {
             return parser.expected_ref("end of statement", &token);
         }
-        let (statement, mut calls, arbiter) = parse_statement(&mut parser, &markers)?;
+        let (statement, mut calls, arbiter) =
+            parse_statement(&mut parser, &markers, &prepared.cte_predicates)?;
         statements.push(statement);
         functions.append(&mut calls);
         arbiters.extend(arbiter);
