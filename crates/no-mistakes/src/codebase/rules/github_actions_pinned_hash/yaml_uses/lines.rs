@@ -1,63 +1,38 @@
+use super::indent::{in_input_block, is_ignorable, is_nested_key, is_value_line};
+
 /// Job and step `uses` lines, in document order. A root sequence counts as steps.
 /// Lines nested under `with` or `env` do not.
 pub(super) fn action_uses_lines(lines: &[&str]) -> Vec<usize> {
     let mut found = Vec::new();
+    // `{ uses:` with the ref on the next line stays open across blanks.
+    let mut await_value = false;
     for index in 0..lines.len() {
         if in_input_block(lines, index) {
+            await_value = false;
             continue;
         }
+        let value_here = is_value_line(lines[index]) && !is_nested_key(lines[index]);
         // `uses:` then `nested: true` is a mapping, not the action scalar.
         let continued = index > 0
             && bare_uses_key(lines[index - 1])
             && !in_input_block(lines, index - 1)
-            && is_value_line(lines[index])
-            && !is_nested_key(lines[index]);
-        if line_has_action_uses(lines[index]) || continued {
+            && value_here;
+        let kind = classify_uses_line(lines[index]);
+        if kind == LineUses::Present || continued || (await_value && value_here) {
             found.push(index + 1);
+        }
+        if !is_ignorable(lines[index]) {
+            await_value = kind == LineUses::Awaits;
         }
     }
     found
 }
 
-pub(super) fn in_input_block(lines: &[&str], index: usize) -> bool {
-    let own = indent_of(lines.get(index).copied().unwrap_or(""));
-    for prev in (0..index).rev() {
-        let trimmed = key_text(lines[prev]);
-        if trimmed.is_empty() || trimmed.starts_with('#') {
-            continue;
-        }
-        if indent_of(lines[prev]) < own {
-            return trimmed.starts_with("with:") || trimmed.starts_with("env:");
-        }
-    }
-    false
-}
-
-fn indent_of(line: &str) -> usize {
-    line.chars().take_while(|ch| ch.is_whitespace()).count()
-}
-
-fn key_text(line: &str) -> &str {
-    line.trim().trim_start_matches('-').trim()
-}
-
-fn is_value_line(line: &str) -> bool {
-    let trimmed = line.trim();
-    !trimmed.is_empty() && !trimmed.starts_with(['-', '#'])
-}
-
-/// A nested mapping entry (`key:` / `key: value`). `docker://image` is a scalar:
-/// its colon is followed by `/`, not by a break.
-fn is_nested_key(line: &str) -> bool {
-    let trimmed = line.trim();
-    if trimmed.is_empty() || trimmed.starts_with(['#', '-']) {
-        return false;
-    }
-    let Some(index) = trimmed.find(':') else {
-        return false;
-    };
-    let after = &trimmed[index + 1..];
-    after.is_empty() || after.starts_with([' ', '\t', '#'])
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum LineUses {
+    None,
+    Present,
+    Awaits,
 }
 
 fn bare_uses_key(line: &str) -> bool {
@@ -66,8 +41,9 @@ fn bare_uses_key(line: &str) -> bool {
     matches!(trimmed, "uses:" | "\"uses\":" | "'uses':")
 }
 
-/// True when this line has a job or step `uses` scalar, including `*alias`.
-fn line_has_action_uses(line: &str) -> bool {
+/// `Present` is a uses scalar on this line. `Awaits` is `{ uses:` whose ref
+/// starts on a later line.
+fn classify_uses_line(line: &str) -> LineUses {
     let mut quote: Option<char> = None;
     let mut token = String::new();
     let mut scalar = String::new();
@@ -85,7 +61,7 @@ fn line_has_action_uses(line: &str) -> bool {
             if ch == active {
                 quote = None;
                 if after_colon && finish_scalar(&scalar, key_was_uses) {
-                    return true;
+                    return LineUses::Present;
                 }
                 if after_colon {
                     scalar.clear();
@@ -117,7 +93,7 @@ fn line_has_action_uses(line: &str) -> bool {
                 continue;
             }
             if alias && key_was_uses {
-                return true;
+                return LineUses::Present;
             }
             skip_anchor = false;
             alias = false;
@@ -143,10 +119,10 @@ fn line_has_action_uses(line: &str) -> bool {
         }
         if matches!(ch, '}' | ']' | ',') {
             if alias && key_was_uses {
-                return true;
+                return LineUses::Present;
             }
             if finish_scalar(&scalar, key_was_uses) {
-                return true;
+                return LineUses::Present;
             }
             if ch != ',' {
                 flow_depth -= 1;
@@ -163,11 +139,11 @@ fn line_has_action_uses(line: &str) -> bool {
         {
             if after_colon && !scalar.is_empty() {
                 if finish_scalar(&scalar, key_was_uses) {
-                    return true;
+                    return LineUses::Present;
                 }
                 // A block value ends the line. Inside `{...}` another key may follow.
                 if flow_depth == 0 {
-                    return false;
+                    return LineUses::None;
                 }
                 scalar.clear();
                 key_was_uses = false;
@@ -193,10 +169,14 @@ fn line_has_action_uses(line: &str) -> bool {
             token.push(ch);
         }
     }
-    if alias && key_was_uses {
-        return true;
+    if (alias && key_was_uses) || finish_scalar(&scalar, key_was_uses) {
+        return LineUses::Present;
     }
-    finish_scalar(&scalar, key_was_uses)
+    // `{ uses:` — the flow collection is still open and the ref is later.
+    if key_was_uses && scalar.is_empty() && flow_depth > 0 {
+        return LineUses::Awaits;
+    }
+    LineUses::None
 }
 
 fn finish_scalar(scalar: &str, key_was_uses: bool) -> bool {

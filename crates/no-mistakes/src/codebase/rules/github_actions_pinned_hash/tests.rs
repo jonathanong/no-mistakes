@@ -444,4 +444,9 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
 
     let nested = check_yaml_shape("nested-uses-pass.yml");
     assert_eq!(lines_of(&nested), Vec::<usize>::new(), "{nested:?}");
+
+    // `{ uses:` with the ref on the next line still fails.
+    let broken = check_yaml_shape("flow-break-fail.yml");
+    assert_eq!(lines_of(&broken), vec![3], "{broken:?}");
+    assert!(broken[0].message.contains("actions/checkout@v4"));
 }

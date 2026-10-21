@@ -4,6 +4,7 @@ use serde_yaml::Value;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
+mod indent;
 mod lines;
 
 /// Pair job and step `uses` values, in document order, with action `uses`
@@ -29,7 +30,7 @@ pub(super) fn append_parsed_uses(
     let source_lines: Vec<&str> = content.lines().collect();
     // A block `uses` inside `with` or `env` is an input, not an action.
     findings
-        .retain(|finding| !lines::in_input_block(&source_lines, finding.line.saturating_sub(1)));
+        .retain(|finding| !indent::in_input_block(&source_lines, finding.line.saturating_sub(1)));
     let action_lines = lines::action_uses_lines(&source_lines);
     for (uses_value, line_num) in uses_values.iter().zip(action_lines) {
         if seen_lines.contains(&line_num) {

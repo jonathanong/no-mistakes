@@ -9,7 +9,7 @@ able to identify the version represented by each immutable SHA.
 
 It rejects mutable tag or branch refs, non-40-character refs, and SHA refs
 without a version-shaped trailing comment. Local and Docker actions are exempt.
-Flow mappings, quoted `uses` keys, values on the line after `uses:`, and YAML
+Flow mappings, quoted `uses` keys, values on the line after `uses:`, including a flow mapping that breaks after the key,, and YAML
 aliases are checked the same way. An alias is judged as the action reference
 it resolves to. Each YAML document is walked, so a flow `uses` in a later
 document is still checked. A quoted flow scalar folded across lines is
