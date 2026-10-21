@@ -48,7 +48,10 @@ saveUser(input).catch(async function* () {});
 - `allowedPathPatterns` excludes matching files.
 - `allowedCalleeNamePatterns` skips a no-op catch when the originating call's
   identifier or member name matches, walking through `.then` / `.finally` /
-  `.catch` chains. Use this for named cleanup APIs such as `releaseLock()`.
+  `.catch` chains. A spelled `call` or `apply` member is that name before
+  forwarding, so `client.call().catch(() => {})` matches `call`. Forwarding
+  still sees `fetch` in `fetch.call(null, url).catch(() => {})`. Use this for
+  named cleanup APIs such as `releaseLock()`.
 
 Values are glob or `/regex/` strings. Invalid regex patterns are ignored.
 

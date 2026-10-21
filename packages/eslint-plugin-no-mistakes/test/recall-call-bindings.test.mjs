@@ -290,5 +290,23 @@ describe("call-binding recall", () => {
       ),
       ["noopCatch"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("no-inline-noop-promise-catch/allowed-call-origin.mjs"),
+        "no-inline-noop-promise-catch",
+        { allowedCalleeNamePatterns: ["call", "apply"] },
+        "allowed-call-origin.mjs",
+      ),
+      ["noopCatch"],
+    );
+    assert.equal(
+      messages(
+        fixture("no-inline-noop-promise-catch/allowed-call-origin.mjs"),
+        "no-inline-noop-promise-catch",
+        { allowedCalleeNamePatterns: ["fetch"] },
+        "allowed-call-origin.mjs",
+      ).length,
+      3,
+    );
   });
 });

@@ -87,7 +87,7 @@ function isInlineNoopFunction(node, sourceCode) {
   return current.body.body.every((statement) => isNoopStatement(statement, sourceCode));
 }
 
-function originatingCalleeName(call) {
+function chainOrigin(call) {
   let current = call;
   while (current?.type === "CallExpression") {
     const invoked = logicalCall(current);
@@ -97,16 +97,29 @@ function originatingCalleeName(call) {
     if (object?.type !== "CallExpression") return null;
     current = object;
   }
-  if (current?.type !== "CallExpression") return null;
+  return current?.type === "CallExpression" ? current : null;
+}
+
+function originatingCalleeName(call) {
+  const current = chainOrigin(call);
+  if (!current) return null;
   const callee = unwrapExpression(logicalCall(current)?.callee ?? current.callee);
   if (callee?.type === "Identifier") return callee.name;
   if (callee?.type === "MemberExpression") return memberPropertyName(callee);
   return null;
 }
 
+function spelledOriginName(call) {
+  const callee = unwrapExpression(chainOrigin(call)?.callee);
+  return callee?.type === "MemberExpression" ? memberPropertyName(callee) : null;
+}
+
 function isAllowedCallee(call, options) {
+  const patterns = options.allowedCalleeNamePatterns ?? [];
+  const spelled = spelledOriginName(call);
+  if ((spelled === "call" || spelled === "apply") && stringMatches(spelled, patterns)) return true;
   const name = originatingCalleeName(call);
-  return Boolean(name && stringMatches(name, options.allowedCalleeNamePatterns ?? []));
+  return Boolean(name && stringMatches(name, patterns));
 }
 
 module.exports = {
