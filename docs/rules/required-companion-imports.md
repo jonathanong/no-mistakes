@@ -43,7 +43,10 @@ use `{sourceDir}` and `{sourceStem}`.
 ## Valid example
 
 ```tsx
-// Button.stories.tsx
+// src/components/Button.tsx
+export default function Button() { return null; }
+
+// src/components/Button.stories.tsx
 import Button from "@/components/Button";
 ```
 
@@ -52,9 +55,12 @@ import Button from "@/components/Button";
 `Button.stories.tsx` exists but imports `./Button` while the configured
 `specifierTemplate` requires `@/components/Button`.
 
-```ts
-// src/feature.ts
-export const feature = true;
+```tsx
+// src/components/Button.tsx
+export default function Button() { return null; }
+
+// src/components/Button.stories.tsx
+import Button from "./Button";
 ```
 
 

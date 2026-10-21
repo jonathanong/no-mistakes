@@ -54,11 +54,6 @@ Patterns run only on the intersection of the rule's existing file scope and the
 entry globs. Literal `bannedSubstrings` and `requiredFiles` behavior is
 unchanged. Substring findings stay on line 1.
 
-## Valid example
-
-A matching document contains every required heading and text, none of the
-banned text, and no configured pin.
-
 ```yaml
 rules:
   - rule: doc-consistency
@@ -69,11 +64,23 @@ rules:
       requiredSubstrings:
         - file: README.md
           substring: "Install the CLI"
-      bannedSubstrings: ["legacy API"]
       bannedPatterns:
         - files: ["docs/**/*.md"]
           pattern: 'PIN-[0-9]{3}'
           message: "Move this pin to versions.md."
+```
+
+## Valid example
+
+A matching document contains every required heading and text, none of the
+banned text, and no configured pin.
+
+```md
+# Guide
+
+## Install
+
+Install the CLI
 ```
 
 ## Counterexample
