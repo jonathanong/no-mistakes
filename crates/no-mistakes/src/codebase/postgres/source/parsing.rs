@@ -47,7 +47,8 @@ pub(super) fn collect_program(
         },
         comments,
     )
-    .with_executes(executes);
+    .with_executes(executes)
+    .with_cte_predicates(&conflicts.cte_predicates);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
         if parser.consume_token(&Token::SemiColon) {

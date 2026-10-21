@@ -42,3 +42,30 @@ test(
     assert.match(joined.sql, /JOIN right_table ON/);
   },
 );
+
+test(
+  "compiled EXPLAIN and PREPARE keep a CTE conflict-target predicate",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const facts = await cjs.parsePostgresSql({
+      sql: fixture("query-cte-conflict-target-wrappers.sql"),
+    });
+    assert.deepEqual(
+      await esm.parsePostgresSql({ sql: fixture("query-cte-conflict-target-wrappers.sql") }),
+      facts,
+    );
+    assert.deepEqual(facts.diagnostics, []);
+    assert.deepEqual(
+      facts.statements.map((statement) => statement.wrapper.wrapperKind),
+      ["explain", "prepare"],
+    );
+    for (const statement of facts.statements) {
+      assert.equal(statement.wrapper.complete, true);
+      const child = statement.wrapper.statements[0].query.nestedStatements[0];
+      assert.equal(child.insert.onConflict.predicate.sql, "id > 0");
+      assert.equal(child.insert.onConflict.action.kind, "doNothing");
+    }
+  },
+);

@@ -1,0 +1,9 @@
+WITH ok AS (
+ INSERT INTO target (id) VALUES (1)
+ ON CONFLICT (id) WHERE id > 0 DO NOTHING
+), bad AS (
+ INSERT INTO target (id) VALUES (2)
+ ON CONFLICT (id) WHERE , DO NOTHING
+)
+SELECT id FROM ok;
+SELECT 42 AS kept;

@@ -810,7 +810,9 @@ replay safety. See [PostgreSQL source API](postgres-source-api.md).
 
 The extended conflict grammar applies to prepared outer INSERT clauses, including
 EXPLAIN/PREPARE wrappers. A column-target `WHERE` inside a data-modifying CTE
-INSERT is projected, including `DO NOTHING`, `DO UPDATE`, and `RETURNING`.
+INSERT is projected, including `DO NOTHING`, `DO UPDATE`, and `RETURNING`, and
+the same predicate is kept when that CTE is the child of an EXPLAIN or PREPARE
+wrapper.
 Expression arbiters and subscripted assignments inside data-modifying CTE
 INSERTs still diagnose through the upstream grammar; neighboring statements
 remain available. Exact closing-delimiter spans apply

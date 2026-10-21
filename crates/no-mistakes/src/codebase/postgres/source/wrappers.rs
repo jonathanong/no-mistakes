@@ -10,6 +10,7 @@ use sqlparser::{
 mod atomic;
 mod atomic_child;
 pub(super) mod child;
+pub(super) use child::keyword;
 mod header;
 pub(super) use header::child_start as prepared_child_start;
 mod options;
@@ -29,21 +30,22 @@ pub(super) struct Context<'a, 's> {
     pub fetch: &'a [crate::codebase::postgres::parse::fetch_expression::Clause],
     pub generated: &'a [Span],
     pub markers: &'a [sqlparser::tokenizer::Location],
+    pub cte_predicates: &'a [super::insert::parsing::CtePredicate],
     pub index_only: Vec<sqlparser::tokenizer::Location>,
     pub comments: std::cell::RefCell<super::metadata_preparation::Comments>,
     pub recursive_views: &'a RecursiveViews,
 }
 
 pub(super) fn starts(parser: &Parser<'_>) -> bool {
-    keyword(&parser.peek_token().token, Keyword::EXPLAIN)
-        || keyword(&parser.peek_token().token, Keyword::PREPARE)
+    child::keyword(&parser.peek_token().token, Keyword::EXPLAIN)
+        || child::keyword(&parser.peek_token().token, Keyword::PREPARE)
 }
 
 pub(super) fn collect(
     parser: &mut Parser<'_>,
     context: &Context<'_, '_>,
 ) -> PostgresSqlStatementKind {
-    let kind = if keyword(&parser.peek_token().token, Keyword::EXPLAIN) {
+    let kind = if child::keyword(&parser.peek_token().token, Keyword::EXPLAIN) {
         PostgresSqlWrapperKind::Explain
     } else {
         PostgresSqlWrapperKind::Prepare
@@ -176,9 +178,6 @@ pub(super) fn declaration() -> PostgresSqlWrapper {
     wrapper
 }
 
-fn keyword(token: &Token, keyword: Keyword) -> bool {
-    matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == keyword)
-}
 fn span(tokens: &[TokenWithSpan], context: &Context<'_, '_>) -> Option<PostgresSqlSpan> {
     let mut significant = tokens
         .iter()

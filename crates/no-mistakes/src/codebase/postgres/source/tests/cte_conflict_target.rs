@@ -125,3 +125,119 @@ fn malformed_cte_conflict_targets_fail_closed_and_keep_the_neighbor() {
         ["SELECT 42 AS kept;", "SELECT 7 AS kept;"]
     );
 }
+
+#[test]
+fn explain_and_prepare_keep_a_cte_conflict_target_predicate() {
+    let facts = facts("query-cte-conflict-target-wrappers.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 2);
+    for (statement, kind) in facts.statements.iter().zip([
+        PostgresSqlWrapperKind::Explain,
+        PostgresSqlWrapperKind::Prepare,
+    ]) {
+        let PostgresSqlStatementKind::Wrapper { wrapper } = &statement.facts else {
+            panic!("wrapper expected")
+        };
+        assert_eq!(wrapper.wrapper_kind, kind);
+        assert!(wrapper.complete, "{:?}", wrapper.diagnostics);
+        assert!(wrapper.diagnostics.is_empty());
+        let PostgresSqlStatementKind::Select { query } = &wrapper.statements[0].facts else {
+            panic!("wrapped SELECT expected")
+        };
+        assert!(query.complete, "{:?}", query.unsupported);
+        let conflict = insert_of(&query.nested_statements[0])
+            .on_conflict
+            .as_ref()
+            .unwrap();
+        assert_eq!(conflict.predicate.as_ref().unwrap().sql, "id > 0");
+        assert!(matches!(
+            conflict.action,
+            PostgresSqlConflictAction::DoNothing
+        ));
+    }
+}
+
+#[test]
+fn comments_and_string_literals_do_not_change_a_cte_conflict_target() {
+    let facts = facts("query-cte-conflict-target-tokens.sql");
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    assert_eq!(facts.statements.len(), 2);
+    let PostgresSqlStatementKind::Select { query } = &facts.statements[0].facts else {
+        panic!("commented CTE expected")
+    };
+    let child = &query.nested_statements[0];
+    assert!(child.sql.contains("/* target */"));
+    assert_eq!(
+        insert_of(child)
+            .on_conflict
+            .as_ref()
+            .unwrap()
+            .predicate
+            .as_ref()
+            .unwrap()
+            .sql,
+        "id > 0"
+    );
+    let PostgresSqlStatementKind::Select { query } = &facts.statements[1].facts else {
+        panic!("quoted predicate expected")
+    };
+    assert_eq!(
+        insert_of(&query.nested_statements[0])
+            .on_conflict
+            .as_ref()
+            .unwrap()
+            .predicate
+            .as_ref()
+            .unwrap()
+            .sql,
+        "note = 'DO WHERE ) ; --'"
+    );
+}
+
+#[test]
+fn one_unparsable_cte_conflict_rejects_the_whole_statement() {
+    let facts = facts("query-cte-conflict-target-multi.sql");
+    assert_eq!(facts.diagnostics.len(), 1, "{:?}", facts.diagnostics);
+    assert!(facts.diagnostics[0].message.contains("sql parser error"));
+    assert_eq!(
+        facts
+            .statements
+            .iter()
+            .map(|statement| statement.sql.as_str())
+            .collect::<Vec<_>>(),
+        ["SELECT 42 AS kept;"]
+    );
+}
+
+#[test]
+fn an_unmatched_cte_paren_does_not_drop_the_next_conflict_predicate() {
+    let facts = facts("query-cte-conflict-target-unmatched.sql");
+    assert!(
+        facts
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("sql parser error")),
+        "{:?}",
+        facts.diagnostics
+    );
+    let later = facts
+        .statements
+        .iter()
+        .find(|statement| statement.sql.contains("WITH later"))
+        .expect("later CTE");
+    let PostgresSqlStatementKind::Select { query } = &later.facts else {
+        panic!("later SELECT expected")
+    };
+    assert!(query.complete, "{:?}", query.unsupported);
+    assert_eq!(
+        insert_of(&query.nested_statements[0])
+            .on_conflict
+            .as_ref()
+            .unwrap()
+            .predicate
+            .as_ref()
+            .unwrap()
+            .sql,
+        "id > 9"
+    );
+}
