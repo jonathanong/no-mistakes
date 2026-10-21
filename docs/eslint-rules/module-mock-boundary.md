@@ -43,7 +43,7 @@ temporary; stale entries are reported.
 
 A computed identifier key, such as `const { [key]: mocked } = ns`, is not the export spelled by that identifier. A string or expression-free template key is.
 
-Another file's re-export is not visible here. `import { mock } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { vi as mock } from "vitest"` or `export * from "vitest"`. `const { mock } = require("vitest")` is not a framework binding. A parameter default such as `function run({ vi } = vitest)` is not judged, because the caller can pass a different object.
+Another file's re-export is not visible here. `import { mock } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { vi as mock } from "vitest"` or `export * from "vitest"`. `const { mock } = require("vitest")` is not a framework binding. A parameter default such as `function run({ vi } = vitest)` is not judged, because the caller can pass a different object. An `.apply` or `.call` whose argument list contains a spread is not rewritten.
 
 ## Suppression
 

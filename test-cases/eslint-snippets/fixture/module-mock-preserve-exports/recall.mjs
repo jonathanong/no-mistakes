@@ -7,3 +7,4 @@ vi.mock.call(vi, "./internal");
 vi.mock.apply(vi, ["./internal"]);
 const call = "bind";
 vi.mock[call](vi, "./internal", () => ({}));
+vi.mock.apply(...[vi, ["react", () => ({})]], ["./internal", () => ({})]);
