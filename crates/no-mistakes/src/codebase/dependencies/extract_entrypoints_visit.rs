@@ -1,3 +1,4 @@
+#[inline(always)]
 fn visit_import_facts(
     program: &Program<'_>,
     source: &str,
