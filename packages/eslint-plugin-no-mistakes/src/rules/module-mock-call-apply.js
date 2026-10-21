@@ -2,17 +2,19 @@
 
 const { isModuleMockMemberCall, propertyName } = require("./module-mock-helpers");
 
+function unwrap(node) {
+  while (node?.type === "ChainExpression") node = node.expression;
+  return node;
+}
+
 function matchDirectMockCallApply(node, context, methods) {
-  if (
-    node.callee.type !== "MemberExpression" ||
-    !["call", "apply"].includes(propertyName(node.callee.property)) ||
-    node.callee.object.type !== "MemberExpression"
-  ) {
-    return null;
-  }
-  const direct = isModuleMockMemberCall({ callee: node.callee.object }, context);
+  const callee = unwrap(node.callee);
+  const object = unwrap(callee?.object);
+  const name = callee?.type === "MemberExpression" ? propertyName(callee.property) : null;
+  if (!["call", "apply"].includes(name) || object?.type !== "MemberExpression") return null;
+  const direct = isModuleMockMemberCall({ callee: object }, context);
   if (!direct || !methods.has(direct.method)) return null;
-  if (propertyName(node.callee.property) === "call") {
+  if (name === "call") {
     return { factory: node.arguments[2], mock: direct, specifierNode: node.arguments[1] };
   }
   const args = node.arguments[1];

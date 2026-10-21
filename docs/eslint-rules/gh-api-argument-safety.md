@@ -65,10 +65,16 @@ as `repos/${repo}/labels`, cannot become a flag or the exact `graphql` endpoint,
 so its field flags still require an explicit method. It does not execute arrays, follow argv aliases, or prove unknown
 requests safe. Configure wrappers only for APIs with this argv protocol.
 
+Same-file `child_process` namespace members, a default import of that module, a single `const` alias, a string or expression-free template member, an optional call, and a comma callee are the same call. `execFile.call` and a literal-array `execFile.apply` shift the arguments. A spread `.call` or a non-literal `.apply` is not read as argv.
+
 ## Fix
 
 Move query parameters into `-f name=value` or `-F name=value` arguments and specify
 `-X GET` (or the intended write method). No automatic fix rewrites request data.
+
+## Limits
+
+Another file's re-export is not visible here. `import { run } from "./barrel.mjs"; run("gh", ["api", "repos/O/R/labels?per_page=100"])` stays unreported when `barrel.mjs` is `export { execFile as run } from "node:child_process"` or `export * from "node:child_process"`. A parameter default such as `function run({ execFile } = cp)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 

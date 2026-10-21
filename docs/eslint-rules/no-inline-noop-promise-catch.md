@@ -52,6 +52,8 @@ saveUser(input).catch(async function* () {});
 
 Values are glob or `/regex/` strings. Invalid regex patterns are ignored.
 
+A string or expression-free template `catch` or `then`, an optional call, and `.call` or a literal-array `.apply` are the same call.
+
 ## Fix
 
 Replace the inline no-op with a named handler, `onError`, logging, a returned
@@ -65,6 +67,10 @@ because their expressions or tag can have observable behavior. A locally
 shadowed `undefined` is treated as a fallback value. Generator callbacks are
 allowed because calling them produces an iterator rather than an ignored
 `undefined` result.
+
+## Limits
+
+`const { catch: fail } = work; fail(() => {})` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 

@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { baselineKey, baselineSet } = require("./module-mock-baseline");
+const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const {
   isInternalSpecifier,
   isPreserveMockCall,
@@ -67,6 +68,15 @@ module.exports = rule(
         const direct = isPreserveMockCall(node, context);
         if (direct) {
           reportMockCall(node, direct);
+          return;
+        }
+        const forwarded = matchDirectMockCallApply(
+          node,
+          context,
+          new Set(["mock", "doMock", "unstable_mockModule"]),
+        );
+        if (forwarded) {
+          reportMockCall(node, forwarded.mock, forwarded.specifierNode, forwarded.factory);
           return;
         }
         const alias = mockAliases.matchCall(node);

@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { logicalCall } = require("./module-mock-helpers");
 const { matchesAny } = require("./async-patterns");
 const { isReassigned, memberPropertyName, resolveVariable } = require("./async-target-bindings");
 const { staticPropertyName } = require("./imported-call-options");
@@ -146,8 +147,10 @@ function createCallSelectors(context, options) {
     },
     matches(node) {
       if (!hasTargets) return [];
+      const invoked = logicalCall(node);
+      if (!invoked) return [];
       const found = [];
-      const callee = unwrapExpression(node.callee);
+      const callee = unwrapExpression(invoked.callee);
       pushGlobals(callee, found);
       pushMembers(callee, found);
       return found;

@@ -22,10 +22,16 @@ await fetch(`/api/users`);
 
 This rule has no options.
 
+`globalThis`, `window`, `self`, and `global` `fetch`, a string or expression-free template member, a single `const` alias, `const { fetch }` from those roots, an optional call, and `.call` or a literal-array `.apply` are the same call. `.call` and `.apply` shift the arguments.
+
 ## Fix
 
 Use a literal URL or an expression-free template. Put dynamic routing behind a
 small static wrapper when the relationship should be analyzable.
+
+## Limits
+
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 

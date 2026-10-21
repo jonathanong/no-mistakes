@@ -20,7 +20,7 @@ describe("require-options-on-imported-call", () => {
   it("reports imported calls without statically visible required options", () => {
     assert.deepEqual(
       messages(ruleFixture("invalid.ts"), RULE, ssrfOptions, "invalid.ts"),
-      Array.from({ length: 21 }, () => "missingOptions"),
+      Array.from({ length: 22 }, () => "missingOptions"),
     );
   });
 

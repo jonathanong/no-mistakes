@@ -26,6 +26,8 @@ await Promise.all([enqueueEmail(first), enqueueEmail(second)]);
   `sourceSpecifierPatterns` and `calleeNamePatterns`; values are glob or
   `/regex/` strings. Only calls matching a configured group are checked.
 
+Same-file namespace members, a default import of the configured module, a single `const` alias, a string or expression-free template member, an optional call, a comma callee, and `.call` or a literal-array `.apply` are the same callee.
+
 ## Fix
 
 Await or return work whose failure belongs to the caller. Use `void` only when
@@ -35,6 +37,10 @@ the call is deliberately detached.
 
 For a bare configured call, ESLint offers one suggestion: prefix it with
 `void`. It does not guess whether `await`, `return`, or detachment is correct.
+
+## Limits
+
+Another file's re-export is not visible here. `import { send } from "./barrel.mjs"; send(id)` stays unreported when `barrel.mjs` is `export { enqueueEmail as send } from "@app/jobs"` or `export * from "@app/jobs"`. A parameter default such as `function run({ enqueueEmail } = client)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 

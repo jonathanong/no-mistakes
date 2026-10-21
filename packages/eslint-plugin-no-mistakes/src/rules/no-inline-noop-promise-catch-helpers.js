@@ -2,6 +2,7 @@
 
 const { unwrapExpression } = require("./async-ast");
 const {
+  logicalCall,
   memberPropertyName,
   repoRelativeFilename,
   stringMatches,
@@ -18,15 +19,16 @@ function shouldCheckFile(filename, options) {
 }
 
 function promiseMethodName(call) {
-  const callee = unwrapExpression(call.callee);
-  if (callee?.type !== "MemberExpression" || callee.computed) return null;
-  return callee.property.name;
+  const invoked = logicalCall(call);
+  if (invoked?.callee?.type !== "MemberExpression") return null;
+  return memberPropertyName(invoked.callee);
 }
 
 function rejectionHandler(call) {
   const method = promiseMethodName(call);
-  if (method === "catch") return call.arguments[0] ?? null;
-  if (method === "then") return call.arguments[1] ?? null;
+  const args = logicalCall(call)?.arguments ?? [];
+  if (method === "catch") return args[0] ?? null;
+  if (method === "then") return args[1] ?? null;
   return null;
 }
 

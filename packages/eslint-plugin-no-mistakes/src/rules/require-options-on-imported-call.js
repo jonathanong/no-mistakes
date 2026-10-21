@@ -13,6 +13,7 @@ const {
   visiblePropertyNames,
 } = require("./imported-call-options");
 const { shouldCheckOptionsFile } = require("./required-call-selector-compile");
+const { logicalCall } = require("./module-mock-helpers");
 const { createCallSelectors } = require("./required-call-selectors");
 
 // Same call and same requirement share one finding. A different property set,
@@ -26,12 +27,12 @@ function requirementKey(target, fallback) {
   ]);
 }
 
-function reportMissing(context, node, target, resolved, suppressed, fallback, reported) {
+function reportMissing(context, node, target, resolved, suppressed, fallback, reported, args) {
   if (suppressed(node)) return;
   const key = requirementKey(target, fallback);
   const seen = reported.get(node);
   if (seen?.has(key)) return;
-  if (hasRequiredOptions(node.arguments[target.optionsPosition - 1], target, context.sourceCode)) {
+  if (hasRequiredOptions(args[target.optionsPosition - 1], target, context.sourceCode)) {
     return;
   }
   if (seen) seen.add(key);
@@ -88,6 +89,8 @@ module.exports = Object.assign(
           selectors.record(node);
         },
         CallExpression(node) {
+          const invoked = logicalCall(node);
+          if (!invoked) return;
           if (matcher) {
             const resolved = matcher.resolveCallTarget(node);
             if (resolved) {
@@ -96,7 +99,16 @@ module.exports = Object.assign(
                 resolved.source,
                 resolved.calleeName,
               )) {
-                reportMissing(context, node, target, resolved, suppressed, fallback, reported);
+                reportMissing(
+                  context,
+                  node,
+                  target,
+                  resolved,
+                  suppressed,
+                  fallback,
+                  reported,
+                  invoked.arguments,
+                );
               }
             }
           }
@@ -109,6 +121,7 @@ module.exports = Object.assign(
               suppressed,
               fallback,
               reported,
+              invoked.arguments,
             );
           }
         },

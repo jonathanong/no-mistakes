@@ -1,6 +1,7 @@
 "use strict";
 const { createTargetMatcher } = require("./async-targets");
 const { unwrapExpression } = require("./async-ast");
+const { logicalCall } = require("./module-mock-helpers");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 const { ruleSuppression } = require("../rule-suppression");
 const { inspectArgv, token } = require("./gh-api-argv");
@@ -87,8 +88,9 @@ module.exports = {
       CallExpression(node) {
         let array;
         let includesApi = true;
-        if (matcher.resolveCallTarget(node) && token(node.arguments[0]) === "gh") {
-          array = unwrapExpression(node.arguments[1]);
+        const invoked = logicalCall(node);
+        if (invoked && matcher.resolveCallTarget(node) && token(invoked.arguments[0]) === "gh") {
+          array = unwrapExpression(invoked.arguments[1]);
         } else {
           const name = wrapperName(node.callee, context, stable);
           const wrapper = (options.wrappers || []).find((entry) => entry.callee === name);

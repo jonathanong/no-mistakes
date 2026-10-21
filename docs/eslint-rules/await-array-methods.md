@@ -22,10 +22,16 @@ users.forEach(logUser);
 
 This rule has no options.
 
+A string or expression-free template method name, an optional call, a single `const` alias of the array, and `.call` or a literal-array `.apply` are the same method.
+
 ## Fix
 
 Remove the unnecessary `await`, or collect async work with `map` and await
 `Promise.all` (or use an explicit sequential loop).
+
+## Limits
+
+`const { sort } = items; await sort()` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 

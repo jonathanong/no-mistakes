@@ -1,5 +1,7 @@
 export async function invalidCatches(work: Promise<void>, ok: () => void) {
   work.catch(() => {});
+  work["catch"](() => {});
+  work[`catch`](() => {});
   work.catch(() => {
     return;
   });

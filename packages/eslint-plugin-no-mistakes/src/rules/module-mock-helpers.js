@@ -21,12 +21,53 @@ const DEFAULT_INTERNAL_SPECIFIERS = ["./**", "../**", "/**"];
 
 function propertyName(node) {
   if (!node) return null;
-  return node.type === "Literal" ? String(node.value) : node.name;
+  if (node.type === "Literal") return String(node.value);
+  if (typeof node.name === "string") return node.name;
+  return literalString(node);
 }
 
 function memberPropertyName(node) {
-  if (!node?.computed) return propertyName(node?.property);
-  return node.property?.type === "Literal" ? String(node.property.value) : null;
+  let current = node;
+  while (current?.type === "ChainExpression") current = current.expression;
+  if (current?.type !== "MemberExpression") return null;
+  if (current.computed && current.property?.type === "Identifier") return null;
+  return propertyName(current.property);
+}
+
+// The call that actually runs, after optional chaining, a comma callee, and
+// `.call` / a literal `.apply` array. Opaque `.apply` or a spread `.call`
+// returns null so callers do not read the wrong argument.
+function logicalCall(node) {
+  if (node?.type !== "CallExpression") return null;
+  let callee = node.callee;
+  let args = node.arguments;
+  for (let depth = 0; depth < 4; depth += 1) {
+    while (callee?.type === "ChainExpression") callee = callee.expression;
+    if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
+      callee = callee.expressions[callee.expressions.length - 1];
+      continue;
+    }
+    if (callee?.type !== "MemberExpression") break;
+    const name = propertyName(callee.property);
+    if (name !== "call" && name !== "apply") break;
+    if (name === "call") {
+      if (args.some((arg) => arg?.type === "SpreadElement")) return null;
+      callee = callee.object;
+      args = args.slice(1);
+      continue;
+    }
+    const list = args[1]?.type === "ChainExpression" ? args[1].expression : args[1];
+    if (
+      list?.type !== "ArrayExpression" ||
+      list.elements.some((element) => !element || element.type === "SpreadElement")
+    ) {
+      return null;
+    }
+    callee = callee.object;
+    args = list.elements;
+  }
+  while (callee?.type === "ChainExpression") callee = callee.expression;
+  return { callee, arguments: args };
 }
 
 function literalString(node) {
@@ -116,15 +157,32 @@ function moduleMockSpecifierArgument(node) {
   return { dynamic: true };
 }
 
+function unwrapCallee(callee) {
+  let current = callee;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (current?.type === "ChainExpression") {
+      current = current.expression;
+      continue;
+    }
+    if (current?.type === "SequenceExpression" && current.expressions.length > 0) {
+      current = current.expressions[current.expressions.length - 1];
+      continue;
+    }
+    break;
+  }
+  return current;
+}
+
 function isModuleMockMemberCall(node, context) {
-  if (node.callee.type !== "MemberExpression") return false;
-  const method = memberPropertyName(node.callee);
+  const callee = unwrapCallee(node.callee);
+  if (callee?.type !== "MemberExpression") return false;
+  const method = memberPropertyName(callee);
   if (!MODULE_MOCK_METHODS.has(method)) return false;
-  if (!isFrameworkBinding(node.callee.object, context)) return false;
+  if (!isFrameworkBinding(callee.object, context)) return false;
   return {
-    framework: frameworkBindingModule(node.callee.object, context),
+    framework: frameworkBindingModule(callee.object, context),
     method,
-    namespace: expressionName(node.callee.object),
+    namespace: expressionName(callee.object),
   };
 }
 
@@ -150,6 +208,7 @@ module.exports = {
   memberPropertyName,
   isPreserveMockCall,
   literalString,
+  logicalCall,
   moduleMockSpecifierArgument,
   pathAllowed,
   propertyName,

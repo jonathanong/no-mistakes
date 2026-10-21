@@ -10,7 +10,7 @@ const {
   resolveVariable,
 } = require("./async-target-bindings");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
-const { literalString } = require("./module-mock-helpers");
+const { literalString, logicalCall } = require("./module-mock-helpers");
 
 function importSpecifierName(specifier) {
   const imported = specifier.imported;
@@ -104,6 +104,7 @@ function createTargetMatcher(context, optionKey = "targets") {
       if (specifier.type === "ImportNamespaceSpecifier") {
         recordNamespace(specifier.local, source);
       } else if (specifier.type === "ImportDefaultSpecifier") {
+        recordNamespace(specifier.local, source);
         recordDirect(specifier.local, source, specifier.local.name);
       } else if (specifier.type === "ImportSpecifier") {
         const imported = importSpecifierName(specifier);
@@ -158,9 +159,37 @@ function createTargetMatcher(context, optionKey = "targets") {
     return source && targetMatches(targets, source, name) ? { source, calleeName: name } : null;
   }
 
+  function resolveCallee(callee, seen = new Set()) {
+    callee = unwrapExpression(callee);
+    if (!callee) return null;
+    const found = resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
+    if (found) return found;
+    if (callee.type !== "Identifier") return null;
+    const variable = resolveVariable(callee, context);
+    if (
+      !variable ||
+      seen.has(variable) ||
+      variable.defs.length !== 1 ||
+      isReassigned(callee, context)
+    ) {
+      return null;
+    }
+    const def = variable.defs[0];
+    if (
+      def.type !== "Variable" ||
+      def.parent?.kind !== "const" ||
+      def.node?.id?.type !== "Identifier"
+    ) {
+      return null;
+    }
+    seen.add(variable);
+    return resolveCallee(def.node.init, seen);
+  }
+
   function resolveCallTarget(node) {
-    const callee = unwrapExpression(node.callee);
-    return resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
+    const invoked = logicalCall(node);
+    if (!invoked) return null;
+    return resolveCallee(invoked.callee);
   }
 
   return {

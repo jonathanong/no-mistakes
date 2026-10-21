@@ -1,7 +1,8 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { pathAllowed } = require("./module-mock-helpers");
+const { logicalCall, pathAllowed } = require("./module-mock-helpers");
+const { resolveVariable } = require("./async-target-bindings");
 const helpers = require("./nullable-fetch-wrapper-helpers");
 
 const {
@@ -25,10 +26,33 @@ function isFunctionBoundary(node) {
   );
 }
 
-function insideWrapper(node, wrapper) {
+function rootIdentifier(node) {
+  let current = node;
+  while (current?.type === "ChainExpression" || current?.type === "MemberExpression") {
+    current = current.type === "ChainExpression" ? current.expression : current.object;
+  }
+  return current?.type === "Identifier" ? current : null;
+}
+
+function spelledCallee(callee, context) {
+  const path = calleePath(callee);
+  if (!path) return null;
+  const root = rootIdentifier(callee);
+  if (!root) return path;
+  const variable = resolveVariable(root, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (def?.type !== "ImportBinding" || def.node?.type !== "ImportSpecifier") return path;
+  const imported = def.node.imported;
+  const importedName = imported?.type === "Literal" ? String(imported.value) : imported?.name;
+  if (!importedName || importedName === root.name) return path;
+  return `${importedName}${path.slice(root.name.length)}`;
+}
+
+function insideWrapper(node, wrapper, context) {
   let current = node.parent;
   while (current) {
-    if (current.type === "CallExpression" && calleePath(current.callee) === wrapper) return true;
+    const invoked = current.type === "CallExpression" ? logicalCall(current) : null;
+    if (invoked && spelledCallee(invoked.callee, context) === wrapper) return true;
     if (isFunctionBoundary(current)) return false;
     current = current.parent;
   }
@@ -118,9 +142,10 @@ module.exports = Object.assign(
         "ArrowFunctionExpression:exit": exitFunction,
         CallExpression(node) {
           if (!currentFunctionChecked()) return;
-          const name = calleePath(node.callee);
+          const invoked = logicalCall(node);
+          const name = invoked ? spelledCallee(invoked.callee, context) : null;
           if (!name || !getterPatterns.some((pattern) => pattern.test(name))) return;
-          if (insideWrapper(node, options.requiredWrapperCallee)) return;
+          if (insideWrapper(node, options.requiredWrapperCallee, context)) return;
           context.report({
             node,
             messageId: "wrapper",

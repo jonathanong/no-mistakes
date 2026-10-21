@@ -31,10 +31,16 @@ export async function getUserRoute() {
 
 Optional lists default to empty and inference defaults to `false`.
 
+An import rename is spelled back to the imported name before the getter pattern is tested. An optional call, a comma callee, and `.call` or a literal-array `.apply` inside the wrapper are the same call.
+
 ## Fix
 
 Wrap the configured getter within the same function boundary using the required
 wrapper, or narrow the configured getter/path policy.
+
+## Limits
+
+Another file's re-export is not visible here. `import { get } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { serverApi as get } from "./server-api"` or `export * from "./server-api"`. A parameter default such as `function run({ get } = serverApi)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 
