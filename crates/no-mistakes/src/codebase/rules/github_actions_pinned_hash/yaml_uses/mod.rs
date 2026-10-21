@@ -7,6 +7,7 @@ use std::sync::Arc;
 mod carry;
 mod indent;
 mod lines;
+mod place;
 
 pub(super) fn is_block_header(scalar: &str) -> bool {
     carry::is_block_header(scalar)
@@ -34,8 +35,9 @@ pub(super) fn append_parsed_uses(
     }
     let source_lines: Vec<&str> = content.lines().collect();
     let classified = lines::action_uses_lines(&source_lines);
-    // A `uses` inside `with` or `env` is an input. Block indent and a flow
-    // mapping that continues on a later line are both inputs.
+    // A `uses` inside `with` or `env` is an input. A matrix `include` field
+    // named `uses` is not an action, so its line-scan hit is dropped too.
+    let action_lines = classified.lines;
     findings.retain(|finding| {
         let index = finding.line.saturating_sub(1);
         let flow_input = classified
@@ -44,9 +46,17 @@ pub(super) fn append_parsed_uses(
             .copied()
             .unwrap_or(false);
         let in_block = classified.block_scalar.get(index).copied().unwrap_or(false);
-        !indent::in_input_block(&source_lines, index) && !flow_input && !in_block
+        let rejected = classified
+            .rejected_uses
+            .get(index)
+            .copied()
+            .unwrap_or(false);
+        let action_here = action_lines.contains(&finding.line);
+        !indent::in_input_block(&source_lines, index)
+            && !flow_input
+            && !in_block
+            && !(rejected && !action_here)
     });
-    let action_lines = classified.lines;
     for (uses_value, line_num) in uses_values.iter().zip(action_lines) {
         if seen_lines.contains(&line_num) {
             continue;

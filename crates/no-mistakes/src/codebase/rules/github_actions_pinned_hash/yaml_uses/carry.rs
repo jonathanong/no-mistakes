@@ -1,5 +1,8 @@
+use super::place::PlaceStack;
+
 /// Flow nesting carried across lines. A `with` or `env` mapping that breaks
-/// after `{` still hides the `uses` keys inside it.
+/// after `{` still hides the `uses` keys inside it. `uses` is an action only
+/// on a job or a step.
 #[derive(Default)]
 pub(super) struct Carry {
     quote: Option<char>,
@@ -13,6 +16,8 @@ pub(super) struct Carry {
     skip_anchor: bool,
     alias: bool,
     block_header: bool,
+    place: PlaceStack,
+    rejected_uses: bool,
 }
 
 pub(super) struct LineMark {
@@ -21,11 +26,24 @@ pub(super) struct LineMark {
     pub awaits: bool,
     pub opens_block: bool,
     pub block_uses: bool,
+    pub rejects_uses: bool,
 }
 
 impl Carry {
     pub(super) fn scan_line(&mut self, line: &str) -> LineMark {
+        self.rejected_uses = false;
+        if self.quote.is_none() && is_doc_start(line) {
+            self.place.reset();
+            self.flow_depth = 0;
+            self.flow_input.clear();
+            self.value_key_is_input = false;
+            self.reset_token();
+            return empty_mark();
+        }
         let starts_in_flow_input = self.in_flow_input();
+        if self.quote.is_none() && self.flow_depth == 0 {
+            self.place.begin_line(line);
+        }
         let mut hits = 0usize;
         for ch in line.chars() {
             if self.consume(ch, &mut hits) {
@@ -57,6 +75,7 @@ impl Carry {
             awaits,
             opens_block: header,
             block_uses,
+            rejects_uses: self.rejected_uses,
         }
     }
 
@@ -77,6 +96,24 @@ impl Carry {
 
 fn finish_scalar(scalar: &str, key_was_uses: bool) -> bool {
     key_was_uses && !scalar.is_empty()
+}
+
+fn is_doc_start(line: &str) -> bool {
+    let Some(rest) = line.strip_prefix("---") else {
+        return false;
+    };
+    rest.trim().is_empty()
+}
+
+fn empty_mark() -> LineMark {
+    LineMark {
+        starts_in_flow_input: false,
+        present_count: 0,
+        awaits: false,
+        opens_block: false,
+        block_uses: false,
+        rejects_uses: false,
+    }
 }
 
 /// `|`, `>`, and the one optional chomp or indent digit YAML allows after them.

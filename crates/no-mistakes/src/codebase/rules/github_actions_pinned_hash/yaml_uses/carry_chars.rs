@@ -20,7 +20,7 @@ impl Carry {
             return false;
         }
         if matches!(ch, '{' | '[') {
-            self.open_flow();
+            self.open_flow(ch == '[');
             return false;
         }
         if matches!(ch, '}' | ']' | ',') {
@@ -40,11 +40,13 @@ impl Carry {
             && matches!(ch, '|' | '>')
         {
             self.block_header = true;
+            self.place.clear_pending();
             self.scalar.push(ch);
             return false;
         }
         if self.after_colon {
             self.value_key_is_input = false;
+            self.place.clear_pending();
             self.scalar.push(ch);
         } else {
             self.value_key_is_input = false;
@@ -104,11 +106,12 @@ impl Carry {
         false
     }
 
-    fn open_flow(&mut self) {
+    fn open_flow(&mut self, sequence: bool) {
         let entering = self.in_flow_input() || self.value_key_is_input;
         self.flow_input.push(entering);
         self.value_key_is_input = false;
         self.flow_depth += 1;
+        self.place.open_flow(sequence);
         self.token.clear();
         self.scalar.clear();
         self.after_colon = false;
@@ -122,6 +125,7 @@ impl Carry {
         if ch != ',' {
             self.flow_depth -= 1;
             self.flow_input.pop();
+            self.place.close_flow();
         }
         self.value_key_is_input = false;
         self.token.clear();
@@ -158,7 +162,11 @@ impl Carry {
     fn finish_key(&mut self) {
         let in_input = self.in_flow_input();
         self.value_key_is_input = !in_input && (self.token == "with" || self.token == "env");
-        self.key_was_uses = self.token == "uses" && !in_input;
+        let action = self.place.note_key(&self.token);
+        if self.token == "uses" && !action && !in_input && self.place.nested() {
+            self.rejected_uses = true;
+        }
+        self.key_was_uses = action && !in_input;
         self.token.clear();
         self.scalar.clear();
         self.after_colon = true;

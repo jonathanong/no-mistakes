@@ -1,0 +1,17 @@
+# A matrix include field named uses is not an action. Its version comment must
+# not cover the step, and the include line must not be reported.
+on: [push]
+jobs:
+  flow:
+    strategy:
+      matrix: { include: [{ uses: ubuntu-latest }] } # v6.0.2
+    steps:
+      - { uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd }
+  block:
+    strategy:
+      matrix:
+        include:
+          # The tag comment would satisfy a stolen zip. The step is the finding.
+          - uses: ubuntu-latest # v6.0.2
+    steps:
+      - uses: actions/checkout@v4

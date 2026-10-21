@@ -471,4 +471,15 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert!(script
         .iter()
         .all(|finding| !finding.message.contains("de0fac2e")));
+
+    // The matrix comment must not validate the step, and include is not a finding.
+    let matrix = check_yaml_shape("matrix-uses-fail.yml");
+    assert_eq!(lines_of(&matrix), vec![9, 17], "{matrix:?}");
+    assert!(matrix[0]
+        .message
+        .contains("de0fac2e4500dabe0009e67214ff5f5447ce83dd"));
+    assert!(matrix[0].message.contains("trailing comment"));
+    assert!(!matrix[0].message.contains("ubuntu-latest"));
+    assert!(matrix[1].message.contains("actions/checkout@v4"));
+    assert!(!matrix[1].message.contains("ubuntu-latest"));
 }

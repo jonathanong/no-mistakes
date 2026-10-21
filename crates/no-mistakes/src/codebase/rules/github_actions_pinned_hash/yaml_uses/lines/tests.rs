@@ -44,3 +44,45 @@ fn block_uses_value_is_the_next_line() {
     let classified = action_uses_lines(&lines);
     assert_eq!(classified.lines, vec![2], "{classified:?}");
 }
+
+#[test]
+fn matrix_include_uses_is_not_an_action_line() {
+    // A flow or block matrix field named uses must not take the step's line.
+    let flow = [
+        "on: [push]",
+        "jobs:",
+        "  build:",
+        "    strategy:",
+        "      matrix: { include: [{ uses: ubuntu-latest }] } # v6.0.2",
+        "    steps:",
+        "      - { uses: actions/checkout@v4 }",
+    ];
+    let classified = action_uses_lines(&flow);
+    assert_eq!(classified.lines, vec![7], "{classified:?}");
+    assert!(classified.rejected_uses[4], "{classified:?}");
+
+    let block = [
+        "jobs:",
+        "  build:",
+        "    uses: org/repo/.github/workflows/build.yml@v4",
+        "    strategy:",
+        "      matrix:",
+        "        include:",
+        "          - uses: ubuntu-latest",
+        "    steps:",
+        "      - uses: actions/checkout@v4",
+    ];
+    let classified = action_uses_lines(&block);
+    assert_eq!(classified.lines, vec![3, 9], "{classified:?}");
+    assert!(classified.rejected_uses[6], "{classified:?}");
+}
+
+#[test]
+fn indented_root_uses_is_not_rejected() {
+    // The reusable-workflow regex fixture is only this line. It is not a
+    // nested matrix field, so the line scan must keep the finding.
+    let line = "    uses: org/repo/.github/workflows/build.yml@main";
+    let classified = action_uses_lines(&[line]);
+    assert!(classified.lines.is_empty(), "{classified:?}");
+    assert!(!classified.rejected_uses[0], "{classified:?}");
+}

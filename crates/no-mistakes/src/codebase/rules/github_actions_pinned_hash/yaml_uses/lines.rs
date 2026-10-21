@@ -9,6 +9,9 @@ pub(super) struct ClassifiedUses {
     pub lines: Vec<usize>,
     pub flow_input_at_start: Vec<bool>,
     pub block_scalar: Vec<bool>,
+    /// Nested `uses` keys that are not job or step actions. Line-scan hits on
+    /// those lines are not action references.
+    pub rejected_uses: Vec<bool>,
 }
 
 struct OpenBlock {
@@ -20,6 +23,7 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
     let mut found = Vec::new();
     let mut flow_input_at_start = Vec::with_capacity(lines.len());
     let mut block_scalar = Vec::with_capacity(lines.len());
+    let mut rejected_uses = Vec::with_capacity(lines.len());
     // `{ uses:` with the ref on the next line stays open across blanks.
     let mut await_value = false;
     let mut block: Option<OpenBlock> = None;
@@ -29,6 +33,7 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
             if inside_block(lines[index], open.min_indent) {
                 flow_input_at_start.push(false);
                 block_scalar.push(true);
+                rejected_uses.push(false);
                 if open.capture_uses && is_value_line(lines[index]) && !is_nested_key(lines[index])
                 {
                     found.push(index + 1);
@@ -41,6 +46,7 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
         let mark = carry.scan_line(lines[index]);
         flow_input_at_start.push(mark.starts_in_flow_input);
         block_scalar.push(false);
+        rejected_uses.push(mark.rejects_uses);
         if in_input_block(lines, index) {
             await_value = false;
             continue;
@@ -74,6 +80,7 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
         lines: found,
         flow_input_at_start,
         block_scalar,
+        rejected_uses,
     }
 }
 
