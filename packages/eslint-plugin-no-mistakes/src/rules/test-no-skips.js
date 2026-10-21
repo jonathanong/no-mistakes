@@ -65,17 +65,9 @@ function annotationFinding(node, context, banned) {
 
 function hasBannedModifier(node, banned) {
   let current = unwrapExpression(node);
-  while (current) {
-    if (current.type === "MemberExpression") {
-      if (banned.has(memberName(current))) return true;
-      current = current.object;
-    } else if (current.type === "CallExpression") {
-      current = current.callee;
-    } else if (current.type === "TaggedTemplateExpression") {
-      current = current.tag;
-    } else {
-      return false;
-    }
+  while (current?.type === "MemberExpression") {
+    if (banned.has(memberName(current))) return true;
+    current = current.object;
   }
   return false;
 }
