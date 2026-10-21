@@ -56,12 +56,18 @@ impl Carry {
     }
 
     fn consume_quoted(&mut self, ch: char, active: char, hits: &mut usize) -> bool {
+        if self.escape_quote {
+            self.escape_quote = false;
+            self.push_quoted(ch);
+            return false;
+        }
+        // `\"` stays inside the scalar, so a later `uses` is still a key.
+        if active == '"' && ch == '\\' {
+            self.escape_quote = true;
+            return false;
+        }
         if ch != active {
-            if self.after_colon {
-                self.scalar.push(ch);
-            } else {
-                self.token.push(ch);
-            }
+            self.push_quoted(ch);
             return false;
         }
         self.quote = None;
@@ -79,6 +85,14 @@ impl Carry {
             self.after_colon = false;
         }
         false
+    }
+
+    fn push_quoted(&mut self, ch: char) {
+        if self.after_colon {
+            self.scalar.push(ch);
+        } else {
+            self.token.push(ch);
+        }
     }
 
     /// An anchor or alias sits between `uses:` and the scalar. Returns true
@@ -142,6 +156,10 @@ impl Carry {
             || (ch == '-' && !self.after_colon && self.flow_depth == 0 && self.token.is_empty());
         if !word_break {
             return None;
+        }
+        // `run: | # explain` — the space before the comment is not a new scalar.
+        if self.block_header && ch.is_whitespace() {
+            return Some(false);
         }
         if self.after_colon && !self.scalar.is_empty() {
             if finish_scalar(&self.scalar, self.key_was_uses) {

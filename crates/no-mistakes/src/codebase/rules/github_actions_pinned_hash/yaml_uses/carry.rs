@@ -6,6 +6,8 @@ use super::place::PlaceStack;
 #[derive(Default)]
 pub(super) struct Carry {
     quote: Option<char>,
+    /// The previous character in a double-quoted scalar was `\`.
+    escape_quote: bool,
     token: String,
     scalar: String,
     after_colon: bool,
@@ -68,6 +70,9 @@ impl Carry {
             && !self.in_flow_input();
         if self.quote.is_none() {
             self.reset_token();
+        } else {
+            // A trailing `\` escapes the line break, not the next character.
+            self.escape_quote = false;
         }
         LineMark {
             starts_in_flow_input,
@@ -91,6 +96,7 @@ impl Carry {
         self.skip_anchor = false;
         self.alias = false;
         self.block_header = false;
+        self.escape_quote = false;
     }
 }
 

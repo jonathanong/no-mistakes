@@ -502,4 +502,19 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert!(!matrix[0].message.contains("ubuntu-latest"));
     assert!(matrix[1].message.contains("actions/checkout@v4"));
     assert!(!matrix[1].message.contains("ubuntu-latest"));
+
+    // `\"` inside the name is not the end of the scalar.
+    let escaped = check_yaml_shape("quote-escape-fail.yml");
+    assert_eq!(lines_of(&escaped), vec![2], "{escaped:?}");
+    assert!(escaped[0].message.contains("actions/checkout@v4"));
+
+    // A comment on `|` must not move the step finding onto the script line.
+    let header = check_yaml_shape("block-header-comment-fail.yml");
+    assert_eq!(lines_of(&header), vec![4, 7], "{header:?}");
+    assert!(header
+        .iter()
+        .all(|finding| finding.message.contains("actions/checkout@v4")));
+    assert!(header
+        .iter()
+        .all(|finding| !finding.message.contains("de0fac2e")));
 }

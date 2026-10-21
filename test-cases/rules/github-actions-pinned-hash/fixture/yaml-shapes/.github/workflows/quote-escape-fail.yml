@@ -1,0 +1,2 @@
+# An escaped quote in the name must not hide the unpinned action.
+- { name: "foo\"bar", uses: actions/checkout@v4 }

@@ -89,6 +89,50 @@ fn flow_closers_count_alias_and_tight_uses() {
 }
 
 #[test]
+fn escaped_double_quote_keeps_the_action_line() {
+    let line = r#"- { name: "foo\"bar", uses: actions/checkout@v4 }"#;
+    let classified = action_uses_lines(&[line]);
+    assert_eq!(classified.lines, vec![1], "{classified:?}");
+
+    let key = r#"- { "foo\"bar": true, uses: actions/checkout@v4 }"#;
+    let classified = action_uses_lines(&[key]);
+    assert_eq!(classified.lines, vec![1], "{classified:?}");
+
+    let value = r#"- { uses: "actions/checkout@v4\"x" }"#;
+    let classified = action_uses_lines(&[value]);
+    assert_eq!(classified.lines, vec![1], "{classified:?}");
+
+    // A trailing `\` escapes the line break. The next line's quote still closes.
+    let continued = action_uses_lines(&[r#"- { name: "foo\"#, r#"", uses: actions/checkout@v4 }"#]);
+    assert_eq!(continued.lines, vec![2], "{continued:?}");
+}
+
+#[test]
+fn commented_block_header_is_not_an_action_line() {
+    let lines = [
+        "- run: | # explain",
+        "    echo { uses: actions/checkout@v4 }",
+        "- uses: actions/checkout@v4",
+    ];
+    let classified = action_uses_lines(&lines);
+    assert_eq!(classified.lines, vec![3], "{classified:?}");
+    assert!(classified.block_scalar[1]);
+
+    let folded = [
+        "- run: >2 # explain",
+        "    echo { uses: actions/checkout@v4 }",
+        "- uses: actions/checkout@v4",
+    ];
+    let classified = action_uses_lines(&folded);
+    assert_eq!(classified.lines, vec![3], "{classified:?}");
+    assert!(classified.block_scalar[1]);
+
+    let uses = ["- uses: | # kept", "    actions/checkout@v4"];
+    let classified = action_uses_lines(&uses);
+    assert_eq!(classified.lines, vec![2], "{classified:?}");
+}
+
+#[test]
 fn bare_dash_shapes_are_not_action_lines() {
     let bare = action_uses_lines(&["-"]);
     assert!(bare.lines.is_empty(), "{bare:?}");
