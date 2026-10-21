@@ -15,6 +15,7 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     facts: &dyn SqlFactContext,
+    observer: Option<&crate::diagnostics::InvocationObserver>,
 ) -> Result<PostgresFindings> {
     let prepared = facts.prepared();
     let mut findings = PostgresFindings::default();
@@ -30,7 +31,7 @@ pub(super) fn scan(
             .ts
             .get(path)
             .and_then(|file| file.query_annotation_heads.as_deref());
-        if let Some(observer) = crate::diagnostics::current() {
+        if let Some(observer) = observer {
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
@@ -82,3 +83,6 @@ pub(super) fn scan(
     findings.sort();
     Ok(findings)
 }
+
+#[cfg(test)]
+mod tests;

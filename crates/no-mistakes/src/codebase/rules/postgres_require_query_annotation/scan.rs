@@ -14,9 +14,10 @@ pub(super) fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &dyn SqlFactContext,
+    observer: Option<&crate::diagnostics::InvocationObserver>,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
     if opts.effort == crate::config::v2::Effort::Low {
-        return low::scan(root, opts, files, facts);
+        return low::scan(root, opts, files, facts, observer);
     }
     let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();

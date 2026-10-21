@@ -49,6 +49,9 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    // Both rule dispatch and applications can be stolen by Rayon. The prepared
+    // source session retains the request observer even when worker TLS is empty.
+    let observer = sources.observer().map(AsRef::as_ref);
     super::run_included_postgres_rule(
         super::PreparedRuleContext::new(root, config, all_files, sources, facts),
         RULE_ID,
@@ -64,7 +67,9 @@ pub(crate) fn check_with_files_sources_and_facts(
             Ok(compiled)
         },
         |compiled, rel| compiled.paths.includes(rel),
-        scan_with_sources,
+        |root, compiled, files, sources, facts| {
+            scan_with_sources(root, compiled, files, sources, facts, observer)
+        },
     )
 }
 
