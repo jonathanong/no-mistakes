@@ -27,7 +27,9 @@ A configured executor interpolates `process.env.*` (including `process.env["SCHE
 
 Conditional value branches, string concatenation, and local alias chains retain their source provenance. This includes `const e = process.env; e.SCHEMA` and `import * as proc from "node:process"; proc.env.SCHEMA`. A condition that chooses between two literal schemas stays finite; reading env only in that condition is not an unbounded value branch.
 
-Destructured query rows and `for (const row of result.rows)` are checked when their source resolves to a configured SQL executor. Aliased or destructured `rows` collections use the same proof. Loop destructuring conservatively attributes each bound field to its source row; it does not assert a concrete runtime field value.
+Destructured query rows and `for (const row of result.rows)` are checked when their source resolves to a configured SQL executor. This includes array destructuring such as `const [first] = result.rows` followed by `const { schema } = first`, as well as aliased or object-destructured `rows` collections. These projections retain the source row's unbounded provenance; they do not assert a concrete runtime row or field value. Loop destructuring conservatively attributes each bound field to its source row.
+
+Comma expressions use JavaScript's value semantics: only the final operand supplies the interpolated value. An unbounded earlier operand does not make a finite final operand unbounded, while an unbounded final operand remains unbounded. The saved `pass-comma-discarded-env` and `fail-comma-env` fixtures cover both outcomes.
 
 A helper call around those values is reported unless the callee is a proven finite validator. Interpolations come from prepared template-expression facts, not a lexical `${...}` scan of the call span.
 
@@ -40,7 +42,7 @@ declare const key: string;
 query(`SELECT id FROM ${process.env[key]}.users`);
 ```
 
-New row-projection proofs require a configured query source. An unrelated HTTP response's `.rows` field is not sufficient. Mutable iteration variables (`for (let row ...)` or `for (var row ...)`) are not added to the row provenance map, since a later reassignment can replace the row. Use a `const` loop binding and validate the field inside its body:
+New row-projection proofs require a configured query source. An unrelated HTTP response's `.rows` field is not sufficient. Mutable array-destructured bindings and mutable iteration variables (`for (let row ...)` or `for (var row ...)`) are not added to the row provenance map, since a later reassignment can replace the row. Use immutable row bindings and validate the field inside the loop body:
 
 ```ts
 for (var row of result.rows) {}
@@ -73,7 +75,7 @@ export function list() {
 }
 ```
 
-A bind-value interpolation (`WHERE tenant = ${process.env.SCHEMA}`), an HTTP `req.query(...)`, or a recovered finite helper stays silent.
+A bind-value interpolation (`WHERE tenant = ${process.env.SCHEMA}`), an HTTP `req.query(...)`, or a recovered finite helper stays silent. `${(process.env.UNUSED, "public")}` also stays silent because the final operand is finite.
 
 ## Counterexample
 
@@ -84,7 +86,7 @@ export function list() {
 }
 ```
 
-`const schema = process.env.SCHEMA as "app" | "public"` is the same violation. So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`, `${process.env["SCHEMA"]}`, `${env.SCHEMA}` after `import { env } from "node:process"`, `${req.params.schema}`, and `${result.rows[0].schema}`.
+`const schema = process.env.SCHEMA as "app" | "public"` is the same violation. So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`, `${process.env["SCHEMA"]}`, `${env.SCHEMA}` after `import { env } from "node:process"`, `${req.params.schema}`, `${result.rows[0].schema}`, and `${("public", process.env.SCHEMA)}`.
 
 ## Fix
 

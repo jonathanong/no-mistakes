@@ -5,6 +5,52 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled identifier checks retain array rows and comma result provenance",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [scenario, expected] of [
+      ["fail-array-destructured-row", [[5, "id"]]],
+      ["fail-array-destructured-row-elision", [[4, "schema"]]],
+      ["fail-comma-env", [[3, "process.env.SCHEMA"]]],
+      ["pass-comma-discarded-env", []],
+      ["pass-array-destructured-http-row", []],
+      ["pass-array-destructured-mutable-row", []],
+      ["pass-array-destructured-mutable-result", []],
+    ]) {
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture",
+        scenario,
+      );
+      const options = { root, config: join(root, ".no-mistakes.yml") };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report, scenario);
+      const found = report.rules.filter(
+        (finding) => finding.rule === "postgres-no-unbounded-sql-identifier",
+      );
+      assert.deepEqual(
+        found.map((finding) => [finding.line, finding.target]),
+        expected,
+        scenario,
+      );
+      for (const finding of found) {
+        assert.equal(finding.file, "src/query.ts", scenario);
+        assert.match(finding.message, /switch whose default throws/, scenario);
+      }
+      const batch = await cjs.analyzeProject({
+        ...options,
+        reports: [{ type: "check", id: "check" }],
+      });
+      assert.deepEqual(batch.reports[0].result, report, scenario);
+    }
+  },
+);
+
+test(
   "compiled SQL verdict checks preserve CJS, ESM, suppression, and batched isolation",
   { skip: !compiled },
   async () => {

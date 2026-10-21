@@ -31,7 +31,7 @@ Static top-level `const` bindings initialized by `require("./tables")`, includin
 
 ## Abstains
 
-A dynamic, shadowed, conditional, or function-local `require` does not establish a registry producer. Mutable `let`/`var` require bindings also abstain, even without a visible reassignment; only retained immutable identities prove this new route. Multiple distinct local module paths can make the binding-to-edge association ambiguous even when every path resolves. Ambiguous re-export routes also abstain. These cases need an explicit import before the rule can judge the cross-file write:
+A dynamic, shadowed, conditional, or function-local `require` does not establish a registry producer. Mutable `let`/`var` require bindings also abstain, even without a visible reassignment; only retained immutable identities prove this route. When a file has multiple distinct internal `require` targets, the graph cannot associate the bound value with one canonical target, so that route abstains even if each target resolves. Ambiguous re-export routes also abstain. These cases need an explicit import before the rule can judge the cross-file write:
 
 ```ts
 declare const path: string;
@@ -39,12 +39,20 @@ const registry = require(path);
 registry.tables.users = "app.users";
 ```
 
-For example, this require route may abstain because the canonical edges do not identify which literal supplied the binding. The same limitation applies to namespace routes with multiple local import paths:
+For example, this route abstains because the per-file require projection sees two internal targets and cannot prove which target supplied `registry`. The same limitation applies to namespace routes with multiple local import paths:
 
 ```ts
 const registry = require("./tables");
 const other = require("./other");
 registry.tables.users = "app.users";
+```
+
+An unrelated external require does not make another binding ambiguous. In the saved `pass-require-other-target` fixture, `tables` comes from `@example/unrelated`, while the separate bare `require("./tables")` is not bound to `tables`; no cross-file registry finding is produced:
+
+```ts
+const { tables } = require("@example/unrelated");
+require("./tables");
+tables.users = "app.users";
 ```
 
 For example, rebinding a required namespace changes the mutation's target:
