@@ -1,4 +1,5 @@
 use super::*;
+use oxc_ast::ast::ConditionalExpression;
 
 impl ImportCollector {
     pub(in super::super) fn value_expression(
@@ -32,19 +33,7 @@ impl ImportCollector {
                         .into(),
                 )
             }
-            Expression::ConditionalExpression(value) => {
-                let consequent = self.value_expression(&value.consequent);
-                let alternate = self.value_expression(&value.alternate);
-                if literal_conditional_arm(&value.consequent, &consequent)
-                    && literal_conditional_arm(&value.alternate, &alternate)
-                {
-                    // Preserve the existing finite-return proof without treating
-                    // opaque templates or other Derived values as literals.
-                    ValueExpression::Unknown
-                } else {
-                    ValueExpression::Derived(vec![consequent, alternate].into())
-                }
-            }
+            Expression::ConditionalExpression(value) => self.conditional_value_expression(value),
             Expression::BinaryExpression(value)
                 if value.operator == oxc_syntax::operator::BinaryOperator::Addition =>
             {
@@ -130,6 +119,20 @@ impl ImportCollector {
                     context: self.current_function_id(),
                 }
             }),
+        }
+    }
+
+    fn conditional_value_expression(&self, value: &ConditionalExpression<'_>) -> ValueExpression {
+        let consequent = self.value_expression(&value.consequent);
+        let alternate = self.value_expression(&value.alternate);
+        if literal_conditional_arm(&value.consequent, &consequent)
+            && literal_conditional_arm(&value.alternate, &alternate)
+        {
+            // Preserve the existing finite-return proof without treating
+            // opaque templates or other Derived values as literals.
+            ValueExpression::Unknown
+        } else {
+            ValueExpression::Derived(vec![consequent, alternate].into())
         }
     }
 }
