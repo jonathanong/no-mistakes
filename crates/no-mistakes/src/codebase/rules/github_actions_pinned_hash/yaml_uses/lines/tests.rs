@@ -311,3 +311,34 @@ fn plain_apostrophe_does_not_hide_the_version_comment() {
     let quoted = r#"- { name: "Don't", uses: actions/checkout@sha } # v6.0.2"#;
     assert_eq!(super::super::version_comment(quoted), "# v6.0.2");
 }
+
+#[test]
+fn hash_inside_a_flow_value_keeps_the_version_comment() {
+    let line = "- { name: foo#bar, uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd } # v6.0.2";
+    assert_eq!(super::super::version_comment(line), "# v6.0.2");
+    let embedded = "- { name: foo#bar, uses: actions/checkout@sha }";
+    assert_eq!(super::super::version_comment(embedded), "");
+
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let file = root.join(".github/workflows/flow-hash-comment-fail.yml");
+    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
+    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    assert_eq!(lines, vec![3], "{findings:?}");
+    assert!(
+        findings[0].message.contains("actions/checkout@v4"),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("trailing comment")),
+        "{findings:?}"
+    );
+}

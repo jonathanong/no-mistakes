@@ -121,6 +121,8 @@ pub(super) fn version_comment(line: &str) -> &str {
     let mut escape = false;
     // A quote opens a scalar only at a boundary. `Don't` keeps the apostrophe.
     let mut boundary = true;
+    // YAML comments need whitespace before `#`. `foo#bar` stays in the scalar.
+    let mut separated = true;
     for (index, ch) in line.char_indices() {
         if escape {
             escape = false;
@@ -133,18 +135,21 @@ pub(super) fn version_comment(line: &str) -> &str {
             } else if ch == active {
                 quote = None;
                 boundary = true;
+                separated = false;
             }
             continue;
         }
         if matches!(ch, '"' | '\'') && boundary {
             quote = Some(ch);
             boundary = false;
+            separated = false;
             continue;
         }
-        if ch == '#' {
+        if ch == '#' && separated {
             return line[index..].trim();
         }
-        boundary = ch.is_whitespace() || matches!(ch, '{' | '[' | ',' | ':' | '-');
+        separated = ch.is_whitespace();
+        boundary = separated || matches!(ch, '{' | '[' | ',' | ':' | '-');
     }
     ""
 }
