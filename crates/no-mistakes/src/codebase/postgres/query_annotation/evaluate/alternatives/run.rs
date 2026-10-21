@@ -92,7 +92,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 // With no reference in the entry scope, every previous prefix map
                 // is empty. New arm-local builders are rebinds, not mutations.
-                if !self.files[path].facts.precise_records && !before.contains_reference() {
+                if !precise_records && !before.contains_reference() {
                     continue;
                 }
                 for (name, value) in before {
