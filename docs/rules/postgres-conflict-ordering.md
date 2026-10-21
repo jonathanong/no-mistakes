@@ -90,7 +90,10 @@ separate from the opt-in SQL verdict ledger and are listed in
 An `INSERT ... SELECT unnest(enum_range(...)) ON CONFLICT DO NOTHING` can
 produce several rows. Its omitted conflict target violates this rule even when
 the current catalog lists just one unique key. The finding establishes the
-policy violation; it does not establish that a deadlock occurred.
+policy violation; it does not establish that a deadlock occurred. On the SQL
+verdict ledger, that targetless clause stays a violation when a trailing
+interpolation leaves an opaque tail. An order finding in the same situation
+still abstains. See [SQL verdicts](../postgres-sql-verdicts.md).
 
 ## Valid example
 
