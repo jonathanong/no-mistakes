@@ -1,27 +1,24 @@
-# ignoreChecks entries must be the RAW name -- either a Checks API check_run
-# `name` or a Statuses API commit status `context`, not the composite display
-# name shown in the PR UI. pr-shepherd matches against the raw name; composite
-# entries silently never match. Patterns are case-insensitive globs.
-ignoreChecks:
-  - 'CodeRabbit'
-  # CodSpeed GitHub app check, e.g. "CodSpeed Performance Analysis".
-  # Local Criterion is the source of truth (AGENTS.md); GHA runners are not a
-  # consistent architecture.
-  - 'CodSpeed*'
-  # Codecov project statuses fail with "No coverage information found on base
-  # report" when main has no upload for that flag. Patch coverage still blocks.
-  - 'codecov/project'
-  - 'codecov/project/*'
+version: 1
 
-# Match the repository's required linear history and allowed merge strategy.
-merge:
-  commandArgs:
-    - '--squash'
+checks:
+  # checks.ignore entries must be the RAW name -- either a Checks API check_run
+  # `name` or a Statuses API commit status `context`, not the composite display
+  # name shown in the PR UI. pr-shepherd matches against the raw name; composite
+  # entries silently never match. Patterns are case-insensitive globs.
+  ignore:
+    - 'CodeRabbit'
+    # CodSpeed GitHub app check, e.g. "CodSpeed Performance Analysis".
+    # Local Criterion is the source of truth (AGENTS.md); GHA runners are not a
+    # consistent architecture.
+    - 'CodSpeed*'
+    # Codecov project statuses fail with "No coverage information found on base
+    # report" when main has no upload for that flag. Patch coverage still blocks.
+    - 'codecov/project'
+    - 'codecov/project/*'
 
-# Bundled rules for vendor bot noise. They hide Codecov reports and Codex
-# quota, activity, and no-findings notices, then minimize them on GitHub.
-# CodeRabbit notices are only hidden, because CodeRabbit later edits the same
-# comment into its walkthrough.
+# Bundled rules for vendor bot noise. They hide Codecov reports and CodeRabbit
+# and Codex notices, then minimize them on GitHub. A CodeRabbit progress
+# comment later edited into its walkthrough is reclassified and shown once.
 classify:
   standard:
     all: true
