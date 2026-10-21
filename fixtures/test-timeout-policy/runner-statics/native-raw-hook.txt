@@ -1,7 +1,10 @@
-// Native static access is the before-fix control: no public hook timeout is captured.
-native.TestRunner.getCurrentSuite().on('beforeAll', async () => {
-  writeFileSync('extension.marker', 'raw callback entered')
-  // The configured hook deadline is 250ms; native .on never captures that timer.
-  await new Promise(resolve => setTimeout(resolve, 400))
+// Native static access is the before-fix control: .on stores the callback unwrapped.
+// Identity is the deadline-capture proof; a 400ms wall-clock sleep raced the following
+// test's 250ms testTimeout on loaded CI (#2443). File-level collectors delete `.suite`.
+describe('native raw static hooks', () => {
+  const raw = () => writeFileSync('extension.marker', 'raw callback entered')
+  const collector = native.TestRunner.getCurrentSuite()
+  collector.on('beforeAll', raw)
+  native.expect(native.TestRunner.getSuiteHooks(collector.suite).beforeAll.at(-1)).toBe(raw)
+  test('body runs after the uncapped raw hook', continued)
 })
-test('body runs after the uncapped raw hook', continued)

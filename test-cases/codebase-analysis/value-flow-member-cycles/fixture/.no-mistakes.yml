@@ -1,0 +1,10 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - glob: src/*.mts
+      traversal: direct
+      unknownCalls: ignore
+      targets:
+        - exact: console.log
