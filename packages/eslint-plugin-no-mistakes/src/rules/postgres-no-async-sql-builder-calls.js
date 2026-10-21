@@ -99,6 +99,13 @@ function argumentParameterContract(argument, context, types, contractOf) {
   return contractOf(binding.typeAnnotation, types);
 }
 
+function arrayLiteralMap(call) {
+  const callee = unwrapExpression(call.callee);
+  if (callee?.type !== "MemberExpression" || callee.computed || callee.optional) return false;
+  if (propertyName(callee.property) !== "map") return false;
+  return unwrapExpression(callee.object)?.type === "ArrayExpression";
+}
+
 function conciseBodyContract(func, context, types, seen) {
   if (func.async) return "allows";
   if (func.returnType) return annotationContract(func.returnType, types);
@@ -107,6 +114,9 @@ function conciseBodyContract(func, context, types, seen) {
   if (unwrapExpression(parent.callee)?.type === "Identifier") {
     return argumentParameterContract(func, context, types, callableReturnContract);
   }
+  // A custom `.map` may call the callback result as a promise. Only an array
+  // literal's map collects values the caller can ignore.
+  if (!arrayLiteralMap(parent)) return "unknown";
   return callResultContract(parent, context, types, seen);
 }
 

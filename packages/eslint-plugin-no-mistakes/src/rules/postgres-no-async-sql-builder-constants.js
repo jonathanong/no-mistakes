@@ -153,10 +153,21 @@ function unboundRunsAfter(func, cutoff, context, seen) {
   return classMemberRunsAfter(func, cutoff, context, seen);
 }
 
+// `const init = () => {}` before the const is live as soon as that line runs.
+// An export lets a cycle call it before a later const, wherever `export { init }` sits.
+function exportRunsEarly(func, variable, cutoff) {
+  const declarator = func.parent;
+  if (declarator?.type !== "VariableDeclarator" || declarator.range[0] >= cutoff) return false;
+  if (declarationExported(declarator.parent)) return true;
+  return variable.references.some(
+    (reference) => reference.identifier.parent?.type === "ExportSpecifier",
+  );
+}
+
 function functionRunsAfter(func, cutoff, context, seen) {
   const variable = boundVariable(func, context);
   if (!variable) return unboundRunsAfter(func, cutoff, context, seen);
-  if (hoistedExport(func, variable)) return false;
+  if (hoistedExport(func, variable) || exportRunsEarly(func, variable, cutoff)) return false;
   return referencesRunAfter(func, variable, cutoff, context, seen);
 }
 

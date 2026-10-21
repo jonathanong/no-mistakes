@@ -160,10 +160,13 @@ async function buildQuery(id: string) {
   exported function is judged by that function. A class method is judged by
   its class: an export stays silent, and so does a call of that class before
   the const. Returning the call from the callback, as in
-  `[1].map(() => build())`, is ready when that callback is. Removing
-  `async` returns the SQL string. A later declarator in the same statement
-  runs after the initializer and still reports. A module-level binding that
-  is not that shape, including a module-level configured tag, is not judged SQL.
+  `[1].map(() => build())`, is ready when that callback is. Another `.map`
+  stays silent, because that callee may still use the promise. Removing
+  `async` returns the SQL string. An exported arrow created before the const
+  stays silent even when `export { name }` is written later. A later
+  declarator in the same statement runs after the initializer and still
+  reports. A module-level binding that is not that shape, including a
+  module-level configured tag, is not judged SQL.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
   name (`import { sql as tag }` matches `sql`). Type-only and default imports

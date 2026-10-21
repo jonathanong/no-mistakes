@@ -498,6 +498,68 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       [],
     );
+    // Only an array literal's discarded map is a known callback contract.
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        const name = "map";
+        consumer.map(() => build());
+        [1][name](() => build());
+        [1]?.map(() => build());
+        [1].forEach(() => build());
+        (0, consumer)(() => build());
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        function take(rows) { return rows; }
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        take([1].map(() => build()));
+      `),
+      [],
+    );
+    // The arrow exists before Q and is exported, so a cycle can call it first.
+    assert.deepEqual(
+      ids(`
+        const init = () => { build(); };
+        trigger();
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        export { init };
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        export const init = () => { build(); };
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        init();
+      `),
+      [],
+    );
+    assert.deepEqual(
+      ids(`
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        const init = () => { build(); };
+        export { init };
+        init();
+      `),
+      ["removeAsync"],
+    );
+    assert.deepEqual(
+      ids(`
+        const init = () => { build(); };
+        const Q = "SELECT 1";
+        async function build() { return Q; }
+        init();
+      `),
+      ["removeAsync"],
+    );
     // An exported helper is hoisted, so a cyclic import can call it before the const.
     assert.deepEqual(
       ids(
