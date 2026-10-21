@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
-const { chmod, mkdtemp, readdir, rm, writeFile } = require("node:fs/promises");
+const { chmod, mkdtemp, readdir, realpath, rm, writeFile } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 
@@ -18,7 +18,8 @@ const aggregateResult = {
 };
 
 async function privateDirectory(prefix) {
-  const directory = await mkdtemp(join(tmpdir(), prefix));
+  // Resolve symlinks (macOS /var -> /private/var) so paths match what production opens.
+  const directory = await realpath(await mkdtemp(join(tmpdir(), prefix)));
   await chmod(directory, 0o700);
   return directory;
 }
@@ -95,6 +96,7 @@ test("closes the output handle when directory validation fails after open", asyn
   const manifest = join(directory, "changed-files.txt");
   const fs = require("node:fs/promises");
   const originalOpen = fs.open;
+  let closeCalls = 0;
   try {
     await writeFile(manifest, "a.mts\n");
     await withFsOverride(
@@ -105,6 +107,7 @@ test("closes the output handle when directory validation fails after open", asyn
             await chmod(directory, 0o755);
             const originalClose = handle.close.bind(handle);
             handle.close = async () => {
+              closeCalls += 1;
               await originalClose();
               const error = new Error("injected directory close failure");
               error.code = "EIO";
@@ -124,6 +127,7 @@ test("closes the output handle when directory validation fails after open", asyn
         );
       },
     );
+    assert.ok(closeCalls >= 1, "directory handle close must be called");
   } finally {
     await chmod(directory, 0o700).catch(() => {});
     await rm(directory, { recursive: true, force: true });
