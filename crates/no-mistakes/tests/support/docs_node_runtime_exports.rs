@@ -1,6 +1,11 @@
 use super::{read, repo_root};
 use std::collections::BTreeSet;
 
+fn table_cells(line: &str) -> Option<Vec<&str>> {
+    let row = line.trim().strip_prefix('|')?.strip_suffix('|')?;
+    Some(row.split('|').map(str::trim).collect())
+}
+
 #[test]
 fn node_runtime_exports_have_api_docs() {
     let root = repo_root();
@@ -16,16 +21,34 @@ fn node_runtime_exports_have_api_docs() {
         "runtime export inventory must not be empty"
     );
     let runtime_inventory = docs
-        .split_once("| Runtime export | API |\n")
-        .and_then(|(_, rest)| rest.split_once("\n\n").map(|(table, _)| table))
+        .split_once("## Runtime exports\n")
+        .and_then(|(_, rest)| rest.trim_start().split_once("\n\n").map(|(table, _)| table))
         .expect("docs/node-api.md must contain a complete runtime export inventory table");
+    let mut rows = runtime_inventory.lines();
+    let header = rows
+        .next()
+        .and_then(table_cells)
+        .expect("runtime export table header");
+    assert_eq!(header, ["Runtime export", "API"]);
+    let separator = rows
+        .next()
+        .and_then(table_cells)
+        .expect("runtime export table separator");
+    assert_eq!(separator.len(), 2);
+    assert!(separator.iter().all(|cell| {
+        !cell.is_empty()
+            && cell
+                .chars()
+                .all(|character| character == '-' || character == ':')
+    }));
     let source_exports = exports.iter().copied().collect::<BTreeSet<_>>();
-    let documented_rows = runtime_inventory
-        .lines()
-        .filter_map(|line| {
-            line.strip_prefix("| `")?
-                .split_once("` |")
-                .map(|(name, api)| (name, api.trim().trim_end_matches('|').trim()))
+    let documented_rows = rows
+        .filter_map(table_cells)
+        .filter_map(|cells| {
+            let [name, api] = cells.as_slice() else {
+                return None;
+            };
+            Some((name.strip_prefix('`')?.strip_suffix('`')?, *api))
         })
         .collect::<Vec<_>>();
     for (export, api) in &documented_rows {
@@ -39,13 +62,12 @@ fn node_runtime_exports_have_api_docs() {
         .map(|(name, _)| *name)
         .collect::<BTreeSet<_>>();
     assert_eq!(
+        documented_rows.len(),
+        source_exports.len(),
+        "runtime export inventory must contain one row per runtime export"
+    );
+    assert_eq!(
         documented_exports, source_exports,
         "runtime export inventory must exactly match packages/no-mistakes/index.js"
     );
-    for export in source_exports {
-        assert!(
-            runtime_inventory.contains(&format!("| `{export}` |")),
-            "docs/node-api.md must map runtime export `{export}`"
-        );
-    }
 }
