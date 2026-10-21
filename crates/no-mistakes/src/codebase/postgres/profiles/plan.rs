@@ -20,9 +20,13 @@ pub fn configure_prepared_postgres_plan(
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
     plan.record_general_sql_locations();
-    let annotation_options =
-        configured_embedded_sql_options(config, &["postgres-require-query-annotation"])?;
-    if !annotation_options.is_empty() {
+    let (_, annotation_options, _) = super::configured_embedded_sql_options_with_annotation(
+        config,
+        &["postgres-require-query-annotation"],
+    )?;
+    plan.query_annotation_heads |= super::annotation_effort::low_requested(config)?;
+    let evaluated_annotation = !annotation_options.is_empty();
+    if evaluated_annotation {
         if plan.query_annotation {
             if let Some(existing) = &mut plan.query_annotation_options {
                 existing.extend(annotation_options);
@@ -34,13 +38,10 @@ pub fn configure_prepared_postgres_plan(
         }
         plan.query_annotation = true;
     }
-    plan.postgres_variants |= [
-        "postgres-lock-ordering",
-        "postgres-conflict-ordering",
-        "postgres-require-query-annotation",
-    ]
-    .iter()
-    .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_variants |= evaluated_annotation
+        || ["postgres-lock-ordering", "postgres-conflict-ordering"]
+            .iter()
+            .any(|id| !config.rule_applications(id).is_empty());
     let ordering = ["postgres-lock-ordering", "postgres-conflict-ordering"]
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());

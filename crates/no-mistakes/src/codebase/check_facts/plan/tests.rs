@@ -2,7 +2,7 @@ use super::CheckFactPlan;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 
 #[test]
-fn production_path_demand_is_shared_across_plan_clones_and_unioned_once() {
+fn production_path_demand_is_shared_across_plan_clones_and_combined_once() {
     use std::sync::Arc;
     let paths = Arc::new(
         [std::path::PathBuf::from("/fixture/index.ts")]
@@ -157,4 +157,25 @@ fn empty_explicit_subset_stays_empty_until_another_profile_is_requested() {
         ..Default::default()
     });
     assert_eq!(plan.query_annotation_options, Some(vec![read]));
+}
+
+#[test]
+fn annotation_heads_survive_plan_union_as_import_and_binding_demand_only() {
+    let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    let mut plan = CheckFactPlan::default();
+    plan.include(CheckFactPlan {
+        query_annotation_heads: true,
+        ..Default::default()
+    });
+    plan.include(CheckFactPlan {
+        embedded_sql_options: vec![profile],
+        ..Default::default()
+    });
+
+    let collected = plan.collected_ts_plan();
+    assert!(plan.query_annotation_heads);
+    assert!(!plan.query_annotation);
+    assert!(collected.imports);
+    assert!(collected.module_bindings);
+    assert!(!collected.call_arguments);
 }

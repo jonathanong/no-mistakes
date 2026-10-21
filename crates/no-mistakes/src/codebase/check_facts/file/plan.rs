@@ -54,6 +54,7 @@ pub(super) fn requires_parse(
     plan.imports
         || plan.production_import_paths.contains(path)
         || plan.query_annotation
+        || plan.query_annotation_heads
         || plan.symbols
         || plan.react
         || plan.react_usages

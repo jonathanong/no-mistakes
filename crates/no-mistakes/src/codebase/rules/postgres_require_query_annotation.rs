@@ -37,6 +37,7 @@ struct CompiledOptions {
     paths: super::RuleGlobFilter,
     embedded: EmbeddedSqlOptions,
     unanalyzable_sql: UnanalyzableSql,
+    effort: crate::config::v2::Effort,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
@@ -51,7 +52,17 @@ pub(crate) fn check_with_files_sources_and_facts(
     super::run_included_postgres_rule(
         super::PreparedRuleContext::new(root, config, all_files, sources, facts),
         RULE_ID,
-        |rule| compile_options(&rule.try_rule_options()?),
+        |rule| {
+            let mut compiled = compile_options(&rule.try_rule_options()?)?;
+            let policy = config.effective_rule_analysis(rule)?;
+            compiled.effort = policy.effort;
+            compiled.unanalyzable_sql = match policy.unanalyzable {
+                crate::config::v2::Unanalyzable::Report => UnanalyzableSql::Report,
+                crate::config::v2::Unanalyzable::Advise => UnanalyzableSql::Advise,
+                crate::config::v2::Unanalyzable::Ignore => UnanalyzableSql::Ignore,
+            };
+            Ok(compiled)
+        },
         |compiled, rel| compiled.paths.includes(rel),
         scan_with_sources,
     )
@@ -61,6 +72,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         paths: super::RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
         unanalyzable_sql: opts.unanalyzable_sql,
+        effort: crate::config::v2::Effort::Max,
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),

@@ -43,6 +43,12 @@ only for rules that explicitly adopt it. If an adopted low-effort rule needs a
 partner check that is absent or outside its configured scope, it warns and
 falls back to `max` for that rule.
 
+[`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md#effort)
+supports `low`: prove a literal annotation at the call or through one local
+const, including explicitly configured trusted tags, without helper evaluation.
+Other shapes use the selected unanalyzable policy. These syntax proofs do not
+require a companion rule.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

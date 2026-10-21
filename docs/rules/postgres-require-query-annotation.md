@@ -4,9 +4,10 @@ A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configurat
 
 Require a leading `/* name */` block comment on executed PostgreSQL SQL so
 slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
-(`-- name`) do not count. `BEGIN`, `COMMIT`, and `ROLLBACK` are exempt.
+(`-- name`) do not count. At the default `effort: max`, `BEGIN`, `COMMIT`, and
+`ROLLBACK` are exempt.
 
-The rule consumes prepared embedded-SQL and helper summaries from the request's
+At `effort: max`, the rule consumes prepared embedded-SQL and helper summaries from the request's
 shared TypeScript parse. Imported helpers use the request's prepared importer
 project catalog and source session. Package-local TypeScript aliases resolve from
 the importing file's project; an explicit `--tsconfig` deliberately overrides that
@@ -32,9 +33,7 @@ on only one path is still reported at that branch's physical source location,
 where line suppressions also apply:
 
 ```ts
-query(named
-  ? "/* accounts/list */ SELECT id FROM accounts"
-  : "SELECT id FROM accounts"); // The second version needs an annotation.
+query(named ? "/* accounts/list */ SELECT id FROM accounts" : "SELECT id FROM accounts"); // The second version needs an annotation.
 ```
 
 Opaque or over-cap calls retain the richer prepared helper-prefix traversal
@@ -48,15 +47,6 @@ when their operands refer to a SQL builder. Without a complete version set,
 arrays and actual fragment-valued branches remain opaque. Reads of array slots
 or object properties containing fragments also remain opaque; interpolation
 effects are evaluated once.
-
-A trusted tag that splices a nested SQL fragment has an unknown prefix when
-the fragment comes first. The rule honors `unanalyzableSql` rather than reading
-that fragment as a bind placeholder. A literal leading annotation before a
-nested fragment remains verifiable. `String.raw` strings and scalar results of
-comparisons, conditional tests, and object expressions remain bind values even
-when their operands refer to a SQL builder. Arrays and actual fragment-valued
-branches remain opaque. Reads of array slots or object properties containing
-fragments also remain opaque; interpolation effects are evaluated once.
 
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
@@ -114,9 +104,8 @@ need a stable operation name rather than an opaque SQL string.
 
 ## What it catches/requires
 
-Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
-`COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
-
+Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
+`BEGIN`, `COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
 
 ## Options and defaults
 
@@ -124,12 +113,70 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
 `executorNames` defaults to `[query, read, write]` only with a configured module.
 `unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
 `advise` puts its reason, known prefix, and helper lines in non-failing
-`advisories`. Proven missing annotations remain findings in every mode.
+`advisories`. At `max`, proven missing annotations remain findings under every
+unanalyzable policy.
 
 Configuration, SQL helper behavior, and callback forwarding are described in
 [options and helpers](../postgres-query-annotation/options-and-helpers.md).
 Use `check --include-sql-verdicts` for per-call proof and residual evidence;
 see [SQL verdicts](../postgres-sql-verdicts.md).
+
+## Effort
+
+`effort: max` is the default and preserves helper, branch, builder, and imported
+value inference. At effective `effort: low`, this rule does not request or run
+the annotation evaluator. It accepts only these two forms:
+
+```ts
+// The leading named comment is literal at the executor call.
+query(`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
+query("/* posts/list */ " + body);
+
+// Or one local const has that literal head and is passed directly.
+const statement = `/* posts/list */ ${body}`;
+query(statement);
+```
+
+Configured `trustedSqlTags` templates also qualify in both positions, when the
+first quasi starts with the complete named comment:
+
+```ts
+import { sql } from "@example/sql"; // Configured trustedSqlTags import.
+query(sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
+const statement = sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`;
+query(statement);
+```
+
+Tag trust follows the actual named import binding, including configured module
+subpaths and import aliases. A shadowed tag, a tag absent from the configuration, and built-in
+default tag imports without an explicit matching configuration do not qualify.
+
+The first complete block comment must contain a nonempty name. Parentheses and
+TypeScript assertions do not add indirection. The const must resolve to the same
+file's lexical declaration; a second alias, import, destructured binding, or
+mutable declaration does not qualify.
+
+Counterexamples at `low` include helper returns, tagged templates absent from the configuration,
+conditional heads, appended builders, and bare transaction
+commands. These shapes are **unanalyzable**, even when `max` can prove their
+annotation. Rewrite them as a named literal at the call, or one local const
+initialized with that literal head and passed directly, as above.
+
+The shared `unanalyzable` policy controls the outcome: `report` fails, `advise`
+emits a non-failing advisory, and `ignore` skips it. `unanalyzableSql` remains an
+alias. For example, set `options.effort: low` and `options.unanalyzable: report`
+to require these forms. Shared configuration and CLI overrides also apply.
+
+Low-effort diagnostics use the executor call's line. Suppress at that call:
+
+```ts
+// no-mistakes-disable-next-line postgres-require-query-annotation
+query(buildSql());
+```
+
+File and same-line directives also work. A helper-line suppression does not
+suppress a low-effort call-site diagnostic. Other applications that remain at
+`max` can still request evaluator work in the same invocation.
 
 ## Valid example
 
@@ -155,7 +202,6 @@ Use `no-mistakes-disable-next-line postgres-require-query-annotation` or
 administrative script.
 
 SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
-
 
 Detailed mutation and invocation behavior is described in
 [advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).

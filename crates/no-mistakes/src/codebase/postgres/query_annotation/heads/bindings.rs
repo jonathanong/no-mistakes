@@ -1,0 +1,92 @@
+use super::{
+    diagnostics::Gaps,
+    imports,
+    syntax::{Head, Syntax},
+    HeadProof, Span,
+};
+use crate::codebase::ts_source::{facts::TsFileFacts, module_facts::ModuleBinding};
+use crate::fx::{FxHashMap, FxHashSet};
+pub(super) struct Bindings<'a> {
+    owners: FxHashMap<Span, Option<&'a ModuleBinding>>,
+    imports: FxHashMap<usize, HeadProof>,
+    constants: &'a FxHashMap<Span, Head>,
+    gaps: Option<Gaps>,
+}
+impl<'a> Bindings<'a> {
+    pub fn new(syntax: &'a Syntax, ts: &'a TsFileFacts) -> Self {
+        let candidates = || {
+            syntax
+                .calls
+                .iter()
+                .map(|call| call.head)
+                .chain(syntax.constants.values().copied())
+        };
+        let wanted = candidates()
+            .filter_map(|head| head.reference())
+            .collect::<FxHashSet<_>>();
+        let mut index = Self {
+            owners: FxHashMap::default(),
+            imports: FxHashMap::default(),
+            constants: &syntax.constants,
+            gaps: None,
+        };
+        let Some(module) = ts.module_bindings.as_deref().filter(|_| !wanted.is_empty()) else {
+            return index;
+        };
+        index.gaps = Some(Gaps::new(module));
+        // Index every possible owner once, retaining only relevant references.
+        // A duplicate is ambiguous even if the other owner is invalid.
+        for binding in &module.bindings {
+            for usage in binding.references.iter().filter(|usage| usage.runtime) {
+                let span = (usage.span.start, usage.span.end);
+                if wanted.contains(&span) {
+                    index
+                        .owners
+                        .entry(span)
+                        .and_modify(|owner| *owner = None)
+                        .or_insert(Some(binding));
+                }
+            }
+        }
+        let tags = candidates()
+            .filter_map(|head| match head {
+                Head::Tag(span) => index.owner(span).map(|binding| binding.id),
+                _ => None,
+            })
+            .collect::<FxHashSet<_>>();
+        index.imports = imports::identities(module, &tags);
+        index
+    }
+    fn owner(&self, span: Span) -> Option<&ModuleBinding> {
+        let owner = self.owners.get(&span).copied().flatten()?;
+        let gaps = self.gaps.as_ref()?;
+        (owner.runtime
+            && !gaps.overlaps(span)
+            && !gaps.overlaps((owner.span.start, owner.span.end)))
+        .then_some(owner)
+    }
+    fn tag(&self, span: Span) -> HeadProof {
+        self.owner(span)
+            .filter(|owner| owner.imported)
+            .and_then(|owner| self.imports.get(&owner.id))
+            .cloned()
+            .unwrap_or(HeadProof::Unproven)
+    }
+    pub fn proof(&self, head: Head) -> HeadProof {
+        match head {
+            Head::Literal => HeadProof::Literal,
+            Head::Tag(span) => self.tag(span),
+            Head::Reference(span) => {
+                let Some(owner) = self.owner(span).filter(|owner| !owner.imported) else {
+                    return HeadProof::Unproven;
+                };
+                match self.constants.get(&(owner.span.start, owner.span.end)) {
+                    Some(Head::Literal) => HeadProof::Literal,
+                    Some(Head::Tag(span)) => self.tag(*span),
+                    _ => HeadProof::Unproven,
+                }
+            }
+            Head::Unproven => HeadProof::Unproven,
+        }
+    }
+}

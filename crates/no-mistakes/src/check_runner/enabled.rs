@@ -84,6 +84,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
         query_annotation: false,
+        query_annotation_heads: false,
         query_annotation_options: None,
         query_annotation_catalog: None,
         embedded_sql_options: Vec::new(),

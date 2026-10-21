@@ -4,6 +4,7 @@ mod coverage;
 mod evaluate;
 mod exports;
 mod expressions;
+pub(crate) mod heads;
 mod mapped_arguments;
 pub(crate) mod modules;
 mod progress;
