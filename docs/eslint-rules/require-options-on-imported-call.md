@@ -175,7 +175,7 @@ Spreads do not count as known keys.
 
 A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding applies only when the direct callee is not itself a configured target. An `.apply` call with a spread argument is not rewritten, because the literal array may not be the runtime argument list.
 
-Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object.
+Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object. `const check = (0, validateUrl)` is still `validateUrl`.
 
 ## Suppression
 

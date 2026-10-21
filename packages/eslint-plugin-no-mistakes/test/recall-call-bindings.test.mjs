@@ -68,6 +68,15 @@ describe("call-binding recall", () => {
       ).length,
       2,
     );
+    assert.deepEqual(
+      messages(
+        fixture("async-call-disposition/comma-alias.mjs"),
+        "async-call-disposition",
+        jobs,
+        "comma-alias.mjs",
+      ),
+      ["disposition", "disposition", "disposition"],
+    );
     assert.equal(
       messages(
         fixture("async-try-catch-return-await/recall.mjs"),

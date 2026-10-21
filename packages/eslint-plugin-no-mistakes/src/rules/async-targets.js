@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const {
   isLocalRequire,
   isReassigned,
@@ -160,7 +160,7 @@ function createTargetMatcher(context, optionKey = "targets") {
   }
 
   function resolveCallee(callee, seen = new Set()) {
-    callee = unwrapExpression(callee);
+    callee = unwrapSequence(callee);
     if (!callee) return null;
     const found = resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
     if (found) return found;

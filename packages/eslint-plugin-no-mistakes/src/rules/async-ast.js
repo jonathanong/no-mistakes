@@ -46,6 +46,14 @@ function unwrapExpression(node) {
   return current;
 }
 
+function unwrapSequence(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "SequenceExpression") {
+    current = unwrapExpression(current.expressions.at(-1));
+  }
+  return current;
+}
+
 function unwrapTransparentParent(node) {
   let current = node;
   while (isTransparentExpression(current.parent)) current = current.parent;
@@ -99,5 +107,6 @@ module.exports = {
   isUnconditionalBeforeReturn,
   traverse,
   unwrapExpression,
+  unwrapSequence,
   unwrapTransparentParent,
 };
