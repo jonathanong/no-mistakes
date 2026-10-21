@@ -13,7 +13,6 @@ const {
   collectPatternNames,
   createCleanupTracker,
   firstNamedCallbackArgument,
-  importSpecifierName,
   isMutableInitializer,
   isKnownTestCallee,
   isTestExtendCall,
@@ -23,7 +22,10 @@ const {
   setupCallbackKind,
 } = require("./test-no-shared-state-helpers");
 const { createMutationHandlers } = require("./test-no-shared-state-mutations");
-const { createImportedTestAliases } = require("./test-no-shared-state-aliases");
+const {
+  createImportedTestAliases,
+  recordImportedTests,
+} = require("./test-no-shared-state-aliases");
 const { createRuleHelpers } = require("./test-no-shared-state-rule-helpers");
 
 module.exports = rule(
@@ -39,6 +41,7 @@ module.exports = rule(
   (context) => {
     const mutableTopLevel = new Set();
     const testCalleeNames = new Set(["it", "test", "describe"]);
+    const namespaces = new Set();
     const testAliases = createImportedTestAliases(context);
     const pendingNamedCallbacks = [];
     const pendingNamedSetupCallbacks = [];
@@ -54,7 +57,7 @@ module.exports = rule(
     let testDepth = 0;
     let setupDepth = 0;
     const { calleeHasProperty, isDescribeCall, isInlineCallback, resolveFunctionCallback } =
-      createRuleHelpers(context, testCalleeNames);
+      createRuleHelpers(context, testCalleeNames, namespaces);
     const mutationHandlers = createMutationHandlers({
       cleanupTracker,
       context,
@@ -66,9 +69,18 @@ module.exports = rule(
 
     function visitTopLevelVariableDeclaration(node) {
       for (const declaration of node.declarations) {
-        if (isTestExtendCall(declaration.init, testCalleeNames)) {
+        if (isTestExtendCall(declaration.init, testCalleeNames, namespaces)) {
           for (const name of collectPatternNames(declaration.id)) testCalleeNames.add(name);
           if (declaration.id.type === "Identifier") testAliases.add(declaration.id, "test");
+        }
+        if (
+          node.kind === "const" &&
+          declaration.id.type === "Identifier" &&
+          declaration.init &&
+          declaration.init.type !== "CallExpression" &&
+          isKnownTestCallee(declaration.init, testCalleeNames, namespaces)
+        ) {
+          testCalleeNames.add(declaration.id.name);
         }
         if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
         for (const name of collectPatternNames(declaration.id)) {
@@ -121,15 +133,7 @@ module.exports = rule(
         registryReports.flush();
       },
       ImportDeclaration(node) {
-        if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
-        for (const specifier of node.specifiers) {
-          if (specifier.type !== "ImportSpecifier") continue;
-          const imported = importSpecifierName(specifier);
-          if (["describe", "it", "test"].includes(imported) && specifier.local?.name) {
-            testCalleeNames.add(specifier.local.name);
-            testAliases.add(specifier.local, imported);
-          }
-        }
+        recordImportedTests(node, testCalleeNames, namespaces, testAliases);
       },
       CallExpression(node) {
         viMockTracker.collectFactoryReferences(node);
@@ -139,7 +143,7 @@ module.exports = rule(
         const isSerialSuite = isDescribe && testAliases.hasProperty(node.callee, "serial");
         if (isDescribe) cleanupTracker.enterSuite(isSerialSuite);
         if (configureSerialMode(node)) cleanupTracker.markCurrentSuiteSerial();
-        if (!isShadowed && isTestCall(node, testCalleeNames)) {
+        if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
           if (callback && !setupCallbackKind(node, testCalleeNames)) {
@@ -174,7 +178,7 @@ module.exports = rule(
       },
       "CallExpression:exit"(node) {
         const isShadowed = testAliases.isShadowed(node.callee);
-        if (!isShadowed && isTestCall(node, testCalleeNames)) testDepth -= 1;
+        if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) testDepth -= 1;
         if (!isShadowed && setupCallbackKind(node, testCalleeNames)) {
           setupDepth -= 1;
           cleanupTracker.endSetup();

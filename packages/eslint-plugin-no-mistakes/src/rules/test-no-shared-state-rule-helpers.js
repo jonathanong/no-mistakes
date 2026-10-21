@@ -40,13 +40,13 @@ function calleeHasProperty(callee, name) {
   return callee.property.name === name || calleeHasProperty(callee.object, name);
 }
 
-function createRuleHelpers(context, testCalleeNames) {
+function createRuleHelpers(context, testCalleeNames, namespaces) {
   return {
     calleeHasProperty,
     isDescribeCall(node) {
       return (
         (node.callee.type === "Identifier" && node.callee.name === "describe") ||
-        (isKnownTestCallee(node.callee, testCalleeNames) &&
+        (isKnownTestCallee(node.callee, testCalleeNames, namespaces) &&
           calleeHasProperty(node.callee, "describe"))
       );
     },
@@ -54,7 +54,8 @@ function createRuleHelpers(context, testCalleeNames) {
       const parent = node.parent;
       return (
         parent?.type === "CallExpression" &&
-        (setupCallbackKind(parent, testCalleeNames) || isTestCall(parent, testCalleeNames))
+        (setupCallbackKind(parent, testCalleeNames) ||
+          isTestCall(parent, testCalleeNames, namespaces))
       );
     },
     resolveFunctionCallback(node, callback) {

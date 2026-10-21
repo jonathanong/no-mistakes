@@ -1,5 +1,7 @@
 "use strict";
 
+const { importSpecifierName } = require("./test-no-shared-state-callees");
+
 function resolveVariable(node, context) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
@@ -55,9 +57,33 @@ function hasProperty(callee, name) {
   return false;
 }
 
+function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
+  if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
+  for (const specifier of node.specifiers) {
+    if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {
+      namespaces.add(specifier.local.name);
+    }
+    if (
+      specifier.type === "ImportDefaultSpecifier" &&
+      node.source.value === "@playwright/test" &&
+      specifier.local?.name
+    ) {
+      testCalleeNames.add(specifier.local.name);
+      testAliases.add(specifier.local, "test");
+    }
+    if (specifier.type !== "ImportSpecifier") continue;
+    const imported = importSpecifierName(specifier);
+    if (["describe", "it", "test"].includes(imported) && specifier.local?.name) {
+      testCalleeNames.add(specifier.local.name);
+      testAliases.add(specifier.local, imported);
+    }
+  }
+}
+
 module.exports = {
   createImportedTestAliases,
   hasOwnProperty,
   hasProperty,
+  recordImportedTests,
   resolveVariable,
 };

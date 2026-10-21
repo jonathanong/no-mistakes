@@ -26,6 +26,19 @@ This rule has no options.
 Check `undefined` explicitly when only an omitted prop should receive a
 fallback; preserve an explicit `null` when it is meaningful.
 
+## Limits
+
+`props["children"]`, `props[\`children\`]`, and `const node = children` are the same ReactNode value when the binding is declared in this file. A computed identifier key is not a static property name.
+
+A prop type imported through another file's re-export is not visible here.
+
+```tsx
+import type { PanelProps } from "./barrel";
+export const Panel = (props: PanelProps) => props.footer ?? <Empty />;
+```
+
+`barrel` may be `export type { PanelProps } from "./types"` where `footer` is `ReactNode`.
+
 ## Suppression
 
 ```tsx

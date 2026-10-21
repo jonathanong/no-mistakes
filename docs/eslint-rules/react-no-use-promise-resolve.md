@@ -27,6 +27,19 @@ This rule has no options.
 Use the value directly, await outside render where appropriate, or pass the
 real asynchronous promise to `React.use`.
 
+## Limits
+
+A default or namespace import of `react`, `const { use } = React`, a string or expression-free template key, optional chaining, a comma callee, and `Promise.resolve.call` are the same call. A computed identifier key is not static.
+
+`use` brought in through another file is not visible here.
+
+```tsx
+import { use } from "./barrel";
+use(Promise.resolve(value));
+```
+
+`barrel` may be `export { use } from "react"` or `export * from "react"`.
+
 ## Suppression
 
 ```tsx

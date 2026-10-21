@@ -636,6 +636,7 @@ describe("react-no-nullish-react-node", () => {
         "nullish",
         "nullish",
         "nullish",
+        "nullish",
       ],
     );
   });

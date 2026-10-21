@@ -29,6 +29,19 @@ This rule has no options.
 
 Remove `.sequential` and isolate the fixture/state that requires ordering.
 
+## Limits
+
+A renamed import, a namespace member, a string or expression-free template key, optional chaining, a comma callee, `Function.prototype` forwarding, and one `const` alias are the same `.sequential` call. Vitest's default import is not a runner. A computed identifier key is not a static name.
+
+Another file's re-export is not visible here.
+
+```ts
+import { suite } from "./barrel.mjs";
+suite.sequential("hidden", () => {});
+```
+
+`barrel.mjs` may be `export { describe as suite } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ describe } = vitest)` is not judged, because the caller can pass a different object.
+
 ## Suppression
 
 ```ts

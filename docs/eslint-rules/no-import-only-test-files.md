@@ -29,6 +29,18 @@ This rule has no options.
 Let the runner discover each test file directly, or put real assertions in the
 file rather than using it as an import-only manifest.
 
+## Limits
+
+`require(\`./users.test\`)` and `require.call(null, "./users.test")` name the same test file. A template with an expression does not.
+
+A test file reached through another module's re-export is not visible here.
+
+```js
+require("./barrel");
+```
+
+`barrel.js` may be `module.exports = require("./users.test")`.
+
 ## Suppression
 
 ```ts

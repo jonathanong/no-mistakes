@@ -86,6 +86,19 @@ scope exits are also intervening suspensions. Do not store an un-awaited
 `expect(...).rejects` matcher promise; the test runner's `valid-expect` rule
 owns that separate error.
 
+## Limits
+
+A renamed `expect`, `v.expect`, and `expect(promise)["rejects"]` or an expression-free template key are the same observer. A computed identifier key is not static.
+
+`expect` brought in through another file is not visible here.
+
+```ts
+import { check } from "./barrel";
+await check(update).rejects.toThrow();
+```
+
+`barrel` may be `export { expect as check } from "vitest"`.
+
 ## Suppression
 
 ```ts

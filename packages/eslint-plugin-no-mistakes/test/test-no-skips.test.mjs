@@ -256,6 +256,14 @@ describe("test-no-skips suppression and binding edges", () => {
       [17, 18, 19, 21],
     );
   });
+  it("follows a Playwright default import, a namespace destructure, and static member keys", () => {
+    assert.deepEqual(messages(code("recall"), rule, undefined, "suite.test.ts"), [
+      "modifier",
+      "modifier",
+      "modifier",
+      "modifier",
+    ]);
+  });
 });
 
 it("loads test-no-skips in Oxlint with the same import and suppression semantics", () => {

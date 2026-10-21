@@ -32,6 +32,21 @@ test("user", () => {
 Create mutable values inside each test or reset them in the lifecycle hook that
 owns the test isolation boundary.
 
+## Limits
+
+A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. Vitest's default import is not a runner. A computed identifier key is not a static modifier.
+
+A runner re-exported by another file is not visible here.
+
+```ts
+import { check } from "./barrel";
+check("hidden", () => {
+  counter += 1;
+});
+```
+
+`barrel` may be `export { test as check } from "vitest"` or `export * from "vitest"`.
+
 ## Suppression
 
 ```ts

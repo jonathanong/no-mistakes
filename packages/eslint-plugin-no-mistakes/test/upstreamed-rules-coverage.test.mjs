@@ -72,6 +72,7 @@ describe("upstreamed generic rule coverage", () => {
       "sequential",
       "sequential",
       "sequential",
+      "sequential",
     ]);
     assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "e2e.spec.tsx"), [
       "semantic",
