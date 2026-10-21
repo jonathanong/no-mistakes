@@ -136,7 +136,7 @@ impl<'a> IntoIterator for &'a mut Values {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq)]
 pub(in crate::codebase::postgres::query_annotation) enum Value {
     Prefix(String, bool, Option<u64>),
     Promise(Box<Value>),
@@ -188,3 +188,5 @@ impl Value {
 
 #[cfg(test)]
 mod tests;
+
+mod equality;
