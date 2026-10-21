@@ -145,6 +145,7 @@ fn mutable_registry_remaining_shapes_use_the_public_cli() {
         "fail-literal-computed",
         "fail-dynamic-key",
         "fail-static-require",
+        "fail-many-const-requires",
         "fail-require-namespace",
         "fail-namespace-reexport",
         "fail-namespace-named-reexport",

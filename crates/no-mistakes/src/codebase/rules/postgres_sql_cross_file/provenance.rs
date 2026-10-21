@@ -141,7 +141,7 @@ fn classify_call(
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
 ) {
-    if is_finite_validator(graph, facts, file, &value_call.callee) {
+    if is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee) {
         return;
     }
     classify(graph, facts, file, &value_call.callee, out, bindings);

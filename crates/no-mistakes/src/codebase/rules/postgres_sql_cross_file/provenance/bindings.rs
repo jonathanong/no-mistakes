@@ -4,6 +4,7 @@ use crate::fx::{fx_map, FxHashMap, FxHashSet};
 
 /// Borrowed syntactic indexes; neither value resolution nor another graph.
 pub(crate) struct Bindings<'a> {
+    pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
     pub(super) facts: &'a CheckFactMap,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
@@ -13,6 +14,7 @@ impl<'a> Bindings<'a> {
     pub(crate) fn new(facts: &'a CheckFactMap) -> Self {
         let mut result = Self {
             facts,
+            routes: super::super::graph::RegistryRoutes::new(facts),
             calls: fx_map(),
             values: fx_map(),
             iterations: fx_map(),

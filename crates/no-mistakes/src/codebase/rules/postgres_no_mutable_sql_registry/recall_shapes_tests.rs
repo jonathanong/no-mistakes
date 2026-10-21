@@ -6,6 +6,7 @@ fn remaining_registry_shapes_report_the_exact_producer_and_writer() {
         "fail-literal-computed",
         "fail-dynamic-key",
         "fail-static-require",
+        "fail-many-const-requires",
         "fail-require-namespace",
         "fail-namespace-reexport",
         "fail-namespace-named-reexport",

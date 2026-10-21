@@ -1,7 +1,8 @@
 //! Cross-file member writes that reach SQL identifier interpolations.
 use super::postgres_sql_cross_file::{
     check_applications, count, finding, identifier_placeholder, interpolations, registry_route,
-    sql_calls, unique_export, unique_namespace_member, Bindings, Provenance, SqlCall,
+    sql_calls, unique_export, unique_namespace_member, Bindings, Provenance, RegistryRoutes,
+    SqlCall,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;
@@ -11,6 +12,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::Path;
 
+mod write_index;
 mod writes;
 use writes::{mutated_exports, MutatedExport};
 
@@ -38,7 +40,8 @@ fn scan(
     graph: &DepGraph,
     facts: &CheckFactMap,
 ) -> Vec<RuleFinding> {
-    let writes = mutated_exports(graph, facts);
+    let bindings = Bindings::new(facts);
+    let writes = mutated_exports(graph, facts, &bindings.routes);
     count(
         "postgres.mutable_sql_registry.producers",
         writes.len() as u64,
@@ -47,15 +50,21 @@ fn scan(
     let mut candidates = 0;
     let mut sinks = 0;
     let calls = sql_calls(root, opts, facts);
-    let bindings = Bindings::new(facts);
     for call in &calls {
         candidates += 1;
         if identifier_placeholder(call.call) != Some(true) {
             continue;
         }
         for provenance in interpolations(graph, facts, call, &bindings) {
-            if let Some(finding) = registry_finding(root, graph, facts, &writes, call, &provenance)
-            {
+            if let Some(finding) = registry_finding(
+                root,
+                graph,
+                facts,
+                &bindings.routes,
+                &writes,
+                call,
+                &provenance,
+            ) {
                 sinks += 1;
                 findings.push(finding);
             }
@@ -66,6 +75,8 @@ fn scan(
     findings
 }
 
+#[cfg(all(test, feature = "test-instrumentation"))]
+mod index_tests;
 #[cfg(test)]
 mod tests;
 
@@ -73,14 +84,15 @@ fn registry_finding(
     root: &Path,
     graph: &DepGraph,
     facts: &CheckFactMap,
+    routes: &RegistryRoutes<'_>,
     writes: &[MutatedExport],
     call: &SqlCall<'_>,
     provenance: &Provenance,
 ) -> Option<RuleFinding> {
     let (unique, name) = match provenance {
         Provenance::Reference { name, members, .. } => (
-            registry_route(graph, facts, &call.file, name, members)
-                .or_else(|| unique_export(graph, facts, &call.file, name))?,
+            registry_route(graph, routes, &call.file, name, members)
+                .or_else(|| unique_export(graph, facts, routes, &call.file, name))?,
             name.as_str(),
         ),
         Provenance::Namespace {
@@ -88,7 +100,7 @@ fn registry_finding(
             exported,
             members,
         } => (
-            registry_route(graph, facts, &call.file, local, members)
+            registry_route(graph, routes, &call.file, local, members)
                 .or_else(|| unique_namespace_member(graph, facts, &call.file, local, exported))?,
             local.as_str(),
         ),

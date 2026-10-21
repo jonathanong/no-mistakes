@@ -12,11 +12,16 @@ pub(crate) struct UniqueExport {
 pub(crate) fn unique_export(
     graph: &DepGraph,
     facts: &CheckFactMap,
+    routes: &super::route_index::RegistryRoutes<'_>,
     importer: &Path,
     local: &str,
 ) -> Option<UniqueExport> {
-    let Some(binding) = imported(facts, importer, local) else {
-        return super::routes::registry_route(graph, facts, importer, local, &[]);
+    let Some(binding) = routes
+        .file(importer)
+        .and_then(|file| file.imports(routes).get(local))
+        .copied()
+    else {
+        return super::routes::registry_route(graph, routes, importer, local, &[]);
     };
     if binding.kind == ImportedBindingKind::Namespace {
         return None;

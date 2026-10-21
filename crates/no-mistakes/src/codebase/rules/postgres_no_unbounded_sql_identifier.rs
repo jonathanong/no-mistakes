@@ -2,7 +2,7 @@
 use super::postgres_sql_cross_file::{
     check_applications, count, finding, identifier_placeholder, interpolations, is_process_env,
     is_process_specifier, sql_calls, unique_export, unique_namespace_member, walk_expression,
-    Bindings, Provenance, SqlCall,
+    Bindings, Provenance, RegistryRoutes, SqlCall,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ValueExpression;
@@ -63,7 +63,9 @@ fn scan(
                     continue;
                 }
             }
-            if let Some(finding) = identifier_finding(root, graph, facts, call, &provenance) {
+            if let Some(finding) =
+                identifier_finding(root, graph, facts, &bindings.routes, call, &provenance)
+            {
                 sinks += 1;
                 findings.push(finding);
             }
@@ -78,6 +80,7 @@ fn identifier_finding(
     root: &Path,
     graph: &DepGraph,
     facts: &CheckFactMap,
+    routes: &RegistryRoutes<'_>,
     call: &SqlCall<'_>,
     provenance: &Provenance,
 ) -> Option<RuleFinding> {
@@ -93,7 +96,7 @@ fn identifier_finding(
                 Some(format!("process.env.{key}")),
             ))
         }
-        Provenance::Reference { name, .. } => named_finding(root, graph, facts, call, name),
+        Provenance::Reference { name, .. } => named_finding(root, graph, facts, routes, call, name),
         Provenance::Namespace {
             local, exported, ..
         } => {
@@ -107,6 +110,7 @@ fn named_finding(
     root: &Path,
     graph: &DepGraph,
     facts: &CheckFactMap,
+    routes: &RegistryRoutes<'_>,
     call: &SqlCall<'_>,
     name: &str,
 ) -> Option<RuleFinding> {
@@ -116,7 +120,7 @@ fn named_finding(
     if query_result_binding(facts, &call.file, name) {
         return Some(message(root, call, name, Some(name.to_string())));
     }
-    let unique = unique_export(graph, facts, &call.file, name)?;
+    let unique = unique_export(graph, facts, routes, &call.file, name)?;
     if unique.producer == call.file {
         return None;
     }

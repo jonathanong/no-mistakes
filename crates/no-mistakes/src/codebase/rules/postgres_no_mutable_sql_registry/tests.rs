@@ -1,8 +1,10 @@
-use super::writes::{member_write, mutated_exports};
+use super::write_index::WriteIndex;
+use super::writes::mutated_exports;
 use super::RULE_ID;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{ValueCall, ValueExpression, ValueFlowFacts};
 use crate::codebase::dependencies::graph::test_support::from_raw_maps;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -69,7 +71,7 @@ fn literal_unrelated_prototype_bind_http_and_suppression_stay_silent() {
 fn member_writes_abstain_without_facts_or_when_the_writer_did_not_parse() {
     let writer = PathBuf::from("/repo/src/mutate.ts");
     let facts = CheckFactMap::default();
-    assert!(!member_write(&facts, &writer, "tables"));
+    assert!(!WriteIndex::new(facts.get_ts_facts(&writer)).member_write("tables"));
     let mut facts = CheckFactMap {
         graph_files_complete: true,
         graph_files: vec![writer.clone()],
@@ -91,7 +93,7 @@ fn member_writes_abstain_without_facts_or_when_the_writer_did_not_parse() {
         Default::default(),
         Default::default(),
     );
-    assert!(mutated_exports(&graph, &facts).is_empty());
+    assert!(mutated_exports(&graph, &facts, &super::RegistryRoutes::new(&facts)).is_empty());
 }
 
 fn named(name: &str) -> ValueExpression {
@@ -141,7 +143,10 @@ fn object_and_reflect_property_mutators_are_member_writes() {
             }
             .into(),
         );
-        assert!(member_write(&facts, &writer, "tables"), "{base}.{method}");
+        assert!(
+            WriteIndex::new(facts.get_ts_facts(&writer)).member_write("tables"),
+            "{base}.{method}"
+        );
     }
     let mut facts = CheckFactMap::default();
     facts.ts.insert(
@@ -169,7 +174,7 @@ fn object_and_reflect_property_mutators_are_member_writes() {
         }
         .into(),
     );
-    assert!(!member_write(&facts, &writer, "tables"));
+    assert!(!WriteIndex::new(facts.get_ts_facts(&writer)).member_write("tables"));
 }
 
 #[path = "recall_shapes_tests.rs"]

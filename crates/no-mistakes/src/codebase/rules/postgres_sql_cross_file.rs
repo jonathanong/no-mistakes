@@ -8,7 +8,8 @@ mod validators;
 
 pub(crate) use expressions::walk_expression;
 pub(crate) use graph::{
-    graph_plan, registry_route, unique_export, unique_namespace_member, UniqueExport,
+    graph_plan, registry_route, unique_export, unique_namespace_member, RegistryRoutes,
+    UniqueExport,
 };
 pub(crate) use options::{compile, CompiledOptions, Options};
 pub(crate) use provenance::{
