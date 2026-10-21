@@ -51,8 +51,8 @@ importers:
         specifier: 1.64.0
         version: 1.64.0
       pr-shepherd:
-        specifier: ^0.58.0
-        version: 0.58.0(supports-color@7.2.0)
+        specifier: ^1.0.0
+        version: 1.0.0(supports-color@7.2.0)
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -2562,8 +2562,8 @@ packages:
     resolution: {integrity: sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  pr-shepherd@0.58.0:
-    resolution: {integrity: sha512-1bvd/a50GS9BX9a5YYYQY/v2Bnrp6xiuveyiuRFoc14noOsCiho5s5U62MI+gJvCkS+GLrp8NiAzZ2whxgvBRg==}
+  pr-shepherd@1.0.0:
+    resolution: {integrity: sha512-MOE+s43j7s6BtsfLT0tmeikVEYPyL/sxw0rzbkjaTqe/Ivw5GLTMnw224UUDvq3QNAxuVA3K1+kaSE4iLWlPjA==}
     engines: {node: '>=22.19.0'}
     hasBin: true
 
@@ -5286,7 +5286,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  pr-shepherd@0.58.0(supports-color@7.2.0):
+  pr-shepherd@1.0.0(supports-color@7.2.0):
     dependencies:
       '@modelcontextprotocol/sdk': 1.32.1(supports-color@7.2.0)(zod@4.4.3)
       picomatch: 4.0.7

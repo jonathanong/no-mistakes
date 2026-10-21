@@ -5,3 +5,6 @@ allowBuilds:
   esbuild: false
 
 linkWorkspacePackages: true
+
+minimumReleaseAgeExclude:
+  - pr-shepherd@1.0.0
