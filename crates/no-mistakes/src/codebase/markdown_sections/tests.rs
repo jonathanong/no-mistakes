@@ -62,7 +62,7 @@ fn test_no_headings_in_plain_text() {
 
 #[test]
 fn test_h4_h5_h6_levels() {
-    // Exercises heading_level_to_u32 for H4, H5, H6 (lines 63-65).
+    // Exercises heading_level_to_u32 for H4, H5, H6.
     let content = "#### H4\n##### H5\n###### H6\n";
     let sections = parse_markdown_sections(content);
     assert_eq!(sections.len(), 3);
@@ -96,4 +96,27 @@ fn atx_required_heading_matches_level() {
     assert!(!has_required_heading(content, "## Perf"));
     assert!(has_required_heading("# Email\n\n## Perf\n", "## Perf"));
     assert!(has_required_heading(content, "Perf"));
+}
+
+#[test]
+fn atx_required_heading_ignores_fenced_and_indented_examples() {
+    // Saved Codex review: a fenced or four-space example of `## Perf` is not
+    // a Markdown heading and must not satisfy `requiredHeading: "## Perf"`.
+    let fenced = "# Title\n\n```md\n## Perf\n```\n";
+    assert!(!has_required_heading(fenced, "## Perf"));
+    assert!(!has_required_heading(fenced, "Perf"));
+
+    let indented = "# Title\n\n    ## Perf\n";
+    assert!(!has_required_heading(indented, "## Perf"));
+
+    let real = "# Title\n\n## Perf\n\n```md\n## Perf\n```\n";
+    assert!(has_required_heading(real, "## Perf"));
+}
+
+#[test]
+fn atx_heading_spec_requires_space_and_valid_level() {
+    assert!(!has_required_heading("#Perf\n", "#Perf"));
+    assert!(!has_required_heading("####### Deep\n", "####### Deep"));
+    assert!(has_required_heading("##\n", "##"));
+    assert!(has_required_heading("##\tPerf\n", "##\tPerf"));
 }
