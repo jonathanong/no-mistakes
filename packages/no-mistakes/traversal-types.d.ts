@@ -175,7 +175,15 @@ export interface ProjectOptions {
   include?: string;
 }
 
+/** Analysis effort for configured rules. `max` preserves the current analysis. */
+export type Effort = "low" | "max";
+
+/** Policy for rule inputs that the selected effort cannot analyze. */
+export type Unanalyzable = "report" | "advise" | "ignore";
+
 export interface CheckOptions extends ProjectOptions {
+  /** Override configured rule effort for this check invocation. Defaults to `max`. */
+  effort?: Effort;
   /** Add deterministic accounting for findings hidden by no-mistakes directives. */
   includeSuppressed?: boolean;
   /** Add declared config evidence; absent slots never imply SDK defaults. */

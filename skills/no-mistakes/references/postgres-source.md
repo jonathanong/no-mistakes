@@ -3,7 +3,8 @@
 For executed TypeScript SQL, use `check` with configured
 `postgres-require-query-annotation` instead. It traces straight-line local/imported
 helpers and callback forwarding, and reports unknown leading SQL by default.
-Inspect unanalyzable findings before using `unanalyzableSql: ignore`; a static
+Inspect unanalyzable findings before using `unanalyzable: ignore` (or its
+legacy alias `unanalyzableSql: ignore`); a static
 leading `/* name */` can establish the annotation even when later appends are opaque.
 
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration

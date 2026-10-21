@@ -1,0 +1,21 @@
+effort: max
+unanalyzable: ignore
+unanalyzableSql: report
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: advise
+      unanalyzableSql: ignore
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      unanalyzableSql: report
+  - rule: postgres-no-offset
+    scope: repository
+  - rule: test-effort-adopter
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report

@@ -98,6 +98,11 @@ projects:
 `include`. Config load prefixes `root` when it copies them onto a rule, because
 rule `options.sqlInclude`, `options.include`, and `schemaCatalogPath` are
 repository-relative. `importSpecifier` and `unanalyzableSql` are not paths.
+Project-level `postgres.unanalyzableSql` retains its existing SQL-specific
+name, value vocabulary, and inheritance behavior for PostgreSQL rules. The
+shared `unanalyzable` policy (`report`, `advise`, or `ignore`) is configured at
+the repository or rule-application level; it is separate from this legacy
+project setting.
 Every key is optional. An embedded-SQL rule still needs a non-empty
 `executors.importSpecifier` on the project; an empty specifier does not select
 every `.query` call. `factoryNames` and `typeNames` are the only executor lists

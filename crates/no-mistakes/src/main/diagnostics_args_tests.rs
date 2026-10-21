@@ -158,3 +158,15 @@ fn every_cli_leaf_accepts_the_millisecond_invocation_budget() {
         }
     }
 }
+
+#[test]
+fn check_effort_is_optional_and_accepts_only_implemented_levels() {
+    use no_mistakes::config::v2::Effort;
+    let default = Cli::try_parse_from(["no-mistakes", "check"]).unwrap();
+    assert!(matches!(default.command, Command::Check(args) if args.effort.is_none()));
+    for (value, expected) in [("low", Effort::Low), ("max", Effort::Max)] {
+        let parsed = Cli::try_parse_from(["no-mistakes", "check", "--effort", value]).unwrap();
+        assert!(matches!(parsed.command, Command::Check(args) if args.effort == Some(expected)));
+    }
+    assert!(Cli::try_parse_from(["no-mistakes", "check", "--effort", "medium"]).is_err());
+}

@@ -9,6 +9,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         runner_config_deadlines,
         codebase,
         warnings,
+        analysis_warning_count: _,
         advisories,
         sql_verdicts,
         include_sql_verdicts,

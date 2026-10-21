@@ -1,22 +1,36 @@
 pub(crate) fn check_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ProjectOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let results = if options.include_sql_verdicts {
-        crate::check_runner::run_all_with_sql_verdicts(
-            root,
-            options.config.map(PathBuf::from),
-            options.tsconfig.map(PathBuf::from),
-            options.include_suppressed,
-            options.include_runner_config_deadlines,
-            true,
-        )
+    let results = if options.effort.is_none() {
+        if options.include_sql_verdicts {
+            crate::check_runner::run_all_with_sql_verdicts(
+                root,
+                options.config.map(PathBuf::from),
+                options.tsconfig.map(PathBuf::from),
+                options.include_suppressed,
+                options.include_runner_config_deadlines,
+                true,
+            )
+        } else {
+            crate::check_runner::run_all_with_evidence(
+                root,
+                options.config.map(PathBuf::from),
+                options.tsconfig.map(PathBuf::from),
+                options.include_suppressed,
+                options.include_runner_config_deadlines,
+            )
+        }
     } else {
-        crate::check_runner::run_all_with_evidence(
+        crate::check_runner::run_all_with_options(
             root,
             options.config.map(PathBuf::from),
             options.tsconfig.map(PathBuf::from),
             options.include_suppressed,
             options.include_runner_config_deadlines,
+            crate::check_runner::AnalysisOptions {
+                effort: options.effort,
+                include_sql_verdicts: options.include_sql_verdicts,
+            },
         )
     }
     .map_err(to_napi_error)?;

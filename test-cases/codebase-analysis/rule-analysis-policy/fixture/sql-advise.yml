@@ -1,0 +1,7 @@
+unanalyzable: advise
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']

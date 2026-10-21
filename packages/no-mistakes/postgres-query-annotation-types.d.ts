@@ -1,5 +1,7 @@
-/** Policy for executor SQL whose leading text cannot be proven. Defaults to `report`. */
-export type PostgresUnanalyzableSql = "report" | "ignore" | "advise";
+import type { Effort, Unanalyzable } from "./traversal-types";
+
+/** Backward-compatible SQL-specific name for the shared unanalyzable policy. */
+export type PostgresUnanalyzableSql = Unanalyzable;
 
 /** Configuration options for the `postgres-require-query-annotation` check rule. */
 export interface PostgresRequireQueryAnnotationOptions {
@@ -10,5 +12,7 @@ export interface PostgresRequireQueryAnnotationOptions {
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: { module: string; name: string }[];
+  effort?: Effort;
+  unanalyzable?: Unanalyzable;
   unanalyzableSql?: PostgresUnanalyzableSql;
 }

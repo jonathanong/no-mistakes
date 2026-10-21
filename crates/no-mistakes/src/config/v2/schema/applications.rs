@@ -21,7 +21,21 @@ impl RuleDef {
         {
             return Ok(T::default());
         }
-        let deserializer = self.options.clone().into_deserializer();
+        let mut options = self.options.clone();
+        if let Some(options) = options.as_mapping_mut() {
+            options.remove("effort");
+            options.remove("unanalyzable");
+            if !super::super::analysis_policy::sql_policy_rule(&self.rule) {
+                if self.options.get("unanalyzable").is_none() {
+                    super::super::analysis_policy::validate_low_alias(self)?;
+                }
+                options.remove("unanalyzableSql");
+            }
+        }
+        if matches!(&options, serde_yaml::Value::Mapping(options) if options.is_empty()) {
+            return Ok(T::default());
+        }
+        let deserializer = options.into_deserializer();
         serde_path_to_error::deserialize(deserializer).map_err(|error| {
             let path = error.path().to_string();
             let location = if path.is_empty() {

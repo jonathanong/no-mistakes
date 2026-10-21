@@ -40,6 +40,12 @@ no-mistakes check --format json
 ```
 
 `no-mistakes check --include-sql-verdicts --format json` adds the opt-in SQL verdict ledger and does not change findings.
+`no-mistakes check --effort low --format json` selects low effort only for
+rules that implement it; `max` is the default and preserves current analysis.
+If a low-effort rule's required partner check is missing or outside its
+configured scope, the check warns and falls back to `max` for that rule.
+Repository and rule settings use `effort` and `unanalyzable`; the older
+SQL-specific `unanalyzableSql` setting remains an alias.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).

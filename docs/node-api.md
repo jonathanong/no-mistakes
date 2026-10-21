@@ -26,6 +26,11 @@ const { analyzeProject } = require("no-mistakes");
 
 ## CLI Mapping
 
+`check(options)` and check reports in `analyzeProject()` accept the same
+`effort: "low" | "max"` option as CLI `--effort`. See
+[check options](node-api/check-verdicts.md) for precedence and fallback
+warnings.
+
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dependencies`                             | `dependencies(options)`                                                                                                                                                                                                                                                    |

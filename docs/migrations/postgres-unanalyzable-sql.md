@@ -1,5 +1,12 @@
 # PostgreSQL `unanalyzableSql` for lock ordering, OFFSET, and generated writes
 
+The shared `unanalyzable` policy is available at repository and rule
+application scope. `unanalyzableSql` remains the SQL-specific alias; legacy
+PostgreSQL parsers keep their `fail` spelling for the shared `report` policy.
+When both forms are set at one scope, `unanalyzable` takes precedence.
+PostgreSQL rules keep their existing defaults; this policy does not enable
+low-effort analysis for them.
+
 `postgres-lock-ordering`, `postgres-no-offset`, and
 `postgres-no-generated-column-writes` now accept the `unanalyzableSql` option
 used by the other PostgreSQL DML rules. Like those rules, it defaults to

@@ -17,7 +17,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
     traversalDeclarations,
-    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?includeSuppressed\?: boolean;/,
+    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?effort\?: Effort;[\s\S]*?includeSuppressed\?: boolean;/,
   );
   assert.doesNotMatch(
     traversalDeclarations,
@@ -81,7 +81,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed"[\s\S]*?>/,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed" \| "effort"[\s\S]*?>/,
   );
   assert.doesNotMatch(
     analyzeProjectDeclarations,
@@ -124,9 +124,15 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
 
 test("query annotation configuration exposes the unknown SQL policy", () => {
   const types = readFileSync(join(packageRoot, "postgres-query-annotation-types.d.ts"), "utf8");
-  assert.match(types, /export type PostgresUnanalyzableSql = "report" \| "ignore" \| "advise";/);
+  assert.match(types, /export type PostgresUnanalyzableSql = Unanalyzable;/);
+  assert.match(types, /import type \{ Effort, Unanalyzable \} from "\.\/traversal-types";/);
   assert.match(types, /export interface PostgresRequireQueryAnnotationOptions/);
+  assert.match(types, /effort\?: Effort;/);
+  assert.match(types, /unanalyzable\?: Unanalyzable;/);
   assert.match(types, /unanalyzableSql\?: PostgresUnanalyzableSql/);
+  const traversal = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  assert.match(traversal, /export type Effort = "low" \| "max";/);
+  assert.match(traversal, /export type Unanalyzable = "report" \| "advise" \| "ignore";/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/postgres-query-annotation-types";/,

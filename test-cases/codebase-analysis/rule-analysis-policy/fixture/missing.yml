@@ -1,0 +1,7 @@
+effort: low
+rules:
+  - rule: test-effort-adopter
+    scope: repository
+  - rule: test-partner
+    enabled: false
+    scope: repository

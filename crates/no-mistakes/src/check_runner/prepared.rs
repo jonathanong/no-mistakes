@@ -32,6 +32,7 @@ pub(super) fn prepare_with_session(
     root: &Path,
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
+    effort: Option<no_mistakes::config::v2::Effort>,
 ) -> Result<PreparedCheckInputs> {
     let (visible_paths, _) = no_mistakes::diagnostics::measure_if_enabled(
         "discovery",
@@ -44,12 +45,14 @@ pub(super) fn prepare_with_session(
         || no_mistakes::playwright::rules::configured(&config)
         || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE))
     .then(|| session.workspace(root));
+    let mut config = config.as_ref().clone();
+    config.effort_override = effort;
     prepare_from_shared(
         root,
         effective_config_path.as_deref(),
         tsconfig_path,
         visible_paths,
-        config.as_ref().clone(),
+        config,
         tsconfig.as_ref().clone(),
         workspace,
     )
@@ -60,12 +63,18 @@ pub(crate) fn prepare_from_shared(
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
     visible_paths: Arc<VisiblePathSnapshot>,
-    config: NoMistakesConfig,
+    mut config: NoMistakesConfig,
     tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     workspace: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
 ) -> Result<PreparedCheckInputs> {
     let root_paths = visible_paths.paths_for(root);
     let sources = visible_paths.source_store_for(root);
+    no_mistakes::codebase::rules::analysis_policy::prepare_rule_analysis(
+        root,
+        &mut config,
+        &root_paths,
+        &sources,
+    )?;
     if config.rule_configured(no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES) {
         no_mistakes::codebase::rules::require_storybook_stories::authorize_configured_sources(
             root, &config, &sources,
