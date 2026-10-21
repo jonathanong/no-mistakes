@@ -25,13 +25,29 @@ function unwrapExpression(node, opts) {
   if (node.type !== "CallExpression" || !isConfiguredWrapper(node.callee, opts)) {
     return node;
   }
-  for (const arg of node.arguments) {
+  for (const arg of wrapperArguments(node)) {
     const unwrapped = unwrapExpression(arg, opts);
     if (isFunctionNode(unwrapped)) {
       return unwrapped;
     }
   }
   return node;
+}
+
+function wrapperArguments(node) {
+  const args = node.arguments || [];
+  const name = staticCalleeName(node.callee);
+  if (name !== "call" && name !== "apply") return args;
+  if (args.some((arg) => arg?.type === "SpreadElement")) return [];
+  if (name === "call") return args.slice(1);
+  const list = args[1];
+  if (
+    list?.type !== "ArrayExpression" ||
+    list.elements.some((element) => !element || element.type === "SpreadElement")
+  ) {
+    return [];
+  }
+  return list.elements;
 }
 
 function isConfiguredWrapper(callee, opts) {

@@ -48,7 +48,11 @@ module.exports = rule(
         if (node.parent?.kind !== "const") return;
         if (node.id?.type !== "Identifier" || node.init?.type !== "Identifier") return;
         const imported = importedNames.get(node.init.name);
-        if (imported && !importedNames.has(node.id.name)) importedNames.set(node.id.name, imported);
+        if (!imported || importedNames.has(node.id.name)) return;
+        const source = variableNamed(node.init.name, node.init, context);
+        if (source?.defs?.length === 1 && source.defs[0].type === "ImportBinding") {
+          importedNames.set(node.id.name, imported);
+        }
       },
       JSXOpeningElement(node) {
         const elementNames = jsxCandidateNames(node.name).flatMap((name) => {
@@ -91,10 +95,15 @@ function mappedImport(name, node, context, importedNames) {
   if (!variable || variable.defs?.length !== 1) return null;
   const def = variable.defs[0];
   if (def.type === "ImportBinding") return imported;
+  const source =
+    def.node?.init?.type === "Identifier"
+      ? variableNamed(def.node.init.name, def.node.init, context)
+      : null;
   if (
     def.type === "Variable" &&
     def.parent?.kind === "const" &&
-    def.node?.init?.type === "Identifier" &&
+    source?.defs?.length === 1 &&
+    source.defs[0].type === "ImportBinding" &&
     importedNames.get(def.node.init.name) === imported
   ) {
     return imported;

@@ -124,7 +124,7 @@ module.exports = rule(
     const namespaces = new Set();
     const beforeAll = (node) =>
       setupCallbackKind(node, testCalleeNames) === "before-once" ||
-      isBeforeAllCall(node, testCalleeNames, namespaces);
+      isBeforeAllCall(node, testCalleeNames, namespaces, context);
 
     return {
       ImportDeclaration(node) {

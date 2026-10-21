@@ -83,7 +83,7 @@ callback so a re-entry mints a fresh value instead of reusing the hoisted one.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A configured factory keeps its name when that binding aliases another function, as in `const randomSuffix = crypto.randomUUID`. A callback in `test.beforeAll.apply(test, [() => {}])` is still inside that hook. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A configured factory keeps its name when that binding aliases another function, as in `const randomSuffix = crypto.randomUUID`. A callback in `test.beforeAll.apply(test, [() => {}])` is still inside that hook. `function register(pw) { pw.test.beforeAll(() => {}) }` is not the imported namespace when `pw` is the parameter. A computed identifier key is not a static name.
 
 Another file's re-export is not visible here.
 

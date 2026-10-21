@@ -12,5 +12,11 @@ export const Forwarded = React.memo.call(React, function Forwarded() {
   return <button>Call</button>;
 });
 
+export const Applied = React.memo.apply(React, [
+  function Applied() {
+    return <button>Apply</button>;
+  },
+]);
+
 export const Plain = () => <div data-pw="plain" />,
   Other = () => <button />;

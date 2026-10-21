@@ -21,3 +21,8 @@ test.beforeAll.apply(test, [
     await createPost({ slug: fresh });
   },
 ]);
+function register(pw) {
+  pw.test.beforeAll(() => {
+    use(suffix);
+  });
+}

@@ -139,7 +139,24 @@ function invokedCall(node) {
   return { callee, arguments: args };
 }
 
-function isBeforeAllCall(node, testNames, namespaces) {
+function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
+  if (node?.type !== "Identifier" || !namespaces.has(node.name) || seen.has(node)) return false;
+  const variable = variableFor(node, context);
+  if (!variable || variable.defs?.length !== 1) return false;
+  const def = variable.defs[0];
+  if (def.type === "ImportBinding" && def.node?.type === "ImportNamespaceSpecifier") return true;
+  if (
+    def.type !== "Variable" ||
+    def.parent?.kind !== "const" ||
+    def.node?.init?.type !== "Identifier"
+  ) {
+    return false;
+  }
+  seen.add(node);
+  return isNamespaceBinding(def.node.init, context, namespaces, seen);
+}
+
+function isBeforeAllCall(node, testNames, namespaces, context) {
   const invoked = invokedCall(node);
   if (!invoked) return false;
   let callee = invoked.callee;
@@ -148,10 +165,12 @@ function isBeforeAllCall(node, testNames, namespaces) {
   let object = callee.object;
   while (object?.type === "ChainExpression") object = object.expression;
   if (object?.type === "Identifier") {
-    return testNames.has(object.name) || namespaces.has(object.name);
+    return testNames.has(object.name) || isNamespaceBinding(object, context, namespaces);
   }
   if (memberName(object) === "test" && object?.object?.type === "Identifier") {
-    return testNames.has(object.object.name) || namespaces.has(object.object.name);
+    return (
+      testNames.has(object.object.name) || isNamespaceBinding(object.object, context, namespaces)
+    );
   }
   return false;
 }

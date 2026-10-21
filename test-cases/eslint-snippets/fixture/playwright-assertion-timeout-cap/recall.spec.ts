@@ -10,3 +10,5 @@ function helper(check) {
 }
 const customAssertions = { expect };
 customAssertions.expect(locator).toHaveText("text", { timeout: 30000 });
+const checkAlias = customAssertions.expect;
+checkAlias(locator).toHaveText("text", { timeout: 30000 });
