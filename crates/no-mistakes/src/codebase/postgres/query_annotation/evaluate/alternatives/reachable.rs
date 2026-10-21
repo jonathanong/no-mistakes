@@ -21,8 +21,18 @@ pub(super) struct Reachable {
     visited_values: FxHashSet<*const ()>,
 }
 
+#[cfg(not(test))]
+#[path = "reachable/scan_runtime.rs"]
+#[macro_use]
+mod scan_hooks;
+#[cfg(test)]
+#[path = "reachable/scan_tests.rs"]
+#[macro_use]
+pub(super) mod scan_hooks;
+
 impl Reachable {
     fn value(&mut self, value: &Value) {
+        record_raw_value!();
         match value {
             Value::Function(_, _, env) => self.pending_env.push(*env),
             Value::Arguments(id) | Value::Array(id) => self.pending_args.push(*id),
@@ -54,6 +64,8 @@ impl Reachable {
 #[path = "reachable/tests.rs"]
 mod tests;
 
+mod walk;
+
 pub(super) fn collect_from_roots(
     scopes: &[Scope],
     roots: RootSeeds<'_>,
@@ -62,56 +74,18 @@ pub(super) fn collect_from_roots(
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &CapturedBindings,
 ) -> Reachable {
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment("postgres.annotation.reachability_walks", 1);
-    }
-    let mut found = Reachable::default();
-    found.pending_env.extend(roots.environments.iter().copied());
-    found.pending_args.extend(roots.arguments.iter().copied());
-    for root in roots.transient {
-        match root {
-            TransientRoot::Argument(id) => found.pending_args.push(*id),
-            TransientRoot::Builder(id) => {
-                found.identities.insert(*id);
-            }
-            TransientRoot::Environment(env) => found.pending_env.push(*env),
-        }
-    }
-    for value in returned {
-        found.value(value);
-    }
-    while !found.pending_env.is_empty() || !found.pending_args.is_empty() {
-        while let Some(env) = found.pending_env.pop() {
-            if found.environments.insert(env) {
-                if let Some(origins) = captured.get(&env) {
-                    found.pending_env.extend(origins.values().copied());
-                }
-                for value in scopes[env].values() {
-                    found.value(value);
-                }
-                if let Some(bindings) = mapped.get(&env) {
-                    found
-                        .pending_args
-                        .extend(bindings.iter().map(|(id, _)| *id));
-                }
-            }
-        }
-        while let Some(id) = found.pending_args.pop() {
-            if found.arguments.insert(id) {
-                found.identities.insert(id);
-                for value in arena.objects[&id].iter().chain(
-                    arena
-                        .extras
-                        .get(&id)
-                        .into_iter()
-                        .flat_map(|slots| slots.values()),
-                ) {
-                    found.value(value);
-                }
-            }
-        }
-    }
-    found
+    walk::collect::<false>(scopes, roots, returned, arena, mapped, captured)
+}
+
+pub(super) fn collect_warm_from_roots(
+    scopes: &[Scope],
+    roots: RootSeeds<'_>,
+    returned: &[Value],
+    arena: Arena<'_>,
+    mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+    captured: &CapturedBindings,
+) -> Reachable {
+    walk::collect::<true>(scopes, roots, returned, arena, mapped, captured)
 }
 
 mod prefix;

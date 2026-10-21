@@ -1,0 +1,6 @@
+{
+  "scopeCount": 24,
+  "bindingsPerScope": 32,
+  "label": "long_saved_record_label_for_stable_alternative_pruning",
+  "prefix": "/* saved stable pruning */ SELECT 1"
+}
