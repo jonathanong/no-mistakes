@@ -78,9 +78,9 @@ fn acquire_lock_reports_when_the_path_is_a_directory() {
 }
 
 #[test]
-fn lock_path_follows_the_cargo_test_binary_env() {
+fn standalone_unit_tests_use_the_per_process_lock_without_a_cli_binary() {
     let path = lock_path().unwrap();
-    assert!(path.extension().is_some_and(|ext| ext == "lock"));
+    assert_eq!(path, lock_file_path(true).unwrap());
 }
 
 #[test]

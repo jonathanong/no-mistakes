@@ -1,0 +1,1 @@
+export const fetchUsers = () => fetch('/api/users');

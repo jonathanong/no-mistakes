@@ -4,6 +4,5 @@ include!("bounded_import_closure.rs");
 include!("execution.rs");
 include!("execution_mixed_relationships.rs");
 mod framework_ownership;
-mod gitignore_tsconfig;
 mod workspace_tsconfig;
 mod workspace_tsconfig_shared_diagnostics;

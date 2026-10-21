@@ -1,0 +1,1 @@
+import { x } from './target.ts'; fetch('/api/root');

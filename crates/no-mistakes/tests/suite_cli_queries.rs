@@ -54,3 +54,12 @@ mod cli_server_lang;
 mod cli_typescript_paths_precedence;
 #[path = "cli_unique_exports.rs"]
 mod cli_unique_exports;
+
+#[path = "cli_fetches.rs"]
+mod cli_fetches;
+#[path = "cli_fetches2.rs"]
+mod cli_fetches2;
+#[path = "cli_gitignore_tsconfig.rs"]
+mod cli_gitignore_tsconfig;
+#[path = "cli_workspace_tsconfig.rs"]
+mod cli_workspace_tsconfig;

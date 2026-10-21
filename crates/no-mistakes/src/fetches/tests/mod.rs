@@ -4,8 +4,6 @@ mod analyze_file_tests;
 mod analyze_file_tests2;
 mod analyze_file_tests3;
 mod cache_opts_tests;
-mod cli_tests;
-mod cli_tests2;
 mod fetch_visitor_tests;
 mod fetch_visitor_tests2;
 mod helpers_tests;

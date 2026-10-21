@@ -9,13 +9,13 @@ use std::time::{Duration, Instant};
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 pub(super) fn lock_path() -> Result<PathBuf> {
-    lock_file_path(std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some())
+    lock_file_path(cfg!(test) || std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some())
 }
 
 pub(super) fn lock_file_path(cargo_test_bin: bool) -> Result<PathBuf> {
-    // Cargo integration tests spawn this binary with `CARGO_BIN_EXE_*` set and
-    // run in parallel, so a shared user lock would print wait progress onto
-    // captured stderr. Isolate each test process instead.
+    // Unit-test helpers also spawn the current executable, without Cargo's
+    // integration-test binary variable. Both harnesses need process isolation
+    // from the user's lock and from parallel test subprocesses.
     if cargo_test_bin {
         let directory = std::env::temp_dir().join("no-mistakes-test-locks");
         create_lock_directory(&directory)?;
