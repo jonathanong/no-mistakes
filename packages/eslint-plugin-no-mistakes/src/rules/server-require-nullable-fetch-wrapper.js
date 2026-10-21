@@ -167,10 +167,13 @@ module.exports = Object.assign(
         "ArrowFunctionExpression:exit": exitFunction,
         CallExpression(node) {
           if (!currentFunctionChecked()) return;
-          const directName = spelledCallee(node.callee, context);
           const invoked = logicalCall(node);
-          const unwrappedName = invoked ? spelledCallee(invoked.callee, context) : null;
-          const name = [directName, unwrappedName].find(
+          const name = [
+            calleePath(node.callee),
+            spelledCallee(node.callee, context),
+            invoked ? calleePath(invoked.callee) : null,
+            invoked ? spelledCallee(invoked.callee, context) : null,
+          ].find(
             (candidate) => candidate && getterPatterns.some((pattern) => pattern.test(candidate)),
           );
           if (!name) return;

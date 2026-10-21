@@ -446,6 +446,31 @@ describe("call-binding recall", () => {
       ),
       ["wrapper", "wrapper"],
     );
+    const localGetter = fixture("server-require-nullable-fetch-wrapper/local-getter-name.ts");
+    assert.deepEqual(
+      messages(
+        localGetter,
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getUser$"],
+          requiredWrapperCallee: "nullableEntity",
+        },
+        "backend/users.ts",
+      ),
+      ["wrapper"],
+    );
+    assert.deepEqual(
+      messages(
+        localGetter,
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^lookup$"],
+          requiredWrapperCallee: "nullableEntity",
+        },
+        "backend/users.ts",
+      ),
+      ["wrapper"],
+    );
   });
 
   it("keeps a configured local wrapper and a forwarded allowed origin", () => {
