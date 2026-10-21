@@ -1,23 +1,17 @@
 //! Literal ternaries and logical clauses in an untagged template become SQL alternatives.
 //! A reached unknown branch abstains for the whole template.
-#[cfg(test)]
-std::thread_local! {
-    static ARG_CLASSIFICATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
+use super::super::super::resolve::functions::LocalFunctions;
 
-#[cfg(test)]
-fn note_arg_classification() {
-    ARG_CLASSIFICATION_CALLS.with(|calls| calls.set(calls.get() + 1));
-}
-
-#[cfg(test)]
-fn reset_arg_classifications() {
-    ARG_CLASSIFICATION_CALLS.with(|calls| calls.set(0));
-}
-
-#[cfg(test)]
-fn arg_classifications() -> usize {
-    ARG_CLASSIFICATION_CALLS.with(std::cell::Cell::get)
+// Unknown helpers abstain before argument classification walks their subtrees.
+fn known_helper_args<T>(
+    functions: &LocalFunctions,
+    name: &str,
+    classify: impl FnOnce() -> Option<T>,
+) -> Option<T> {
+    if !functions.has_program(name) {
+        return None;
+    }
+    classify()
 }
 
 #[rustfmt::skip]
@@ -175,10 +169,8 @@ fn scope_index(visitor: &ScopeVisitor<'_>, name: &str) -> Option<usize> {
 
 fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast::ast::CallExpression<'_>, line: u32) -> Option<Vec<Recovered>> {
     let oxc_ast::ast::Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else { return None };
-    if call.optional || visitor.shadowed_locally(name.name.as_str()) || !visitor.functions.has_program(name.name.as_str()) { return None; }
-    #[cfg(test)]
-    super::note_arg_classification();
-    let args = super::super::super::super::imported::clause_args(visitor, call)?;
+    if call.optional || visitor.shadowed_locally(name.name.as_str()) { return None; }
+    let args = super::known_helper_args(&visitor.functions, name.name.as_str(), || super::super::super::super::imported::clause_args(visitor, call))?;
     let strings = visitor.functions.identifier_clauses(name.name.as_str(), &args)?;
     let mut values = Vec::new();
     for sql in strings { values.extend(text(visitor, expr, sql, line)?); }
