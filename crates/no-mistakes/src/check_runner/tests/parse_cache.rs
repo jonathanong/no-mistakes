@@ -117,6 +117,7 @@ fn supplemental_call_sources_collect_facts_once() {
             None,
             false,
             false,
+            false,
         )
         .unwrap()
     };
