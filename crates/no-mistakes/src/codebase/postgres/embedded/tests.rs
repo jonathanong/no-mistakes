@@ -19,9 +19,13 @@ pub(super) fn read_fixture(name: &str) -> String {
 }
 
 fn extract(name: &str) -> super::EmbeddedSqlFileFacts {
+    extract_from_path(&fixture(name))
+}
+
+pub(super) fn extract_from_path(path: &Path) -> super::EmbeddedSqlFileFacts {
     extract_embedded_sql_from_source(
-        &fixture(name),
-        &read_fixture(name),
+        path,
+        &std::fs::read_to_string(path).expect("fixture"),
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     )
 }
@@ -39,6 +43,8 @@ fn first_init<'a>(program: &'a oxc_ast::ast::Program<'a>) -> &'a Expression<'a> 
     }
 }
 
+mod builder_text;
+mod iife_fail_closed;
 mod part1;
 mod part2;
 mod part3;
