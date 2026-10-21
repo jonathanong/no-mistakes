@@ -9,6 +9,7 @@ mod memory;
 mod observer;
 mod progress;
 mod request;
+mod timeout;
 
 use std::sync::Arc;
 
@@ -19,6 +20,7 @@ pub use context::{
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
 pub use progress::{ActiveSpanSnapshot, CompletedSpanSnapshot, ProgressGuard, ProgressSnapshot};
 pub use request::{progress_for_request, DiagnosticRequestGuard};
+pub(crate) use timeout::render_timeout_stderr;
 
 /// Count one AST visitor walk when verbose timings are enabled.
 pub fn record_ast_walk() {

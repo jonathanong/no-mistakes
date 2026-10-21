@@ -5,6 +5,9 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 use wait_timeout::ChildExt;
 
+#[path = "tests/timeout.rs"]
+mod timeout;
+
 #[cfg(unix)]
 #[test]
 fn command_error_subprocess_helper() {

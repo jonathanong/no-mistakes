@@ -11,7 +11,7 @@ no-mistakes tests plan vitest --verbose-timings --changed-file src/app.ts
 also emits deterministic work counts for discovery, source reads, parsing,
 resolution, graph construction, traversal, and output. Diagnostics go only to
 stderr; stdout, structured output order, exit status, and actionable error text
-are unchanged.
+are unchanged. See [partial timeout snapshots](diagnostics-timeouts.md).
 
 On Unix, `--verbose-timings` also emits `[memory] peak_rss_kib: N` when
 process resource sampling succeeds. This is the process-lifetime peak resident

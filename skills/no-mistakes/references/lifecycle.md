@@ -39,6 +39,12 @@ no-mistakes call-sites backend/services/urls/add-url.mts addUrl --format json
 rg -n 'addUrl\(|skipCreatedEvents' backend/
 ```
 
+Use `--verbose-timings` to retain published work counts on a CLI hard timeout.
+The bounded stderr snapshot labels its timings and counters `PARTIAL`; counts
+are lower bounds because unfinished work may not have published local counters.
+It does not require `--progress` and does not publish findings to stdout. Full
+stderr pipes or stalled snapshot collection can omit this best-effort output.
+
 ## Before handoff
 
 Run `no-mistakes check --format json`. For Next.js or Playwright changes, also
