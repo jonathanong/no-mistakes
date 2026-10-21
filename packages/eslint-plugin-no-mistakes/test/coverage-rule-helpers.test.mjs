@@ -22,6 +22,7 @@ const {
 const {
   compilePatterns,
   memberRootAndProperty,
+  objectPropertyName,
   optionTypeAllowed,
   propsFromType,
   typeIncludesNull,
@@ -236,6 +237,47 @@ describe("nullable option helpers", () => {
         },
       }),
     ).toEqual({ object: "opts", property: "timeout" });
+    expect(
+      memberRootAndProperty({
+        type: "MemberExpression",
+        object: { type: "Identifier", name: "opts" },
+      }),
+    ).toBe(null);
+    expect(
+      memberRootAndProperty({
+        type: "MemberExpression",
+        computed: true,
+        property: { type: "Identifier", name: "timeout" },
+        object: { type: "Identifier", name: "opts" },
+      }),
+    ).toBe(null);
+    expect(
+      memberRootAndProperty({
+        type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TemplateLiteral",
+          expressions: [],
+          quasis: [{ value: { raw: "timeout" } }],
+        },
+        object: { type: "Identifier", name: "opts" },
+      }),
+    ).toEqual({ object: "opts", property: "timeout" });
+    expect(
+      memberRootAndProperty({
+        type: "MemberExpression",
+        object: { type: "Identifier", name: "opts" },
+        property: { type: "CallExpression" },
+      }),
+    ).toBe(null);
+    expect(objectPropertyName({ type: "SpreadElement" })).toBe(null);
+    expect(
+      objectPropertyName({
+        type: "Property",
+        computed: true,
+        key: { type: "Identifier", name: "timeout" },
+      }),
+    ).toBe(null);
   });
 });
 
