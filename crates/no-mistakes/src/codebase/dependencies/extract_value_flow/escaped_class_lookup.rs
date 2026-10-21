@@ -50,6 +50,14 @@ fn class_ref(collector: &ImportCollector, object: &Expression<'_>) -> Option<(Ca
             let class_id = this_class(collector)?;
             Some((class_id, collector.current_lexical_scope_id()))
         }
+        Expression::Super(_) => {
+            // `super.rebind` is the base method, including when this class overrides it.
+            let class_id = this_class(collector)?;
+            let scope = collector.current_lexical_scope_id();
+            let base = collector.class_local_bases.get(&class_id)?;
+            let base_id = collector.class_id_for_binding(scope, base)?;
+            Some((base_id, scope))
+        }
         Expression::NewExpression(new) => {
             let name = simple_callee_name(&new.callee)?;
             let scope = collector.callee_binding_scope(&name).unwrap_or(0);

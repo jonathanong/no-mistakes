@@ -152,3 +152,52 @@ fn arrow_arguments_belong_to_the_enclosing_function() {
 fn callback_array_parameter_reads_the_element() {
     unknown_replica_keeps_primary("callback-array-slot");
 }
+
+fn guarded_array_escapes_both(file: &str) {
+    let (built, root) = graph();
+    assert_unknown(&built, &root, file, "replica.get");
+    assert_unknown(&built, &root, file, "untouched.get");
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn conditional_array_reassignment_keeps_both_origins_unknown() {
+    guarded_array_escapes_both("array-reassign-conditional");
+}
+
+#[test]
+fn loop_array_reassignment_keeps_both_origins_unknown() {
+    guarded_array_escapes_both("array-reassign-loop");
+}
+
+#[test]
+fn conditional_array_push_keeps_both_origins_unknown() {
+    guarded_array_escapes_both("array-push-conditional");
+}
+
+#[test]
+fn loop_array_push_keeps_both_origins_unknown() {
+    guarded_array_escapes_both("array-push-loop");
+}
+
+#[test]
+fn super_method_rebind_uses_the_base_instead_of_the_override() {
+    let (built, root) = graph();
+    assert_unknown(&built, &root, "class-method-super", "replica.get");
+    for callee in ["primary.info", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, "class-method-super", callee);
+    }
+}
+
+#[test]
+fn guarded_array_unions_slots_by_position() {
+    let (built, root) = graph();
+    // Slot 0 is equal on both paths; slot 1 exists only on the guarded path.
+    assert_unknown(&built, &root, "array-reassign-union", "replica.get");
+    assert_unknown(&built, &root, "array-reassign-union", "untouched.get");
+    for callee in ["primary.get", "unrelated.get"] {
+        assert_export(&built, &root, "array-reassign-union", callee);
+    }
+}
