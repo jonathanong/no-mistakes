@@ -1,7 +1,7 @@
--- PostgreSQL-valid target predicates exceed the shared parser's nested INSERT support.
+-- An expression arbiter inside a CTE still exceeds the shared parser.
 WITH a AS (
  INSERT INTO target (id) VALUES (1)
- ON CONFLICT (id) WHERE id > 0 DO NOTHING RETURNING id
+ ON CONFLICT (lower(id)) DO NOTHING RETURNING id
 )
 SELECT id FROM a;
 SELECT 42 AS neighbor;

@@ -5,13 +5,16 @@ use sqlparser::{
     tokenizer::{Span, Token},
 };
 
+#[derive(Clone)]
 pub(in crate::codebase::postgres::source) struct Located {
     pub expression: Expr,
     pub span: Span,
     pub delimiters: Vec<Span>,
 }
 
-pub(super) fn parse(parser: &mut Parser<'_>) -> Result<Located, ParserError> {
+pub(in crate::codebase::postgres::source::insert::parsing) fn parse(
+    parser: &mut Parser<'_>,
+) -> Result<Located, ParserError> {
     let index = parser.index();
     let start = parser.peek_token().span.start;
     let expression = parser.parse_expr()?;

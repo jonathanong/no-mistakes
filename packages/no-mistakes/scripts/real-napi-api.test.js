@@ -399,6 +399,7 @@ require("./postgres-helper-tracing-api.test.js");
 require("./postgres-predicate-api.test.js");
 
 require("./postgres-cte-api.test.js");
+require("./postgres-cte-conflict-target.test.js");
 require("./postgres-wrapper-api.test.js");
 
 require("./postgres-wrapper-option-api.test.js");

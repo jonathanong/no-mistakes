@@ -24,11 +24,7 @@ pub(super) fn collect_program(
         crate::codebase::postgres::parse::fetch_expression::prepare(&mut prepared.tokens);
     // Conditional AST parsing owns its nested statements. Keep that grammar
     // intact; unsupported partial conflict targets in procedural bodies diagnose.
-    let conflict_markers = if !procedural {
-        super::insert::parsing::prepare(&mut prepared.tokens)
-    } else {
-        Vec::new()
-    };
+    let conflicts = super::insert::parsing::prepare(&mut prepared.tokens, procedural);
     let executes = super::execute_preparation::prepare(
         &mut prepared.tokens,
         source,
@@ -46,12 +42,13 @@ pub(super) fn collect_program(
         &fetch_expressions,
         &generated,
         super::wrappers::child::Markers {
-            inserts: &conflict_markers,
+            inserts: &conflicts.markers,
             index_only: create_index_only,
         },
         comments,
     )
-    .with_executes(executes);
+    .with_executes(executes)
+    .with_cte_predicates(&conflicts.cte_predicates);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
         if parser.consume_token(&Token::SemiColon) {
@@ -69,7 +66,7 @@ pub(super) fn collect_program(
         } else if super::wrappers::starts(&parser) {
             Ok(super::wrappers::collect(&mut parser, &wrapper_context))
         } else {
-            super::insert::parsing::parse(&mut parser, &conflict_markers)
+            super::insert::parsing::parse(&mut parser, &conflicts.markers)
                 .map_err(|error| error.to_string())
                 .and_then(|(mut statement, conflict_predicate)| {
                     prepared
@@ -99,6 +96,7 @@ pub(super) fn collect_program(
                         return Ok(super::insert::source_projection::project_insert(
                             value,
                             conflict_predicate.as_ref(),
+                            &conflicts.cte_predicates,
                             locations,
                             &parser,
                             start_index,
@@ -128,6 +126,7 @@ pub(super) fn collect_program(
                             locations,
                             &prepared.recursive_views,
                             super::index_only::contains(&wrapper_context.index_only, start),
+                            &conflicts.cte_predicates,
                         ))
                     }
                 })
@@ -149,7 +148,7 @@ pub(super) fn collect_program(
             Err(error) => (None, Some(error)),
         };
         if error.is_some() {
-            super::recovery::recover(&mut parser, &conflict_markers);
+            super::recovery::recover(&mut parser, &conflicts.markers);
         }
         let end = if parser.peek_token().token == Token::SemiColon {
             parser.next_token().span.end

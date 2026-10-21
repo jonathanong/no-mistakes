@@ -57,6 +57,7 @@ fn facts(name: &str) -> super::PostgresSqlFacts {
     })
 }
 
+mod cte_conflict_target;
 mod query;
 
 mod insert;

@@ -110,6 +110,7 @@ pub(super) fn project(
                     recursive_views,
                     super::index_only::contains(&wrapper_context.index_only, owned[0].span.start),
                     &owned_tokens,
+                    wrapper_context.cte_predicates,
                 )
             };
             super::wrappers::finalize(&mut facts, &span);

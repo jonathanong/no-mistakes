@@ -1,0 +1,1 @@
+SELECT 1; WITH written AS (INSERT INTO events(id) VALUES (1) ON CONFLICT (id) WHERE uuidv7() IS NOT NULL DO NOTHING) INSERT INTO events(id) VALUES (2) ON CONFLICT (id) WHERE length(id::text) > 0 DO NOTHING; SELECT 2;

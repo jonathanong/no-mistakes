@@ -1,0 +1,9 @@
+WITH open AS (
+ INSERT INTO target (id) VALUES (1)
+ ON CONFLICT (id) WHERE id > 0 DO NOTHING
+SELECT 9;
+WITH later AS (
+ INSERT INTO target (id) VALUES (2)
+ ON CONFLICT (id) WHERE id > 9 DO NOTHING RETURNING id
+)
+SELECT id FROM later;

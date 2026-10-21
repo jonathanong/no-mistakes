@@ -68,7 +68,7 @@ fn cte_core_mode_skips_returning_projection() {
         matches!(expr, Expr::Between { negated: false, .. }),
         "{expr}"
     );
-    let core = project_cte_core(value, &Locations::new(&sql));
+    let core = project_cte_core(value, None, &Locations::new(&sql));
     // Empty because CTE-core passes None into returning::project; forwarding this BETWEEN item would fill the list.
     assert!(core.returning.is_empty(), "{:?}", core.returning);
     assert!(core.complete, "{:?}", core.diagnostics);

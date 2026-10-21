@@ -8,9 +8,11 @@ use sqlparser::{
 
 pub(super) mod arbiter;
 pub(super) mod assignment;
+mod cte_target;
 pub(super) mod expressions;
 mod markers;
 mod with;
+pub(in crate::codebase::postgres::source) use cte_target::CtePredicate;
 pub(in crate::codebase::postgres::source) use markers::prepare;
 pub(in crate::codebase::postgres::source) use with::inner_insert;
 
@@ -62,10 +64,10 @@ fn parse_with_mode(
     markers: &[Location],
     normalize_with: bool,
 ) -> Result<(Statement, Option<ConflictFacts>), ParserError> {
-    let insert = keyword(&parser.peek_token().token, Keyword::INSERT)
-        || keyword(&parser.peek_token().token, Keyword::WITH)
-        || keyword(&parser.peek_token().token, Keyword::EXPLAIN)
-        || keyword(&parser.peek_token().token, Keyword::PREPARE);
+    let insert = cte_target::keyword(&parser.peek_token().token, Keyword::INSERT)
+        || cte_target::keyword(&parser.peek_token().token, Keyword::WITH)
+        || cte_target::keyword(&parser.peek_token().token, Keyword::EXPLAIN)
+        || cte_target::keyword(&parser.peek_token().token, Keyword::PREPARE);
     let result = parse_inner(parser, markers, normalize_with);
     if insert && result.is_err() {
         let previous = parser.token_at(parser.index().saturating_sub(1));
@@ -195,8 +197,4 @@ fn parse_inner(
         ));
     }
     Ok((statement, facts))
-}
-
-fn keyword(token: &Token, expected: Keyword) -> bool {
-    matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
 }

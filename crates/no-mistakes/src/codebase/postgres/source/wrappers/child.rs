@@ -21,9 +21,17 @@ impl<'a, 's> Context<'a, 's> {
             fetch,
             generated,
             markers: markers.inserts,
+            cte_predicates: &[],
             index_only: markers.index_only,
             comments: std::cell::RefCell::new(comments),
         }
+    }
+    pub(in crate::codebase::postgres::source) fn with_cte_predicates(
+        mut self,
+        cte_predicates: &'a [super::super::insert::parsing::CtePredicate],
+    ) -> Self {
+        self.cte_predicates = cte_predicates;
+        self
     }
 }
 impl Context<'_, '_> {
@@ -86,6 +94,7 @@ impl Context<'_, '_> {
                 self.recursive_views,
                 super::super::index_only::contains(&self.index_only, first.span.start),
                 tokens,
+                self.cte_predicates,
             )
         };
         let mut result = PostgresSqlStatement {
@@ -125,4 +134,11 @@ impl Context<'_, '_> {
             .unwrap_or(end)
             .max(end)
     }
+}
+
+pub(in crate::codebase::postgres::source) fn keyword(
+    token: &Token,
+    expected: sqlparser::keywords::Keyword,
+) -> bool {
+    matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
 }
