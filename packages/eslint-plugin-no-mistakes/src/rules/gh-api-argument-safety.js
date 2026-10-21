@@ -1,7 +1,6 @@
 "use strict";
 const { createTargetMatcher } = require("./async-targets");
 const { unwrapExpression } = require("./async-ast");
-const { logicalCall } = require("./module-mock-helpers");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 const { ruleSuppression } = require("../rule-suppression");
 const { inspectArgv, token } = require("./gh-api-argv");
