@@ -34,14 +34,37 @@ documented intentional cycles.
 
 ## Valid example
 
-```text
-@app/api -> @app/domain -> @app/types
+`@app/api` depends on `@app/domain`, which depends on `@app/types`. The
+workspace graph is acyclic.
+
+```json
+// package.json
+{ "name": "root", "private": true, "workspaces": ["packages/*"] }
+
+// packages/api/package.json
+{ "name": "@app/api", "dependencies": { "@app/domain": "workspace:*" } }
+
+// packages/domain/package.json
+{ "name": "@app/domain", "dependencies": { "@app/types": "workspace:*" } }
+
+// packages/types/package.json
+{ "name": "@app/types" }
 ```
 
 ## Counterexample
 
-```text
-@app/api -> @app/domain -> @app/api
+`@app/api` depends on `@app/domain`, while `@app/domain` depends on
+`@app/api`.
+
+```json
+// package.json
+{ "name": "root", "private": true, "workspaces": ["packages/*"] }
+
+// packages/api/package.json
+{ "name": "@app/api", "dependencies": { "@app/domain": "workspace:*" } }
+
+// packages/domain/package.json
+{ "name": "@app/domain", "dependencies": { "@app/api": "workspace:*" } }
 ```
 
 ## Fix

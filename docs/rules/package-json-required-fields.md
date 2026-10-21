@@ -31,33 +31,9 @@ are `private`, `type`, `license`, `requireScopedName`,
   when a file with that exact name exists beside `package.json`. It defaults to
   unset.
 
-## Valid example
-
-A selected manifest containing each required field with the configured shape
-passes.
-
-```json
-{ "name": "@app/web", "version": "1.0.0", "private": true, "type": "module" }
-```
-
-
-## Counterexample
-
-```json
-{ "name": "web" }
-```
-
-## Suppression and related rules
-
-JSON cannot contain directives, so narrow the configuration for exceptional
-manifests. [`package-json-workspace-coverage`](package-json-workspace-coverage.md)
-checks directory membership rather than field shape.
-
-Flags `package.json` manifests that do not match configured field-shape
-policy: `private`, `type`, `license`, scoped `name`, and `main` when a
-companion entry file exists. Application-specific name pins stay local.
-
-Empty options report nothing. Each check is opt-in.
+Empty options report nothing. Each check is opt-in. `unscopedNameExceptions`
+applies only when `requireScopedName` is enabled; `web` below is an allowed
+unscoped name, not a free pass on the other fields.
 
 ```yaml
 rules:
@@ -72,17 +48,39 @@ rules:
       mainWhenFileExists: index.mts
 ```
 
-Counterexample: an unscoped workspace package missing required fields.
+## Valid example
+
+A selected manifest containing each required field with the configured shape
+passes. `mainWhenFileExists` is checked only when that sibling file exists, so
+this example omits `index.mts`.
 
 ```json
+// package.json
 {
-  "name": "foo"
+  "name": "@app/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED"
 }
 ```
 
-Fix: declare the configured shape.
+## Counterexample
+
+An unscoped name that is not in `unscopedNameExceptions` is a finding, and so
+are missing `private`, `type`, and `license`. `foo` is not the `web` exception.
 
 ```json
+// package.json
+{ "name": "foo" }
+```
+
+## Fix
+
+Declare the configured shape.
+
+```json
+// package.json
 {
   "name": "@scope/foo",
   "private": true,
@@ -92,8 +90,10 @@ Fix: declare the configured shape.
 }
 ```
 
-Exclude an intentional exception with a rule-level `exclude` glob. A valid
-`package.json` cannot contain `no-mistakes-disable-file` comments.
+## Suppression
+
+JSON cannot contain directives, so narrow the configuration for exceptional
+manifests. Exclude an intentional exception with a rule-level `exclude` glob.
 
 ```yaml
 rules:
@@ -103,3 +103,8 @@ rules:
     options:
       private: true
 ```
+
+## Related rules
+
+[`package-json-workspace-coverage`](package-json-workspace-coverage.md)
+checks directory membership rather than field shape.
