@@ -1,4 +1,6 @@
 use super::*;
+#[path = "escaped_guarded_identity.rs"]
+mod identity;
 #[path = "escaped_guarded_pushes.rs"]
 mod pushes;
 
@@ -7,6 +9,7 @@ type Fields = std::sync::Arc<FxHashMap<String, ValueExpression>>;
 struct Identity {
     binding: (usize, String),
     root: Option<super::super::mutable_origins::RootIdentity>,
+    parameter: Option<u32>,
 }
 pub(super) struct Summary {
     at: u32,
@@ -111,50 +114,6 @@ impl ImportCollector {
                     common,
                 },
             );
-    }
-    fn array_identities(
-        &self,
-        fields: &FxHashMap<String, ValueExpression>,
-    ) -> FxHashMap<String, Identity> {
-        fields
-            .iter()
-            .filter_map(|(slot, value)| {
-                self.array_identity(value)
-                    .map(|identity| (slot.clone(), identity))
-            })
-            .collect()
-    }
-    fn array_identity(&self, value: &ValueExpression) -> Option<Identity> {
-        if let ValueExpression::Either(left, right) = value {
-            let left = self.array_identity(left)?;
-            return (self.array_identity(right)? == left).then_some(left);
-        }
-        let ValueExpression::Named {
-            name,
-            scope,
-            offset,
-            context,
-        } = value
-        else {
-            return None;
-        };
-        let scope = scope.unwrap_or(0);
-        let binding = (scope, name.clone());
-        let stable = (scope == 0 && self.imported_bindings.contains(name))
-            || self
-                .receiver_escapes
-                .stable_bindings
-                .get(&scope)
-                .is_some_and(|names| names.contains(name));
-        let root = if stable {
-            None
-        } else {
-            Some(
-                self.mutable_receiver_version(&binding, (*offset, *context))?
-                    .known_identity()?,
-            )
-        };
-        Some(Identity { binding, root })
     }
 }
 

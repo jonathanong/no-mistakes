@@ -20,6 +20,8 @@ mod escaped_guarded_arrays;
 mod escaped_higher_order;
 #[path = "escaped_origin_absorb.rs"]
 mod escaped_origin_absorb;
+#[path = "escaped_parameter_identity.rs"]
+mod escaped_parameter_identity;
 #[path = "escaped_parameters.rs"]
 mod escaped_parameters;
 #[path = "escaped_possible_arguments.rs"]
@@ -63,6 +65,8 @@ pub(in super::super) struct Side {
     pushes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     pending_possible: Vec<escaped_possible_arguments::Pending>,
     stable_bindings: FxHashMap<usize, FxHashSet<String>>,
+    parameter_epochs: FxHashMap<usize, FxHashMap<String, escaped_parameter_identity::Epochs>>,
+    pub(in super::super) parameter_completion: Option<(u32, u32)>,
     guarded_summaries: FxHashMap<usize, FxHashMap<String, escaped_guarded_arrays::Summary>>,
     guarded_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
     guarded_open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,

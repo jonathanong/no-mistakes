@@ -20,6 +20,9 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
+        if !member {
+            self.note_guarded_parameter_write(scope, base, offset, completed_at);
+        }
         if member && self.project_arguments_alias(scope, name, offset, receiver, completed_at) {
             return;
         }

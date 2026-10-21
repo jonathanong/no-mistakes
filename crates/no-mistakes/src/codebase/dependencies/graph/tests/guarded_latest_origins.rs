@@ -1,7 +1,7 @@
 use super::*;
 use receiver_escapes::{assert_export, assert_unknown, graph};
 
-fn possible(built: &DepGraph, root: &Path, file: &str, callee: &str) {
+pub(super) fn possible(built: &DepGraph, root: &Path, file: &str, callee: &str) {
     let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
     let site = sites
         .iter()
