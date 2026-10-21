@@ -163,7 +163,9 @@ async function buildQuery(id: string) {
     function expression with no binding is not hoisted. It is ready when that
     expression starts at or after the const and every function that contains
     it is ready too. `[1].map(() => build())` reports when that callback is
-    ready. Another `.map` stays silent, because that callee may still use the
+    ready and the array is discarded. Returning that array from an async
+    function stays silent, because a caller can await the function and use an
+    element. Another `.map` stays silent, because that callee may still use the
     promise. Removing `async` returns the SQL string.
 
   A later declarator in the same statement runs after the initializer and

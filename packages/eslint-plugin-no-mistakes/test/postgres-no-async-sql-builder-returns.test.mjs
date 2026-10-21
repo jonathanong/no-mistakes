@@ -503,6 +503,9 @@ describe("postgres-no-async-sql-builder", () => {
       `),
       [],
     );
+    // A returned array keeps its element promises. A discarded map still reports.
+    assert.deepEqual(saved("returned-array-map.ts"), []);
+    assert.deepEqual(saved("discarded-array-map-async.ts"), ["removeAsync"]);
     // Only an array literal's discarded map is a known callback contract.
     assert.deepEqual(
       ids(`

@@ -1,6 +1,11 @@
 "use strict";
 
-const { isFunction, isTransparentExpression, unwrapExpression } = require("./async-ast");
+const {
+  findContainingFunction,
+  isFunction,
+  isTransparentExpression,
+  unwrapExpression,
+} = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { propertyName } = require("./module-mock-helpers");
 const {
@@ -40,12 +45,25 @@ function callResultContract(call, context, types, seen = new Set()) {
     ) {
       return bindingResultContract(parent, context, types, seen);
     }
-    if (parent.type === "AwaitExpression" && parent.argument === current) return "allows";
-    if (parent.type === "ReturnStatement" && parent.argument === current)
+    if (parent.type === "AwaitExpression" && parent.argument === current) {
+      // `await` does not flatten an array's elements. Keep walking so a
+      // returned array stays unknown. A discarded await still allows.
+      if (arrayMapValue(current, context)) {
+        current = parent;
+        continue;
+      }
+      return "allows";
+    }
+    if (parent.type === "ReturnStatement" && parent.argument === current) {
+      // An async return flattens one promise, not an array of them.
+      if (returnsAsyncArrayMap(parent, current, context)) return "unknown";
       return returnedPromiseContract(parent, context, types);
+    }
     if (parent.type === "ArrowFunctionExpression" && parent.body === current) {
       // `() => build()` returns the promise. A discarded `[1].map` result does
-      // not observe it; a typed callback parameter still can.
+      // not observe it; a typed callback parameter still can. An async arrow
+      // that returns the array does not flatten its elements.
+      if (parent.async && arrayMapValue(current, context)) return "unknown";
       return conciseBodyContract(parent, context, types, seen);
     }
     if (parent.type === "CallExpression" && parent.arguments.includes(current)) {
@@ -104,6 +122,38 @@ function arrayLiteralMap(call) {
   if (callee?.type !== "MemberExpression" || callee.computed || callee.optional) return false;
   if (propertyName(callee.property) !== "map") return false;
   return unwrapExpression(callee.object)?.type === "ArrayExpression";
+}
+
+// `[1].map(() => build())` is an array of promises. Returning that array from
+// an async function still lets a caller observe each element.
+function arrayMapValue(node, context, seen = new Set()) {
+  const value = unwrapExpression(node);
+  if (!value || seen.has(value)) return false;
+  seen.add(value);
+  if (value.type === "AwaitExpression") return arrayMapValue(value.argument, context, seen);
+  if (value.type === "SequenceExpression") {
+    return arrayMapValue(value.expressions.at(-1), context, seen);
+  }
+  if (value.type === "ConditionalExpression" || value.type === "LogicalExpression") {
+    return (
+      arrayMapValue(value.consequent ?? value.left, context, seen) ||
+      arrayMapValue(value.alternate ?? value.right, context, seen)
+    );
+  }
+  if (value.type === "Identifier") return bindingMapValue(value, context, seen);
+  return value.type === "CallExpression" && arrayLiteralMap(value);
+}
+
+function bindingMapValue(identifier, context, seen) {
+  const variable = resolveVariable(identifier, context);
+  if (!variable || variable.defs.length !== 1) return false;
+  const definition = variable.defs[0];
+  if (definition.type !== "Variable" || hasLaterWrite(variable)) return false;
+  return arrayMapValue(definition.node.init, context, seen);
+}
+
+function returnsAsyncArrayMap(returnStatement, value, context) {
+  return findContainingFunction(returnStatement).async && arrayMapValue(value, context);
 }
 
 function conciseBodyContract(func, context, types, seen) {
