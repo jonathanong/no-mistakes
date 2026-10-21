@@ -8,6 +8,7 @@ const {
   namespaceSourceFromInit,
   recordObjectPatternBindings,
   resolveVariable,
+  stableConstInitializer,
 } = require("./async-target-bindings");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
 const { literalString, logicalCall } = require("./module-mock-helpers");
@@ -146,44 +147,34 @@ function createTargetMatcher(context, optionKey = "targets") {
     return (variable && directBindings.get(variable)) || null;
   }
 
-  function resolveNamespaceTarget(node) {
+  function resolveNamespaceTarget(node, seen) {
     if (node.type !== "MemberExpression") return null;
     const name = memberPropertyName(node);
     if (!name) return null;
-    const object = unwrapExpression(node.object);
-    const source =
-      requireSource(object, context) ||
-      (object.type === "Identifier"
-        ? namespaceBindings.get(resolveVariable(object, context))
-        : null);
-    return source && targetMatches(targets, source, name) ? { source, calleeName: name } : null;
+    let object = unwrapExpression(node.object);
+    for (;;) {
+      const source =
+        requireSource(object, context) ||
+        (object?.type === "Identifier"
+          ? namespaceBindings.get(resolveVariable(object, context))
+          : null);
+      if (source) {
+        return targetMatches(targets, source, name) ? { source, calleeName: name } : null;
+      }
+      const init = stableConstInitializer(object, context, seen);
+      if (!init) return null;
+      object = unwrapSequence(init);
+    }
   }
 
   function resolveCallee(callee, seen = new Set()) {
     callee = unwrapSequence(callee);
     if (!callee) return null;
-    const found = resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
+    const found = resolveDirectTarget(callee) || resolveNamespaceTarget(callee, seen);
     if (found) return found;
-    if (callee.type !== "Identifier") return null;
-    const variable = resolveVariable(callee, context);
-    if (
-      !variable ||
-      seen.has(variable) ||
-      variable.defs.length !== 1 ||
-      isReassigned(callee, context)
-    ) {
-      return null;
-    }
-    const def = variable.defs[0];
-    if (
-      def.type !== "Variable" ||
-      def.parent?.kind !== "const" ||
-      def.node?.id?.type !== "Identifier"
-    ) {
-      return null;
-    }
-    seen.add(variable);
-    return resolveCallee(def.node.init, seen);
+    const init = stableConstInitializer(callee, context, seen);
+    if (!init) return null;
+    return resolveCallee(init, seen);
   }
 
   function resolveCallTarget(node) {
