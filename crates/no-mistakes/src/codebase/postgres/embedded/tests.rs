@@ -8,13 +8,13 @@ use oxc_span::SourceType;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded")
         .join(name)
 }
 
-fn read_fixture(name: &str) -> String {
+pub(super) fn read_fixture(name: &str) -> String {
     std::fs::read_to_string(fixture(name)).expect("fixture")
 }
 

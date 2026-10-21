@@ -1,12 +1,11 @@
 use super::*;
+use crate::codebase::postgres::embedded::tests::{fixture, read_fixture};
 use crate::codebase::postgres::embedded::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
-use std::path::PathBuf;
 
 #[test]
 fn unknown_callees_skip_argument_classification() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/postgres-facts/embedded/identifier-clause-lazy-args.ts");
-    let source = std::fs::read_to_string(&path).expect("saved fixture");
+    let path = fixture("identifier-clause-lazy-args.ts");
+    let source = read_fixture("identifier-clause-lazy-args.ts");
     crate::ast::with_program(&path, &source, |program, source| {
         let functions = LocalFunctions::collect(program, source, &[]);
         let classifications = std::cell::Cell::new(0);
