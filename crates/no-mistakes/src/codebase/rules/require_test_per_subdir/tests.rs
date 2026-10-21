@@ -339,6 +339,7 @@ fn escaping_root_is_one_finding_and_skips_outside_files() {
         .unwrap();
     let findings = super::scan(&root, &opts, &[inside.clone(), outside.clone()]).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
     assert!(
         findings[0].message.contains("escapes the repository"),
         "{findings:?}"
@@ -356,4 +357,20 @@ fn escaping_root_is_one_finding_and_skips_outside_files() {
     let checked = check_with_files(&root, &config, &[inside]).unwrap();
     assert_eq!(checked.len(), 1, "{checked:?}");
     assert!(checked[0].message.contains("escapes the repository"));
+    assert_eq!(checked[0].file, ".no-mistakes.yml");
+}
+
+#[test]
+fn escaping_root_is_suppressed_from_the_config_file() {
+    let root = fixture("escape-disabled");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files = vec![
+        root.join(".no-mistakes.yml"),
+        root.join("agents/email/index.mts"),
+    ];
+    let mut findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let sources = super::super::source_store_for_files(&files);
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert!(findings.is_empty(), "{findings:?}");
 }

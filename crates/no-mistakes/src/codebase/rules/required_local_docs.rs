@@ -145,7 +145,12 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
 fn scan_root(root: &Path, root_rel: &Path, ctx: &scan_pkg::ScanCtx<'_>) -> Vec<RuleFinding> {
     let pkg_root = super::configured_root::normalize_configured_root(root, root_rel);
     if super::configured_root::escapes_repository(root, &pkg_root) {
-        return vec![super::configured_root::escape_finding(RULE_ID, root_rel)];
+        let config_file = super::configured_root::config_file_for_finding(root, ctx.files);
+        return vec![super::configured_root::escape_finding(
+            RULE_ID,
+            root_rel,
+            &config_file,
+        )];
     }
     scan_pkg::scan_pkg(root, &pkg_root, ctx)
 }

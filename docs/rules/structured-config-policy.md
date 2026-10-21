@@ -169,8 +169,9 @@ for generated config that cannot be edited. Findings currently report line 1.
 
 YAML 1.1 merge keys (`<<: *anchor`) are not expanded. Structured YAML is parsed
 with `serde_yaml`, which leaves `<<` as an ordinary key instead of copying the
-anchored mapping into its parent. A banned or required key that would exist
-only after that copy is not a finding.
+anchored mapping into its parent. A banned key that would exist only after
+that copy is not a finding. A required key that exists only in the merge
+remains missing and is reported as a finding.
 
 ```yaml
 defaults: &defaults

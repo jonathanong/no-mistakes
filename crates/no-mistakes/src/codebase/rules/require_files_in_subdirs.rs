@@ -61,11 +61,16 @@ pub(crate) fn check_with_files(
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     let file_set: HashSet<&PathBuf> = files.iter().collect();
     let mut findings = Vec::new();
+    let config_file = super::configured_root::config_file_for_finding(root, files);
 
     for spec in &opts.packages {
         let abs_root = super::configured_root::normalize_configured_root(root, &spec.root);
         if super::configured_root::escapes_repository(root, &abs_root) {
-            findings.push(super::configured_root::escape_finding(RULE_ID, &spec.root));
+            findings.push(super::configured_root::escape_finding(
+                RULE_ID,
+                &spec.root,
+                &config_file,
+            ));
             continue;
         }
         let subdirs = first_level_subdirs(&abs_root, files);

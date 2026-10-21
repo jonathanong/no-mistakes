@@ -79,11 +79,16 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     let glob = Glob::new(test_glob_str)?.compile_matcher();
     let exclude_set: HashSet<&str> = opts.exclude_dirs.iter().map(String::as_str).collect();
     let mut findings = Vec::new();
+    let config_file = super::configured_root::config_file_for_finding(root, files);
 
     for rule_root in &opts.roots {
         let abs_root = super::configured_root::normalize_configured_root(root, rule_root);
         if super::configured_root::escapes_repository(root, &abs_root) {
-            findings.push(super::configured_root::escape_finding(RULE_ID, rule_root));
+            findings.push(super::configured_root::escape_finding(
+                RULE_ID,
+                rule_root,
+                &config_file,
+            ));
             continue;
         }
 
