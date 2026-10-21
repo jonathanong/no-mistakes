@@ -33,7 +33,7 @@ file rather than using it as an import-only manifest.
 
 ## Limits
 
-`require(\`./users.test\`)`, `require?.("./users.test")`, `require["call"](null, "./users.test")`, and `require.call(null, "./users.test")` name the same test file. A template with an expression, or a computed identifier key, does not.
+An optional `require?.()` call and a static `require["call"]` or `require["apply"]` key name the same test file as `require.call`. A template with an expression, or a computed identifier key, does not.
 
 A test file reached through another module's re-export is not visible here.
 
