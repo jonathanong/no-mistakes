@@ -7,6 +7,9 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        if immutable {
+            self.note_stable_array_binding(&declarator.id);
+        }
         self.note_instance_class(declarator);
         if let Some(init) = &declarator.init {
             self.record_callable_initializer(declarator, immutable, init);

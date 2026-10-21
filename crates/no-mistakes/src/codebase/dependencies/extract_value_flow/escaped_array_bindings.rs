@@ -15,6 +15,7 @@ impl ImportCollector {
                 || self.conditional_execution
                 || self.repeat_depth > self.call_repeat_base;
             self.receiver_escapes.guarded_arrays |= guarded;
+            self.note_guarded_array(scope, name, at, items, guarded);
             self.receiver_escapes.arrays.push((
                 scope,
                 name.to_string(),
