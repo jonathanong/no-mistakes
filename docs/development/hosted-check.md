@@ -120,8 +120,9 @@ frozen budgets across several healthy nightly runs. First establish that the
 candidate is healthy; never adopt a regression or a failed/censored sample as
 the new normal.
 
-Collect six complete fresh pairs per cohort and worker count with the documented
-production builds and runner population. Review multiple runs for variance and
+Collect six complete fresh candidate samples per cohort and worker count, retaining
+their release-baseline pairs, with the documented production builds and runner
+population. Review multiple runs for variance and
 retain their source, environment and raw-sample evidence. Update
 `hosted-check-calibration.json` with those observations and provenance; use
 `calibratedBudget` and the run's `proposed-budgets.json` to derive the limits and
