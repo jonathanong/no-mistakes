@@ -37,9 +37,11 @@ impl Eq for Bindings {}
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 
 #[cfg(not(test))]
+#[macro_use]
 mod binding_scan_count;
 #[cfg(test)]
 #[path = "scope/binding_scan_count/tests.rs"]
+#[macro_use]
 mod binding_scan_count;
 
 impl Scope {
@@ -49,7 +51,7 @@ impl Scope {
         self.0
             .reference_binding_names
             .get_or_init(|| {
-                binding_scan_count::record(self.len());
+                record_binding_scan!(self.len());
                 self.iter()
                     .filter(|(_, value)| value.contains_reference())
                     .map(|(name, _)| name.clone())
