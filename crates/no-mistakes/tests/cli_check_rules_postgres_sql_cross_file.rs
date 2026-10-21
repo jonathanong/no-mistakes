@@ -101,6 +101,7 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
     let rule = "postgres-no-unbounded-sql-identifier";
     for (scenario, line, target) in [
         ("fail-conditional-env", 3, "process.env.SCHEMA"),
+        ("fail-template-validator", 6, "process.env.SCHEMA"),
         ("fail-concat-env", 2, "process.env.SCHEMA"),
         ("fail-alias-chain", 4, "b"),
         ("fail-env-object-alias", 3, "process.env.SCHEMA"),
@@ -122,6 +123,9 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
     }
     for scenario in [
         "pass-conditional-literals",
+        "pass-conditional-validator-local",
+        "pass-conditional-validator-nested",
+        "pass-conditional-validator-imported",
         "pass-new-bind-value",
         "pass-projected-http-rows",
         "pass-alias-cycle",

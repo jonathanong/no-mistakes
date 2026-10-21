@@ -4,6 +4,7 @@ use super::findings;
 fn remaining_identifier_shapes_report_exact_sources() {
     for (scenario, line, producer) in [
         ("fail-conditional-env", 3, "process.env.SCHEMA"),
+        ("fail-template-validator", 6, "process.env.SCHEMA"),
         ("fail-concat-env", 2, "process.env.SCHEMA"),
         ("fail-alias-chain", 4, "b"),
         ("fail-env-object-alias", 3, "process.env.SCHEMA"),
@@ -26,6 +27,9 @@ fn remaining_identifier_shapes_report_exact_sources() {
 fn remaining_identifier_shapes_preserve_finite_bind_and_unknown_controls() {
     for scenario in [
         "pass-conditional-literals",
+        "pass-conditional-validator-local",
+        "pass-conditional-validator-nested",
+        "pass-conditional-validator-imported",
         "pass-new-bind-value",
         "pass-projected-http-rows",
         "pass-alias-cycle",

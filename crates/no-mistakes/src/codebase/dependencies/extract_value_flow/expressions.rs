@@ -32,13 +32,19 @@ impl ImportCollector {
                         .into(),
                 )
             }
-            Expression::ConditionalExpression(value) => ValueExpression::Derived(
-                vec![
-                    self.value_expression(&value.consequent),
-                    self.value_expression(&value.alternate),
-                ]
-                .into(),
-            ),
+            Expression::ConditionalExpression(value) => {
+                let consequent = self.value_expression(&value.consequent);
+                let alternate = self.value_expression(&value.alternate);
+                if literal_conditional_arm(&value.consequent, &consequent)
+                    && literal_conditional_arm(&value.alternate, &alternate)
+                {
+                    // Preserve the existing finite-return proof without treating
+                    // opaque templates or other Derived values as literals.
+                    ValueExpression::Unknown
+                } else {
+                    ValueExpression::Derived(vec![consequent, alternate].into())
+                }
+            }
             Expression::BinaryExpression(value)
                 if value.operator == oxc_syntax::operator::BinaryOperator::Addition =>
             {
@@ -126,4 +132,12 @@ impl ImportCollector {
             }),
         }
     }
+}
+
+fn literal_conditional_arm(expression: &Expression<'_>, value: &ValueExpression) -> bool {
+    let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
+    expression.is_literal()
+        || matches!(expression, Expression::TemplateLiteral(template) if template.expressions.is_empty())
+        || (matches!(expression, Expression::ConditionalExpression(_))
+            && matches!(value, ValueExpression::Unknown))
 }
