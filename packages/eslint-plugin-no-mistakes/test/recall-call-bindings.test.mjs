@@ -178,6 +178,15 @@ describe("call-binding recall", () => {
     );
     assert.equal(
       messages(
+        fixture("nextjs-static-fetch-url/dynamic-fetch-key.mjs"),
+        "nextjs-static-fetch-url",
+        undefined,
+        "dynamic-fetch-key.mjs",
+      ).length,
+      1,
+    );
+    assert.equal(
+      messages(
         fixture("module-mock-boundary/recall.mjs"),
         "module-mock-boundary",
         undefined,
@@ -202,6 +211,15 @@ describe("call-binding recall", () => {
         "recall.mjs",
       ).length,
       5,
+    );
+    assert.equal(
+      messages(
+        fixture("no-global-fetch-outside-helper/dynamic-fetch-key.mjs"),
+        "no-global-fetch-outside-helper",
+        { checkedPathPatterns: ["**"] },
+        "dynamic-fetch-key.mjs",
+      ).length,
+      2,
     );
     assert.equal(
       messages(
@@ -241,6 +259,16 @@ describe("call-binding recall", () => {
       messages(local, "server-require-nullable-fetch-wrapper", server, "backend/users.ts"),
       [],
     );
+    const getterAlias = messages(
+      fixture("server-require-nullable-fetch-wrapper/local-getter-alias.ts"),
+      "server-require-nullable-fetch-wrapper",
+      {
+        getterCalleePatterns: ["^getUser$"],
+        requiredWrapperCallee: "wrap",
+      },
+      "backend/users.ts",
+    );
+    assert.deepEqual(getterAlias, ["wrapper"]);
     assert.equal(
       messages(
         fixture("server-require-nullable-fetch-wrapper/named-call.ts"),
