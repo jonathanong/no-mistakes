@@ -59,12 +59,16 @@ function isChunkCall(node, chunkFunctionNames) {
   return Boolean(name && chunkFunctionNames.includes(name));
 }
 
-function forOfRightHandSide(node) {
-  let current = node;
-  while (current) {
-    if (current.type === "ForOfStatement") return current.right;
-    current = current.parent;
-  }
+function forOfRightHandSide(defNode) {
+  const declaration = defNode?.parent;
+  if (declaration?.type !== "VariableDeclaration") return undefined;
+  const loop = declaration.parent;
+  if (loop?.type !== "ForOfStatement" || loop.left !== declaration) return undefined;
+  return loop.right;
+}
+
+function isReassignedBinding(variable) {
+  return (variable?.references ?? []).some((reference) => reference.isWrite() && !reference.init);
 }
 
 function isStaticallyBounded(source, chunkFunctionNames, context) {
@@ -81,7 +85,10 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
     const init = def?.node?.init;
     if (init && init !== source) return isStaticallyBounded(init, chunkFunctionNames, null);
     const iterated = forOfRightHandSide(def?.node);
-    if (iterated) return isStaticallyBounded(iterated, chunkFunctionNames, null);
+    if (iterated) {
+      if (isReassignedBinding(variable)) return false;
+      return isStaticallyBounded(iterated, chunkFunctionNames, null);
+    }
   }
   return false;
 }

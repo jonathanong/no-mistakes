@@ -57,9 +57,18 @@ can itself reject unhandled.
 
 The rule recognizes global `expect` plus a named `expect` import from `vitest`
 or `@jest/globals`. It follows only one immutable, non-aliased `const` binding
-used directly as the single `expect` argument within the same function. It does
-not infer promise identity through aliases, destructuring, mutable bindings, or
-cross-function flows; attach the rejection observer immediately in those forms.
+used directly as the single `expect` argument within the same function or at
+module scope (top-level `await`). It does not infer promise identity through
+aliases, destructuring, mutable bindings, or cross-function flows; attach the
+rejection observer immediately in those forms.
+
+Module-level delayed rejects are reported the same way as inside a function:
+
+```ts
+const update = updateCommunityAgentPrompt(input);
+await releaseLock();
+await expect(update).rejects.toMatchObject({ status: 403 });
+```
 
 The rule stays silent when the observer itself is attached before coordination,
 including a stored matcher promise:
