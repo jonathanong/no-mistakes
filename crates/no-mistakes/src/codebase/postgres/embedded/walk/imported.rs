@@ -14,6 +14,13 @@ use oxc_ast::ast::{
     CallExpression, Expression, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
 };
 mod args;
+#[cfg(test)]
+#[macro_use]
+pub(super) mod clause_args_test_counter;
+#[cfg(not(test))]
+#[macro_use]
+#[path = "imported/clause_args_noop.rs"]
+mod clause_args_test_counter;
 pub(super) mod constants;
 use args::classify;
 
@@ -181,6 +188,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn clause_args(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
 ) -> Option<Vec<SiteArg>> {
+    record_clause_args!(call.span.start);
     let (args, builder) = args::classify(visitor, call)?;
     builder.is_none().then_some(args)
 }
