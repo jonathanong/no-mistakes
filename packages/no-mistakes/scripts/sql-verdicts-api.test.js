@@ -160,3 +160,91 @@ test(
     }
   },
 );
+
+test(
+  "borrowed coincident applications preserve full async reports and independent sinks",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-verdicts/fixture/borrowed-applications",
+    );
+    const options = { root, config: join(root, ".no-mistakes.yml"), includeSuppressed: true };
+    const baseline = await cjs.check(options);
+    const requested = { ...options, includeSqlVerdicts: true };
+    const pending = cjs.check(requested);
+    assert.ok(pending instanceof Promise);
+    const [first, second, moduleReport] = await Promise.all([
+      pending,
+      cjs.check(requested),
+      esm.check(requested),
+    ]);
+    assert.deepEqual(second, first);
+    assert.deepEqual(moduleReport, first);
+    const { spawnSync } = require("node:child_process");
+    const { mkdtempSync, rmSync } = require("node:fs");
+    const { tmpdir } = require("node:os");
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(
+        dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
+        process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
+      );
+    const runtime = mkdtempSync(join(tmpdir(), "no-mistakes-borrowed-sql-"));
+    try {
+      for (const includeSqlVerdicts of [false, true]) {
+        const args = [
+          "check",
+          "--root",
+          root,
+          "--config",
+          options.config,
+          "--format",
+          "json",
+          "--include-suppressed",
+        ];
+        if (includeSqlVerdicts) args.push("--include-sql-verdicts");
+        const child = spawnSync(cli, args, {
+          env: { ...process.env, XDG_RUNTIME_DIR: runtime },
+          encoding: "utf8",
+        });
+        assert.equal(child.status, 1, child.stderr);
+        assert.deepEqual(JSON.parse(child.stdout), includeSqlVerdicts ? first : baseline);
+      }
+    } finally {
+      rmSync(runtime, { recursive: true, force: true });
+    }
+    const { sqlVerdicts, ...otherFields } = first;
+    assert.deepEqual(otherFields, baseline);
+    assert.equal(baseline.rules.length, 1);
+    assert.equal(baseline.suppressed.length, 1);
+    assert.ok(baseline.advisories.length > 0);
+    const rows = sqlVerdicts.filter((row) => row.subcheck === "select-star");
+    for (const index of [0, 1, 2]) {
+      const applicationRows = rows.filter((row) => row.application.index === index);
+      assert.ok(applicationRows.some((row) => row.status === "abstain" && row.advisory));
+      assert.ok(
+        applicationRows.some((row) => row.status === (index === 2 ? "proven-clear" : "violation")),
+      );
+      assert.deepEqual(
+        applicationRows[0].application,
+        index === 2 ? { index } : { index, name: "coincident" },
+      );
+    }
+    const batch = await cjs.analyzeProject({
+      root,
+      config: options.config,
+      reports: [
+        { type: "check", includeSqlVerdicts: true, includeSuppressed: true },
+        { type: "check", includeSuppressed: true },
+        { type: "check", includeSqlVerdicts: true, includeSuppressed: true },
+      ],
+    });
+    assert.deepEqual(
+      batch.reports.map(({ result }) => result),
+      [first, baseline, first],
+    );
+  },
+);

@@ -1,4 +1,5 @@
 use super::{CompiledOptions, RULE_ID};
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -11,15 +12,16 @@ pub(super) fn scan_with_sources(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &crate::codebase::check_facts::CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        let file = facts
+        let file = prepared
             .embedded_sql(path, &opts.embedded)
             .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
@@ -28,7 +30,7 @@ pub(super) fn scan_with_sources(
             .calls
             .iter()
             .any(|call| !call.variants.is_empty())
-            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
+            .then(|| prepared.postgres_statements(path, Some(&opts.embedded)))
             .transpose()?
             .map(crate::codebase::rules::index_sql_variants)
             .unwrap_or_default();
@@ -60,7 +62,7 @@ pub(super) fn scan_with_sources(
                 }
                 continue;
             }
-            let prefix = facts.query_annotation_prefix(path, &opts.embedded, *span);
+            let prefix = prepared.query_annotation_prefix(path, &opts.embedded, *span);
             let sql = match prefix {
                 Some(value) => value.as_deref(),
                 None => call.sql_text.as_deref(),

@@ -1,5 +1,5 @@
 use super::{owner, CompiledOptions, Tracked, RULE_ID};
-use crate::codebase::check_facts::{CheckFactMap, PathMembership};
+use crate::codebase::check_facts::{PathMembership, SqlFactContext};
 use crate::codebase::postgres::{
     record_sql_policy_verdicts, EmbeddedSqlFileFacts, SqlBranchJudgment, SqlColumnClause,
     SqlStatementFileFacts,
@@ -15,8 +15,9 @@ pub(super) fn record(
     queries: &PathMembership<'_>,
     tracked: &[Tracked],
     columns: &BTreeMap<String, BTreeSet<String>>,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
+    let prepared = facts.prepared();
     let checks = [
         (opts.where_clause, "where"),
         (opts.join_clause, "join"),
@@ -31,7 +32,7 @@ pub(super) fn record(
             crate::codebase::postgres::SqlPolicyVerdictContext {
                 facts,
                 embedded: file,
-                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
+                statements: prepared.postgres_statements(&file.path, Some(&opts.embedded))?,
             },
             RULE_ID,
             &relative_slash_path(root, &file.path),

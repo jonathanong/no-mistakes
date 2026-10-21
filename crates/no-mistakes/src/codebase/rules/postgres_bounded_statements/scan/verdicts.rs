@@ -1,5 +1,5 @@
 use super::{offenders, variant_offenders, CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
 use crate::codebase::postgres::{
     project_sql_bounds, record_sql_policy_verdicts, EmbeddedSqlFileFacts, SchemaCatalog,
@@ -13,8 +13,9 @@ pub(super) fn record(
     opts: &CompiledOptions,
     embedded: &[&EmbeddedSqlFileFacts],
     catalog: &SchemaCatalog,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
+    let prepared = facts.prepared();
     let checks = opts
         .statements
         .iter()
@@ -25,7 +26,7 @@ pub(super) fn record(
             crate::codebase::postgres::SqlPolicyVerdictContext {
                 facts,
                 embedded: file,
-                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
+                statements: prepared.postgres_statements(&file.path, Some(&opts.embedded))?,
             },
             RULE_ID,
             &relative_slash_path(root, &file.path),

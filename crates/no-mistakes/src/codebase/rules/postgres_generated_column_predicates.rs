@@ -1,5 +1,6 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::{relative_slash_path, TS_JS_EXTENSIONS};
 use crate::config::v2::NoMistakesConfig;
@@ -139,7 +140,8 @@ fn check_applications(
                 &files,
                 &query_files,
                 sources,
-                view.as_ref().unwrap_or(facts),
+                view.as_ref()
+                    .map_or(facts as &dyn SqlFactContext, |view| view),
             )
         })
         .collect();

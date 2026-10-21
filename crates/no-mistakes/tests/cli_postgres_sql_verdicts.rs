@@ -28,7 +28,7 @@ fn fixture_report(
         .arg(root)
         .arg("--config")
         .arg(root.join(config))
-        .args(["--format", "json"]);
+        .args(["--format", "json", "--include-suppressed"]);
     if include_verdicts {
         command.arg("--include-sql-verdicts");
     }
@@ -133,6 +133,51 @@ fn fail_mode_keeps_finite_branch_origins_with_either_ledger_flag() {
         .iter()
         .any(|row| row["line"] == 10 && row["target"] == "unanalyzable-sql"));
     assert_eq!(detailed["sqlVerdicts"].as_array().unwrap().len(), 84);
+    detailed.as_object_mut().unwrap().remove("sqlVerdicts");
+    assert_eq!(detailed, plain);
+}
+
+#[test]
+fn coincident_applications_preserve_identity_and_every_other_report_field() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/borrowed-applications");
+    let plain = fixture_report(&root, ".no-mistakes.yml", false, 1);
+    let mut detailed = fixture_report(&root, ".no-mistakes.yml", true, 1);
+    assert_eq!(detailed, fixture_report(&root, ".no-mistakes.yml", true, 1));
+    assert_eq!(plain["rules"].as_array().unwrap().len(), 1, "{plain}");
+    assert!(
+        !plain["advisories"].as_array().unwrap().is_empty(),
+        "{plain}"
+    );
+    assert_eq!(plain["suppressed"].as_array().unwrap().len(), 1, "{plain}");
+    let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
+    let span = source.find("query(\"SELECT * FROM orders\")").unwrap() as u64;
+    let rows = detailed["sqlVerdicts"].as_array().unwrap();
+    let applications = rows
+        .iter()
+        .filter(|row| row["subcheck"] == "select-star" && row["span"][0] == span)
+        .map(|row| (row["application"].clone(), row["status"].clone()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        applications,
+        vec![
+            (
+                serde_json::json!({"index": 0, "name": "coincident"}),
+                serde_json::json!("violation")
+            ),
+            (
+                serde_json::json!({"index": 1, "name": "coincident"}),
+                serde_json::json!("violation")
+            ),
+            (
+                serde_json::json!({"index": 2}),
+                serde_json::json!("proven-clear")
+            ),
+        ]
+    );
+    assert!(rows
+        .iter()
+        .any(|row| row["status"] == "abstain" && row["advisory"] == true));
     detailed.as_object_mut().unwrap().remove("sqlVerdicts");
     assert_eq!(detailed, plain);
 }
