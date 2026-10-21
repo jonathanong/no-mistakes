@@ -31,11 +31,19 @@ Static top-level `const` bindings initialized by `require("./tables")`, includin
 
 ## Abstains
 
-A dynamic, shadowed, conditional, or function-local `require` does not establish a registry producer. Mutable `let`/`var` require bindings also abstain, even without a visible reassignment; only retained immutable identities prove this new route. Neither do multiple unresolved require targets or ambiguous re-export routes. These cases need an explicit import before the rule can judge the cross-file write:
+A dynamic, shadowed, conditional, or function-local `require` does not establish a registry producer. Mutable `let`/`var` require bindings also abstain, even without a visible reassignment; only retained immutable identities prove this new route. Multiple distinct local module paths can make the binding-to-edge association ambiguous even when every path resolves. Ambiguous re-export routes also abstain. These cases need an explicit import before the rule can judge the cross-file write:
 
 ```ts
 declare const path: string;
 const registry = require(path);
+registry.tables.users = "app.users";
+```
+
+For example, this require route may abstain because the canonical edges do not identify which literal supplied the binding. The same limitation applies to namespace routes with multiple local import paths:
+
+```ts
+const registry = require("./tables");
+const other = require("./other");
 registry.tables.users = "app.users";
 ```
 
