@@ -175,3 +175,12 @@ fn site_hole(
         },
     )
 }
+
+/// Arguments of a same-file call that returns literal text, not a builder.
+pub(in crate::codebase::postgres::embedded::walk) fn clause_args(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+) -> Option<Vec<SiteArg>> {
+    let (args, builder) = args::classify(visitor, call)?;
+    builder.is_none().then_some(args)
+}

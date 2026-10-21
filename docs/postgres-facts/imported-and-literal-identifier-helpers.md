@@ -89,7 +89,10 @@ Each call runs the model against the call site's arguments:
   helper call or `.append`), is skipped. A recoverable `switch` yields one
   alternative per arm. An unknown selector, or a name that is not bound,
   keeps every arm; a selector that matches none reaches `default` and that
-  path ends. `default` is proven only when the analyzer sees `throw`, or a
+  path ends. An untagged hole that calls the helper is the union of those
+  returned strings, so `postgres-required-predicates` judges each one. A
+  selector that reaches `default`, or a return that is not a string, leaves
+  the call unanalyzable. `default` is proven only when the analyzer sees `throw`, or a
   same-file callee whose body always throws — a function named `assertNever`
   is not enough. A `switch` that is not this shape, including a `default` that
   does not throw, stays `Dynamic` rather than keeping the known arms. At most

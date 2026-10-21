@@ -403,3 +403,27 @@ fn one_function_appending_one_helper_twice_merges_and_one_directive_suppresses_i
     assert_eq!(suppressed[0]["line"], 22);
     assert_eq!(suppressed[0]["directive"]["line"], 21);
 }
+
+#[test]
+fn proven_throw_switches_are_judged_and_unproven_defaults_abstain() {
+    // `owned` satisfies account_id, so it is absent. `member` and the `all`
+    // arm's second SELECT do not. The orders identifier is judged; accounts
+    // is not a required relation. An inherited key, a non-throwing
+    // `assertNever`, an unknown fragment, and a statement spliced as an
+    // identifier publish nothing. A throw guard and a bound `??` are judged.
+    assert_eq!(
+        required("proven-throw-switch"),
+        expect(&[
+            ("src/queries.mts", 10, "orders"),
+            ("src/queries.mts", 12, "orders"),
+            ("src/queries.mts", 35, "orders"),
+            ("src/queries.mts", 40, UNANALYZABLE),
+            ("src/queries.mts", 58, UNANALYZABLE),
+            ("src/queries.mts", 63, "orders"),
+            ("src/queries.mts", 74, "orders"),
+            ("src/queries.mts", 87, UNANALYZABLE),
+            ("src/queries.mts", 92, UNANALYZABLE),
+            ("src/queries.mts", 101, UNANALYZABLE),
+        ])
+    );
+}
