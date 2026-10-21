@@ -102,3 +102,30 @@ fn shared_defaults_preserve_malformed_options_errors_instead_of_panicking() {
         );
     }
 }
+
+#[test]
+fn cli_effort_override_preserves_policy_exit_status_on_saved_sql() {
+    for effort in [Effort::Low, Effort::Max] {
+        for (policy, expected) in [
+            ("report", ExitCode::FAILURE),
+            ("advise", ExitCode::SUCCESS),
+            ("ignore", ExitCode::SUCCESS),
+        ] {
+            let status = run(CheckArgs {
+                root: root(),
+                config: Some(format!("sql-{policy}.yml").into()),
+                tsconfig: None,
+                effort: Some(effort),
+                format: Format::Json,
+                json: false,
+                include_suppressed: false,
+                include_runner_config_deadlines: false,
+                include_sql_verdicts: false,
+                timings: false,
+                verbose_timings: false,
+            })
+            .unwrap();
+            assert_eq!(status, expected, "{effort:?}/{policy}");
+        }
+    }
+}
