@@ -105,6 +105,20 @@ fn conflict_target_predicates_inside_ctes_stay_complete() {
 }
 
 #[test]
+fn predicates_without_a_column_target_fail_closed_and_keep_the_neighbor() {
+    let facts = facts("query-cte-conflict-target-invalid-arbiter.sql");
+    assert_eq!(facts.diagnostics.len(), 2, "{:?}", facts.diagnostics);
+    assert_eq!(
+        facts
+            .statements
+            .iter()
+            .map(|statement| statement.sql.as_str())
+            .collect::<Vec<_>>(),
+        ["SELECT 42 AS kept;", "SELECT 7 AS kept;"]
+    );
+}
+
+#[test]
 fn malformed_cte_conflict_targets_fail_closed_and_keep_the_neighbor() {
     let sql = fixture("query-cte-conflict-target-rejected.sql");
     let facts = facts("query-cte-conflict-target-rejected.sql");

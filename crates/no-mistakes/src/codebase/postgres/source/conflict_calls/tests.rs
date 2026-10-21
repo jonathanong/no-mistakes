@@ -116,6 +116,27 @@ fn cte_conflict_predicate_keeps_its_function_call_beside_the_recovered_outer_con
 }
 
 #[test]
+fn cte_conflict_predicate_calls_belong_to_their_own_program_statement() {
+    // Neighbouring statements must not each re-report the middle statement's CTE call.
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres/function-call-clauses/cte-conflict-program.sql"
+    ));
+    let tokens = Tokenizer::new(&PostgreSqlDialect {}, sql.trim_end_matches('\n'))
+        .tokenize_with_location()
+        .unwrap();
+    let (statements, calls, _) = program::parse(tokens).unwrap();
+    assert_eq!(statements.len(), 3);
+    let mut names = calls
+        .iter()
+        .filter(|call| call.clause == Some(SqlFunctionClause::Where))
+        .map(|call| call.name_parts.join("."))
+        .collect::<Vec<_>>();
+    names.sort();
+    assert_eq!(names, ["length", "uuidv7"]);
+}
+
+#[test]
 fn failed_prepared_projection_does_not_publish_partial_conflict_calls() {
     let fixture = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

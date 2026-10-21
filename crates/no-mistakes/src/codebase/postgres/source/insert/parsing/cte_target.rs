@@ -101,16 +101,30 @@ fn target_where(
     on: usize,
     insert_depth: usize,
 ) -> Option<(usize, usize)> {
-    let mut depth = insert_depth;
-    let mut where_at = None;
-    let mut position = on + 2;
+    // Only `( columns ) WHERE` bears a predicate; `ON CONSTRAINT` and a bare
+    // `WHERE` are invalid and must keep failing closed.
+    if tokens[*significant.get(on + 2)?].token != Token::LParen {
+        return None;
+    }
+    let mut depth = insert_depth + 1;
+    let mut position = on + 3;
+    while depth > insert_depth {
+        match &tokens[*significant.get(position)?].token {
+            Token::LParen => depth += 1,
+            Token::RParen => depth -= 1,
+            _ => {}
+        }
+        position += 1;
+    }
+    if !keyword(&tokens[*significant.get(position)?].token, Keyword::WHERE) {
+        return None;
+    }
+    let where_at = position;
+    position += 1;
     while position < significant.len() {
         let token = &tokens[significant[position]].token;
         if depth == insert_depth && keyword(token, Keyword::DO) {
-            return where_at.map(|start| (start, position));
-        }
-        if depth == insert_depth && keyword(token, Keyword::WHERE) && where_at.is_none() {
-            where_at = Some(position);
+            return Some((where_at, position));
         }
         match token {
             Token::LParen => depth += 1,

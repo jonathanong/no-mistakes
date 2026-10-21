@@ -37,7 +37,9 @@ pub(super) fn parse_statement(
     markers: &[Location],
     cte_predicates: &[parsing::CtePredicate],
 ) -> Result<(Statement, Vec<SqlFunctionCallFact>, Option<PolicyArbiter>), ParserError> {
+    let begin = parser.peek_token().span.start;
     let (mut statement, facts) = parsing::parse_policy(parser, markers)?;
+    let next = parser.peek_token();
     let mut functions = Vec::new();
     let mut policy_arbiter = None;
     if let Some(facts) = facts {
@@ -74,7 +76,12 @@ pub(super) fn parse_statement(
             );
         }
     }
-    for predicate in cte_predicates {
+    // Only predicates inside this statement; a program holds several.
+    let key = |at: Location| (at.line, at.column);
+    for predicate in cte_predicates.iter().filter(|p| {
+        key(p.on_start) >= key(begin)
+            && (next.token == Token::EOF || key(p.on_start) < key(next.span.start))
+    }) {
         function_calls::collect_expression(
             &predicate.predicate.expression,
             &mut functions,
