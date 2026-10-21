@@ -7,18 +7,20 @@ fn finite_set_call_literals_match_standalone_and_parse_only_the_call_source_once
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
     let options = json!({ "root": root, "config": ".no-mistakes.yml" });
-    let standalone = parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap());
+    let standalone = parse_json(
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    );
 
     crate::ast::begin_parse_count(&root);
     let aggregate = parse_json(
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
     let counts = crate::ast::finish_parse_count(&root);
@@ -40,22 +42,22 @@ fn supplemental_skipped_call_sources_preserve_check_scope_and_parse_once() {
             .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
     );
     let standalone = parse_json(
-        crate::napi_api::check_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
-        )
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+        ))
         .unwrap(),
     );
 
     crate::ast::begin_parse_count(&root);
     let aggregate = parse_json(
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
     let counts = crate::ast::finish_parse_count(&root);
@@ -98,20 +100,20 @@ fn finite_set_skill_directory_symlinks_match_standalone_and_analyze_project() {
             .join("../../fixtures/rules/finite-set-consistency/path-regex-skill-symlinks"),
     );
     let standalone = parse_json(
-        crate::napi_api::check_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
-        )
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+        ))
         .unwrap(),
     );
     let aggregate = parse_json(
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
     let result = &aggregate["reports"][0]["result"];
@@ -122,4 +124,46 @@ fn finite_set_skill_directory_symlinks_match_standalone_and_analyze_project() {
     for finding in result["rules"].as_array().unwrap() {
         assert_ne!(finding["rule"], "finite-set-consistency", "{result}");
     }
+}
+
+#[test]
+fn analyze_project_keeps_production_imports_for_supplemental_call_overlap() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../fixtures/rules/finite-set-consistency/call-literals/production-import-overlap",
+        ),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let options = json!({ "root": root, "config": ".no-mistakes.yml" });
+    let standalone = parse_json(
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    );
+
+    let aggregate = parse_json(
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "config": ".no-mistakes.yml",
+                "reports": [{ "type": "check", "id": "check" }]
+            })
+            .to_string(),
+        ))
+        .unwrap(),
+    );
+    let result = &aggregate["reports"][0]["result"];
+
+    // The skipped call source is also a production-import file. Overwriting it
+    // with call-site-only facts would drop the undeclared left-pad import.
+    for report in [&standalone, result] {
+        assert!(report["rules"].as_array().unwrap().iter().any(|finding| {
+            finding["rule"] == "production-dependency-declarations"
+                && finding["target"] == "left-pad"
+                && finding["file"] == "generated/lib/schedules.mts"
+        }));
+        assert!(report["rules"].as_array().unwrap().iter().any(|finding| {
+            finding["rule"] == "finite-set-consistency" && finding["target"] == "missing"
+        }));
+    }
+    assert_eq!(result, &standalone);
 }

@@ -1,0 +1,31 @@
+# generated/ is skipped for ordinary discovery, so the call source is
+# supplemental, but it is the package project root and still demands
+# production import facts.
+version: 2
+filesystem:
+  skipDirectories: [generated]
+projects:
+  schedules:
+    root: generated
+rules:
+  - rule: production-dependency-declarations
+    projects:
+      - schedules
+    options:
+      workspaceRoots: [generated]
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: schedulerIds
+          file: generated/lib/schedules.mts
+          kind: ts-call-first-string-argument
+          target: ai_agents.upsertJobScheduler
+        - name: registryIds
+          file: registry.mts
+          kind: ts-const-array-property
+          target: AI_AGENTS_SCHEDULED_JOBS
+          property: id
+      comparisons:
+        - left: schedulerIds
+          right: registryIds

@@ -8,9 +8,26 @@ impl CheckFactMap {
         supplemental: &Self,
         graph_files: Vec<PathBuf>,
     ) -> Self {
+        self.compose_view(supplemental, graph_files, true)
+    }
+
+    /// Merge supplemental facts the way the CLI does: fill keys that are
+    /// absent, and keep a richer primary entry such as production imports.
+    pub(crate) fn fact_view_filling_missing(&self, supplemental: &Self) -> Self {
+        self.compose_view(supplemental, self.graph_files.clone(), false)
+    }
+
+    fn compose_view(
+        &self,
+        supplemental: &Self,
+        graph_files: Vec<PathBuf>,
+        overwrite: bool,
+    ) -> Self {
         let mut ts = self.ts.clone();
         for (path, facts) in supplemental.ts.iter() {
-            ts.insert(path.clone(), Arc::clone(facts));
+            if overwrite || !ts.contains_key(path) {
+                ts.insert(path.clone(), Arc::clone(facts));
+            }
         }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);

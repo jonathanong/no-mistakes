@@ -35,8 +35,12 @@ pub(super) fn collect_with_sources_and_session(
     mut plan: CheckFactPlan,
     mut playwright: PlaywrightFactPlan,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
-    mut precollected: FileIdMap<super::CheckFileFacts>,
+    supplemental: super::SupplementalFactInput<'_, FileIdMap<super::CheckFileFacts>>,
 ) -> CheckFactMap {
+    let super::SupplementalFactInput {
+        facts: mut precollected,
+        call_sites: supplemental_call_sites,
+    } = supplemental;
     module_resolution::initialize_if_missing(root, &mut playwright, &sources);
     crate::playwright::integration_routes::runner_plan(root, &mut plan, &playwright, &sources);
     let config_facts = cached_config_file_facts(
@@ -55,10 +59,13 @@ pub(super) fn collect_with_sources_and_session(
         file_scope,
         plan,
         playwright,
-        PrecollectedFacts {
-            ts: crate::codebase::ts_source::facts::TsFactMap::new(),
-            files: precollected,
-            routes: Default::default(),
+        super::SupplementalFactInput {
+            facts: PrecollectedFacts {
+                ts: crate::codebase::ts_source::facts::TsFactMap::new(),
+                files: precollected,
+                routes: Default::default(),
+            },
+            call_sites: supplemental_call_sites,
         },
         sources,
     )
@@ -70,9 +77,13 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
     playwright: PlaywrightFactPlan,
-    precollected: PrecollectedFacts,
+    supplemental: super::SupplementalFactInput<'_, PrecollectedFacts>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
+    let super::SupplementalFactInput {
+        facts: precollected,
+        call_sites: supplemental_call_sites,
+    } = supplemental;
     let PrecollectedFacts {
         ts: precollected_ts,
         files: precollected,
@@ -147,7 +158,10 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &mut plan,
         &playwright,
         &sources,
-        &mut ts,
+        super::SupplementalFactInput {
+            facts: &mut ts,
+            call_sites: supplemental_call_sites,
+        },
     );
     let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
         session,

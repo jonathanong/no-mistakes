@@ -18,6 +18,11 @@ mod stats;
 use rustc_hash::FxHashSet;
 use std::path::{Path, PathBuf};
 
+pub(super) struct SupplementalFactInput<'a, T> {
+    pub(super) facts: T,
+    pub(super) call_sites: &'a [PathBuf],
+}
+
 /// Borrowed path membership used by request-scoped finite-set projections.
 #[doc(hidden)]
 pub struct PathMembership<'a> {
@@ -94,6 +99,7 @@ pub use collect::{
     collect_check_facts_with_graph_files_playwright_and_sources,
     collect_check_facts_with_graph_files_playwright_sources_and_session,
     collect_check_facts_with_playwright, collect_check_facts_with_playwright_and_session,
+    collect_check_facts_with_supplemental_call_sites,
 };
 pub(crate) use collect::{collect_check_facts_with_precollected_graph_facts, graph_only_files};
 pub(crate) use file::{
