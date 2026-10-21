@@ -37,7 +37,7 @@ fn shared_unanalyzable_policies_route_actual_sql_failures_advisories_and_skips()
 }
 
 #[test]
-fn explicit_max_stays_identical_and_non_adopting_low_is_a_nonfailing_note() {
+fn sql_explicit_max_is_byte_identical_to_default() {
     for mode in ["report", "advise", "ignore"] {
         let config = format!("sql-{mode}.yml");
         let default = check_runner::json_value(&report(&config, None));
@@ -45,15 +45,39 @@ fn explicit_max_stays_identical_and_non_adopting_low_is_a_nonfailing_note() {
             check_runner::json_value(&report(&config, Some(Effort::Max))),
             default
         );
-        assert!(default.get("analysisFallbacks").is_none());
         let low = report(&config, Some(Effort::Low));
+        assert_eq!(low.rules.len(), usize::from(mode == "report"));
+        assert_eq!(low.advisories.len(), usize::from(mode == "advise"));
         assert_eq!(has_failures(&low), mode == "report");
-        let mut low = check_runner::json_value(&low);
-        assert_eq!(low["warnings"], serde_json::json!([
-            "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation"
-        ]));
-        low["warnings"] = serde_json::json!([]);
-        assert_eq!(low, default);
+        assert!(low.warnings.is_empty());
+        for finding in low.rules.iter().chain(&low.advisories) {
+            assert!(finding.message.contains("query(\"/* name */ \" + sql)"));
+            assert!(finding.message.contains("one local const"));
+        }
+    }
+}
+
+#[test]
+fn non_adopting_rules_keep_low_and_max_byte_identical_to_default() {
+    let config = "project-no-policy.yml";
+    let default = report(config, None);
+    assert_eq!(
+        default
+            .rules
+            .iter()
+            .map(|finding| (finding.rule.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("postgres-no-mutable-sql-registry", 4),
+            ("postgres-no-unbounded-sql-identifier", 5),
+        ]
+    );
+    let default = check_runner::json_value(&default);
+    for effort in [Effort::Low, Effort::Max] {
+        assert_eq!(
+            check_runner::json_value(&report(config, Some(effort))),
+            default
+        );
     }
 }
 

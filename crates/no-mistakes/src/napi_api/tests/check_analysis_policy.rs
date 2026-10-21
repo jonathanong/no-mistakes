@@ -19,11 +19,22 @@ fn async_check_options_preserve_sql_alias_and_default_effort_reports() {
         let default = execute(format!("sql-{mode}.yml"), None);
         assert_eq!(execute(format!("legacy-sql-{mode}.yml"), None), default);
         assert_eq!(execute(format!("sql-{mode}.yml"), Some("max")), default);
-        let mut low = execute(format!("sql-{mode}.yml"), Some("low"));
-        assert_eq!(low["warnings"], serde_json::json!([
-            "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation"
-        ]));
-        low["warnings"] = serde_json::json!([]);
-        assert_eq!(low, default);
+        let low = execute(format!("sql-{mode}.yml"), Some("low"));
+        assert_eq!(execute(format!("legacy-sql-{mode}.yml"), Some("low")), low);
+        // Low deliberately replaces deep inference with static rewrite guidance.
+        // Policy routing and finding identity must still match the max tier.
+        for field in ["rules", "advisories"] {
+            let rows = low[field].as_array().unwrap();
+            let expected = default[field].as_array().unwrap();
+            assert_eq!(rows.len(), expected.len());
+            for (actual, expected) in rows.iter().zip(expected) {
+                for key in ["rule", "file", "line"] {
+                    assert_eq!(actual[key], expected[key]);
+                }
+                let message = actual["message"].as_str().unwrap();
+                assert!(message.contains("query(\"/* name */ \" + sql)"));
+                assert!(message.contains("one local const"));
+            }
+        }
     }
 }
