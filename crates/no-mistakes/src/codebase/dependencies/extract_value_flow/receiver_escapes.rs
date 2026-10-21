@@ -30,6 +30,7 @@ type StoredArray = (
     String,
     u32,
     std::sync::Arc<FxHashMap<String, ValueExpression>>,
+    bool,
 );
 
 #[derive(Default)]
