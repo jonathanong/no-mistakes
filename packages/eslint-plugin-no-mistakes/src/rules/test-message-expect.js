@@ -36,14 +36,18 @@ function unwrap(node) {
   return current;
 }
 
-function isExpectBinding(def) {
+function isExpectBinding(def, modules) {
   const imported = def.node?.imported;
   const importedName = imported?.type === "Literal" ? String(imported.value) : imported?.name;
+  const source = def.parent?.source?.value;
   return (
-    def.type === "ImportBinding" &&
-    EXPECT_MODULES.has(def.parent?.source?.value) &&
-    importedName === "expect"
+    def.type === "ImportBinding" && importedName === "expect" && (!modules || modules.has(source))
   );
+}
+
+function isNestedBinding(variable) {
+  const scopeType = variable?.scope?.type;
+  return Boolean(scopeType && scopeType !== "module" && scopeType !== "global");
 }
 
 function isNamespace(node, context, seen) {
@@ -68,34 +72,47 @@ function isNamespace(node, context, seen) {
   return isNamespace(def.node.init, context, seen);
 }
 
-function isExpectCallee(node, context, seen = new Set()) {
+function isExpectCallee(node, context, seen = new Set(), modules = null) {
   let callee = unwrap(node);
   if (callee?.type === "MemberExpression") {
     const name = memberName(callee);
     if (!callee.computed && (name === "call" || name === "apply")) {
-      return isExpectCallee(callee.object, context, seen);
+      return isExpectCallee(callee.object, context, seen, modules);
     }
-    if (name === "soft" || name === "poll") return isExpectCallee(callee.object, context, seen);
+    if (name === "soft" || name === "poll")
+      return isExpectCallee(callee.object, context, seen, modules);
     return name === "expect" && isNamespace(callee.object, context, seen);
   }
   if (callee?.type !== "Identifier" || seen.has(callee.name)) return false;
   const variable = resolveVariable(callee, context);
   if (!variable || variable.defs.length === 0) return callee.name === "expect";
-  if (variable.defs.every(isExpectBinding)) return true;
-  const def = variable.defs.length === 1 ? variable.defs[0] : null;
-  if (def?.type !== "Variable" || def.node?.parent?.kind !== "const" || !def.node.init)
-    return false;
+  if (variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  if (def.type === "Parameter" || isNestedBinding(variable)) return false;
+  if (isExpectBinding(def, modules)) return true;
+  if (!modules && callee.name === "expect") return true;
+  if (def.type !== "Variable" || def.node?.parent?.kind !== "const" || !def.node.init) return false;
   seen.add(callee.name);
-  if (def.node.id.type === "Identifier") return isExpectCallee(def.node.init, context, seen);
-  if (def.node.id.type !== "ObjectPattern" || !isNamespace(def.node.init, context, seen)) {
-    return false;
-  }
+  if (def.node.id.type === "Identifier")
+    return isExpectCallee(def.node.init, context, seen, modules);
+  if (def.node.id.type !== "ObjectPattern") return false;
+  const fromModule =
+    isNamespace(def.node.init, context, seen) || (!modules && requireExpectSource(def.node.init));
+  if (!fromModule) return false;
   return def.node.id.properties.some((property) => {
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
     const key = property.computed ? literalString(property.key) : propertyName(property.key);
     return value?.name === callee.name && key === "expect";
   });
+}
+
+function requireExpectSource(node) {
+  const call = unwrap(node);
+  if (call?.type !== "CallExpression") return false;
+  const callee = unwrap(call.callee);
+  if (callee?.type !== "Identifier" || callee.name !== "require") return false;
+  return EXPECT_MODULES.has(literalString(call.arguments?.[0]));
 }
 
 function expectArguments(node, context) {
@@ -121,6 +138,7 @@ function isExpectCall(node, context) {
 }
 
 module.exports = {
+  EXPECT_MODULES,
   expectArguments,
   isExpectCall,
   isExpectCallee,

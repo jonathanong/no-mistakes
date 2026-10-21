@@ -26,6 +26,11 @@ describe[sequentialName]("computed identifier", () => {});
 function helper(suite) {
   suite.sequential("shadowed parameter", () => {});
 }
+import { test as base } from "vitest";
+const test = base.extend({});
+test.sequential("extended fixture", () => {});
+const { describe: cjsDescribe } = require("vitest");
+cjsDescribe.sequential("commonjs", () => {});
 function shadowedNamespace(v) {
   const { it: nested } = v;
   nested.sequential("shadowed namespace", () => {});

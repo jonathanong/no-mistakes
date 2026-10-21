@@ -1,5 +1,6 @@
 "use strict";
 
+const { literalString } = require("./module-mock-helpers");
 const {
   isKnownTestCallee,
   isTestCall,
@@ -33,11 +34,16 @@ function resolveFunctionCallback(context, node, callback) {
 }
 
 function calleeHasProperty(callee, name) {
+  while (callee?.type === "ChainExpression") callee = callee.expression;
   if (!callee) return false;
   if (callee.type === "Identifier") return callee.name === name;
   if (callee.type === "CallExpression") return calleeHasProperty(callee.callee, name);
-  if (callee.type !== "MemberExpression" || callee.computed) return false;
-  return callee.property.name === name || calleeHasProperty(callee.object, name);
+  if (callee.type !== "MemberExpression") return false;
+  if (callee.computed && callee.property?.type === "Identifier") {
+    return calleeHasProperty(callee.object, name);
+  }
+  const prop = callee.computed ? literalString(callee.property) : callee.property?.name;
+  return prop === name || calleeHasProperty(callee.object, name);
 }
 
 function createRuleHelpers(context, testCalleeNames, namespaces) {

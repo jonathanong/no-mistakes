@@ -1,4 +1,5 @@
 import { expect as check } from "vitest";
+import { expect as pwExpect } from "@playwright/test";
 import * as v from "vitest";
 
 declare const err: { message: string; body: { message: string } };
@@ -6,6 +7,7 @@ declare const label: string;
 
 const seen = check;
 const { expect } = v;
+const { expect: cjsExpect } = require("vitest");
 
 test("messages", () => {
   check(err["message"]).toMatch("x");
@@ -21,6 +23,11 @@ test("messages", () => {
   check.call(null, err.message).toMatch("x");
   const ns = v;
   ns.expect(err.message).toMatch("x");
+  pwExpect(err.message).toBe("x");
+  cjsExpect(err.message).toMatch("x");
+  function helper(expect: typeof check) {
+    expect(err.message).toBe("x");
+  }
   expect(err[label]).toMatch("x");
   expect(err.body.message).toMatch("x");
   // no-mistakes-disable-next-line test-no-error-message-matching -- retained probe

@@ -15,7 +15,7 @@ const {
   suspensionOccursBeforeMatcher,
 } = require("./test-no-delayed-rejects-suspensions");
 
-const { isExpectCallee } = require("./test-message-expect");
+const { EXPECT_MODULES, isExpectCallee } = require("./test-message-expect");
 
 function findVariable(scope, name) {
   let current = scope;
@@ -32,7 +32,10 @@ function expectedIdentifier(rejects, context) {
   if (literalPropertyName(rejects) !== "rejects") return null;
   const expectation = unwrapExpression(rejects.object);
   if (expectation?.type !== "CallExpression") return null;
-  if (expectation.arguments.length !== 1 || !isExpectCallee(expectation.callee, context))
+  if (
+    expectation.arguments.length !== 1 ||
+    !isExpectCallee(expectation.callee, context, new Set(), EXPECT_MODULES)
+  )
     return null;
   const [argument] = expectation.arguments;
   const unwrapped = unwrapExpression(argument);

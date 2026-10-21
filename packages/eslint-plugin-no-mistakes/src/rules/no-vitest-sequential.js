@@ -89,10 +89,17 @@ function acceptsRunner(root, context, namespaces) {
   if (!variable || variable.defs.length === 0) return true;
   if (variable.defs.length !== 1) return false;
   const def = variable.defs[0];
-  if (def.type !== "ImportBinding") return false;
+  const scopeType = variable.scope?.type;
+  const nested = Boolean(scopeType && scopeType !== "module" && scopeType !== "global");
+  if (def.type === "Parameter" || (nested && def.type !== "ImportBinding")) return false;
+  if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
-  if (def.node?.type !== "ImportSpecifier") return false;
-  return TEST_NAMES.has(staticName(def.node.imported, false));
+  if (def.node?.type === "ImportDefaultSpecifier") return true;
+  const imported = staticName(def.node?.imported, false);
+  const source = def.parent?.source?.value;
+  if (source && source !== "vitest" && TEST_NAMES.has(imported) && imported !== root.name)
+    return false;
+  return true;
 }
 
 function isUnshadowedNamespace(identifier, context, namespaces) {
@@ -104,13 +111,29 @@ function isUnshadowedNamespace(identifier, context, namespaces) {
   return def.type === "ImportBinding" && def.node?.type === "ImportNamespaceSpecifier";
 }
 
+function isVitestRequire(node) {
+  let call = node;
+  while (call?.type === "ChainExpression") call = call.expression;
+  if (call?.type !== "CallExpression") return false;
+  let callee = call.callee;
+  while (callee?.type === "ChainExpression") callee = callee.expression;
+  return (
+    callee?.type === "Identifier" &&
+    callee.name === "require" &&
+    literalString(call.arguments?.[0]) === "vitest"
+  );
+}
+
 function destructuredTest(node, context, namespaces) {
   if (node?.type !== "Identifier") return false;
   const variable = resolveVariable(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
   if (def?.type !== "Variable" || def.node?.parent?.kind !== "const") return false;
-  if (def.node.id?.type !== "ObjectPattern" || def.node.init?.type !== "Identifier") return false;
-  if (!isUnshadowedNamespace(def.node.init, context, namespaces)) return false;
+  if (def.node.id?.type !== "ObjectPattern") return false;
+  const fromNamespace =
+    def.node.init?.type === "Identifier" &&
+    isUnshadowedNamespace(def.node.init, context, namespaces);
+  if (!fromNamespace && !isVitestRequire(def.node.init)) return false;
   return def.node.id.properties.some((property) => {
     if (property.type !== "Property") return false;
     let value = property.value;

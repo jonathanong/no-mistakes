@@ -13,7 +13,7 @@ describe("test and react same-file recall", () => {
         undefined,
         "recall.test.ts",
       ).length,
-      12,
+      14,
     );
   });
 
@@ -109,7 +109,7 @@ describe("test and react same-file recall", () => {
         undefined,
         "recall.test.ts",
       ).length,
-      12,
+      14,
     );
   });
 
@@ -122,6 +122,15 @@ describe("test and react same-file recall", () => {
         "recall.test.ts",
       ).length,
       5,
+    );
+    assert.equal(
+      messages(
+        snippet("test-no-shared-state/computed-describe.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "computed-describe.test.ts",
+      ).length,
+      1,
     );
   });
 
