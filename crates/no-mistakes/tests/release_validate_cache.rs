@@ -150,17 +150,7 @@ fn validate_job_starts_isolated_catalog_postgres_after_disk_reclamation_before_t
     let setup = &validate[start..tests];
     for required in [
         "timeout-minutes: 5",
-        "postgresql-18",
-        "extension/citext.control",
-        "extension/pg_stat_statements.control",
-        "initdb",
-        "pg_ctl",
-        "listen_addresses=",
-        "NO_MISTAKES_TEST_POSTGRES_URL=",
-        "host=$RUNNER_TEMP&port=56225",
-        "PGOPTIONS=-cstandard_conforming_strings=off",
-        "$GITHUB_ENV",
-        "$GITHUB_PATH",
+        "uses: ./.github/actions/start-test-postgres",
     ] {
         assert!(
             setup.contains(required),

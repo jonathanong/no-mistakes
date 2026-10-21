@@ -138,9 +138,11 @@ followed by forced termination after a five-second grace period. `--foreground`
 does not time out descendants, and the npm launcher does not forward signals to
 the native analyzer, so a timed-out sample can leave the analyzer running after
 its launcher exits. After each sample, and again before restoring the consumer launcher,
-the harness SIGTERM/SIGKILL leftover `no-mistakes` processes (native binary and
-`bin/no-mistakes.js`) so the next variant does not share CPU/RSS with a stalled
-predecessor. Candidate timeouts, signals, nonzero exits, missing samples and
+the harness SIGTERM/SIGKILL leftover analyzer argv whose path sits under the
+consumer fixture (the replaced native binary or `bin/no-mistakes.js`). It does
+not match a process only by command name, so a local `hosted-check.cjs measure`
+cannot kill unrelated `no-mistakes` sessions. Production measurements still run
+on a dedicated hosted runner. Candidate timeouts, signals, nonzero exits, missing samples and
 invalid measurements fail the gate with `Candidate did not complete successfully`,
 not a calibration-helper error. Timeout cohorts still write a `*.processes.txt`
 snapshot. A failing baseline never excuses a candidate failure. Calibration

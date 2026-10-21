@@ -323,7 +323,9 @@ control validates its returned counts and edge/glob preflight after its marker.
 CI builds the harness once, then runs each semantic shard in both CodSpeed CPU
 simulation and memory modes: `check`, `observer`, `tests-plan`, `graph-core`,
 `graph-gates`, `language-frontends`, `native-frontends`, `graph-finalization`,
-`graph-production`, and `query`. Production node and selector finalization use
+`graph-production`, `query`, and `query-indexes`. Symbol, workspace, and
+scoped-resolver benches live in `query-indexes`; SQL, PostgreSQL, and
+relationship benches stay on `query`. Production node and selector finalization use
 separate filtered jobs. `NO_MISTAKES_BENCH_SHARD` skips unused setup and
 preflight work; unset or `general-memory` still runs every non-production
 workload locally. Swift/.NET fixture-only changes select `native-frontends`,

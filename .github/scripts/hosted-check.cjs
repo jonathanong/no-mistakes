@@ -139,6 +139,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         terminateLeftoverCheckProcesses({
           psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
           nativePath: native,
+          fixturePath: fixture,
         });
       } catch (error) {
         writeFileSync(`${prefix}.leftover-kill.txt`, String(error));
@@ -151,6 +152,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
       terminateLeftoverCheckProcesses({
         psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
         nativePath: native,
+        fixturePath: fixture,
       });
     } catch {
       // Restore the consumer launcher even if leftover cleanup fails.

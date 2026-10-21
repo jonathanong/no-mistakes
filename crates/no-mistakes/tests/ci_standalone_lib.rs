@@ -59,7 +59,13 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
         "catalog PostgreSQL must start before standalone library tests"
     );
 
-    assert_catalog_postgres_setup(steps[postgres]["run"].as_str().unwrap());
+    assert_eq!(
+        steps[postgres]["uses"].as_str(),
+        Some("./.github/actions/start-test-postgres")
+    );
+    assert_catalog_postgres_setup(include_str!(
+        "../../../.github/actions/start-test-postgres/action.yml"
+    ));
 
     let test_step = &steps[tests];
     let run = test_step["run"].as_str().unwrap();
@@ -71,7 +77,15 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
         run.contains("test ! -e \"$CARGO_TARGET_DIR/debug/no-mistakes\""),
         "standalone job must keep the no-CLI-binary check"
     );
-    assert_eq!(test_step["env"]["CARGO_INCREMENTAL"].as_str(), Some("0"));
+    assert!(
+        !run.contains("trap "),
+        "standalone artifacts stay in workspace target so rust-cache can reuse them"
+    );
+    assert_eq!(job["env"]["CARGO_INCREMENTAL"].as_str(), Some("0"));
+    assert_eq!(
+        job["env"]["CARGO_TARGET_DIR"].as_str(),
+        Some("${{ github.workspace }}/target/standalone-lib")
+    );
 }
 
 #[test]
@@ -92,5 +106,8 @@ fn tests_gate_requires_standalone_lib_and_coverage_keeps_catalog_postgres() {
         coverage_steps,
         "Start isolated PostgreSQL for catalog fixtures",
     );
-    assert_catalog_postgres_setup(coverage_postgres["run"].as_str().unwrap());
+    assert_eq!(
+        coverage_postgres["uses"].as_str(),
+        Some("./.github/actions/start-test-postgres")
+    );
 }
