@@ -20,6 +20,60 @@ describe(rule, () => {
   it("handles Playwright aliases and namespaces without mistaking fixtures for contexts", () => {
     assert.equal(messages(code("playwright"), rule, undefined, "suite.spec.ts").length, 6);
   });
+  it("reports Playwright declaration skip/fixme annotations through const aliases", () => {
+    const findings = lint(
+      code("annotations"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.spec.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [16, "annotation"],
+        [17, "annotation"],
+        [18, "annotation"],
+        [19, "annotation"],
+        [20, "annotation"],
+        [21, "annotation"],
+        [28, "modifier"],
+      ],
+    );
+    assert.deepEqual(
+      messages(
+        code("annotations"),
+        rule,
+        { allow: ["skip", "skipIf", "runIf", "only", "todo", "fixme"] },
+        "suite.spec.ts",
+      ),
+      [],
+    );
+    const allowSkip = lint(
+      code("allow-annotations"),
+      { [`no-mistakes/${rule}`]: ["error", { allow: ["skip"] }] },
+      "suite.spec.ts",
+    );
+    assert.deepEqual(
+      allowSkip.map(({ message }) => message),
+      [
+        "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+      ],
+    );
+    const allowFixme = lint(
+      code("allow-annotations"),
+      { [`no-mistakes/${rule}`]: ["error", { allow: ["fixme"] }] },
+      "suite.spec.ts",
+    );
+    assert.deepEqual(
+      allowFixme.map(({ message }) => message),
+      [
+        "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+      ],
+    );
+    assert.deepEqual(
+      messages(code("allow-annotations"), rule, { allow: ["skip", "fixme"] }, "suite.spec.ts"),
+      [],
+    );
+  });
   it("handles configured globals and Vitest namespace/quoted members", () => {
     assert.equal(messages(code("globals"), rule, undefined, "suite.test.ts").length, 4);
     assert.equal(messages(code("namespace"), rule, undefined, "suite.test.ts").length, 4);

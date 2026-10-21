@@ -85,11 +85,22 @@ function imported(node, context, namespace = false) {
     return { framework: "vitest", name: node.name };
   return null;
 }
-function testBinding(node, context) {
+function testBinding(node, context, visited = new Set()) {
+  if (!node?.type) return null;
   node = unwrapExpression(node);
-  if (node.type === "Identifier") return imported(node, context);
-  if (node.type === "CallExpression") return testBinding(node.callee, context);
-  if (node.type === "TaggedTemplateExpression") return testBinding(node.tag, context);
+  if (!node?.type) return null;
+  if (node.type === "Identifier") {
+    const binding = imported(node, context);
+    if (binding) return binding;
+    const variable = resolveVariable(node, context);
+    if (!variable || visited.has(variable) || variable.defs.length !== 1) return null;
+    visited.add(variable);
+    const definition = variable.defs[0];
+    if (definition.type !== "Variable" || definition.node.parent.kind !== "const") return null;
+    return testBinding(definition.node.init, context, visited);
+  }
+  if (node.type === "CallExpression") return testBinding(node.callee, context, visited);
+  if (node.type === "TaggedTemplateExpression") return testBinding(node.tag, context, visited);
   if (node.type !== "MemberExpression") return null;
   const name = memberName(node);
   if (NAMES.has(name) && node.object.type === "Identifier") {
@@ -97,7 +108,7 @@ function testBinding(node, context) {
     if (framework) return { framework, name };
   }
   if (!CHAIN.has(name)) return null;
-  const binding = testBinding(node.object, context);
+  const binding = testBinding(node.object, context, visited);
   if (!binding) return null;
   if (name === "each" || name === "for") return { ...binding, table: name };
   return name === "describe" ? { ...binding, name } : binding;
