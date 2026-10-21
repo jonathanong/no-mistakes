@@ -60,6 +60,23 @@ describe(rule, () => {
       ],
     );
   });
+  it("admits only test from configured namespaces across module forms", () => {
+    const findings = lint(
+      code("configured-namespace"),
+      { [`no-mistakes/${rule}`]: ["error", { testModules: ["./fixtures"] }] },
+      "suite.spec.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [12, "modifier"],
+        [13, "modifier"],
+        [14, "annotation"],
+        [16, "modifier"],
+        [17, "modifier"],
+      ],
+    );
+  });
   it("reports Playwright declaration skip/fixme annotations through const aliases", () => {
     const findings = lint(
       code("annotations"),

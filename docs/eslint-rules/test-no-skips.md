@@ -57,8 +57,10 @@ Same-file `const test = <binding>.extend(...)` (and chained
 binding, including declaration annotations. Cross-file fixture modules are not
 inferred and have no hardcoded path conventions: list their import specifiers
 in `testModules`. Only the exported `test` from those modules is admitted as
-Playwright's `test`; a named `describe` import from the same module stays
-ordinary.
+Playwright's `test`. For namespace bindings, only `fixtures.test` is admitted;
+`fixtures.describe` and `fixtures.it` stay ordinary. This applies to ESM,
+CommonJS, and awaited dynamic imports. A named `describe` import from the same
+module also stays ordinary.
 
 `const` destructuring follows a default and a nested object pattern when the
 key that introduces the identifier is `it`, `test`, or `describe`:
