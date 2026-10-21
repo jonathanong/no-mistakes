@@ -22,6 +22,18 @@ context's `skip()` is also reported. A `.each` callback receives row data,
 while `.for` receives its test context as the second callback parameter; only
 the latter is treated as a context `skip()`.
 
+For Playwright, the rule also reports statically visible `skip` and `fixme`
+`annotation` values in test and suite declaration details. It follows same-file
+`const` aliases for the test/describe callee, details object, annotation object,
+and annotation array. This rule only treats the Playwright `skip` and `fixme`
+annotation types as coverage-removing declarations; other annotation values
+are outside this rule's check. This is syntax analysis, not runtime evaluation:
+mutable bindings, computed or spread properties, and dynamically produced
+annotation values are not resolved and may not be reported. It does not prove
+aliased objects are immutable; mutation through another alias or a helper call
+is not tracked. `test.step.skip()` skips only a step, so this rule leaves it
+alone.
+
 `const` destructuring follows a default and a nested object pattern when the
 key that introduces the identifier is `it`, `test`, or `describe`:
 
@@ -66,8 +78,9 @@ test("loads the page", async ({ page }) => {
 
 `allow` is a list of modifiers to permit. It defaults to `[]`; entries must be
 one of `skip`, `skipIf`, `runIf`, `only`, `todo`, or `fixme`. An allowed
-modifier produces no finding in any supported import, global, or member-chain
-form.
+modifier produces no finding in supported import, global, or member-chain
+forms; allowing `skip` or `fixme` also suppresses the matching Playwright
+declaration-annotation finding.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { allow: ["todo"] }]
