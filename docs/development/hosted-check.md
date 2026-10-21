@@ -136,8 +136,8 @@ The 600-second collection deadline is separate from the budgets. A timeout sends
 SIGTERM to `pnpm` (`timeout --foreground`), which relays it to `pnpm exec`,
 followed by forced termination after a five-second grace period. `--foreground`
 does not time out descendants, and the npm launcher does not forward signals to
-the native analyzer, so a timed-out sample can leave a reparented analyzer
-running. After each sample, and again before restoring the consumer launcher,
+the native analyzer, so a timed-out sample can leave the analyzer running after
+its launcher exits. After each sample, and again before restoring the consumer launcher,
 the harness SIGTERM/SIGKILL leftover `no-mistakes` processes (native binary and
 `bin/no-mistakes.js`) so the next variant does not share CPU/RSS with a stalled
 predecessor. Candidate timeouts, signals, nonzero exits, missing samples and
