@@ -43,10 +43,14 @@ pub(super) fn run(
         }
     };
 
-    let workspace = discovery::load_workspace(workspace_roots, files, sources)?;
+    let visible = std::sync::OnceLock::new();
+    let workspace = discovery::load_workspace(workspace_roots, files, sources, &visible)?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
+    let visible = visible
+        .get()
+        .expect("nonempty workspace initialized visibility");
     let facts = facts.ok_or_else(|| {
         anyhow::anyhow!("production-dependency-declarations requires prepared import facts")
     })?;
@@ -55,7 +59,6 @@ pub(super) fn run(
         "production-dependency-declarations requires a complete prepared import plan"
     );
 
-    let visible: crate::fx::PathSet = files.iter().map(|path| normalize_path(path)).collect();
     let imports_by_file: HashMap<PathBuf, Vec<FileImport>> = files
         .par_iter()
         .map(|file| {
@@ -70,7 +73,7 @@ pub(super) fn run(
         imports_by_file: &imports_by_file,
         owners: &owners,
         test_globset: &test_globset,
-        visible: &visible,
+        visible,
     };
     let relationships = reachability::PreparedReachability::new(&reachability_ctx, sources);
 

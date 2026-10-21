@@ -1,5 +1,14 @@
 use super::*;
 
+fn load_workspace(
+    roots: &[PathBuf],
+    files: &[PathBuf],
+    sources: &SourceStore,
+) -> anyhow::Result<WorkspaceMap> {
+    let visible = std::sync::OnceLock::new();
+    super::load_workspace(roots, files, sources, &visible)
+}
+
 fn fixture_root(name: &str) -> PathBuf {
     normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -169,3 +178,6 @@ fn group_by_package_inverts_owners_by_directory() {
     assert!(files.contains(&app_index));
     assert!(files.contains(&app_package_json));
 }
+
+#[path = "prepared_tests.rs"]
+mod prepared;

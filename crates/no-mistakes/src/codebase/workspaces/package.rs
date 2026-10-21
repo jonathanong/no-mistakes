@@ -75,8 +75,7 @@ pub fn load_root_package_from_source_store(
     if !files.iter().any(|path| normalize_path(path) == manifest) {
         return Ok(None);
     }
-    let visible: std::collections::HashSet<PathBuf> =
-        files.iter().map(|path| normalize_path(path)).collect();
+    let visible = normalized_visible_files(files);
     load_package_with_sources(dir, Some(&visible), WorkspaceSources::Store(sources))
 }
 

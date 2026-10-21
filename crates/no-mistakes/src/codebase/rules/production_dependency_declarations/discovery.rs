@@ -4,6 +4,7 @@
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::SourceStore;
 use crate::codebase::workspaces::{self, WorkspaceMap};
+use crate::fx::PathSet;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -16,6 +17,7 @@ pub(super) fn load_workspace(
     workspace_roots: &[PathBuf],
     files: &[PathBuf],
     sources: &SourceStore,
+    visible: &std::sync::OnceLock<PathSet>,
 ) -> anyhow::Result<WorkspaceMap> {
     let mut roots: Vec<&Path> = Vec::new();
     for workspace_root in workspace_roots {
@@ -33,8 +35,11 @@ pub(super) fn load_workspace(
             let Some(package_root) = manifest.parent() else {
                 continue;
             };
-            let Some(package) =
-                workspaces::load_root_package_from_source_store(package_root, files, sources)?
+            let Some(package) = workspaces::load_root_package_from_visible_sources(
+                package_root,
+                visible.get_or_init(|| workspaces::normalized_visible_files(files)),
+                sources,
+            )?
             else {
                 continue;
             };
@@ -52,20 +57,27 @@ pub(super) fn compute_owners(
     workspace: &WorkspaceMap,
     files: &[PathBuf],
 ) -> HashMap<PathBuf, PathBuf> {
+    let directories: PathSet = workspace
+        .packages
+        .iter()
+        .map(|package| {
+            workspaces::record_preparation!(package_dir);
+            normalize_path(&package.dir)
+        })
+        .collect();
     files
         .iter()
         .filter_map(|file| {
             let file = normalize_path(file);
-            nearest_package_dir(workspace, &file).map(|dir| (file, dir))
+            nearest_package_dir(&directories, &file).map(|dir| (file, dir))
         })
         .collect()
 }
 
-fn nearest_package_dir(workspace: &WorkspaceMap, file: &Path) -> Option<PathBuf> {
+fn nearest_package_dir(directories: &PathSet, file: &Path) -> Option<PathBuf> {
     file.ancestors().find_map(|dir| {
-        workspace
-            .package_by_dir(dir)
-            .map(|package| normalize_path(&package.dir))
+        workspaces::record_preparation!(ancestor_lookup);
+        directories.get(dir).cloned()
     })
 }
 

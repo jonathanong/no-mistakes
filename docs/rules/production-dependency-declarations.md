@@ -162,3 +162,8 @@ suppression does not make a pruned production install safe.
 [`strict-package-layout`](strict-package-layout.md) checks workspace structure;
 [`required-entrypoint-reachability`](required-entrypoint-reachability.md)
 checks that selected runtime files are registered.
+
+The rule prepares package visibility once per application and indexes package
+ownership by directory. This retains the configured `workspaceRoots`, manifest
+selection order, and entrypoint resolution while reusing the request's file
+inventory and source store.
