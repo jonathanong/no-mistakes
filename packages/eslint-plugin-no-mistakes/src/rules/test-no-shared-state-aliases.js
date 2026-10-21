@@ -57,6 +57,26 @@ function hasProperty(callee, name) {
   return false;
 }
 
+function isDescribeBinding(
+  node,
+  testAliases,
+  testCalleeNames,
+  namespaces,
+  calleeHasProperty,
+  isKnownTestCallee,
+) {
+  let current = node;
+  while (current?.type === "ChainExpression") current = current.expression;
+  if (current?.type === "Identifier") {
+    return current.name === "describe" || testAliases.isDescribeAliasCall(current);
+  }
+  return (
+    current?.type === "MemberExpression" &&
+    calleeHasProperty(current, "describe") &&
+    isKnownTestCallee(current, testCalleeNames, namespaces)
+  );
+}
+
 function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
   if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
   for (const specifier of node.specifiers) {
@@ -84,6 +104,7 @@ module.exports = {
   createImportedTestAliases,
   hasOwnProperty,
   hasProperty,
+  isDescribeBinding,
   recordImportedTests,
   resolveVariable,
 };

@@ -132,6 +132,15 @@ describe("test and react same-file recall", () => {
       ).length,
       1,
     );
+    assert.equal(
+      messages(
+        snippet("test-no-shared-state/alias-describe.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "alias-describe.test.ts",
+      ).length,
+      1,
+    );
   });
 
   it("reports delayed rejects through renamed expect and static keys", () => {

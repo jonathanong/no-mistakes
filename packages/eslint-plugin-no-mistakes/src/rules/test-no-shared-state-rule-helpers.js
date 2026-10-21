@@ -67,6 +67,25 @@ function createRuleHelpers(context, testCalleeNames, namespaces) {
     resolveFunctionCallback(node, callback) {
       return resolveFunctionCallback(context, node, callback);
     },
+    configureSerialMode(node) {
+      if (!calleeHasProperty(node.callee, "configure")) return false;
+      if (
+        node.callee.type !== "MemberExpression" ||
+        !isKnownTestCallee(node.callee.object, testCalleeNames) ||
+        !calleeHasProperty(node.callee.object, "describe")
+      ) {
+        return false;
+      }
+      const options = node.arguments[0];
+      if (options?.type !== "ObjectExpression") return false;
+      return options.properties.some(
+        (property) =>
+          property.type === "Property" &&
+          (property.key?.name ?? property.key?.value) === "mode" &&
+          property.value?.type === "Literal" &&
+          property.value.value === "serial",
+      );
+    },
   };
 }
 

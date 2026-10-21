@@ -24,6 +24,7 @@ const {
 const { createMutationHandlers } = require("./test-no-shared-state-mutations");
 const {
   createImportedTestAliases,
+  isDescribeBinding,
   recordImportedTests,
 } = require("./test-no-shared-state-aliases");
 const { createRuleHelpers } = require("./test-no-shared-state-rule-helpers");
@@ -56,8 +57,13 @@ module.exports = rule(
     );
     let testDepth = 0;
     let setupDepth = 0;
-    const { calleeHasProperty, isDescribeCall, isInlineCallback, resolveFunctionCallback } =
-      createRuleHelpers(context, testCalleeNames, namespaces);
+    const {
+      calleeHasProperty,
+      configureSerialMode,
+      isDescribeCall,
+      isInlineCallback,
+      resolveFunctionCallback,
+    } = createRuleHelpers(context, testCalleeNames, namespaces);
     const mutationHandlers = createMutationHandlers({
       cleanupTracker,
       context,
@@ -81,6 +87,18 @@ module.exports = rule(
           isKnownTestCallee(declaration.init, testCalleeNames, namespaces)
         ) {
           testCalleeNames.add(declaration.id.name);
+          if (
+            isDescribeBinding(
+              declaration.init,
+              testAliases,
+              testCalleeNames,
+              namespaces,
+              calleeHasProperty,
+              isKnownTestCallee,
+            )
+          ) {
+            testAliases.add(declaration.id, "describe");
+          }
         }
         if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
         for (const name of collectPatternNames(declaration.id)) {
@@ -88,26 +106,6 @@ module.exports = rule(
           viMockTracker.markIfCaptured(name);
         }
       }
-    }
-
-    function configureSerialMode(node) {
-      if (!calleeHasProperty(node.callee, "configure")) return false;
-      if (
-        node.callee.type !== "MemberExpression" ||
-        !isKnownTestCallee(node.callee.object, testCalleeNames) ||
-        !calleeHasProperty(node.callee.object, "describe")
-      ) {
-        return false;
-      }
-      const options = node.arguments[0];
-      if (options?.type !== "ObjectExpression") return false;
-      return options.properties.some(
-        (property) =>
-          property.type === "Property" &&
-          (property.key?.name ?? property.key?.value) === "mode" &&
-          property.value?.type === "Literal" &&
-          property.value.value === "serial",
-      );
     }
 
     return {
