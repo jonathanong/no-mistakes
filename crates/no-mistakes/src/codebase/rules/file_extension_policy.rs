@@ -77,11 +77,13 @@ pub(crate) fn check_file(
     let ext = file_extension(&rel);
 
     for scope in scopes {
-        let scope_path = scope.path.trim_end_matches('/');
-        let in_scope = scope_path.is_empty()
-            || scope_path == "."
-            || rel == scope_path
-            || rel.starts_with(&format!("{scope_path}/"));
+        // `./src` and `src/../src` are the same prefix as `src`. A scope that
+        // normalizes to `..` or starts with `../` matches nothing in the repo.
+        let Some(scope_path) = normalized_scope_path(&scope.path) else {
+            continue;
+        };
+        let in_scope =
+            scope_path == "." || rel == scope_path || rel.starts_with(&format!("{scope_path}/"));
         if !in_scope {
             continue;
         }
@@ -101,6 +103,15 @@ pub(crate) fn check_file(
         }
     }
     Vec::new()
+}
+
+fn normalized_scope_path(path: &str) -> Option<String> {
+    let normalized = crate::codebase::workflow_topology::posix_path::normalize(path);
+    if normalized == ".." || normalized.starts_with("../") {
+        None
+    } else {
+        Some(normalized)
+    }
 }
 
 fn file_extension(rel: &str) -> &str {

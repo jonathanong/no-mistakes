@@ -1,0 +1,9 @@
+rules:
+  - rule: required-local-docs
+    scope: repository
+    options:
+      # `..` leaves this repository. Report that once; do not scan the parent.
+      roots: [".."]
+      requiredFile: README.md
+      codeExtensions: [mts, ts]
+      testExcludePatterns: ["*.test.*", __tests__]

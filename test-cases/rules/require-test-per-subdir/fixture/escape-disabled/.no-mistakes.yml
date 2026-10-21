@@ -1,0 +1,8 @@
+# no-mistakes-disable-file require-test-per-subdir
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      # `..` leaves this repository. The directive above must suppress that finding.
+      roots: [".."]
+      testGlob: "*.test.mts"

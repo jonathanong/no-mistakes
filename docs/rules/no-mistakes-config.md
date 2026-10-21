@@ -101,3 +101,26 @@ testPlan:
             limit:
               files: 10
 ```
+
+## Limitations
+
+YAML 1.1 merge keys (`<<: *anchor`) are not expanded when the config loader
+reads `.no-mistakes.yml`. `serde_yaml` leaves `<<` as a key, and the project
+mapping ignores that key. Schema path fields that the anchor would have
+supplied stay unset, so this rule never checks them against tracked files.
+Project `include` and `exclude` globs are the same kind of path field: they
+are resolved only after the loader has copied them onto the project.
+
+```yaml
+shared: &shared
+  root: apps/missing
+projects:
+  web:
+    <<: *shared
+```
+
+That file loads successfully. `projects.web.root` stays unset, and
+`apps/missing` is not reported as a missing directory.
+
+A bare alias is not this limit. `root: *alias` is expanded by the YAML parser,
+so the loaded path is checked like any other `root`.
