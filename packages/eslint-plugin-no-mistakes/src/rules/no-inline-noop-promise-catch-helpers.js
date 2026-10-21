@@ -88,15 +88,17 @@ function isInlineNoopFunction(node, sourceCode) {
 }
 
 function originatingCalleeName(call) {
-  let current = unwrapExpression(call);
+  let current = call;
   while (current?.type === "CallExpression") {
-    const method = promiseMethodName(current);
+    const invoked = logicalCall(current);
+    const method = invoked ? memberPropertyName(invoked.callee) : null;
     if (!CHAIN_METHODS.has(method)) break;
-    const callee = unwrapExpression(current.callee);
-    current = unwrapExpression(callee?.object);
+    const object = unwrapExpression(invoked.callee?.object);
+    if (object?.type !== "CallExpression") return null;
+    current = object;
   }
   if (current?.type !== "CallExpression") return null;
-  const callee = unwrapExpression(current.callee);
+  const callee = unwrapExpression(logicalCall(current)?.callee ?? current.callee);
   if (callee?.type === "Identifier") return callee.name;
   if (callee?.type === "MemberExpression") return memberPropertyName(callee);
   return null;

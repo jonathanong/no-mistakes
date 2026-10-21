@@ -48,11 +48,15 @@ function spelledCallee(callee, context) {
   return `${importedName}${path.slice(root.name.length)}`;
 }
 
+function wrapperMatches(callee, wrapper, context) {
+  return calleePath(callee) === wrapper || spelledCallee(callee, context) === wrapper;
+}
+
 function insideWrapper(node, wrapper, context) {
   let current = node.parent;
   while (current) {
     const invoked = current.type === "CallExpression" ? logicalCall(current) : null;
-    if (invoked && spelledCallee(invoked.callee, context) === wrapper) return true;
+    if (invoked && wrapperMatches(invoked.callee, wrapper, context)) return true;
     if (isFunctionBoundary(current)) return false;
     current = current.parent;
   }

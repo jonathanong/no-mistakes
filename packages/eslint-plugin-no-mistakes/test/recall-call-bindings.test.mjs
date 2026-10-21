@@ -186,4 +186,33 @@ describe("call-binding recall", () => {
       6,
     );
   });
+
+  it("keeps a configured local wrapper and a forwarded allowed origin", () => {
+    const local = fixture("server-require-nullable-fetch-wrapper/local-alias.ts");
+    assert.deepEqual(
+      messages(
+        local,
+        "server-require-nullable-fetch-wrapper",
+        {
+          ...server,
+          requiredWrapperCallee: "wrap",
+        },
+        "backend/users.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(local, "server-require-nullable-fetch-wrapper", server, "backend/users.ts"),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("no-inline-noop-promise-catch/forwarded-origin.mjs"),
+        "no-inline-noop-promise-catch",
+        { allowedCalleeNamePatterns: ["releaseLock"] },
+        "forwarded-origin.mjs",
+      ),
+      ["noopCatch"],
+    );
+  });
 });
