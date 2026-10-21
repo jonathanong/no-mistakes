@@ -175,6 +175,16 @@ jobs:
         timeout-minutes: 1
         run: bash .github/scripts/rust-disk-usage.sh "before Clippy"
 
+      - name: Test standalone Rust library without a CLI build
+        timeout-minutes: 10
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/standalone-lib-target
+          CARGO_INCREMENTAL: "0"
+        run: |
+          trap 'rm -rf "$CARGO_TARGET_DIR"' EXIT
+          env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
+          test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
+
       - name: Run Clippy
         timeout-minutes: 10
         run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
@@ -1053,7 +1063,7 @@ jobs:
         uses: CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369 # v5.4.2
         with:
           mode: memory
-          runner-version: '5.4.0'
+          runner-version: "5.4.0"
           instruments-cache-dir: ~/.cache/codspeed-action/libc6-${{ steps.libc.outputs.version }}
           config: .github/frontend-lifecycle.yml
 
@@ -1071,7 +1081,7 @@ jobs:
       contents: read
       id-token: write
     env:
-      RAYON_NUM_THREADS: '4'
+      RAYON_NUM_THREADS: "4"
       NO_MISTAKES_BENCH_SHARD: language-frontends
       CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
     steps:
@@ -1087,7 +1097,7 @@ jobs:
         timeout-minutes: 2
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         env:
-          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
         with:
           key: ${{ needs.bench.outputs.cache-key }}
           path: codspeed-analysis.tar
@@ -1132,10 +1142,10 @@ jobs:
         uses: CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369 # v5.4.2
         env:
           TMPDIR: ${{ runner.temp }}/frontend-lifecycle-smoke/profiles
-          CODSPEED_SKIP_UPLOAD: 'true'
+          CODSPEED_SKIP_UPLOAD: "true"
         with:
           mode: memory
-          runner-version: '5.4.0'
+          runner-version: "5.4.0"
           instruments-cache-dir: ~/.cache/codspeed-action/libc6-${{ steps.provenance.outputs.libc }}
           config: .github/frontend-lifecycle-smoke.yml
       - name: Verify all raw profiles and CI execution identity
