@@ -155,11 +155,13 @@ impl PlaceStack {
     }
 
     fn item_place(&self) -> Place {
-        match self.levels.last() {
-            Some(level) if !level.mapping && level.items_are_steps => Place::Step,
-            Some(level) => level.place,
-            None => Place::Step,
-        }
+        self.levels.last().map_or(Place::Step, |level| {
+            if !level.mapping && level.items_are_steps {
+                Place::Step
+            } else {
+                level.place
+            }
+        })
     }
 
     fn only_root_map(&self) -> bool {

@@ -43,3 +43,7 @@ pub(super) fn is_nested_key(line: &str) -> bool {
     let after = &trimmed[index + 1..];
     after.is_empty() || after.starts_with([' ', '\t', '#'])
 }
+
+#[cfg(test)]
+#[path = "indent/tests.rs"]
+mod tests;

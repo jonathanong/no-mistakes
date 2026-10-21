@@ -345,6 +345,26 @@ fn unreadable_file_produces_no_findings() {
 }
 
 #[test]
+fn block_header_accepts_one_chomp_or_indent() {
+    assert!(yaml_uses::is_block_header("|+2"));
+    assert!(yaml_uses::is_block_header("|2+"));
+    assert!(yaml_uses::is_block_header("|-"));
+    assert!(!yaml_uses::is_block_header("|not"));
+    assert!(!yaml_uses::is_block_header("|12"));
+    assert!(!yaml_uses::is_block_header("|+-"));
+    assert!(!yaml_uses::is_block_header("plain"));
+}
+
+#[test]
+fn non_string_job_id_still_checks_the_step_line() {
+    // YAML reads `1` as a number, so the job is not walked by name. The step
+    // line is still a `uses` hit.
+    let findings = run_on_workflow("jobs:\n  1:\n    steps:\n      - uses: actions/checkout@v4\n");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("actions/checkout@v4"));
+}
+
+#[test]
 fn uses_line_not_matching_regex_skipped() {
     // A line containing "uses:" but not as a YAML step key must not produce findings.
     // The regex requires `^\s*-?\s*uses:\s+<value>`, so bare `uses:` with nothing after is skipped.

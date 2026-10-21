@@ -78,6 +78,28 @@ fn matrix_include_uses_is_not_an_action_line() {
 }
 
 #[test]
+fn flow_closers_count_alias_and_tight_uses() {
+    // `}` and a missing space still close the action scalar once.
+    let alias = action_uses_lines(&["- { uses: *checkout }"]);
+    assert_eq!(alias.lines, vec![1], "{alias:?}");
+    let tight = action_uses_lines(&["- { uses: actions/checkout@v4}"]);
+    assert_eq!(tight.lines, vec![1], "{tight:?}");
+    let root = action_uses_lines(&["[{ uses: actions/checkout@v4 }]"]);
+    assert_eq!(root.lines, vec![1], "{root:?}");
+}
+
+#[test]
+fn bare_dash_shapes_are_not_action_lines() {
+    let bare = action_uses_lines(&["-"]);
+    assert!(bare.lines.is_empty(), "{bare:?}");
+    // `-uses` is not a sequence item. A root key is not a job or step.
+    let stuck = action_uses_lines(&["-uses: actions/checkout@v4"]);
+    assert!(stuck.lines.is_empty(), "{stuck:?}");
+    let unclosed = action_uses_lines(&["- \"uses"]);
+    assert!(unclosed.lines.is_empty(), "{unclosed:?}");
+}
+
+#[test]
 fn indented_root_uses_is_not_rejected() {
     // The reusable-workflow regex fixture is only this line. It is not a
     // nested matrix field, so the line scan must keep the finding.
