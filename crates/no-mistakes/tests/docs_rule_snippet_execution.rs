@@ -183,3 +183,47 @@ fn known_gap_prefixes_fail_once_they_stop_reproducing() {
         [] as [String; 0]
     );
 }
+
+#[test]
+fn heading_section_skips_hashes_inside_fences_and_accepts_suffixes() {
+    let body = "\
+## Valid example
+
+```md
+## Perf
+content
+```
+
+## Counterexample and fix
+
+```yaml
+bad: true
+```
+";
+    let valid = docs_rule_snippets::heading_section(body, "Valid example");
+    assert!(
+        valid.contains("## Perf"),
+        "heading inside a fence must stay in the Valid example: {valid}"
+    );
+    let counter = docs_rule_snippets::heading_section(body, "Counterexample");
+    assert!(
+        counter.contains("bad: true"),
+        "Counterexample and fix must match Counterexample: {counter}"
+    );
+}
+
+#[test]
+fn fences_keep_inner_backticks_inside_a_longer_opening() {
+    let section = "\
+````markdown
+```mermaid
+flowchart TD
+  A --> B
+```
+````
+";
+    let extracted = docs_rule_snippets::fences(section);
+    assert_eq!(extracted.len(), 1, "{extracted:?}");
+    assert_eq!(extracted[0].0, "markdown");
+    assert!(extracted[0].1.contains("```mermaid"));
+}
