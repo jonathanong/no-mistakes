@@ -3,8 +3,8 @@ import { describe, it } from "vitest";
 import { lint, plugin } from "./helpers.mjs";
 import {
   headingSection,
+  knownRecallFailures,
   listedDocFiles,
-  recallAuditRules,
   ruleOption,
   rulePages,
   snippetFilename,
@@ -48,10 +48,11 @@ describe("eslint rule docs are executable", () => {
         }
       }
 
-      if (failures.length > 0 && recallAuditRules.has(page.ruleId)) {
-        return;
-      }
-      assert.deepEqual(failures, []);
+      const known = knownRecallFailures.get(page.ruleId) ?? [];
+      assert.deepEqual(
+        failures.filter((failure) => !known.includes(failure)),
+        [],
+      );
     });
   }
 });

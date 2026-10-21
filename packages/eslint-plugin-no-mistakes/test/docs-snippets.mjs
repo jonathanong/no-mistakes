@@ -4,23 +4,18 @@ import { __dirname, plugin } from "./helpers.mjs";
 
 export const docsDir = resolve(__dirname, "../../../docs/eslint-rules");
 
-// Open PR #2406 is rewriting these call-binding docs and fixtures. Execute
-// their snippets only when they already pass; do not edit those pages here.
-export const recallAuditRules = new Set([
-  "async-call-disposition",
-  "async-try-catch-return-await",
-  "await-array-methods",
-  "gh-api-argument-safety",
-  "module-mock-boundary",
-  "module-mock-preserve-exports",
-  "nextjs-static-fetch-method",
-  "nextjs-static-fetch-url",
-  "no-argv-main-guard",
-  "no-banned-import-outside-allowed-paths",
-  "no-global-fetch-outside-helper",
-  "no-inline-noop-promise-catch",
-  "require-options-on-imported-call",
-  "server-require-nullable-fetch-wrapper",
+// Open PR #2406 is rewriting these call-binding docs. Exempt only the
+// Disallowed snippets that currently miss so a new mismatch still fails.
+export const knownRecallFailures = new Map([
+  ["async-call-disposition", ["Disallowed ts hits=0 ids="]],
+  ["async-try-catch-return-await", ["Disallowed ts hits=0 ids="]],
+  ["await-array-methods", ["Disallowed ts hits=0 ids="]],
+  ["module-mock-boundary", ["Disallowed ts hits=0 ids="]],
+  ["module-mock-preserve-exports", ["Disallowed ts hits=0 ids="]],
+  ["no-banned-import-outside-allowed-paths", ["Disallowed ts hits=0 ids="]],
+  ["no-global-fetch-outside-helper", ["Disallowed ts hits=0 ids="]],
+  ["require-options-on-imported-call", ["Disallowed ts hits=0 ids="]],
+  ["server-require-nullable-fetch-wrapper", ["Disallowed ts hits=0 ids="]],
 ]);
 
 const FENCE = /```([A-Za-z0-9_-]*)[^\n]*\n([\s\S]*?)```/g;
