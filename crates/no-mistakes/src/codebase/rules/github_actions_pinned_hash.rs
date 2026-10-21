@@ -88,25 +88,17 @@ fn check_file_with_sources(
     let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
-    check_source(
-        path,
-        root,
-        exclude_set,
-        uses_re,
-        sha_re,
-        version_re,
-        &content,
-    )
+    check_source(path, root, uses_re, sha_re, version_re, &content, sources)
 }
 
 fn check_source(
     path: &Path,
     root: &Path,
-    _exclude_set: &GlobSet,
     uses_re: &Regex,
     sha_re: &Regex,
     version_re: &Regex,
     content: &str,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
@@ -141,8 +133,12 @@ fn check_source(
         }
     }
 
+    // Parse failures keep the line-scan findings. Syntax and I/O both mean
+    // there is no cached document to walk.
+    let parsed = sources.parse_yaml_path(path).ok();
     yaml_uses::append_parsed_uses(
         content,
+        parsed.as_deref(),
         &file,
         sha_re,
         version_re,

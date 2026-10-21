@@ -393,4 +393,11 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
 
     let dedup = check_yaml_shape("dedup-fail.yml");
     assert_eq!(lines_of(&dedup), vec![1, 2], "{dedup:?}");
+
+    // The pinned block uses is already judged. Repeating its ref in run, name,
+    // or a comment must not move the finding. The later flow uses still fails.
+    let echoed = check_yaml_shape("echo-ref-fail.yml");
+    assert_eq!(lines_of(&echoed), vec![5], "{echoed:?}");
+    assert!(echoed[0].message.contains("actions/checkout@v4"));
+    assert!(!echoed[0].message.contains("de0fac2e"));
 }

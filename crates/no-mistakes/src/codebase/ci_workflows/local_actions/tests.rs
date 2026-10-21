@@ -9,6 +9,11 @@ fn local_use_paths_map_the_repository_root_and_reject_parents() {
     assert_eq!(local_use_relative("././"), Some(String::new()));
     assert_eq!(local_use_relative("./../secret/action.yml"), None);
     assert_eq!(local_use_relative("./foo/../../secret/action.yml"), None);
+    // `..actions` is a directory name, not a parent segment.
+    assert_eq!(
+        local_use_relative("./..actions/deploy"),
+        Some("..actions/deploy".to_owned())
+    );
     assert_eq!(
         local_use_relative(r".\actions\outer"),
         Some("actions/outer".to_owned())

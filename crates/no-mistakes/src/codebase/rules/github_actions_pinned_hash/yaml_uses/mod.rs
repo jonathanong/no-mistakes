@@ -3,32 +3,36 @@ use regex::Regex;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
-/// String `uses` values serde_yaml can see, including flow mappings, quoted
-/// keys, and values on the line after `uses:`. A parse failure leaves the
-/// line-scan findings untouched.
+mod lines;
+
+/// String `uses` values from the request-scoped YAML document, including flow
+/// mappings, quoted keys, and values on the line after `uses:`. A missing
+/// document leaves the line-scan findings untouched.
 pub(super) fn append_parsed_uses(
     content: &str,
+    parsed: Option<&Value>,
     file: &str,
     sha_re: &Regex,
     version_re: &Regex,
     seen_lines: &BTreeSet<usize>,
     findings: &mut Vec<RuleFinding>,
 ) {
-    let Ok(value) = serde_yaml::from_str::<Value>(content) else {
+    let Some(value) = parsed else {
         return;
     };
     let mut uses_values = Vec::new();
-    collect_uses(&value, &mut uses_values);
-    let lines: Vec<&str> = content.lines().collect();
+    collect_uses(value, &mut uses_values);
+    let source_lines: Vec<&str> = content.lines().collect();
     let mut claimed = seen_lines.clone();
     for uses_value in uses_values {
-        let Some(line_num) = claim_value_line(&lines, &mut claimed, &uses_value) else {
+        let Some(line_num) = lines::claim_uses_line(&source_lines, &mut claimed, &uses_value)
+        else {
             continue;
         };
         if exempt(&uses_value) {
             continue;
         }
-        let comment = version_comment(lines[line_num - 1]);
+        let comment = version_comment(source_lines[line_num - 1]);
         if let Some(finding) =
             unpinned_finding(file, line_num, &uses_value, sha_re, version_re, comment)
         {
@@ -73,18 +77,6 @@ pub(super) fn unpinned_finding(
         import: None,
         target: None,
     })
-}
-
-fn claim_value_line(lines: &[&str], claimed: &mut BTreeSet<usize>, value: &str) -> Option<usize> {
-    for (index, line) in lines.iter().enumerate() {
-        let line_num = index + 1;
-        if claimed.contains(&line_num) || !line.contains(value) {
-            continue;
-        }
-        claimed.insert(line_num);
-        return Some(line_num);
-    }
-    None
 }
 
 /// Version comment on the line that contains the value text, not a bare `uses:`.
