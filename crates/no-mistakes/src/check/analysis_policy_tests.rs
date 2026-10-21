@@ -58,7 +58,7 @@ fn sql_explicit_max_is_byte_identical_to_default() {
 }
 
 #[test]
-fn non_adopting_rules_keep_low_and_max_byte_identical_to_default() {
+fn non_adopting_low_preserves_findings_and_reports_fallback() {
     let config = "project-no-policy.yml";
     let default = report(config, None);
     assert_eq!(
@@ -72,13 +72,27 @@ fn non_adopting_rules_keep_low_and_max_byte_identical_to_default() {
             ("postgres-no-unbounded-sql-identifier", 5),
         ]
     );
-    let default = check_runner::json_value(&default);
-    for effort in [Effort::Low, Effort::Max] {
-        assert_eq!(
-            check_runner::json_value(&report(config, Some(effort))),
-            default
-        );
-    }
+    let mut default_json = check_runner::json_value(&default);
+    assert_eq!(
+        check_runner::json_value(&report(config, Some(Effort::Max))),
+        default_json
+    );
+
+    let low = report(config, Some(Effort::Low));
+    assert_eq!(
+        low.warnings,
+        [
+            "postgres-no-mutable-sql-registry: requested effort low; effective effort max because this rule has no low implementation",
+            "postgres-no-unbounded-sql-identifier: requested effort low; effective effort max because this rule has no low implementation",
+        ]
+    );
+    assert!(low.analysis_fallbacks.is_empty());
+    let mut low_json = check_runner::json_value(&low);
+    assert!(low_json.get("analysisFallbacks").is_none());
+    // After removing fallback warnings, the low-tier findings match exactly.
+    default_json.as_object_mut().unwrap().remove("warnings");
+    low_json.as_object_mut().unwrap().remove("warnings");
+    assert_eq!(low_json, default_json);
 }
 
 #[test]
