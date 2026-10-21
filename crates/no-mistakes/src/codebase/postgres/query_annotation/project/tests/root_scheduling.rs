@@ -47,7 +47,6 @@ fn demanded_roots_remain_individually_stealable_and_indexed() {
             .collect::<Vec<_>>();
         assert_eq!(legacy.iter().sum::<usize>(), roots.len());
         assert!(legacy.iter().any(|count| *count > 1));
-        eprintln!("root leaf sizes: legacy={legacy:?}, singleton={leaves:?}");
     });
 }
 
