@@ -22,6 +22,13 @@ impl ImportCollector {
             Expression::TaggedTemplateExpression(tagged) => {
                 ValueExpression::Call(templates::tag_offset(tagged), tagged.span.end)
             }
+            Expression::TemplateLiteral(template) if !template.expressions.is_empty() => {
+                let mut fields = fx_map();
+                for (index, interpolation) in template.expressions.iter().enumerate() {
+                    fields.insert(index.to_string(), self.value_expression(interpolation));
+                }
+                ValueExpression::Array(std::sync::Arc::new(fields))
+            }
             Expression::StaticMemberExpression(member) => ValueExpression::Member(
                 std::sync::Arc::new(self.value_expression(&member.object)),
                 member.property.name.to_string(),

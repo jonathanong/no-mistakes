@@ -16,6 +16,8 @@ publishes partial diagnostics and source coordinates.
 `postgres-duplicate-function-body`, `postgres-table-shape`,
 `postgres-status-with-lifecycle-timestamps`,
 `postgres-no-offset`,
+`postgres-no-mutable-sql-registry`,
+`postgres-no-unbounded-sql-identifier`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,

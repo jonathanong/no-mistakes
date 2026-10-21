@@ -40,6 +40,8 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-explicit-columns",
             "postgres-bounded-statements",
             "postgres-no-offset",
+            "postgres-no-mutable-sql-registry",
+            "postgres-no-unbounded-sql-identifier",
             "postgres-sql-shape-policy",
             "postgres-sql-statement-policy",
             "postgres-no-generated-column-writes",

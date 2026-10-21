@@ -2,12 +2,23 @@
 use super::progress::output::ProgressOutput;
 use super::{InvocationObserver, TimingKind};
 use std::fmt::Write;
-use std::sync::{mpsc, Arc};
+use std::sync::{mpsc, Arc, Mutex};
 use std::time::Duration;
 
+const INCOMPLETE_LINE: &str =
+    "[PARTIAL] timeout diagnostics incomplete: snapshot collection or delivery did not finish\n";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SnapshotPhase {
+    Open,
+    Published,
+    Finished,
+    Abandoned,
+}
+
 pub fn render_timeout_stderr(observer: Option<Arc<InvocationObserver>>, message: String) {
-    // Created only after expiry, even with diagnostics disabled. A fresh writer
-    // avoids both Rust's stderr lock and an occupied progress-output queue.
+    // Created only after expiry, even with diagnostics disabled. Snapshot text,
+    // the optional progress line, and the incomplete marker share this writer.
     let output = ProgressOutput::stderr();
     let mut initial = format!("error: {message}\n");
     if observer.is_some() {
@@ -20,19 +31,111 @@ pub fn render_timeout_stderr(observer: Option<Arc<InvocationObserver>>, message:
         return;
     };
     let (completed, receiver) = mpsc::channel();
+    let gate = Arc::new(Mutex::new(SnapshotPhase::Open));
     let snapshot_output = Arc::clone(&output);
-    // Snapshot locks/aggregation, as well as OS writes, must not delay exit.
-    // Never join this worker: process::exit will reclaim a stalled snapshot.
+    let snapshot_gate = Arc::clone(&gate);
+    // Collection and OS writes must not delay exit. Never join this worker:
+    // process::exit reclaims a stalled snapshot. The gate is held only around
+    // a non-blocking enqueue, never during collection or the OS write.
     let _ = std::thread::Builder::new()
         .name("no-mistakes-timeout-snapshot".to_string())
         .spawn(move || {
-            snapshot_output.emit(partial_snapshot(&observer));
-            observer.render_progress_stderr();
-            let _ = completed.send(());
+            if publish_timeout_snapshot(&observer, &snapshot_output, &snapshot_gate) {
+                let _ = completed.send(());
+            }
         });
     if receiver.recv_timeout(Duration::from_millis(75)).is_err() {
-        output.emit("[PARTIAL] timeout diagnostics incomplete: snapshot collection or delivery did not finish\n".to_string());
+        abandon_timeout_snapshot(&gate, &output);
     }
+}
+
+fn publish_timeout_snapshot(
+    observer: &InvocationObserver,
+    output: &ProgressOutput,
+    gate: &Mutex<SnapshotPhase>,
+) -> bool {
+    // Queue the partial snapshot before progress collection. Progress may block
+    // on its own mutex; the exit path must still be able to see this chunk.
+    let queued = claim_enqueue(
+        gate,
+        SnapshotPhase::Open,
+        SnapshotPhase::Published,
+        output,
+        partial_snapshot(observer),
+    );
+    if !queued {
+        return false;
+    }
+    match observer.render_progress_text() {
+        Some(progress) => {
+            let _ = claim_enqueue(
+                gate,
+                SnapshotPhase::Published,
+                SnapshotPhase::Finished,
+                output,
+                progress,
+            );
+        }
+        None => {
+            let _ = claim_transition(gate, SnapshotPhase::Published, SnapshotPhase::Finished);
+        }
+    }
+    true
+}
+
+fn abandon_timeout_snapshot(gate: &Mutex<SnapshotPhase>, output: &ProgressOutput) {
+    // Winning Open means the snapshot was not queued, so there is no late line
+    // for this marker to precede. Winning Published means the snapshot is
+    // already queued and a later progress line must be skipped.
+    if claim_enqueue(
+        gate,
+        SnapshotPhase::Open,
+        SnapshotPhase::Abandoned,
+        output,
+        INCOMPLETE_LINE.to_string(),
+    ) {
+        return;
+    }
+    let _ = claim_enqueue(
+        gate,
+        SnapshotPhase::Published,
+        SnapshotPhase::Abandoned,
+        output,
+        INCOMPLETE_LINE.to_string(),
+    );
+}
+
+fn claim_enqueue(
+    gate: &Mutex<SnapshotPhase>,
+    from: SnapshotPhase,
+    to: SnapshotPhase,
+    output: &ProgressOutput,
+    text: String,
+) -> bool {
+    let mut phase = gate
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    if *phase != from {
+        return false;
+    }
+    let Some(receiver) = output.try_enqueue(text) else {
+        return false;
+    };
+    *phase = to;
+    drop(phase);
+    output.flush_enqueued(receiver);
+    true
+}
+
+fn claim_transition(gate: &Mutex<SnapshotPhase>, from: SnapshotPhase, to: SnapshotPhase) -> bool {
+    let mut phase = gate
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    if *phase != from {
+        return false;
+    }
+    *phase = to;
+    true
 }
 
 fn partial_snapshot(observer: &InvocationObserver) -> String {

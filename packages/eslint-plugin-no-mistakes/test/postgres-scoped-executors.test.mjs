@@ -61,6 +61,11 @@ describe("scoped PostgreSQL executors", () => {
     assert.equal(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)).length, 1);
   });
 
+  it("does not scan a relative import that does not resolve to a file", () => {
+    const name = "postgres-scoped/relative-inside/orders-missing.ts";
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)), []);
+  });
+
   it("does not scan a relative import that resolves outside that package", () => {
     // The file sits in @example/db, but the import lands in another directory.
     const name = "postgres-scoped/relative-inside/orders-external.ts";
@@ -91,8 +96,65 @@ describe("scoped PostgreSQL executors", () => {
     assert.deepEqual(run({ importSpecifier: "@example/db" }), []);
   });
 
+  it("scans quoted destructured parameter keys", () => {
+    assert.equal(manual("quoted-keys.ts").length, 2);
+  });
+
+  it("matches a string-literal import specifier name", () => {
+    assert.equal(manual("literal-import.ts").length, 1);
+  });
+
+  it("does not treat a relative import as in-package when package.json is unreadable", () => {
+    // broken-json/package.json is intentionally truncated so JSON.parse throws.
+    const name = "postgres-scoped/broken-json/orders.ts";
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)), []);
+  });
+
+  it("does not treat a relative import as in-package when package.json name is not a string", () => {
+    const name = "postgres-scoped/numeric-name/orders.ts";
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)), []);
+  });
+
+  it("does not scan a relative import that only finds the package under node_modules", () => {
+    // App-local ./transaction is not inside node_modules/@example/db.
+    const name = "postgres-scoped/nested-modules/orders.ts";
+    assert.deepEqual(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)), []);
+  });
+
+  it("scans a relative import that resolves inside a nested node_modules package", () => {
+    // The specifier walks into node_modules/@example/db, so the file is in-package.
+    const name = "postgres-scoped/nested-modules/orders-inside.ts";
+    assert.equal(messages(fixture(name), MANUAL, SCOPED, fixtureFile(name)).length, 1);
+  });
+
+  it("does not resolve a relative import when importSpecifier is not a package name", () => {
+    const name = "postgres-scoped/relative-inside/orders.ts";
+    const filename = fixtureFile(name);
+    assert.deepEqual(
+      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "@" }, filename),
+      [],
+    );
+    assert.deepEqual(
+      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "@/" }, filename),
+      [],
+    );
+    assert.deepEqual(
+      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "@scope/" }, filename),
+      [],
+    );
+    assert.deepEqual(
+      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "./db" }, filename),
+      [],
+    );
+    assert.deepEqual(
+      messages(fixture(name), MANUAL, { ...SCOPED, importSpecifier: "/abs/db" }, filename),
+      [],
+    );
+  });
+
   it("exposes scope lookups as range checks", () => {
     assert.equal(collectScopedExecutors({ body: [] }, SCOPED_DEFAULTS).length, 0);
+    assert.equal(collectScopedExecutors({ body: [] }, SCOPED, "").length, 0);
     assert.equal(isScopedExecutor(undefined, "tx", { range: [1, 2] }), false);
     const scoped = [{ name: "tx", range: [10, 20] }];
     assert.equal(isScopedExecutor(scoped, "tx", { range: [10, 12] }), true);

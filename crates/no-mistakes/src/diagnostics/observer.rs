@@ -1,4 +1,7 @@
+mod render;
 mod snapshot;
+#[cfg(test)]
+mod tests;
 #[cfg(all(test, unix))]
 mod timeout_tests;
 mod timing_order;
@@ -9,7 +12,6 @@ use super::progress::ProgressState;
 use dashmap::DashMap;
 use rustc_hash::FxBuildHasher;
 use std::collections::BTreeMap;
-use std::fmt::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -148,50 +150,33 @@ impl InvocationObserver {
     /// Render a single deterministic diagnostics block. This is intentionally
     /// called by the CLI boundary after command dispatch, including failures.
     pub fn render_stderr(&self) {
+        let text = self.verbose_timings_block(self.started.elapsed(), self.verbose_peak_rss());
+        if self.progress_enabled() {
+            self.emit_progress_output(text);
+        } else {
+            eprint!("{text}");
+        }
+    }
+
+    /// Ordinary `--verbose-timings` bytes for a fixed total and RSS sample.
+    /// Live elapsed time and `getrusage` stay outside this helper so tests can
+    /// lock the historical block exactly.
+    pub(in crate::diagnostics) fn verbose_timings_block(
+        &self,
+        total: Duration,
+        peak_rss_kib: Option<u64>,
+    ) -> String {
         let mut snapshot = self.snapshot();
         snapshot.timings.push(TimingDiagnostic {
             label: "total".to_string(),
-            duration: self.started.elapsed(),
+            duration: total,
             kind: TimingKind::Serial,
         });
-        let mut output = self.progress_enabled().then(String::new);
-        for entry in snapshot.timings {
-            let suffix = match entry.kind {
-                TimingKind::Serial => "",
-                TimingKind::Parallel => " (parallel; non-additive)",
-            };
-            match &mut output {
-                Some(output) => {
-                    let _ = writeln!(
-                        output,
-                        "[timing] {}: {:.3}ms{}",
-                        entry.label,
-                        entry.duration.as_secs_f64() * 1000.0,
-                        suffix
-                    );
-                }
-                None => eprintln!(
-                    "[timing] {}: {:.3}ms{}",
-                    entry.label,
-                    entry.duration.as_secs_f64() * 1000.0,
-                    suffix
-                ),
-            }
-        }
-        if self.verbose {
-            for (metric, count) in snapshot.work {
-                match &mut output {
-                    Some(output) => {
-                        let _ = writeln!(output, "[work] {metric}: {count}");
-                    }
-                    None => eprintln!("[work] {metric}: {count}"),
-                }
-            }
-        }
-        super::memory::render(self.verbose, &mut output);
-        if let Some(output) = output {
-            self.emit_progress_output(output);
-        }
+        render::format_block(&snapshot, self.verbose, peak_rss_kib)
+    }
+
+    fn verbose_peak_rss(&self) -> Option<u64> {
+        self.verbose.then(super::memory::peak_rss_kib).flatten()
     }
 }
 

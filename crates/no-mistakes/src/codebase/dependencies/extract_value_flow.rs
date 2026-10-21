@@ -106,6 +106,9 @@ mod module_provider_intervals;
 pub(crate) use module_provider_intervals::ModuleProviderTarget;
 pub(crate) use mutation_history::ValueAssignedMutations;
 
+#[cfg(test)]
+#[path = "extract_value_flow/from_expression_tests.rs"]
+mod from_expression_tests;
 #[path = "extract_value_flow/write_targets.rs"]
 pub(super) mod write_targets;
 

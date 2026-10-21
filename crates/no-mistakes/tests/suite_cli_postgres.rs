@@ -44,6 +44,8 @@ mod cli_check_rules_postgres_object_naming;
 mod cli_check_rules_postgres_offset;
 #[path = "cli_check_rules_postgres_required_comments.rs"]
 mod cli_check_rules_postgres_required_comments;
+#[path = "cli_check_rules_postgres_sql_cross_file.rs"]
+mod cli_check_rules_postgres_sql_cross_file;
 #[path = "cli_check_rules_postgres_sql_shape_functions.rs"]
 mod cli_check_rules_postgres_sql_shape_functions;
 #[path = "cli_check_rules_postgres_sql_statement_policy.rs"]

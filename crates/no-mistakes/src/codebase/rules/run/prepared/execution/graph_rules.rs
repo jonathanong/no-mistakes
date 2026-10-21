@@ -97,6 +97,40 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
             },
         )?);
     }
+    if rule_enabled(
+        config,
+        crate::codebase::rules::POSTGRES_NO_MUTABLE_SQL_REGISTRY,
+    ) {
+        findings.extend(crate::perf_trace::trace(
+            "rules.postgres_no_mutable_sql_registry",
+            || {
+                crate::codebase::rules::postgres_no_mutable_sql_registry::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph
+                        .expect("postgres-no-mutable-sql-registry requires canonical graph"),
+                    shared,
+                )
+            },
+        )?);
+    }
+    if rule_enabled(
+        config,
+        crate::codebase::rules::POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
+    ) {
+        findings.extend(crate::perf_trace::trace(
+            "rules.postgres_no_unbounded_sql_identifier",
+            || {
+                crate::codebase::rules::postgres_no_unbounded_sql_identifier::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph
+                        .expect("postgres-no-unbounded-sql-identifier requires canonical graph"),
+                    shared,
+                )
+            },
+        )?);
+    }
     Ok(findings)
 }
 
