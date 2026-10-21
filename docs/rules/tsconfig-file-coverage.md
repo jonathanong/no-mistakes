@@ -14,6 +14,15 @@ without a snapshot should pass tracked paths themselves.
 rules:
   - rule: tsconfig-file-coverage
     scope: repository
+```
+
+Optional `allow` and `auxiliaryConfigs` entries name reasoned exceptions. Those
+paths must exist or they are findings:
+
+```yaml
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
     options:
       allow:
         - path: scripts/generate.ts
@@ -86,17 +95,21 @@ be repository-relative and reasons non-empty.
 ## Valid example
 
 ```json
+// tsconfig.json
 {"include":["src/**/*.ts"]}
-```
 
-```text
-src/index.ts
+// src/index.ts
+export const ok = 1;
 ```
 
 ## Counterexample
 
-```text
-orphan.ts
+```json
+// tsconfig.json
+{"include":["src"]}
+
+// orphan.ts
+export const orphan = 1;
 ```
 
 The file is tracked beside a config that includes only `src`.

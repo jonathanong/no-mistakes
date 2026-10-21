@@ -74,7 +74,10 @@ and `exclude` filters apply before matching.
 
 ```ts
 // runtime/register-workers.ts
-import "./email-worker";
+import "../workers/email-worker";
+
+// workers/email-worker.ts
+export const worker = true;
 ```
 
 With `sourceGlobs: ["workers/**/*.ts"]`, `workers/email-worker.ts` is reachable.
@@ -82,7 +85,12 @@ With `sourceGlobs: ["workers/**/*.ts"]`, `workers/email-worker.ts` is reachable.
 ## Counterexample
 
 ```ts
-import type { EmailWorker } from "./email-worker";
+// runtime/register-workers.ts
+import type { EmailWorker } from "../workers/email-worker";
+
+// workers/email-worker.ts
+export type EmailWorker = { run(): void };
+export const worker = true;
 ```
 
 The type-only import does not load the worker at runtime.
