@@ -114,8 +114,18 @@ pub(super) fn unpinned_finding(
 /// Version comment on the line that contains the value text, not a bare `uses:`.
 fn version_comment(line: &str) -> &str {
     let mut quote = None;
+    let mut escape = false;
     for (index, ch) in line.char_indices() {
+        if escape {
+            escape = false;
+            continue;
+        }
         if let Some(active) = quote {
+            // `\"` is still inside the double-quoted scalar.
+            if active == '"' && ch == '\\' {
+                escape = true;
+                continue;
+            }
             if ch == active {
                 quote = None;
             }

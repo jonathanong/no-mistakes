@@ -15,8 +15,19 @@ pub(super) struct Carry {
     flow_depth: i32,
     flow_input: Vec<bool>,
     value_key_is_input: bool,
+    key_gap: bool,
     skip_anchor: bool,
     alias: bool,
+    /// `&name` whose mapping is being read so a later step alias can be judged.
+    reading_anchor: bool,
+    anchor_pending: bool,
+    block_anchor: bool,
+    step_alias: bool,
+    anchor_depth: i32,
+    anchor_indent: usize,
+    anchor_name: String,
+    alias_name: String,
+    anchors_with_uses: Vec<String>,
     block_header: bool,
     place: PlaceStack,
     rejected_uses: bool,
@@ -39,8 +50,12 @@ impl Carry {
             self.flow_depth = 0;
             self.flow_input.clear();
             self.value_key_is_input = false;
+            self.reset_anchor_state();
             self.reset_token();
             return empty_mark();
+        }
+        if self.quote.is_none() {
+            self.end_block_anchor(line);
         }
         let starts_in_flow_input = self.in_flow_input();
         if self.quote.is_none() && self.flow_depth == 0 {
@@ -68,7 +83,14 @@ impl Carry {
             && self.scalar.is_empty()
             && self.flow_depth > 0
             && !self.in_flow_input();
+        if self.step_alias && self.anchor_has_uses() {
+            hits += 1;
+        }
         if self.quote.is_none() {
+            // `&name` at the end of the line anchors the following block mapping.
+            if self.reading_anchor && !self.anchor_name.is_empty() && self.anchor_depth == 0 {
+                self.block_anchor = true;
+            }
             self.reset_token();
         } else {
             // A trailing `\` escapes the line break, not the next character.
@@ -97,8 +119,15 @@ impl Carry {
         self.alias = false;
         self.block_header = false;
         self.escape_quote = false;
+        self.key_gap = false;
+        self.reading_anchor = false;
+        self.step_alias = false;
+        self.alias_name.clear();
     }
 }
+
+#[path = "carry_anchor.rs"]
+mod anchor;
 
 fn finish_scalar(scalar: &str, key_was_uses: bool) -> bool {
     key_was_uses && !scalar.is_empty()

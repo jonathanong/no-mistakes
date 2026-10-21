@@ -133,6 +133,41 @@ fn commented_block_header_is_not_an_action_line() {
 }
 
 #[test]
+fn space_before_colon_keeps_the_uses_key() {
+    let line = "- uses : actions/checkout@v4";
+    assert_eq!(action_uses_lines(&[line]).lines, vec![1]);
+    let flow = action_uses_lines(&["- { uses : actions/checkout@v4 }"]);
+    assert_eq!(flow.lines, vec![1], "{flow:?}");
+}
+
+#[test]
+fn mapping_alias_step_is_an_action_line() {
+    let flow = [
+        "jobs:",
+        "  call:",
+        "    strategy:",
+        "      matrix:",
+        "        include:",
+        "          - &shared { uses: actions/checkout@v4 }",
+        "    steps: [*shared]",
+    ];
+    assert_eq!(action_uses_lines(&flow).lines, vec![7], "{flow:?}");
+
+    let block = [
+        "jobs:",
+        "  call:",
+        "    strategy:",
+        "      matrix:",
+        "        include:",
+        "          - &plain",
+        "            uses: actions/checkout@v3",
+        "    steps:",
+        "      - *plain",
+    ];
+    assert_eq!(action_uses_lines(&block).lines, vec![9], "{block:?}");
+}
+
+#[test]
 fn bare_dash_shapes_are_not_action_lines() {
     let bare = action_uses_lines(&["-"]);
     assert!(bare.lines.is_empty(), "{bare:?}");

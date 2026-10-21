@@ -1,0 +1,16 @@
+# A matrix anchor reused as a step is still an action reference.
+jobs:
+  call:
+    strategy:
+      matrix:
+        include:
+          - &shared { uses: actions/checkout@v4 }
+    steps: [*shared]
+  block:
+    strategy:
+      matrix:
+        include:
+          - &plain
+            uses: actions/checkout@v3
+    steps:
+      - *plain

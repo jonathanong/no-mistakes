@@ -6,6 +6,9 @@ impl Carry {
         if let Some(active) = self.quote {
             return self.consume_quoted(ch, active, hits);
         }
+        if self.anchor_pending && !ch.is_whitespace() && ch != '{' {
+            self.clear_anchor_watch();
+        }
         if matches!(ch, '"' | '\'') {
             self.quote = Some(ch);
             if !self.after_colon {
@@ -50,6 +53,11 @@ impl Carry {
             self.scalar.push(ch);
         } else {
             self.value_key_is_input = false;
+            // `foo uses:` — a new word replaces the key. `uses :` keeps it.
+            if self.key_gap {
+                self.token.clear();
+                self.key_gap = false;
+            }
             self.token.push(ch);
         }
         false
@@ -95,31 +103,6 @@ impl Carry {
         }
     }
 
-    /// An anchor or alias sits between `uses:` and the scalar. Returns true
-    /// when this character was consumed as part of that name.
-    fn consume_anchor(&mut self, ch: char, hits: &mut usize) -> bool {
-        if self.skip_anchor {
-            let boundary = ch.is_whitespace() || matches!(ch, '}' | ']' | ',' | ':');
-            if !boundary {
-                return true;
-            }
-            let was_alias = self.alias && self.key_was_uses;
-            self.skip_anchor = false;
-            self.alias = false;
-            if was_alias {
-                *hits += 1;
-                self.key_was_uses = false;
-            }
-            return ch.is_whitespace();
-        }
-        if self.after_colon && self.scalar.is_empty() && matches!(ch, '&' | '*') {
-            self.alias = ch == '*';
-            self.skip_anchor = true;
-            return true;
-        }
-        false
-    }
-
     fn open_flow(&mut self, sequence: bool) {
         let entering = self.in_flow_input() || self.value_key_is_input;
         self.flow_input.push(entering);
@@ -130,6 +113,8 @@ impl Carry {
         self.scalar.clear();
         self.after_colon = false;
         self.key_was_uses = false;
+        self.key_gap = false;
+        self.arm_anchor_mapping(sequence);
     }
 
     fn close_flow(&mut self, ch: char, hits: &mut usize) {
@@ -140,6 +125,10 @@ impl Carry {
             self.flow_depth -= 1;
             self.flow_input.pop();
             self.place.close_flow();
+            if self.anchor_depth > self.flow_depth {
+                self.anchor_depth = 0;
+                self.anchor_name.clear();
+            }
         }
         self.value_key_is_input = false;
         self.token.clear();
@@ -171,8 +160,8 @@ impl Carry {
             self.key_was_uses = false;
             self.after_colon = false;
             return Some(stop);
-        } else if !self.after_colon {
-            self.token.clear();
+        } else if !self.after_colon && !self.token.is_empty() {
+            self.key_gap = true;
         }
         Some(false)
     }
@@ -184,7 +173,9 @@ impl Carry {
         if self.token == "uses" && !action && !in_input && self.place.nested() {
             self.rejected_uses = true;
         }
+        self.note_anchor_uses();
         self.key_was_uses = action && !in_input;
+        self.key_gap = false;
         self.token.clear();
         self.scalar.clear();
         self.after_colon = true;

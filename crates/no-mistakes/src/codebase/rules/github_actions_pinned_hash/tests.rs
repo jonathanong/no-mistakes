@@ -517,4 +517,23 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert!(header
         .iter()
         .all(|finding| !finding.message.contains("de0fac2e")));
+
+    // `uses :` with a space before the colon is still an action key.
+    let spaced = check_yaml_shape("space-before-colon-fail.yml");
+    assert_eq!(lines_of(&spaced), vec![2, 3], "{spaced:?}");
+    assert!(spaced[0].message.contains("actions/checkout@v4"));
+    assert!(spaced[1].message.contains("actions/checkout@v3"));
+
+    // `#` after an escaped quote stays inside the name. The pinned line passes.
+    let comment = check_yaml_shape("escaped-comment-fail.yml");
+    assert_eq!(lines_of(&comment), vec![3], "{comment:?}");
+    assert!(comment[0].message.contains("actions/checkout@v4"));
+    assert!(!comment[0].message.contains("trailing comment"));
+    assert!(!comment[0].message.contains("de0fac2e"));
+
+    // The alias line is the step. The anchor's tag must not be dropped.
+    let alias_step = check_yaml_shape("mapping-alias-fail.yml");
+    assert_eq!(lines_of(&alias_step), vec![8, 16], "{alias_step:?}");
+    assert!(alias_step[0].message.contains("actions/checkout@v4"));
+    assert!(alias_step[1].message.contains("actions/checkout@v3"));
 }

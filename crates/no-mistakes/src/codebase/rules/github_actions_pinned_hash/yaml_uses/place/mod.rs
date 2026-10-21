@@ -13,6 +13,7 @@ pub(super) struct PlaceStack {
     pending: Option<Place>,
     pending_indent: usize,
     key_indent: usize,
+    line_indent: usize,
 }
 
 impl Default for PlaceStack {
@@ -22,6 +23,7 @@ impl Default for PlaceStack {
             pending: None,
             pending_indent: 0,
             key_indent: 0,
+            line_indent: 0,
         }
     }
 }
@@ -36,6 +38,7 @@ impl PlaceStack {
         if trimmed.is_empty() || trimmed.starts_with('#') {
             return;
         }
+        self.line_indent = line.chars().take_while(|ch| ch.is_whitespace()).count();
         let split = split_line(line);
         let pop_at = if split.sequence {
             split.dash_indent
@@ -152,6 +155,15 @@ impl PlaceStack {
             items_are_steps: steps,
             root,
         });
+    }
+
+    pub(super) fn line_indent(&self) -> usize {
+        self.line_indent
+    }
+
+    /// The current sequence item is a step. A root sequence counts.
+    pub(super) fn item_is_step(&self) -> bool {
+        self.item_place() == Place::Step
     }
 
     fn item_place(&self) -> Place {
