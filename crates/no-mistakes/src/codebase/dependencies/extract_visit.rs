@@ -196,81 +196,24 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_await_expression(&mut self, expression: &oxc_ast::ast::AwaitExpression<'a>) {
-        self.invalidate_replacement_expression();
-        self.record_unknown_fresh_call(expression.span.end);
-        walk::walk_await_expression(self, expression);
-        // Operand evaluation can create the first capture; completion must
-        // invalidate it even when the pre-operand path was still cold.
-        self.record_descriptor_call(expression.span.end);
+        visit_await_expression_with_capture(self, expression);
     }
 
     fn visit_yield_expression(&mut self, expression: &oxc_ast::ast::YieldExpression<'a>) {
-        self.invalidate_replacement_expression();
-        self.record_unknown_fresh_call(expression.span.end);
-        walk::walk_yield_expression(self, expression);
-        self.record_descriptor_call(expression.span.end);
+        visit_yield_expression_with_capture(self, expression);
     }
 
     fn visit_unary_expression(&mut self, expression: &oxc_ast::ast::UnaryExpression<'a>) {
-        if expression.operator == oxc_syntax::operator::UnaryOperator::Delete {
-            self.invalidate_replacement_expression();
-            if self.collect_value_flow {
-                if let Some((name, path, start)) =
-                    extract_value_flow::write_targets::from_expression(&expression.argument)
-                {
-                    self.record_reassigned_callable_alias_path(
-                        &name,
-                        start,
-                        Some(&path),
-                        expression.span.end,
-                    );
-                }
-            }
-        }
-        walk::walk_unary_expression(self, expression);
+        visit_unary_expression_with_delete(self, expression);
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
-        visit_new_expression_with_imports_and_calls(self, new);
+        visit_new_expression_with_calls(self, new);
     }
 
     fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
-        self.visit_receiver_tagged(tagged);
+        visit_tagged_template_with_receiver(self, tagged);
     }
 
-    fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
-        visit_identifier_reference_with_namespaces(self, identifier);
-    }
-
-    fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
-        visit_static_member_expression_with_getters(self, member);
-    }
-
-    fn visit_computed_member_expression(&mut self, member: &ComputedMemberExpression<'a>) {
-        visit_computed_member_expression_with_getters(self, member);
-    }
-
-    fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {
-        visit_ts_type_reference_without_name_walk(self, reference);
-    }
-
-    fn visit_ts_type_query(&mut self, query: &oxc_ast::ast::TSTypeQuery<'a>) {
-        self.walk_as_type_names(|collector| walk::walk_ts_type_query(collector, query));
-    }
-
-    fn visit_ts_class_implements(&mut self, implements: &oxc_ast::ast::TSClassImplements<'a>) {
-        self.walk_as_type_names(|collector| walk::walk_ts_class_implements(collector, implements));
-    }
-
-    fn visit_ts_interface_heritage(&mut self, heritage: &oxc_ast::ast::TSInterfaceHeritage<'a>) {
-        self.walk_as_type_names(|collector| walk::walk_ts_interface_heritage(collector, heritage));
-    }
-
-    fn visit_ts_type_parameter(&mut self, parameter: &TSTypeParameter<'a>) {
-        visit_ts_type_parameter_without_name_walk(self, parameter);
-    }
-
-    fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
-        visit_jsx_opening_element_with_value_reference(self, opening);
-    }
+    visit_import_collector_tail!();
 }

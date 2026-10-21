@@ -1,4 +1,5 @@
-use super::{member_write, mutated_exports, RULE_ID};
+use super::writes::{member_write, mutated_exports};
+use super::RULE_ID;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::graph::test_support::from_raw_maps;
 use crate::codebase::ts_source::facts::TsFileFacts;

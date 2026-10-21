@@ -12,8 +12,6 @@ use anyhow::Result;
 use std::path::Path;
 
 mod writes;
-#[cfg(test)]
-use writes::member_write;
 use writes::{mutated_exports, MutatedExport};
 
 pub const RULE_ID: &str = "postgres-no-mutable-sql-registry";

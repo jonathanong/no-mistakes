@@ -190,6 +190,8 @@ include!("extract_namespace_walk.rs");
 include!("extract_namespace_uses.rs");
 include!("extract_export_names.rs");
 include!("extract_collector.rs");
+include!("extract_visit_effects.rs");
+include!("extract_visit_tail.rs");
 include!("extract_visit.rs");
 include!("extract_visit_callables.rs");
 include!("extract_visit_modules.rs");
