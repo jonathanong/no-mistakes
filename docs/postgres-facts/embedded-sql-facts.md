@@ -39,7 +39,10 @@ is never referenced except as `X.member` reads, and is never exported or
 written (including a write after the read). A poisoned member keeps the proved
 SQL and substitutes `sql_placeholder_N` for that member. The same literal
 exported from another file is spliced when it is interpolated into an untagged
-template or passed to `.append`, including `as const`. An imported tagged
+template or passed to `.append`, including `as const`. A default export of a
+string or a no-substitution template is that literal, including one wrapped in
+parentheses or a type assertion. `export default QUERY` follows the const it
+names. A namespace member such as `ns.CONST` stays unknown. An imported tagged
 fragment constant is spliced only by `.append`; an untagged template would
 stringify the statement object. `let`, reassigned bindings, computed
 initializers, spreads, computed keys or writes, nested members, numeric keys,
