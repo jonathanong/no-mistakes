@@ -165,6 +165,27 @@ glob to its intended configs.
 Use a top-of-file `no-mistakes-disable-file structured-config-policy` directive
 for generated config that cannot be edited. Findings currently report line 1.
 
+## Limitations
+
+YAML 1.1 merge keys (`<<: *anchor`) are not expanded. Structured YAML is parsed
+with `serde_yaml`, which leaves `<<` as an ordinary key instead of copying the
+anchored mapping into its parent. A banned or required key that would exist
+only after that copy is not a finding.
+
+```yaml
+defaults: &defaults
+  legacy:
+    enabled: true
+runtime:
+  <<: *defaults
+```
+
+With `bannedKeys: [runtime.legacy.enabled]`, the file above is not a finding.
+`runtime` contains the key `<<`, not `legacy`.
+
+A bare alias is not this limit. `enabled: *flag` is expanded by the YAML
+parser, and the policy sees the value the alias points at.
+
 ## Related rules
 
 [`config-path-references`](config-path-references.md) validates referenced

@@ -480,3 +480,34 @@ fn doc_section_findings_sorted() {
         assert!(findings[i - 1] <= findings[i]);
     }
 }
+
+#[test]
+fn doc_section_level_one_does_not_satisfy_level_two() {
+    // `# Perf` shares the text of `## Perf` and must still be a finding.
+    let root = fixture("rules/required-doc-section/fail");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let findings = check_required_doc_section(&root, &config).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "agents/demo/README.md");
+    assert!(findings[0].message.contains("## Perf"), "{findings:?}");
+}
+
+#[test]
+fn doc_section_matching_level_passes() {
+    let root = fixture("rules/required-doc-section/pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let findings = check_required_doc_section(&root, &config).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn heading_without_hashes_matches_any_level() {
+    let present = crate::codebase::markdown_sections::has_required_heading;
+    assert!(present("# Perf\n", "Perf"));
+    assert!(present("## Perf\n", "Perf"));
+    assert!(!present("# Perf\n", "## Perf"));
+    assert!(present("## Perf\n", "## Perf"));
+    assert!(!present("## Other\n", "## Perf"));
+}

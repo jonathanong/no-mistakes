@@ -81,11 +81,11 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     let mut findings = Vec::new();
 
     for rule_root in &opts.roots {
-        let abs_root = if rule_root.is_absolute() {
-            rule_root.clone()
-        } else {
-            root.join(rule_root)
-        };
+        let abs_root = super::configured_root::normalize_configured_root(root, rule_root);
+        if super::configured_root::escapes_repository(root, &abs_root) {
+            findings.push(super::configured_root::escape_finding(RULE_ID, rule_root));
+            continue;
+        }
 
         let subdirs = first_level_subdirs(&abs_root, files, &exclude_set);
         for subdir in subdirs {

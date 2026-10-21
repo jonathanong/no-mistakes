@@ -138,16 +138,19 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
     };
     opts.roots
         .par_iter()
-        .flat_map(|root_rel| {
-            let pkg_root = if root_rel.is_absolute() {
-                root_rel.clone()
-            } else {
-                root.join(root_rel)
-            };
-            scan_pkg::scan_pkg(root, &pkg_root, &ctx)
-        })
+        .flat_map(|root_rel| scan_root(root, root_rel, &ctx))
         .collect()
 }
 
+fn scan_root(root: &Path, root_rel: &Path, ctx: &scan_pkg::ScanCtx<'_>) -> Vec<RuleFinding> {
+    let pkg_root = super::configured_root::normalize_configured_root(root, root_rel);
+    if super::configured_root::escapes_repository(root, &pkg_root) {
+        return vec![super::configured_root::escape_finding(RULE_ID, root_rel)];
+    }
+    scan_pkg::scan_pkg(root, &pkg_root, ctx)
+}
+
+#[cfg(test)]
+mod recall_tests;
 #[cfg(test)]
 mod tests;

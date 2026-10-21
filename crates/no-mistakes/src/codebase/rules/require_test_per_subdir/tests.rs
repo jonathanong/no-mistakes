@@ -16,9 +16,11 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 }
 
 fn fixture(path: &str) -> PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/require-test-per-subdir/fixture")
-        .join(path)
+    crate::codebase::ts_resolver::normalize_path(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/require-test-per-subdir/fixture")
+            .join(path),
+    )
 }
 
 #[test]
@@ -301,4 +303,57 @@ fn root_dir_itself_in_file_list_is_skipped_by_first_level_subdirs() {
         findings.is_empty(),
         "root dir itself should be skipped, no subdirs found"
     );
+}
+
+#[test]
+fn parent_segment_root_reports_missing_test() {
+    // `services/../agents` must resolve to `agents` before strip_prefix.
+    let root = fixture("parent-segment");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files = vec![root.join("agents/email/index.mts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("agents/email"), "{findings:?}");
+    assert!(!findings[0].message.contains("escapes"));
+}
+
+#[test]
+fn dot_prefix_root_still_matches() {
+    let root = fixture("parent-segment");
+    let config = config_with_rule("roots: [\"./agents\"]\ntestGlob: \"*.test.mts\"");
+    let file = root.join("agents/email/index.mts");
+    let findings = check_with_files(&root, &config, &[file]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("agents/email"), "{findings:?}");
+    assert!(!findings[0].message.contains("escapes"));
+}
+
+#[test]
+fn escaping_root_is_one_finding_and_skips_outside_files() {
+    let root = fixture("escape");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let inside = root.join("agents/email/index.mts");
+    let outside = fixture("fail").join("agents/email/index.mts");
+    let opts: Options = config.rule_applications(RULE_ID)[0]
+        .try_rule_options()
+        .unwrap();
+    let findings = super::scan(&root, &opts, &[inside.clone(), outside.clone()]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("escapes the repository"),
+        "{findings:?}"
+    );
+    let outside_text = outside.display().to_string();
+    assert!(
+        findings.iter().all(|finding| {
+            !finding.message.contains("no test file")
+                && !finding.file.contains("index.mts")
+                && !finding.message.contains(&outside_text)
+                && !finding.file.contains(&outside_text)
+        }),
+        "{findings:?}"
+    );
+    let checked = check_with_files(&root, &config, &[inside]).unwrap();
+    assert_eq!(checked.len(), 1, "{checked:?}");
+    assert!(checked[0].message.contains("escapes the repository"));
 }

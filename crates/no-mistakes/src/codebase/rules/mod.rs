@@ -122,6 +122,7 @@ pub mod workflow_topology_policy;
 pub mod workspace_package_cycles;
 
 mod catalog_rule;
+mod configured_root;
 mod entrypoints;
 pub mod filesystem_dispatch;
 mod masked_source;
