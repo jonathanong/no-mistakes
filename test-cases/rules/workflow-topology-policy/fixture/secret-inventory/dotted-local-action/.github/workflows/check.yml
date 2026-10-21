@@ -1,0 +1,7 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/./deploy
+      - uses: ./.github/actions/deploy/../deploy

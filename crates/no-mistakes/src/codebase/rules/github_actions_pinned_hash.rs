@@ -5,7 +5,10 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+mod yaml_uses;
 
 pub const RULE_ID: &str = "github-actions-pinned-hash";
 
@@ -107,6 +110,9 @@ fn check_source(
 ) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
+    // Lines the regex already accepted or flagged. Parsed `uses` values must
+    // not report those lines again.
+    let mut seen_lines = BTreeSet::new();
 
     for (i, line) in content.lines().enumerate() {
         let line_num = i + 1;
@@ -116,6 +122,7 @@ fn check_source(
         let Some(caps) = uses_re.captures(line) else {
             continue;
         };
+        seen_lines.insert(line_num);
         let raw = caps.get(1).map_or("", |m| m.as_str());
         let uses_value = raw
             .strip_prefix('"')
@@ -124,37 +131,29 @@ fn check_source(
             .unwrap_or(raw);
         let trailing = caps.get(2).map_or("", |m| m.as_str()).trim();
 
-        if uses_value.starts_with("./")
-            || uses_value.starts_with("../")
-            || uses_value.starts_with("docker://")
-        {
+        if yaml_uses::exempt(uses_value) {
             continue;
         }
-
-        let ref_part = uses_value.rsplit_once('@').map_or("", |(_, r)| r);
-        let sha_ok = sha_re.is_match(ref_part);
-        let comment_ok = version_re.is_match(trailing);
-
-        if !sha_ok || !comment_ok {
-            let reason = if !sha_ok {
-                format!("`{ref_part}` is not a 40-char commit SHA")
-            } else {
-                format!("trailing comment must be `# v1.2.3` or `# 1.87.0`, got `{trailing}`")
-            };
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: file.clone(),
-                line: line_num,
-                message: format!(
-                    "{file}:{line_num}: `uses: {uses_value}` — {reason} \
-                    (pin with `owner/repo@<40-char-sha> # v1.2.3`)"
-                ),
-                import: None,
-                target: None,
-            });
+        if let Some(finding) =
+            yaml_uses::unpinned_finding(&file, line_num, uses_value, sha_re, version_re, trailing)
+        {
+            findings.push(finding);
         }
     }
 
+    yaml_uses::append_parsed_uses(
+        content,
+        &file,
+        sha_re,
+        version_re,
+        &seen_lines,
+        &mut findings,
+    );
+    findings.sort_by(|left, right| {
+        left.line
+            .cmp(&right.line)
+            .then(left.message.cmp(&right.message))
+    });
     findings
 }
 

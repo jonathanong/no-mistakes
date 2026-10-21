@@ -488,6 +488,7 @@ fn saved_fixtures_match_allowed_flagged_allowlist_and_suppression() {
             "env.FOO",
             "github.actor",
             "github.actor",
+            "github.actor",
             "github.event.head_commit.message",
             "github.event.issue.title",
             "github.ref",

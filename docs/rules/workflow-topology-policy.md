@@ -182,6 +182,12 @@ one source finding with `no-mistakes-disable-line workflow-topology-policy` or
 `no-mistakes-disable-file workflow-topology-policy` only for a whole-file
 exception such as a generated workflow.
 
+## Limitations
+
+A directory symlink is not followed. `uses: ./actions/link`, where
+`actions/link` is a symlink to `actions/real` and the undeclared secret exists
+only in `actions/real/action.yml`, is not a finding.
+
 ## Related rules
 
 [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks typecheck gates;

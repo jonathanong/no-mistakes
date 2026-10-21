@@ -1,0 +1,128 @@
+use super::{RuleFinding, RULE_ID};
+use regex::Regex;
+use serde_yaml::Value;
+use std::collections::BTreeSet;
+
+/// String `uses` values serde_yaml can see, including flow mappings, quoted
+/// keys, and values on the line after `uses:`. A parse failure leaves the
+/// line-scan findings untouched.
+pub(super) fn append_parsed_uses(
+    content: &str,
+    file: &str,
+    sha_re: &Regex,
+    version_re: &Regex,
+    seen_lines: &BTreeSet<usize>,
+    findings: &mut Vec<RuleFinding>,
+) {
+    let Ok(value) = serde_yaml::from_str::<Value>(content) else {
+        return;
+    };
+    let mut uses_values = Vec::new();
+    collect_uses(&value, &mut uses_values);
+    let lines: Vec<&str> = content.lines().collect();
+    let mut claimed = seen_lines.clone();
+    for uses_value in uses_values {
+        let Some(line_num) = claim_value_line(&lines, &mut claimed, &uses_value) else {
+            continue;
+        };
+        if exempt(&uses_value) {
+            continue;
+        }
+        let comment = version_comment(lines[line_num - 1]);
+        if let Some(finding) =
+            unpinned_finding(file, line_num, &uses_value, sha_re, version_re, comment)
+        {
+            findings.push(finding);
+        }
+    }
+}
+
+pub(super) fn exempt(uses_value: &str) -> bool {
+    uses_value.starts_with("./")
+        || uses_value.starts_with("../")
+        || uses_value.starts_with("docker://")
+}
+
+pub(super) fn unpinned_finding(
+    file: &str,
+    line_num: usize,
+    uses_value: &str,
+    sha_re: &Regex,
+    version_re: &Regex,
+    comment: &str,
+) -> Option<RuleFinding> {
+    let ref_part = uses_value.rsplit_once('@').map_or("", |(_, part)| part);
+    let sha_ok = sha_re.is_match(ref_part);
+    let comment_ok = version_re.is_match(comment);
+    if sha_ok && comment_ok {
+        return None;
+    }
+    let reason = if !sha_ok {
+        format!("`{ref_part}` is not a 40-char commit SHA")
+    } else {
+        format!("trailing comment must be `# v1.2.3` or `# 1.87.0`, got `{comment}`")
+    };
+    Some(RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line: line_num,
+        message: format!(
+            "{file}:{line_num}: `uses: {uses_value}` — {reason} \
+             (pin with `owner/repo@<40-char-sha> # v1.2.3`)"
+        ),
+        import: None,
+        target: None,
+    })
+}
+
+fn claim_value_line(lines: &[&str], claimed: &mut BTreeSet<usize>, value: &str) -> Option<usize> {
+    for (index, line) in lines.iter().enumerate() {
+        let line_num = index + 1;
+        if claimed.contains(&line_num) || !line.contains(value) {
+            continue;
+        }
+        claimed.insert(line_num);
+        return Some(line_num);
+    }
+    None
+}
+
+/// Version comment on the line that contains the value text, not a bare `uses:`.
+fn version_comment(line: &str) -> &str {
+    let mut quote = None;
+    for (index, ch) in line.char_indices() {
+        if let Some(active) = quote {
+            if ch == active {
+                quote = None;
+            }
+            continue;
+        }
+        match ch {
+            '"' | '\'' => quote = Some(ch),
+            '#' => return line[index..].trim(),
+            _ => {}
+        }
+    }
+    ""
+}
+
+fn collect_uses(value: &Value, out: &mut Vec<String>) {
+    match value {
+        Value::Mapping(mapping) => {
+            for (key, child) in mapping {
+                if key.as_str() == Some("uses") {
+                    if let Some(text) = child.as_str() {
+                        out.push(text.to_owned());
+                    }
+                }
+                collect_uses(child, out);
+            }
+        }
+        Value::Sequence(items) => {
+            for item in items {
+                collect_uses(item, out);
+            }
+        }
+        _ => {}
+    }
+}

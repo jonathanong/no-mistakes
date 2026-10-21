@@ -351,3 +351,46 @@ fn uses_line_not_matching_regex_skipped() {
     let findings = run_on_workflow("      # uses: some comment reference\n");
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+fn check_yaml_shape(name: &str) -> Vec<RuleFinding> {
+    let root = fixture("yaml-shapes");
+    let config = config_with_options("{}");
+    let files = vec![root.join(".github").join("workflows").join(name)];
+    check_with_files(&root, &config, &files).unwrap()
+}
+
+fn lines_of(findings: &[RuleFinding]) -> Vec<usize> {
+    findings.iter().map(|finding| finding.line).collect()
+}
+
+#[test]
+fn yaml_flow_quoted_and_next_line_uses_are_checked() {
+    // The tag on the last line of flow-pass proves the document parsed, so the
+    // pinned, local, parent, and Docker flow entries were judged, not skipped.
+    let flow = check_yaml_shape("flow-fail.yml");
+    assert_eq!(lines_of(&flow), vec![1], "{flow:?}");
+    assert!(flow[0].message.contains("actions/checkout@v4"));
+    assert!(flow[0].message.contains("not a 40-char commit SHA"));
+
+    let next_line = check_yaml_shape("next-line-fail.yml");
+    assert_eq!(lines_of(&next_line), vec![2], "{next_line:?}");
+    assert!(next_line[0].message.contains("actions/checkout@v4"));
+
+    let quoted = check_yaml_shape("quoted-key-fail.yml");
+    assert_eq!(lines_of(&quoted), vec![1], "{quoted:?}");
+    assert!(quoted[0].message.contains("not a 40-char commit SHA"));
+
+    let passed = check_yaml_shape("flow-pass.yml");
+    assert_eq!(lines_of(&passed), vec![8], "{passed:?}");
+    assert!(passed[0].message.contains("actions/checkout@v4"));
+    assert!(!passed[0].message.contains("de0fac2e"));
+
+    let next_pass = check_yaml_shape("next-line-pass.yml");
+    assert_eq!(lines_of(&next_pass), vec![3], "{next_pass:?}");
+
+    let multi = check_yaml_shape("multi-doc-fail.yml");
+    assert_eq!(lines_of(&multi), vec![1, 3], "{multi:?}");
+
+    let dedup = check_yaml_shape("dedup-fail.yml");
+    assert_eq!(lines_of(&dedup), vec![1, 2], "{dedup:?}");
+}
