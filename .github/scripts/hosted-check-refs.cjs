@@ -61,6 +61,19 @@ function githubApi(endpoint) {
   return JSON.parse(result.stdout);
 }
 
+function sourceSummary(refs) {
+  return [
+    `Candidate: main \`${refs.candidate.commit}\`.`,
+    `Baseline: release [${refs.baseline.release.tag}](${refs.baseline.release.url}) \`${refs.baseline.commit}\`.`,
+    ...(refs.baseline.commit === refs.candidate.commit
+      ? [
+          "> **Warning:** baseline and candidate resolve to the same commit; this run measures variance, not a change between versions. Absolute budgets still apply.",
+        ]
+      : []),
+    "",
+  ].join("\n\n");
+}
+
 if (require.main === module) {
   const [compiler, output] = process.argv.slice(2);
   const refs = resolveRefs(
@@ -74,6 +87,8 @@ if (require.main === module) {
     appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${refs[key].commit}\n`);
   }
   appendFileSync(process.env.GITHUB_OUTPUT, `compiler=${refs.compiler}\n`);
+  if (process.env.GITHUB_STEP_SUMMARY)
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, sourceSummary(refs));
 }
 
-module.exports = { resolveRefs, validateCompiler, commitIdentity };
+module.exports = { resolveRefs, validateCompiler, commitIdentity, sourceSummary };

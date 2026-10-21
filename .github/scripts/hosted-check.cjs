@@ -21,7 +21,11 @@ const {
   aggregate,
   summarize,
 } = require("./hosted-check-metrics.cjs");
-const { replaceNative, measurementEnvironment } = require("./hosted-check-runtime.cjs");
+const {
+  replaceNative,
+  measurementEnvironment,
+  reportedSample,
+} = require("./hosted-check-runtime.cjs");
 const { artifactBuilds } = require("./hosted-check-provenance.cjs");
 
 function measure(fixture, artifact, output, sampleNumber, expectedTree) {
@@ -96,7 +100,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         closeSync(stderr);
       }
       if (result.error) throw result.error;
-      const sample = {
+      const sample = reportedSample({
         ...parseTime(readFileSync(`${prefix}.time`, "utf8"), result.status),
         variant,
         jobs,
@@ -118,7 +122,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         signal: result.signal,
         processExit: result.status,
         deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
-      };
+      });
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
       console.log(JSON.stringify(sample));
       if (variant === "candidate" && !successful(sample)) failed = true;

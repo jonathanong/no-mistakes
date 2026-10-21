@@ -5,6 +5,7 @@ const {
   CHECK_ARGS,
   COLLECTION_DEADLINE_SECONDS,
   successful,
+  resourceAccountingComplete,
 } = require("./hosted-check-runtime.cjs");
 const { readFileSync, readdirSync, writeFileSync } = require("node:fs");
 const { join } = require("node:path");
@@ -42,14 +43,7 @@ function aggregate(samples) {
   const sorted = samples.map((sample) => sample.elapsed).sort((a, b) => a - b);
   // Timeout/signal accounting can omit descendants the wrapper never waited for.
   // A completed nonzero check still has valid resources, despite being a failure.
-  const resources = samples.filter(
-    (sample) =>
-      Number.isInteger(sample.exit) &&
-      sample.exit >= 0 &&
-      sample.exit !== 124 &&
-      sample.exit !== 137 &&
-      !sample.signal,
-  );
+  const resources = samples.filter(resourceAccountingComplete);
   return {
     n: samples.length,
     passed: samples.filter(successful).length,

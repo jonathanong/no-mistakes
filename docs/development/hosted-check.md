@@ -14,6 +14,11 @@ and carried through the artifacts. A dispatch selects the workflow harness, not
 an alternative candidate or baseline. A pinned analyzer ref or another build of
 `main` is not a release baseline. The release tag may legitimately point to the
 same commit as `main`; provenance must still identify the actual release tag.
+The summary warns when those commits match: that run measures variance and
+absolute budgets, not a version change. GitHub's
+[`releases/latest`](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)
+orders published stable releases by creation date (`created_at`, the release
+commit's date), not semantic version precedence.
 
 Both variants are built from source with the same resolved Rust compiler,
 production release profile, default features (including Mermaid), fat LTO and
@@ -23,6 +28,13 @@ the production phase removes the temporary analyzer artifacts before building
 the real sources. Source identities, build settings and binary hashes accompany
 both binaries. Cargo targets live outside the checkout, with incremental
 compilation disabled.
+
+Measurement uses standard four-core, 16-GB Linux hosted VMs, matching the
+calibration's CPU/RSS population; the one-core `ubuntu-slim` runner would change
+that population. See [runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+Builds use `ubuntu-22.04` so their older glibc requirement remains compatible
+with the newer `ubuntu-latest` measurement image. Record image versions with
+every sample and review calibration when that image or hardware changes.
 
 ## Workload
 
@@ -100,6 +112,23 @@ to measure today's `main`. Intentional workload or performance changes require
 new reviewed observations; the workflow never automatically widens its budgets.
 Here `auto` covers four available workers, not a 24-worker machine.
 
+### Recalibrating frozen budgets
+
+Recalibrate after an intentional workload, analyzer, compiler, runner-image or
+hardware change. Also review tighter limits when proposals stay well below the
+frozen budgets across several healthy nightly runs. First establish that the
+candidate is healthy; never adopt a regression or a failed/censored sample as
+the new normal.
+
+Collect six complete fresh pairs per cohort and worker count with the documented
+production builds and runner population. Review multiple runs for variance and
+retain their source, environment and raw-sample evidence. Update
+`hosted-check-calibration.json` with those observations and provenance; use
+`calibratedBudget` and the run's `proposed-budgets.json` to derive the limits and
+relative tolerances. Review changes to `hosted-check-budgets.json`, the table
+above and the margin rationale together in a PR. Validate the revised limits
+against healthy runs and the deliberate-slowdown regression tests before landing.
+
 ## Failures and retained evidence
 
 The 600-second collection deadline is separate from the budgets. A timeout sends
@@ -109,7 +138,10 @@ measurements fail the gate, including calibration mode. A failing baseline never
 excuses a candidate failure.
 
 Timeout or signal resource counters are censored: exclude them from resource maxima,
-calibration and ratios. When a release baseline is censored, report that its
+calibration and ratios. Per-sample JSON/logs label their CPU and RSS as
+`n/a (killed)` with null counters: the launcher's tiny counters can omit a busy
+analyzer it never reaped. Original GNU time counters remain in `.time` artifacts.
+When a release baseline is censored, report that its
 relative comparison is unavailable and still enforce every absolute candidate
 budget. This permits a repaired `main` to pass against a stalled release while
 preventing that release from normalizing another regression.
