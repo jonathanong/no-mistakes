@@ -2,135 +2,238 @@ name: Hosted full-check performance
 
 on:
   schedule:
-    - cron: "23 8 * * 1"
-  pull_request:
-    paths:
-      - ".github/workflows/hosted-check.yml"
-      - ".github/scripts/hosted-check*.cjs"
-      - ".github/scripts/hosted-check-budgets.json"
-      - "tests/js/hosted-check.test.js"
+    - cron: "23 8 * * *"
   workflow_dispatch:
-    inputs:
-      candidateRef:
-        description: "Exact 40-character candidate source commit"
-        required: false
-      calibrate:
-        description: "Record variance and proposed budgets without enforcing stored limits"
-        type: boolean
-        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: hosted-check-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: hosted-check-main
+  cancel-in-progress: false
+
+env:
+  CARGO_PROFILE_RELEASE_LTO: fat
+  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
+  CARGO_BUILD_JOBS: "1"
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+  NO_MISTAKES_BUILD_NAPI: "1"
 
 jobs:
-  build:
-    name: Build production candidate CLI
-    runs-on: ubuntu-22.04
-    timeout-minutes: 80
-    env:
-      CANDIDATE_REF: ${{ inputs.candidateRef || github.event.pull_request.head.sha || github.sha }}
-      CARGO_PROFILE_RELEASE_LTO: fat
-      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
-      CARGO_BUILD_JOBS: "1"
-      CARGO_TERM_COLOR: always
-      RUSTFLAGS: "-D warnings"
+  resolve:
+    name: Resolve main and latest stable release once
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      candidate: ${{ steps.refs.outputs.candidate }}
+      baseline: ${{ steps.refs.outputs.baseline }}
+      compiler: ${{ steps.refs.outputs.compiler }}
     steps:
-      - name: Validate exact source pin
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ "$CANDIDATE_REF" =~ ^[0-9a-f]{40}$ ]]
-
-      - name: Checkout candidate source
-        timeout-minutes: 5
+      - name: Checkout immutable measurement harness
+        timeout-minutes: 3
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.CANDIDATE_REF }}
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
-      - name: Install production Rust compiler
+      - name: Resolve one production stable compiler
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
-          targets: x86_64-unknown-linux-gnu
 
-      - name: Cache production build
-        timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
-        with:
-          prefix-key: hosted-full-check-production
-          shared-key: release-x86_64-unknown-linux-gnu
-          cache-bin: "false"
-
-      - name: Build with official x86 release flags and default features
-        timeout-minutes: 60
+      - name: Resolve immutable main and latest release source identities
+        id: refs
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOSTED_HARNESS_COMMIT: ${{ github.workflow_sha }}
         shell: bash
         run: |
           set -euo pipefail
-          # Keep fat LTO and Mermaid: swap protects the cold production link.
+          compiler="$(rustc --version | cut -d' ' -f2)"
+          node .github/scripts/hosted-check-refs.cjs "$compiler" refs.json
+
+      - name: Retain resolved sources and compiler
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: hosted-source-refs
+          path: refs.json
+          if-no-files-found: error
+
+  dependencies:
+    name: Prepare production dependencies (${{ matrix.variant }})
+    needs: resolve
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: baseline
+            commit: ${{ needs.resolve.outputs.baseline }}
+          - variant: candidate
+            commit: ${{ needs.resolve.outputs.candidate }}
+    env:
+      RUSTUP_TOOLCHAIN: ${{ needs.resolve.outputs.compiler }}
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../no-mistakes-hosted-target
+    steps:
+      - name: Checkout immutable build harness
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Checkout resolved source variant
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.commit }}
+          path: source
+          persist-credentials: false
+
+      - name: Install the resolved compiler
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: ${{ needs.resolve.outputs.compiler }}
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Cache Rust registry without assuming a warm target
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          prefix-key: hosted-source-production
+          shared-key: registry
+          workspaces: source
+          cache-targets: "false"
+          cache-bin: "false"
+
+      - name: Download resolved source identities
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: hosted-source-refs
+          path: metadata
+
+      - name: Compile the exact production dependency graph
+        timeout-minutes: 24
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: node harness/.github/scripts/hosted-check-build.cjs dependencies source artifact metadata/refs.json "$VARIANT"
+
+      - name: Archive external dependency target for the next phase
+        timeout-minutes: 3
+        run: tar --zstd -cf dependency-target.tar.zst -C "$CARGO_TARGET_DIR" .
+
+      - name: Upload dependency phase output
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: hosted-dependencies-${{ matrix.variant }}
+          path: dependency-target.tar.zst
+          compression-level: 0
+          if-no-files-found: error
+
+  production:
+    name: Build real production CLI (${{ matrix.variant }})
+    needs: [resolve, dependencies]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: baseline
+            commit: ${{ needs.resolve.outputs.baseline }}
+          - variant: candidate
+            commit: ${{ needs.resolve.outputs.candidate }}
+    env:
+      RUSTUP_TOOLCHAIN: ${{ needs.resolve.outputs.compiler }}
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../no-mistakes-hosted-target
+    steps:
+      - name: Checkout immutable build harness
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Checkout real resolved source variant
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.commit }}
+          path: source
+          persist-credentials: false
+
+      - name: Install the same resolved compiler
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: ${{ needs.resolve.outputs.compiler }}
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Restore Rust registry
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          prefix-key: hosted-source-production
+          shared-key: registry
+          workspaces: source
+          cache-targets: "false"
+          cache-bin: "false"
+          save-if: "false"
+
+      - name: Download resolved source identities
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: hosted-source-refs
+          path: metadata
+
+      - name: Download the completed dependency phase
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: hosted-dependencies-${{ matrix.variant }}
+          path: prepared-dependencies
+
+      - name: Restore external target and protect the production link
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$CARGO_TARGET_DIR"
+          tar --zstd -xf prepared-dependencies/dependency-target.tar.zst -C "$CARGO_TARGET_DIR"
           sudo fallocate -l 8G /mnt/no-mistakes-hosted.swap
           sudo chmod 600 /mnt/no-mistakes-hosted.swap
           sudo mkswap /mnt/no-mistakes-hosted.swap
           sudo swapon /mnt/no-mistakes-hosted.swap
-          mkdir -p production-cli
-          python - <<'PY'
-          from pathlib import Path
-          import json, os, subprocess
-          def run(*args):
-              return subprocess.check_output(args, text=True).strip()
-          manifest = Path('crates/no-mistakes/Cargo.toml')
-          source = manifest.read_text()
-          original = 'crate-type = ["rlib"]'
-          if original not in source:
-              raise SystemExit('unexpected production crate-type')
-          provenance = {
-              'commit': run('git', 'rev-parse', 'HEAD'),
-              'tree': run('git', 'rev-parse', 'HEAD^{tree}'),
-              'rustc': run('rustc', '-Vv'), 'cargo': run('cargo', '-V'),
-              'sourceVersion': run('git', 'show', 'HEAD:crates/no-mistakes/Cargo.toml'),
-              'command': 'NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes',
-              'features': 'default (including mermaid-validation)',
-              'lto': 'fat', 'codegenUnits': 1, 'buildJobs': 1,
-              'rustflags': os.environ.get('RUSTFLAGS', ''),
-              'imageOS': os.environ.get('ImageOS'), 'imageVersion': os.environ.get('ImageVersion'),
-              'releaseManifestPatch': 'rlib plus cdylib, identical to release.yml',
-              'baselineSourceCommit': '4dd9fcc2e74d45d2a84ff12ceec05d37c3e286ac',
-              'baselineCompiler': 'published npm binary; build compiler not independently established',
-          }
-          Path('production-cli/provenance.json').write_text(json.dumps(provenance, indent=2))
-          manifest.write_text(source.replace(original, 'crate-type = ["rlib", "cdylib"]', 1))
-          PY
-          NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes
-          cp target/x86_64-unknown-linux-gnu/release/no-mistakes production-cli/no-mistakes
-          # Probe the runtime CPU policy with the exact num_cpus dependency.
-          cat > /tmp/hosted-cpu-probe.rs <<'RS'
-          fn main() { println!("{}", num_cpus::get()); }
-          RS
-          cpu_library=$(find target/x86_64-unknown-linux-gnu/release/deps -name 'libnum_cpus-*.rlib' -print -quit)
-          test -n "$cpu_library"
-          rustc /tmp/hosted-cpu-probe.rs --edition=2021 --target x86_64-unknown-linux-gnu \
-            -L dependency=target/x86_64-unknown-linux-gnu/release/deps \
-            --extern "num_cpus=$cpu_library" -o production-cli/cpu-probe
-          sha256sum production-cli/no-mistakes > production-cli/SHA256SUMS
-          production-cli/no-mistakes --version
 
-      - name: Upload pinned production CLI
-        timeout-minutes: 5
+      - name: Rebuild real package with default features and official release flags
+        timeout-minutes: 24
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: node harness/.github/scripts/hosted-check-build.cjs production source "artifact/$VARIANT" metadata/refs.json "$VARIANT"
+
+      - name: Upload source-built production CLI and provenance
+        timeout-minutes: 3
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: hosted-production-cli
-          path: production-cli/
+          name: hosted-production-${{ matrix.variant }}
+          path: artifact/
           if-no-files-found: error
 
   sample:
     name: ${{ matrix.fixture.name }} jobs ${{ matrix.jobs }} pair ${{ matrix.sample }}
-    needs: build
+    needs: production
     runs-on: ubuntu-latest
     # 22 minutes for two capped commands, plus setup and artifact upload.
     timeout-minutes: 30
@@ -153,6 +256,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: harness
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
       - name: Checkout exact public consumer tree
@@ -191,12 +295,13 @@ jobs:
           cache: false
           working_directory: fixture
 
-      - name: Download candidate CLI
+      - name: Download both source-built production CLIs
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: hosted-production-cli
-          path: production-cli
+          pattern: hosted-production-*
+          path: artifact
+          merge-multiple: true
 
       - name: Measure both exact public commands with a 600-second collection cap
         # Two 600-second commands + two 5-second kill grace periods + overhead.
@@ -208,8 +313,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x production-cli/no-mistakes production-cli/cpu-probe
-          node harness/.github/scripts/hosted-check.cjs measure fixture production-cli measurements "$SAMPLE_NUMBER" "$EXPECTED_TREE"
+          chmod +x artifact/{baseline,candidate}/{no-mistakes,cpu-probe}
+          node harness/.github/scripts/hosted-check.cjs measure fixture artifact measurements "$SAMPLE_NUMBER" "$EXPECTED_TREE"
 
       - name: Upload measurements, provenance, and raw logs
         if: ${{ always() }}
@@ -228,7 +333,7 @@ jobs:
   summarize:
     name: Summarize hosted samples
     if: ${{ always() }}
-    needs: [build, sample]
+    needs: [resolve, dependencies, production, sample]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -236,6 +341,7 @@ jobs:
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
       - name: Download measurements
@@ -247,8 +353,6 @@ jobs:
 
       - name: Report max and empirical p95; enforce complete candidate results
         timeout-minutes: 1
-        env:
-          HOSTED_CHECK_CALIBRATE: ${{ inputs.calibrate || false }}
         run: node .github/scripts/hosted-check.cjs summarize measurements
 
       - name: Upload summary
