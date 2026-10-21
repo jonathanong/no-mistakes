@@ -541,4 +541,17 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     let encoded = check_yaml_shape("quoted-escape-key-fail.yml");
     assert_eq!(lines_of(&encoded), vec![2], "{encoded:?}");
     assert!(encoded[0].message.contains("actions/checkout@v4"));
+
+    // `foo#bar` is one plain scalar. The unpinned action after it still fails.
+    let hashed = check_yaml_shape("plain-hash-fail.yml");
+    assert_eq!(lines_of(&hashed), vec![2], "{hashed:?}");
+    assert!(hashed[0].message.contains("actions/checkout@v4"));
+
+    // The header comment covers the pinned block value. The bare header does not.
+    let chomp = check_yaml_shape("block-chomp-comment-fail.yml");
+    assert_eq!(lines_of(&chomp), vec![6, 9], "{chomp:?}");
+    assert!(chomp[0].message.contains("trailing comment"));
+    assert!(chomp[0].message.contains("de0fac2e"));
+    assert!(chomp[1].message.contains("actions/checkout@v4"));
+    assert!(!chomp[1].message.contains("trailing comment"));
 }

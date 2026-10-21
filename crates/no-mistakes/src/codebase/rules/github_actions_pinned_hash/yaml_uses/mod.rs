@@ -64,7 +64,11 @@ pub(super) fn append_parsed_uses(
         if exempt(uses_value) {
             continue;
         }
-        let comment = version_comment(source_lines[line_num - 1]);
+        let comment = version_comment(lines::comment_at(
+            &classified.block_scalar,
+            &source_lines,
+            line_num,
+        ));
         if let Some(finding) =
             unpinned_finding(file, line_num, uses_value, sha_re, version_re, comment)
         {

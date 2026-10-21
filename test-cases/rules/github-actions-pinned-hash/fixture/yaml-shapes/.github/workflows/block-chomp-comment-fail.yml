@@ -1,0 +1,9 @@
+# The version comment on the block header covers the pinned value.
+- uses: >- # v6.0.2
+    actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+# The same shape without a header comment still needs one.
+- uses: >-
+    actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+# A header comment does not pin a tag.
+- uses: >- # v6.0.2
+    actions/checkout@v4

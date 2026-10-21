@@ -1,0 +1,2 @@
+# An unseparated hash is part of the plain name, not a comment.
+- { name: foo#bar, uses: actions/checkout@v4 }

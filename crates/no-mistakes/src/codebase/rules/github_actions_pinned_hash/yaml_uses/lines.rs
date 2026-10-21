@@ -84,6 +84,18 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
     }
 }
 
+/// Version-comment line for an action. A block value's comment is on the header.
+pub(super) fn comment_at<'a>(block_scalar: &[bool], lines: &[&'a str], line_num: usize) -> &'a str {
+    let mut index = line_num.saturating_sub(1);
+    if block_scalar.get(index).copied().unwrap_or(false) {
+        while index > 0 && block_scalar[index - 1] {
+            index -= 1;
+        }
+        index = index.saturating_sub(1);
+    }
+    lines.get(index).copied().unwrap_or("")
+}
+
 fn bare_uses_key(line: &str) -> bool {
     let trimmed = line.trim();
     let trimmed = trimmed.strip_prefix('-').map(str::trim).unwrap_or(trimmed);

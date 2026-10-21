@@ -19,6 +19,8 @@ pub(super) struct Carry {
     flow_input: Vec<bool>,
     value_key_is_input: bool,
     key_gap: bool,
+    /// `#` starts a comment only after whitespace, not inside `foo#bar`.
+    comment_break: bool,
     skip_anchor: bool,
     alias: bool,
     /// `&name` whose mapping is being read so a later step alias can be judged.
@@ -63,6 +65,9 @@ impl Carry {
         let starts_in_flow_input = self.in_flow_input();
         if self.quote.is_none() && self.flow_depth == 0 {
             self.place.begin_line(line);
+        }
+        if self.quote.is_none() {
+            self.comment_break = true;
         }
         let mut hits = 0usize;
         for ch in line.chars() {
@@ -125,6 +130,7 @@ impl Carry {
         self.escape_hex = 0;
         self.escape_value = 0;
         self.key_gap = false;
+        self.comment_break = false;
         self.reading_anchor = false;
         self.step_alias = false;
         self.alias_name.clear();

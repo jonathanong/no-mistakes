@@ -133,6 +133,26 @@ fn commented_block_header_is_not_an_action_line() {
 }
 
 #[test]
+fn hash_inside_a_plain_scalar_is_not_a_comment() {
+    let line = "- { name: foo#bar, uses: actions/checkout@v4 }";
+    assert_eq!(action_uses_lines(&[line]).lines, vec![1]);
+    let comment = "- { name: foo #bar, uses: actions/checkout@v4 }";
+    assert!(action_uses_lines(&[comment]).lines.is_empty());
+}
+
+#[test]
+fn block_header_keeps_the_version_comment_line() {
+    let lines = ["- uses: >- # v6.0.2", "    actions/checkout@sha"];
+    let classified = action_uses_lines(&lines);
+    assert_eq!(classified.lines, vec![2], "{classified:?}");
+    assert!(classified.block_scalar[1]);
+    assert_eq!(
+        super::comment_at(&classified.block_scalar, &lines, 2),
+        "- uses: >- # v6.0.2"
+    );
+}
+
+#[test]
 fn unicode_escape_in_the_key_is_uses() {
     let line = r#"- { "us\u0065s": actions/checkout@v4 }"#;
     assert_eq!(action_uses_lines(&[line]).lines, vec![1]);

@@ -10,16 +10,19 @@ impl Carry {
             self.clear_anchor_watch();
         }
         if matches!(ch, '"' | '\'') {
+            self.comment_break = false;
             self.quote = Some(ch);
             if !self.after_colon {
                 self.token.clear();
             }
             return false;
         }
-        if ch == '#' {
+        // `foo#bar` keeps the hash. A comment needs whitespace before `#`.
+        if ch == '#' && self.comment_break {
             return true;
         }
         if self.consume_anchor(ch, hits) {
+            self.comment_break = ch.is_whitespace();
             return false;
         }
         if matches!(ch, '{' | '[') {
@@ -31,8 +34,10 @@ impl Carry {
             return false;
         }
         if let Some(stop) = self.consume_space(ch, hits) {
+            self.comment_break = true;
             return stop;
         }
+        self.comment_break = false;
         if ch == ':' && !self.after_colon {
             self.finish_key();
             return false;
