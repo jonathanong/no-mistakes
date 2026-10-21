@@ -64,9 +64,13 @@ impl Carry {
     }
 
     fn consume_quoted(&mut self, ch: char, active: char, hits: &mut usize) -> bool {
+        if self.escape_hex > 0 {
+            self.push_hex_digit(ch);
+            return false;
+        }
         if self.escape_quote {
             self.escape_quote = false;
-            self.push_quoted(ch);
+            self.begin_escape(ch);
             return false;
         }
         // `\"` stays inside the scalar, so a later `uses` is still a key.
@@ -95,7 +99,7 @@ impl Carry {
         false
     }
 
-    fn push_quoted(&mut self, ch: char) {
+    pub(super) fn push_quoted(&mut self, ch: char) {
         if self.after_colon {
             self.scalar.push(ch);
         } else {

@@ -133,6 +133,18 @@ fn commented_block_header_is_not_an_action_line() {
 }
 
 #[test]
+fn unicode_escape_in_the_key_is_uses() {
+    let line = r#"- { "us\u0065s": actions/checkout@v4 }"#;
+    assert_eq!(action_uses_lines(&[line]).lines, vec![1]);
+    let short = r#"- { "us\x65s": actions/checkout@v4 }"#;
+    assert_eq!(action_uses_lines(&[short]).lines, vec![1]);
+    let long = r#"- { "us\U00000065s": actions/checkout@v4 }"#;
+    assert_eq!(action_uses_lines(&[long]).lines, vec![1]);
+    let broken = r#"- { "us\u00zzs": actions/checkout@v4 }"#;
+    assert!(action_uses_lines(&[broken]).lines.is_empty());
+}
+
+#[test]
 fn space_before_colon_keeps_the_uses_key() {
     let line = "- uses : actions/checkout@v4";
     assert_eq!(action_uses_lines(&[line]).lines, vec![1]);

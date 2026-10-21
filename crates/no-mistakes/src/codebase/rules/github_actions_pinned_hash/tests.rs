@@ -536,4 +536,9 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert_eq!(lines_of(&alias_step), vec![8, 16], "{alias_step:?}");
     assert!(alias_step[0].message.contains("actions/checkout@v4"));
     assert!(alias_step[1].message.contains("actions/checkout@v3"));
+
+    // `\u0065` in the quoted key is `e`, so the unpinned action is still found.
+    let encoded = check_yaml_shape("quoted-escape-key-fail.yml");
+    assert_eq!(lines_of(&encoded), vec![2], "{encoded:?}");
+    assert!(encoded[0].message.contains("actions/checkout@v4"));
 }

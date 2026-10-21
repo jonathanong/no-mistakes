@@ -8,6 +8,9 @@ pub(super) struct Carry {
     quote: Option<char>,
     /// The previous character in a double-quoted scalar was `\`.
     escape_quote: bool,
+    /// Remaining hex digits of a `\x`, `\u`, or `\U` escape.
+    escape_hex: u8,
+    escape_value: u32,
     token: String,
     scalar: String,
     after_colon: bool,
@@ -119,6 +122,8 @@ impl Carry {
         self.alias = false;
         self.block_header = false;
         self.escape_quote = false;
+        self.escape_hex = 0;
+        self.escape_value = 0;
         self.key_gap = false;
         self.reading_anchor = false;
         self.step_alias = false;

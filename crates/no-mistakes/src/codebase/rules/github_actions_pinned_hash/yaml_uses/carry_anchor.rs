@@ -118,6 +118,40 @@ impl Carry {
         ch.is_whitespace()
     }
 
+    pub(super) fn begin_escape(&mut self, ch: char) {
+        let digits = match ch {
+            'x' => 2,
+            'u' => 4,
+            'U' => 8,
+            _ => {
+                // `\"` and `\\` stay inside the scalar as the escaped character.
+                self.push_quoted(ch);
+                return;
+            }
+        };
+        self.escape_hex = digits;
+        self.escape_value = 0;
+    }
+
+    pub(super) fn push_hex_digit(&mut self, ch: char) {
+        match ch.to_digit(16) {
+            Some(digit) => {
+                self.escape_value = self.escape_value.saturating_mul(16) + digit;
+                self.escape_hex -= 1;
+                if self.escape_hex == 0 {
+                    let decoded = char::from_u32(self.escape_value).unwrap_or('\u{FFFD}');
+                    self.push_quoted(decoded);
+                    self.escape_value = 0;
+                }
+            }
+            None => {
+                self.escape_hex = 0;
+                self.escape_value = 0;
+                self.push_quoted(ch);
+            }
+        }
+    }
+
     fn remember_anchor(&mut self) {
         let name = self.anchor_name.clone();
         if !self.anchors_with_uses.iter().any(|have| have == &name) {
