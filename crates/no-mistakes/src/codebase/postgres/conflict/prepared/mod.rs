@@ -175,7 +175,7 @@ fn recover_chunk(
             .all(|(index, _)| complete.get(index).copied().unwrap_or(false));
     if all_complete && !failed && !leftover {
         recovery.reliable.extend(local);
-    } else if has_conflict || failed || !local.is_empty() || leftover {
+    } else if has_conflict || failed {
         recovery.failure_overlaps_conflict = true;
     }
 }
