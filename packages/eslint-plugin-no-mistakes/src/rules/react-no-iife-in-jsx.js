@@ -52,24 +52,28 @@ function visit(node, callback, seen = new Set()) {
   }
 }
 
-module.exports = Object.assign(rule(
-  {
-    type: "suggestion",
-    docs: { description: "disallow immediately invoked functions inside JSX", recommended: false },
-    schema: [],
-    messages: { iife: "Avoid IIFEs in JSX; extract the logic into a variable or component." },
-  },
-  (context) => {
-    const suppressed = ruleSuppression(context, "react-no-iife-in-jsx");
-    return {
-      JSXExpressionContainer(node) {
-        visit(node.expression, (child) => {
-          if (isIife(child) && !suppressed(child))
-            context.report({ node: child, messageId: "iife" });
-        });
+module.exports = Object.assign(
+  rule(
+    {
+      type: "suggestion",
+      docs: {
+        description: "disallow immediately invoked functions inside JSX",
+        recommended: false,
       },
-    };
-  },
-),
-{ __test: { isFunctionCallee, isIife } },
+      schema: [],
+      messages: { iife: "Avoid IIFEs in JSX; extract the logic into a variable or component." },
+    },
+    (context) => {
+      const suppressed = ruleSuppression(context, "react-no-iife-in-jsx");
+      return {
+        JSXExpressionContainer(node) {
+          visit(node.expression, (child) => {
+            if (isIife(child) && !suppressed(child))
+              context.report({ node: child, messageId: "iife" });
+          });
+        },
+      };
+    },
+  ),
+  { __test: { isFunctionCallee, isIife } },
 );

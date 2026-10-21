@@ -113,38 +113,39 @@ function isMockingCall(node, context) {
   return mockMember(node.callee, context);
 }
 
-module.exports = Object.assign(rule(
-  {
-    type: "problem",
-    docs: {
-      description: "require .mock.test filenames for module-mocking tests",
-      recommended: false,
-    },
-    schema: [],
-    messages: {
-      needsMock:
-        "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
-      unnecessaryMock:
-        "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
-    },
-  },
-  (context) => {
-    let usesMocking = false;
-    return {
-      CallExpression(node) {
-        if (isMockingCall(node, context)) usesMocking = true;
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: {
+        description: "require .mock.test filenames for module-mocking tests",
+        recommended: false,
       },
-      "Program:exit"(node) {
-        if (!isTestFile(context.filename)) return;
-        if (usesMocking && !isMockTestFile(context.filename)) {
-          context.report({ node, messageId: "needsMock" });
-        }
-        if (!usesMocking && isMockTestFile(context.filename)) {
-          context.report({ node, messageId: "unnecessaryMock" });
-        }
+      schema: [],
+      messages: {
+        needsMock:
+          "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+        unnecessaryMock:
+          "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
       },
-    };
-  },
-),
-{ __test: { mockMember, propertyName } },
+    },
+    (context) => {
+      let usesMocking = false;
+      return {
+        CallExpression(node) {
+          if (isMockingCall(node, context)) usesMocking = true;
+        },
+        "Program:exit"(node) {
+          if (!isTestFile(context.filename)) return;
+          if (usesMocking && !isMockTestFile(context.filename)) {
+            context.report({ node, messageId: "needsMock" });
+          }
+          if (!usesMocking && isMockTestFile(context.filename)) {
+            context.report({ node, messageId: "unnecessaryMock" });
+          }
+        },
+      };
+    },
+  ),
+  { __test: { mockMember, propertyName } },
 );

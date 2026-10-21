@@ -107,51 +107,52 @@ function isPromiseResolve(node) {
   );
 }
 
-module.exports = Object.assign(rule(
-  {
-    type: "problem",
-    docs: { description: "disallow React.use(Promise.resolve(...))", recommended: false },
-    schema: [],
-    messages: {
-      resolve: "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: { description: "disallow React.use(Promise.resolve(...))", recommended: false },
+      schema: [],
+      messages: {
+        resolve: "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+      },
     },
+    (context) => {
+      const suppressed = ruleSuppression(context, "react-no-use-promise-resolve");
+      const useNames = new Set();
+      return {
+        ImportDeclaration(node) {
+          if (node.source.value !== "react") return;
+          for (const specifier of node.specifiers) {
+            if (specifier.type !== "ImportSpecifier") continue;
+            if (staticName(specifier.imported, false) === "use") useNames.add(specifier.local.name);
+          }
+        },
+        CallExpression(node) {
+          const forwarded = unwrap(node.callee);
+          const forwarding =
+            forwarded?.type === "MemberExpression" &&
+            !forwarded.computed &&
+            (staticName(forwarded.property, false) === "call" ||
+              staticName(forwarded.property, false) === "apply");
+          const resolvedArgument = forwarding
+            ? staticName(forwarded.property, false) === "apply"
+              ? node.arguments[1]?.elements?.[0]
+              : node.arguments[1]
+            : node.arguments[0];
+          if (
+            suppressed(node) ||
+            !isReactUse(node.callee, context, useNames) ||
+            !isPromiseResolve(resolvedArgument)
+          ) {
+            return;
+          }
+          context.report({ node, messageId: "resolve" });
+        },
+      };
+    },
+  ),
+  {
+    __test: { isPromiseResolve, isReactNamespace, isReactUse, patternKey, staticName },
   },
-  (context) => {
-    const suppressed = ruleSuppression(context, "react-no-use-promise-resolve");
-    const useNames = new Set();
-    return {
-      ImportDeclaration(node) {
-        if (node.source.value !== "react") return;
-        for (const specifier of node.specifiers) {
-          if (specifier.type !== "ImportSpecifier") continue;
-          if (staticName(specifier.imported, false) === "use") useNames.add(specifier.local.name);
-        }
-      },
-      CallExpression(node) {
-        const forwarded = unwrap(node.callee);
-        const forwarding =
-          forwarded?.type === "MemberExpression" &&
-          !forwarded.computed &&
-          (staticName(forwarded.property, false) === "call" ||
-            staticName(forwarded.property, false) === "apply");
-        const resolvedArgument = forwarding
-          ? staticName(forwarded.property, false) === "apply"
-            ? node.arguments[1]?.elements?.[0]
-            : node.arguments[1]
-          : node.arguments[0];
-        if (
-          suppressed(node) ||
-          !isReactUse(node.callee, context, useNames) ||
-          !isPromiseResolve(resolvedArgument)
-        ) {
-          return;
-        }
-        context.report({ node, messageId: "resolve" });
-      },
-    };
-  },
-),
-{
-  __test: { isPromiseResolve, isReactNamespace, isReactUse, patternKey, staticName },
-},
 );

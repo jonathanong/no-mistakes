@@ -59,34 +59,35 @@ function isTestImport(statement) {
   return statement.type === "ImportDeclaration" && isTestImportSource(statement.source?.value);
 }
 
-module.exports = Object.assign(rule(
-  {
-    type: "problem",
-    docs: {
-      description: "disallow aggregate test files that only import tests",
-      recommended: false,
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: {
+        description: "disallow aggregate test files that only import tests",
+        recommended: false,
+      },
+      schema: [],
+      messages: {
+        aggregate:
+          "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+      },
     },
-    schema: [],
-    messages: {
-      aggregate:
-        "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
-    },
-  },
-  (context) => ({
-    Program(node) {
-      const suppressed = ruleSuppression(context, "no-import-only-test-files");
-      if (!isTestFile(context.filename) || node.body.length === 0) return;
-      const statements = node.body.filter((statement) => statement.directive === undefined);
-      if (statements.length === 0) return;
-      if (
-        suppressed(node) ||
-        !statements.every((statement) => isTestImport(statement) || isTestRequire(statement))
-      ) {
-        return;
-      }
-      context.report({ node, messageId: "aggregate" });
-    },
-  }),
-),
-{ __test: { requireSource } },
+    (context) => ({
+      Program(node) {
+        const suppressed = ruleSuppression(context, "no-import-only-test-files");
+        if (!isTestFile(context.filename) || node.body.length === 0) return;
+        const statements = node.body.filter((statement) => statement.directive === undefined);
+        if (statements.length === 0) return;
+        if (
+          suppressed(node) ||
+          !statements.every((statement) => isTestImport(statement) || isTestRequire(statement))
+        ) {
+          return;
+        }
+        context.report({ node, messageId: "aggregate" });
+      },
+    }),
+  ),
+  { __test: { requireSource } },
 );
