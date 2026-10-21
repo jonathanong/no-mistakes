@@ -104,7 +104,12 @@ function createMockAliases(context, methods) {
       const args = node.arguments ?? [];
       if (args.some((arg) => arg?.type === "SpreadElement")) return null;
       if (memberPropertyName(node.callee) === "call") {
-        return { factory: args[2], mock, specifierNode: args[1] };
+        return {
+          factory: args[2] ?? null,
+          forwarded: true,
+          mock,
+          specifierNode: args[1] ?? null,
+        };
       }
       const list = unwrapExpression(args[1]);
       if (
@@ -114,9 +119,10 @@ function createMockAliases(context, methods) {
         return null;
       }
       return {
-        factory: list?.type === "ArrayExpression" ? list.elements[1] : undefined,
+        factory: list?.type === "ArrayExpression" ? (list.elements[1] ?? null) : null,
+        forwarded: true,
         mock,
-        specifierNode: list?.type === "ArrayExpression" ? list.elements[0] : undefined,
+        specifierNode: list?.type === "ArrayExpression" ? (list.elements[0] ?? null) : null,
       };
     },
   };

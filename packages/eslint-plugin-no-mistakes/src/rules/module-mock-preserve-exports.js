@@ -85,7 +85,12 @@ module.exports = rule(
           return;
         }
         const alias = mockAliases.matchCall(node);
-        if (alias) reportMockCall(node, alias.mock, alias.specifierNode, alias.factory);
+        if (!alias) return;
+        if (alias.forwarded) {
+          reportMockCall(node, alias.mock, alias.specifierNode, alias.factory);
+          return;
+        }
+        reportMockCall(node, alias.mock);
       },
     };
   },

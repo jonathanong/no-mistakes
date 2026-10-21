@@ -293,6 +293,24 @@ describe("call-binding recall", () => {
       ),
       ["boundary", "boundary", "boundary"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/factory-less-alias.mjs"),
+        "module-mock-preserve-exports",
+        undefined,
+        "factory-less-alias.mjs",
+      ),
+      ["preserve"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/factory-less-alias.mjs"),
+        "module-mock-boundary",
+        undefined,
+        "factory-less-alias.mjs",
+      ),
+      ["boundary", "boundary", "boundary"],
+    );
     assert.equal(
       messages(
         fixture("no-global-fetch-outside-helper/recall.mjs"),

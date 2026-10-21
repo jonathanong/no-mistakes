@@ -123,7 +123,12 @@ module.exports = rule(
           return;
         }
         const alias = mockAliases.matchCall(node);
-        if (alias) reportIfDisallowed(node, alias.mock, alias.specifierNode, alias.factory);
+        if (!alias) return;
+        if (alias.forwarded) {
+          reportIfDisallowed(node, alias.mock, alias.specifierNode, alias.factory);
+          return;
+        }
+        reportIfDisallowed(node, alias.mock);
       },
       "Program:exit"(node) {
         for (const entry of tracker.stale()) {
