@@ -28,23 +28,30 @@ pub(super) fn manifest_nodes_with_sources(
                 sources,
             )
             .into_iter()
-            .map(|entry| Dependency {
-                workspace_name: alias::workspace_dependency_name_with_sources(
+            .map(|entry| {
+                let workspace_name = alias::workspace_dependency_name_with_sources(
                     &entry.name,
                     &entry.specifier,
                     &package.dir,
                     workspace,
                     sources,
                     &catalogs,
-                ),
-                resolved_name: alias::resolved_dependency_name_with_sources(
+                );
+                // `catalog:` is invisible to the specifier resolver. A link alias
+                // still has to be matchable as the package it names.
+                let resolved_name = alias::resolved_dependency_name_with_sources(
                     &entry.specifier,
                     &package.dir,
                     workspace,
                     sources,
-                ),
-                name: entry.name,
-                field: entry.field,
+                )
+                .or_else(|| workspace_name.clone());
+                Dependency {
+                    workspace_name,
+                    resolved_name,
+                    name: entry.name,
+                    field: entry.field,
+                }
             })
             .collect();
             (package.name.clone(), PackageNode { manifest, deps })

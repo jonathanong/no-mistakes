@@ -409,6 +409,36 @@ fn unreadable_package_include_is_a_finding_and_does_not_hide_packages() {
 }
 
 #[test]
+fn included_scope_does_not_mark_an_existing_outside_package_unmatched() {
+    let root = fixture_root("scoped-app");
+    let mut narrowed = config("packageRoots: [packages]\n");
+    narrowed.rules[0].include = vec!["packages/**".to_string(), "pnpm-workspace.yaml".to_string()];
+    let present = files_named(
+        &root,
+        &[
+            "pnpm-workspace.yaml",
+            "packages/api/package.json",
+            "apps/web/package.json",
+        ],
+    );
+    let findings = check_with_files(&root, &narrowed, &present).unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("apps/*")),
+        "{findings:?}"
+    );
+    let without_app = files_named(&root, &["pnpm-workspace.yaml", "packages/api/package.json"]);
+    let missing = check_with_files(&root, &narrowed, &without_app).unwrap();
+    assert!(
+        missing
+            .iter()
+            .any(|finding| finding.message.contains("apps/*")),
+        "{missing:?}"
+    );
+}
+
+#[test]
 fn invalid_workspace_globs_fail_the_check() {
     let root = fixture_root("invalid-glob");
     let error = check_with_files(

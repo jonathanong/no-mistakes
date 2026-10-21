@@ -52,7 +52,7 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, sources)
+            scan(root, &opts, &files, all_files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -64,6 +64,7 @@ fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     if opts.package_roots.is_empty() {
@@ -105,7 +106,9 @@ fn scan(
         .collect();
     let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
     let covered_workspace_dirs = covered_workspace_dirs(root, files, &workspace_globs)?;
-    for pattern in unmatched_patterns(&workspace_globs, &package_directories(root, files))? {
+    // Existence uses the unfiltered inventory. A narrowed include must not
+    // report a package that exists outside that include as unmatched.
+    for pattern in unmatched_patterns(&workspace_globs, &package_directories(root, all_files))? {
         findings.push(config_finding(
             &workspace_config_file(root, files),
             &format!("workspace pattern \"{pattern}\" does not correspond to a package directory"),

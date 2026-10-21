@@ -64,7 +64,7 @@ fn scan(
         .par_iter()
         .flat_map(
             |path| match path.file_name().and_then(|name| name.to_str()) {
-                Some("pnpm-workspace.yaml") => check_workspace(root, path, sources),
+                Some("pnpm-workspace.yaml") => check_workspace(root, path, files, sources),
                 Some("package.json") => check_package_json(root, path, sources),
                 _ => Vec::new(),
             },
@@ -75,6 +75,7 @@ fn scan(
 fn check_workspace(
     root: &Path,
     path: &Path,
+    files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let Ok(source) = sources.read_path(path) else {
@@ -92,7 +93,7 @@ fn check_workspace(
                 ));
             }
             findings.extend(included::included_override_findings(
-                root, path, &source, sources,
+                root, path, &source, sources, files,
             ));
             findings
         }

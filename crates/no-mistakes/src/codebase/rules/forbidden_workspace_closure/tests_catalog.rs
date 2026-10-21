@@ -59,6 +59,25 @@ fn catalog_workspace_protocol_reaches_the_forbidden_package() {
 }
 
 #[test]
+fn catalog_link_alias_matches_the_named_package() {
+    let root = fixture_root("catalog-link-alias");
+    let files = vec![
+        root.join("package.json"),
+        root.join("pnpm-workspace.yaml"),
+        root.join("packages/app/package.json"),
+        root.join("packages/secret/package.json"),
+    ];
+    let findings = check_with_files(&root, &config(), &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "packages/app/package.json");
+    assert_eq!(findings[0].target.as_deref(), Some("@acme/secret"));
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/secret")
+    );
+}
+
+#[test]
 fn semver_catalog_entries_are_not_walked() {
     let findings = findings("catalog-semver");
     assert!(findings.is_empty(), "{findings:?}");

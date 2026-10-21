@@ -8,6 +8,7 @@ pub(super) fn included_override_findings(
     path: &Path,
     source: &str,
     sources: &SourceStore,
+    files: &[std::path::PathBuf],
 ) -> Vec<RuleFinding> {
     let root_yaml = crate::codebase::ts_resolver::normalize_path(&root.join("pnpm-workspace.yaml"));
     if crate::codebase::ts_resolver::normalize_path(path) != root_yaml {
@@ -41,6 +42,13 @@ pub(super) fn included_override_findings(
         findings.push(finding(root, path, 1, issue.message.clone()));
     }
     for included in resolved.included_override_paths {
+        let included_path = crate::codebase::ts_resolver::normalize_path(&included);
+        let allowed = files.iter().any(|candidate| {
+            crate::codebase::ts_resolver::normalize_path(candidate) == included_path
+        });
+        if !allowed {
+            continue;
+        }
         let Ok(text) = sources.read_path(&included) else {
             continue;
         };

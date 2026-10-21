@@ -86,6 +86,18 @@ fn fail_included_overrides_are_banned() {
 }
 
 #[test]
+fn excluded_included_override_file_is_not_reported() {
+    let findings = findings_for("fail-included-excluded");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "pnpm/security.yaml"),
+        "{findings:?}"
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn fail_duplicate_overrides_reports_every_definition() {
     let findings = findings_for("fail-duplicate-overrides");
     let body = findings
