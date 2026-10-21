@@ -332,3 +332,25 @@ fn varying_width_without_a_push_keeps_the_possible_suffix_receiver() {
         assert_export(&built, &root, file, callee);
     }
 }
+
+#[test]
+fn bound_spreads_remove_this_arg_before_projecting_possible_slots() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    possible(&built, &root, "array-bind-varying-width", "untouched.get");
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, "array-bind-optional-push", callee);
+    }
+    assert_unknown(&built, &root, "array-bind-known-empty", "untouched.get");
+    for file in ["array-bind-varying-width", "array-bind-known-empty"] {
+        assert_export(&built, &root, file, "replica.get");
+    }
+    for file in [
+        "array-bind-varying-width",
+        "array-bind-optional-push",
+        "array-bind-known-empty",
+    ] {
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}

@@ -1,6 +1,13 @@
 use super::*;
 
 impl ImportCollector {
+    pub(super) fn is_builtin_bind_callee(&self, raw: &str) -> bool {
+        raw.strip_suffix(".bind").is_some_and(|receiver| {
+            is_function_prototype_receiver(self, receiver)
+                && !receiver_owns_member(self, receiver, "bind")
+        })
+    }
+
     pub(super) fn value_arguments(
         &self,
         arguments: &[Argument<'_>],
@@ -27,9 +34,7 @@ impl ImportCollector {
     ) -> (ValueExpression, Vec<ValueExpression>, Option<usize>, bool) {
         if let Some(raw) = simple_callee_name(&call.callee) {
             if let Some(receiver) = raw.strip_suffix(".bind") {
-                if is_function_prototype_receiver(self, receiver)
-                    && !receiver_owns_member(self, receiver, "bind")
-                {
+                if self.is_builtin_bind_callee(&raw) {
                     let (arguments, spread) = self.value_arguments(&call.arguments);
                     return (
                         ValueExpression::Named {

@@ -20,9 +20,12 @@ impl ImportCollector {
         {
             return;
         }
+        let bound =
+            simple_callee_name(&call.callee).is_some_and(|raw| self.is_builtin_bind_callee(&raw));
         let arguments = call
             .arguments
             .iter()
+            .skip(usize::from(bound))
             .map(|argument| match argument {
                 Argument::SpreadElement(spread) => {
                     ArgumentValue::Spread(self.value_expression(&spread.argument))

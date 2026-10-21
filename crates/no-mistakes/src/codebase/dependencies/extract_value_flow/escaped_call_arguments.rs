@@ -6,7 +6,9 @@ impl ImportCollector {
         self.note_possible_arguments(call);
         let mut arguments = super::escaped_spread_arguments::Arguments::default();
         let mut uncertain_raw = None;
-        for (raw_index, argument) in call.arguments.iter().enumerate() {
+        let bound =
+            simple_callee_name(&call.callee).is_some_and(|raw| self.is_builtin_bind_callee(&raw));
+        for (raw_index, argument) in call.arguments.iter().skip(usize::from(bound)).enumerate() {
             match argument {
                 Argument::SpreadElement(spread) => {
                     let was_uncertain = arguments.guarded_open_tail;
