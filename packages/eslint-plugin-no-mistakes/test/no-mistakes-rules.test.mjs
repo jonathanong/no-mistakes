@@ -291,6 +291,15 @@ describe("test-no-delayed-rejects", () => {
       ),
       [],
     );
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "module-level-catch-before-await.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "module-level-catch-before-await.ts",
+      ),
+      [],
+    );
   });
 
   it("recognizes the ordinary global expect binding", () => {

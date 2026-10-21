@@ -1318,6 +1318,13 @@ describe("postgres-no-unbounded-query-fanout", () => {
       ),
       ["unboundedFanout"],
     );
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-array-of-ids.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout"],
+    );
   });
 
   it("ignores maps without executors and non-map Promise.all", () => {

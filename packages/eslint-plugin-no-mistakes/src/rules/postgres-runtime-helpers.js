@@ -87,7 +87,8 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
     const iterated = forOfRightHandSide(def?.node);
     if (iterated) {
       if (isReassignedBinding(variable)) return false;
-      return isStaticallyBounded(iterated, chunkFunctionNames, null);
+      const right = unwrapTs(iterated);
+      return Boolean(right?.type === "CallExpression" && isChunkCall(right, chunkFunctionNames));
     }
   }
   return false;
