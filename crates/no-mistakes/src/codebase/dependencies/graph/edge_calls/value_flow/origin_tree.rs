@@ -135,3 +135,7 @@ impl OriginNode {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "origin_tree_join_tests.rs"]
+mod tests;

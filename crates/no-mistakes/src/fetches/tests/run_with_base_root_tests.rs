@@ -250,3 +250,42 @@ fn test_run_with_base_root_sorts_duplicates_and_unsupported_entries() {
     assert_eq!(report.duplicates[1].key, "GET /api/other server rsc");
     assert_eq!(report.duplicates[1].count, 2);
 }
+
+#[test]
+fn fetches_run_wrapper_publishes_the_next_app_fixture() {
+    let root = fixture("nextjs-fetches", "next-app");
+    let code = crate::fetches::run(Cli {
+        root,
+        config: None,
+        format: Format::Json,
+        json: true,
+        targets: vec![],
+    })
+    .unwrap();
+    assert_eq!(code, std::process::ExitCode::SUCCESS);
+}
+
+#[test]
+fn target_file_match_uses_saved_layout_wrapper_chain() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-fetches/cli/fixture/target-file-match-uses-wrapper-chain");
+    let report = run_with_base_root(
+        &root,
+        &Cli {
+            root: PathBuf::from("."),
+            config: None,
+            format: Format::Human,
+            json: false,
+            targets: vec!["app/layout.tsx".into()],
+        },
+    )
+    .unwrap();
+    assert!(
+        report.routes.iter().any(|route| route
+            .api_calls
+            .iter()
+            .any(|call| call.path == "/api/layout")),
+        "layout wrapper target must keep the dashboard page: routes={}",
+        report.routes.len()
+    );
+}
