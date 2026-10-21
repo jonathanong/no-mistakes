@@ -87,3 +87,48 @@ fn unique_exports_include_scope_preserves_fixture_findings() {
     .unwrap();
     assert_eq!(scoped_findings, full_findings);
 }
+
+#[test]
+fn unique_exports_project_scope_keeps_reexport_origin_facts() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-unique-canonical");
+    let files = discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
+        .expect("unique-exports suppression fixture config");
+    let mut scoped = CheckFactPlan {
+        symbols: true,
+        source: true,
+        ..Default::default()
+    };
+    configure_family_path_scopes(&root, &files, &config, sources.as_ref(), &mut scoped).unwrap();
+    let origin =
+        crate::codebase::ts_resolver::normalize_path(&root.join("shared/collision-origin.ts"));
+    assert!(
+        crate::codebase::check_facts::family_scope::applies(&scoped.symbols_paths, &origin),
+        "reexport origins outside projects must stay in the symbols closure"
+    );
+    let scoped_findings = crate::codebase::unique_exports::analyze_project_with_facts(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        None,
+        &collect_check_facts(&root, files.clone(), scoped),
+    )
+    .expect("scoped unique-exports should keep reexport origin facts");
+    let full_findings = crate::codebase::unique_exports::analyze_project_with_facts(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        None,
+        &collect_check_facts(
+            &root,
+            files,
+            CheckFactPlan {
+                symbols: true,
+                source: true,
+                ..Default::default()
+            },
+        ),
+    )
+    .unwrap();
+    assert_eq!(scoped_findings, full_findings);
+}

@@ -20,15 +20,7 @@ pub fn configure_family_path_scopes(
     plan: &mut CheckFactPlan,
 ) -> Result<()> {
     if plan.symbols {
-        plan.symbols_paths = from_rule_ids(root, files, config, &[UNIQUE_EXPORTS])?;
-        if plan.storybook {
-            plan.symbols_paths = super::merge(
-                true,
-                &plan.symbols_paths,
-                true,
-                &from_rule_ids(root, files, config, &[REQUIRE_STORYBOOK_STORIES])?,
-            );
-        }
+        plan.symbols_paths = symbols_scope(root, files, sources, config, plan.storybook)?;
     }
     if plan.storybook {
         plan.storybook_paths = scoped_or_closure(
@@ -52,6 +44,36 @@ pub fn configure_family_path_scopes(
         plan.integration_paths = FamilyPathScope::All;
     }
     Ok(())
+}
+
+fn symbols_scope(
+    root: &Path,
+    files: &[PathBuf],
+    sources: &SourceStore,
+    config: &NoMistakesConfig,
+    storybook: bool,
+) -> Result<FamilyPathScope> {
+    // unique-exports follows reexport origins that can sit outside projects.
+    let unique = scoped_or_closure(
+        root,
+        files,
+        sources,
+        from_rule_ids(root, files, config, &[UNIQUE_EXPORTS])?,
+    );
+    if !storybook {
+        return Ok(unique);
+    }
+    Ok(super::merge(
+        true,
+        &unique,
+        true,
+        &scoped_or_closure(
+            root,
+            files,
+            sources,
+            from_rule_ids(root, files, config, &[REQUIRE_STORYBOOK_STORIES])?,
+        ),
+    ))
 }
 
 fn scoped_or_closure(
