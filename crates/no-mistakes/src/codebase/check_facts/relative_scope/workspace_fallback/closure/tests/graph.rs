@@ -26,8 +26,8 @@ fn seed_order_is_irrelevant_and_diamond_cycle_modules_resolve_once() {
         }
         assert_eq!(
             counts.len(),
-            7,
-            "duplicate import/binding/reexport facts resolve once"
+            8,
+            "runtime imports resolve once, including disconnected modules needed to find callers"
         );
         assert!(counts.values().all(|count| *count == 1));
         assert_eq!(
@@ -41,7 +41,7 @@ fn seed_order_is_irrelevant_and_diamond_cycle_modules_resolve_once() {
             .contains_key(&fixture.path("packages/type-only/src/index.mts")));
         assert!(!trace
             .iter()
-            .any(|(_, specifier)| specifier == "@p/type-only" || specifier == "@p/noise"));
+            .any(|(_, specifier)| specifier == "@p/type-only"));
         assert_cached(&fallback);
         if let Some(previous) = &previous {
             assert_eq!(&trace, previous);
@@ -61,4 +61,18 @@ fn seed_without_prepared_facts_is_retained_without_resolution() {
     });
     assert!(fallback.prepared.is_empty());
     assert!(fallback.importers.as_deref().unwrap().contains(&missing));
+}
+
+#[test]
+fn reverse_callers_and_their_argument_helpers_join_the_selected_component() {
+    let fixture = Fixture::new("workspace-fallback-reverse-context");
+    let selected = fixture.path("packages/app/src/index.mts");
+    let seeds = PathSet::from_iter([selected]);
+    let mut fallback = fixture.fallback(Some(&seeds));
+    fallback.prepare(&fixture.files, |_, _| None);
+    let allowed = fallback.importers.as_deref().unwrap();
+    assert_eq!(allowed.len(), 3);
+    assert!(allowed.contains(&fixture.path("packages/caller/src/index.mts")));
+    assert!(allowed.contains(&fixture.path("packages/fragment/src/index.mts")));
+    assert_cached(&fallback);
 }

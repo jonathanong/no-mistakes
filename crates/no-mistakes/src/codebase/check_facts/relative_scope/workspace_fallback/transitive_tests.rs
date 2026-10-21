@@ -47,3 +47,21 @@ fn transitive_workspace_reexports_handle_diamond_and_cycle_without_type_only_wid
             > 0
     );
 }
+
+#[test]
+fn excluded_workspace_caller_keeps_sql_at_selected_executor() {
+    // The caller is outside include; losing its literal would silently erase
+    // the selected executor's finding under unanalyzableSql:ignore.
+    let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("workspace-fallback-reverse-context");
+    let (output, _) = crate::benchmark_support::check_json_observed(&root, true).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{output}");
+    assert_eq!(findings[0]["file"], "packages/app/src/index.mts");
+    assert_eq!(findings[0]["line"], 3);
+    assert!(findings[0]["message"]
+        .as_str()
+        .unwrap()
+        .ends_with("query execution must start with a /* name */ annotation"));
+}

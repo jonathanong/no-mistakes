@@ -34,8 +34,8 @@ fn verbose_work_counts_match_actual_closure_and_off_has_no_observer() {
     let work = observer.snapshot().work;
     for (metric, expected) in [
         ("seeds", 1),
-        ("resolutions", 7),
-        ("workspace_edges", 6),
+        ("resolutions", 8),
+        ("workspace_edges", 7),
         ("modules", 5),
         ("importers", 5),
     ] {

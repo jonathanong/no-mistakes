@@ -1,0 +1,1 @@
+{"name": "@p/caller", "private": true, "type": "module", "dependencies": {"@p/app": "workspace:*"}}

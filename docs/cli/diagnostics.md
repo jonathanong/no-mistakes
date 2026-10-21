@@ -140,9 +140,9 @@ creates no prefix-walk work ledger. See the saved
   become conservative again.
 - **Workspace names.** pnpm workspace package names resolve through the session
   workspace map when the TypeScript resolver has no target. For annotation,
-  this fallback follows the runtime dependency closure of configured annotation
-  files, or a target in a configured executor package. Project roots, project filters,
-  rule filters, and option filters all narrow that selection. Other embedded
+  this fallback follows runtime dependencies and reverse callers from configured
+  annotation files, or a target in a configured executor package. Project roots,
+  project filters, rule filters, and option filters narrow the initial seeds. Other embedded
   SQL projections retain their existing resolution. A package the workspace
   does not declare stays unresolved and cannot enter another module.
 - **Catalog identity.** Resolver targets without an exact prepared inventory
@@ -156,11 +156,13 @@ fallback resolutions, including repeated requests for an edge.
 rejected by the annotation scope. Neither counter includes primary resolver hits.
 The deterministic `postgres.annotation.workspace_closure` pre-pass is included in
 `postgres.annotation.project`. Its `closure_seeds`, `closure_importers`,
-`closure_modules`, `closure_resolutions`, and `closure_workspace_edges` counters
-share the `postgres.annotation.` prefix. They count configured seeds, transitive
-permission files, modules visited once, unique import lookups, and workspace
-fallback edges admitted by that pre-pass. Prepared targets, including failures,
-are reused during evaluation; type-only imports cannot widen the closure.
+`closure_modules`, `closure_scanned_modules`, `closure_resolutions`, and
+`closure_workspace_edges` counters share the `postgres.annotation.` prefix. They
+count configured seeds, permission files, retained modules, scanned modules,
+unique import lookups, and raw workspace edges resolved by that pre-pass. Finding
+reverse callers requires resolving runtime imports in all prepared modules once;
+disconnected components stay blocked. Retained targets, including failures, are
+reused during evaluation; type-only imports cannot widen the closure.
 `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`

@@ -10,10 +10,11 @@ The rule consumes prepared embedded-SQL and helper summaries from the request's
 shared TypeScript parse. Imported helpers use the request's prepared importer
 project catalog and source session. Package-local TypeScript aliases resolve from
 the importing file's project; an explicit `--tsconfig` deliberately overrides that
-ownership for every importer. Workspace-package fallback follows a deterministic transitive closure
-from configured annotation files, including out-of-scope helpers reached through
-runtime imports and re-exports. Targets in configured executor packages are also
-allowed. Unreachable excluded packages do not expand this fallback. Relative
+ownership for every importer. Workspace-package fallback follows a deterministic
+runtime component from configured annotation files, including both out-of-scope
+helpers and callers. Callers can supply SQL to selected executor spans, so their
+dependencies and transitive callers must remain available too. Targets in
+configured executor packages are also allowed. Unreachable excluded packages do not expand this fallback. Relative
 imports and TypeScript resolver hits retain their existing behavior.
 
 Helper evaluation shares immutable function summaries, binding snapshots, and

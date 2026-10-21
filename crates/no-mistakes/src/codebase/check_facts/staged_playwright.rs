@@ -1,5 +1,6 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use crate::codebase::ts_source::FileIdMap;
+use crate::playwright::integration_routes::RouteOccurrence;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -22,10 +23,7 @@ use precollect::cached_config_file_facts;
 pub(super) struct PrecollectedFacts {
     ts: crate::codebase::ts_source::facts::TsFactMap,
     files: FileIdMap<super::CheckFileFacts>,
-    routes: std::collections::BTreeMap<
-        PathBuf,
-        Vec<crate::playwright::integration_routes::RouteOccurrence>,
-    >,
+    routes: std::collections::BTreeMap<PathBuf, Vec<RouteOccurrence>>,
 }
 
 pub(super) fn collect_with_sources_and_session(

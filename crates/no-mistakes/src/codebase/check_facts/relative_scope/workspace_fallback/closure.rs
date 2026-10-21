@@ -50,17 +50,29 @@ fn expand<const OBSERVED: bool>(
         "postgres.annotation.closure_seeds",
         seeds.len() as u64,
     );
-    while let Some(from) = pending.pop_first() {
-        let Some(file) = files.get(&from) else {
-            continue;
-        };
+    // An excluded caller can supply SQL to a selected executor. Permissions
+    // must include reverse callers and their dependencies, not only callees.
+    // Resolve the prepared runtime projection once, then traverse its component.
+    if !seeds.iter().any(|path| files.contains_key(path)) {
+        return (allowed, prepared);
+    }
+    let mut neighbors = FxHashMap::<PathBuf, BTreeSet<PathBuf>>::default();
+    let mut paths = files.keys().collect::<Vec<_>>();
+    paths.sort();
+    for from in paths {
+        let file = &files[from];
         let mut targets = FxHashMap::default();
         for specifier in specifiers(&file.ts) {
-            let target = fallback.raw_target(specifier, &from, primary);
+            let target = fallback.raw_target(specifier, from, primary);
             if let Some(path) = target.path() {
-                if allowed.insert(path.clone()) {
-                    pending.insert(path.clone());
-                }
+                neighbors
+                    .entry(from.clone())
+                    .or_default()
+                    .insert(path.clone());
+                neighbors
+                    .entry(path.clone())
+                    .or_default()
+                    .insert(from.clone());
             }
             note::<OBSERVED>(fallback, "postgres.annotation.closure_resolutions", 1);
             if OBSERVED && matches!(target, ResolvedTarget::Workspace(_)) {
@@ -68,8 +80,23 @@ fn expand<const OBSERVED: bool>(
             }
             targets.insert(specifier.to_owned(), target);
         }
-        prepared.insert(from, targets);
+        prepared.insert(from.clone(), targets);
     }
+    note::<OBSERVED>(
+        fallback,
+        "postgres.annotation.closure_scanned_modules",
+        prepared.len() as u64,
+    );
+    while let Some(from) = pending.pop_first() {
+        if let Some(targets) = neighbors.get(&from) {
+            for path in targets {
+                if allowed.insert(path.clone()) {
+                    pending.insert(path.clone());
+                }
+            }
+        }
+    }
+    prepared.retain(|path, _| allowed.contains(path));
     note::<OBSERVED>(
         fallback,
         "postgres.annotation.closure_modules",
