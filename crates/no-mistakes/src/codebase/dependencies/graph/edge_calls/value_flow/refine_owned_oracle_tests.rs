@@ -42,7 +42,7 @@ pub(super) fn refine_site(
         initializing: Vec::new(),
         cache: data.cache,
         visiting: fx_set(),
-        calls_visiting: fx_set(),
+        calls_visiting: fx_set(), fields_visiting: fx_set(),
         default_origins: None,
         acquisition_context: None,
         invocation_read: None,

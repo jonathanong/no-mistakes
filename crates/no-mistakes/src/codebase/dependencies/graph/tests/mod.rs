@@ -141,6 +141,7 @@ include!("call_site_index.rs");
 mod repeated_foreign_parameters;
 mod repeated_propagated_replacements;
 mod repeated_replacement_controls;
+mod value_flow_member_cycles;
 #[path = "value_flow_repeated_replacements.rs"]
 mod value_flow_repeated_replacements;
 #[path = "value_flow_worklist.rs"]
