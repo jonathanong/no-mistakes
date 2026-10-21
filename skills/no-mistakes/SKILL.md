@@ -41,10 +41,8 @@ no-mistakes check --format json
 
 `no-mistakes check --include-sql-verdicts --format json` adds the opt-in SQL verdict ledger and does not change findings.
 
-SQL residual advice is grouped per executor call, rule, configured application,
-and executor profile. Advice uses the executor call line; proven findings keep
-their SQL origin lines. Checks and reasons are sorted and deduplicated in the
-advisory, while the optional ledger remains per obligation.
+Grouped residual advice, including a `target` that may list several checks, is described in
+[SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
 
 For Next.js routes, pages, selectors, or Playwright tests, also run
 `no-mistakes tests plan playwright --changed-file <file> --format json` and

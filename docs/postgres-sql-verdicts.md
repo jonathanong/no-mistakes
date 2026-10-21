@@ -50,8 +50,11 @@ Each PostgreSQL rule application accepts `unanalyzableSql: advise` to place its
 residual uncertainty in the non-failing `advisories` list. Each executor call,
 rule, configured application, and executor profile produces at most one residual
 advisory. Its `target` lists unresolved checks in sorted, comma-separated
-order; the message combines sorted, deduplicated checks, residual reasons,
-known prefixes, and helper lines. A single subcheck keeps its existing target.
+order and may name more than one check. The message combines sorted,
+deduplicated checks, residual reasons, known prefixes, and helper lines. A
+single subcheck keeps its existing target. When any grouped obligation is a
+violation, the message says the call proved a violation and that remaining SQL
+is unresolved. An abstain-only group says the call has unresolved SQL.
 The optional ledger remains one row per obligation.
 
 Advice is attributed to the executor call's starting line, including multiline
