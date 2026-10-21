@@ -7,15 +7,25 @@ recovery exceeds the depth limit of 8, no partial version set is published.
 Loops other than the bounded helper loops described [below](imported-and-literal-identifier-helpers.md#helper-control-flow-and-nested-composition),
 untagged `${...}` SQL-text interpolation other than the
 [literal-identifier helpers](imported-and-literal-identifier-helpers.md#imported-and-literal-identifier-helpers)
-and a ternary whose every arm is a literal or a same-file immutable `const` of
-those literals (nested ternaries included),
+and a ternary, `&&`, `||`, or `??` whose every reached branch is a literal or a
+same-file immutable `const` of those literals (nested ternaries and logical
+expressions included),
 calls to imported helpers the request resolver cannot prove (see the same
 section for what it does resolve), `sql.raw(variable)`, and `sql.join` over
 non-literal input, spreads, or array holes remain `Dynamic` and retain the
 existing `unanalyzableSql` behavior.
-That ternary is one alternative per arm, under the same 16-version and depth-8
-caps. An unknown arm (a parameter, call, `let`, reassignment, or anything
-else) or a cap overflow publishes no alternative.
+That clause expression is one alternative per reached arm, under the same
+16-version and depth-8 caps. An unknown reached arm (a parameter, call, `let`,
+reassignment, or anything else) or a cap overflow publishes no alternative.
+`&&` and `||` use string truthiness: only `""` is a falsy clause. A branch
+JavaScript will not evaluate is not part of the union, so `"AND id > $2" ||
+unknown` and an inline `"" && unknown` stay the known string. A `const`
+initialized with `"" && unknown` is stored as an absent fragment and still
+publishes nothing. A reached unknown arm,
+including `unknown || "AND id > $2"` and `unknown && "AND id > $2"`, publishes
+nothing. `??` keeps a proven string, including `""`, and does not take its
+fallback; an unknown left still publishes nothing. A non-string result is not
+stringified into the clause.
 An unknown falsy result from `condition && sqlFragment` cannot prove whether
 a following `??` takes its fallback, so that composed call remains `Dynamic`.
 Present and absent fragments inside trusted templates and recoverable `||`

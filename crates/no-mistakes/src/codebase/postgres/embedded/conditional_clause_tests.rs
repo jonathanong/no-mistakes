@@ -75,6 +75,56 @@ fn unknown_arms_abstain_instead_of_dropping_the_arm() {
 }
 
 #[test]
+fn logical_clauses_are_alternatives_until_an_unknown_branch() {
+    let calls = read_calls("conditional-clause-logical.ts");
+    assert_eq!(calls.len(), 16, "{calls:?}");
+    let greater = "SELECT id FROM orders WHERE account_id = $1 AND id > $2";
+    let lesser = "SELECT id FROM orders WHERE account_id = $1 AND id < $2";
+    let empty = "SELECT id FROM orders WHERE account_id = $1 ";
+    let pair = [lesser.to_string(), greater.to_string()];
+    assert_eq!(sql_of(&calls[0]), pair, "or {calls:?}");
+    assert_eq!(
+        sql_of(&calls[1]),
+        vec![empty.to_string(), lesser.to_string()],
+        "and {calls:?}"
+    );
+    assert_eq!(sql_of(&calls[2]), pair, "inline {calls:?}");
+    assert_eq!(
+        sql_of(&calls[3]),
+        vec![
+            "SELECT id FROM orders WHERE account_id = $1 AND id < $2 /*no*/".to_string(),
+            "SELECT id FROM orders WHERE account_id = $1 AND id < $2 /*yes*/".to_string(),
+            "SELECT id FROM orders WHERE account_id = $1 AND id > $2 /*no*/".to_string(),
+            "SELECT id FROM orders WHERE account_id = $1 AND id > $2 /*yes*/".to_string(),
+        ],
+        "independent holes {calls:?}"
+    );
+    assert_eq!(
+        sql_of(&calls[4]),
+        vec![empty.to_string(), lesser.to_string(), greater.to_string()],
+        "nested {calls:?}"
+    );
+    let kept = vec![empty.to_string(), greater.to_string()];
+    assert_eq!(sql_of(&calls[5]), kept, "coalesce {calls:?}");
+    assert_eq!(sql_of(&calls[6]), kept, "coalesce fallback {calls:?}");
+    assert_eq!(
+        sql_of(&calls[7]),
+        vec![empty.to_string()],
+        "falsy and {calls:?}"
+    );
+    assert_eq!(
+        sql_of(&calls[8]),
+        vec![greater.to_string()],
+        "truthy or {calls:?}"
+    );
+    for call in &calls[9..] {
+        assert!(call.is_unanalyzable(), "{call:?}");
+        assert!(call.variants.is_empty(), "{call:?}");
+        assert_ne!(call.sql_text.as_deref(), Some(greater), "{call:?}");
+    }
+}
+
+#[test]
 fn variant_cap_keeps_sixteen_and_abstains_past_it() {
     let calls = read_calls("conditional-clause-cap.ts");
     assert_eq!(calls.len(), 2, "{calls:?}");
