@@ -1,4 +1,11 @@
+#[cfg(test)]
+mod borrowed_tests;
 mod builder_ids;
+#[cfg(not(test))]
+mod hooks;
+#[cfg(test)]
+#[path = "effects/test_hooks.rs"]
+mod hooks;
 #[cfg(test)]
 mod tests;
 
@@ -8,8 +15,13 @@ use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_live_builders(&mut self) {
-        let values = self.live_builder_values();
-        self.invalidate_opaque_builders(&values);
+        // Opaque hooks may patch intrinsics even without live builders.
+        self.untrusted_array_intrinsics = true;
+        let ids = self.collect_builder_ids_from(
+            self.scopes.iter().flat_map(|scope| scope.values()),
+            std::mem::drop,
+        );
+        self.invalidate_builder_ids(ids);
     }
 
     pub(super) fn invalidate_opaque_builders(&mut self, values: &[Value]) {
@@ -21,7 +33,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn live_builder_values(&self) -> Vec<Value> {
         self.scopes
             .iter()
-            .flat_map(|scope| scope.values().cloned())
+            .flat_map(|scope| hooks::root_values!(scope))
             .collect()
     }
 

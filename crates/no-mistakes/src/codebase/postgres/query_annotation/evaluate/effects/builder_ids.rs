@@ -6,6 +6,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn collect_builder_ids(
         &self,
         values: &[Value],
+        visit: impl FnMut(()),
+    ) -> FxHashSet<u64> {
+        self.collect_builder_ids_from(values, visit)
+    }
+
+    pub(super) fn collect_builder_ids_from<'a>(
+        &self,
+        values: impl IntoIterator<Item = &'a Value>,
         mut visit: impl FnMut(()),
     ) -> FxHashSet<u64> {
         let mut ids = fx_set();
