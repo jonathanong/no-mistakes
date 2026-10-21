@@ -26,14 +26,20 @@ path that does not exist is skipped.
 rules:
   - rule: package-json-registry-only
     scope: repository
+    options:
+      scopes: [packages]
+      lockfile: pnpm-lock.yaml
 ```
+
+`scopes: [packages]` limits the check to manifests under `packages/`. A
+configured `lockfile` that does not exist is skipped.
 
 ## Valid example
 
-A dependency that resolves from the npm registry passes.
+A dependency under `packages/` that resolves from the npm registry passes.
 
 ```json
-// package.json
+// packages/web/package.json
 { "name": "@app/web", "version": "1.0.0", "dependencies": { "left-pad": "^1.3.0" } }
 ```
 
@@ -42,7 +48,7 @@ A dependency that resolves from the npm registry passes.
 `file:`, `link:`, `git+https:`, and direct tarball-style specifiers are findings.
 
 ```json
-// package.json
+// packages/web/package.json
 { "name": "@app/web", "version": "1.0.0", "dependencies": { "left-pad": "file:../vendor/left-pad" } }
 ```
 
