@@ -145,6 +145,28 @@ fn independent_codebase_rule_timing_is_opt_in() {
     assert!(stderr(&verbose).contains("rules.server_route_client_boundary:"));
 }
 
+#[test]
+fn filesystem_rule_timing_uses_the_rule_id_and_is_opt_in() {
+    let root = fixture("rules", "test-no-dependency-pins").join("fixture/fail");
+    let args = [
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+    ];
+    let plain = run(&args);
+    let mut verbose_args = args.to_vec();
+    verbose_args.push("--verbose-timings");
+    let verbose = run(&verbose_args);
+
+    assert_eq!(plain.status.code(), Some(1));
+    assert_eq!(verbose.status.code(), plain.status.code());
+    assert_eq!(verbose.stdout, plain.stdout);
+    assert!(!stderr(&plain).contains("rules.test-no-dependency-pins:"));
+    assert!(stderr(&verbose).contains("rules.test-no-dependency-pins:"));
+}
+
 fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
     String::from_utf8_lossy(stderr)
         .lines()

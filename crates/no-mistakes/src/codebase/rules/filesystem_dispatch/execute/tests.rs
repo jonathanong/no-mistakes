@@ -13,7 +13,7 @@ fn trace_rule_records_only_verbose_observers() {
     assert_eq!(trace_rule(&sources, "special", || 42), 42);
     let timings = verbose.snapshot().timings;
     assert_eq!(timings.len(), 1);
-    assert_eq!(timings[0].label, "filesystem_rule.special");
+    assert_eq!(timings[0].label, "rules.special");
     assert_eq!(timings[0].kind, TimingKind::Parallel);
 
     for observer in [None, Some(InvocationObserver::new(false))] {

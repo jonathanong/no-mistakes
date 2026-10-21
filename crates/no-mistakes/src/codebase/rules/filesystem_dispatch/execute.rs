@@ -185,7 +185,7 @@ pub(super) fn trace_rule<T>(
 ) -> T {
     match sources.observer().filter(|observer| observer.detailed()) {
         Some(observer) => observer.trace(
-            &format!("filesystem_rule.{rule_id}"),
+            &format!("rules.{rule_id}"),
             crate::diagnostics::TimingKind::Parallel,
             run,
         ),
