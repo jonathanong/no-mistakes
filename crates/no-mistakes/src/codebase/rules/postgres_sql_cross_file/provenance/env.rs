@@ -73,7 +73,7 @@ fn imported_env(facts: &CheckFactMap, file: &Path, local: &str) -> bool {
 }
 
 fn imported_process(facts: &CheckFactMap, file: &Path, local: &str) -> bool {
-    imported_from_process(facts, file, local, &["process", "default"])
+    imported_from_process(facts, file, local, &["process", "default", "*"])
 }
 
 fn imported_from_process(facts: &CheckFactMap, file: &Path, local: &str, names: &[&str]) -> bool {

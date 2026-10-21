@@ -2,7 +2,7 @@
 use super::postgres_sql_cross_file::{
     check_applications, count, finding, identifier_placeholder, interpolations, is_process_env,
     is_process_specifier, sql_calls, unique_export, unique_namespace_member, walk_expression,
-    Provenance, SqlCall,
+    Bindings, Provenance, SqlCall,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ValueExpression;
@@ -40,13 +40,30 @@ fn scan(
     let mut findings = Vec::new();
     let mut candidates = 0;
     let mut sinks = 0;
-    for call in sql_calls(root, opts, facts) {
+    let calls = sql_calls(root, opts, facts);
+    let bindings = Bindings::with_calls(facts, &calls);
+    for call in &calls {
         candidates += 1;
         if identifier_placeholder(call.call) != Some(true) {
             continue;
         }
-        for provenance in interpolations(graph, facts, &call) {
-            if let Some(finding) = identifier_finding(root, graph, facts, &call, &provenance) {
+        for provenance in interpolations(graph, facts, call, &bindings) {
+            if let Provenance::Reference {
+                name,
+                scope,
+                offset,
+                ..
+            } = &provenance
+            {
+                if bindings.env_alias(&call.file, *scope, name, *offset)
+                    || bindings.query_projection(&call.file, *scope, name, *offset)
+                {
+                    sinks += 1;
+                    findings.push(message(root, call, name, Some(name.clone())));
+                    continue;
+                }
+            }
+            if let Some(finding) = identifier_finding(root, graph, facts, call, &provenance) {
                 sinks += 1;
                 findings.push(finding);
             }
@@ -76,8 +93,10 @@ fn identifier_finding(
                 Some(format!("process.env.{key}")),
             ))
         }
-        Provenance::Named(name) => named_finding(root, graph, facts, call, name),
-        Provenance::Namespace { local, exported } => {
+        Provenance::Reference { name, .. } => named_finding(root, graph, facts, call, name),
+        Provenance::Namespace {
+            local, exported, ..
+        } => {
             let unique = unique_namespace_member(graph, facts, &call.file, local, exported)?;
             imported_unbounded(root, facts, call, unique.producer, &unique.exported, local)
         }
@@ -146,49 +165,5 @@ fn shadowed_process(facts: &CheckFactMap, file: &Path) -> bool {
 #[cfg(test)]
 mod tests;
 
-fn local_env_alias(facts: &CheckFactMap, file: &Path, name: &str) -> bool {
-    facts.get_ts_facts(file).is_some_and(|ts| {
-        ts.value_flow
-            .bindings
-            .iter()
-            .any(|binding| binding.name == name && expression_unbounded(&binding.value))
-    })
-}
-
-fn parameter(facts: &CheckFactMap, file: &Path, name: &str) -> bool {
-    facts.get_ts_facts(file).is_some_and(|ts| {
-        ts.value_flow
-            .parameters
-            .iter()
-            .any(|parameter| parameter.name == name)
-    })
-}
-
-fn query_result_binding(facts: &CheckFactMap, file: &Path, name: &str) -> bool {
-    facts.get_ts_facts(file).is_some_and(|ts| {
-        ts.value_flow.bindings.iter().any(|binding| {
-            binding.name == name
-                && matches!(
-                    binding.value,
-                    ValueExpression::Call(_, _) | ValueExpression::Awaited(_)
-                )
-        })
-    })
-}
-
-fn export_is_unbounded(facts: &CheckFactMap, producer: &Path, exported: &str) -> bool {
-    let Some(ts) = facts.get_ts_facts(producer) else {
-        return false;
-    };
-    ts.value_flow.bindings.iter().any(|binding| {
-        binding.owner.is_none() && binding.name == exported && expression_unbounded(&binding.value)
-    })
-}
-
-fn expression_unbounded(expr: &ValueExpression) -> bool {
-    let mut found = false;
-    walk_expression(expr, &mut |value| {
-        found |= is_process_env(value);
-    });
-    found
-}
+mod local_sources;
+use local_sources::{export_is_unbounded, local_env_alias, parameter, query_result_binding};

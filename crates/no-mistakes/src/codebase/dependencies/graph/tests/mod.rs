@@ -186,3 +186,6 @@ mod guarded_latest_origins;
 
 #[path = "guarded_parameter_identity.rs"]
 mod guarded_parameter_identity;
+
+#[path = "template_value_provenance.rs"]
+mod template_value_provenance;

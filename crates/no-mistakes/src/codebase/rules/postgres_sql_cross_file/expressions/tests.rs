@@ -55,3 +55,16 @@ fn walks_member_awaited_alternatives_and_containers() {
         ["el"]
     );
 }
+
+#[test]
+fn walks_opaque_derived_inputs_without_losing_nested_provenance() {
+    let expression = ValueExpression::Derived(
+        vec![
+            named("schema"),
+            ValueExpression::Derived(vec![named("table")].into()),
+            ValueExpression::Unknown,
+        ]
+        .into(),
+    );
+    assert_eq!(names(&expression), ["schema", "table"]);
+}

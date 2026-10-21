@@ -25,6 +25,7 @@ fn findings(scenario: &str) -> Vec<crate::codebase::rules::RuleFinding> {
 fn member_write_alias_and_array_assignment_reach_sql() {
     for scenario in [
         "fail-member-write",
+        "fail-computed-key",
         "fail-alias",
         "fail-array",
         "fail-namespace",
@@ -50,7 +51,6 @@ fn literal_unrelated_prototype_bind_http_and_suppression_stay_silent() {
     for scenario in [
         "pass-literal-registry",
         "pass-unrelated-state",
-        "pass-prototype-key",
         "pass-bind-value",
         "pass-http-query",
         "pass-suppressed",
@@ -171,3 +171,6 @@ fn object_and_reflect_property_mutators_are_member_writes() {
     );
     assert!(!member_write(&facts, &writer, "tables"));
 }
+
+#[path = "recall_shapes_tests.rs"]
+mod recall_shapes;

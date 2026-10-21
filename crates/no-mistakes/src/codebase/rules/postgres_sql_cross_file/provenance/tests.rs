@@ -101,3 +101,54 @@ fn imported_process_and_env_aliases_are_process_env_keys() {
     assert!(env_key(&process, &file, &named("proc")).is_none());
     assert!(env_key(&process, &file, &member(member(named("proc"), "argv"), "0")).is_none());
 }
+
+#[test]
+fn opaque_and_projected_fact_containers_preserve_input_references() {
+    let file = PathBuf::from("/repo/src/query.ts");
+    let mut facts = imported("ns", "*", "./tables");
+    Arc::make_mut(&mut Arc::get_mut(facts.ts.get_mut(&file).unwrap()).unwrap().ts)
+        .imported_bindings[0]
+        .kind = ImportedBindingKind::Namespace;
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        PathBuf::from("/repo"),
+        Default::default(),
+        Default::default(),
+    );
+    let bindings = Bindings::new(&facts);
+    let mut fields = crate::fx::fx_map();
+    fields.insert("schema".into(), named("config"));
+    // These typed containers exercise provenance independently of runtime array semantics.
+    for expression in [
+        ValueExpression::Awaited(Arc::new(named("config"))),
+        member(
+            ValueExpression::Derived(vec![named("config")].into()),
+            "schema",
+        ),
+        ValueExpression::Object(Arc::new(fields.clone()), false),
+        ValueExpression::Array(Arc::new(fields)),
+        ValueExpression::Either(Arc::new(named("config")), Arc::new(named("config"))),
+    ] {
+        let mut found = BTreeSet::new();
+        classify(&graph, &facts, &file, &expression, &mut found, &bindings);
+        assert_eq!(
+            found,
+            BTreeSet::from([Provenance::Reference {
+                name: "config".into(),
+                scope: 0,
+                offset: 0,
+                members: Vec::new(),
+            }])
+        );
+    }
+    let mut found = BTreeSet::new();
+    classify(&graph, &facts, &file, &named("ns"), &mut found, &bindings);
+    assert_eq!(
+        found,
+        BTreeSet::from([Provenance::Reference {
+            name: "ns".into(),
+            scope: 0,
+            offset: 0,
+            members: Vec::new(),
+        }])
+    );
+}

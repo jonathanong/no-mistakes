@@ -1,4 +1,6 @@
-use super::super::postgres_sql_cross_file::{unique_export, unique_namespace_member, UniqueExport};
+use super::super::postgres_sql_cross_file::{
+    registry_route, unique_export, unique_namespace_member, UniqueExport,
+};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::{
     ImportedBindingKind, ValueAssignedMutations, ValueExpression, ValueMutationHistory,
@@ -25,6 +27,13 @@ pub(super) fn mutated_exports(graph: &DepGraph, facts: &CheckFactMap) -> Vec<Mut
             if binding.is_type_only {
                 continue;
             }
+            for member in namespace_writes(facts, writer, &binding.local) {
+                push_write(
+                    &mut out,
+                    registry_route(graph, facts, writer, &binding.local, &[member]),
+                    writer,
+                );
+            }
             if binding.kind == ImportedBindingKind::Namespace {
                 for member in namespace_writes(facts, writer, &binding.local) {
                     push_write(
@@ -43,6 +52,27 @@ pub(super) fn mutated_exports(graph: &DepGraph, facts: &CheckFactMap) -> Vec<Mut
                 unique_export(graph, facts, writer, &binding.local),
                 writer,
             );
+        }
+        for binding in ts
+            .value_flow
+            .bindings
+            .iter()
+            .filter(|binding| binding.owner.is_none())
+        {
+            if member_write(facts, writer, &binding.name) {
+                push_write(
+                    &mut out,
+                    registry_route(graph, facts, writer, &binding.name, &[]),
+                    writer,
+                );
+            }
+            for member in namespace_writes(facts, writer, &binding.name) {
+                push_write(
+                    &mut out,
+                    registry_route(graph, facts, writer, &binding.name, &[member]),
+                    writer,
+                );
+            }
         }
     }
     out.sort_by(|left, right| {
@@ -157,7 +187,7 @@ fn nested_write(history: &ValueMutationHistory) -> bool {
 }
 
 fn named_members(assigned: Option<&ValueAssignedMutations>) -> bool {
-    assigned.is_some_and(|assigned| !assigned.members.is_empty())
+    assigned.is_some_and(|assigned| !assigned.members.is_empty() || assigned.dynamic.is_some())
 }
 
 fn is_named(expr: &ValueExpression, local: &str) -> bool {

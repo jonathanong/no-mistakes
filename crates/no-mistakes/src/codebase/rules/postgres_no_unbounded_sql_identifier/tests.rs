@@ -116,7 +116,12 @@ fn same_file_or_literal_exports_are_not_unbounded_identifier_sources() {
         &graph,
         &facts,
         &call,
-        &Provenance::Named("schema".into()),
+        &Provenance::Reference {
+            name: "schema".into(),
+            scope: 0,
+            offset: 0,
+            members: vec![]
+        },
     )
     .is_none());
 }
@@ -169,7 +174,11 @@ fn shadowed_process_and_unbounded_namespace_members_are_classified() {
         &Provenance::Namespace {
             local: "t".into(),
             exported: "config".into(),
+            members: vec!["config".into()],
         },
     )
     .is_none());
 }
+
+#[path = "recall_shapes_tests.rs"]
+mod recall_shapes;

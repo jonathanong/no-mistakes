@@ -3,6 +3,11 @@ use crate::codebase::dependencies::extract::ValueExpression;
 pub(crate) fn walk_expression(expr: &ValueExpression, visit: &mut impl FnMut(&ValueExpression)) {
     visit(expr);
     match expr {
+        ValueExpression::Derived(parts) => {
+            for part in parts.iter() {
+                walk_expression(part, visit);
+            }
+        }
         ValueExpression::Awaited(inner) => walk_expression(inner, visit),
         ValueExpression::Member(inner, _) => walk_expression(inner, visit),
         ValueExpression::Nullish(left, right)

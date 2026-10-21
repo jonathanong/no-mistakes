@@ -63,3 +63,102 @@ fn switch_validator_and_literal_registry_pass() {
         assert!(out.status.success(), "{rule}/{scenario}: {}", stdout(&out));
     }
 }
+
+fn exact_locations(rule: &str, scenario: &str, expected: &[(u64, &str)]) {
+    let out = Command::new(bin())
+        .args(["check", "--format", "json", "--root"])
+        .arg(fixture(rule, scenario))
+        .args(["--config", ".no-mistakes.yml"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    let findings: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["rule"] == rule)
+        .collect();
+    assert_eq!(
+        out.status.code(),
+        Some(if expected.is_empty() { 0 } else { 1 }),
+        "{scenario}: {report}"
+    );
+    let actual = findings
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["file"], "src/query.ts", "{scenario}: {report}");
+            (
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(actual, expected, "{scenario}: {report}");
+}
+
+#[test]
+fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
+    let rule = "postgres-no-unbounded-sql-identifier";
+    for (scenario, line, target) in [
+        ("fail-conditional-env", 3, "process.env.SCHEMA"),
+        ("fail-concat-env", 2, "process.env.SCHEMA"),
+        ("fail-alias-chain", 4, "b"),
+        ("fail-env-object-alias", 3, "process.env.SCHEMA"),
+        ("fail-process-namespace", 3, "process.env.SCHEMA"),
+        ("fail-destructured-rows", 3, "rows"),
+        ("fail-destructured-row", 4, "schema"),
+        ("fail-iterated-rows", 4, "row"),
+        ("fail-iterated-row-alias", 4, "row"),
+        ("fail-conditional-row-source", 5, "row"),
+        ("fail-diamond-alias", 21, "a18"),
+        ("fail-await-env-alias", 3, "a"),
+        ("fail-env-fallback-right", 4, "a"),
+        ("fail-env-destruct-default", 3, "schema"),
+        ("fail-row-default", 4, "row"),
+        ("fail-row-nullish", 5, "row"),
+        ("fail-row-nullish-right", 5, "row"),
+    ] {
+        exact_locations(rule, scenario, &[(line, target)]);
+    }
+    for scenario in [
+        "pass-conditional-literals",
+        "pass-new-bind-value",
+        "pass-projected-http-rows",
+        "pass-alias-cycle",
+        "pass-alias-shadow",
+        "pass-finite-alias",
+        "pass-stale-mutable-row",
+        "pass-dynamic-env-key",
+        "pass-diamond-alias",
+        "pass-self-alias-cycle",
+    ] {
+        exact_locations(rule, scenario, &[]);
+    }
+}
+
+#[test]
+fn mutable_registry_remaining_shapes_use_the_public_cli() {
+    let rule = "postgres-no-mutable-sql-registry";
+    for scenario in [
+        "fail-literal-computed",
+        "fail-dynamic-key",
+        "fail-static-require",
+        "fail-require-namespace",
+        "fail-namespace-reexport",
+        "fail-namespace-named-reexport",
+    ] {
+        exact_locations(rule, scenario, &[(3, "src/tables.ts")]);
+    }
+    for scenario in [
+        "pass-dynamic-unrelated",
+        "pass-dynamic-require",
+        "pass-shadowed-require",
+        "pass-require-other-target",
+        "pass-namespace-other-target",
+        "pass-namespace-cycle",
+        "pass-unknown-namespace-key",
+        "pass-require-rebound",
+    ] {
+        exact_locations(rule, scenario, &[]);
+    }
+}

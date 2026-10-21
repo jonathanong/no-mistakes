@@ -6,21 +6,34 @@ use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod bindings;
 mod env;
+mod search;
+pub(crate) use bindings::Bindings;
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Provenance {
     ProcessEnv(String),
-    Named(String),
-    Namespace { local: String, exported: String },
+    Reference {
+        name: String,
+        scope: usize,
+        offset: u32,
+        members: Vec<String>,
+    },
+    Namespace {
+        local: String,
+        exported: String,
+        members: Vec<String>,
+    },
 }
 
 pub(crate) fn interpolations(
     graph: &DepGraph,
     facts: &CheckFactMap,
     call: &SqlCall<'_>,
+    bindings: &Bindings<'_>,
 ) -> BTreeSet<Provenance> {
     let mut out = BTreeSet::new();
     let Some(ts) = facts.get_ts_facts(&call.file) else {
@@ -32,11 +45,11 @@ pub(crate) fn interpolations(
         }
         if (value_call.offset, value_call.end) == call.span {
             for argument in value_call.arguments.iter() {
-                classify(graph, facts, &call.file, argument, &mut out);
+                classify(graph, facts, &call.file, argument, &mut out, bindings);
             }
             continue;
         }
-        classify_call(graph, facts, &call.file, value_call, &mut out);
+        classify_call(graph, facts, &call.file, value_call, &mut out, bindings);
     }
     out
 }
@@ -51,18 +64,28 @@ fn classify(
     file: &Path,
     expr: &ValueExpression,
     out: &mut BTreeSet<Provenance>,
+    bindings: &Bindings<'_>,
 ) {
-    if let Some(key) = env_key(facts, file, expr) {
+    if let Some(key) = env_key(facts, file, expr).map(str::to_owned).or_else(|| {
+        matches!(expr, ValueExpression::Member(_, _))
+            .then(|| bindings.env(file, expr, &[]))
+            .flatten()
+    }) {
         out.insert(Provenance::ProcessEnv(key.to_string()));
         return;
     }
     match expr {
-        ValueExpression::Call(start, end) => {
-            if let Some(value_call) = value_call_at(facts, file, *start, *end) {
-                classify_call(graph, facts, file, value_call, out);
+        ValueExpression::Derived(parts) => {
+            for part in parts.iter() {
+                classify(graph, facts, file, part, out, bindings);
             }
         }
-        ValueExpression::Awaited(inner) => classify(graph, facts, file, inner, out),
+        ValueExpression::Call(start, end) => {
+            if let Some(value_call) = value_call_at(facts, file, *start, *end) {
+                classify_call(graph, facts, file, value_call, out, bindings);
+            }
+        }
+        ValueExpression::Awaited(inner) => classify(graph, facts, file, inner, out, bindings),
         ValueExpression::Member(inner, key) => {
             let mut members = vec![key.clone()];
             let mut current = inner.as_ref();
@@ -73,25 +96,38 @@ fn classify(
             members.reverse();
             if let Some(key) = env_from_chain(facts, file, current, &members) {
                 out.insert(Provenance::ProcessEnv(key));
-            } else if let ValueExpression::Named { name, .. } = current {
-                out.insert(named_provenance(facts, file, name, &members));
+            } else if let ValueExpression::Named {
+                name,
+                scope,
+                offset,
+                ..
+            } = current
+            {
+                out.insert(named_provenance(
+                    facts, file, name, *scope, *offset, &members,
+                ));
             } else {
-                classify(graph, facts, file, current, out);
+                classify(graph, facts, file, current, out, bindings);
             }
         }
         ValueExpression::Nullish(left, right)
         | ValueExpression::Default(left, right)
         | ValueExpression::Either(left, right) => {
-            classify(graph, facts, file, left, out);
-            classify(graph, facts, file, right, out);
+            classify(graph, facts, file, left, out, bindings);
+            classify(graph, facts, file, right, out, bindings);
         }
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
             for value in fields.values() {
-                classify(graph, facts, file, value, out);
+                classify(graph, facts, file, value, out, bindings);
             }
         }
-        ValueExpression::Named { name, .. } => {
-            out.insert(named_provenance(facts, file, name, &[]));
+        ValueExpression::Named {
+            name,
+            scope,
+            offset,
+            ..
+        } => {
+            out.insert(named_provenance(facts, file, name, *scope, *offset, &[]));
         }
         _ => {}
     }
@@ -103,60 +139,19 @@ fn classify_call(
     file: &Path,
     value_call: &ValueCall,
     out: &mut BTreeSet<Provenance>,
+    bindings: &Bindings<'_>,
 ) {
     if is_finite_validator(graph, facts, file, &value_call.callee) {
         return;
     }
-    classify(graph, facts, file, &value_call.callee, out);
+    classify(graph, facts, file, &value_call.callee, out, bindings);
     for argument in value_call.arguments.iter() {
-        classify(graph, facts, file, argument, out);
+        classify(graph, facts, file, argument, out, bindings);
     }
 }
 
-fn named_provenance(
-    facts: &CheckFactMap,
-    file: &Path,
-    local: &str,
-    members: &[String],
-) -> Provenance {
-    if is_namespace_import(facts, file, local) {
-        if let Some(exported) = members.first() {
-            return Provenance::Namespace {
-                local: local.to_string(),
-                exported: exported.clone(),
-            };
-        }
-    }
-    Provenance::Named(local.to_string())
-}
-
-fn is_namespace_import(facts: &CheckFactMap, file: &Path, local: &str) -> bool {
-    facts.get_ts_facts(file).is_some_and(|ts| {
-        ts.imported_bindings.iter().any(|binding| {
-            !binding.is_type_only
-                && binding.local == local
-                && binding.kind == ImportedBindingKind::Namespace
-        })
-    })
-}
-
-fn value_call_at<'a>(
-    facts: &'a CheckFactMap,
-    file: &Path,
-    start: u32,
-    end: u32,
-) -> Option<&'a ValueCall> {
-    facts
-        .get_ts_facts(file)?
-        .value_flow
-        .calls
-        .iter()
-        .find(|call| call.offset == start && call.end == end)
-}
-
-fn contains(outer: (u32, u32), inner: (u32, u32)) -> bool {
-    inner.0 >= outer.0 && inner.1 <= outer.1
-}
+mod helpers;
+use helpers::{contains, named_provenance, value_call_at};
 
 #[cfg(test)]
 mod tests;

@@ -23,11 +23,32 @@ impl ImportCollector {
                 ValueExpression::Call(templates::tag_offset(tagged), tagged.span.end)
             }
             Expression::TemplateLiteral(template) if !template.expressions.is_empty() => {
-                let mut fields = fx_map();
-                for (index, interpolation) in template.expressions.iter().enumerate() {
-                    fields.insert(index.to_string(), self.value_expression(interpolation));
-                }
-                ValueExpression::Array(std::sync::Arc::new(fields))
+                ValueExpression::Derived(
+                    template
+                        .expressions
+                        .iter()
+                        .map(|part| self.value_expression(part))
+                        .collect::<Vec<_>>()
+                        .into(),
+                )
+            }
+            Expression::ConditionalExpression(value) => ValueExpression::Derived(
+                vec![
+                    self.value_expression(&value.consequent),
+                    self.value_expression(&value.alternate),
+                ]
+                .into(),
+            ),
+            Expression::BinaryExpression(value)
+                if value.operator == oxc_syntax::operator::BinaryOperator::Addition =>
+            {
+                ValueExpression::Derived(
+                    vec![
+                        self.value_expression(&value.left),
+                        self.value_expression(&value.right),
+                    ]
+                    .into(),
+                )
             }
             Expression::StaticMemberExpression(member) => ValueExpression::Member(
                 std::sync::Arc::new(self.value_expression(&member.object)),
