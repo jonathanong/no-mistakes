@@ -116,9 +116,11 @@ pub(super) fn unpinned_finding(
 }
 
 /// Version comment on the line that contains the value text, not a bare `uses:`.
-fn version_comment(line: &str) -> &str {
+pub(super) fn version_comment(line: &str) -> &str {
     let mut quote = None;
     let mut escape = false;
+    // A quote opens a scalar only at a boundary. `Don't` keeps the apostrophe.
+    let mut boundary = true;
     for (index, ch) in line.char_indices() {
         if escape {
             escape = false;
@@ -128,18 +130,21 @@ fn version_comment(line: &str) -> &str {
             // `\"` is still inside the double-quoted scalar.
             if active == '"' && ch == '\\' {
                 escape = true;
-                continue;
-            }
-            if ch == active {
+            } else if ch == active {
                 quote = None;
+                boundary = true;
             }
             continue;
         }
-        match ch {
-            '"' | '\'' => quote = Some(ch),
-            '#' => return line[index..].trim(),
-            _ => {}
+        if matches!(ch, '"' | '\'') && boundary {
+            quote = Some(ch);
+            boundary = false;
+            continue;
         }
+        if ch == '#' {
+            return line[index..].trim();
+        }
+        boundary = ch.is_whitespace() || matches!(ch, '{' | '[' | ',' | ':' | '-');
     }
     ""
 }

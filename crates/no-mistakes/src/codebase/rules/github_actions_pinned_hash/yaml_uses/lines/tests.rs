@@ -273,3 +273,11 @@ fn anchor_only_step_and_plain_apostrophe_keep_the_action() {
     let quoted = ["- name: say \"hi\"", "- { uses: actions/checkout@v4 }"];
     assert_eq!(action_uses_lines(&quoted).lines, vec![2], "{quoted:?}");
 }
+
+#[test]
+fn plain_apostrophe_does_not_hide_the_version_comment() {
+    let line = "- { name: Don't fail, uses: actions/checkout@sha } # v1";
+    assert_eq!(super::super::version_comment(line), "# v1");
+    let quoted = r#"- { name: "Don't", uses: actions/checkout@sha } # v6.0.2"#;
+    assert_eq!(super::super::version_comment(quoted), "# v6.0.2");
+}

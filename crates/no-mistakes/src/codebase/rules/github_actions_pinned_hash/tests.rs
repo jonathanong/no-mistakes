@@ -585,4 +585,10 @@ fn anchor_only_and_plain_apostrophe_steps_are_checked() {
     let named = check_yaml_shape("plain-apostrophe-fail.yml");
     assert_eq!(lines_of(&named), vec![3], "{named:?}");
     assert!(named[0].message.contains("actions/checkout@v4"));
+
+    // The apostrophe stays in the name, so the trailing version comment counts.
+    let comment = check_yaml_shape("plain-apostrophe-comment-fail.yml");
+    assert_eq!(lines_of(&comment), vec![4], "{comment:?}");
+    assert!(comment[0].message.contains("trailing comment"));
+    assert!(comment[0].message.contains("de0fac2e"));
 }
