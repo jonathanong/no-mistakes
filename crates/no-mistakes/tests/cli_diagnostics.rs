@@ -147,7 +147,7 @@ fn independent_codebase_rule_timing_is_opt_in() {
 
 #[test]
 fn filesystem_rule_timing_uses_the_rule_id_and_is_opt_in() {
-    let root = fixture("rules", "test-no-dependency-pins").join("fixture/fail");
+    let root = fixture("rules", "test-no-dependency-pins").join("fail");
     let args = [
         "check",
         "--root",

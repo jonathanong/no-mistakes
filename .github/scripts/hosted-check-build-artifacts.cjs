@@ -30,7 +30,7 @@ function externalTarget(source, target) {
 }
 
 function ownedArtifact(area, name) {
-  if ([".fingerprint", "build"].includes(area)) return /^no-mistakes-/.test(name);
+  if ([".fingerprint", "build"].includes(area)) return name.startsWith("no-mistakes-");
   return /^(?:lib)?no_mistakes(?:-|\.)/.test(name) || /^no-mistakes(?:\.|$)/.test(name);
 }
 
