@@ -120,12 +120,18 @@ impl InvocationObserver {
 
     /// Called on ordinary listener threads, never from a raw signal handler.
     pub fn render_progress_stderr(&self) {
-        let Some(snapshot) = self.progress_snapshot() else {
-            return;
-        };
-        render_snapshot(&snapshot, |line| {
+        if let Some(line) = self.render_progress_text() {
             self.emit_progress_output(line);
-        });
+        }
+    }
+
+    /// One `[progress]` line, without touching the heartbeat stderr writer.
+    /// The timeout path emits this on its own writer so the two cannot interleave.
+    pub(in crate::diagnostics) fn render_progress_text(&self) -> Option<String> {
+        let snapshot = self.progress_snapshot()?;
+        let mut line = None;
+        render_snapshot(&snapshot, |text| line = Some(text));
+        line
     }
 }
 
