@@ -33,7 +33,7 @@ export const page = true;
 
 ```ts
 // web/app/page.ts
-import 'server-only';
+import 'fs';
 ```
 
 ## Related rules

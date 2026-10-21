@@ -229,6 +229,23 @@ flowchart TD
 }
 
 #[test]
+fn text_email_is_file_content_not_a_path() {
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n",
+        &[("text".into(), "owner@example.com".into())],
+    );
+    let body = std::fs::read_to_string(fixture.path().join("fixture.txt")).unwrap();
+    assert_eq!(
+        body, "owner@example.com",
+        "a lone email must stay fixture content, not become an empty path"
+    );
+    assert!(
+        !fixture.path().join("owner@example.com").exists(),
+        "email addresses are not path listings"
+    );
+}
+
+#[test]
 fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
     let fixture = docs_rule_snippets::materialize_snippet(
         "rules:\n  - rule: github-actions-composite-step-schema\n    scope: repository\n",

@@ -41,6 +41,7 @@ are explicit policy options; there are no inferred alias conventions.
 ## Valid example
 
 ```json
+// tsconfig.json
 {"compilerOptions":{"paths":{"@api/*":["src/api/*"]}}}
 ```
 
@@ -50,6 +51,7 @@ alias and folder agree.
 ## Counterexample
 
 ```json
+// tsconfig.json
 {"compilerOptions":{"paths":{"@api/*":["src/services/*"]}}}
 ```
 

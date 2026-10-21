@@ -259,7 +259,10 @@ fn looks_like_path_listing(code: &str) -> bool {
         .collect();
     !lines.is_empty()
         && lines.iter().all(|line| {
-            !line.contains(' ') && (line.contains('/') || line.contains('.')) && !line.contains('=')
+            !line.contains(' ')
+                && !line.contains('@')
+                && (line.contains('/') || line.contains('.'))
+                && !line.contains('=')
         })
 }
 
