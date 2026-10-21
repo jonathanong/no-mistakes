@@ -1,0 +1,7 @@
+# The version comment is on the line that closes the quoted ref, not the `uses` key.
+on: [push]
+jobs:
+  build:
+    steps:
+      - { uses: "actions/checkout@\
+          de0fac2e4500dabe0009e67214ff5f5447ce83dd" } # v6.0.2

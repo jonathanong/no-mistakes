@@ -162,7 +162,7 @@ fn block_header_keeps_the_version_comment_line() {
     assert_eq!(classified.lines, vec![2], "{classified:?}");
     assert!(classified.block_scalar[1]);
     assert_eq!(
-        super::comment_at(&classified.block_scalar, &lines, 2),
+        super::comment_at(&classified, &lines, 2),
         "- uses: >- # v6.0.2"
     );
 }
@@ -499,7 +499,7 @@ fn nested_anchor_input_does_not_shift_the_pinned_step() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-fn yaml_shape_findings(name: &str) -> Vec<super::super::super::RuleFinding> {
+pub(super) fn yaml_shape_findings(name: &str) -> Vec<super::super::super::RuleFinding> {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
     let mut config = crate::config::v2::NoMistakesConfig::default();
@@ -511,6 +511,8 @@ fn yaml_shape_findings(name: &str) -> Vec<super::super::super::RuleFinding> {
     let file = root.join(".github/workflows").join(name);
     super::super::super::check_with_files(&root, &config, &[file]).unwrap()
 }
+
+mod continued;
 
 #[test]
 fn matrix_next_line_value_does_not_steal_the_step_comment() {

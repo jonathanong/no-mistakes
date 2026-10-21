@@ -12,6 +12,8 @@ pub(super) struct ClassifiedUses {
     /// Nested `uses` keys that are not job or step actions. Line-scan hits on
     /// those lines are not action references.
     pub rejected_uses: Vec<bool>,
+    /// Source line that holds the version comment for each action line.
+    comment_lines: Vec<usize>,
 }
 
 struct OpenBlock {
@@ -26,6 +28,11 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
     let mut rejected_uses = Vec::with_capacity(lines.len());
     // `{ uses:` with the ref on the next line stays open across blanks.
     let mut await_value = false;
+    // `uses:` then a comment or blank still owns the following scalar.
+    let mut pending_value = false;
+    // Index of an action whose quoted scalar is still open.
+    let mut open_quote_at: Option<usize> = None;
+    let mut comment_lines = Vec::new();
     let mut block: Option<OpenBlock> = None;
     let mut carry = Carry::default();
     for index in 0..lines.len() {
@@ -36,7 +43,7 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
                 rejected_uses.push(false);
                 if open.capture_uses && is_value_line(lines[index]) && !is_nested_key(lines[index])
                 {
-                    found.push(index + 1);
+                    record(&mut found, &mut comment_lines, index + 1);
                     open.capture_uses = false;
                 }
                 continue;
@@ -49,24 +56,29 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
         rejected_uses.push(mark.rejects_uses);
         if in_input_block(lines, index) {
             await_value = false;
+            pending_value = false;
             continue;
         }
         let value_here = is_value_line(lines[index]) && !is_nested_key(lines[index]);
-        let previous_in_flow = index > 0 && flow_input_at_start[index - 1];
-        // `uses:` then `nested: true` is a mapping, not the action scalar.
+        let ignorable = is_ignorable(lines[index]);
         // A rejected matrix `uses:` must not claim the next indented value.
-        let continued = index > 0
-            && bare_uses_key(lines[index - 1])
-            && !rejected_uses[index - 1]
-            && !in_input_block(lines, index - 1)
-            && !previous_in_flow
-            && value_here
-            && !mark.starts_in_flow_input;
-        if continued || (await_value && value_here && !mark.starts_in_flow_input) {
-            found.push(index + 1);
+        if !ignorable && (pending_value || await_value) && value_here && !mark.starts_in_flow_input
+        {
+            record(&mut found, &mut comment_lines, index + 1);
+            pending_value = false;
+            await_value = false;
         }
+        let before = found.len();
         for _ in 0..mark.present_count {
-            found.push(index + 1);
+            record(&mut found, &mut comment_lines, index + 1);
+        }
+        if mark.quote_open && found.len() > before {
+            open_quote_at = Some(before);
+        } else if let Some(slot) = open_quote_at {
+            if !mark.quote_open {
+                comment_lines[slot] = index + 1;
+                open_quote_at = None;
+            }
         }
         if mark.opens_block {
             block = Some(OpenBlock {
@@ -74,7 +86,14 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
                 capture_uses: mark.block_uses,
             });
         }
-        if !is_ignorable(lines[index]) {
+        if !ignorable {
+            // `uses:` then `nested: true` is a mapping, not the action scalar.
+            let bare_action = bare_uses_key(lines[index])
+                && !mark.rejects_uses
+                && mark.present_count == 0
+                && !mark.opens_block
+                && !mark.starts_in_flow_input;
+            pending_value = bare_action;
             await_value = mark.awaits;
         }
     }
@@ -83,14 +102,31 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
         flow_input_at_start,
         block_scalar,
         rejected_uses,
+        comment_lines,
     }
 }
 
+fn record(found: &mut Vec<usize>, comments: &mut Vec<usize>, line: usize) {
+    found.push(line);
+    comments.push(line);
+}
+
 /// Version-comment line for an action. A block value's comment is on the header.
-pub(super) fn comment_at<'a>(block_scalar: &[bool], lines: &[&'a str], line_num: usize) -> &'a str {
-    let mut index = line_num.saturating_sub(1);
-    if block_scalar.get(index).copied().unwrap_or(false) {
-        while index > 0 && block_scalar[index - 1] {
+/// A quoted scalar folded with `\` keeps the action on the opening line and the
+/// comment on the line that closes the quote.
+pub(super) fn comment_at<'a>(
+    classified: &ClassifiedUses,
+    lines: &[&'a str],
+    line_num: usize,
+) -> &'a str {
+    let mut index = classified
+        .lines
+        .iter()
+        .position(|line| *line == line_num)
+        .map(|slot| classified.comment_lines[slot].saturating_sub(1))
+        .unwrap_or(line_num.saturating_sub(1));
+    if classified.block_scalar.get(index).copied().unwrap_or(false) {
+        while index > 0 && classified.block_scalar[index - 1] {
             index -= 1;
         }
         index = index.saturating_sub(1);

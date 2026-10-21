@@ -53,6 +53,8 @@ pub(super) struct LineMark {
     pub opens_block: bool,
     pub block_uses: bool,
     pub rejects_uses: bool,
+    /// The line ended inside a quoted scalar, so its comment is on the closer.
+    pub quote_open: bool,
 }
 
 impl Carry {
@@ -122,6 +124,7 @@ impl Carry {
             opens_block: header,
             block_uses,
             rejects_uses: self.rejected_uses,
+            quote_open: self.quote.is_some(),
         }
     }
 
@@ -171,6 +174,7 @@ fn empty_mark() -> LineMark {
         opens_block: false,
         block_uses: false,
         rejects_uses: false,
+        quote_open: false,
     }
 }
 

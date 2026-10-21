@@ -37,7 +37,6 @@ pub(super) fn append_parsed_uses(
     let classified = lines::action_uses_lines(&source_lines);
     // A `uses` inside `with` or `env` is an input. A matrix `include` field
     // named `uses` is not an action, so its line-scan hit is dropped too.
-    let action_lines = classified.lines;
     findings.retain(|finding| {
         let index = finding.line.saturating_sub(1);
         let flow_input = classified
@@ -51,26 +50,22 @@ pub(super) fn append_parsed_uses(
             .get(index)
             .copied()
             .unwrap_or(false);
-        let action_here = action_lines.contains(&finding.line);
+        let action_here = classified.lines.contains(&finding.line);
         !indent::in_input_block(&source_lines, index)
             && !flow_input
             && !in_block
             && !(rejected && !action_here)
     });
-    for (uses_value, line_num) in uses_values.iter().zip(action_lines) {
-        if seen_lines.contains(&line_num) {
+    for (uses_value, line_num) in uses_values.iter().zip(&classified.lines) {
+        if seen_lines.contains(line_num) {
             continue;
         }
         if exempt(uses_value) {
             continue;
         }
-        let comment = version_comment(lines::comment_at(
-            &classified.block_scalar,
-            &source_lines,
-            line_num,
-        ));
+        let comment = version_comment(lines::comment_at(&classified, &source_lines, *line_num));
         if let Some(finding) =
-            unpinned_finding(file, line_num, uses_value, sha_re, version_re, comment)
+            unpinned_finding(file, *line_num, uses_value, sha_re, version_re, comment)
         {
             findings.push(finding);
         }
