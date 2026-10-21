@@ -76,7 +76,12 @@ module.exports = rule(
           new Set(["mock", "doMock", "unstable_mockModule"]),
         );
         if (forwarded) {
-          reportMockCall(node, forwarded.mock, forwarded.specifierNode, forwarded.factory);
+          reportMockCall(
+            node,
+            forwarded.mock,
+            forwarded.specifierNode ?? null,
+            forwarded.factory ?? null,
+          );
           return;
         }
         const alias = mockAliases.matchCall(node);

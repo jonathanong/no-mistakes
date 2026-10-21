@@ -1,6 +1,6 @@
 "use strict";
 
-const { isModuleMockMemberCall, propertyName } = require("./module-mock-helpers");
+const { isModuleMockMemberCall, memberPropertyName } = require("./module-mock-helpers");
 
 function unwrap(node) {
   while (node?.type === "ChainExpression") node = node.expression;
@@ -10,7 +10,7 @@ function unwrap(node) {
 function matchDirectMockCallApply(node, context, methods) {
   const callee = unwrap(node.callee);
   const object = unwrap(callee?.object);
-  const name = callee?.type === "MemberExpression" ? propertyName(callee.property) : null;
+  const name = callee?.type === "MemberExpression" ? memberPropertyName(callee) : null;
   if (!["call", "apply"].includes(name) || object?.type !== "MemberExpression") return null;
   const direct = isModuleMockMemberCall({ callee: object }, context);
   if (!direct || !methods.has(direct.method)) return null;
