@@ -10,7 +10,7 @@ use std::sync::{Arc, OnceLock};
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
 mod yaml;
-pub use yaml::YamlParseOutcome;
+pub use yaml::{YamlDocumentsOutcome, YamlParseOutcome};
 mod optional;
 mod read;
 mod regular_paths;
@@ -23,6 +23,7 @@ pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
 
 type JsonParseSlots = DashMap<PathBuf, Arc<OnceLock<JsonParseOutcome>>>;
 type YamlParseSlots = DashMap<PathBuf, Arc<OnceLock<YamlParseOutcome>>>;
+type YamlDocumentSlots = DashMap<PathBuf, Arc<OnceLock<YamlDocumentsOutcome>>>;
 type SupplementalReadSlots = DashMap<PathBuf, Arc<OnceLock<SourceReadOutcome>>>;
 
 /// Lazy request-scoped source storage for a frozen file inventory.
@@ -36,6 +37,7 @@ pub struct SourceStore {
     reads: Vec<OnceLock<SourceReadOutcome>>,
     json_parses: JsonParseSlots,
     yaml_parses: OnceLock<YamlParseSlots>,
+    yaml_documents: OnceLock<YamlDocumentSlots>,
     supplemental_reads: SupplementalReadSlots,
     validated_regular_paths: ValidatedPathCache,
     trusted_regular_paths: DashSet<PathBuf>,
@@ -62,6 +64,7 @@ impl SourceStore {
             reads,
             json_parses: DashMap::new(),
             yaml_parses: OnceLock::new(),
+            yaml_documents: OnceLock::new(),
             supplemental_reads: DashMap::new(),
             validated_regular_paths: DashMap::new(),
             trusted_regular_paths: DashSet::new(),

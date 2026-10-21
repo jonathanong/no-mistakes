@@ -133,12 +133,12 @@ fn check_source(
         }
     }
 
-    // Parse failures keep the line-scan findings. Syntax and I/O both mean
-    // there is no cached document to walk.
-    let parsed = sources.parse_yaml_path(path).ok();
+    // Parse failures keep the line-scan findings. Each document that parses
+    // is walked, including a flow `uses` in a later document.
+    let documents = sources.parse_yaml_documents_path(path).ok();
     yaml_uses::append_parsed_uses(
         content,
-        parsed.as_deref(),
+        documents.as_deref().unwrap_or(&[]),
         &file,
         sha_re,
         version_re,

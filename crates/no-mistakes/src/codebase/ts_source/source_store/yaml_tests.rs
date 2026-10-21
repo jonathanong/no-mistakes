@@ -158,3 +158,43 @@ fn parse_counters_are_request_scoped_and_json_counters_stay_independent() {
     assert_eq!(json_store.json_parse_count(), 1);
     assert_eq!(json_store.yaml_parse_count(), 0);
 }
+
+#[test]
+fn yaml_documents_keep_parsed_documents_and_cache_one_read() {
+    let multi = fixture("multi.yml");
+    let sources = store(&multi);
+    let first = sources.parse_yaml_documents_path(&multi).unwrap();
+    let second = sources.parse_yaml_documents_path(&multi).unwrap();
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(first.len(), 2);
+    assert_eq!(first[0]["name"].as_str(), Some("first"));
+    assert_eq!(first[1]["name"].as_str(), Some("second"));
+    assert_eq!(sources.yaml_parse_count(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
+
+    let partial = fixture("partial.yml");
+    let kept = store(&partial).parse_yaml_documents_path(&partial).unwrap();
+    assert_eq!(kept.len(), 1);
+    assert_eq!(kept[0]["name"].as_str(), Some("kept"));
+
+    let comments = fixture("comments.yml");
+    let only_comments = store(&comments)
+        .parse_yaml_documents_path(&comments)
+        .unwrap();
+    assert!(
+        only_comments.is_empty() || only_comments.iter().all(|document| !document.is_mapping()),
+        "{only_comments:?}"
+    );
+
+    let malformed = fixture("malformed.yml");
+    let syntax = store(&malformed)
+        .parse_yaml_documents_path(&malformed)
+        .unwrap_err();
+    assert!(!syntax.is_io());
+
+    let missing = fixture("missing.yml");
+    let io_error = store(&missing)
+        .parse_yaml_documents_path(&missing)
+        .unwrap_err();
+    assert!(io_error.is_io());
+}

@@ -1,5 +1,8 @@
 use std::collections::BTreeSet;
 
+#[path = "folded.rs"]
+mod folded;
+
 /// Bind `value` to a real `uses` occurrence that the line scan has not already
 /// judged. A later step, name, or comment that merely contains the text is not
 /// an occurrence. A second real `uses` of the same text still is.
@@ -20,7 +23,7 @@ pub(super) fn claim_uses_line(
             return Some(line_num);
         }
     }
-    None
+    folded::claim_folded_uses(lines, claimed, value)
 }
 
 fn bare_uses_key(line: &str) -> bool {

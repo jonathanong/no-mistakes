@@ -2,6 +2,7 @@ use super::{RuleFinding, RULE_ID};
 use regex::Regex;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
+use std::sync::Arc;
 
 mod lines;
 
@@ -10,18 +11,20 @@ mod lines;
 /// document leaves the line-scan findings untouched.
 pub(super) fn append_parsed_uses(
     content: &str,
-    parsed: Option<&Value>,
+    documents: &[Arc<Value>],
     file: &str,
     sha_re: &Regex,
     version_re: &Regex,
     seen_lines: &BTreeSet<usize>,
     findings: &mut Vec<RuleFinding>,
 ) {
-    let Some(value) = parsed else {
+    if documents.is_empty() {
         return;
-    };
+    }
     let mut uses_values = Vec::new();
-    collect_uses(value, &mut uses_values);
+    for document in documents {
+        collect_uses(document, &mut uses_values);
+    }
     let source_lines: Vec<&str> = content.lines().collect();
     let mut claimed = seen_lines.clone();
     for uses_value in uses_values {

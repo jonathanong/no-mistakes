@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
@@ -38,6 +39,11 @@ impl std::error::Error for YamlLoadError {
 #[doc(hidden)]
 pub type YamlParseOutcome = Result<Arc<serde_yaml::Value>, YamlLoadError>;
 
+/// Every YAML document in one file that parsed. A later broken document does
+/// not drop the documents before it. An empty failure is a syntax error.
+#[doc(hidden)]
+pub type YamlDocumentsOutcome = Result<Arc<[Arc<serde_yaml::Value>]>, YamlLoadError>;
+
 impl super::SourceStore {
     #[doc(hidden)]
     pub fn parse_yaml_path(&self, path: &Path) -> YamlParseOutcome {
@@ -72,11 +78,64 @@ impl super::SourceStore {
         result
     }
 
+    /// Documents from one cached parse. Single-document files still use
+    /// [`Self::parse_yaml_path`], which rejects a multi-document stream.
+    #[doc(hidden)]
+    pub fn parse_yaml_documents_path(&self, path: &Path) -> YamlDocumentsOutcome {
+        let path = crate::codebase::ts_source::normalize_discovery_path(path);
+        let slots = self.yaml_documents.get_or_init(dashmap::DashMap::new);
+        let cell = super::once_lock_slot(slots, path.clone());
+        self.increment("yaml.requests", 1);
+        let parsed = std::cell::Cell::new(false);
+        let result = cell
+            .get_or_init(|| {
+                parsed.set(true);
+                self.yaml_parse_count
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                self.increment("yaml.parses", 1);
+                match self.read_path(&path) {
+                    Ok(source) => documents_from_str(&source).map(Arc::from).map_err(|error| {
+                        self.increment("yaml.errors", 1);
+                        YamlLoadError::Syntax(error)
+                    }),
+                    Err(error) => {
+                        self.increment("yaml.errors", 1);
+                        Err(YamlLoadError::Io(error))
+                    }
+                }
+            })
+            .clone();
+        if !parsed.get() {
+            self.increment("yaml.cache_hits", 1);
+        }
+        result
+    }
+
     #[doc(hidden)]
     pub fn yaml_parse_count(&self) -> usize {
         self.yaml_parse_count
             .load(std::sync::atomic::Ordering::Relaxed)
     }
+}
+
+fn documents_from_str(source: &str) -> Result<Vec<Arc<serde_yaml::Value>>, Arc<serde_yaml::Error>> {
+    let mut documents = Vec::new();
+    let mut failure = None;
+    for document in serde_yaml::Deserializer::from_str(source) {
+        match serde_yaml::Value::deserialize(document) {
+            Ok(value) => documents.push(Arc::new(value)),
+            Err(error) => {
+                failure = Some(Arc::new(error));
+                break;
+            }
+        }
+    }
+    if documents.is_empty() {
+        if let Some(error) = failure {
+            return Err(error);
+        }
+    }
+    Ok(documents)
 }
 
 #[cfg(test)]

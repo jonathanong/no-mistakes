@@ -21,8 +21,9 @@ not script bodies.
 It flags `${{ <expr> }}` in:
 
 - a step `run` body
-- `with.script` when the step `uses` `actions/github-script` (a trailing slash
-  is the same action; `actions/github-script/extra` is not)
+- `with.script` when the step `uses` `actions/github-script` (owner/repo case
+  is ignored; a trailing slash is the same action; `actions/github-script/extra`
+  is not)
 
 Values already in `env` or in `with` (other than that `script` input) are not
 flagged. `if`, `defaults.run`, workflow `env`, job `env`, and reusable-workflow

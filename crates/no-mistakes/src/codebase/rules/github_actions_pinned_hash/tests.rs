@@ -400,4 +400,13 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert_eq!(lines_of(&echoed), vec![5], "{echoed:?}");
     assert!(echoed[0].message.contains("actions/checkout@v4"));
     assert!(!echoed[0].message.contains("de0fac2e"));
+
+    // `from_str` rejects the whole file. Document 1's flow uses must still fail.
+    let multi_flow = check_yaml_shape("multi-doc-flow-fail.yml");
+    assert_eq!(lines_of(&multi_flow), vec![1], "{multi_flow:?}");
+    assert!(multi_flow[0].message.contains("actions/checkout@v4"));
+
+    let folded = check_yaml_shape("folded-flow-fail.yml");
+    assert_eq!(lines_of(&folded), vec![1], "{folded:?}");
+    assert!(folded[0].message.contains("actions/checkout@v4"));
 }
