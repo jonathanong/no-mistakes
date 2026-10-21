@@ -409,4 +409,12 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     let folded = check_yaml_shape("folded-flow-fail.yml");
     assert_eq!(lines_of(&folded), vec![1], "{folded:?}");
     assert!(folded[0].message.contains("actions/checkout@v4"));
+
+    let anchored = check_yaml_shape("anchor-flow-fail.yml");
+    assert_eq!(lines_of(&anchored), vec![1], "{anchored:?}");
+    assert!(anchored[0].message.contains("actions/checkout@v4"));
+    assert!(!anchored[0].message.contains("&checkout"));
+
+    let input = check_yaml_shape("with-uses-pass.yml");
+    assert_eq!(lines_of(&input), Vec::<usize>::new(), "{input:?}");
 }

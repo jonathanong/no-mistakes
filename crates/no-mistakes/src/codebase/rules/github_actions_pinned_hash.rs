@@ -114,8 +114,12 @@ fn check_source(
         let Some(caps) = uses_re.captures(line) else {
             continue;
         };
-        seen_lines.insert(line_num);
         let raw = caps.get(1).map_or("", |m| m.as_str());
+        // `&anchor value` and `*alias` are resolved by the parsed walk.
+        if raw.starts_with('&') || raw.starts_with('*') {
+            continue;
+        }
+        seen_lines.insert(line_num);
         let uses_value = raw
             .strip_prefix('"')
             .and_then(|s| s.strip_suffix('"'))

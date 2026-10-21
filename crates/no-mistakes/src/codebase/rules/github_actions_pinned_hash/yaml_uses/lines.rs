@@ -78,6 +78,7 @@ fn line_uses_scalar(line: &str, value: &str) -> bool {
     let mut after_colon = false;
     let mut key_was_uses = false;
     let mut flow_depth = 0_i32;
+    let mut skip_anchor = false;
 
     for ch in line.chars() {
         if let Some(active) = quote {
@@ -107,6 +108,17 @@ fn line_uses_scalar(line: &str, value: &str) -> bool {
         }
         if ch == '#' {
             break;
+        }
+        // `&anchor value` and `*alias` sit between `uses:` and the scalar.
+        if skip_anchor {
+            if ch.is_whitespace() {
+                skip_anchor = false;
+            }
+            continue;
+        }
+        if after_colon && scalar.is_empty() && matches!(ch, '&' | '*') {
+            skip_anchor = true;
+            continue;
         }
         if matches!(ch, '{' | '[') {
             flow_depth += 1;

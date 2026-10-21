@@ -101,21 +101,57 @@ fn version_comment(line: &str) -> &str {
     ""
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Place {
+    Root,
+    Jobs,
+    Job,
+    Steps,
+    Step,
+}
+
 fn collect_uses(value: &Value, out: &mut Vec<String>) {
+    collect_in(value, Place::Root, true, out);
+}
+
+/// Job `uses` and step `uses` only. A root sequence is a step list (the saved
+/// fixtures). Inputs under `with` or `env` are not action references.
+fn collect_in(value: &Value, place: Place, at_root: bool, out: &mut Vec<String>) {
     match value {
         Value::Mapping(mapping) => {
-            for (key, child) in mapping {
-                if key.as_str() == Some("uses") {
-                    if let Some(text) = child.as_str() {
-                        out.push(text.to_owned());
+            if matches!(place, Place::Job | Place::Step) {
+                for (key, child) in mapping {
+                    if key.as_str() == Some("uses") {
+                        if let Some(text) = child.as_str() {
+                            out.push(text.to_owned());
+                        }
                     }
                 }
-                collect_uses(child, out);
+            }
+            for (key, child) in mapping {
+                let Some(key) = key.as_str() else {
+                    continue;
+                };
+                if matches!(key, "with" | "env") {
+                    continue;
+                }
+                let next = match key {
+                    "jobs" => Place::Jobs,
+                    "steps" => Place::Steps,
+                    _ if place == Place::Jobs => Place::Job,
+                    _ => Place::Root,
+                };
+                collect_in(child, next, false, out);
             }
         }
         Value::Sequence(items) => {
+            let as_steps = place == Place::Steps || (at_root && place == Place::Root);
             for item in items {
-                collect_uses(item, out);
+                if as_steps {
+                    collect_in(item, Place::Step, false, out);
+                } else {
+                    collect_in(item, place, false, out);
+                }
             }
         }
         _ => {}
