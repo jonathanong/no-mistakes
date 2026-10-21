@@ -1,0 +1,8 @@
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        # `../outside` leaves the repository. Report that once; do not scan it.
+        - path: ../outside
+          bannedExtensions: [".js"]

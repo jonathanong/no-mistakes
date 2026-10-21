@@ -23,8 +23,12 @@ operational section, such as performance notes or ownership guidance.
 ## What it catches/requires
 
 Every file matching `glob` must contain the exact `requiredHeading` Markdown
-heading. A fenced or four-space-indented example of that line is not a heading.
-Content below the heading is not inferred or validated by this rule.
+heading. When `requiredHeading` starts with `#`, the ATX level and the text
+must both match, so `### Perf` does not satisfy `## Perf`. A value without
+`#` matches any level. Setext headings and a closing `##` use the parsed
+level and text. A fenced or four-space-indented example of that line is not
+a heading. Content below the heading is not inferred or validated by this
+rule.
 
 ## Options and defaults
 
@@ -52,6 +56,13 @@ This agent keeps its query under 100 ms.
 The configured heading is `## Perf`, so the level-one heading does not satisfy
 the contract. A fenced or indented example that merely quotes `## Perf` also
 does not satisfy the contract, because it is not a document heading.
+
+```md
+// agents/demo/README.md
+### Perf
+```
+
+A deeper heading does not satisfy `## Perf` either.
 
 ## Fix
 

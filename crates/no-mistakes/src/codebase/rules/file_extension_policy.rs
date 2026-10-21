@@ -39,7 +39,8 @@ pub(crate) fn check_with_files(
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
-            Ok(scan(root, &opts, &files))
+            let config_file = super::configured_root::config_file_for_finding(root, config);
+            Ok(scan(root, &opts, &files, &config_file))
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -47,14 +48,35 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFinding> {
+fn scan(root: &Path, opts: &Options, files: &[PathBuf], config_file: &str) -> Vec<RuleFinding> {
     let allowlist: HashSet<&str> = opts.allowlist.iter().map(String::as_str).collect();
-    let mut findings: Vec<RuleFinding> = files
+    let mut findings = escaping_scope_findings(opts, config_file);
+    // `par_iter` is a rayon iterator. Collect it before extending the Vec.
+    let file_findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(|path| check_file(path, root, &allowlist, &opts.scopes))
         .collect();
+    findings.extend(file_findings);
     findings.sort_by(|a, b| a.file.cmp(&b.file));
     findings
+}
+
+fn escaping_scope_findings(opts: &Options, config_file: &str) -> Vec<RuleFinding> {
+    opts.scopes
+        .iter()
+        .filter(|scope| normalized_scope_path(&scope.path).is_none())
+        .map(|scope| {
+            let display = scope.path.replace('\\', "/");
+            RuleFinding {
+                rule: RULE_ID.to_string(),
+                file: config_file.to_string(),
+                line: 1,
+                message: format!("{display}: configured root escapes the repository"),
+                import: None,
+                target: None,
+            }
+        })
+        .collect()
 }
 
 pub(crate) fn check_file(
@@ -77,8 +99,8 @@ pub(crate) fn check_file(
     let ext = file_extension(&rel);
 
     for scope in scopes {
-        // `./src` and `src/../src` are the same prefix as `src`. A scope that
-        // normalizes to `..` or starts with `../` matches nothing in the repo.
+        // `./src` and `src/../src` are the same prefix as `src`. An escaping
+        // scope is one config finding from `scan`, not a hit on each file.
         let Some(scope_path) = normalized_scope_path(&scope.path) else {
             continue;
         };
