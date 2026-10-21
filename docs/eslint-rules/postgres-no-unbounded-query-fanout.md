@@ -18,9 +18,9 @@ await Promise.all(userIds.map((id) => query("SELECT * FROM users WHERE id = $1",
 ```ts
 import { query } from "@example/db";
 
-await Promise.all(
-  chunkArray(userIds, 50).map((id) => query("SELECT * FROM users WHERE id = $1", [id])),
-);
+for (const id of userIds) {
+  await query("SELECT * FROM users WHERE id = $1", [id]);
+}
 ```
 
 ## Options
