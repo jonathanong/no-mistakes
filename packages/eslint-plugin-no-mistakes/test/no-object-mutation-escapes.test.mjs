@@ -71,6 +71,8 @@ describe("no-object-mutation escapes", () => {
           Object.assign.call(null, box, { c: 1 });
           Object.assign.apply(null, [box, { c: 1 }]);
           Object.assign.bind(null)(box, { c: 1 });
+          Object.assign.bind(null, box)(rows);
+          Object.assign.bind(null, box)({ c: 1 });
           Object.assign.call(box, { c: 1 });
           Object.assign.apply(box, [{ c: 1 }]);
         }
@@ -99,6 +101,7 @@ describe("no-object-mutation escapes", () => {
           Object.assign.apply(null, []);
           Object.assign.bind(null)();
           Object.assign.bind(null)(...box);
+          Object.assign.bind(null, ...box)(rows);
           bind(null)(box);
           Object.assign.call(null)(box, { c: 1 });
           fn.bind(null)(box);
@@ -106,7 +109,7 @@ describe("no-object-mutation escapes", () => {
           box[missingName].bind(null)(box);
         }
       `),
-      repeated(8),
+      repeated(10),
     );
     assert.deepEqual(
       ids(

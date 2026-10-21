@@ -95,6 +95,40 @@ describe("no-object-mutation", () => {
       "box",
     );
     assert.equal(mutationCall({ callee: bind, arguments: [] }, scope), null);
+    const prebound = {
+      ...bind,
+      arguments: [
+        { type: "Literal", value: null },
+        { type: "Identifier", name: "box" },
+      ],
+    };
+    assert.equal(
+      mutationCall(
+        {
+          callee: prebound,
+          arguments: [{ type: "Identifier", name: "rows" }],
+        },
+        scope,
+      )?.targetNode.name,
+      "box",
+    );
+    const spreadBound = {
+      ...bind,
+      arguments: [
+        { type: "Literal", value: null },
+        { type: "SpreadElement", argument: { type: "Identifier", name: "box" } },
+      ],
+    };
+    assert.equal(
+      mutationCall(
+        {
+          callee: spreadBound,
+          arguments: [{ type: "Identifier", name: "rows" }],
+        },
+        scope,
+      ),
+      null,
+    );
   });
 
   it("names the static rewrite in the report", () => {

@@ -12,8 +12,10 @@ createWorker('jobs', async (j) => {
     label,
     [skipped]: unused,
     extra: { nested },
-    deduplicationId: dedup = 'fallback',
+    deduplicationId: dedup,
   } = j;
+  // A default is the fallback when the property is missing, so it is not a job token.
+  const { deduplicationId: fallbackDedup = 'fallback' } = j;
   // A computed key and a nested pattern are not id tokens.
   const { ['id']: computedId } = j;
   const {
@@ -26,6 +28,9 @@ createWorker('jobs', async (j) => {
     case 'destructured-dedup':
       await queue.add('destructured-dedup', {}, { deduplication: { id: dedup } });
       break;
+    case 'defaulted-dedup':
+      await queue.add('defaulted-dedup', {}, { deduplication: { id: fallbackDedup } });
+      break;
   }
-  return { alias, label, unused, nested, bare, computedId, nestedId };
+  return { alias, label, unused, nested, bare, computedId, nestedId, fallbackDedup };
 });

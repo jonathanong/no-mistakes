@@ -34,9 +34,10 @@ pub(super) fn note_destructured_ids(
 }
 
 fn bound_id_name<'a>(pattern: &'a BindingPattern<'a>) -> Option<&'a str> {
-    match pattern {
-        BindingPattern::BindingIdentifier(id) => Some(id.name.as_str()),
-        BindingPattern::AssignmentPattern(assignment) => bound_id_name(&assignment.left),
-        _ => None,
-    }
+    // A default (`id = fallback`) is the fallback when the property is missing,
+    // so only a bare name is the job id.
+    let BindingPattern::BindingIdentifier(id) = pattern else {
+        return None;
+    };
+    Some(id.name.as_str())
 }

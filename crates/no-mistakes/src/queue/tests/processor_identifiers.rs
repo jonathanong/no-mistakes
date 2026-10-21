@@ -10,6 +10,7 @@ fn named_processors_and_copied_const_tokens_keep_their_worker_ownership() {
         .map(|finding| finding.job.as_deref().unwrap())
         .collect();
     jobs.sort_unstable();
+    // `defaulted-dedup` stays off this list: a fallback binding is not the job id.
     assert_eq!(
         jobs,
         [

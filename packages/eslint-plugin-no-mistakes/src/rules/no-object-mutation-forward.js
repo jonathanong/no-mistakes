@@ -88,7 +88,8 @@ function forwardedObjectTarget(node) {
   return { targetNode: target, otherArgs: list.elements.slice(1) };
 }
 
-// `Object.assign.bind(thisArg)(target, ...sources)` mutates `target`, same as `.call`.
+// `Object.assign.bind(thisArg)(target, ...sources)` mutates `target`.
+// `Object.assign.bind(thisArg, target, ...bound)(...rest)` mutates that pre-bound target.
 function boundObjectMutation(bound, node, scope) {
   const member = unwrap(bound.callee);
   if (!member || member.type !== "MemberExpression" || methodName(member) !== "bind") {
@@ -101,6 +102,16 @@ function boundObjectMutation(bound, node, scope) {
   const name = methodName(method);
   if (!name || !OBJECT_METHODS.has(name) || !isGlobal(method.object, scope, "Object")) {
     return null;
+  }
+  if (bound.arguments.length > 1) {
+    const target = bound.arguments[1];
+    if (target.type === "SpreadElement") {
+      return null;
+    }
+    return {
+      targetNode: target,
+      otherArgs: [...bound.arguments.slice(2), ...node.arguments],
+    };
   }
   return argumentMutation(node);
 }
