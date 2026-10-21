@@ -32,6 +32,10 @@ impl ImportCollector {
         assigned: Option<(Option<String>, u32)>,
         tracking: mutation_metadata::Tracking<'_>,
     ) {
+        if self.receiver_escapes.projecting_possible {
+            self.remember_possible_escape(key, path, assigned, &tracking);
+            return;
+        }
         if self.remember_module_provider_mutation(key, path, assigned.clone(), &tracking) {
             return;
         }

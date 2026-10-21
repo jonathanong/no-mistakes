@@ -9,6 +9,10 @@ impl ValueFlowResolution<'_, '_> {
             // import target; retaining that target would resurrect the old method.
             self.replacement_read = true;
             FlowValue::Unknown
+        } else if self.receiver_origin_possible() {
+            // Newly recovered escapes widen the original candidate; historical
+            // definite mutations above keep their existing Unknown semantics.
+            FlowValue::Possible(Box::new(value))
         } else {
             value
         };
@@ -17,6 +21,9 @@ impl ValueFlowResolution<'_, '_> {
     }
     pub(in super::super) fn member_value(&mut self, base: FlowValue, member: &str) -> FlowValue {
         match base {
+            FlowValue::Possible(value) => {
+                FlowValue::Possible(Box::new(self.member_value(*value, member)))
+            }
             FlowValue::TypedObject {
                 executor,
                 mut properties,

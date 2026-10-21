@@ -117,6 +117,7 @@ impl ImportCollector {
             if writer.sources.is_empty() {
                 continue;
             }
+            let mut possible_sources = Vec::new();
             if writer
                 .sources
                 .iter()
@@ -128,45 +129,15 @@ impl ImportCollector {
             {
                 let arguments =
                     parameter_arguments.get_or_insert_with(|| self.parameter_call_origins());
-                writer.sources = writer
-                    .sources
-                    .into_iter()
-                    .flat_map(|source| parameter_arguments::expand(arguments, source))
-                    .collect();
-                if writer.sources.is_empty() {
-                    continue;
+                let mut definite_sources = Vec::new();
+                for source in writer.sources {
+                    let (definite, possible) = parameter_arguments::expand(arguments, source);
+                    definite_sources.extend(definite);
+                    possible_sources.extend(possible);
                 }
+                writer.sources = definite_sources;
             }
-            #[cfg(feature = "test-instrumentation")]
-            {
-                self.value_flow.reference_forward_writer_replays += 1;
-            }
-            // The alias initializer was collected after this callable body.
-            // Its own source coordinates select snapshots; declaration order
-            // cannot truncate the receiver-origin facts available at invocation.
-            writer.metadata.foreign_before = self.mutable_receiver_origin_watermark();
-            let info = MutationInfo {
-                metadata: writer.metadata,
-                assigned_member: writer.member.as_deref(),
-                completed_at: writer.completed_at,
-                has_assignment: writer.assigned,
-                proof: Some(&writer.proof),
-            };
-            let mut affected = mutation_projection::Affected::default();
-            self.project_member_mutation(
-                PendingQueue::from_vec(writer.sources),
-                None,
-                info,
-                &mut affected,
-            );
-            let aliases = alias_index.get_or_insert_with(|| self.prepare_mutation_alias_index());
-            self.invalidate_mutation_bindings_indexed(
-                &affected,
-                info.metadata.context,
-                info.metadata.offset,
-                true,
-                Some(aliases),
-            );
+            self.replay_forward_write(&mut writer, possible_sources, &mut alias_index);
         }
     }
 }
@@ -174,3 +145,6 @@ impl ImportCollector {
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "forward_receiver_work_tests.rs"]
 mod tests;
+
+#[path = "forward_receiver_replay.rs"]
+mod replay;

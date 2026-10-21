@@ -31,15 +31,16 @@ impl ValueFlowResolution<'_, '_> {
         }
         let enabled = location.is_some()
             && self.indexes.file(self.facts, file).is_some_and(|index| {
-                index
-                    .values
-                    .receiver_mutations
-                    .as_ref()
-                    .is_some_and(|receivers| {
-                        context.map_or(receivers.module_writer, |context| {
-                            receivers.writer_contexts.contains(&context)
+                index.values.possible_receiver_mutations.is_some()
+                    || index
+                        .values
+                        .receiver_mutations
+                        .as_ref()
+                        .is_some_and(|receivers| {
+                            context.map_or(receivers.module_writer, |context| {
+                                receivers.writer_contexts.contains(&context)
+                            })
                         })
-                    })
             });
         let previous = self.member_read.take();
         if enabled {

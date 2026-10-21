@@ -12,9 +12,9 @@ impl ValueFlowResolution<'_, '_> {
         self.default_origins = origins;
         loop {
             callee = match callee {
-                FlowValue::Returned { executor, .. } | FlowValue::Provenance { executor, .. } => {
-                    *executor
-                }
+                FlowValue::Possible(executor)
+                | FlowValue::Returned { executor, .. }
+                | FlowValue::Provenance { executor, .. } => *executor,
                 other => {
                     callee = other;
                     break;

@@ -147,6 +147,9 @@ match deterministically. Ordinary singleton rows omit `alternatives` and retain
 their existing shape and spelling-versus-target configuration precedence.
 Unknown candidates add no invented effects. Trusted typed/returned executor
 provenance is retained alongside matched callable alternatives.
+Receiver writes newly recovered through guarded array alternatives or `super`
+calls keep an existing effect match as a possible target alongside unknown
+evidence. Such a row preserves recall; it does not prove one runtime callee.
 
 For callable alternatives, `functions` and `categories` also match retained
 export paths, including a plain imported name such as `read` after

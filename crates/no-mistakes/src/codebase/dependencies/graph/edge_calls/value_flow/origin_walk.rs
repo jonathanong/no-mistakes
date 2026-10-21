@@ -9,6 +9,18 @@ impl ValueFlowResolution<'_, '_> {
         receivers_only: bool,
         hint: Option<&member_projection::MemberProjection<'_>>,
     ) -> bool {
+        self.origins_invalidated_in_channel(file, offset, contexts, receivers_only, hint, false)
+    }
+
+    pub(super) fn origins_invalidated_in_channel(
+        &self,
+        file: &std::path::Path,
+        offset: u32,
+        contexts: (Option<CallableId>, Option<CallableId>),
+        receivers_only: bool,
+        hint: Option<&member_projection::MemberProjection<'_>>,
+        possible: bool,
+    ) -> bool {
         let (context, source_context) = contexts;
         let Some(root) = &self.default_origins else {
             return false;
@@ -28,7 +40,12 @@ impl ValueFlowResolution<'_, '_> {
                 projection.pop();
                 continue;
             };
-            if (receivers_only && !node.has_receivers) || (!receivers_only && !node.has_defaults) {
+            let relevant = if receivers_only {
+                node.has_receivers
+            } else {
+                node.has_defaults
+            };
+            if !relevant {
                 continue;
             }
             if !visited.insert((
@@ -91,52 +108,30 @@ impl ValueFlowResolution<'_, '_> {
                         acquiring,
                     ));
                 }
-                OriginKind::Receiver(source, scope, name) if receivers_only && receivers => {
-                    if self.indexes.file(self.facts, source).is_some_and(|index| {
-                        index
-                            .values
-                            .receiver_mutations
-                            .as_ref()
-                            .and_then(|receivers| receivers.get(scope))
-                            .and_then(|names| names.get(name))
-                            .is_some_and(|history| {
-                                history.assignment_invalidated_guarded_reads(
-                                    &projection,
-                                    &|writer| {
-                                        reads.offset(read, source, writer).known().or_else(|| {
-                                            let (file, acquisition) =
-                                                self.module_snapshot.as_ref()?;
-                                            let writer = writer?;
-                                            // This qualified proof precedes the writer's
-                                            // execution altogether; zero orders before
-                                            // every authored write in that callable.
-                                            (file == source
-                                                && self.writer_after_module_snapshot(
-                                                    source,
-                                                    writer,
-                                                    *acquisition,
-                                                ))
-                                            .then_some(0)
-                                        })
-                                    },
-                                    &|| reads.default_owner(read, source),
-                                    &|guards| self.module_provider_summary(source, guards),
-                                )
-                            })
-                    }) {
+                OriginKind::Receiver(source, scope, name, possible_only)
+                    if receivers_only && receivers && (possible || !possible_only) =>
+                {
+                    if self.receiver_history_invalidated(
+                        (source, *scope, name),
+                        &projection,
+                        (read, &reads),
+                        possible,
+                    ) {
                         return true;
                     }
                 }
                 OriginKind::Receiver(..) | OriginKind::ReceiverOwnedContexts(..) => {}
                 origin @ OriginKind::InvocationReceiver { .. } => {
-                    if self.invocation_receiver_invalidated(
-                        origin,
-                        (file, source_context),
-                        receivers_only,
-                        receivers,
-                        (read, &reads),
-                        &projection,
-                    ) {
+                    if !possible
+                        && self.invocation_receiver_invalidated(
+                            origin,
+                            (file, source_context),
+                            receivers_only,
+                            receivers,
+                            (read, &reads),
+                            &projection,
+                        )
+                    {
                         return true;
                     }
                 }
@@ -166,3 +161,6 @@ impl ValueFlowResolution<'_, '_> {
 
 #[path = "origin_invocation.rs"]
 mod invocation;
+
+#[path = "origin_receiver.rs"]
+mod receiver;

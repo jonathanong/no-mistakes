@@ -1,5 +1,5 @@
 use super::*;
-use default_origins::{merge, ReceiverRead};
+use default_origins::{ReceiverRead, merge};
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn record_receiver_origin(
@@ -10,17 +10,24 @@ impl ValueFlowResolution<'_, '_> {
         phase: (u32, Option<CallableId>, bool),
     ) {
         let (offset, context, repeated) = phase;
+        let possible_only = !self
+            .indexes
+            .file(self.facts, file)
+            .is_some_and(|index| scope == 0 && index.imported.contains_key(name));
         if self.indexes.file(self.facts, file).is_some_and(|index| {
-            index
-                .values
-                .receiver_mutations
-                .as_ref()
-                .and_then(|receivers| receivers.get(&scope))
-                .and_then(|names| names.get(name))
-                .is_some_and(|history| history.has_assignments)
+            [
+                (!possible_only)
+                    .then_some(index.values.receiver_mutations.as_ref())
+                    .flatten(),
+                index.values.possible_receiver_mutations.as_ref(),
+            ]
+            .into_iter()
+            .flatten()
+            .filter_map(|receivers| receivers.get(&scope).and_then(|names| names.get(name)))
+            .any(|history| history.has_assignments)
         }) {
             let source = self.cache.origin_node(
-                OriginKind::Receiver(file.to_path_buf(), scope, name.to_string()),
+                OriginKind::Receiver(file.to_path_buf(), scope, name.to_string(), possible_only),
                 1,
             );
             let source = self.cache.origin_node(

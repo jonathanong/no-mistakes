@@ -8,6 +8,7 @@ impl ValueFlowResolution<'_, '_> {
         }
         let mut factory = None;
         let mut is_async = false;
+        let mut possible = false;
         let result = self
             .indexes
             .file(self.facts, path)
@@ -31,6 +32,10 @@ impl ValueFlowResolution<'_, '_> {
                 let mut target = target;
                 loop {
                     target = match target {
+                        FlowValue::Possible(inner) => {
+                            possible = true;
+                            *inner
+                        }
                         FlowValue::Bound { target, .. }
                         | FlowValue::Provenance {
                             executor: target, ..
@@ -136,6 +141,11 @@ impl ValueFlowResolution<'_, '_> {
             result = result.awaited();
         }
         let result = with_factory_origin(factory, result);
+        let result = if possible {
+            FlowValue::Possible(Box::new(result))
+        } else {
+            result
+        };
         if is_async {
             FlowValue::Promise(Box::new(result))
         } else {

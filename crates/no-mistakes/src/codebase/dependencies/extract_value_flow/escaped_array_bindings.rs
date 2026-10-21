@@ -1,17 +1,6 @@
-//! Escaped array elements that can reach a later spread.
-//!
-//! A later unconditional assignment replaces the array. An assignment inside a
-//! conditional or a loop is unioned with the array that is still live when that
-//! guard does not run.
-//!
-//! A write inside a function whose body starts after the spread is not live for
-//! that spread. The window ends at the spread's source offset, so a hoisted
-//! function declared later stays outside it.
-
+//! Array liveness uses authored offsets, not call execution order. A write in a
+//! hoisted function declared after its consumer is still outside this approximation.
 use super::*;
-
-type ArrayItems = std::sync::Arc<FxHashMap<String, ValueExpression>>;
-type LiveArray = (u32, ArrayItems, bool);
 
 impl ImportCollector {
     pub(in super::super::super) fn note_array_value(
@@ -22,14 +11,16 @@ impl ImportCollector {
         value: &ValueExpression,
     ) {
         if let ValueExpression::Array(items) = value {
-            let conditional =
-                self.conditional_execution || self.repeat_depth > self.call_repeat_base;
+            let guarded = self.receiver_write_is_conditional
+                || self.conditional_execution
+                || self.repeat_depth > self.call_repeat_base;
+            self.receiver_escapes.guarded_arrays |= guarded;
             self.receiver_escapes.arrays.push((
                 scope,
                 name.to_string(),
                 at,
                 std::sync::Arc::clone(items),
-                conditional,
+                guarded,
             ));
         }
     }
@@ -80,7 +71,7 @@ fn named_items(
     name: &str,
     before: u32,
 ) -> Option<(u32, std::sync::Arc<FxHashMap<String, ValueExpression>>)> {
-    let mut rows: Vec<LiveArray> = Vec::new();
+    let mut best: Option<(u32, std::sync::Arc<FxHashMap<String, ValueExpression>>)> = None;
     if let Some(indexes) = collector
         .value_binding_indexes
         .get(&scope)
@@ -92,50 +83,24 @@ fn named_items(
                 continue;
             }
             if let ValueExpression::Array(items) = &binding.value {
-                rows.push((binding.declared_at, std::sync::Arc::clone(items), false));
+                if best
+                    .as_ref()
+                    .is_none_or(|(at, _)| binding.declared_at >= *at)
+                {
+                    best = Some((binding.declared_at, std::sync::Arc::clone(items)));
+                }
             }
         }
     }
-    for (entry_scope, entry_name, at, items, conditional) in &collector.receiver_escapes.arrays {
+    for (entry_scope, entry_name, at, items, _) in &collector.receiver_escapes.arrays {
         if *entry_scope != scope || entry_name != name || *at > before {
             continue;
         }
-        rows.push((*at, std::sync::Arc::clone(items), *conditional));
-    }
-    union_live_arrays(&mut rows)
-}
-
-/// The latest unconditional array replaces everything before it. Later guarded
-/// arrays stay live on the path that skips the guard.
-fn union_live_arrays(rows: &mut [LiveArray]) -> Option<(u32, ArrayItems)> {
-    if rows.is_empty() {
-        return None;
-    }
-    rows.sort_by_key(|(at, _, _)| *at);
-    let start = rows
-        .iter()
-        .rposition(|(_, _, conditional)| !conditional)
-        .unwrap_or(0);
-    let (declared_at, first, _) = &rows[start];
-    let mut merged = (**first).clone();
-    for (_, items, _) in rows.iter().skip(start + 1) {
-        for (key, value) in items.iter() {
-            match merged.get(key) {
-                Some(existing) if existing == value => {}
-                Some(existing) => {
-                    let either = ValueExpression::Either(
-                        std::sync::Arc::new(existing.clone()),
-                        std::sync::Arc::new(value.clone()),
-                    );
-                    merged.insert(key.clone(), either);
-                }
-                None => {
-                    merged.insert(key.clone(), value.clone());
-                }
-            }
+        if best.as_ref().is_none_or(|(best_at, _)| *at >= *best_at) {
+            best = Some((*at, std::sync::Arc::clone(items)));
         }
     }
-    Some((*declared_at, std::sync::Arc::new(merged)))
+    best
 }
 
 fn append_pushes(
@@ -195,3 +160,7 @@ fn flatten(value: &ValueExpression, slot: usize, found: &mut Vec<(usize, ValueEx
         other => found.push((slot, other.clone())),
     }
 }
+
+#[path = "escaped_array_alternatives.rs"]
+mod alternatives;
+pub(super) use alternatives::additional_entries;

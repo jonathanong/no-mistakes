@@ -153,9 +153,13 @@ fn callback_array_parameter_reads_the_element() {
     unknown_replica_keeps_primary("callback-array-slot");
 }
 
-fn guarded_array_escapes_both(file: &str) {
+fn guarded_array_keeps_both_origins(file: &str, newly_recovered: bool) {
     let (built, root) = graph();
-    assert_unknown(&built, &root, file, "replica.get");
+    if newly_recovered {
+        assert_possible_export(&built, &root, file, "replica.get");
+    } else {
+        assert_unknown(&built, &root, file, "replica.get");
+    }
     assert_unknown(&built, &root, file, "untouched.get");
     for callee in ["primary.get", "replica.info", "unrelated.get"] {
         assert_export(&built, &root, file, callee);
@@ -163,41 +167,296 @@ fn guarded_array_escapes_both(file: &str) {
 }
 
 #[test]
-fn conditional_array_reassignment_keeps_both_origins_unknown() {
-    guarded_array_escapes_both("array-reassign-conditional");
+fn conditional_array_reassignment_keeps_the_earlier_and_later_origins() {
+    guarded_array_keeps_both_origins("array-reassign-conditional", true);
 }
 
 #[test]
-fn loop_array_reassignment_keeps_both_origins_unknown() {
-    guarded_array_escapes_both("array-reassign-loop");
+fn loop_array_reassignment_keeps_the_earlier_and_later_origins() {
+    guarded_array_keeps_both_origins("array-reassign-loop", true);
 }
 
 #[test]
-fn conditional_array_push_keeps_both_origins_unknown() {
-    guarded_array_escapes_both("array-push-conditional");
+fn conditional_array_push_keeps_the_initial_and_appended_origins() {
+    guarded_array_keeps_both_origins("array-push-conditional", false);
 }
 
 #[test]
-fn loop_array_push_keeps_both_origins_unknown() {
-    guarded_array_escapes_both("array-push-loop");
+fn loop_array_push_keeps_the_initial_and_appended_origins() {
+    guarded_array_keeps_both_origins("array-push-loop", false);
 }
 
 #[test]
 fn super_method_rebind_uses_the_base_instead_of_the_override() {
     let (built, root) = graph();
-    assert_unknown(&built, &root, "class-method-super", "replica.get");
+    assert_possible_export(&built, &root, "class-method-super", "replica.get");
     for callee in ["primary.info", "replica.info", "unrelated.get"] {
         assert_export(&built, &root, "class-method-super", callee);
     }
 }
 
+fn assert_possible_export(
+    built: &super::DepGraph,
+    root: &std::path::Path,
+    file: &str,
+    callee: &str,
+) {
+    let site = built
+        .call_sites_in_file(&root.join(format!("src/{file}.mts")))
+        .iter()
+        .find(|site| site.source_callee == callee)
+        .unwrap();
+    assert!(
+        matches!(&site.target, super::ResolvedCallTarget::Alternatives(_)),
+        "{site:?}"
+    );
+    assert!(site.has_unknown_target(), "{site:?}");
+    let candidates = site.targets().collect::<Vec<_>>();
+    assert_eq!(candidates.len(), 1, "{site:?}");
+    assert!(
+        matches!(candidates[0].target, super::KnownCallTargetRef::ModuleExport { export_path, .. }
+        if export_path == callee),
+        "{site:?}"
+    );
+}
+
 #[test]
-fn guarded_array_unions_slots_by_position() {
+fn guarded_array_effects_preserve_the_baseline_call_sites() {
+    let root = super::fixture("value-flow-receiver-escapes");
+    let report = crate::effects_query::run(
+        &root,
+        Some(&root.join("effects.yml")),
+        None,
+        "receiver",
+        std::path::Path::new("src/array-reassign-conditional.mts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    // These four matches were reported before the guarded origin was recovered.
+    // Widening that target to possible+unknown must not silence an existing effect.
+    let observed = report
+        .call_sites
+        .iter()
+        .map(|site| (site.file.as_str(), site.line, site.callee.as_str()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        observed,
+        [
+            ("src/array-reassign-conditional.mts", 12, "replica.get"),
+            ("src/array-reassign-conditional.mts", 14, "primary.get"),
+            ("src/array-reassign-conditional.mts", 15, "replica.info"),
+            ("src/array-reassign-conditional.mts", 16, "unrelated.get"),
+        ]
+    );
+}
+
+#[test]
+fn super_uses_the_class_declaration_base_despite_a_method_local_shadow() {
     let (built, root) = graph();
-    // Slot 0 is equal on both paths; slot 1 exists only on the guarded path.
-    assert_unknown(&built, &root, "array-reassign-union", "replica.get");
-    assert_unknown(&built, &root, "array-reassign-union", "untouched.get");
-    for callee in ["primary.get", "unrelated.get"] {
-        assert_export(&built, &root, "array-reassign-union", callee);
+    assert_possible_export(&built, &root, "class-method-super-shadow", "replica.get");
+    for callee in ["primary.info", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, "class-method-super-shadow", callee);
     }
 }
+
+#[test]
+fn unconditional_array_reset_discards_earlier_guarded_origins() {
+    let (built, root) = graph();
+    assert_export(
+        &built,
+        &root,
+        "array-reassign-conditional-reset",
+        "replica.get",
+    );
+    assert_unknown(
+        &built,
+        &root,
+        "array-reassign-conditional-reset",
+        "untouched.get",
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-reassign-conditional-reset",
+        "unrelated.get",
+    );
+}
+
+#[test]
+fn guarded_array_lengths_preserve_origins_of_shifted_arguments() {
+    guarded_array_keeps_both_origins("array-reassign-conditional-shift", true);
+}
+
+#[test]
+fn guarded_escape_preserves_a_repository_method_candidate() {
+    let (built, root) = graph();
+    let site = built
+        .call_sites_in_file(&root.join("src/array-guarded-local-method.mts"))
+        .iter()
+        .find(|site| site.source_callee == "api.get")
+        .unwrap();
+    assert!(site.has_unknown_target(), "{site:?}");
+    assert!(
+        site.targets().any(|candidate| matches!(
+            candidate.target,
+            super::KnownCallTargetRef::RepositoryFunction {
+                scope: "original",
+                ..
+            }
+        )),
+        "{site:?}"
+    );
+    assert_export(&built, &root, "array-guarded-local-method", "unrelated.get");
+}
+
+#[test]
+fn guarded_factory_keeps_returned_executor_and_factory_provenance() {
+    let (built, root) = graph();
+    let site = built
+        .call_sites_in_file(&root.join("src/array-guarded-factory-return.mts"))
+        .iter()
+        .find(|site| site.source_callee == "made")
+        .unwrap();
+    assert!(site.has_unknown_target(), "{site:?}");
+    assert!(
+        site.targets().any(|candidate| matches!(
+            candidate.target,
+            super::KnownCallTargetRef::ModuleExport {
+                export_path: "primary.get",
+                ..
+            }
+        )),
+        "{site:?}"
+    );
+    assert!(
+        site.returned_from.iter().any(|(module, export)| module
+            == "./uncertain-factory-provider.mts"
+            && export == "make"),
+        "{site:?}"
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-guarded-factory-return",
+        "unrelated.get",
+    );
+}
+
+#[test]
+fn guarded_escape_keeps_existing_authored_choice_metadata() {
+    let (built, root) = graph();
+    let site = built
+        .call_sites_in_file(&root.join("src/array-guarded-existing-choice.mts"))
+        .iter()
+        .find(|site| site.source_callee == "api.get")
+        .unwrap();
+    assert!(site.has_unknown_target(), "{site:?}");
+    assert!(
+        site.targets().any(|candidate| matches!(
+            candidate.target,
+            super::KnownCallTargetRef::ModuleExport {
+                export_path: "primary.get",
+                ..
+            }
+        )),
+        "{site:?}"
+    );
+    assert_eq!(
+        site.alternatives.len(),
+        2,
+        "only the authored nullish alternatives survive"
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-guarded-existing-choice",
+        "unrelated.get",
+    );
+}
+
+#[test]
+fn guarded_multiple_spreads_keep_const_tail_origins_and_positions() {
+    guarded_array_keeps_both_origins("array-guarded-multiple-spreads", true);
+}
+
+#[test]
+fn guarded_method_copy_keeps_the_original_replacement_payload_candidate() {
+    let (built, root) = graph();
+    let site = built
+        .call_sites_in_file(&root.join("src/array-guarded-replacement-copy.mts"))
+        .iter()
+        .find(|site| site.source_callee == "destination.get")
+        .unwrap();
+    assert!(site.has_unknown_target(), "{site:?}");
+    assert!(
+        site.targets().any(|candidate| matches!(
+            candidate.target,
+            super::KnownCallTargetRef::ModuleExport {
+                export_path: "replica.get",
+                ..
+            }
+        )),
+        "{site:?}"
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-guarded-replacement-copy",
+        "primary.get",
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-guarded-replacement-copy",
+        "unrelated.get",
+    );
+}
+
+#[test]
+fn guarded_inline_factory_keeps_the_returned_executor_candidate() {
+    let (built, root) = graph();
+    let sites = built.call_sites_in_file(&root.join("src/array-guarded-inline-factory.mts"));
+    let site = sites
+        .iter()
+        .find(|site| {
+            site.returned_from
+                .iter()
+                .any(|(_, export)| export == "make")
+        })
+        .unwrap();
+    assert!(site.has_unknown_target(), "{site:?}");
+    assert!(
+        site.targets().any(|candidate| matches!(
+            candidate.target,
+            super::KnownCallTargetRef::ModuleExport {
+                export_path: "primary.get",
+                ..
+            }
+        )),
+        "{site:?}"
+    );
+    let invocation = sites
+        .iter()
+        .find(|site| site.source_callee == "value")
+        .unwrap();
+    assert!(
+        invocation.targets().any(|candidate| matches!(
+            candidate.target,
+            super::KnownCallTargetRef::ModuleExport {
+                export_path: "primary.get",
+                ..
+            }
+        )),
+        "{invocation:?}"
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-guarded-inline-factory",
+        "unrelated.get",
+    );
+}
+
+#[path = "receiver_escape_union.rs"]
+mod union;

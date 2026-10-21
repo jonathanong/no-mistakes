@@ -38,7 +38,11 @@ impl ValueFlowResolution<'_, '_> {
                 self.default_origins = origins;
                 self.invocation_read = read;
                 self.invocation_start = start;
-                while let FlowValue::Bound { target: inner, .. } = target { target = *inner; }
+                while let FlowValue::Bound { target: inner, .. } | FlowValue::Possible(inner) =
+                    target
+                {
+                    target = *inner;
+                }
                 let owner = match target {
                     FlowValue::Callable { file, id, .. } => (file, id),
                     FlowValue::Target(ResolvedCallTarget::ModuleExport {

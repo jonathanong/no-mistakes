@@ -596,6 +596,13 @@ the matching imported methods. Root assignments preserve acquisition snapshots
 for saved aliases and exclude overwritten roots from later direct reads.
 Conditional root writes retain possible acquisitions. Copied methods and untouched
 members retain the precision covered by the saved controls.
+Guarded array reassignments also retain earlier contents when a branch or loop
+may not execute. Receiver writes recovered through these alternatives or explicit
+`super` calls retain previously reported call targets as possibilities
+alongside unknown evidence, rather than claiming one known callee or hiding the call.
+Array assignment and push discovery still use source-offset windows: writes in
+a function declared after its consumer can execute earlier at runtime, so this
+ordering remains an approximation.
 Callable bodies can refer to receiver aliases declared later: pending writes
 reuse the completed binding facts and each initializer's acquisition coordinates.
 Uncalled, unavailable, and escaped writers retain conservative unknown targets;

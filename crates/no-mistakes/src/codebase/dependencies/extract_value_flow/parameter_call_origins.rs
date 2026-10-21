@@ -4,6 +4,7 @@ use super::*;
 /// from the request's collected facts and shared by receiver-write projections.
 pub(in crate::codebase::dependencies) struct ParameterCallOrigins {
     values: FxHashMap<(usize, String), Vec<ValueExpression>>,
+    possible: FxHashMap<(usize, String), Vec<ValueExpression>>,
 }
 
 impl ParameterCallOrigins {
@@ -44,9 +45,14 @@ impl ParameterCallOrigins {
             }
         }
         super::receiver_escapes::absorb(collector, &slots, &mut values);
-        Self { values }
+        let mut possible = fx_map();
+        super::receiver_escapes::absorb_possible(collector, &slots, &mut possible);
+        Self { values, possible }
     }
 
+    pub(super) fn possible_values(&self, key: &(usize, String)) -> Option<&[ValueExpression]> {
+        self.possible.get(key).map(Vec::as_slice)
+    }
     pub(super) fn values(&self, key: &(usize, String)) -> Option<&[ValueExpression]> {
         self.values.get(key).map(Vec::as_slice)
     }

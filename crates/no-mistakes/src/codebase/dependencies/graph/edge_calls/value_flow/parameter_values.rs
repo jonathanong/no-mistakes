@@ -150,6 +150,7 @@ impl ValueFlowResolution<'_, '_> {
 // receiver mutation timing. Unrelated and unknown inputs still erase agreement.
 fn executor_provenance(value: FlowValue) -> FlowValue {
     match value {
+        FlowValue::Possible(inner) => FlowValue::Possible(Box::new(executor_provenance(*inner))),
         FlowValue::Provenance {
             executor,
             typed,

@@ -60,7 +60,10 @@ pub(in super::super) fn absorb(
             apply_escaped(values, parameters, collector, call.offset, call.end);
         }
     }
-    for (offset, end, method, arguments) in &collector.receiver_escapes.methods {
+    for (offset, end, method, arguments, possible) in &collector.receiver_escapes.methods {
+        if *possible {
+            continue;
+        }
         if let Some(parameters) = slots.get(method) {
             for (index, argument) in arguments.iter().enumerate() {
                 if let Some(key) = parameters.get(&index) {
@@ -144,3 +147,7 @@ fn push_slot(
         values.entry(key.clone()).or_default().push(item);
     }
 }
+
+#[path = "escaped_possible_origins.rs"]
+mod possible;
+pub(in super::super) use possible::absorb_possible;

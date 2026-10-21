@@ -108,9 +108,10 @@ impl ImportCollector {
         let mut arguments = None;
         let mut aliases = None;
         for ((key, path, (owner, acquired), assigned, has_assignment), mut write) in pending {
-            let index = providers
+            let (index, possible_index) = providers
                 .entry((key.clone(), path.clone()))
                 .or_insert_with(|| {
+                    let mut possible = Vec::new();
                     let mut members = self
                         .prior_member_mutations
                         .foreign_member_provider_references(&key, &path);
@@ -119,16 +120,22 @@ impl ImportCollector {
                             .get(&receiver.0 .0)
                             .is_some_and(|names| names.contains_key(&receiver.0 .1))
                     }) {
-                        arguments
+                        possible = arguments
                             .get_or_insert_with(|| {
                                 arguments::MemberArguments::new(self.parameter_call_origins())
                             })
                             .expand(&mut members);
                     }
-                    self.receiver_only_bindings
+                    let origins = self
+                        .receiver_only_bindings
                         .as_deref()
-                        .unwrap_or(&empty_origins)
-                        .foreign_provider_index(&key, &path, members)
+                        .unwrap_or(&empty_origins);
+                    let possible = (!possible.is_empty())
+                        .then(|| origins.foreign_provider_index(&key, &path, possible));
+                    (
+                        origins.foreign_provider_index(&key, &path, members),
+                        possible,
+                    )
                 });
             // A direct writer may acquire its own later provider on another call.
             // A nested closure retains its enclosing owner's saved acquisition.
@@ -150,40 +157,14 @@ impl ImportCollector {
                 has_assignment,
                 proof: None,
             };
-            for (reference, provider) in &index.module_references {
-                self.active_module_provider = Some(std::sync::Arc::clone(provider));
-                let mut affected = mutation_projection::Affected::default();
-                self.project_member_mutation(
-                    mutation_projection::PendingQueue::new((reference.clone(), false, true, true)),
-                    None,
+            if let Some(possible) = possible_index {
+                self.replay_possible_foreign(
+                    possible,
+                    (owner != acquired).then_some(acquired),
                     info,
-                    &mut affected,
                 );
             }
-            self.active_module_provider = None;
-            if references.is_empty() {
-                continue;
-            }
-            let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
-            let mut affected = mutation_projection::Affected::default();
-            self.project_member_mutation(
-                mutation_projection::PendingQueue::from_vec(
-                    references
-                        .into_iter()
-                        .map(|reference| (reference, false, true, true))
-                        .collect(),
-                ),
-                None,
-                info,
-                &mut affected,
-            );
-            self.invalidate_mutation_bindings_indexed(
-                &affected,
-                Some(owner),
-                info.metadata.offset,
-                true,
-                Some(aliases),
-            );
+            self.replay_foreign(index, references, owner, info, &mut aliases);
         }
         self.foreign_receiver_writes = None;
     }
@@ -194,3 +175,6 @@ const _: () = assert!(size_of::<Option<Box<ForeignReceiverWrites>>>() == size_of
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "mutable_foreign_writes_tests.rs"]
 mod tests;
+
+#[path = "mutable_foreign_replay.rs"]
+mod replay;

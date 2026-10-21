@@ -3,6 +3,7 @@ use super::*;
 impl ImportCollector {
     pub(in super::super::super) fn note_escaped_call(&mut self, call: &CallExpression<'_>) {
         self.note_class_method(call);
+        self.note_possible_arguments(call);
         let mut extras: FxHashMap<usize, Vec<ValueExpression>> = fx_map();
         let (mut open_at, mut open_vals, mut position): (
             Option<usize>,
@@ -119,7 +120,7 @@ fn walk_spread_argument(
 }
 
 /// Both sides of a conditional or logical expression can be the runtime argument.
-fn argument_values(
+pub(super) fn argument_values(
     collector: &ImportCollector,
     expression: &Expression<'_>,
 ) -> Vec<ValueExpression> {

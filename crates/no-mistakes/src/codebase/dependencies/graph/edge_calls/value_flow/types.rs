@@ -3,6 +3,8 @@ use super::*;
 #[derive(Clone, PartialEq, Eq)]
 pub(super) enum FlowValue {
     Uncallable,
+    /// Sparse escaped uncertainty widens canonical targets, not authored branches.
+    Possible(Box<FlowValue>),
     Choice(Vec<FlowValue>),
     TypedObject {
         executor: Box<FlowValue>,
@@ -66,15 +68,22 @@ impl FlowValue {
                 members,
                 receiver_factories,
             },
-            Self::TypedObject { executor, properties } => Self::TypedObject {
-                executor: Box::new(executor.map_executor(operation)), properties,
+            Self::Possible(value) => Self::Possible(Box::new(value.map_executor(operation))),
+            Self::TypedObject {
+                executor,
+                properties,
+            } => Self::TypedObject {
+                executor: Box::new(executor.map_executor(operation)),
+                properties,
             },
             value => operation(value),
         }
     }
     pub(super) fn executor(&self) -> &Self {
         match self {
-            Self::Provenance { executor, .. } | Self::TypedObject { executor, .. } => executor.executor(),
+            Self::Provenance { executor, .. }
+            | Self::TypedObject { executor, .. }
+            | Self::Possible(executor) => executor.executor(),
             value => value,
         }
     }

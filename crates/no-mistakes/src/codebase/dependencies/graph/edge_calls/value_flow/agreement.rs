@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Default)]
 struct Provenance {
+    possible: bool,
     typed: Vec<(String, String)>,
     members: Vec<(String, String, String)>,
     factories: Vec<(String, String)>,
@@ -19,6 +20,7 @@ pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
         if value != first {
             return FlowValue::Unknown;
         }
+        shared.possible |= provenance.possible;
         shared
             .typed
             .retain(|origin| provenance.typed.contains(origin));
@@ -29,6 +31,11 @@ pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
             .factories
             .retain(|origin| provenance.factories.contains(origin));
     }
+    let first = if shared.possible {
+        FlowValue::Possible(Box::new(first))
+    } else {
+        first
+    };
     if shared.typed.is_empty() && shared.members.is_empty() && shared.factories.is_empty() {
         return first;
     }
@@ -44,6 +51,10 @@ pub(super) fn agreed_value(values: Vec<FlowValue>) -> FlowValue {
 // Only origins common to every input can select a configured effect afterward.
 fn normalize(value: FlowValue, provenance: &mut Provenance) -> FlowValue {
     match value {
+        FlowValue::Possible(inner) => {
+            provenance.possible = true;
+            normalize(*inner, provenance)
+        }
         FlowValue::Provenance {
             executor,
             typed,

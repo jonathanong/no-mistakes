@@ -1,33 +1,44 @@
 use super::*;
+type Pending = mutation_projection::PendingMutation<nested::RootRead>;
 
 pub(super) fn expand(
     origins: &parameter_call_origins::ParameterCallOrigins,
-    source: mutation_projection::PendingMutation<nested::RootRead>,
-) -> Vec<mutation_projection::PendingMutation<nested::RootRead>> {
-    let (mut pending, mut output, mut seen) = (vec![source], Vec::new(), fx_set());
-    while let Some(source) = pending.pop() {
+    source: Pending,
+) -> (Vec<Pending>, Vec<Pending>) {
+    let mut pending = vec![(source, false)];
+    let (mut definite, mut possible, mut seen) = (Vec::new(), Vec::new(), fx_set());
+    while let Some((source, uncertain)) = pending.pop() {
         let key = (source.0 .0 .0 .0, source.0 .0 .0 .1.clone());
-        if !seen.insert(key.clone()) {
-            output.push(source);
-            continue;
-        }
-        let Some(values) = origins.values(&key) else {
-            output.push(source);
-            continue;
-        };
-        let ((((_, _), path), reads, _), exiting, _, propagated) = source;
-        let mut references = Vec::new();
-        for value in values {
-            nested::write_receiver_references(value, &path, &reads, &mut references);
-        }
-        for reference in references {
-            let item = (reference, exiting, true, propagated);
-            if origins.values(&item.0 .0 .0).is_some() {
-                pending.push(item);
+        let values = origins.values(&key);
+        let extra = origins.possible_values(&key);
+        if !seen.insert((key, uncertain)) || (values.is_none() && extra.is_none()) {
+            if uncertain {
+                possible.push(source);
             } else {
-                output.push(item);
+                definite.push(source);
+            }
+            continue;
+        }
+        let ((((_, _), path), reads, _), exiting, _, propagated) = source;
+        for (values, newly_uncertain) in [(values, false), (extra, true)] {
+            let mut references = Vec::new();
+            for value in values.into_iter().flatten() {
+                nested::write_receiver_references(value, &path, &reads, &mut references);
+            }
+            for reference in references {
+                let item = (reference, exiting, true, propagated);
+                let uncertain = uncertain || newly_uncertain;
+                if origins.values(&item.0 .0 .0).is_some()
+                    || origins.possible_values(&item.0 .0 .0).is_some()
+                {
+                    pending.push((item, uncertain));
+                } else if uncertain {
+                    possible.push(item);
+                } else {
+                    definite.push(item);
+                }
             }
         }
     }
-    output
+    (definite, possible)
 }

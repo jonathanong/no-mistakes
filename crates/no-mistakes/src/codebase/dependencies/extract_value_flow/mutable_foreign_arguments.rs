@@ -32,22 +32,19 @@ impl MemberArguments {
     pub(super) fn expand(
         &self,
         references: &mut Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))>,
-    ) {
-        let mut arguments = Vec::new();
-        let mut visited = fx_set();
+    ) -> Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))> {
+        let (mut arguments, mut possible, mut visited) = (Vec::new(), Vec::new(), fx_set());
         let mut pending: Vec<_> = references
             .iter()
             .cloned()
-            .map(|(reference, owner, interval)| (reference, owner, interval, Vec::new()))
+            .map(|(reference, owner, interval)| (reference, owner, interval, Vec::new(), false))
             .collect();
-        while let Some(((receiver, reads, _), owner, interval, mut active)) = pending.pop() {
-            let Some(values) = self.origins.values(&receiver.0) else {
-                continue;
-            };
-            // A recursive wrapper can append a member on every pass. Its first
-            // occurrence remains a possible receiver; revisit no parameter in
-            // the same forwarding chain.
-            if active.contains(&receiver.0) {
+        while let Some(((receiver, reads, _), owner, interval, mut active, uncertain)) =
+            pending.pop()
+        {
+            let values = self.origins.values(&receiver.0);
+            let extra = self.origins.possible_values(&receiver.0);
+            if (values.is_none() && extra.is_none()) || active.contains(&receiver.0) {
                 continue;
             }
             if !visited.insert((
@@ -56,20 +53,29 @@ impl MemberArguments {
                 owner,
                 interval,
                 active.clone(),
+                uncertain,
             )) {
                 continue;
             }
             active.push(receiver.0.clone());
-            for value in values {
-                let mut projected = Vec::new();
-                nested::write_receiver_references(value, &receiver.1, &reads, &mut projected);
-                for reference in projected {
-                    let item = (reference, owner, interval);
-                    pending.push((item.0.clone(), owner, interval, active.clone()));
-                    arguments.push(item);
+            for (values, added) in [(values, false), (extra, true)] {
+                for value in values.into_iter().flatten() {
+                    let mut projected = Vec::new();
+                    nested::write_receiver_references(value, &receiver.1, &reads, &mut projected);
+                    for reference in projected {
+                        let item = (reference, owner, interval);
+                        let uncertain = uncertain || added;
+                        pending.push((item.0.clone(), owner, interval, active.clone(), uncertain));
+                        if uncertain {
+                            possible.push(item);
+                        } else {
+                            arguments.push(item);
+                        }
+                    }
                 }
             }
         }
         references.extend(arguments);
+        possible
     }
 }
