@@ -162,6 +162,11 @@ included. `postgres.annotation.dense_arena_slots_copied` counts physical dense
 vector copies across all evaluator operations, including those same join
 copies; these counters overlap and must not be added.
 
+`postgres.annotation.parallel_factory_arms` counts closed-factory arms actually
+dispatched in parallel. It is absent at `--jobs 1`, where execution stays serial;
+this thread-count-dependent counter must not be compared for equality across
+different job counts.
+
 Alternative arms reuse direct references from unchanged prefix scopes and dense
 vectors. `postgres.annotation.prefix_scope_scans` and
 `postgres.annotation.prefix_binding_scans` count actual cache construction;

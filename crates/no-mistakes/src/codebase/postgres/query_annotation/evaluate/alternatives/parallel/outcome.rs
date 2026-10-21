@@ -1,5 +1,5 @@
 mod take;
-use super::super::super::{ArgumentObjects, CapturedBindings, Scope};
+use super::super::super::{ArgumentObjects, CapturedBindings, ExecutionEvents, Scope};
 use super::translate::Translation;
 use super::*;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -9,6 +9,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Outcome {
     base_env: usize,
     base_id: u64,
     value: Value,
+    events: ExecutionEvents,
     scopes: Vec<Scope>,
     next_builder: u64,
     invalidated_builders: FxHashSet<u64>,
@@ -157,6 +158,15 @@ impl Outcome {
                 .into_iter()
                 .map(|(id, slot)| (translation.id(id), slot)),
         );
+        // Preserve executor observations even if factory eligibility widens later.
+        // Values can reference this arm's private environments and object IDs.
+        for (call, values) in self.events {
+            evaluator.events.entry(call).or_default().extend(
+                values
+                    .into_iter()
+                    .map(|(flag, value)| (flag, translation.value(value))),
+            );
+        }
         translation.value(self.value)
     }
 }

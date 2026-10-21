@@ -28,6 +28,9 @@ fn eligible_arms_belong_to_the_request_observer_and_jobs1_bypasses_forks() {
             })
         });
         let work = observer.snapshot().work;
+        if jobs == 1 {
+            assert!(!work.contains_key("postgres.annotation.parallel_factory_arms"));
+        }
         assert_eq!(
             work.get("postgres.annotation.parallel_factory_arms")
                 .copied()

@@ -8,7 +8,6 @@ impl Outcome {
         base_env: usize,
         base_id: u64,
     ) -> Self {
-        debug_assert!(fork.events.is_empty());
         fork.scopes.drain(..base_env);
         fork.invalidated_builders.retain(|id| *id >= base_id);
         fork.builder_updates.retain(|id, _| *id >= base_id);
@@ -40,6 +39,7 @@ impl Outcome {
             base_env,
             base_id,
             value,
+            events: fork.events,
             scopes: fork.scopes,
             next_builder: fork.next_builder,
             invalidated_builders: fork.invalidated_builders,

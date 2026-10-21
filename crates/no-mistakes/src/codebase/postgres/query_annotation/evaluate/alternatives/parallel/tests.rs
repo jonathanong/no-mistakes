@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::postgres::query_annotation;
+mod events;
 mod fixtures;
 mod invoke;
 mod observer;
