@@ -13,6 +13,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
+        let precise_records = self.files[path].facts.precise_records;
         let scopes = self.scopes.clone();
         let seen = self.active_callback_functions.clone();
         let executions = self.active_callback_executions.clone();
@@ -90,12 +91,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 // With no reference in the entry scope, every previous prefix map
                 // is empty. New arm-local builders are rebinds, not mutations.
-                if !self.files[path].facts.precise_records && !before.contains_reference() {
+                if !precise_records && !before.contains_reference() {
                     continue;
                 }
                 for (name, value) in before {
                     // An arm can drop a name the other branch still has.
-                    if !self.files[path].facts.precise_records {
+                    if !precise_records {
+                        // Scalar and function bindings have no old prefixes to
+                        // compare. Skip them before resolving the after binding.
+                        if !value.contains_reference() {
+                            continue;
+                        }
                         super::super::super::progress::binding(path, name, || {
                             super::values::changes(
                                 value,
@@ -123,19 +129,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
             super::merge::objects(&mut joined, &self.argument_objects);
             super::extras::join(&mut joined_extras, &self.argument_extra_slots, &objects);
-            module_states.join(
-                &self.scopes,
-                &self.modules,
-                scopes.len(),
-                self.files[path].facts.precise_records,
-            );
+            module_states.join(&self.scopes, &self.modules, scopes.len(), precise_records);
             if let Some(joined) = &mut joined_scopes {
-                super::bindings::join_with_sql(
-                    joined,
-                    &self.scopes,
-                    &scopes,
-                    self.files[path].facts.precise_records,
-                );
+                super::bindings::join_with_sql(joined, &self.scopes, &scopes, precise_records);
             } else {
                 joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             }
