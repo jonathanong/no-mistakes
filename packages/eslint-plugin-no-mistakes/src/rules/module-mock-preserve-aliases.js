@@ -90,6 +90,7 @@ function createMockAliases(context, methods) {
     },
     declare(id, init) {
       if (!id || !init) return;
+      init = unwrapExpression(init);
       const origin = bindingOrigin(id);
       if (id.type === "ObjectPattern" && isFrameworkBinding(init, context)) {
         for (const property of id.properties) {
