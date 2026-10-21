@@ -1,8 +1,6 @@
 # Known check-rule doc execution gaps tracked by #2416.
 # Remove a prefix only after that snippet executes as documented.
-banned-renamed-files.md: Counterexample[0] expected 
 config-path-references.md: Counterexample[0] expected 
-csharp-no-async-void-delegate.md: Counterexample[0] expected 
 doc-consistency.md: Valid example[0] expected 
 finite-set-consistency.md: Valid example[0] run error:
 finite-set-consistency.md: Counterexample[0] run error:
