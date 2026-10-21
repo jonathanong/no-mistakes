@@ -232,4 +232,68 @@ fn unique_export_follows_named_reexports_stars_and_namespace_members() {
     let unique = unique_namespace_member(&graph, &facts, &importer, "t", "tables").unwrap();
     assert_eq!(unique.producer, producer);
     assert_eq!(unique.exported, "tables");
+    facts.ts.insert(
+        importer.clone(),
+        file_facts(TsFileFacts {
+            imported_bindings: vec![named_import("tables")],
+            ..Default::default()
+        }),
+    );
+    assert!(unique_namespace_member(&graph, &facts, &importer, "tables", "users").is_none());
+
+    let left = PathBuf::from("/repo/src/left.ts");
+    let right = PathBuf::from("/repo/src/right.ts");
+    facts.ts.insert(
+        importer.clone(),
+        file_facts(TsFileFacts {
+            imported_bindings: vec![ImportedBinding {
+                specifier: "./left".into(),
+                local: "registry".into(),
+                imported: "registry".into(),
+                kind: ImportedBindingKind::Named,
+                is_type_only: false,
+            }],
+            ..Default::default()
+        }),
+    );
+    facts.ts.insert(
+        left.clone(),
+        file_facts(TsFileFacts {
+            exported_bindings: vec![ExportedBinding {
+                specifier: Some("./right".into()),
+                local: "registry".into(),
+                exported: "registry".into(),
+            }],
+            ..Default::default()
+        }),
+    );
+    facts.ts.insert(
+        right.clone(),
+        file_facts(TsFileFacts {
+            exported_bindings: vec![ExportedBinding {
+                specifier: Some("./left".into()),
+                local: "registry".into(),
+                exported: "registry".into(),
+            }],
+            ..Default::default()
+        }),
+    );
+    let forward = [
+        (
+            NodeId::file(&importer),
+            vec![(NodeId::file(&left), EdgeKind::Require)],
+        ),
+        (
+            NodeId::file(&left),
+            vec![(NodeId::file(&right), EdgeKind::Import)],
+        ),
+        (
+            NodeId::file(&right),
+            vec![(NodeId::file(&left), EdgeKind::Import)],
+        ),
+    ]
+    .into_iter()
+    .collect();
+    let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
+    assert!(unique_export(&graph, &facts, &importer, "registry").is_none());
 }

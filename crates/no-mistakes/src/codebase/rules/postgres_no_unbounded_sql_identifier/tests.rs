@@ -120,3 +120,56 @@ fn same_file_or_literal_exports_are_not_unbounded_identifier_sources() {
     )
     .is_none());
 }
+
+#[test]
+fn shadowed_process_and_unbounded_namespace_members_are_classified() {
+    let file = PathBuf::from("/repo/src/query.ts");
+    let mut facts = CheckFactMap::default();
+    facts.ts.insert(
+        file.clone(),
+        CheckFileFacts {
+            ts: Arc::new(TsFileFacts {
+                imported_bindings: vec![ImportedBinding {
+                    specifier: "./process".into(),
+                    local: "process".into(),
+                    imported: "process".into(),
+                    kind: ImportedBindingKind::Named,
+                    is_type_only: false,
+                }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+        .into(),
+    );
+    let graph = from_raw_maps(
+        PathBuf::from("/repo"),
+        Default::default(),
+        Default::default(),
+    );
+    let owned = EmbeddedSqlCall::default();
+    let call = SqlCall {
+        file: file.clone(),
+        span: (0, 1),
+        call: &owned,
+    };
+    assert!(identifier_finding(
+        Path::new("/repo"),
+        &graph,
+        &facts,
+        &call,
+        &Provenance::ProcessEnv("SCHEMA".into()),
+    )
+    .is_none());
+    assert!(identifier_finding(
+        Path::new("/repo"),
+        &graph,
+        &facts,
+        &call,
+        &Provenance::Namespace {
+            local: "t".into(),
+            exported: "config".into(),
+        },
+    )
+    .is_none());
+}
