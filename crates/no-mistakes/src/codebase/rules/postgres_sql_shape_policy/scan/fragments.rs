@@ -140,3 +140,6 @@ fn key(finding: &RuleFinding, offset: usize) -> Key {
         finding.target.clone(),
     )
 }
+
+#[cfg(test)]
+mod tests;

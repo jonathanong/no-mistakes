@@ -135,6 +135,37 @@ fn an_iife_hands_its_returned_builder_to_the_const() {
 }
 
 #[test]
+fn a_function_iife_recovers_the_returned_builder_and_rejects_unsafe_shapes() {
+    let facts = extract("function-iife.ts");
+    let branching = facts
+        .calls
+        .iter()
+        .find(|call| call.line == 12)
+        .expect("function IIFE executor");
+    assert_eq!(branching.kind, EmbeddedSqlKind::Dynamic, "{branching:#?}");
+    assert_eq!(branching.variants.len(), 2, "{branching:#?}");
+
+    let nested = facts
+        .calls
+        .iter()
+        .find(|call| call.line == 26)
+        .expect("nested function IIFE executor");
+    assert_eq!(nested.kind, EmbeddedSqlKind::Dynamic, "{nested:#?}");
+    assert_eq!(
+        nested.sql_text.as_deref(),
+        Some("SELECT p.account_id FROM view_active_plans p")
+    );
+
+    for call in facts.calls.iter().filter(|call| call.line > 26) {
+        assert_eq!(call.kind, EmbeddedSqlKind::Dynamic, "{call:#?}");
+        assert!(
+            call.variants.is_empty(),
+            "unsafe function IIFE must stay opaque: {call:#?}"
+        );
+    }
+}
+
+#[test]
 fn unpublishing_origins_requires_matching_lengths() {
     use super::super::unpublish::unpublish_origins;
     assert!(unpublish_origins("abc", &[], &[1, 2]).is_none());
