@@ -20,7 +20,9 @@ pub use context::{
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
 pub use progress::{ActiveSpanSnapshot, CompletedSpanSnapshot, ProgressGuard, ProgressSnapshot};
 pub use request::{progress_for_request, DiagnosticRequestGuard};
-pub(crate) use timeout::render_timeout_stderr;
+// The native invocation harness compiles watchdog source across this crate boundary.
+#[doc(hidden)]
+pub use timeout::render_timeout_stderr;
 
 /// Count one AST visitor walk when verbose timings are enabled.
 pub fn record_ast_walk() {

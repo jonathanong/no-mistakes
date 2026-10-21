@@ -5,7 +5,7 @@ use std::fmt::Write;
 use std::sync::{mpsc, Arc};
 use std::time::Duration;
 
-pub(crate) fn render_timeout_stderr(observer: Option<Arc<InvocationObserver>>, message: String) {
+pub fn render_timeout_stderr(observer: Option<Arc<InvocationObserver>>, message: String) {
     // Created only after expiry, even with diagnostics disabled. A fresh writer
     // avoids both Rust's stderr lock and an occupied progress-output queue.
     let output = ProgressOutput::stderr();
