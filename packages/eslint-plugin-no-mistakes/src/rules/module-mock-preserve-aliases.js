@@ -37,49 +37,73 @@ function frameworkMock(object, method, context) {
   return { framework, method, namespace: expressionName(object) };
 }
 
+function bindingOrigin(id) {
+  const parent = id?.parent;
+  if (parent?.type === "VariableDeclarator" || parent?.type === "AssignmentExpression") {
+    return parent;
+  }
+  return id;
+}
+
+function writtenAfter(variable, origin, use) {
+  if (!variable?.references || !origin?.range || !use?.range) return false;
+  return variable.references.some(
+    (reference) =>
+      reference.isWrite() &&
+      reference.identifier.range[0] >= origin.range[1] &&
+      reference.identifier.range[0] < use.range[0],
+  );
+}
+
 function createMockAliases(context, methods) {
   const aliases = new Map();
 
-  function record(name, variable, mock) {
+  function record(name, variable, mock, origin) {
     const entries = aliases.get(name) ?? [];
-    entries.push({ mock, variable });
+    entries.push({ mock, origin, variable });
     aliases.set(name, entries);
   }
 
-  function recordPattern(pattern, mock) {
+  function recordPattern(pattern, mock, origin) {
     if (pattern.type === "Identifier") {
-      record(pattern.name, resolveVariable(pattern, context), mock);
+      record(pattern.name, resolveVariable(pattern, context), mock, origin);
       return;
     }
     for (const name of collectPatternNames(pattern)) {
-      record(name, resolveVariableByName(name, pattern, context), mock);
+      record(name, resolveVariableByName(name, pattern, context), mock, origin);
     }
   }
 
   return {
     declareImport(local, source, imported) {
       if (!methods.has(imported)) return;
-      record(local.name, resolveVariable(local, context), {
-        framework: source,
-        method: imported,
-        namespace: source === "vitest" ? "vi" : "jest",
-      });
+      record(
+        local.name,
+        resolveVariable(local, context),
+        {
+          framework: source,
+          method: imported,
+          namespace: source === "vitest" ? "vi" : "jest",
+        },
+        local,
+      );
     },
     declare(id, init) {
       if (!id || !init) return;
+      const origin = bindingOrigin(id);
       if (id.type === "ObjectPattern" && isFrameworkBinding(init, context)) {
         for (const property of id.properties) {
           if (property.type !== "Property") continue;
           if (property.computed && property.key?.type === "Identifier") continue;
           const method = propertyName(property.key);
           if (!methods.has(method)) continue;
-          recordPattern(property.value, frameworkMock(init, method, context));
+          recordPattern(property.value, frameworkMock(init, method, context), origin);
         }
       }
       if (init.type === "MemberExpression" && isFrameworkBinding(init.object, context)) {
         const method = memberPropertyName(init);
         if (!methods.has(method)) return;
-        recordPattern(id, frameworkMock(init.object, method, context));
+        recordPattern(id, frameworkMock(init.object, method, context), origin);
       }
     },
     get(node) {
@@ -87,7 +111,17 @@ function createMockAliases(context, methods) {
       const entries = aliases.get(node.name);
       if (!entries) return null;
       const variable = resolveVariable(node, context);
-      return entries.find((entry) => entry.variable === variable)?.mock ?? null;
+      if (!node.range) {
+        return entries.find((candidate) => candidate.variable === variable)?.mock ?? null;
+      }
+      const entry = entries.findLast(
+        (candidate) =>
+          candidate.variable === variable &&
+          candidate.origin?.range &&
+          candidate.origin.range[1] <= node.range[0],
+      );
+      if (!entry || writtenAfter(variable, entry.origin, node)) return null;
+      return entry.mock;
     },
     matchCall(node) {
       const direct = this.get(node.callee);
