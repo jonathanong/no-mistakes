@@ -6,6 +6,10 @@ export const docsDir = resolve(__dirname, "../../../docs/eslint-rules");
 
 // Open PR #2406 is rewriting these call-binding docs. Exempt only the
 // Disallowed snippets that currently miss so a new mismatch still fails.
+export function staleKnownRecallFailures(failures, known) {
+  return known.filter((entry) => !failures.includes(entry));
+}
+
 export const knownRecallFailures = new Map([
   ["async-call-disposition", ["Disallowed ts hits=0 ids="]],
   ["async-try-catch-return-await", ["Disallowed ts hits=0 ids="]],
