@@ -36,21 +36,20 @@ impl ImportCollector {
             BindingPattern::ObjectPattern(object) => {
                 let shared = std::sync::Arc::new(value);
                 for property in &object.properties {
-                    if !property.computed {
-                        if let Some(key) =
+                    let Some(key) = (!property.computed)
+                        .then(|| {
                             crate::codebase::ts_source::static_property_key_name(&property.key)
-                        {
-                            self.record_value_pattern(
-                                &property.value,
-                                ValueExpression::Member(
-                                    std::sync::Arc::clone(&shared),
-                                    key.to_string(),
-                                ),
-                                declared_at,
-                                immutable,
-                            );
-                        }
-                    }
+                        })
+                        .flatten()
+                    else {
+                        continue;
+                    };
+                    self.record_value_pattern(
+                        &property.value,
+                        ValueExpression::Member(std::sync::Arc::clone(&shared), key.to_string()),
+                        declared_at,
+                        immutable,
+                    );
                 }
             }
             BindingPattern::AssignmentPattern(assignment) => self.record_value_pattern(

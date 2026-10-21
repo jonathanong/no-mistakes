@@ -64,7 +64,9 @@ and `Object.defineProperty`) and unbounded identifier interpolations
 (`process.env`, imported config, request parameters, query rows, and
 non-finite wrappers) through prepared import, value-flow, and embedded-SQL
 facts plus the canonical graph. CLI `check`, Node `check()`,
-and batched `analyzeProject()` share findings. Unknown provenance and HTTP
+and batched `analyzeProject()` share findings. Immutable array-destructured
+query rows retain source provenance; comma expressions retain their final
+operand's value provenance. Unknown provenance and HTTP
 `.query` collisions stay silent. See
 [mutable SQL registries](rules/postgres-no-mutable-sql-registry.md) and
 [unbounded SQL identifiers](rules/postgres-no-unbounded-sql-identifier.md).
