@@ -630,6 +630,12 @@ This covers a later value shifting into an earlier parameter when the optional
 push is skipped, without enumerating combinations of branch lengths.
 Pushes written in another function are possible: this projection does not prove
 helper reachability, even when the helper has no local invocation.
+Repeated reads of the same guard are not correlated. For example, the saved
+`interleaved-correlated-width.mts` fixture always replaces `tail.get` before its
+final reads, but the projection can retain that vendor candidate through an
+infeasible combination of guarded array widths. Its test requires unknown
+evidence without asserting that the vendor method can run. The separate
+`interleaved.mts` exact-target control uses an explicit unconditional write.
 Fixed arguments before that tail keep their slots, including ordinary arguments
 between an earlier fixed spread and the spread that introduces uncertainty.
 A suffix after an open prefix and guarded

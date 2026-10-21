@@ -47,6 +47,14 @@ fn guarded_array_stress_retains_early_and_distinct_late_targets() {
         }
     }
     receiver_escapes::assert_unknown(&built, &root, "interleaved", "tail.get");
+    // Correlated guards always overwrite tail at runtime; this projection may
+    // conservatively retain its vendor candidate, so do not require that edge.
+    let correlated = built.call_sites_in_file(&root.join("src/interleaved-correlated-width.mts"));
+    assert!(correlated
+        .iter()
+        .find(|site| site.source_callee == "tail.get")
+        .unwrap()
+        .has_unknown_target());
     assert_possible(&built, &root, "interleaved", "untouched.get");
     for callee in ["replica.info", "unrelated.get"] {
         receiver_escapes::assert_export(&built, &root, "interleaved", callee);

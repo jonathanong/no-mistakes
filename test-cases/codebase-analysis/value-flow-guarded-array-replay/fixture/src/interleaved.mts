@@ -18,6 +18,9 @@ args.push(flag ? late : box);
 if (flag) { args = [other]; }
 args.push(late);
 mutate(...args);
+// Keep the strict Unknown assertion grounded in a definite local write; the
+// interleaved guard correlation is covered separately as a conservative case.
+late.client.get = replacement;
 replica.get('older array and conditional push');
 tail.get('historical latest pushed origin');
 untouched.get('historical latest array origin');
