@@ -1,14 +1,14 @@
 "use strict";
 
 const {
-  callMethodName,
   cssSelectorValues,
-  isSelectorCall,
   literalString,
   options,
   rule,
   selectorAttributes,
 } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
+const { SELECTOR_METHODS, invokedCall, methodFromCallee } = require("./playwright-static-call");
 
 module.exports = rule(
   {
@@ -24,20 +24,23 @@ module.exports = rule(
     messages: { prefer: "Prefer getByTestId('{{value}}') for exact test ID selectors." },
   },
   (context) => {
+    const suppressed = ruleSuppression(context, "playwright-prefer-get-by-test-id");
     const attrs = selectorAttributes(options(context));
     return {
       CallExpression(node) {
-        const methodName = callMethodName(node);
-        if (!isSelectorCall(node) || methodName === "getByTestId") {
+        const invoked = invokedCall(node);
+        const methodName = invoked ? methodFromCallee(invoked.callee, context) : null;
+        if (!methodName || !SELECTOR_METHODS.has(methodName) || methodName === "getByTestId") {
           return;
         }
-        for (const arg of node.arguments.slice(0, methodName === "dragAndDrop" ? 2 : 1)) {
+        for (const arg of invoked.arguments.slice(0, methodName === "dragAndDrop" ? 2 : 1)) {
           const source = literalString(arg);
           if (typeof source !== "string" || source === "") {
             continue;
           }
           for (const selector of cssSelectorValues(source, attrs)) {
             if (selector.operator === "=") {
+              if (suppressed(arg)) return;
               context.report({ node: arg, messageId: "prefer", data: { value: selector.value } });
             }
           }

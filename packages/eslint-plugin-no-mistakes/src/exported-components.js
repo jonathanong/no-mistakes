@@ -109,6 +109,17 @@ function collectTopLevelDefinition(statement, definitions, opts) {
     const fn = functionFromExpression(declaration.init, opts);
     if (fn) {
       definitions.set(declaration.id.name, { name: declaration.id.name, fn });
+      return;
+    }
+    if (
+      declaration.init?.type === "Identifier" &&
+      declaration.parent?.kind === "const" &&
+      definitions.has(declaration.init.name)
+    ) {
+      definitions.set(declaration.id.name, {
+        name: declaration.id.name,
+        fn: definitions.get(declaration.init.name).fn,
+      });
     }
   }
 }

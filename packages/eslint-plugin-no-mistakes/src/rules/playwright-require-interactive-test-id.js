@@ -1,5 +1,6 @@
 "use strict";
 
+const { ruleSuppression } = require("../rule-suppression");
 const {
   attributeName,
   INTERACTIVE_ELEMENTS,
@@ -30,32 +31,55 @@ module.exports = rule(
     const opts = options(context);
     const attrs = selectorAttributes(opts);
     const interactiveComponents = compileMatchers(opts.interactiveComponents);
+    const importedNames = new Map();
+    const suppressed = ruleSuppression(context, "playwright-require-interactive-test-id");
     return {
+      ImportDeclaration(node) {
+        for (const specifier of node.specifiers) {
+          if (specifier.type !== "ImportSpecifier" || !specifier.local?.name) continue;
+          const imported =
+            specifier.imported?.type === "Identifier"
+              ? specifier.imported.name
+              : specifier.imported?.value;
+          if (typeof imported === "string") importedNames.set(specifier.local.name, imported);
+        }
+      },
+      VariableDeclarator(node) {
+        if (node.parent?.kind !== "const") return;
+        if (node.id?.type !== "Identifier" || node.init?.type !== "Identifier") return;
+        const imported = importedNames.get(node.init.name);
+        if (imported && !importedNames.has(node.id.name)) importedNames.set(node.id.name, imported);
+      },
       JSXOpeningElement(node) {
-        const elementName = jsxElementName(node.name);
+        const elementNames = jsxCandidateNames(node.name).flatMap((name) => {
+          const imported = importedNames.get(name);
+          return imported && imported !== name ? [name, imported] : [name];
+        });
         const hasSelector = node.attributes.some((attr) =>
           isSelectorAttribute(attributeName(attr), attrs),
         );
         if (
           hasSelector ||
-          !isInteractiveElement(elementName, node.attributes, interactiveComponents)
+          !isInteractiveElement(elementNames, node.attributes, interactiveComponents)
         ) {
           return;
         }
+        if (suppressed(node)) return;
         context.report({ node: node.name, messageId: "missing" });
       },
     };
   },
 );
 
-function isInteractiveElement(elementName, attributes, interactiveComponents) {
-  if (matchesAny(elementName, interactiveComponents)) {
+function isInteractiveElement(elementNames, attributes, interactiveComponents) {
+  const names = Array.isArray(elementNames) ? elementNames : [elementNames];
+  if (names.some((name) => matchesAny(name, interactiveComponents))) {
     return true;
   }
-  if (INTERACTIVE_ELEMENTS.has(elementName)) {
+  if (names.some((name) => INTERACTIVE_ELEMENTS.has(name))) {
     return true;
   }
-  if (elementName === "a" && attributes.some((attr) => attributeName(attr) === "href")) {
+  if (names.includes("a") && attributes.some((attr) => attributeName(attr) === "href")) {
     return true;
   }
   return attributes.some((attr) => {
@@ -77,6 +101,20 @@ function isInteractiveElement(elementName, attributes, interactiveComponents) {
       "textbox",
     ].includes(selectorLiteral(attr));
   });
+}
+
+function jsxCandidateNames(name) {
+  if (!name) return [];
+  if (name.type === "JSXIdentifier") return [name.name];
+  if (name.type === "JSXMemberExpression") {
+    const object = jsxElementName(name.object);
+    const property = jsxElementName(name.property);
+    const names = [];
+    if (object && property) names.push(`${object}.${property}`);
+    if (property) names.push(property);
+    return names;
+  }
+  return [];
 }
 
 function jsxElementName(name) {

@@ -37,6 +37,17 @@ export function SaveButton() {
 Add one configured attribute to each returned JSX branch, or narrow the rule
 configuration to the component surface that needs coverage hooks.
 
+## Limits
+
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+
+Another file's re-export is not visible here.
+
+```js
+export { page as screen } from "./playwright.mjs";
+screen.locator("#save");
+```
+
 ## Suppression
 
 ```tsx

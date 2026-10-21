@@ -70,6 +70,17 @@ await page.evaluate(() => window.scrollTo(0, 0));
 Replace the raw scroll with a helper that scrolls repeatedly until the
 paginated request fires, instead of a single synthetic scroll.
 
+## Limits
+
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+
+Another file's re-export is not visible here.
+
+```js
+export { page as screen } from "./playwright.mjs";
+screen.locator("#save");
+```
+
 ## Suppression
 
 ```ts

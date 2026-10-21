@@ -8,6 +8,7 @@ const {
   importSpecifierName,
   setupCallbackKind,
 } = require("./test-no-shared-state-callees");
+const { invokedCall, isBeforeAllCall, methodFromCallee } = require("./playwright-static-call");
 const {
   collectEvents,
   writeReusesTrackedValue,
@@ -51,15 +52,10 @@ function isSharedScopeShield(fn, testCalleeNames) {
 // A declaration nested arbitrarily deep inside a `beforeAll` callback — even inside a local helper
 // function the hook itself defines and invokes — is minted fresh on every hook re-entry, so it is
 // never a hoisting hazard regardless of how many function boundaries separate it from the hook.
-function isWithinBeforeAllCallback(node, testCalleeNames) {
+function isWithinBeforeAllCallback(node, beforeAll) {
   for (let fn = nearestOwnFunction(node); fn; fn = nearestOwnFunction(fn)) {
     const parent = fn.parent;
-    if (
-      parent?.type === "CallExpression" &&
-      setupCallbackKind(parent, testCalleeNames) === "before-once"
-    ) {
-      return true;
-    }
+    if (parent?.type === "CallExpression" && beforeAll(parent)) return true;
   }
   return false;
 }
@@ -124,12 +120,22 @@ module.exports = rule(
     // Local aliases of the imported `test`/`it`/`describe` bindings (e.g. `import { test as pw }`),
     // so `pw.beforeAll(...)` is recognized the same as `test.beforeAll(...)`.
     const testCalleeNames = new Set(["test", "it", "describe"]);
+    const namespaces = new Set();
+    const beforeAll = (node) =>
+      setupCallbackKind(node, testCalleeNames) === "before-once" ||
+      isBeforeAllCall(node, testCalleeNames, namespaces);
 
     return {
       ImportDeclaration(node) {
         if (node.source.value !== "@playwright/test") return;
         isPlaywrightFile = true;
         for (const specifier of node.specifiers) {
+          if (specifier.type === "ImportDefaultSpecifier" && specifier.local?.name) {
+            testCalleeNames.add(specifier.local.name);
+          }
+          if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {
+            namespaces.add(specifier.local.name);
+          }
           if (specifier.type !== "ImportSpecifier") continue;
           const imported = importSpecifierName(specifier);
           if (["describe", "it", "test"].includes(imported) && specifier.local?.name) {
@@ -141,22 +147,23 @@ module.exports = rule(
         if (
           node.id.type !== "Identifier" ||
           node.init?.type !== "CallExpression" ||
-          node.init.callee.type !== "Identifier" ||
-          !factoryNames.has(node.init.callee.name)
+          !factoryNames.has(methodFromCallee(invokedCall(node.init)?.callee, context))
         ) {
           return;
         }
+        const factory = methodFromCallee(invokedCall(node.init).callee, context);
         const fn = nearestOwnFunction(node);
         if (
           (!fn || !isSharedScopeShield(fn, testCalleeNames)) &&
-          !isWithinBeforeAllCallback(node, testCalleeNames)
+          !isWithinBeforeAllCallback(node, beforeAll)
         ) {
-          candidates.set(node, node.init.callee.name);
+          candidates.set(node, factory);
         }
       },
       CallExpression(node) {
-        if (setupCallbackKind(node, testCalleeNames) !== "before-once") return;
-        const callback = node.arguments.find((argument) => isFunctionNode(argument));
+        if (!beforeAll(node)) return;
+        const args = invokedCall(node)?.arguments ?? node.arguments;
+        const callback = args.find((argument) => isFunctionNode(argument));
         if (callback) beforeAllCallbacks.push(callback);
       },
       "Program:exit"() {

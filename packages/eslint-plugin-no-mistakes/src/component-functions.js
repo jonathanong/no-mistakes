@@ -1,5 +1,7 @@
 "use strict";
 
+const { literalString } = require("./helpers");
+
 function nonEmptyStrings(value, fallback) {
   if (!Array.isArray(value)) {
     return fallback;
@@ -37,14 +39,28 @@ function isConfiguredWrapper(callee, opts) {
   return Boolean(name && opts.wrappers.has(name));
 }
 
+function staticCalleeName(node) {
+  if (!node || node.type !== "MemberExpression") return null;
+  if (node.computed && node.property?.type === "Identifier") return null;
+  if (!node.computed && typeof node.property?.name === "string") return node.property.name;
+  return literalString(node.property);
+}
+
 function calleeName(node) {
-  if (node.type === "Identifier") {
-    return node.name;
+  let current = node;
+  for (let depth = 0; depth < 4; depth += 1) {
+    while (current?.type === "ChainExpression") current = current.expression;
+    if (current?.type === "MemberExpression") {
+      const name = staticCalleeName(current);
+      if (name === "call" || name === "apply") {
+        current = current.object;
+        continue;
+      }
+      return name;
+    }
+    break;
   }
-  if (node.type === "MemberExpression" && !node.computed) {
-    return node.property.name;
-  }
-  return null;
+  return current?.type === "Identifier" ? current.name : null;
 }
 
 function isFunctionNode(node) {
