@@ -417,4 +417,31 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
 
     let input = check_yaml_shape("with-uses-pass.yml");
     assert_eq!(lines_of(&input), Vec::<usize>::new(), "{input:?}");
+
+    // The input comment shares the resolved ref. The later action still needs
+    // its own version comment.
+    let stolen = check_yaml_shape("with-comment-fail.yml");
+    assert_eq!(lines_of(&stolen), vec![5], "{stolen:?}");
+    assert!(stolen[0]
+        .message
+        .contains("de0fac2e4500dabe0009e67214ff5f5447ce83dd"));
+    assert!(stolen[0].message.contains("trailing comment"));
+
+    let alias = check_yaml_shape("alias-fail.yml");
+    assert_eq!(lines_of(&alias), vec![3], "{alias:?}");
+    assert!(alias[0]
+        .message
+        .contains("de0fac2e4500dabe0009e67214ff5f5447ce83dd"));
+    assert!(alias[0].message.contains("trailing comment"));
+    assert!(!alias[0].message.contains("*checkout"));
+
+    let block_input = check_yaml_shape("with-block-uses-pass.yml");
+    assert_eq!(
+        lines_of(&block_input),
+        Vec::<usize>::new(),
+        "{block_input:?}"
+    );
+
+    let nested = check_yaml_shape("nested-uses-pass.yml");
+    assert_eq!(lines_of(&nested), Vec::<usize>::new(), "{nested:?}");
 }

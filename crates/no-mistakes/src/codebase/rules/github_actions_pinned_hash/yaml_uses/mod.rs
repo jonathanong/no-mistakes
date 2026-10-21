@@ -6,8 +6,9 @@ use std::sync::Arc;
 
 mod lines;
 
-/// String `uses` values from the request-scoped YAML document, including flow
-/// mappings, quoted keys, and values on the line after `uses:`. A missing
+/// Pair job and step `uses` values, in document order, with action `uses`
+/// lines. The regex already judged `seen_lines`. Once a document parses, a
+/// `uses` line under `with` or `env` is an input and is dropped. A missing
 /// document leaves the line-scan findings untouched.
 pub(super) fn append_parsed_uses(
     content: &str,
@@ -26,18 +27,20 @@ pub(super) fn append_parsed_uses(
         collect_uses(document, &mut uses_values);
     }
     let source_lines: Vec<&str> = content.lines().collect();
-    let mut claimed = seen_lines.clone();
-    for uses_value in uses_values {
-        let Some(line_num) = lines::claim_uses_line(&source_lines, &mut claimed, &uses_value)
-        else {
+    // A block `uses` inside `with` or `env` is an input, not an action.
+    findings
+        .retain(|finding| !lines::in_input_block(&source_lines, finding.line.saturating_sub(1)));
+    let action_lines = lines::action_uses_lines(&source_lines);
+    for (uses_value, line_num) in uses_values.iter().zip(action_lines) {
+        if seen_lines.contains(&line_num) {
             continue;
-        };
-        if exempt(&uses_value) {
+        }
+        if exempt(uses_value) {
             continue;
         }
         let comment = version_comment(source_lines[line_num - 1]);
         if let Some(finding) =
-            unpinned_finding(file, line_num, &uses_value, sha_re, version_re, comment)
+            unpinned_finding(file, line_num, uses_value, sha_re, version_re, comment)
         {
             findings.push(finding);
         }

@@ -1,29 +1,63 @@
-use std::collections::BTreeSet;
-
-#[path = "folded.rs"]
-mod folded;
-
-/// Bind `value` to a real `uses` occurrence that the line scan has not already
-/// judged. A later step, name, or comment that merely contains the text is not
-/// an occurrence. A second real `uses` of the same text still is.
-pub(super) fn claim_uses_line(
-    lines: &[&str],
-    claimed: &mut BTreeSet<usize>,
-    value: &str,
-) -> Option<usize> {
-    for (index, line) in lines.iter().enumerate() {
-        let line_num = index + 1;
-        if claimed.contains(&line_num) {
+/// Job and step `uses` lines, in document order. A root sequence counts as steps.
+/// Lines nested under `with` or `env` do not.
+pub(super) fn action_uses_lines(lines: &[&str]) -> Vec<usize> {
+    let mut found = Vec::new();
+    for index in 0..lines.len() {
+        if in_input_block(lines, index) {
             continue;
         }
-        let matched = line_uses_scalar(line, value)
-            || (index > 0 && bare_uses_key(lines[index - 1]) && scalar_line_equals(line, value));
-        if matched {
-            claimed.insert(line_num);
-            return Some(line_num);
+        // `uses:` then `nested: true` is a mapping, not the action scalar.
+        let continued = index > 0
+            && bare_uses_key(lines[index - 1])
+            && !in_input_block(lines, index - 1)
+            && is_value_line(lines[index])
+            && !is_nested_key(lines[index]);
+        if line_has_action_uses(lines[index]) || continued {
+            found.push(index + 1);
         }
     }
-    folded::claim_folded_uses(lines, claimed, value)
+    found
+}
+
+pub(super) fn in_input_block(lines: &[&str], index: usize) -> bool {
+    let own = indent_of(lines.get(index).copied().unwrap_or(""));
+    for prev in (0..index).rev() {
+        let trimmed = key_text(lines[prev]);
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if indent_of(lines[prev]) < own {
+            return trimmed.starts_with("with:") || trimmed.starts_with("env:");
+        }
+    }
+    false
+}
+
+fn indent_of(line: &str) -> usize {
+    line.chars().take_while(|ch| ch.is_whitespace()).count()
+}
+
+fn key_text(line: &str) -> &str {
+    line.trim().trim_start_matches('-').trim()
+}
+
+fn is_value_line(line: &str) -> bool {
+    let trimmed = line.trim();
+    !trimmed.is_empty() && !trimmed.starts_with(['-', '#'])
+}
+
+/// A nested mapping entry (`key:` / `key: value`). `docker://image` is a scalar:
+/// its colon is followed by `/`, not by a break.
+fn is_nested_key(line: &str) -> bool {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || trimmed.starts_with(['#', '-']) {
+        return false;
+    }
+    let Some(index) = trimmed.find(':') else {
+        return false;
+    };
+    let after = &trimmed[index + 1..];
+    after.is_empty() || after.starts_with([' ', '\t', '#'])
 }
 
 fn bare_uses_key(line: &str) -> bool {
@@ -32,59 +66,25 @@ fn bare_uses_key(line: &str) -> bool {
     matches!(trimmed, "uses:" | "\"uses\":" | "'uses':")
 }
 
-fn scalar_line_equals(line: &str, value: &str) -> bool {
-    let trimmed = line.trim();
-    if trimmed.is_empty() || trimmed.starts_with(['-', '#']) {
-        return false;
-    }
-    let mut quote = None;
-    let mut end = trimmed.len();
-    for (index, ch) in trimmed.char_indices() {
-        if let Some(active) = quote {
-            if ch == active {
-                quote = None;
-            }
-            continue;
-        }
-        match ch {
-            '"' | '\'' => quote = Some(ch),
-            '#' => {
-                end = index;
-                break;
-            }
-            _ => {}
-        }
-    }
-    unquote(trimmed[..end].trim()) == value
-}
-
-fn unquote(scalar: &str) -> &str {
-    let bytes = scalar.as_bytes();
-    if bytes.len() >= 2 {
-        let open = bytes[0];
-        let close = bytes[bytes.len() - 1];
-        if (open == b'"' || open == b'\'') && open == close {
-            return &scalar[1..scalar.len() - 1];
-        }
-    }
-    scalar
-}
-
-/// True when an unquoted `uses` key on this line has scalar `value`.
-fn line_uses_scalar(line: &str, value: &str) -> bool {
+/// True when this line has a job or step `uses` scalar, including `*alias`.
+fn line_has_action_uses(line: &str) -> bool {
     let mut quote: Option<char> = None;
     let mut token = String::new();
     let mut scalar = String::new();
     let mut after_colon = false;
     let mut key_was_uses = false;
     let mut flow_depth = 0_i32;
+    let mut flow_input: Vec<bool> = Vec::new();
+    // Set at `with:` / `env:` and consumed by the following `{` or `[`.
+    let mut value_key_is_input = false;
     let mut skip_anchor = false;
+    let mut alias = false;
 
     for ch in line.chars() {
         if let Some(active) = quote {
             if ch == active {
                 quote = None;
-                if after_colon && finish_scalar(&scalar, key_was_uses, value) {
+                if after_colon && finish_scalar(&scalar, key_was_uses) {
                     return true;
                 }
                 if after_colon {
@@ -110,17 +110,30 @@ fn line_uses_scalar(line: &str, value: &str) -> bool {
             break;
         }
         // `&anchor value` and `*alias` sit between `uses:` and the scalar.
+        // An alias is the whole scalar; a delimiter must not stay inside the name.
         if skip_anchor {
-            if ch.is_whitespace() {
-                skip_anchor = false;
+            let boundary = ch.is_whitespace() || matches!(ch, '}' | ']' | ',' | ':');
+            if !boundary {
+                continue;
             }
-            continue;
+            if alias && key_was_uses {
+                return true;
+            }
+            skip_anchor = false;
+            alias = false;
+            if ch.is_whitespace() {
+                continue;
+            }
         }
         if after_colon && scalar.is_empty() && matches!(ch, '&' | '*') {
+            alias = ch == '*';
             skip_anchor = true;
             continue;
         }
         if matches!(ch, '{' | '[') {
+            let entering = flow_input.last().copied().unwrap_or(false) || value_key_is_input;
+            flow_input.push(entering);
+            value_key_is_input = false;
             flow_depth += 1;
             token.clear();
             scalar.clear();
@@ -129,12 +142,17 @@ fn line_uses_scalar(line: &str, value: &str) -> bool {
             continue;
         }
         if matches!(ch, '}' | ']' | ',') {
-            if finish_scalar(&scalar, key_was_uses, value) {
+            if alias && key_was_uses {
+                return true;
+            }
+            if finish_scalar(&scalar, key_was_uses) {
                 return true;
             }
             if ch != ',' {
                 flow_depth -= 1;
+                flow_input.pop();
             }
+            value_key_is_input = false;
             token.clear();
             scalar.clear();
             after_colon = false;
@@ -144,7 +162,7 @@ fn line_uses_scalar(line: &str, value: &str) -> bool {
         if ch.is_whitespace() || (ch == '-' && !after_colon && flow_depth == 0 && token.is_empty())
         {
             if after_colon && !scalar.is_empty() {
-                if finish_scalar(&scalar, key_was_uses, value) {
+                if finish_scalar(&scalar, key_was_uses) {
                     return true;
                 }
                 // A block value ends the line. Inside `{...}` another key may follow.
@@ -160,21 +178,27 @@ fn line_uses_scalar(line: &str, value: &str) -> bool {
             continue;
         }
         if ch == ':' && !after_colon {
-            key_was_uses = token == "uses";
+            let in_input = flow_input.last().copied().unwrap_or(false);
+            value_key_is_input = !in_input && (token == "with" || token == "env");
+            key_was_uses = token == "uses" && !in_input;
             token.clear();
             scalar.clear();
             after_colon = true;
             continue;
         }
         if after_colon {
+            value_key_is_input = false;
             scalar.push(ch);
         } else {
             token.push(ch);
         }
     }
-    finish_scalar(&scalar, key_was_uses, value)
+    if alias && key_was_uses {
+        return true;
+    }
+    finish_scalar(&scalar, key_was_uses)
 }
 
-fn finish_scalar(scalar: &str, key_was_uses: bool, value: &str) -> bool {
-    key_was_uses && scalar == value
+fn finish_scalar(scalar: &str, key_was_uses: bool) -> bool {
+    key_was_uses && !scalar.is_empty()
 }
