@@ -10,6 +10,8 @@ pub(super) struct Walk {
     observer: Arc<InvocationObserver>,
     nodes: u64,
     containers: u64,
+    summary_entries: u64,
+    replayed_entries: u64,
     unique: FxHashSet<usize>,
 }
 
@@ -22,6 +24,8 @@ impl Walk {
             observer,
             nodes: 0,
             containers: 0,
+            summary_entries: 0,
+            replayed_entries: 0,
             unique: FxHashSet::default(),
         })
     }
@@ -45,6 +49,14 @@ impl Walk {
                 .increment("postgres.annotation.prefix_nodes", INTERVAL);
             self.emit();
         }
+    }
+
+    pub(super) fn summary(&mut self, entries: usize) {
+        self.summary_entries += entries as u64;
+    }
+
+    pub(super) fn replay(&mut self, entries: usize) {
+        self.replayed_entries += entries as u64;
     }
 
     pub(super) fn complete(&self) {
@@ -72,6 +84,18 @@ impl Drop for Walk {
             .increment("postgres.annotation.prefix_nodes", self.nodes % INTERVAL);
         self.observer
             .increment("postgres.annotation.prefix_containers", self.containers);
+        if self.summary_entries > 0 {
+            self.observer.increment(
+                "postgres.annotation.prefix_summary_entries",
+                self.summary_entries,
+            );
+        }
+        if self.replayed_entries > 0 {
+            self.observer.increment(
+                "postgres.annotation.prefix_replayed_entries",
+                self.replayed_entries,
+            );
+        }
         if self.nodes >= INTERVAL && !self.nodes.is_multiple_of(INTERVAL) {
             self.emit();
         }

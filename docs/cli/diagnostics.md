@@ -129,8 +129,15 @@ both flags, long prefix walks periodically emit
 `postgres.annotation.prefix_unique_containers_current_walk` work lines through
 the bounded progress writer. These local counts reset for each comparison;
 distinct containers are immutable value identities, not bytes or allocations.
-Completed shared records reuse their direct prefix writes within each walk;
-these counters count actual visits, including memo lookups. Progress alone
+Shared records retain empty or single-prefix summaries inline. Larger summaries
+require actual reuse within the walk; snapshot aliases alone do not retain
+overlapping descendant maps.
+`postgres.annotation.prefix_summary_entries` counts entries in published inline
+or full summaries, not allocations;
+`postgres.annotation.prefix_replayed_entries` counts entries replayed on memo hits.
+The two summary counters are omitted when their counts are zero.
+A repeated larger summary may require one additional traversal to materialize.
+These counters complement actual node visits, including memo lookups. Progress alone
 creates no prefix-walk work ledger. See the saved
 [shared-record reproduction](../../fixtures/performance/annotation-shared-record-dag/README.md).
 

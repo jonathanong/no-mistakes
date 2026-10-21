@@ -15,6 +15,8 @@ fn memoized_maps_match_saved_last_write_argument_cycle_and_sparse_cases() {
         "arena_before",
         "arena_after",
         "distinct_prefix_chain",
+        "aliased_distinct_prefix_chain",
+        "repeated_aliased_distinct_prefix_chain",
     ] {
         let case = fixture::load(name);
         let expected = legacy::collect(&case.root, case.arena(), &case.definite);
@@ -68,6 +70,11 @@ fn saved_shared_dags_visit_records_instead_of_expanding_every_container_path() {
         let visits = observer.snapshot().work["postgres.annotation.prefix_nodes"];
         // Thirty duplicate edges used to expand billions of paths.
         assert!(visits <= 2 * 31 + 2, "{name}: {visits}");
+        if name == "shared_prefix_depth30" {
+            let work = observer.snapshot().work;
+            assert!(work["postgres.annotation.prefix_summary_entries"] > 0);
+            assert!(work["postgres.annotation.prefix_replayed_entries"] > 0);
+        }
     }
 }
 
@@ -118,4 +125,71 @@ fn reference_free_entry_cannot_mutate_an_arm_created_builder() {
         &before.definite,
     );
     assert!(changed.is_empty());
+}
+
+#[test]
+fn snapshot_aliases_retain_only_inline_cold_summaries() {
+    let case = fixture::load("aliased_distinct_prefix_chain");
+    // The unreachable arena retains one alias per layer, like entry snapshots.
+    // It must not turn a single chain traversal into quadratic summary copies.
+    let observer = InvocationObserver::new(true);
+    let actual = with_observer(Some(observer.clone()), || {
+        collect::<true>(
+            &case.root,
+            case.arena(),
+            &case.definite,
+            &mut progress::Walk::new(),
+        )
+    });
+    assert_eq!(
+        actual,
+        legacy::collect(&case.root, case.arena(), &case.definite)
+    );
+    assert_eq!(actual.len(), 128);
+    let work = observer.snapshot().work;
+    assert_eq!(work["postgres.annotation.prefix_nodes"], 256);
+    assert_eq!(work["postgres.annotation.prefix_summary_entries"], 1);
+    assert!(!work.contains_key("postgres.annotation.prefix_replayed_entries"));
+}
+
+#[test]
+fn observed_large_summary_replays_restore_intervening_overwrites() {
+    let case = fixture::load("repeated_aliased_distinct_prefix_chain");
+    let observer = InvocationObserver::new(true);
+    let actual = with_observer(Some(observer.clone()), || {
+        collect::<true>(
+            &case.root,
+            case.arena(),
+            &case.definite,
+            &mut progress::Walk::new(),
+        )
+    });
+    assert_eq!(
+        actual,
+        legacy::collect(&case.root, case.arena(), &case.definite)
+    );
+    assert_eq!(actual[&1], ("SELECT 0", true));
+    assert_eq!(actual[&2], ("SELECT 1", true));
+    let work = observer.snapshot().work;
+    assert!(work["postgres.annotation.prefix_summary_entries"] >= 128);
+    assert!(work["postgres.annotation.prefix_replayed_entries"] >= 128);
+}
+
+#[test]
+fn reference_free_walk_adds_no_summary_counter_updates() {
+    let case = fixture::load("reference_free_before");
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(observer.clone()), || {
+        assert!(collect::<true>(
+            &case.root,
+            case.arena(),
+            &case.definite,
+            &mut progress::Walk::new()
+        )
+        .is_empty());
+    });
+    let work = observer.snapshot().work;
+    assert_eq!(work["postgres.annotation.prefix_nodes"], 1);
+    assert!(!work.contains_key("postgres.annotation.prefix_summary_entries"));
+    assert!(!work.contains_key("postgres.annotation.prefix_replayed_entries"));
 }

@@ -60,3 +60,11 @@ prefix maps with the frozen original walk, including overwrite order, argument
 cycles, sparse/deleted slots, both arenas, and a 128-record distinct-prefix chain.
 These work bounds establish the reduced-case improvement; full-consumer resource
 measurements and findings parity remain the acceptance gate.
+
+The aliased distinct-prefix chain retains 128 separate snapshot-like aliases
+outside the walked root. A collection still visits exactly 256 nodes and
+produces 128 prefixes. Eager ancestor summaries retained 8,256 map entries for
+this single traversal. Cold summaries now retain only empty/single-prefix
+results inline; larger maps require actual reuse within the walk. This case
+retains one inline prefix entry. This work-count regression establishes an algorithmic
+bound, not a measured full-consumer speedup.

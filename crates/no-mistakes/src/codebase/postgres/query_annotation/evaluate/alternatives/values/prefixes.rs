@@ -3,6 +3,28 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 type Prefixes<'a> = FxHashMap<u64, (&'a str, bool)>;
 
+#[derive(Clone, Copy)]
+enum Shape<'a> {
+    Empty,
+    One(u64, (&'a str, bool)),
+    Many,
+}
+impl<'a> Shape<'a> {
+    fn merge(&mut self, other: Self) {
+        *self = match (*self, other) {
+            (current, Self::Empty) => current,
+            (Self::Empty, next) => next,
+            (Self::One(id, _), Self::One(other, value)) if id == other => Self::One(id, value),
+            _ => Self::Many,
+        };
+    }
+}
+
+struct Summary<'a> {
+    shape: Shape<'a>,
+    full: Option<Prefixes<'a>>,
+}
+
 pub(super) fn collect<'a, const OBSERVED: bool>(
     value: &'a Value,
     arena: Arena<'a>,
@@ -27,12 +49,11 @@ struct Walk<'a, 'w, const OBSERVED: bool> {
     work: &'w mut Option<progress::Walk>,
     visited: FxHashSet<u64>,
     found: Prefixes<'a>,
-    completed: FxHashMap<usize, Prefixes<'a>>,
+    completed: FxHashMap<usize, Summary<'a>>,
 }
 
 impl<'a, const OBSERVED: bool> Walk<'a, '_, OBSERVED> {
-    fn visit(&mut self, value: &'a Value, mut direct: Option<&mut Prefixes<'a>>) {
-        // Specialization removes the per-node diagnostic branch when disabled.
+    fn visit(&mut self, value: &'a Value, mut direct: Option<&mut Prefixes<'a>>) -> Shape<'a> {
         if OBSERVED {
             if let Some(work) = self.work.as_mut() {
                 work.visit(value);
@@ -44,8 +65,9 @@ impl<'a, const OBSERVED: bool> Walk<'a, '_, OBSERVED> {
                 if let Some(direct) = direct {
                     direct.insert(*id, (text, *complete));
                 }
+                return Shape::One(*id, (text, *complete));
             }
-            Value::Promise(value) | Value::Evaluated(value, _) => self.visit(value, direct),
+            Value::Promise(value) | Value::Evaluated(value, _) => return self.visit(value, direct),
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
@@ -53,40 +75,77 @@ impl<'a, const OBSERVED: bool> Walk<'a, '_, OBSERVED> {
             | Value::Joined(values)
             | Value::Possible(values) => {
                 if !values.contains_reference() {
-                    return;
-                }
-                // A uniquely owned chain cannot be revisited. Forward writes
-                // directly instead of retaining overlapping ancestor summaries.
-                // is_shared uses Arc::strong_count as a shortcut for this
-                // single-threaded walk. Parallel walks over shared values must
-                // revisit that ownership assumption.
-                if !values.is_shared() {
-                    for child in values {
-                        self.visit(child, direct.as_deref_mut());
-                    }
-                    return;
+                    return Shape::Empty;
                 }
                 let identity = values.identity() as usize;
-                if let Some(summary) = self.completed.get(&identity) {
-                    // All argument edges in a completed occurrence were visited.
-                    // Replay direct writes: skipping them would change last-writer order.
-                    self.found
-                        .extend(summary.iter().map(|(id, value)| (*id, *value)));
-                    if let Some(direct) = direct {
-                        direct.extend(summary.iter().map(|(id, value)| (*id, *value)));
+                // Arc::strong_count is a shortcut for this single-threaded walk;
+                // parallel walks must revisit that ownership assumption.
+                let shared = values.is_shared();
+                let previous = if shared {
+                    self.completed.get(&identity)
+                } else {
+                    None
+                };
+                if let Some(summary) = previous {
+                    let entries = if let Some(full) = &summary.full {
+                        self.found
+                            .extend(full.iter().map(|(id, value)| (*id, *value)));
+                        if let Some(direct) = direct.as_deref_mut() {
+                            direct.extend(full.iter().map(|(id, value)| (*id, *value)));
+                        }
+                        Some(full.len())
+                    } else {
+                        match summary.shape {
+                            Shape::Empty => Some(0),
+                            Shape::One(id, prefix) => {
+                                self.found.insert(id, prefix);
+                                if let Some(direct) = direct.as_deref_mut() {
+                                    direct.insert(id, prefix);
+                                }
+                                Some(1)
+                            }
+                            Shape::Many => None,
+                        }
+                    };
+                    if let Some(entries) = entries {
+                        if OBSERVED {
+                            if let Some(work) = self.work.as_mut() {
+                                work.replay(entries);
+                            }
+                        }
+                        return summary.shape;
                     }
-                    return;
                 }
-                let mut summary = FxHashMap::default();
+                // Snapshot aliases alone do not justify overlapping descendant
+                // maps. Empty/singleton summaries are inline; larger summaries
+                // require a completed occurrence to have actually been reused.
+                let mut full = previous.map(|_| FxHashMap::default());
+                let mut shape = Shape::Empty;
                 for child in values {
-                    self.visit(child, Some(&mut summary));
+                    let output = if full.is_some() {
+                        full.as_mut()
+                    } else {
+                        direct.as_deref_mut()
+                    };
+                    shape.merge(self.visit(child, output));
                 }
-                if let Some(direct) = direct {
-                    direct.extend(summary.iter().map(|(id, value)| (*id, *value)));
+                if let (Some(direct), Some(full)) = (direct, &full) {
+                    direct.extend(full.iter().map(|(id, value)| (*id, *value)));
                 }
-                // Publish only after completion: mutable argument cycles can
-                // reenter this record before its later children have been visited.
-                self.completed.insert(identity, summary);
+                if shared {
+                    if OBSERVED {
+                        if let Some(work) = self.work.as_mut() {
+                            work.summary(full.as_ref().map_or_else(
+                                || usize::from(matches!(shape, Shape::One(..))),
+                                FxHashMap::len,
+                            ));
+                        }
+                    }
+                    // Argument cycles can reenter this container: publish only
+                    // after every direct child has completed.
+                    self.completed.insert(identity, Summary { shape, full });
+                }
+                return shape;
             }
             Value::Arguments(id) | Value::Array(id) if self.visited.insert(*id) => {
                 for (index, child) in self.arena.objects[id].iter().enumerate().chain(
@@ -97,14 +156,14 @@ impl<'a, const OBSERVED: bool> Walk<'a, '_, OBSERVED> {
                         .flat_map(|slots| slots.iter().map(|(index, value)| (*index, value))),
                 ) {
                     if !self.definite.contains(&(*id, index)) {
-                        // Argument-derived writes are visited once and must not
-                        // enter a replayable immutable-container summary.
+                        // Argument writes occur once, outside replayable summaries.
                         self.visit(child, None);
                     }
                 }
             }
             _ => {}
         }
+        Shape::Empty
     }
 }
 
