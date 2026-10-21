@@ -96,8 +96,8 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
 
 function isPromiseAllCallee(node) {
   const callee = unwrapTs(node);
-  if (callee?.type !== "MemberExpression" || callee.computed) return false;
-  if (callee.property?.name !== "all") return false;
+  if (callee?.type !== "MemberExpression") return false;
+  if (memberPropertyName(callee) !== "all") return false;
   const object = unwrapTs(callee.object);
   return object?.type === "Identifier" && object.name === "Promise";
 }

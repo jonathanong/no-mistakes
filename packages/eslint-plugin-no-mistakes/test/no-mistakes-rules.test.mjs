@@ -694,6 +694,15 @@ describe("ts-preserve-null-option-defaults", () => {
       ),
       Array(4).fill("default"),
     );
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-preserve-null-option-defaults", "static-keys.ts"),
+        "ts-preserve-null-option-defaults",
+        undefined,
+        "static-keys.ts",
+      ),
+      ["default", "default", "default"],
+    );
   });
 
   it("supports type-name and path scoping options", () => {

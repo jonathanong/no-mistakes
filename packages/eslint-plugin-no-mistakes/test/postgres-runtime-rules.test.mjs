@@ -662,6 +662,28 @@ describe("postgres runtime helpers", () => {
         property: { type: "Literal", value: "all" },
         object: { type: "Identifier", name: "Promise" },
       }),
+      true,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TemplateLiteral",
+          expressions: [],
+          quasis: [{ value: { cooked: "all", raw: "all" } }],
+        },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      true,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: { type: "Identifier", name: "all" },
+        object: { type: "Identifier", name: "Promise" },
+      }),
       false,
     );
     assert.equal(
@@ -1399,6 +1421,19 @@ describe("postgres-no-unbounded-query-fanout", () => {
         "postgres-no-unbounded-query-fanout",
       ),
       [],
+    );
+  });
+
+  it("reports static Promise.all keys and ignores a computed identifier", () => {
+    assert.deepEqual(
+      ids(
+        `${IMPORT}Promise["all"](ids.map((id) => query("SELECT 1")));
+         Promise[\`all\`](ids.map((id) => query("SELECT 1")));
+         const name = "all";
+         Promise[name](ids.map((id) => query("SELECT 1")));`,
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout", "unboundedFanout"],
     );
   });
 

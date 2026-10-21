@@ -1,7 +1,6 @@
 "use strict";
 
 const { keyName, typeAnnotation, typeName } = require("../react-node-types");
-const { memberPropertyName } = require("./module-mock-helpers");
 function compilePatterns(patterns = []) {
   return patterns.flatMap((pattern) => {
     try {
@@ -87,8 +86,20 @@ function propsFromTypes(types, facts) {
   return props.size > 0 ? props : null;
 }
 const isIdentifier = (node) => node?.type === "Identifier";
-const objectPropertyName = (property) =>
-  property.type === "Property" ? keyName(property.key) : null;
+function staticKey(node) {
+  if (!node) return null;
+  if (node.type === "Identifier") return node.name;
+  if (node.type === "Literal") return String(node.value);
+  if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
+    return node.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
+  }
+  return null;
+}
+const objectPropertyName = (property) => {
+  if (property.type !== "Property") return null;
+  if (property.computed && property.key?.type === "Identifier") return null;
+  return staticKey(property.key);
+};
 function memberRootAndProperty(node) {
   let current = node;
   while (
@@ -100,7 +111,8 @@ function memberRootAndProperty(node) {
     current = current.expression;
   }
   if (current?.type !== "MemberExpression") return null;
-  const property = memberPropertyName(current);
+  if (current.computed && current.property?.type === "Identifier") return null;
+  const property = staticKey(current.property);
   let object = current.object;
   while (object?.type === "ChainExpression" || object?.type === "TSNonNullExpression") {
     object = object.expression;

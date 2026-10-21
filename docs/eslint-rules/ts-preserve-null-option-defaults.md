@@ -30,6 +30,10 @@ function render(options: { label?: string | null }) {
 All lists default to empty. Object-destructuring defaults remain allowed because
 they apply only to `undefined`.
 
+## Limits
+
+`` options[`label`] `` and `` const { [`label`]: text } = options `` are `options.label`. A computed identifier key is not.
+
 ## Fix
 
 Test explicitly for `undefined` and preserve `null`; do not use `??`, `||`,

@@ -54,6 +54,10 @@ for (const id of userIds) {
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
 
+## Limits
+
+`Promise["all"]` and a no-expression `` Promise[`all`] `` are `Promise.all`. A computed identifier key is not.
+
 ## Fix
 
 Use a static array, a SCREAMING_CASE bounded collection, sequential work, or a
