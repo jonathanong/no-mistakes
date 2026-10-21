@@ -71,7 +71,10 @@ widening never spills into another framework or the rest of the repository.
 The plan sets `fallback_triggered` and `fallback_reason`, and it emits a
 warning that names the declaration. This does not require
 `--global-config-fallback`. Repository-wide and full-suite selection still
-need that explicit opt-in.
+need that explicit opt-in. Dotnet and Swift stay inside that framework in
+`tests_plan_json_reports_configured_dotnet_source_impact` and
+`tests_plan_json_reports_configured_swift_source_impact`
+(`crates/no-mistakes/src/napi_api/tests/tests_native_fallback.rs`).
 
 ## Three jobs
 
