@@ -246,6 +246,29 @@ fn text_email_is_file_content_not_a_path() {
 }
 
 #[test]
+fn text_at_prefixed_paths_are_path_listings() {
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n",
+        &[(
+            "text".into(),
+            "app/@modal/page.tsx\npackages/@scope/pkg/index.ts".into(),
+        )],
+    );
+    assert!(
+        fixture.path().join("app/@modal/page.tsx").exists(),
+        "Next.js parallel-route paths must stay named files"
+    );
+    assert!(
+        fixture.path().join("packages/@scope/pkg/index.ts").exists(),
+        "scoped package paths must stay named files"
+    );
+    assert!(
+        !fixture.path().join("fixture.txt").exists(),
+        "at-prefixed paths are not email content"
+    );
+}
+
+#[test]
 fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
     let fixture = docs_rule_snippets::materialize_snippet(
         "rules:\n  - rule: github-actions-composite-step-schema\n    scope: repository\n",

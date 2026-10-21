@@ -260,10 +260,16 @@ fn looks_like_path_listing(code: &str) -> bool {
     !lines.is_empty()
         && lines.iter().all(|line| {
             !line.contains(' ')
-                && !line.contains('@')
+                && !looks_like_email_line(line)
                 && (line.contains('/') || line.contains('.'))
                 && !line.contains('=')
         })
+}
+
+fn looks_like_email_line(line: &str) -> bool {
+    // `owner@example.com` is fixture content. `app/@modal/page.tsx` and
+    // `packages/@scope/pkg` still contain `/`, so they stay path listings.
+    line.contains('@') && !line.contains('/')
 }
 
 fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(String, String)> {
