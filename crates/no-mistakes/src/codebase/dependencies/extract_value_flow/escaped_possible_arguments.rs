@@ -14,6 +14,7 @@ impl ImportCollector {
             match argument {
                 Argument::SpreadElement(spread) => {
                     let value = self.value_expression(&spread.argument);
+                    let already_open = open.is_some();
                     if let Some((additional, minimum)) =
                         super::escaped_array_bindings::additional_entries(
                             self,
@@ -21,6 +22,9 @@ impl ImportCollector {
                             call.span.start,
                         )
                     {
+                        if already_open {
+                            shifted.extend(additional.iter().map(|(_, value)| value.clone()));
+                        }
                         for (slot, value) in additional {
                             extras.entry(position + slot).or_default().push(value);
                         }
