@@ -289,9 +289,10 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
 
-      - name: Build N-API addon
+      - name: Build native CLI and N-API addon
         timeout-minutes: 10
         run: |
+          cargo build --locked -p no-mistakes --bin no-mistakes
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
           cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
 

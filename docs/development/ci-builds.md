@@ -27,6 +27,8 @@ The real-addon API steps load `inline-owned-member-api.test.js` through
 JavaScript discovery alone skips the native behavior test without that addon.
 Those steps also run `sql-verdicts-api.test.js` to compare async CJS/ESM check
 reports with the sibling compiled CLI, including SQL advisory aggregation.
+The Linux JavaScript job builds the CLI before the addon so both artifacts are
+available to these parity tests, as in the native platform matrix.
 
 ## Hosted measurement
 
