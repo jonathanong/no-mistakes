@@ -135,6 +135,12 @@ the same `RuleFinding` entries. Named configuration types are exported as
 `DeclaredPayloadCompatibilityOptions`, `DeclaredPayloadContract`, and
 `DeclaredPayloadSchema`.
 
+## Counterexample
+
+```ts
+export type User = { id: number };
+```
+
 ## Suppression
 
 Findings use the first nonempty line of the referenced document after leading

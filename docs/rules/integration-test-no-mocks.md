@@ -24,6 +24,20 @@ application.
 An integration test that calls its real database/API boundary without a mocked
 module passes.
 
+```ts
+// tests/integration/users.test.ts
+import { db } from '../db';
+test('loads', async () => { await db.query('select 1'); });
+```
+
+
+## Counterexample
+
+```ts
+// tests/integration/users.test.ts
+vi.mock('../db');
+```
+
 ## Related rules
 
 [`module-mock-boundary`](../eslint-rules/module-mock-boundary.md) governs

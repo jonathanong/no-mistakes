@@ -80,6 +80,15 @@ full recovery of Markdown fences nested directly inside MDX JSX blocks. When
 `file` is omitted, clear JSX component blocks are detected automatically while
 standard Markdown HTML blocks retain CommonMark semantics.
 
+## Counterexample
+
+```md
+```mermaid
+flowchart LR
+  A -> B
+```
+```
+
 ## Related rules
 
 [`markdown-structure-budget`](markdown-structure-budget.md) controls diagram

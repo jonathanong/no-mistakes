@@ -52,7 +52,10 @@ export function getTeam() {}
 ## Counterexample
 
 ```ts
-// users.ts and teams.ts both export function getCurrentUser() {}
+// users.ts
+export function getCurrentUser() {}
+// teams.ts
+export function getCurrentUser() {}
 ```
 
 ## Fix

@@ -20,11 +20,26 @@ exceptions, not Markdown paths or globs.
 A test that asserts rendered Markdown text without evaluating a shell fence
 passes.
 
+```md
+```js
+console.log(1)
+```
+```
+
+
 ## Related rules
 
 [`markdown-mermaid-validation`](markdown-mermaid-validation.md) validates a
 safe, declarative fence language; [`shellcheck-runner`](shellcheck-runner.md)
 checks real shell files.
+
+## Counterexample
+
+```md
+```js eval
+throw new Error('no')
+```
+```
 
 ## Suppression
 

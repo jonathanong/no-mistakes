@@ -21,6 +21,23 @@ and `**/*.Tests/**`; paths under `tests/` also use the test limit.
 
 A selected source file at or below its configured physical-line limit passes.
 
+```cs
+class Ok { }
+```
+
+
+## Counterexample
+
+```cs
+class TooLong {
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+}
+```
+
 ## Suppression and related rules
 
 Use file suppression for generated or intentionally exceptional files. See
@@ -34,8 +51,8 @@ rules:
   - rule: csharp-max-lines-per-file
     scope: repository
     options:
-      srcMax: 200
-      testMax: 500
+      srcMax: 3
+      testMax: 10
       excludes:
         - "**/*.g.cs"
       testRoots:

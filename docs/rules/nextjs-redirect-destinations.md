@@ -1,5 +1,12 @@
 # `nextjs-redirect-destinations`
 
+## Counterexample
+
+```ts
+// next.config.ts
+export default { async redirects() { return [{ source: '/a', destination: 'https://evil.test', permanent: true }]; } };
+```
+
 ## Suppression
 
 Use a line directive for a deliberate external or dynamic destination. Prefer
@@ -27,6 +34,12 @@ to `true`. `trackedRoutesOnly` defaults to `false`.
 ## Valid example
 
 A redirect from `/old` to an existing `app/new/page.tsx` route passes.
+
+```ts
+// next.config.ts
+export default { async redirects() { return [{ source: '/a', destination: '/b', permanent: true }]; } };
+```
+
 
 ## Related rules
 

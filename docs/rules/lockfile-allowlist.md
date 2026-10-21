@@ -20,11 +20,22 @@ defaults.
 
 A repository containing only its configured `pnpm-lock.yaml` passes.
 
+```text
+pnpm-lock.yaml
+```
+
+
 ## Related rules
 
 [`package-json-registry-only`](package-json-registry-only.md) controls package
 sources, while [`pnpm-overrides-ban`](pnpm-overrides-ban.md) controls pnpm
 resolution overrides.
+
+## Counterexample
+
+```text
+package-lock.json
+```
 
 ## Suppression
 

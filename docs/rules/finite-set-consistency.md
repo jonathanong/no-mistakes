@@ -23,6 +23,17 @@ below.
 Two configured route inventories containing the same static values pass an
 `equal-set` comparison.
 
+```ts
+export const STATUS = ['open', 'closed'] as const;
+```
+
+
+## Counterexample
+
+```ts
+export const STATUS = ['open'] as const;
+```
+
 ## Related rules
 
 [`pnpm-release-age-policy`](pnpm-release-age-policy.md) uses policy-specific

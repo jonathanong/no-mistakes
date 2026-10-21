@@ -22,6 +22,27 @@ adds explicit denials. No other rule-specific options exist.
 The `Clean Action` example below is valid because each composite step uses only
 the documented step keys.
 
+```yaml
+name: composite
+description: ok
+runs:
+  using: composite
+  steps:
+    - run: echo ok
+      shell: bash
+```
+
+
+## Counterexample
+
+```yaml
+name: composite
+runs:
+  using: composite
+  steps:
+    - run: echo bad
+```
+
 ## Suppression
 
 Use a file directive for an intentionally exceptional action, or a line

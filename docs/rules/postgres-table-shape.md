@@ -98,12 +98,22 @@ matches no shape and no banned pattern. `article_votes` has
 `score smallint NOT NULL`. `report_export_cursors` is keyed by the
 `report_types` enum.
 
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, created_at timestamptz NOT NULL);
+```
+
+
 ## Counterexample
 
 `bad_revisions.changes` is nullable `json` with no reject trigger.
 `comment_votes.user_id` is `ON DELETE SET NULL`. `content_votes` has
 `target_table`. `sync_cursors` is keyed by `cursor_name text`.
 `order_history` matches the banned history pattern.
+
+```sql
+CREATE TABLE orders (name text);
+```
+
 
 ## Fix
 

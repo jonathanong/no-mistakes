@@ -20,6 +20,18 @@ the common rule `include` and `exclude` fields to narrow the file scope.
 
 A file containing one meaningful declaration or Markdown paragraph passes.
 
+```ts
+export const ready = true;
+```
+
+## Counterexample
+
+A placeholder file containing only `// TODO`.
+
+```ts
+// TODO
+```
+
 ## Related rules
 
 [`agents-md-max-size`](agents-md-max-size.md) constrains instruction-file size;

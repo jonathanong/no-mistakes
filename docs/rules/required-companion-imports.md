@@ -52,6 +52,12 @@ import Button from "@/components/Button";
 `Button.stories.tsx` exists but imports `./Button` while the configured
 `specifierTemplate` requires `@/components/Button`.
 
+```ts
+// src/feature.ts
+export const feature = true;
+```
+
+
 ## Fix
 
 Make the companion import match the rendered template or narrow the source and

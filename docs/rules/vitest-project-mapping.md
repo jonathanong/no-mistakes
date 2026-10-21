@@ -76,6 +76,12 @@ projects:
 `web/profile.test.ts` matches both `web/**/*.test.ts` and a broad
 `**/*.test.ts` project.
 
+```ts
+// vitest.config.ts
+export default { test: { include: ['src/**/*.test.ts'] } };
+```
+
+
 ## Fix
 
 Make project globs mutually exclusive, add the missing include, or enable

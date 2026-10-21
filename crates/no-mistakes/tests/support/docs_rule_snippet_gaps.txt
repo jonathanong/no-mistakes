@@ -1,0 +1,105 @@
+# Known check-rule doc execution gaps tracked by #2416.
+# Remove a prefix only after that snippet executes as documented.
+banned-renamed-files.md: Counterexample[0] expected 
+config-path-references.md: Counterexample[0] expected 
+csharp-no-async-void-delegate.md: Counterexample[0] expected 
+declared-payload-compatibility.md: Valid example needs an executable fence
+doc-consistency.md: Valid example[0] expected 
+finite-set-consistency.md: Valid example[0] run error:
+finite-set-consistency.md: Counterexample[0] run error:
+forbidden-calls.md: Valid example[0] run error:
+forbidden-calls.md: Counterexample[0] run error:
+forbidden-dependencies.md: Counterexample[0] expected 
+forbidden-workspace-closure.md: Valid example[0] expected 
+github-actions-action-timeout-pair.md: Counterexample[0] expected 
+github-actions-checkout-credentials.md: Counterexample needs an executable fence
+github-actions-composite-step-schema.md: Counterexample[0] expected 
+github-actions-docker-host-ports.md: Counterexample needs an executable fence
+github-actions-download-integrity.md: Counterexample needs an executable fence
+github-actions-job-timeouts.md: Counterexample needs an executable fence
+github-actions-pinned-hash.md: Valid example needs an executable fence
+github-actions-script-expressions.md: Counterexample needs an executable fence
+github-actions-step-timeouts.md: Counterexample needs an executable fence
+github-actions-test-timeout-literals.md: Counterexample[0] expected 
+integration-test-no-mocks.md: Counterexample[0] expected 
+markdown-child-links.md: Counterexample[0] expected 
+markdown-eval-tests.md: Valid example needs an executable fence
+markdown-link-display-text.md: Counterexample[0] expected 
+markdown-mermaid-validation.md: Counterexample needs an executable fence
+markdown-structure-budget.md: Counterexample[0] expected 
+nextjs-redirect-destinations.md: Valid example[0] expected 
+nextjs-redirect-destinations.md: Counterexample[0] expected 
+no-mistakes-config.md: Counterexample[0] expected 
+no-raw-ephemeral-port.md: Counterexample[0] expected 
+package-json-nested-workspace-coverage.md: Counterexample[0] expected 
+package-json-registry-only.md: Counterexample[0] expected 
+package-json-required-fields.md: Valid example[0] expected 
+package-json-required-fields.md: Counterexample[0] expected 
+package-json-workspace-coverage.md: Counterexample[0] expected 
+playwright-coverage.md: Valid example[0] run error:
+playwright-coverage.md: Counterexample[0] run error:
+playwright-prefer-test-id-locators.md: Counterexample[0] expected 
+playwright-unique-html-ids.md: Valid example[0] run error:
+playwright-unique-html-ids.md: Counterexample[0] run error:
+playwright-unique-test-ids.md: Valid example[0] run error:
+playwright-unique-test-ids.md: Counterexample[0] run error:
+pnpm-overrides-ban.md: Counterexample[0] expected 
+pnpm-release-age-policy.md: Counterexample[0] expected 
+postgres-bounded-statements.md: Valid example[0] run error:
+postgres-bounded-statements.md: Counterexample[0] run error:
+postgres-column-naming.md: Valid example[0] expected 
+postgres-column-requires-trigger.md: Valid example[0] expected 
+postgres-conflict-ordering.md: Counterexample needs an executable fence
+postgres-constraint-validate.md: Counterexample[0] expected 
+postgres-duplicate-function-body.md: Valid example[0] expected 
+postgres-explicit-columns.md: Valid example[0] run error:
+postgres-explicit-columns.md: Counterexample[0] run error:
+postgres-finite-text-columns.md: Valid example[0] expected 
+postgres-fk-index.md: Valid example[0] expected 
+postgres-generated-column-predicates.md: Valid example[0] run error:
+postgres-generated-column-predicates.md: Counterexample[0] run error:
+postgres-idempotent-insert.md: Valid example[0] run error:
+postgres-idempotent-insert.md: Valid example[1] run error:
+postgres-idempotent-insert.md: Counterexample[0] run error:
+postgres-identifier-length.md: Counterexample[0] expected 
+postgres-lock-ordering.md: Counterexample[0] expected 
+postgres-no-add-column.md: Counterexample[0] expected 
+postgres-no-generated-column-writes.md: Counterexample[0] expected 
+postgres-no-generated-column-writes.md: Counterexample[1] expected 
+postgres-no-offset.md: Counterexample[0] expected 
+postgres-no-offset.md: Counterexample[1] expected 
+postgres-object-naming.md: Valid example[0] expected 
+postgres-require-fk-on-delete.md: Counterexample[0] expected 
+postgres-require-named-constraints.md: Counterexample[0] expected 
+postgres-require-query-annotation.md: Counterexample[0] expected 
+postgres-required-comments.md: Valid example[0] expected 
+postgres-required-predicates.md: Valid example[0] run error:
+postgres-required-predicates.md: Counterexample[0] run error:
+postgres-sql-shape-policy.md: Valid example[0] run error:
+postgres-sql-shape-policy.md: Counterexample[0] run error:
+postgres-sql-statement-policy.md: Counterexample[0] expected 
+postgres-status-with-lifecycle-timestamps.md: Valid example[0] expected 
+postgres-table-shape.md: Valid example[0] expected 
+production-dependency-declarations.md: Counterexample[0] expected 
+query-reached-per-item.md: Valid example[0] run error:
+query-reached-per-item.md: Counterexample[0] run error:
+require-storybook-stories.md: Valid example[0] run error:
+require-storybook-stories.md: Counterexample[0] run error:
+required-companion-imports.md: Counterexample[0] expected 
+required-doc-section.md: Valid example needs an executable fence
+required-entrypoint-reachability.md: Valid example[0] expected 
+server-route-client-boundary.md: Counterexample[0] expected 
+shellcheck-runner.md: Counterexample[0] expected 
+structured-config-policy.md: Counterexample[0] expected 
+test-email-domain-policy.md: Counterexample[0] expected 
+test-no-dependency-pins.md: Counterexample[0] expected 
+test-no-unmocked-dynamic-imports.md: Counterexample[0] expected 
+tsconfig-alias-folder-mapping.md: Counterexample[0] expected 
+tsconfig-file-coverage.md: Valid example[0] expected 
+tsconfig-file-coverage.md: Valid example[1] expected 
+tsconfig-gate-coverage.md: Valid example[0] expected 
+version-pin-consistency.md: Counterexample[0] expected 
+vitest-ci-path-coverage.md: Counterexample[0] expected 
+vitest-project-mapping.md: Counterexample[0] expected 
+workflow-topology-policy.md: Valid example[0] expected 
+workspace-package-cycles.md: Counterexample[0] expected 

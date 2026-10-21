@@ -69,6 +69,12 @@ Prefer removing baseline entries as documents are repaired.
 Suppressions use standard `no-mistakes` directives. Prefer fixing the map;
 suppression hides future discoverability regressions.
 
+## Counterexample
+
+```md
+# Orphan
+```
+
 ## Related rules
 
 [`markdown-child-links`](markdown-child-links.md) enforces complete indexes,
