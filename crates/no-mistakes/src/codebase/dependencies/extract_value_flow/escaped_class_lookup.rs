@@ -4,17 +4,23 @@ impl ImportCollector {
     pub(super) fn resolve_class_method(
         &mut self,
         call: &CallExpression<'_>,
-    ) -> Option<(CallableId, Vec<ValueExpression>)> {
+    ) -> Option<(CallableId, Vec<ValueExpression>, bool)> {
         if let Some(resolved) = prototype_call(self, call) {
-            return Some(resolved);
+            return Some((resolved.0, resolved.1, false));
         }
         let (object, method) = method_name(&call.callee)?;
         let (class_id, scope) = class_ref(self, object)?;
         let method = member_on_class(self, class_id, &method, scope)?;
-        Some((method, call_arguments(self, call, 0)))
+        Some((
+            method,
+            call_arguments(self, call, 0),
+            matches!(
+                crate::codebase::ts_source::unwrap_ts_wrappers(object),
+                Expression::Super(_)
+            ),
+        ))
     }
 }
-
 fn prototype_call(
     collector: &ImportCollector,
     call: &CallExpression<'_>,
@@ -30,7 +36,6 @@ fn prototype_call(
     let method = method_callable(collector, &member.object)?;
     Some((method, call_arguments(collector, call, 1)))
 }
-
 fn method_name<'a>(callee: &'a Expression<'a>) -> Option<(&'a Expression<'a>, String)> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(callee) {
         Expression::StaticMemberExpression(member) => {
@@ -46,17 +51,10 @@ fn method_name<'a>(callee: &'a Expression<'a>) -> Option<(&'a Expression<'a>, St
 
 fn class_ref(collector: &ImportCollector, object: &Expression<'_>) -> Option<(CallableId, usize)> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(object) {
+        Expression::Super(_) => super_class(collector),
         Expression::ThisExpression(_) => {
             let class_id = this_class(collector)?;
             Some((class_id, collector.current_lexical_scope_id()))
-        }
-        Expression::Super(_) => {
-            // `super.rebind` is the base method, including when this class overrides it.
-            let class_id = this_class(collector)?;
-            let scope = collector.current_lexical_scope_id();
-            let base = collector.class_local_bases.get(&class_id)?;
-            let base_id = collector.class_id_for_binding(scope, base)?;
-            Some((base_id, scope))
         }
         Expression::NewExpression(new) => {
             let name = simple_callee_name(&new.callee)?;
@@ -195,3 +193,7 @@ fn call_arguments(
         })
         .collect()
 }
+
+#[path = "escaped_super_class.rs"]
+mod super_lookup;
+use super_lookup::super_class;

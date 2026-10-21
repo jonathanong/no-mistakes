@@ -168,6 +168,10 @@ For repeated query or cache calls hidden in helpers, enable
 explicit effect families. It traces resolved per-item calls; dynamic targets
 cannot prove sink reachability. Use configured batch exemptions and reviewed
 callsite allowlists for rollout. CLI and async `check()` share the rule.
+Receiver targets retained as possible still participate when a newly recovered
+escape adds unknown evidence; a match does not prove one runtime callee.
+Escaped-array history uses source offsets, which can differ from execution order
+for hoisted functions.
 
 For separately compiled HTTP/queue payloads, opt in to
 `declared-payload-compatibility` and run `check --root <workspace> --format json`.

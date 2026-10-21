@@ -20,10 +20,14 @@ mod escaped_higher_order;
 mod escaped_origin_absorb;
 #[path = "escaped_parameters.rs"]
 mod escaped_parameters;
+#[path = "escaped_possible_arguments.rs"]
+mod escaped_possible_arguments;
+#[path = "escaped_possible_mutations.rs"]
+mod escaped_possible_mutations;
 
 pub(super) use array_element_values::value as array_element_value;
 pub(super) use escaped_array_entries::{array_elements, assign_sources, copied_member};
-pub(super) use escaped_origin_absorb::absorb;
+pub(super) use escaped_origin_absorb::{absorb, absorb_possible};
 
 type StoredArray = (
     usize,
@@ -38,6 +42,7 @@ pub(in super::super) struct Side {
     /// `const api = new Api()` — write origins only, not a callable binding.
     /// Keyed by binding scope and name. Dotted keys are instance fields.
     instances: FxHashMap<(usize, String), CallableId>,
+    pub(in super::super) base_scopes: FxHashMap<CallableId, usize>,
     /// Arrow callables. `arguments` belongs to the enclosing function.
     arrows: FxHashSet<CallableId>,
     /// Instance field `(class, name)` initialized with an arrow or function.
@@ -50,9 +55,10 @@ pub(in super::super) struct Side {
     argument_aliases: FxHashSet<(usize, String)>,
     /// Array values from `let` bindings and later array assignments.
     arrays: Vec<StoredArray>,
+    guarded_arrays: bool,
     /// Call span `(start, end)`, method, and the raw argument values. Spread and
     /// conditional shapes are also stored in the escaped maps under that same span.
-    methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>)>,
+    methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>, bool)>,
     /// Conditional and spread arguments. Keyed by call span `(start, end)`, then
     /// parameter index.
     escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
@@ -60,4 +66,7 @@ pub(in super::super) struct Side {
     /// spread ahead of them had no known elements.
     open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
     reassigned: Vec<(usize, String, ValueExpression)>,
+    possible_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
+    possible_open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
+    pub(super) projecting_possible: bool,
 }

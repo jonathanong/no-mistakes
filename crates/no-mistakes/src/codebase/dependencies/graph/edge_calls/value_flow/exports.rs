@@ -60,6 +60,8 @@ pub(in super::super) fn resolve_value_exports(
                     Some(id),
                 ),
                 FlowValue::Target(target) => (target, None),
+                // Possible values stay deferred Value exports; do not promote
+                // their known branch to an exact cross-module callable.
                 _ => return None,
             };
             let NodeId::Symbol {

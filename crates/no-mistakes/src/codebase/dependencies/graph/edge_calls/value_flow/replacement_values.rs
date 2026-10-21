@@ -44,9 +44,11 @@ impl ValueFlowResolution<'_, '_> {
         // The replacement catalog tracks repeated writes and would otherwise
         // turn that earlier snapshot into a live, unknown method value.
         if !self.foreign_acquisition
-            && self.member_initializer.is_some_and(|(file, start, owner, repeated)| {
-                file == path && start == *offset && owner == *context && !repeated
-            })
+            && self
+                .member_initializer
+                .is_some_and(|(file, start, owner, repeated)| {
+                    file == path && start == *offset && owner == *context && !repeated
+                })
             && context.is_some_and(|owner| {
                 matches!(
                     self.source_execution_phase(path, owner),
@@ -54,9 +56,9 @@ impl ValueFlowResolution<'_, '_> {
                 )
             })
             && self.replacements.is_some_and(|catalog| {
-                catalog.file(path).is_some_and(|file| {
-                    !file.acquisition_repeats(*offset, *context)
-                })
+                catalog
+                    .file(path)
+                    .is_some_and(|file| !file.acquisition_repeats(*offset, *context))
             })
         {
             return None;
@@ -81,9 +83,9 @@ impl ValueFlowResolution<'_, '_> {
                 )
             })
             && self.replacements.is_some_and(|catalog| {
-                catalog.file(path).is_some_and(|file| {
-                    !file.acquisition_repeats(*offset, *context)
-                })
+                catalog
+                    .file(path)
+                    .is_some_and(|file| !file.acquisition_repeats(*offset, *context))
             })
         {
             return None;
@@ -163,3 +165,7 @@ pub(super) fn replacement_target(
 }
 
 include!("replacement_coordinates.rs");
+
+#[path = "possible_replacement_candidates.rs"]
+mod possible_candidates;
+pub(super) use possible_candidates::{replacement_candidates, ReplacementCandidates};

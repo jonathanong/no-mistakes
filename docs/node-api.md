@@ -22,7 +22,7 @@ const { analyzeProject } = require("no-mistakes");
 - [Selected TypeScript and JavaScript module facts](node-api/typescript-modules.md)
 - [Declared runner config deadlines](node-api/runner-deadlines.md)
 - [Live phase progress](node-api/progress.md)
-- [Effect alternatives](node-api/effect-alternatives.md)
+- [Effect alternatives](node-api/effect-alternatives.md): retained possible receiver targets and physical call matches
 
 ## CLI Mapping
 

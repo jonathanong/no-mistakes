@@ -11,6 +11,11 @@ pub(super) fn apply_value(
     let mut value = value;
     loop {
         value = match value {
+            FlowValue::Possible(inner) => {
+                apply_value(inputs, facts, indexes, site, *inner, replacement_read);
+                possible::widen(site);
+                return;
+            }
             FlowValue::Provenance {
                 executor,
                 typed,
@@ -127,3 +132,6 @@ pub(super) fn apply_value(
     }
     site.target = target;
 }
+
+#[path = "possible_targets.rs"]
+mod possible;

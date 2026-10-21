@@ -29,11 +29,15 @@ impl ImportCollector {
     }
 
     pub(super) fn note_class_method(&mut self, call: &CallExpression<'_>) {
-        let Some((method, arguments)) = self.resolve_class_method(call) else {
+        let Some((method, arguments, possible)) = self.resolve_class_method(call) else {
             return;
         };
-        self.receiver_escapes
-            .methods
-            .push((call.span.start, call.span.end, method, arguments));
+        self.receiver_escapes.methods.push((
+            call.span.start,
+            call.span.end,
+            method,
+            arguments,
+            possible,
+        ));
     }
 }

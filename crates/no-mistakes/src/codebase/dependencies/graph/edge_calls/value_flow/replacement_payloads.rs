@@ -1,7 +1,8 @@
-use super::super::replacement_values::{replacement_candidate, replacement_target};
+use super::super::replacement_values::{
+    replacement_candidates, replacement_target, ReplacementCandidates,
+};
 use super::index::PreparedReplacements;
 use super::*;
-
 type Group = (usize, Option<CallableId>, Option<usize>);
 /// Targets are built at acquisition once. A reader borrows a normalized payload
 /// after two prefix searches; it never allocates a frame or a candidate set.
@@ -48,15 +49,15 @@ impl ReplacementPayloads {
                     );
                 let leaf = if admissible {
                     let value = flow.value(path, &write.value);
-                    replacement_candidate(flow, value)
+                    replacement_candidates(flow, value)
                 } else {
-                    None
+                    ReplacementCandidates::Single(None)
                 };
                 #[cfg(feature = "test-instrumentation")]
                 {
                     probe.rhs_attempts += 1;
                     probe.rhs_resolutions += usize::from(admissible);
-                    probe.rhs_known += usize::from(leaf.is_some());
+                    probe.rhs_known += usize::from(leaf.has_known());
                     probe.rhs.push(ReplacementRhsProbe {
                         file: path.to_path_buf(),
                         write_index,
@@ -64,7 +65,7 @@ impl ReplacementPayloads {
                         owner: write.owner.map(|owner| owner.0),
                         region: write.region,
                         resolved: admissible,
-                        known: leaf.is_some(),
+                        known: leaf.has_known(),
                     });
                 }
                 #[cfg(not(feature = "test-instrumentation"))]
@@ -72,11 +73,7 @@ impl ReplacementPayloads {
                 leaf
             })
             .collect();
-        let writes: Vec<_> = leaves
-            .iter()
-            .cloned()
-            .map(|value| replacement_target([value]))
-            .collect();
+        let writes: Vec<_> = leaves.iter().cloned().map(replacement_target).collect();
         #[cfg(feature = "test-instrumentation")]
         for target in &writes {
             probe.target(target);
@@ -130,11 +127,12 @@ impl ReplacementPayloads {
                 owner,
                 None,
             );
-            let original = replacement_candidate(flow, original);
-            let tail = index
-                .tail(receiver, property, owner, region)
-                .and_then(|tail| leaves[tail].clone());
-            let target = replacement_target([original, tail]);
+            let original = replacement_candidates(flow, original);
+            let tail = index.tail(receiver, property, owner, region).map_or_else(
+                || ReplacementCandidates::Single(None),
+                |tail| leaves[tail].clone(),
+            );
+            let target = replacement_target(original.into_iter().chain(tail));
             #[cfg(feature = "test-instrumentation")]
             probe.target(&target);
             entries
@@ -199,5 +197,4 @@ impl ReplacementPayloads {
         )
     }
 }
-
 include!("replacement_stability.rs");

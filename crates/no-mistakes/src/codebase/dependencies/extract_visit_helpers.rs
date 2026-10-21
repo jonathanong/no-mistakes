@@ -186,10 +186,6 @@ impl ImportCollector {
         );
     }
 
-    fn record_class_local_base(&mut self, class_id: CallableId, base: String) {
-        self.class_local_bases.insert(class_id, base);
-    }
-
     fn callee_shadows_import(&self, callee: &str) -> bool {
         let binding = callee
             .split_once('.')

@@ -12,6 +12,9 @@ several categories may describe one row. `categories` filters alternatives befor
 choosing scalar fields and counts, so a read-only request cannot expose a write
 scalar/category count. Unknown candidates add no evidence. The returned Promise,
 CommonJS/ESM facades and batched reports preserve this same projection.
+Newly recovered receiver writes through guarded array alternatives or `super`
+retain existing matches as possible targets alongside unknown evidence. A match
+therefore does not prove one runtime callee.
 
 
 `check()` and `analyzeProject()` accept the same `forbidden-calls` argument

@@ -20,7 +20,7 @@ pub(super) struct OriginNode {
 }
 pub(super) enum OriginKind {
     Source(DefaultOriginUse),
-    Receiver(std::path::PathBuf, usize, String),
+    Receiver(std::path::PathBuf, usize, String, bool),
     ReceiverUse(Origins, ReceiverRead),
     ReceiverSnapshot(Arc<OriginNode>),
     ReceiverAcquisition(Arc<OriginNode>),
@@ -114,5 +114,19 @@ impl ValueFlowResolution<'_, '_> {
             .map(|(file, offset, context)| (file.as_path(), *offset, *context))
             .unwrap_or((std::path::Path::new(""), 0, None));
         self.origins_invalidated(file, offset, (context, context), true, None)
+    }
+    pub(super) fn receiver_origin_possible(&self) -> bool {
+        let Some((file, offset, context)) = &self.member_read else {
+            return false;
+        };
+        // Ordinary files pay no second origin walk or temporary traversal buffers.
+        if !self
+            .indexes
+            .file(self.facts, file)
+            .is_some_and(|index| index.values.possible_receiver_mutations.is_some())
+        {
+            return false;
+        }
+        self.origins_invalidated_in_channel(file, *offset, (*context, *context), true, None, true)
     }
 }

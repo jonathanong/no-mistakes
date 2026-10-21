@@ -167,6 +167,9 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub receiver_root_target_decompositions: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
+    /// Newly recovered escape origins retain the original callable as possible.
+    /// Historical definite mutation semantics remain in `receiver_mutations`.
+    pub possible_receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub replacements: Option<std::sync::Arc<replacements::ValueReplacementFacts>>,
     pub bindings: Vec<ValueBinding>,
     pub parameters: Vec<ValueParameter>,

@@ -37,6 +37,13 @@ impl FlowFileIndex {
                     std::sync::Arc::clone(histories),
                 ))
             }),
+            possible_receiver_mutations: flow.possible_receiver_mutations.as_ref().map(
+                |histories| {
+                    std::sync::Arc::new(prepared_receivers::PreparedReceiverMutations::new(
+                        std::sync::Arc::clone(histories),
+                    ))
+                },
+            ),
             async_callables: flow.async_callables.clone(),
             generator_callables: flow.generator_callables.clone(),
             sites,

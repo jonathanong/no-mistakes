@@ -86,7 +86,9 @@ impl ValueFlowResolution<'_, '_> {
             self.record_receiver_read(path, offset, context, repeated);
         }
         self.visiting.remove(&key);
-        if scope == 0 && file.imported.contains_key(base) {
+        if (scope == 0 && file.imported.contains_key(base))
+            || file.values.possible_receiver_mutations.is_some()
+        {
             self.record_receiver_origin(path, scope, base, (offset, context, repeated));
         }
         let owned_invocation = self
