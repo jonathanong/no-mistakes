@@ -1,4 +1,5 @@
 const EXACT_TIMING_ORDER: &[(&str, u16)] = &[
+    ("check.prepare", 5),
     ("discovery", 10),
     ("read", 20),
     ("parse", 30),
@@ -29,6 +30,7 @@ const EXACT_TIMING_ORDER: &[(&str, u16)] = &[
 ];
 
 const PREFIX_TIMING_ORDER: &[(&str, u16)] = &[
+    ("check.prepare.", 6),
     ("discovery.", 11),
     ("read.", 21),
     ("parse.", 31),

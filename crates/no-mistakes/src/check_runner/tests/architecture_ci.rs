@@ -4,6 +4,7 @@ use super::*;
 fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     let prepared = concat!(
         include_str!("../prepared.rs"),
+        include_str!("../prepared/independent.rs"),
         include_str!("../../codebase/ci_workflows/prepared.rs"),
     );
     let tasks = check_task_sources();
