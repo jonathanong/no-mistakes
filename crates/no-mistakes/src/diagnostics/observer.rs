@@ -1,3 +1,6 @@
+mod snapshot;
+#[cfg(all(test, unix))]
+mod timeout_tests;
 mod timing_order;
 mod work;
 
@@ -12,7 +15,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use work::WorkCounters;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TimingKind {
     Serial,
@@ -140,33 +142,7 @@ impl InvocationObserver {
             .lock()
             .expect("diagnostics timing mutex must not be poisoned")
             .clone();
-        let mut grouped = BTreeMap::<(String, TimingKind), Duration>::new();
-        for entry in recorded {
-            *grouped.entry((entry.label, entry.kind)).or_default() += entry.duration;
-        }
-        let mut timings = grouped
-            .into_iter()
-            .map(|((label, kind), duration)| TimingDiagnostic {
-                label,
-                duration,
-                kind,
-            })
-            .collect::<Vec<_>>();
-        timings.sort_by(|a, b| {
-            (timing_order(&a.label), a.label.as_str(), a.kind).cmp(&(
-                timing_order(&b.label),
-                b.label.as_str(),
-                b.kind,
-            ))
-        });
-        DiagnosticsSnapshot {
-            timings,
-            work: self
-                .work
-                .as_ref()
-                .map(|work| work.snapshot())
-                .unwrap_or_default(),
-        }
+        self.snapshot_from(recorded)
     }
 
     /// Render a single deterministic diagnostics block. This is intentionally

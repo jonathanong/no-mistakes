@@ -20,15 +20,7 @@ pub(super) fn watch_deadline(
                 return;
             }
             let message = timeout_diagnostic(timeout, current_phase());
-            if !observer.as_ref().is_some_and(|observer| {
-                observer.progress_enabled()
-                    && observer.emit_progress_output(format!("error: {message}\n"))
-            }) {
-                eprintln!("error: {message}");
-            }
-            if let Some(observer) = &observer {
-                observer.render_progress_stderr();
-            }
+            crate::diagnostics::render_timeout_stderr(observer, message);
             crate::invocation::child::process_tree::terminate_registered_groups();
             std::process::exit(124);
         }

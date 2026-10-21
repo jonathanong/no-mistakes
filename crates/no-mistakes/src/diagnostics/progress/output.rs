@@ -11,12 +11,12 @@ struct Message {
     completed: mpsc::Sender<()>,
 }
 
-pub(super) struct ProgressOutput {
+pub(in crate::diagnostics) struct ProgressOutput {
     sender: mpsc::SyncSender<Message>,
 }
 
 impl ProgressOutput {
-    pub(super) fn stderr() -> Arc<Self> {
+    pub(in crate::diagnostics) fn stderr() -> Arc<Self> {
         Self::start(duplicate_stderr())
     }
 
@@ -37,7 +37,7 @@ impl ProgressOutput {
         Arc::new(Self { sender })
     }
 
-    pub(super) fn emit(&self, text: String) {
+    pub(in crate::diagnostics) fn emit(&self, text: String) {
         let (completed, receiver) = mpsc::channel();
         if self.sender.try_send(Message { text, completed }).is_ok() {
             let _ = receiver.recv_timeout(OUTPUT_WAIT);

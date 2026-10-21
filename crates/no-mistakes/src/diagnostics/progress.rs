@@ -1,5 +1,5 @@
 mod activity;
-mod output;
+pub(super) mod output;
 mod spans;
 use super::{InvocationObserver, TimingDiagnostic, TimingKind};
 use output::ProgressOutput;
