@@ -4,6 +4,7 @@ struct EffectiveScopeKey {
     tsconfig: Option<PathBuf>,
     automatic_tsconfig: bool,
     config: Option<PathBuf>,
+    effort: Option<crate::config::v2::Effort>,
 }
 
 struct EffectiveScope {
@@ -36,6 +37,7 @@ impl EffectiveScope {
             tsconfig: self.tsconfig.clone(),
             automatic_tsconfig: self.automatic_tsconfig,
             config: self.config.clone(),
+            effort: self.key.effort,
         };
         Ok(self)
     }
@@ -65,6 +67,11 @@ fn effective_scope(
         tsconfig: tsconfig.clone(),
         automatic_tsconfig,
         config: config.clone(),
+        effort: if request.report_type == "check" {
+            string_option(request, "effort")?
+                .map(|value| serde_json::from_value(serde_json::Value::String(value.into())))
+                .transpose()?
+        } else { None },
     };
     Ok(EffectiveScope {
         key,
@@ -122,4 +129,12 @@ fn scope_graph_files(
             }
         })
         .unwrap_or_else(|| traversal.graph_files().iter_visible().cloned().collect())
+}
+
+fn requested_check_effort(options: &AnalyzeProjectOptions) -> Result<Option<crate::config::v2::Effort>> {
+    options.reports.iter().find(|request| request.report_type == "check")
+        .map(|request| -> Result<_> {
+            let parsed: ProjectOptions = serde_json::from_str(&project_options(request, options)?)?;
+            Ok(parsed.effort)
+        }).transpose().map(Option::flatten)
 }

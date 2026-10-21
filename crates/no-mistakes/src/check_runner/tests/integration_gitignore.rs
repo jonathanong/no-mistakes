@@ -75,7 +75,7 @@ fn prepare(
     tsconfig_path: Option<&Path>,
 ) -> anyhow::Result<prepared::PreparedCheckInputs> {
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
-    prepared::prepare_with_session(&session, root, config_path, tsconfig_path)
+    prepared::prepare_with_session(&session, root, config_path, tsconfig_path, None)
 }
 
 #[test]

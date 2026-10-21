@@ -46,7 +46,8 @@ An existing contextual finding can coexist with whole-call `abstain` when
 another reachable invocation remains unknown; the row does not promote one
 observed context into proof for every execution.
 
-Each PostgreSQL rule application accepts `unanalyzableSql: advise` to place its
+Each PostgreSQL rule application accepts `unanalyzable: advise` (or the
+SQL-specific `unanalyzableSql: advise` alias) to place its
 residual uncertainty in the non-failing `advisories` list. Each executor call,
 rule, configured application, and executor profile produces at most one residual
 advisory. Its `target` lists unresolved checks in sorted, comma-separated

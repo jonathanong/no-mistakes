@@ -60,7 +60,7 @@ type BatchedReactUsagesOptions = Pick<
   Required<Pick<ProjectOptions, "target">>;
 type BatchedCheckOptions = Pick<
   CheckOptions,
-  "root" | "tsconfig" | "config" | "includeSuppressed"
+  "root" | "tsconfig" | "config" | "includeSuppressed" | "effort"
 > &
   Pick<CheckOptions, "includeRunnerConfigDeadlines" | "includeSqlVerdicts">;
 type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;

@@ -36,4 +36,13 @@ their findings and advisories follow normal suppression directives.
 Grouped residual advice, including a `target` that may list several checks, is
 described in [SQL verdict semantics](../postgres-sql-verdicts.md).
 
+Pass `effort: "low"` or `effort: "max"` to `check()` or a check report in
+`analyzeProject()`. The default is `max`; invocation effort takes precedence
+over per-rule and repository defaults. If a low-effort rule's required partner
+check is missing or out of scope, the report includes a warning and that rule
+runs at `max`. Rule options may set `effort` and the shared `unanalyzable`
+policy. `unanalyzableSql` is a backward-compatible SQL alias for the same
+policy. Legacy PostgreSQL rules that use `fail` keep that spelling; shared
+`report` maps to the legacy parser's accepted value.
+
 [Node/N-API guide](../node-api.md)

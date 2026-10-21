@@ -1,0 +1,14 @@
+rules:
+  - rule: test-effort-adopter
+    scope: repository
+    options:
+      unanalyzableSql: advise
+  - rule: test-effort-adopter
+    scope: repository
+    options:
+      unanalyzable: advise
+  - rule: test-effort-adopter
+    scope: repository
+    options:
+      unanalyzable: advise
+      unanalyzableSql: invalid-overridden-alias

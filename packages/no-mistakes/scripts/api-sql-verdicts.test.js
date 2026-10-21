@@ -17,8 +17,16 @@ test("check SQL verdict declarations are named and exposed from both entrypoints
   );
   assert.match(declarations("check-report-types.d.ts"), /sqlVerdicts\?: SqlObligationVerdict\[\];/);
   assert.match(
+    declarations("traversal-types.d.ts"),
+    /export type Unanalyzable = "report" \| "advise" \| "ignore";/,
+  );
+  assert.match(
     declarations("postgres-query-annotation-types.d.ts"),
-    /"report" \| "ignore" \| "advise"/,
+    /import type \{ Effort, Unanalyzable \} from "\.\/traversal-types";/,
+  );
+  assert.match(
+    declarations("postgres-query-annotation-types.d.ts"),
+    /export type PostgresUnanalyzableSql = Unanalyzable;/,
   );
   assert.match(
     declarations("check-report-types.d.ts"),

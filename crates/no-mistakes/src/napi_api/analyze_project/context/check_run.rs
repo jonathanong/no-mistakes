@@ -71,6 +71,8 @@ impl SharedCheckContext {
             && !self.graph_rules_enabled
         {
             let mut results = crate::check_runner::empty_results([None]);
+            results.warnings.extend(self.prepared.config.analysis_warnings.iter().cloned());
+            results.analysis_warning_count = self.prepared.config.analysis_warnings.len();
             results.include_suppressed = include_suppressed;
             results.include_sql_verdicts = include_sql_verdicts;
             results.runner_config_deadlines = runner_config_deadlines;

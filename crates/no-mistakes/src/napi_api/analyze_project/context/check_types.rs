@@ -2,6 +2,7 @@ struct SharedCheckPreparationOptions<'a> {
     config_path: Option<&'a Path>,
     tsconfig_path: Option<&'a Path>,
     deadlines: bool,
+    effort: Option<crate::config::v2::Effort>,
 }
 
 struct SharedCheckContext {

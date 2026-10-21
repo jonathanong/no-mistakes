@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    include: ['legacy-project/src/*.mts']
+    options:
+      importSpecifier: '@example/db'
+      unanalyzableSql: { historically: ignored }
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    include: ['legacy-project/src/*.mts']
+    options:
+      importSpecifier: '@example/db'
+      unanalyzableSql: [historically, ignored]

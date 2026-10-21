@@ -1,0 +1,13 @@
+projects:
+  db:
+    root: legacy-project
+    include: ['src/*.mts']
+    postgres:
+      unanalyzableSql: fail
+      executors:
+        importSpecifier: '@example/db'
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    projects: [db]
+  - rule: postgres-no-unbounded-sql-identifier
+    projects: [db]

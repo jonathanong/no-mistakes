@@ -19,11 +19,23 @@ Rules are opt-in. `include` and `exclude` filters apply to each rule
 application and are interpreted relative to the configured root.
 
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
-`options.unanalyzableSql` defaults to `report`. Configure `ignore` to skip
-opaque executor arguments, or `advise` for a non-failing residual advisory.
+`options.unanalyzableSql` remains an alias for `options.unanalyzable`.
+`options.unanalyzable` inherits the repository `unanalyzable` policy and
+defaults to `report`; configure `ignore` to skip opaque executor arguments, or
+`advise` for a non-failing residual advisory. The legacy key keeps the same
+meaning. Other PostgreSQL rules keep their legacy `fail` spelling for
+`report`; setting the shared `report` policy translates to that spelling.
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
+
+Rule applications that support alternate effort levels can set
+`options.effort: low` or `options.effort: max`. The repository-level
+`effort` defaults to `max`; a rule option overrides it, and the invocation
+option overrides both. `max` preserves current analysis. `low` is available
+only for rules that explicitly adopt it. If an adopted low-effort rule needs a
+partner check that is absent or outside its configured scope, it warns and
+falls back to `max` for that rule.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

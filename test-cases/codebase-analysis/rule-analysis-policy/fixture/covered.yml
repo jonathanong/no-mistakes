@@ -1,0 +1,13 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: test-effort-adopter
+    name: selected-application
+    scope: repository
+    include: ['src/*.ts']
+  - rule: test-partner
+    scope: repository
+    include: ['src/covered.ts']
+  - rule: test-partner
+    scope: repository
+    include: ['src/outside.ts']
