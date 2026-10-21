@@ -1,0 +1,3 @@
+{
+  "compilerOptions": { "module": "nodenext", "moduleResolution": "nodenext" }
+}

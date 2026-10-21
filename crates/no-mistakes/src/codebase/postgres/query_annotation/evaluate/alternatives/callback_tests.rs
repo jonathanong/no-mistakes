@@ -5,6 +5,9 @@ mod branch_join;
 #[path = "callback_tests/tests/computed_receiver.rs"]
 mod computed_receiver;
 #[cfg(test)]
+#[path = "callback_tests/tests/private_arms.rs"]
+mod private_arms;
+#[cfg(test)]
 #[path = "callback_tests/tests/siblings.rs"]
 mod siblings;
 #[cfg(test)]
