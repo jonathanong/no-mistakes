@@ -51,7 +51,8 @@ fn catalog_root_configured(config: &crate::config::v2::NoMistakesConfig, key: &s
 }
 
 /// Prepare runner catalogs only for forbidden-calls root kinds that exist.
-pub(crate) fn prepare_root_catalogs(
+#[doc(hidden)]
+pub fn prepare_root_catalogs(
     root: &std::path::Path,
     config: &crate::config::v2::NoMistakesConfig,
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
