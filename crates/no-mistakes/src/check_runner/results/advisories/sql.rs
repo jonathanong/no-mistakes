@@ -98,12 +98,20 @@ fn finding(root: &Path, sources: &SourceStore, rows: &[&SqlObligationVerdict]) -
                 |name| format!(" application {name:?} (#{})", app.index),
             )
         });
+    let outcome = if rows
+        .iter()
+        .any(|row| row.status == SqlVerdictStatus::Violation)
+    {
+        "proved a violation, but remaining SQL is unresolved for"
+    } else {
+        "has unresolved SQL for"
+    };
     RuleFinding {
         rule: verdict.rule.clone(),
         file: verdict.file.clone(),
         line,
         message: format!(
-            "{}:{line}: {}{application} has unresolved SQL for {checks}: {reasons}{prefix}{helpers}",
+            "{}:{line}: {}{application} {outcome} {checks}: {reasons}{prefix}{helpers}",
             verdict.file, verdict.rule
         ),
         import: None,

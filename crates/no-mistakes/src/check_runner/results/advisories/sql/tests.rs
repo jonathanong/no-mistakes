@@ -58,6 +58,10 @@ fn groups_only_matching_calls_rules_applications_and_profiles() {
     merge_sql(&mut advice, Path::new("/missing"), &sources, &rows);
     assert_eq!(advice.len(), 6);
     assert!(advice.iter().all(|finding| finding.line == 1));
+    assert!(advice.iter().all(|finding| {
+        finding.message.contains("has unresolved SQL for")
+            && !finding.message.contains("proved a violation")
+    }));
     assert!(advice
         .iter()
         .any(|finding| finding.message.contains("application #0")));
@@ -88,7 +92,10 @@ fn aggregation_sorts_and_deduplicates_all_residual_evidence() {
     );
     assert_eq!(advice.len(), 1);
     assert_eq!(advice[0].target.as_deref(), Some("first, second"));
-    assert!(advice[0].message.contains("has unresolved SQL for"));
+    assert!(advice[0]
+        .message
+        .contains("proved a violation, but remaining SQL is unresolved for"));
+    assert!(!advice[0].message.contains("has unresolved SQL for"));
     assert!(advice[0]
         .message
         .contains("invalid, opaque; known SQL prefix \"SELECT \"; helper lines [2, 4, 8]"));

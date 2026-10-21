@@ -22,11 +22,8 @@ For [`postgres-require-query-annotation`](../rules/postgres-require-query-annota
 `options.unanalyzableSql` defaults to `report`. Configure `ignore` to skip
 opaque executor arguments, or `advise` for a non-failing residual advisory.
 Helper and callback tracing still checks every recovered leading prefix.
-PostgreSQL rule applications using `unanalyzableSql: advise` emit at most one
-residual advisory per executor call, rule, application, and executor profile,
-with sorted unresolved checks/reasons. Advice uses the executor call line;
-proven findings retain their SQL origin lines. The optional
-[SQL verdict ledger](../postgres-sql-verdicts.md) remains per obligation.
+Grouped advice, including a `target` that may list several checks, is described
+in [SQL verdicts](../postgres-sql-verdicts.md).
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

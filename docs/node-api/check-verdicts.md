@@ -33,9 +33,7 @@ findings retain their usual `rules` field and suppression behavior. The
 It is a raw proof inventory: suppressed calls remain in `sqlVerdicts` while
 their findings and advisories follow normal suppression directives.
 
-[Node/N-API guide](../node-api.md)
+Grouped residual advice, including a `target` that may list several checks, is
+described in [SQL verdict semantics](../postgres-sql-verdicts.md).
 
-SQL residual advice is grouped per executor call, rule, configured application,
-and executor profile. Advice uses the executor call line; proven findings keep
-their SQL origin lines. Checks and reasons are sorted and deduplicated in the
-advisory, while the optional ledger remains per obligation.
+[Node/N-API guide](../node-api.md)
