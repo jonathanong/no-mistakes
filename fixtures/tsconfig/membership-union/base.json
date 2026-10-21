@@ -1,0 +1,1 @@
+{"compilerOptions": {"allowJs": true, "outDir": "src/generated"}, "files": ["src/explicit.ts"]}
