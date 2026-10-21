@@ -74,7 +74,7 @@ Move query parameters into `-f name=value` or `-F name=value` arguments and spec
 
 ## Limits
 
-Another file's re-export is not visible here. `import { run } from "./barrel.mjs"; run("gh", ["api", "repos/O/R/labels?per_page=100"])` stays unreported when `barrel.mjs` is `export { execFile as run } from "node:child_process"` or `export * from "node:child_process"`. A parameter default such as `function run({ execFile } = cp)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten. `const run = (0, execFile)` is still `execFile`.
+Another file's re-export is not visible here. `import { run } from "./barrel.mjs"; run("gh", ["api", "repos/O/R/labels?per_page=100"])` stays unreported when `barrel.mjs` is `export { execFile as run } from "node:child_process"` or `export * from "node:child_process"`. A parameter default such as `function run({ execFile } = cp)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten. `const run = (0, execFile)` is still `execFile`. `const run = execFile<string>` is still `execFile`.
 
 ## Suppression
 

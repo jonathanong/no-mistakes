@@ -6,6 +6,7 @@ const transparentExpressionTypes = new Set([
   "TSAsExpression",
   "TSTypeAssertion",
   "TSSatisfiesExpression",
+  "TSInstantiationExpression",
 ]);
 
 function isFunction(node) {
