@@ -42,6 +42,8 @@ unitTest(
 );
 declare const unrelatedCall: () => void;
 unrelatedCall();
+declare const ambientDetails: Record<string, unknown>;
+browser("ambient details are not statically resolved", ambientDetails, () => {});
 const cyclicFirst = cyclicSecond;
 const cyclicSecond = cyclicFirst;
 browser("cyclic const aliases are not resolved", cyclicFirst, () => {});
