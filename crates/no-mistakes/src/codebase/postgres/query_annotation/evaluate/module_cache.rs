@@ -44,6 +44,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.modules.ids.get_or_init(|| {
             // Production evaluators already have the prepared shared table.
             // Direct unit evaluators freeze their supplied catalog lazily.
+            // Every prepared module carries the same Arc, so the chosen table
+            // is independent of hash-map iteration order.
             self.files
                 .values()
                 .find_map(|file| file.module.module_ids.as_ref())
