@@ -42,8 +42,12 @@ projects' include paths (`testDir` and `testMatch` for Playwright).
 list still errors for names present in neither source. `options.excludeRoots`
 removes matching source files from the initial root collection before
 call-graph traversal. Patterns are relative to the repository root and accept
-one glob or a list. It applies to all root selector kinds. If it removes every
-configured root, the rule fails with a configuration error. Excluded root files
+one glob or a list, and match the whole repository-relative path (`*` also
+crosses `/`), so excluding a directory needs `dir/**` and
+`src/mocks/mock-only` does not exclude `src/mocks/mock-only.mock.test.mts`. It
+applies to all root selector kinds. If it removes every configured root, the
+rule fails with a configuration error; this is intentional, so an exclusion
+that empties the root set is never a silent no-op. Excluded root files
 can still produce findings when another retained root reaches them. Rule-level
 `include` and `exclude` continue to filter findings after traversal; they do
 not remove traversal roots.

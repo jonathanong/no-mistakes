@@ -1,0 +1,16 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: roots-partial-path-exclusion
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [root-exclusion]
+      # Matches the whole repo-relative path, so this extensionless prefix
+      # excludes no file (mock-only.mock.test.mts stays a root).
+      excludeRoots: "src/root-exclusion/mock-only"
+      traversal: transitive
+      targets:
+        - global: setTimeout
