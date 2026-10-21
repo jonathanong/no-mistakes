@@ -83,11 +83,13 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
   }
   if (seen.has(node.name)) return false;
   seen.add(node.name);
-  if (methodFromCallee(node, context, seen) !== "expect") return false;
   const variable = variableFor(node, context);
   const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
-  if (def?.node?.id?.type === "ObjectPattern") return isPlaywrightNamespace(def.node.init, context);
-  return expectRoot(def?.node?.init, context, expectNames, seen);
+  if (def?.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
+    if (def.node.id?.type === "ObjectPattern") return isPlaywrightNamespace(def.node.init, context);
+    return expectRoot(def.node.init, context, expectNames, seen);
+  }
+  return methodFromCallee(node, context, seen) === "expect";
 }
 
 function numericLiteral(node) {

@@ -20,3 +20,8 @@ export const Applied = React.memo.apply(React, [
 
 export const Plain = () => <div data-pw="plain" />,
   Other = () => <button />;
+
+export const Later = Early;
+function Early() {
+  return <button />;
+}

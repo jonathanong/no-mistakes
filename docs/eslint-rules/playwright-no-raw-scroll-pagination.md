@@ -72,7 +72,7 @@ paginated request fires, instead of a single synthetic scroll.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name.
 
 Another file's re-export is not visible here.
 

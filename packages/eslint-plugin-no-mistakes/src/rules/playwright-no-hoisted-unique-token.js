@@ -122,9 +122,12 @@ module.exports = rule(
     // so `pw.beforeAll(...)` is recognized the same as `test.beforeAll(...)`.
     const testCalleeNames = new Set(["test", "it", "describe"]);
     const namespaces = new Set();
-    const beforeAll = (node) =>
-      setupCallbackKind(node, testCalleeNames) === "before-once" ||
-      isBeforeAllCall(node, testCalleeNames, namespaces, context);
+    const beforeAll = (node) => {
+      const kind = setupCallbackKind(node, testCalleeNames);
+      const callee = node.callee?.type === "ChainExpression" ? node.callee.expression : node.callee;
+      if (kind === "before-once" && callee?.type === "Identifier") return true;
+      return isBeforeAllCall(node, testCalleeNames, namespaces, context);
+    };
 
     return {
       ImportDeclaration(node) {

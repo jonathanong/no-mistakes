@@ -40,7 +40,7 @@ module.exports = rule(
           }
           for (const selector of cssSelectorValues(source, attrs)) {
             if (selector.operator === "=") {
-              if (suppressed(arg)) return;
+              if (suppressed(arg)) continue;
               context.report({ node: arg, messageId: "prefer", data: { value: selector.value } });
             }
           }

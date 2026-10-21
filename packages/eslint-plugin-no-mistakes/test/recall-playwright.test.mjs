@@ -17,6 +17,13 @@ describe("playwright same-file recall", () => {
     );
     assert.equal(
       messages(
+        fixture("playwright-prefer-get-by-test-id/suppressed-drag.jsx"),
+        "playwright-prefer-get-by-test-id",
+      ).length,
+      1,
+    );
+    assert.equal(
+      messages(
         fixture("playwright-selector-priority/recall.spec.js"),
         "playwright-selector-priority",
         undefined,
@@ -31,7 +38,7 @@ describe("playwright same-file recall", () => {
         undefined,
         "e2e/recall.spec.ts",
       ).length,
-      4,
+      5,
     );
     assert.equal(
       messages(
@@ -44,12 +51,21 @@ describe("playwright same-file recall", () => {
     );
     assert.equal(
       messages(
+        fixture("playwright-no-raw-scroll-pagination/forwarded-cursor.spec.js"),
+        "playwright-no-raw-scroll-pagination",
+        undefined,
+        "e2e/forwarded-cursor.spec.js",
+      ).length,
+      1,
+    );
+    assert.equal(
+      messages(
         fixture("playwright-require-exported-component-attribute/recall.tsx"),
         "playwright-require-exported-component-attribute",
         undefined,
         "recall.tsx",
       ).length,
-      5,
+      6,
     );
     assert.equal(
       messages(

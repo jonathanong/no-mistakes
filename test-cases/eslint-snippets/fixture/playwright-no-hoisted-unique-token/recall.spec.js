@@ -26,3 +26,8 @@ function register(pw) {
     use(suffix);
   });
 }
+function registerRunner(test) {
+  test.beforeAll(() => {
+    use(suffix);
+  });
+}

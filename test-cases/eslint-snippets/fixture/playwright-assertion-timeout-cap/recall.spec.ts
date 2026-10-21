@@ -12,3 +12,5 @@ const customAssertions = { expect };
 customAssertions.expect(locator).toHaveText("text", { timeout: 30000 });
 const checkAlias = customAssertions.expect;
 checkAlias(locator).toHaveText("text", { timeout: 30000 });
+const verify = check;
+verify(locator).toBeVisible({ timeout: 20000 });

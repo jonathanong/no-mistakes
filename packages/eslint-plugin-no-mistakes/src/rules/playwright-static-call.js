@@ -156,6 +156,25 @@ function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
   return isNamespaceBinding(def.node.init, context, namespaces, seen);
 }
 
+function isTestBinding(node, context, testNames, seen = new Set()) {
+  if (node?.type !== "Identifier" || !testNames.has(node.name) || seen.has(node)) return false;
+  const variable = variableFor(node, context);
+  if (!variable || variable.defs.length === 0) return true;
+  if (variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  if (def.type === "Parameter") return false;
+  if (def.type === "ImportBinding") return true;
+  if (
+    def.type === "Variable" &&
+    def.parent?.kind === "const" &&
+    def.node?.init?.type === "Identifier"
+  ) {
+    seen.add(node);
+    return isTestBinding(def.node.init, context, testNames, seen);
+  }
+  return false;
+}
+
 function isBeforeAllCall(node, testNames, namespaces, context) {
   const invoked = invokedCall(node);
   if (!invoked) return false;
@@ -165,11 +184,14 @@ function isBeforeAllCall(node, testNames, namespaces, context) {
   let object = callee.object;
   while (object?.type === "ChainExpression") object = object.expression;
   if (object?.type === "Identifier") {
-    return testNames.has(object.name) || isNamespaceBinding(object, context, namespaces);
+    return (
+      isTestBinding(object, context, testNames) || isNamespaceBinding(object, context, namespaces)
+    );
   }
   if (memberName(object) === "test" && object?.object?.type === "Identifier") {
     return (
-      testNames.has(object.object.name) || isNamespaceBinding(object.object, context, namespaces)
+      isTestBinding(object.object, context, testNames) ||
+      isNamespaceBinding(object.object, context, namespaces)
     );
   }
   return false;

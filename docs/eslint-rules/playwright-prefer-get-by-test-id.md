@@ -28,7 +28,7 @@ Replace an exact configured test-id CSS selector with `getByTestId(value)`.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. A line suppression on one `dragAndDrop` selector does not hide the other selector.
 
 Another file's re-export is not visible here.
 

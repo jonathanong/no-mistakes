@@ -37,16 +37,17 @@ function isCursorWaitCall(node) {
 // param name is passed as a bare accessor argument, never appearing with a trailing `=` the way
 // it does in a raw query string, so it needs its own literal-collection path rather than the
 // boundary-matched one below.
-function isSearchParamsAccessorCall(node) {
+function searchParamsAccessorCall(node) {
   const invoked = invokedCall(node);
   const callee = invoked?.callee;
   let object = callee?.type === "ChainExpression" ? callee.expression : callee;
   if (object?.type !== "MemberExpression" || !SEARCH_PARAMS_ACCESSORS.has(memberName(object))) {
-    return false;
+    return null;
   }
   let receiver = object.object;
   while (receiver?.type === "ChainExpression") receiver = receiver.expression;
-  return receiver?.type === "MemberExpression" && memberName(receiver) === "searchParams";
+  if (receiver?.type !== "MemberExpression" || memberName(receiver) !== "searchParams") return null;
+  return invoked;
 }
 
 function escapeRegExp(value) {
@@ -120,8 +121,9 @@ function staticStringValue(node) {
 }
 
 function collectSearchParamsAccessorArgs(node, results) {
-  if (node.type === "CallExpression" && isSearchParamsAccessorCall(node)) {
-    const value = staticStringValue(node.arguments[0]);
+  if (node.type === "CallExpression") {
+    const invoked = searchParamsAccessorCall(node);
+    const value = invoked ? staticStringValue(invoked.arguments[0]) : null;
     if (value !== null) results.push(value);
   }
   for (const child of childNodes(node)) collectSearchParamsAccessorArgs(child, results);
