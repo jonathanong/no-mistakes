@@ -1,6 +1,10 @@
-use super::{print_results, print_violations};
+use super::{
+    callsite_props, print_results, print_results_md, print_usages, print_usages_md,
+    print_violations, print_violations_md, target_label,
+};
 use crate::react_traits::report::types::{
-    AggregatedFacts, ComponentFacts, ComponentRef, Environment, FetchCall, Violation,
+    AggregatedFacts, Callsite, ComponentFacts, ComponentRef, Environment, FetchCall, UsagesReport,
+    UsagesTarget, Violation,
 };
 
 fn make_facts(name: &str, file: &str) -> ComponentFacts {
@@ -124,4 +128,60 @@ fn aggregated_facts_keeps_the_public_seven_field_literal_shape() {
         uses_suspense: false,
         has_fetch: false,
     };
+}
+
+fn usages_report() -> UsagesReport {
+    UsagesReport {
+        target: UsagesTarget {
+            file: "app/Widget.tsx".into(),
+            symbol: Some("Widget".into()),
+        },
+        callsites: vec![Callsite {
+            file: "app/page.tsx".into(),
+            line: 12,
+            component: "Widget".into(),
+            props: vec!["title".into()],
+            has_spread: true,
+        }],
+        stories: Some(vec!["app/Widget.stories.tsx".into()]),
+        tests: Some(vec!["app/Widget.test.tsx".into()]),
+        prop_types: Some(vec!["WidgetProps".into()]),
+    }
+}
+
+#[test]
+fn usages_labels_include_symbol_spread_and_optional_sections() {
+    let with_symbol = usages_report();
+    assert_eq!(target_label(&with_symbol), "app/Widget.tsx#Widget");
+    assert_eq!(callsite_props(&with_symbol.callsites[0]), "title, ...");
+    print_usages(&with_symbol);
+    print_usages_md(&with_symbol);
+    print_results_md(&[make_facts("Widget", "app/Widget.tsx")]);
+    print_violations_md(&[Violation {
+        component: "Widget".into(),
+        file: "app/Widget.tsx".into(),
+        rule: "assert-no-fetch".into(),
+        detail: None,
+    }]);
+
+    let file_only = UsagesReport {
+        target: UsagesTarget {
+            file: "app/Widget.tsx".into(),
+            symbol: None,
+        },
+        callsites: vec![Callsite {
+            file: "app/page.tsx".into(),
+            line: 4,
+            component: "default".into(),
+            props: vec![],
+            has_spread: false,
+        }],
+        stories: None,
+        tests: None,
+        prop_types: None,
+    };
+    assert_eq!(target_label(&file_only), "app/Widget.tsx");
+    assert_eq!(callsite_props(&file_only.callsites[0]), "");
+    print_usages(&file_only);
+    print_usages_md(&file_only);
 }

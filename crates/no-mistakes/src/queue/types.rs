@@ -51,6 +51,9 @@ impl fmt::Display for EdgeKind {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Edge {
