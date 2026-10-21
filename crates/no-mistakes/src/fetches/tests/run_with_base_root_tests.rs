@@ -253,20 +253,54 @@ fn test_run_with_base_root_sorts_duplicates_and_unsupported_entries() {
 
 #[test]
 fn fetches_run_wrapper_publishes_the_next_app_fixture() {
-    let root = fixture("nextjs-fetches", "next-app");
-    let code = crate::fetches::run(Cli {
-        root,
+    let cli = Cli {
+        root: fixture("nextjs-fetches", "next-app"),
         config: None,
         format: Format::Json,
         json: true,
         targets: vec![],
-    })
+    };
+    let report = run_with_base_root(&std::env::current_dir().unwrap(), &cli).unwrap();
+    let mut paths = report
+        .routes
+        .iter()
+        .flat_map(|route| route.api_calls.iter().map(|call| call.path.clone()))
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths.dedup();
+    assert!(
+        paths.iter().any(|path| path == "/api/home"),
+        "home page fetch missing: {paths:?}"
+    );
+    assert!(
+        paths.iter().any(|path| path == "/api/users"),
+        "imported users fetch missing: {paths:?}"
+    );
+
+    let mut published = Vec::new();
+    crate::fetches::cli::publish_report_with_deadline_check(
+        &report,
+        Format::Json,
+        &mut published,
+        || Ok(()),
+        || Ok(()),
+    )
     .unwrap();
+    let published = String::from_utf8(published).unwrap();
+    assert!(published.contains("\"/api/home\""), "{published}");
+    assert!(published.contains("\"/api/users\""), "{published}");
+    assert!(published.contains("\"route\":\"/\""), "{published}");
+    assert!(published.contains("\"route\":\"/users\""), "{published}");
+
+    let code = crate::fetches::run(cli).unwrap();
     assert_eq!(code, std::process::ExitCode::SUCCESS);
 }
 
 #[test]
 fn target_file_match_uses_saved_layout_wrapper_chain() {
+    // The layout file is the target. `reaches_target` returns true for that
+    // same path before any import walk, so `wrapper_file == target_file` does
+    // not change this report. The assertions pin the fetches that stay.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/nextjs-fetches/cli/fixture/target-file-match-uses-wrapper-chain");
     let report = run_with_base_root(
@@ -280,12 +314,37 @@ fn target_file_match_uses_saved_layout_wrapper_chain() {
         },
     )
     .unwrap();
+    let routes = report
+        .routes
+        .iter()
+        .map(|route| {
+            let paths = route
+                .api_calls
+                .iter()
+                .map(|call| call.path.as_str())
+                .collect::<Vec<_>>()
+                .join(",");
+            format!("{} [{paths}]", route.route)
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    let dashboard = report
+        .routes
+        .iter()
+        .find(|route| route.route == "/dashboard")
+        .unwrap_or_else(|| panic!("layout target dropped the dashboard page: {routes}"));
     assert!(
-        report.routes.iter().any(|route| route
+        dashboard
             .api_calls
             .iter()
-            .any(|call| call.path == "/api/layout")),
-        "layout wrapper target must keep the dashboard page: routes={}",
-        report.routes.len()
+            .any(|call| call.path == "/api/layout"),
+        "layout file target must keep the layout fetch: {routes}"
+    );
+    assert!(
+        dashboard
+            .api_calls
+            .iter()
+            .any(|call| call.path == "/api/page"),
+        "layout file target must keep the page fetch: {routes}"
     );
 }
