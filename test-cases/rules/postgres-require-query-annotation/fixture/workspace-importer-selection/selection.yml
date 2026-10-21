@@ -1,0 +1,32 @@
+filesystem:
+  skipDirectories: [generated]
+projects:
+  app:
+    root: packages/app
+    include: [src/**]
+    exclude: [src/project-excluded.mts]
+  reopened:
+    root: generated/reopened
+rules:
+  - rule: postgres-require-query-annotation
+    projects: [app]
+    include: [src/**/*.mts]
+    exclude: [src/rule-excluded.mts]
+    options:
+      importSpecifier: '@app/db'
+      include: [packages/app/src/**]
+      exclude: [packages/app/src/option-excluded.mts]
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [repo/selected.mts]
+    options:
+      # Same profile, different application: option masks must not cross-widen.
+      importSpecifier: '@app/db'
+  - rule: postgres-require-query-annotation
+    projects: [reopened]
+    options:
+      importSpecifier: '@app/reopened'
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: '@app/db'

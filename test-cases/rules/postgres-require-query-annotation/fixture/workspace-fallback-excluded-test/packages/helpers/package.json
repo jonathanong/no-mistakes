@@ -1,0 +1,1 @@
+{"name":"@fixture/test-helpers","private":true,"type":"module","main":"src/index.mts","exports":{".":{"import":"./src/index.mts"}}}

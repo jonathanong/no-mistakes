@@ -99,6 +99,7 @@ fn collect_check_facts_inner(
         root,
         &sources,
         plan.query_annotation_catalog.as_deref(),
+        plan.query_annotation_workspace_importers.as_deref(),
         &mut ts,
     );
     let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(

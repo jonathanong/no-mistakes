@@ -19,9 +19,30 @@ pub fn configure_prepared_postgres_plan(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
+    configure_plan_and_masks(config, plan, false).map(|_| ())
+}
+
+pub(super) type AnnotationMasks<'a> = Vec<(
+    &'a crate::config::v2::schema::RuleDef,
+    Arc<crate::codebase::rules::RuleGlobFilter>,
+)>;
+
+pub(super) fn configure_plan_and_masks<'a>(
+    config: &'a NoMistakesConfig,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+    retain_masks: bool,
+) -> Result<AnnotationMasks<'a>> {
     plan.record_general_sql_locations();
-    let annotation_options =
-        configured_embedded_sql_options(config, &["postgres-require-query-annotation"])?;
+    let mut masks = Vec::new();
+    let (_, annotation_options, _) = configured_with_annotation_masks(
+        config,
+        &["postgres-require-query-annotation"],
+        |rule, paths| {
+            if retain_masks {
+                masks.push((rule, paths));
+            }
+        },
+    )?;
     if !annotation_options.is_empty() {
         if plan.query_annotation {
             if let Some(existing) = &mut plan.query_annotation_options {
@@ -31,6 +52,7 @@ pub fn configure_prepared_postgres_plan(
             }
         } else {
             plan.query_annotation_options = Some(annotation_options);
+            plan.query_annotation_workspace_importers = Some(Arc::default());
         }
         plan.query_annotation = true;
     }
@@ -100,7 +122,7 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_write_sql_include.dedup();
     plan.postgres_sql_include.sort();
     plan.postgres_sql_include.dedup();
-    Ok(())
+    Ok(masks)
 }
 
 #[derive(Default, Deserialize)]

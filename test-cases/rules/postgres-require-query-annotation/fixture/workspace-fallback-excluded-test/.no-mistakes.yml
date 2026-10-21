@@ -1,0 +1,11 @@
+# Project selection alone must constrain fallback; no rule options.include exists.
+projects:
+  app:
+    include: ['src/**']
+    postgres:
+      unanalyzableSql: ignore
+      executors:
+        importSpecifier: '@app/db'
+rules:
+  - rule: postgres-require-query-annotation
+    projects: [app]

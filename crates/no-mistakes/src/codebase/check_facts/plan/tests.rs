@@ -158,3 +158,6 @@ fn empty_explicit_subset_stays_empty_until_another_profile_is_requested() {
     });
     assert_eq!(plan.query_annotation_options, Some(vec![read]));
 }
+
+#[path = "workspace_importers_tests.rs"]
+mod workspace_importers;

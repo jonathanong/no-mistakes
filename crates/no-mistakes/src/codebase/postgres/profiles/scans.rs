@@ -38,8 +38,9 @@ pub(super) fn record(
     profile: EmbeddedSqlOptions,
     rule_id: &str,
     options: &super::EmbeddedSqlRuleOptions,
-) -> Result<()> {
+) -> Result<Arc<crate::codebase::rules::RuleGlobFilter>> {
     let scan = EmbeddedSqlRuleScan::new(rule_id, &options.include, &options.exclude)?;
+    let paths = Arc::clone(&scan.paths);
     let scans = grouped.entry(profile).or_default();
     if !scans
         .iter()
@@ -47,5 +48,5 @@ pub(super) fn record(
     {
         scans.push(scan);
     }
-    Ok(())
+    Ok(paths)
 }

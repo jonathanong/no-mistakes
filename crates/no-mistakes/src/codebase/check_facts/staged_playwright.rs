@@ -168,6 +168,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         root,
         &sources,
         plan.query_annotation_catalog.as_deref(),
+        plan.query_annotation_workspace_importers.as_deref(),
         &mut ts,
     );
     let integration_route_links = crate::playwright::integration_routes::prepare_links(

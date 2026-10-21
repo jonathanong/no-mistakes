@@ -3,18 +3,17 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::postgres::{
     package_name, package_root_for_specifier, project_relative_scoped_facts,
 };
-use crate::codebase::ts_resolver::{
-    resolve_tsconfig_from_visible_and_sources, ImportResolver, ScopedImportResolver, TsConfig,
-    TsConfigCatalog,
-};
+use crate::codebase::ts_resolver::{ImportResolver, ScopedImportResolver, TsConfigCatalog};
 use crate::codebase::ts_source::{FileIdMap, SourceStore};
-use crate::codebase::workspaces::{load_indexed_from_source_store, IndexedWorkspaceMap};
+use crate::codebase::workspaces::IndexedWorkspaceMap;
 use crate::fx::PathSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 mod imported_sql;
+mod settings;
+mod workspace_fallback;
+use settings::{tsconfig_for, workspace_for};
 mod unproven;
 pub(super) use unproven::count_unproven_member_queries;
 #[doc(hidden)]
@@ -28,6 +27,7 @@ pub(super) fn project_relative_executor_scopes(
     root: &Path,
     sources: &SourceStore,
     catalog: Option<&TsConfigCatalog>,
+    annotation_workspace_importers: Option<&PathSet>,
     files: &mut FileIdMap<CheckFileFacts>,
 ) -> u32 {
     let annotation = files
@@ -99,21 +99,17 @@ pub(super) fn project_relative_executor_scopes(
             });
         }
         if annotation {
+            let fallback = workspace_fallback::WorkspaceFallback::new(
+                &workspace,
+                &visible,
+                annotation_workspace_importers,
+                files,
+            );
             crate::perf_trace::trace("postgres.annotation.project", || {
                 crate::codebase::postgres::query_annotation::project::project(
                     files,
                     |specifier, from| {
-                        // Canonical visibility also admits symlink aliases that do
-                        // not identify a prepared source. Keep those unresolved:
-                        // only an exact inventory identity proves an external edge.
-                        // Do not replace that hit with a workspace target.
-                        // Package names the scoped resolver misses use the session
-                        // workspace map, as imported SQL helpers do. No target
-                        // from either source stays unresolved.
-                        if let Some(target) = resolver.resolve(specifier, from) {
-                            return visible.contains(&target).then_some(target);
-                        }
-                        workspace.resolve_specifier_from_file_visible(specifier, from, &visible)
+                        fallback.resolve(specifier, from, |spec, file| resolver.resolve(spec, file))
                     },
                 );
             });
@@ -167,49 +163,6 @@ pub(super) fn remember_package_root(
         }
     }
     resolved
-}
-
-fn tsconfig_for(session: &AnalysisSession, root: &Path, sources: &SourceStore) -> Arc<TsConfig> {
-    let loaded = if session.existing_sources_for(root).is_some() {
-        session.tsconfig(root, None).ok()
-    } else {
-        resolve_tsconfig_from_visible_and_sources(
-            None,
-            root,
-            sources.inventory().paths().as_ref(),
-            sources,
-        )
-        .ok()
-        .map(Arc::new)
-    };
-    or_empty_tsconfig(root, loaded)
-}
-
-pub(super) fn or_empty_tsconfig(root: &Path, config: Option<Arc<TsConfig>>) -> Arc<TsConfig> {
-    config.unwrap_or_else(|| {
-        Arc::new(TsConfig {
-            dir: root.to_path_buf(),
-            paths_dir: root.to_path_buf(),
-            ..TsConfig::default()
-        })
-    })
-}
-
-fn workspace_for(
-    session: &AnalysisSession,
-    root: &Path,
-    sources: &SourceStore,
-) -> Arc<IndexedWorkspaceMap> {
-    if session.existing_sources_for(root).is_some() {
-        return session.workspace(root);
-    }
-    workspace_or_empty(load_indexed_from_source_store(root, sources))
-}
-
-pub(super) fn workspace_or_empty(
-    loaded: anyhow::Result<IndexedWorkspaceMap>,
-) -> Arc<IndexedWorkspaceMap> {
-    Arc::new(loaded.unwrap_or_default())
 }
 
 #[cfg(test)]

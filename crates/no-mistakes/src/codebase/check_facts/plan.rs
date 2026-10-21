@@ -43,6 +43,9 @@ pub struct CheckFactPlan {
     /// The owning request's ordinary importer catalog, including explicit overrides.
     #[doc(hidden)]
     pub query_annotation_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
+    /// Configured workspace importers: `None` is direct/unrestricted; `Some(empty)` fails closed.
+    #[doc(hidden)]
+    pub query_annotation_workspace_importers: Option<Arc<crate::fx::PathSet>>,
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
     pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
@@ -74,7 +77,8 @@ pub struct CheckFactPlan {
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
 }
-
+mod merge;
+use merge::merge_workspace_importers;
 impl CheckFactPlan {
     pub(super) fn with_production_files(
         &self,
@@ -108,6 +112,11 @@ impl CheckFactPlan {
             }
         }
         if other.query_annotation {
+            merge_workspace_importers(
+                &mut self.query_annotation_workspace_importers,
+                other.query_annotation_workspace_importers,
+                self.query_annotation,
+            );
             if self.query_annotation {
                 self.query_annotation_options = match (
                     self.query_annotation_options.take(),
@@ -198,6 +207,5 @@ impl CheckFactPlan {
         plan
     }
 }
-
 #[cfg(test)]
 mod tests;

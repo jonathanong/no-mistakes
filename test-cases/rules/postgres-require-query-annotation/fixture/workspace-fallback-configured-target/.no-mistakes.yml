@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@fixture/db/base'
+      include: ['packages/db/**']
+      unanalyzableSql: ignore

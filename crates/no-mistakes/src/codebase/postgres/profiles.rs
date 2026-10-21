@@ -74,45 +74,10 @@ pub(crate) fn configured_embedded_sql_options(
     Ok(configured_embedded_sql_options_with_annotation(config, rule_ids)?.0)
 }
 
-type AnnotatedSqlProfiles = (
-    Vec<EmbeddedSqlOptions>,
-    Vec<EmbeddedSqlOptions>,
-    scans::EmbeddedSqlRuleScans,
-);
-
-fn configured_embedded_sql_options_with_annotation(
-    config: &NoMistakesConfig,
-    rule_ids: &[&str],
-) -> Result<AnnotatedSqlProfiles> {
-    let mut grouped = scans::EmbeddedSqlRuleScans::new();
-    let mut annotation_profiles = Vec::new();
-    for rule_id in rule_ids {
-        for rule in config.rule_applications(rule_id) {
-            let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
-            let profile = EmbeddedSqlOptions::configured(
-                options.import_specifier.as_deref().unwrap_or_default(),
-                &options.executor_names,
-            )
-            .with_scoped_executors(
-                &options.executor_factory_names,
-                &options.executor_type_names,
-            )
-            .with_trusted_sql_tags(&options.trusted_sql_tags);
-            // Legacy statement policies select only SQL files until executors
-            // are explicitly configured; do not request an empty TS projection.
-            if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {
-                if *rule_id == "postgres-require-query-annotation" {
-                    annotation_profiles.push(profile.clone());
-                }
-                scans::record(&mut grouped, profile, rule_id, &options)?;
-            }
-        }
-    }
-    annotation_profiles.sort();
-    annotation_profiles.dedup();
-    let profiles = grouped.keys().cloned().collect();
-    Ok((profiles, annotation_profiles, grouped))
-}
+mod configured;
+use configured::{
+    configured_embedded_sql_options_with_annotation, configured_with_annotation_masks,
+};
 
 pub fn configured_embedded_sql_options_for_checks(
     config: &NoMistakesConfig,
@@ -193,3 +158,7 @@ pub(crate) mod scans;
 pub(crate) use prepare::prepare_rule_sql_facts;
 mod plan;
 pub use plan::{assign_prepared_embedded_sql_options, configure_prepared_postgres_plan};
+
+mod workspace_importers;
+#[doc(hidden)]
+pub use workspace_importers::configure_prepared_postgres_plan_with_scope;

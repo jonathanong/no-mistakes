@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [repo/selected.mts]
+    options:
+      importSpecifier: '@app/db'
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: ['[']
+    options:
+      importSpecifier: '@app/db'

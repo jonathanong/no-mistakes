@@ -1,0 +1,1 @@
+{"name":"@fixture/db","private":true,"type":"module","exports":{"./read":{"import":"./src/read.mts"},"./base":{"import":"./src/base.mts"}}}

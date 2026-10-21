@@ -42,7 +42,12 @@ pub(super) fn prepare_call_site_facts(
     if !plan.production_import_paths.is_empty() {
         plan.graph.imports = true;
     }
-    crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
+    crate::codebase::postgres::configure_prepared_postgres_plan_with_scope(
+        root,
+        config,
+        &sources.inventory().target_file_paths(),
+        &mut plan,
+    )?;
     crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if !needs_call_sites

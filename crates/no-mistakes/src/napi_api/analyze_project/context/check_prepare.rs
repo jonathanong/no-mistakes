@@ -79,7 +79,12 @@ impl SharedCheckContext {
                 prepared.visible_paths.paths_for(&root).as_ref(),
             )?;
         plan.graph.imports |= !plan.production_import_paths.is_empty();
-        crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
+        crate::codebase::postgres::configure_prepared_postgres_plan_with_scope(
+            &root,
+            config,
+            prepared.visible_paths.paths_for(&root).as_ref(),
+            &mut plan,
+        )?;
         let prepare_runner_configs = if deadlines {
             crate::integration_tests::prepare_runner_configs_with_deadline_evidence
         } else {

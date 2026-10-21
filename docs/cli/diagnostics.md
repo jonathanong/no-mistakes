@@ -139,14 +139,21 @@ creates no prefix-walk work ledger. See the saved
   yields no query facts. If recovery later emits partial facts, that edge must
   become conservative again.
 - **Workspace names.** pnpm workspace package names resolve through the session
-  workspace map when the TypeScript resolver has no target, the same way
-  imported SQL helpers do. That fallback lives in relative executor scope
-  projection, so embedded SQL and annotation demand share it. A package the
-  workspace does not declare stays unresolved and cannot enter another module.
+  workspace map when the TypeScript resolver has no target. For annotation,
+  this fallback requires an importer selected by a configured annotation rule,
+  or a target in a configured executor package. Project roots, project filters,
+  rule filters, and option filters all narrow that selection. Other embedded
+  SQL projections retain their existing resolution. A package the workspace
+  does not declare stays unresolved and cannot enter another module.
 - **Catalog identity.** Resolver targets without an exact prepared inventory
   identity (including ambiguous symlink spellings) cannot enter a prepared
   module and are not replaced by a workspace target. The complete module catalog
   remains available to every retained evaluator.
+
+Verbose `postgres.annotation.workspace_fallback_edges` counts accepted annotation
+fallback resolutions, including repeated requests for an edge.
+`postgres.annotation.workspace_fallback_blocked` counts visible workspace targets
+rejected by the annotation scope. Neither counter includes primary resolver hits.
 `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`

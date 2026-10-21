@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "paths": { "@fixture/db/base": ["./packages/db/src/base.mts"] }
+  },
+  "include": ["**/*.mts"]
+}

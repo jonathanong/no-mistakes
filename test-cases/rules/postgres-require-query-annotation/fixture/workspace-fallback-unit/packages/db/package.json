@@ -1,0 +1,1 @@
+{"name":"@fixture/db","private":true,"type":"module","main":"index.mts","exports":{".":"./index.mts","./entry":"./index.mts"}}

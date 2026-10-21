@@ -86,6 +86,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         query_annotation: false,
         query_annotation_options: None,
         query_annotation_catalog: None,
+        query_annotation_workspace_importers: None,
         embedded_sql_options: Vec::new(),
         embedded_sql_rule_ids: Default::default(),
         postgres_schema_catalog_paths: Vec::new(),

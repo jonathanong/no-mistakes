@@ -1,0 +1,12 @@
+[
+  "packages/app/src/selected.mts",
+  "packages/app/src/project-excluded.mts",
+  "packages/app/src/rule-excluded.mts",
+  "packages/app/src/option-excluded.mts",
+  "packages/app/src/generated/skipped.mts",
+  "packages/app/elsewhere.mts",
+  "packages/other/src/excluded.mts",
+  "repo/selected.mts",
+  "repo/excluded.mts",
+  "generated/reopened/selected.mts"
+]

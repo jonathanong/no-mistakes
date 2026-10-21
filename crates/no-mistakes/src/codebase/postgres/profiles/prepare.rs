@@ -12,8 +12,11 @@ pub(crate) fn prepare_rule_sql_facts(
         .copied()
         .filter(|id| PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id))
         .collect();
+    let mut annotation_masks = Vec::new();
     let (profiles, annotation_profiles, embedded_sql_rule_ids) =
-        configured_embedded_sql_options_with_annotation(config, &dml_ids)?;
+        configured_with_annotation_masks(config, &dml_ids, |rule, paths| {
+            annotation_masks.push((rule, paths));
+        })?;
     let patterns = sql_patterns(config, rule_ids)?;
     let selected = if profiles.is_empty() {
         crate::codebase::postgres::postgres_sql_paths(
@@ -27,59 +30,66 @@ pub(crate) fn prepare_rule_sql_facts(
     } else {
         files.to_vec()
     };
+    let mut plan = crate::codebase::check_facts::CheckFactPlan {
+        postgres_schema: rule_ids.iter().any(|id| {
+            !matches!(
+                *id,
+                "postgres-sql-shape-policy"
+                    | "postgres-require-query-annotation"
+                    | "postgres-lock-ordering"
+                    | "postgres-conflict-ordering"
+            )
+        }),
+        postgres_dml: !profiles.is_empty()
+            && dml_ids.iter().any(|id| !matches!(*id, "postgres-require-query-annotation")),
+        postgres_variants: dml_ids.iter().any(|id| {
+            matches!(
+                *id,
+                "postgres-lock-ordering"
+                    | "postgres-conflict-ordering"
+                    | "postgres-require-query-annotation"
+            )
+        }),
+        postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering"),
+        postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
+        postgres_general_locations: rule_ids.iter().any(|id| {
+            *id != "postgres-conflict-ordering"
+                && super::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
+        }),
+        postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
+        postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
+        postgres_sql_include: patterns,
+        postgres_write_sql_include: if rule_ids.contains(&"postgres-no-generated-column-writes") {
+            super::plan::write_patterns(config)?
+        } else {
+            Vec::new()
+        },
+        query_annotation: rule_ids.contains(&"postgres-require-query-annotation"),
+        query_annotation_workspace_importers: rule_ids
+            .contains(&"postgres-require-query-annotation")
+            .then(Arc::default),
+        query_annotation_options: rule_ids
+            .contains(&"postgres-require-query-annotation")
+            .then_some(annotation_profiles),
+        embedded_sql: !profiles.is_empty(),
+        embedded_sql_options: profiles,
+        embedded_sql_rule_ids,
+        postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,
+        ..Default::default()
+    };
+    super::workspace_importers::assign_from_masks(
+        root,
+        config,
+        files,
+        &mut plan,
+        annotation_masks,
+    )?;
     Ok(
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
             selected,
             Vec::new(),
-            crate::codebase::check_facts::CheckFactPlan {
-                postgres_schema: rule_ids.iter().any(|id| {
-                    !matches!(
-                        *id,
-                        "postgres-sql-shape-policy"
-                            | "postgres-require-query-annotation"
-                            | "postgres-lock-ordering"
-                            | "postgres-conflict-ordering"
-                    )
-                }),
-                postgres_dml: !profiles.is_empty()
-                    && dml_ids
-                        .iter()
-                        .any(|id| !matches!(*id, "postgres-require-query-annotation")),
-                postgres_variants: dml_ids.iter().any(|id| {
-                    matches!(
-                        *id,
-                        "postgres-lock-ordering"
-                            | "postgres-conflict-ordering"
-                            | "postgres-require-query-annotation"
-                    )
-                }),
-                postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering"),
-                postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
-                postgres_general_locations: rule_ids.iter().any(|id| {
-                    *id != "postgres-conflict-ordering"
-                        && super::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
-                }),
-                postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
-                postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
-                postgres_sql_include: patterns,
-                postgres_write_sql_include: if rule_ids
-                    .contains(&"postgres-no-generated-column-writes")
-                {
-                    super::plan::write_patterns(config)?
-                } else {
-                    Vec::new()
-                },
-                query_annotation: rule_ids.contains(&"postgres-require-query-annotation"),
-                query_annotation_options: rule_ids
-                    .contains(&"postgres-require-query-annotation")
-                    .then_some(annotation_profiles),
-                embedded_sql: !profiles.is_empty(),
-                embedded_sql_options: profiles,
-                embedded_sql_rule_ids,
-                postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,
-                ..Default::default()
-            },
+            plan,
             None,
             sources,
         ),
