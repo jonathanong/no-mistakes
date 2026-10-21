@@ -180,3 +180,5 @@ mod opaque_entry_preparation;
 
 #[path = "lexical_member_replacements.rs"]
 mod lexical_member_replacements;
+
+mod guarded_array_replay;
