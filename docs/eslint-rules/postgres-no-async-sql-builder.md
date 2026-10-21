@@ -150,14 +150,27 @@ async function buildQuery(id: string) {
   `${id.x}` stays silent because it can throw after `async` is removed.
   A module-level `const` string or no-substitution template is judged SQL
   even when `callees` is unset, but only for a function that entry already
-  selects. A call that appears before that const's initializer stays silent,
-  including a call through another function, because removing `async` would
-  throw before the rest of the module runs. An exported function is one of
-  those calls: it is hoisted, so another module can run it before the
-  initializer. A later declarator in the same
-  statement runs after the initializer and still reports.
-  A module-level binding that is not that
-  shape, including a module-level configured tag, is not judged SQL.
+  selects. A call before that const's initializer stays silent, because
+  removing `async` would throw before the rest of the module runs:
+  - A hoisted function can run first. That includes `export function` and
+    `export default function`, named or anonymous. A cyclic import can call
+    the default before the initializer.
+  - An exported arrow created before the const stays silent, even when
+    `export { name }` is written later.
+  - A class method is judged by its class. An export stays silent, and so
+    does a call of that class before the const.
+  - A callback is judged by the function or class that runs it. An arrow or
+    function expression with no binding is not hoisted. It is ready when that
+    expression starts at or after the const and every function that contains
+    it is ready too. `[1].map(() => build())` reports when that callback is
+    ready and the array is discarded. Returning that array from an async
+    function stays silent, because a caller can await the function and use an
+    element. Another `.map` stays silent, because that callee may still use the
+    promise. Removing `async` returns the SQL string.
+
+  A later declarator in the same statement runs after the initializer and
+  still reports. A module-level binding that is not that shape, including a
+  module-level configured tag, is not judged SQL.
 - `source`, when set, limits `callees` to a named import or a namespace member
   imported from that exact module specifier. Renamed imports match the imported
   name (`import { sql as tag }` matches `sql`). Type-only and default imports
