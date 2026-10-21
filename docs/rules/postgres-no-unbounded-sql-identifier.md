@@ -50,6 +50,15 @@ row = { schema: "app" };
 query(`SELECT id FROM ${row.schema}.users`);
 ```
 
+For an immutable array-destructured row, one adjacent overwrite is handled precisely: a direct assignment of a primitive scalar to a direct static member, immediately followed by a direct configured query whose only interpolation reads that same member, is treated as finite. The saved `pass-array-row-overwritten-member` fixture demonstrates this counterexample:
+
+```ts
+first.schema = "public";
+query(`SELECT id FROM ${first.schema}.users`);
+```
+
+This proof applies only to adjacent statements. Reads before the write, copied member values, other untouched members, conditional writes, aliases, intervening calls or declarations, object/function assignments, and dynamic writes such as `first.schema = process.env.SCHEMA` retain the row's unbounded finding where its query-source proof applies. In particular, writing one member does not validate the others.
+
 Unresolved imports, invalidated aliases, and cyclic alias chains remain unknown unless another existing source proof applies. Unknown is not a validation guarantee.
 
 ## Valid example

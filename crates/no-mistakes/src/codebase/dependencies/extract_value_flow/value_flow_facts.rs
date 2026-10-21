@@ -175,6 +175,9 @@ pub struct ValueFlowFacts {
     /// Iterable source for const loop/destructuring bindings, for provenance only. These are
     /// not runtime element values and never enter ordinary value resolution.
     pub iteration_bindings: Vec<ValueBinding>,
+    /// Direct call/member reads immediately preceded by a scalar overwrite.
+    /// (call start, call end, lexical scope, receiver, member), provenance only.
+    pub row_literal_overwrites: Vec<(u32, u32, usize, String, String)>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,

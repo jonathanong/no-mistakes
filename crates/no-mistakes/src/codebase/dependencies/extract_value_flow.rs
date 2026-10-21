@@ -192,3 +192,6 @@ mod phase_changed_roots;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "extract_value_flow/phase_changed_roots_tests.rs"]
 mod phase_changed_roots_tests;
+
+#[path = "extract_value_flow/row_literal_overwrites.rs"]
+mod row_literal_overwrites;
