@@ -116,8 +116,75 @@ impl super::LocalFunctions {
         self.programs.contains_key(name)
     }
 
+    /// Literal strings a same-file helper returns for these arguments.
+    /// A failed run, or any result that is not a string, abstains.
+    pub(crate) fn identifier_clauses(
+        &self,
+        name: &str,
+        args: &[crate::codebase::postgres::embedded::helpers::SiteArg],
+    ) -> Option<Vec<String>> {
+        use crate::codebase::postgres::embedded::helpers::program::exec::{run, Ret};
+        use crate::codebase::postgres::embedded::helpers::sentinel;
+        let program = self.programs.get(name).cloned()?;
+        let mut callees = SameFile {
+            programs: &self.programs,
+            depth: 0,
+        };
+        let outcomes = run(&program, args, None, &mut callees)?;
+        let mut texts = Vec::new();
+        for outcome in outcomes {
+            let Ret::Str(text, _) = outcome.ret else {
+                return None;
+            };
+            if text.contains('\0') || sentinel::contains(&text) {
+                return None;
+            }
+            if !texts.contains(&text) {
+                texts.push(text);
+            }
+        }
+        (!texts.is_empty()).then_some(texts)
+    }
+}
+
+struct SameFile<'a> {
+    programs: &'a crate::fx::FxHashMap<
+        String,
+        std::sync::Arc<crate::codebase::postgres::embedded::helpers::program::Program>,
+    >,
+    depth: u8,
+}
+
+impl crate::codebase::postgres::embedded::helpers::program::exec::Callees for SameFile<'_> {
+    fn call(
+        &mut self,
+        name: &str,
+        args: &[crate::codebase::postgres::embedded::helpers::SiteArg],
+    ) -> crate::codebase::postgres::embedded::helpers::program::exec::Callee {
+        use crate::codebase::postgres::embedded::helpers::program::exec::{
+            run, Callee, MAX_CALL_DEPTH,
+        };
+        if self.depth >= MAX_CALL_DEPTH {
+            return Callee::Failed;
+        }
+        let Some(program) = self.programs.get(name).cloned() else {
+            return Callee::Unresolved;
+        };
+        self.depth += 1;
+        let outcomes = run(&program, args, None, self);
+        self.depth -= 1;
+        outcomes.map_or(Callee::Failed, Callee::Done)
+    }
+}
+
+impl super::LocalFunctions {
     /// Moves the lowered programs out once the walk is finished.
-    pub(crate) fn take_programs(&mut self) -> FxHashMap<String, std::sync::Arc<HelperProgram>> {
+    pub(crate) fn take_programs(
+        &mut self,
+    ) -> crate::fx::FxHashMap<
+        String,
+        std::sync::Arc<crate::codebase::postgres::embedded::helpers::program::Program>,
+    > {
         std::mem::take(&mut self.programs)
     }
 }

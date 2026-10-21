@@ -65,6 +65,7 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
         Expression::Identifier(_) => constant(visitor, expr, constraints),
         Expression::ConditionalExpression(branch) => conditional(visitor, branch, depth, constraints),
         Expression::LogicalExpression(branch) => logic::recover(visitor, branch, depth, constraints),
+        Expression::CallExpression(call) => call_clause(visitor, expr, call, line),
         _ => None,
     }
 }
@@ -150,6 +151,16 @@ fn is_union(visitor: &ScopeVisitor<'_>, name: &str) -> bool {
 }
 fn scope_index(visitor: &ScopeVisitor<'_>, name: &str) -> Option<usize> {
     visitor.scopes.iter().enumerate().rfind(|(_, scope)| scope.contains_key(name)).map(|(index, _)| index)
+}
+
+fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast::ast::CallExpression<'_>, line: u32) -> Option<Vec<Recovered>> {
+    let oxc_ast::ast::Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else { return None };
+    if call.optional || visitor.shadowed_locally(name.name.as_str()) { return None; }
+    let args = super::super::super::super::imported::clause_args(visitor, call)?;
+    let strings = visitor.functions.identifier_clauses(name.name.as_str(), &args)?;
+    let mut values = Vec::new();
+    for sql in strings { values.extend(text(visitor, expr, sql, line)?); }
+    super::super::super::limit::bounded(values)
 }
 }
 

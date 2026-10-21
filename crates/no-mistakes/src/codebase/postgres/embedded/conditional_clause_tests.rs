@@ -125,6 +125,30 @@ fn logical_clauses_are_alternatives_until_an_unknown_branch() {
 }
 
 #[test]
+fn identifier_holes_follow_same_file_helpers_until_a_failed_call() {
+    let calls = read_calls("identifier-clause-calls.ts");
+    assert_eq!(calls.len(), 6, "{calls:?}");
+    assert_eq!(
+        sql_of(&calls[0]),
+        vec![
+            "SELECT id FROM accounts WHERE id = $1".to_string(),
+            "SELECT id FROM orders WHERE id = $1".to_string(),
+        ],
+        "nested {calls:?}"
+    );
+    assert_eq!(
+        sql_of(&calls[1]),
+        vec!["SELECT id FROM orders WHERE account_id = $1".to_string()],
+        "duplicate {calls:?}"
+    );
+    // Failed nested call, depth cap, NUL text, and a statement used as an identifier.
+    for call in &calls[2..] {
+        assert!(call.is_unanalyzable(), "{call:?}");
+        assert!(call.variants.is_empty(), "{call:?}");
+    }
+}
+
+#[test]
 fn variant_cap_keeps_sixteen_and_abstains_past_it() {
     let calls = read_calls("conditional-clause-cap.ts");
     assert_eq!(calls.len(), 2, "{calls:?}");
