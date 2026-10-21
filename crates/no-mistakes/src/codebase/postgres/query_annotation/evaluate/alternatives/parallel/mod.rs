@@ -5,6 +5,9 @@ mod gate;
 mod outcome;
 #[cfg(test)]
 mod probe;
+#[cfg(not(test))]
+#[path = "probe/runtime.rs"]
+mod probe;
 #[cfg(test)]
 mod tests;
 mod translate;
@@ -34,7 +37,6 @@ fn run<F: Fn(&str, &Path) -> Option<PathBuf> + Sync>(
     if !gate::eligible(evaluator, arms, path, *env, depth) {
         return None;
     }
-    #[cfg(test)]
     let probe = probe::current();
     let observer = crate::diagnostics::current();
     if let Some(observer) = &observer {
@@ -47,10 +49,7 @@ fn run<F: Fn(&str, &Path) -> Option<PathBuf> + Sync>(
         .par_iter()
         .with_max_len(1)
         .map(|arm| {
-            #[cfg(test)]
-            if let Some(probe) = &probe {
-                probe.enter();
-            }
+            probe.enter();
             crate::diagnostics::with_observer(observer.clone(), || {
                 let mut fork = evaluator.fork_arm();
                 let value = fork.expr(arm, path, env, depth, generic);

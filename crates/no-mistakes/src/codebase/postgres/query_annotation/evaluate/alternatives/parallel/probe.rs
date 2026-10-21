@@ -36,8 +36,16 @@ impl Probe {
         );
     }
 }
-pub(super) fn current() -> Option<Arc<Probe>> {
-    CURRENT.with_borrow(Clone::clone)
+pub(super) struct Hook(Option<Arc<Probe>>);
+impl Hook {
+    pub fn enter(&self) {
+        if let Some(probe) = &self.0 {
+            probe.enter();
+        }
+    }
+}
+pub(super) fn current() -> Hook {
+    Hook(CURRENT.with_borrow(Clone::clone))
 }
 pub(super) fn installed<T>(probe: Arc<Probe>, run: impl FnOnce() -> T) -> T {
     CURRENT.with_borrow_mut(|slot| assert!(slot.replace(probe).is_none()));

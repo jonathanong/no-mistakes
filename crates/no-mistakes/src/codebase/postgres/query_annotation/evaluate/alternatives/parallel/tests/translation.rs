@@ -55,7 +55,9 @@ fn both_namespaces_translate_nested_values_without_losing_dag_sharing() {
     assert!(translation
         .changed(&Value::Aggregate(baseline.clone()))
         .is_none());
-    assert!(translation.changed(&Value::Aggregate(baseline)).is_none());
+    assert!(translation
+        .changed(&Value::Aggregate(baseline.clone()))
+        .is_none());
     let plain: Values = vec![Value::Number(1)].into();
     assert!(translation.changed(&Value::Object(plain)).is_none());
     let mixed: Values = vec![Value::Primitive, Value::Arguments(7), Value::Boolean(false)].into();
@@ -77,4 +79,12 @@ fn both_namespaces_translate_nested_values_without_losing_dag_sharing() {
         panic!()
     };
     assert!(matches!(functions_only[0], Value::Function(_, _, 8)));
+    for unchanged in [
+        Value::References(baseline.clone()),
+        Value::Record(baseline.clone(), vec!["sql".into()]),
+        Value::Joined(baseline.clone()),
+        Value::Possible(baseline),
+    ] {
+        assert!(translation.changed(&unchanged).is_none());
+    }
 }
