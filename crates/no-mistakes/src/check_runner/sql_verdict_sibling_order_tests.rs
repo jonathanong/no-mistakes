@@ -32,6 +32,17 @@ fn sibling_order_keeps_each_conflict_on_its_own_chunk() {
             true,
         )
         .unwrap();
+        let plain = run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join(config)),
+            None,
+            false,
+            false,
+            false,
+        )
+        .unwrap();
+        assert_eq!(targets(&plain), targets(&report), "{config}: ledger parity");
+        assert!(plain.sql_verdicts.is_empty(), "{config}");
         let unanalyzable = fail_closed.then_some("unanalyzable-sql");
         let mut expected = vec![
             ("src/before.ts", 7, Some("targetless-arbiter")),
@@ -47,6 +58,8 @@ fn sibling_order_keeps_each_conflict_on_its_own_chunk() {
                 ("src/before.ts", 9, Some(target)),
                 ("src/before.ts", 11, Some(target)),
                 ("src/broken.ts", 4, Some(target)),
+                ("src/leading.ts", 4, Some(target)),
+                ("src/leading.ts", 5, Some(target)),
             ]);
         }
         expected.sort();
@@ -67,6 +80,22 @@ fn sibling_order_keeps_each_conflict_on_its_own_chunk() {
         let inside = verdict("src/broken.ts", 0);
         assert_eq!(inside.status, SqlVerdictStatus::Abstain, "{config}");
         assert!(inside.residual_reasons.contains(&"invalid-sql".to_string()));
+        assert_eq!(
+            report
+                .sql_verdicts
+                .iter()
+                .filter(|row| row.file == "src/leading.ts")
+                .count(),
+            2,
+            "{config}: retain both failed conflict obligations"
+        );
+        for nth in [0, 1] {
+            let leading = verdict("src/leading.ts", nth);
+            assert_eq!(leading.status, SqlVerdictStatus::Abstain, "{config} {nth}");
+            assert!(leading
+                .residual_reasons
+                .contains(&"invalid-sql".to_string()));
+        }
         let targeted_before = verdict("src/before.ts", 0);
         assert_eq!(
             targeted_before.status,
