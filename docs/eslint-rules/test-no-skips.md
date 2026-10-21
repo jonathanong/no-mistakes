@@ -64,7 +64,9 @@ in `testModules`. Only the exported `test` from those modules is admitted as
 Playwright's `test`. For namespace bindings, only `fixtures.test` is admitted;
 `fixtures.describe` and `fixtures.it` stay ordinary. This applies to ESM,
 CommonJS, and awaited dynamic imports. A named `describe` import from the same
-module also stays ordinary.
+module also stays ordinary. A fixtures module re-exporting Playwright's
+`describe` as a separate named member is not followed; `fixtures.test.describe`
+is the supported form.
 
 `const` destructuring follows a default and a nested object pattern when the
 key that introduces the identifier is `it`, `test`, or `describe`:
