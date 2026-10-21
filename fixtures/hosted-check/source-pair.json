@@ -1,0 +1,86 @@
+{
+  "baseline": {
+    "schemaVersion": 1,
+    "compiler": "1.99.1",
+    "rustc": "rustc 1.99.1 fixture",
+    "cargo": "cargo 1.99.1 fixture",
+    "command": "NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes",
+    "features": "default (including mermaid-validation)",
+    "lto": "fat",
+    "codegenUnits": 1,
+    "buildJobs": 1,
+    "rustflags": "-D warnings",
+    "refs": {
+      "schemaVersion": 1,
+      "repository": "jonathanong/no-mistakes",
+      "harnessCommit": "1111111111111111111111111111111111111111",
+      "compiler": "1.99.1",
+      "resolvedAt": "2026-10-21T00:00:00Z",
+      "candidate": {
+        "kind": "main",
+        "ref": "refs/heads/main",
+        "commit": "2222222222222222222222222222222222222222",
+        "tree": "3333333333333333333333333333333333333333"
+      },
+      "baseline": {
+        "kind": "release",
+        "ref": "refs/tags/v0.94.0",
+        "commit": "4444444444444444444444444444444444444444",
+        "tree": "5555555555555555555555555555555555555555",
+        "release": {
+          "id": 123,
+          "tag": "v0.94.0",
+          "url": "https://github.com/jonathanong/no-mistakes/releases/tag/v0.94.0",
+          "endpoint": "repos/jonathanong/no-mistakes/releases/latest"
+        }
+      }
+    },
+    "variant": "baseline",
+    "commit": "4444444444444444444444444444444444444444",
+    "tree": "5555555555555555555555555555555555555555",
+    "binarySha256": "44a8595c5c4084f0a2eb699b8a9b7edb2cb7b229e8c25709e4526e20533657bc",
+    "cpuProbeSha256": "d5219ee3e338dfe045190da20355ca628071dd0b21c31b7f5b1421108f8cf354"
+  },
+  "candidate": {
+    "schemaVersion": 1,
+    "compiler": "1.99.1",
+    "rustc": "rustc 1.99.1 fixture",
+    "cargo": "cargo 1.99.1 fixture",
+    "command": "NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes",
+    "features": "default (including mermaid-validation)",
+    "lto": "fat",
+    "codegenUnits": 1,
+    "buildJobs": 1,
+    "rustflags": "-D warnings",
+    "refs": {
+      "schemaVersion": 1,
+      "repository": "jonathanong/no-mistakes",
+      "harnessCommit": "1111111111111111111111111111111111111111",
+      "compiler": "1.99.1",
+      "resolvedAt": "2026-10-21T00:00:00Z",
+      "candidate": {
+        "kind": "main",
+        "ref": "refs/heads/main",
+        "commit": "2222222222222222222222222222222222222222",
+        "tree": "3333333333333333333333333333333333333333"
+      },
+      "baseline": {
+        "kind": "release",
+        "ref": "refs/tags/v0.94.0",
+        "commit": "4444444444444444444444444444444444444444",
+        "tree": "5555555555555555555555555555555555555555",
+        "release": {
+          "id": 123,
+          "tag": "v0.94.0",
+          "url": "https://github.com/jonathanong/no-mistakes/releases/tag/v0.94.0",
+          "endpoint": "repos/jonathanong/no-mistakes/releases/latest"
+        }
+      }
+    },
+    "variant": "candidate",
+    "commit": "2222222222222222222222222222222222222222",
+    "tree": "3333333333333333333333333333333333333333",
+    "binarySha256": "9616dccf1881bfdac822541da33dd951b206c382e0da13424d37c7c250074afa",
+    "cpuProbeSha256": "d5219ee3e338dfe045190da20355ca628071dd0b21c31b7f5b1421108f8cf354"
+  }
+}

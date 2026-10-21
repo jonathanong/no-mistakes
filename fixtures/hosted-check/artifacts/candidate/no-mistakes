@@ -1,0 +1,3 @@
+#!/bin/sh
+# Identity-test artifact; not a performance measurement.
+printf 'candidate fixture\n'

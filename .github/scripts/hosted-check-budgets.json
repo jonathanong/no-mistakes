@@ -7,7 +7,10 @@
     "wallSecondsStddev": 19.220128424822423,
     "rssKiB": 4686616,
     "rssKiBMargin": 93732.32,
-    "rssKiBStddev": 1096.7026944436673
+    "rssKiBStddev": 1096.7026944436673,
+    "cpuSeconds": 260.52,
+    "cpuSecondsStddev": 19.226024463384693,
+    "cpuSecondsMargin": 57.67807339015408
   },
   "22edf4bfe0a782ac0d030c916dedfd6f8acb499c/4": {
     "sampleCount": 6,
@@ -17,7 +20,10 @@
     "wallSecondsStddev": 17.289062052831746,
     "rssKiB": 5099860,
     "rssKiBMargin": 252423.10453997672,
-    "rssKiBStddev": 84141.0348466589
+    "rssKiBStddev": 84141.0348466589,
+    "cpuSeconds": 424.65,
+    "cpuSecondsStddev": 58.09139592056641,
+    "cpuSecondsMargin": 174.27418776169924
   },
   "22edf4bfe0a782ac0d030c916dedfd6f8acb499c/auto": {
     "sampleCount": 6,
@@ -27,7 +33,10 @@
     "wallSecondsStddev": 13.7526313845751,
     "rssKiB": 5026128,
     "rssKiBMargin": 138337.5583708199,
-    "rssKiBStddev": 46112.51945693996
+    "rssKiBStddev": 46112.51945693996,
+    "cpuSeconds": 446.42,
+    "cpuSecondsStddev": 44.65247003246294,
+    "cpuSecondsMargin": 133.95741009738884
   },
   "92d0a2061bde8d260aa0b86a2d71110ece1a43ca/1": {
     "sampleCount": 6,
@@ -37,7 +46,10 @@
     "wallSecondsStddev": 57.14882492230265,
     "rssKiB": 4686628,
     "rssKiBMargin": 93732.56,
-    "rssKiBStddev": 752.6142881095647
+    "rssKiBStddev": 752.6142881095647,
+    "cpuSeconds": 286.66,
+    "cpuSecondsStddev": 57.151856896050774,
+    "cpuSecondsMargin": 171.4555706881523
   },
   "92d0a2061bde8d260aa0b86a2d71110ece1a43ca/4": {
     "sampleCount": 6,
@@ -47,7 +59,10 @@
     "wallSecondsStddev": 11.578170264194021,
     "rssKiB": 5095404,
     "rssKiBMargin": 206199.55103733856,
-    "rssKiBStddev": 68733.18367911286
+    "rssKiBStddev": 68733.18367911286,
+    "cpuSeconds": 454.65999999999997,
+    "cpuSecondsStddev": 49.981958611749775,
+    "cpuSecondsMargin": 149.94587583524932
   },
   "92d0a2061bde8d260aa0b86a2d71110ece1a43ca/auto": {
     "sampleCount": 6,
@@ -57,6 +72,9 @@
     "wallSecondsStddev": 18.046426423717985,
     "rssKiB": 5019972,
     "rssKiBMargin": 115215.30583737562,
-    "rssKiBStddev": 38405.101945791874
+    "rssKiBStddev": 38405.101945791874,
+    "cpuSeconds": 435.40999999999997,
+    "cpuSecondsStddev": 65.8306787650459,
+    "cpuSecondsMargin": 197.49203629513772
   }
 }

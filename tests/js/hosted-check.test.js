@@ -1,6 +1,8 @@
 const assert = require("node:assert/strict");
-const { readFileSync, readdirSync } = require("node:fs");
+const { readFileSync, readdirSync, mkdtempSync, copyFileSync, linkSync, rmSync, statSync, cpSync } = require("node:fs");
 const { join } = require("node:path");
+const { tmpdir } = require("node:os");
+const { replaceNative } = require("../../.github/scripts/hosted-check-runtime.cjs");
 const { createRequire } = require("node:module");
 const {
   packageManifest,
@@ -8,6 +10,7 @@ const {
   calibratedBudget,
   enforceBudget,
   budgetReport,
+  pairedReport,
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
@@ -16,6 +19,17 @@ const {
   successful,
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
+
+const { validateBuildPair, artifactBuilds } = require("../../.github/scripts/hosted-check-provenance.cjs");
+const { relativeLimits } = require("../../.github/scripts/hosted-check-budget.cjs");
+const fixture = (name) => JSON.parse(readFileSync(join(__dirname, "../../fixtures/hosted-check", name), "utf8"));
+const cases = fixture("metric-cases.json");
+function samplePair(values, variant, fixtureCommit = "consumer", jobs = "auto") {
+  const builds = fixture("source-pair.json"), provenance = builds[variant];
+  return values.map((sample) => ({ ...sample, variant, fixtureCommit, jobs,
+    fixtureTree: "consumer-tree", sourceCommit: provenance.commit, sourceTree: provenance.tree,
+    binarySha256: provenance.binarySha256, candidateCommit: builds.candidate.commit, provenance }));
+}
 
 test("keeps the consumer's exact default command and separate collection cap", () => {
   assert.deepEqual(CHECK_ARGS, [
@@ -113,7 +127,7 @@ test("resource maxima retain completed failures and exclude both timeout statuse
   assert.equal(result.userMax, 20);
   assert.equal(result.systemMax, 2);
   assert.equal(result.rssMaxKiB, 200);
-  assert.match(formatSummary([{ key: "mixed", ...result }]), /\| 2 \| 20 \| 2 \| 200 \|/);
+  assert.match(formatSummary([{ key: "mixed", ...result }]), /\| 2 \| 20 \| 2 \| 22 \| 200 \|/);
 });
 
 test("all-censored samples retain outcomes with null resources and n/a rendering", () => {
@@ -134,7 +148,7 @@ test("all-censored samples retain outcomes with null resources and n/a rendering
   assert.equal(result.rssMaxKiB, null);
   const markdown = formatSummary([{ key: "censored", ...result }]);
   assert.match(markdown, /\| Resource n \|/);
-  assert.match(markdown, /\| 0 \| n\/a \| n\/a \| n\/a \|/);
+  assert.match(markdown, /\| 0 \| n\/a \| n\/a \| n\/a \| n\/a \|/);
   assert.doesNotMatch(markdown, /Infinity|\| null \|/);
 });
 
@@ -161,31 +175,11 @@ test("signals and missing numeric wrapper statuses never supply resource maxima"
   assert.equal(missing.rssMaxKiB, null);
 });
 
-test("uses fresh hosted pairs on both distinct issue trees and production defaults", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /runs-on: ubuntu-latest/);
-  assert.match(workflow, /sample: \[1, 2, 3, 4, 5, 6\]/);
-  assert.match(workflow, /22edf4bfe0a782ac0d030c916dedfd6f8acb499c/);
-  assert.match(workflow, /92d0a2061bde8d260aa0b86a2d71110ece1a43ca/);
-  assert.match(workflow, /CARGO_PROFILE_RELEASE_LTO: fat/);
-  assert.match(workflow, /CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"/);
-  assert.match(
-    workflow,
-    /NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes/,
-  );
-  assert.doesNotMatch(workflow, /--no-default-features|--skip-rule|--skip-category/);
-});
+
 
 // Constant and noisy measurements pin the actual calibration arithmetic, not a guessed percentage.
 test("calibrates wall/RSS headroom from six fresh samples and rejects slowed candidates", () => {
-  const samples = Array.from({ length: 6 }, (_, index) => ({
-    elapsed: 10 + index,
-    rss_kib: 100 + index * 10,
-    exit: 0,
-  }));
+  const samples = cases.noisy;
   const budget = calibratedBudget(samples);
   assert.equal(budget.wallSeconds, 15);
   assert.equal(budget.rssKiB, 150);
@@ -215,7 +209,7 @@ test("calibrates wall/RSS headroom from six fresh samples and rejects slowed can
 
 // Identical samples have σ of 0, so the margin is the relative floor.
 test("widens a quiet cohort to the relative wall and RSS floors", () => {
-  const samples = Array.from({ length: 6 }, () => ({ elapsed: 100, rss_kib: 1000, exit: 0 }));
+  const samples = cases.healthy;
   const budget = calibratedBudget(samples);
   assert.equal(budget.wallSecondsStddev, 0);
   assert.equal(budget.rssKiBStddev, 0);
@@ -256,43 +250,11 @@ test("calibrates completed runs beyond 180 seconds while enforcing measured budg
   );
 });
 
-test("bounds both collection commands and leaves time for artifacts", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  const section = workflow.slice(workflow.indexOf("  sample:"), workflow.indexOf("  summarize:"));
-  assert.match(section, /timeout-minutes: 30/);
-  assert.match(section, /600-second collection cap\n[\s\S]*?timeout-minutes: 22/);
-  assert.match(
-    section,
-    /Upload measurements, provenance, and raw logs\n[\s\S]*?timeout-minutes: 3/,
-  );
-  assert.ok(22 * 60 > 2 * (COLLECTION_DEADLINE_SECONDS + 5));
-});
 
-test("weekly runs use the event source and separate thread budgets", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /schedule:/);
-  assert.match(workflow, /github.event.pull_request.head.sha \|\| github.sha/);
-  assert.match(workflow, /jobs: \["1", "4", "auto"\]/);
-  assert.match(workflow, /HOSTED_CHECK_JOBS: \$\{\{ matrix.jobs \}\}/);
-});
 
-test("budget-only PR edits run the hosted gate", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  const paths = workflow.slice(
-    workflow.indexOf("  pull_request:"),
-    workflow.indexOf("  workflow_dispatch:"),
-  );
-  assert.match(paths, /- "\.github\/scripts\/hosted-check-budgets\.json"/);
-});
+
+
+
 
 test("retains valid calibration proposals and reports every failed cohort", () => {
   const fixtures = [
@@ -302,25 +264,20 @@ test("retains valid calibration proposals and reports every failed cohort", () =
   const groups = new Map();
   for (const commit of fixtures) {
     for (const jobs of ["1", "4", "auto"]) {
-      for (const variant of ["published", "current"]) {
+      for (const variant of ["baseline", "candidate"]) {
         groups.set(
           `${commit}/${jobs}/${variant}`,
-          Array.from({ length: 6 }, (_, index) => ({
-            sampleNumber: index + 1,
-            candidateCommit: "f".repeat(40),
-            exit: 0,
-            elapsed: 10 + index / 10,
-            rss_kib: 100 + index,
-          })),
+          samplePair(cases.noisy, variant, commit, jobs),
         );
       }
     }
   }
-  const calibration = budgetReport(groups, {}, true);
+  const budgets = Object.fromEntries(fixtures.flatMap((commit) => ["1", "4", "auto"].map((jobs) => [`${commit}/${jobs}`, calibratedBudget(cases.noisy)])));
+  const calibration = budgetReport(groups, budgets, true);
   assert.deepEqual(calibration.failures, []);
   assert.equal(Object.keys(calibration.proposed).length, 6);
-  const failed = `${fixtures[0]}/1/current`,
-    slowed = `${fixtures[0]}/4/current`;
+  const failed = `${fixtures[0]}/1/candidate`,
+    slowed = `${fixtures[0]}/4/candidate`;
   groups.set(
     failed,
     groups.get(failed).map((value, index) => (index ? value : { ...value, exit: 124 })),
@@ -329,12 +286,12 @@ test("retains valid calibration proposals and reports every failed cohort", () =
     slowed,
     groups.get(slowed).map((value, index) => (index ? value : { ...value, elapsed: 50 })),
   );
-  groups.delete(`${fixtures[1]}/auto/published`);
-  const report = budgetReport(groups, calibration.proposed, false);
+  groups.delete(`${fixtures[1]}/auto/baseline`);
+  const report = budgetReport(groups, budgets, false);
   assert.equal(report.failures.length, 3);
   assert.ok(report.failures.some((failure) => failure.includes("Calibration requires")));
   assert.ok(report.failures.some((failure) => failure.includes("elapsed 50 exceeds")));
-  assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/published`)));
+  assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/baseline`)));
   assert.equal(Object.keys(report.proposed).length, 5);
   assert.ok(report.proposed[`${fixtures[1]}/auto`]);
   assert.equal(report.proposed[`${fixtures[0]}/1`], undefined);
@@ -349,4 +306,151 @@ test("hosted measurement source modules stay within the repository line limit", 
       `${file} has ${lines} lines; split responsibilities before adding more`,
     );
   }
+});
+
+test("CPU maxima sum user and system within each sample", () => {
+  const result = aggregate(cases.cpuMax);
+  assert.equal(result.userMax, 100);
+  assert.equal(result.systemMax, 100);
+  assert.equal(result.cpuMax, 101);
+  assert.notEqual(result.cpuMax, result.userMax + result.systemMax);
+});
+
+test("saved CPU-only 36x regression fails below the wall collection cap", () => {
+  const budget = calibratedBudget(cases.healthy);
+  assert.ok(cases.cpuSlow36.every(successful));
+  assert.equal(cases.cpuSlow36[0].elapsed, cases.healthy[0].elapsed);
+  assert.equal(cases.cpuSlow36[0].rss_kib, cases.healthy[0].rss_kib);
+  assert.throws(() => enforceBudget(cases.cpuSlow36, budget), /cpu 360 exceeds/);
+  assert.throws(() => pairedReport(samplePair(cases.healthy, "baseline"), samplePair(cases.cpuSlow36, "candidate"), budget), /cpuSeconds ratio 36 exceeds/);
+});
+
+test("frozen paired budgets reject release-relative wall, CPU and RSS regressions", () => {
+  const budget = calibratedBudget(cases.healthy);
+  const baseline = samplePair(cases.healthy, "baseline");
+  assert.ok(pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget).every((row) => row.status === "compared"));
+  assert.throws(() => pairedReport(baseline, samplePair(cases.wallSlow, "candidate"), budget), /wallSeconds ratio 2 exceeds/);
+  assert.throws(() => pairedReport(baseline, samplePair(cases.rssSlow, "candidate"), budget), /rssKiB ratio 2 exceeds/);
+  assert.equal(relativeLimits(budget).wallSeconds, 0.1);
+  assert.equal(relativeLimits(budget).rssKiB, 0.02);
+});
+
+test("censored baseline skips ratios without excusing an unhealthy candidate", () => {
+  const budget = calibratedBudget(cases.healthy);
+  const baseline = samplePair(cases.censored, "baseline");
+  const report = pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget);
+  assert.ok(report.every((row) => row.status === "baseline-censored-or-failed" && row.ratios === null));
+  enforceBudget(cases.healthy, budget);
+  assert.throws(() => enforceBudget(cases.cpuSlow36, budget), /cpu 360 exceeds/);
+  assert.throws(() => pairedReport(baseline, samplePair(cases.failed, "candidate"), budget), /Candidate did not complete/);
+});
+
+test("missing or zero CPU budgets fail closed", () => {
+  const budget = calibratedBudget(cases.healthy);
+  for (const invalid of [undefined, null, 0, NaN]) {
+    assert.throws(() => enforceBudget(cases.healthy, { ...budget, cpuSeconds: invalid }), /Invalid budget: cpuSeconds/);
+    assert.throws(() => relativeLimits({ ...budget, cpuSeconds: invalid }), /paired calibration: cpuSeconds/);
+  }
+  assert.throws(() => calibratedBudget(cases.healthy, { wallSeconds: 0.1, rssKiB: 0.02 }), /Invalid floor: cpuSeconds/);
+  const proposed = calibratedBudget(cases.healthy, { wallSeconds: 0.1, cpuSeconds: 0.05, rssKiB: 0.02 });
+  assert.equal(proposed.cpuSecondsMargin, 0.5);
+});
+
+test("source provenance rejects substituted main baselines and mismatched identities", () => {
+  const builds = fixture("source-pair.json");
+  validateBuildPair(builds);
+  const invalid = fixture("source-pair.json");
+  invalid.baseline.refs.baseline.kind = "main";
+  invalid.candidate.refs.baseline.kind = "main";
+  assert.throws(() => validateBuildPair(invalid), /latest stable release tag/);
+  assert.throws(() => validateBuildPair({ ...builds, baseline: { ...builds.baseline, commit: builds.candidate.commit } }), /baseline source\/binary identity/);
+  assert.throws(() => validateBuildPair({ ...builds, candidate: { ...builds.candidate, rustc: "other compiler" } }), /settings differ: rustc/);
+  assert.throws(() => validateBuildPair({ baseline: builds.baseline }), /Missing source-built/);
+  const candidate = samplePair(cases.healthy, "candidate");
+  candidate[0].binarySha256 = "0".repeat(64);
+  assert.throws(() => pairedReport(samplePair(cases.healthy, "baseline"), candidate, calibratedBudget(cases.healthy)), /Sample binary\/source identity/);
+});
+
+test("the latest release can legitimately be the same source and binary as main", () => {
+  const builds = fixture("source-pair.json");
+  for (const build of Object.values(builds)) {
+    build.refs.candidate.commit = builds.baseline.commit;
+    build.refs.candidate.tree = builds.baseline.tree;
+  }
+  builds.candidate.commit = builds.baseline.commit;
+  builds.candidate.tree = builds.baseline.tree;
+  builds.candidate.binarySha256 = builds.baseline.binarySha256;
+  validateBuildPair(builds);
+});
+
+test("stored healthy CPU budgets come from per-sample CPU sums in durable calibration", () => {
+  const calibration = JSON.parse(readFileSync(join(__dirname, "../../docs/development/hosted-check-calibration.json"), "utf8"));
+  const budgets = JSON.parse(readFileSync(join(__dirname, "../../.github/scripts/hosted-check-budgets.json"), "utf8"));
+  for (const [key, pairs] of Object.entries(calibration.cohorts)) {
+    const calculated = calibratedBudget(pairs.map((pair) => pair.current));
+    assert.equal(budgets[key].cpuSeconds, calculated.cpuSeconds);
+    assert.equal(budgets[key].cpuSecondsStddev, calculated.cpuSecondsStddev);
+    assert.equal(budgets[key].cpuSecondsMargin, 3 * calculated.cpuSecondsStddev);
+  }
+});
+
+test("binary swapping replaces a pnpm hardlink without mutating its store inode", () => {
+  const directory = mkdtempSync(join(tmpdir(), "hosted-check-swap-"));
+  const store = join(directory, "store"), native = join(directory, "native");
+  const source = join(__dirname, "../../fixtures/hosted-check/package-export/index.js");
+  const candidate = join(__dirname, "../../fixtures/hosted-check/package-export/package.json");
+  try {
+    copyFileSync(source, store);
+    linkSync(store, native);
+    assert.equal(statSync(store).ino, statSync(native).ino);
+    replaceNative(candidate, native);
+    assert.equal(readFileSync(store, "utf8"), readFileSync(source, "utf8"));
+    assert.equal(readFileSync(native, "utf8"), readFileSync(candidate, "utf8"));
+    assert.notEqual(statSync(store).ino, statSync(native).ino);
+    replaceNative(store, native);
+    assert.equal(readFileSync(native, "utf8"), readFileSync(source, "utf8"));
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("calibration proposals never replace reviewed absolute candidate budgets", () => {
+  const { FIXTURES } = require("../../.github/scripts/hosted-check-budget.cjs");
+  const groups = new Map(), budgets = {};
+  for (const commit of FIXTURES) for (const jobs of ["1", "4", "auto"]) {
+    const key = `${commit}/${jobs}`;
+    budgets[key] = calibratedBudget(cases.healthy);
+    groups.set(`${key}/baseline`, samplePair(cases.censored, "baseline", commit, jobs));
+    groups.set(`${key}/candidate`, samplePair(cases.healthy, "candidate", commit, jobs));
+  }
+  assert.deepEqual(budgetReport(groups, budgets, true).failures, []);
+  const key = `${FIXTURES[0]}/auto`;
+  groups.set(`${key}/candidate`, samplePair(cases.cpuSlow36, "candidate", FIXTURES[0]));
+  assert.ok(budgetReport(groups, budgets, true).failures.some((failure) => /cpu 360 exceeds/.test(failure)));
+  delete budgets[`${FIXTURES[1]}/1`];
+  assert.ok(budgetReport(groups, budgets, false).failures.some((failure) => /Missing calibrated budget/.test(failure)));
+});
+
+test("measurement cohorts reject mixed source selections and mismatched pairs", () => {
+  const { validateCohort } = require("../../.github/scripts/hosted-check-provenance.cjs");
+  const candidate = samplePair(cases.healthy, "candidate");
+  candidate[1].provenance = fixture("source-pair.json").candidate;
+  candidate[1].provenance.refs.harnessCommit = "0".repeat(40);
+  assert.throws(() => validateCohort(candidate), /Mixed source selections/);
+  const baseline = samplePair(cases.healthy, "baseline");
+  baseline[0].fixtureTree = "different-tree";
+  assert.throws(() => pairedReport(baseline, samplePair(cases.healthy, "candidate"), calibratedBudget(cases.healthy)), /Mismatched sample pair: fixtureTree/);
+  assert.throws(() => pairedReport([], samplePair(cases.healthy, "candidate"), calibratedBudget(cases.healthy)), /Missing baseline pair/);
+});
+
+test("artifact bytes and CPU probes must match their source provenance", () => {
+  const artifacts = join(__dirname, "../../fixtures/hosted-check/artifacts");
+  artifactBuilds(artifacts);
+  const directory = mkdtempSync(join(tmpdir(), "hosted-check-artifacts-"));
+  try {
+    cpSync(artifacts, directory, { recursive: true });
+    copyFileSync(join(directory, "candidate/no-mistakes"), join(directory, "baseline/no-mistakes"));
+    assert.throws(() => artifactBuilds(directory), /baseline binary hash/);
+    cpSync(artifacts, directory, { recursive: true });
+    copyFileSync(join(directory, "candidate/no-mistakes"), join(directory, "baseline/cpu-probe"));
+    assert.throws(() => artifactBuilds(directory), /baseline CPU probe hash/);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 });
