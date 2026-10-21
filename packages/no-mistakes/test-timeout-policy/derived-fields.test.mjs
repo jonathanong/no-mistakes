@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { BareRunner } from "../../../fixtures/test-timeout-policy/derived-fields/bare-runner.mjs";
 import {
   BaseRunner,
   withBothFields,
   withExtensionField,
 } from "../../../fixtures/test-timeout-policy/derived-fields/runners.mjs";
-import { guardPublicRunner } from "./public-runner.mjs";
+import { guardCollectionRunner, guardPublicRunner } from "./public-runner.mjs";
 import { guardVitestExports, protectRunnerTimeouts } from "./index.mjs";
 
 const config = () => ({ testTimeout: 25, hookTimeout: 25 });
@@ -58,6 +59,17 @@ describe("derived runner field initialization", () => {
       runner.onBeforeCollect = () => {};
     }).toThrow(TypeError);
     expect(Reflect.deleteProperty(runner, "onBeforeCollect")).toBe(false);
+  });
+
+  it("protects a collection subclass that has no onBeforeCollect", () => {
+    const protect = vi.fn();
+    const Guarded = guardCollectionRunner(BareRunner, 25, protect);
+    class Derived extends Guarded {}
+    const runner = new Derived(config());
+    expect(protect).not.toHaveBeenCalled();
+    expect(runner.onBeforeCollect(["bare.mjs"])).toBeUndefined();
+    expect(protect).toHaveBeenCalledOnce();
+    expect(protect.mock.calls[0][0]).toBe(runner);
   });
 
   it("fails closed when a derived SDK runner replaces the collection hook with an own field", () => {
