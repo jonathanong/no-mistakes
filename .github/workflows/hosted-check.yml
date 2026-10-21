@@ -364,4 +364,5 @@ jobs:
           path: |
             measurements/summary.*
             measurements/proposed-budgets.json
+            measurements/comparisons.json
           if-no-files-found: error

@@ -355,5 +355,6 @@ test("nightly and demand runs always source-build latest release against resolve
   assert.match(workflow, /jobs: \["1", "4", "auto"\]/);
   assert.equal((workflow.match(/tree: [a-f0-9]{40}/g) || []).length, 2);
   assert.match(workflow, /measure fixture artifact measurements/);
+  assert.match(workflow, /measurements\/comparisons\.json/);
   for (const [, ref] of workflow.matchAll(/uses: ([^\s#]+)/g)) assert.match(ref, /@[a-f0-9]{40}$/);
 });
