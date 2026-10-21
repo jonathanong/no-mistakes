@@ -1,0 +1,10 @@
+    PID COMMAND         COMMAND
+      1 systemd         /sbin/init splash
+     42 node            node .github/scripts/hosted-check.cjs measure /tmp/fixture /tmp/artifact /tmp/out 1 abc
+     55 pnpm            pnpm exec no-mistakes --timeout 0 --lock-timeout 0 check
+     77 node            node /tmp/fixture/node_modules/no-mistakes/bin/no-mistakes.js --timeout 0 check
+     88 no-mistakes     /tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes --timeout 0 --lock-timeout 0 check
+     91 no-mistakes-ext /tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes-extra --timeout 0 check
+   4242 no-mistakes     /tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes --timeout 0 check
+not-a-process-line
+     99 node            node /tmp/fixture/node_modules/.bin/no-mistakes --timeout 0 check

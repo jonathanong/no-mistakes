@@ -28,18 +28,9 @@ pub(super) struct RootIdentity {
     context: Option<CallableId>,
     selected: Option<usize>,
 }
-impl RootVersion {
-    pub(super) fn identity(self) -> RootIdentity {
-        RootIdentity {
-            context: self.context,
-            selected: self.selected,
-        }
-    }
+#[path = "mutable_origin_identity.rs"]
+mod identity;
 
-    pub(super) fn same_selected(&self, other: &Self) -> bool {
-        self.context == other.context && self.selected == other.selected
-    }
-}
 #[path = "mutable_origin_possible.rs"]
 mod possible;
 #[path = "mutable_origin_snapshots.rs"]

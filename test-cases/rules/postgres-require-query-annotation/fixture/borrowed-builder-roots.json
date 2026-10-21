@@ -1,0 +1,9 @@
+{
+  "comment": "Long scalar payloads must stay borrowed; argument cycles and deleted/extra slots retain the old collector semantics.",
+  "prefix": "/* long stable annotation payload retained across shared scope snapshots */ SELECT a_really_long_project_specific_column_name FROM a_really_long_project_specific_table_name",
+  "labels": ["a_long_record_property_label_retained_in_shared_scope_snapshots", "another_long_record_property_label_preserving_order"],
+  "builder": 7,
+  "argument": 100,
+  "dead_builder": 8,
+  "extra_builder": 9
+}

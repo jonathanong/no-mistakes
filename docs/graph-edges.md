@@ -597,7 +597,16 @@ for saved aliases and exclude overwritten roots from later direct reads.
 Conditional root writes retain possible acquisitions. Copied methods and untouched
 members retain the precision covered by the saved controls.
 Guarded array reassignments also retain earlier contents when a branch or loop
-may not execute. Receiver writes recovered through these alternatives or explicit
+may not execute. Branch-exclusive entries in the earlier contents and guarded
+replacement are possible receiver origins: a write through either keeps its
+original method candidate alongside unknown evidence. Entries proven to name
+the same receiver in corresponding live slots retain definite-write behavior.
+Unchanged parameters captured within their owning function count as the same
+receiver; reassignment separates their identities, while uncertain or
+cross-function writes keep the conservative possible-origin behavior.
+A later unconditional array assignment replaces these alternatives; unconditional
+pushes retain their existing write precision. Receiver writes recovered through
+these alternatives or explicit
 `super` calls retain previously reported call targets as possibilities
 alongside unknown evidence, rather than claiming one known callee or hiding the call.
 Array assignment and push discovery still use source-offset windows: writes in

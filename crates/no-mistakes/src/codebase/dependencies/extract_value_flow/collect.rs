@@ -7,6 +7,9 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        if immutable {
+            self.note_stable_array_binding(&declarator.id);
+        }
         self.note_instance_class(declarator);
         if let Some(init) = &declarator.init {
             self.record_callable_initializer(declarator, immutable, init);
@@ -155,7 +158,7 @@ impl ImportCollector {
                 && self.repeat_depth == 0
                 && collect_helpers::direct_arrow(&call.callee),
         };
-        self.note_array_push(&value_call);
+        self.note_array_push(&value_call, true);
         self.value_flow.calls.push(value_call);
     }
 }

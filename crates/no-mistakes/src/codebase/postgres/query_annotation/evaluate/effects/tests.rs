@@ -3,7 +3,7 @@ use super::super::{Evaluator, Value};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
-fn evaluator<'a>(
+pub(super) fn evaluator<'a>(
     files: &'a FxHashMap<PathBuf, super::super::File<'a>>,
     scope: FxHashMap<String, Value>,
 ) -> Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> {
@@ -52,7 +52,7 @@ fn shared_roots(spec: &serde_json::Value) -> Vec<Value> {
     }
     vec![value; ids(spec, "roots") as usize]
 }
-fn collect_old(
+pub(super) fn collect_old(
     e: &Evaluator<'_, fn(&str, &Path) -> Option<PathBuf>>,
     values: &[Value],
 ) -> (FxHashSet<u64>, usize) {
@@ -71,7 +71,7 @@ fn collect_new(
     let ids = e.collect_builder_ids(values, |()| visits += 1);
     (ids, visits)
 }
-fn same_state(
+pub(super) fn same_state(
     old: &Evaluator<'_, fn(&str, &Path) -> Option<PathBuf>>,
     new: &Evaluator<'_, fn(&str, &Path) -> Option<PathBuf>>,
 ) {

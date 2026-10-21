@@ -129,7 +129,7 @@ impl ImportCollector {
             once: false,
             repeated: self.repeat_depth > self.call_repeat_base,
         };
-        self.note_array_push(&value_call);
+        self.note_array_push(&value_call, false);
         self.value_flow.calls.push(value_call);
     }
 }

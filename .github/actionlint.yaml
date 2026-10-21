@@ -1,0 +1,5 @@
+# GitHub-hosted ubuntu-slim is one-core. CPU-heavy Test CI jobs stay on
+# ubuntu-latest so this label is only for short aggregator and lint jobs.
+self-hosted-runner:
+  labels:
+    - ubuntu-slim

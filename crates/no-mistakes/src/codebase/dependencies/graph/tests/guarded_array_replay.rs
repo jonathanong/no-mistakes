@@ -27,7 +27,7 @@ fn guarded_array_stress_retains_early_and_distinct_late_targets() {
         "either-array",
         "method-consumer",
     ] {
-        for callee in ["replica.get", "tail.get"] {
+        for callee in ["replica.get", "tail.get", "untouched.get"] {
             let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
             let site = sites
                 .iter()
@@ -42,14 +42,12 @@ fn guarded_array_stress_retains_early_and_distinct_late_targets() {
                 "{file}: {site:?}"
             );
         }
-        receiver_escapes::assert_unknown(&built, &root, file, "untouched.get");
         for callee in ["replica.info", "unrelated.get"] {
             receiver_escapes::assert_export(&built, &root, file, callee);
         }
     }
-    for callee in ["tail.get", "untouched.get"] {
-        receiver_escapes::assert_unknown(&built, &root, "interleaved", callee);
-    }
+    receiver_escapes::assert_unknown(&built, &root, "interleaved", "tail.get");
+    assert_possible(&built, &root, "interleaved", "untouched.get");
     for callee in ["replica.info", "unrelated.get"] {
         receiver_escapes::assert_export(&built, &root, "interleaved", callee);
     }
@@ -66,10 +64,10 @@ fn guarded_array_stress_retains_early_and_distinct_late_targets() {
         )), "{site:?}");
     }
     receiver_escapes::assert_export(&built, &root, "consumer-generations", "replica.set");
-    receiver_escapes::assert_unknown(&built, &root, "consumer-generations", "untouched.get");
+    assert_possible(&built, &root, "consumer-generations", "untouched.get");
     receiver_escapes::assert_export(&built, &root, "consumer-generations", "unrelated.get");
     receiver_escapes::assert_export(&built, &root, "constructor-and-call", "replica.get");
-    receiver_escapes::assert_unknown(&built, &root, "constructor-and-call", "untouched.info");
+    assert_possible(&built, &root, "constructor-and-call", "untouched.info");
     receiver_escapes::assert_export(&built, &root, "constructor-and-call", "unrelated.get");
     let sites = built.call_sites_in_file(&root.join("src/constructor-and-call.mts"));
     let site = sites
@@ -88,5 +86,21 @@ fn guarded_array_stress_retains_early_and_distinct_late_targets() {
             }
         )),
         "{site:?}"
+    );
+}
+
+fn assert_possible(built: &DepGraph, root: &Path, file: &str, callee: &str) {
+    let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
+    let site = sites
+        .iter()
+        .find(|site| site.source_callee == callee)
+        .unwrap();
+    assert!(site.has_unknown_target(), "{file}: {site:?}");
+    assert_eq!(site.targets().count(), 1, "{file}: {site:?}");
+    assert!(
+        site.targets().any(|candidate| matches!(candidate.target,
+        KnownCallTargetRef::ModuleExport { specifier: "@vendor/valkey", export_path, .. }
+            if export_path == callee)),
+        "{file}: {site:?}"
     );
 }

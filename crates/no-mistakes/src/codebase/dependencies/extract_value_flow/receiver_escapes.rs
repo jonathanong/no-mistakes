@@ -14,16 +14,22 @@ mod escaped_class_aliases;
 mod escaped_class_lookup;
 #[path = "escaped_class_methods.rs"]
 mod escaped_class_methods;
+#[path = "escaped_guarded_arrays.rs"]
+mod escaped_guarded_arrays;
 #[path = "escaped_higher_order.rs"]
 mod escaped_higher_order;
 #[path = "escaped_origin_absorb.rs"]
 mod escaped_origin_absorb;
+#[path = "escaped_parameter_identity.rs"]
+mod escaped_parameter_identity;
 #[path = "escaped_parameters.rs"]
 mod escaped_parameters;
 #[path = "escaped_possible_arguments.rs"]
 mod escaped_possible_arguments;
 #[path = "escaped_possible_mutations.rs"]
 mod escaped_possible_mutations;
+#[path = "escaped_spread_arguments.rs"]
+mod escaped_spread_arguments;
 
 pub(super) use array_element_values::value as array_element_value;
 pub(super) use escaped_array_entries::{array_elements, assign_sources, copied_member};
@@ -58,6 +64,12 @@ pub(in super::super) struct Side {
     guarded_arrays: bool,
     pushes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     pending_possible: Vec<escaped_possible_arguments::Pending>,
+    stable_bindings: FxHashMap<usize, FxHashSet<String>>,
+    parameter_epochs: FxHashMap<usize, FxHashMap<String, escaped_parameter_identity::Epochs>>,
+    pub(in super::super) parameter_completion: Option<(u32, u32)>,
+    guarded_summaries: FxHashMap<usize, FxHashMap<String, escaped_guarded_arrays::Summary>>,
+    guarded_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
+    guarded_open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
     /// Call span `(start, end)`, method, and the raw argument values. Spread and
     /// conditional shapes are also stored in the escaped maps under that same span.
     methods: Vec<(u32, u32, CallableId, Vec<ValueExpression>, bool)>,
