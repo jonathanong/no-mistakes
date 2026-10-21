@@ -9,7 +9,13 @@ impl Carry {
         if self.anchor_pending && !ch.is_whitespace() && ch != '{' {
             self.clear_anchor_watch();
         }
-        if matches!(ch, '"' | '\'') {
+        // `Don't` keeps the apostrophe. A quote starts a scalar only at its boundary.
+        let opens_quote = if self.after_colon {
+            self.scalar.is_empty()
+        } else {
+            self.token.is_empty()
+        };
+        if matches!(ch, '"' | '\'') && opens_quote {
             self.comment_break = false;
             self.quote = Some(ch);
             if !self.after_colon {

@@ -94,6 +94,21 @@ pub(super) fn split_line(line: &str) -> Split<'_> {
     }
 }
 
+/// `&name` alone, or `&name # note`, is an anchor for the following mapping.
+pub(super) fn anchor_only(text: &str) -> bool {
+    let Some(rest) = text.trim_start().strip_prefix('&') else {
+        return false;
+    };
+    let name_end = rest
+        .find(|ch: char| ch.is_whitespace() || ch == '#')
+        .unwrap_or(rest.len());
+    if name_end == 0 {
+        return false;
+    }
+    let tail = rest[name_end..].trim_start();
+    tail.is_empty() || tail.starts_with('#')
+}
+
 pub(super) fn is_block_key(text: &str) -> bool {
     let text = text.trim_start();
     if text.is_empty() || text.starts_with(['#', '{', '[', '|', '>', '*', '&']) {

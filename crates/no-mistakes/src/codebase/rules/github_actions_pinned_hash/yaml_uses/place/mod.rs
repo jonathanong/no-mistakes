@@ -6,7 +6,7 @@
 /// step.
 mod line;
 
-use line::{child_place, is_block_key, split_line, Level, Place, Split};
+use line::{anchor_only, child_place, is_block_key, split_line, Level, Place, Split};
 
 pub(super) struct PlaceStack {
     levels: Vec<Level>,
@@ -130,8 +130,10 @@ impl PlaceStack {
         }
         if is_block_key(split.body) {
             self.push_sequence_item(self.item_place(), split.key_indent);
-        } else if self.in_sequence() && (split.body.is_empty() || split.body.starts_with('#')) {
-            // A bare `-`, or `- # note`, opens the item. The next key stays inside it.
+        } else if self.in_sequence()
+            && (split.body.is_empty() || split.body.starts_with('#') || anchor_only(split.body))
+        {
+            // A bare `-`, `- # note`, or `- &name` opens the item. The next key stays inside it.
             self.push_sequence_item(self.item_place(), split.dash_indent);
         }
     }

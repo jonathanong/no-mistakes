@@ -251,3 +251,25 @@ fn same_column_and_bare_dash_steps_are_action_lines() {
     ];
     assert_eq!(action_uses_lines(&bare).lines, vec![5, 7], "{bare:?}");
 }
+
+#[test]
+fn anchor_only_step_and_plain_apostrophe_keep_the_action() {
+    let anchored = [
+        "jobs:",
+        "  build:",
+        "    steps:",
+        "      - &checkout",
+        "        uses: actions/checkout@v4",
+        "      - &same { uses: actions/setup-node@v4 }",
+    ];
+    assert_eq!(
+        action_uses_lines(&anchored).lines,
+        vec![5, 6],
+        "{anchored:?}"
+    );
+
+    let named = ["- name: Don't fail", "- { uses: actions/checkout@v4 }"];
+    assert_eq!(action_uses_lines(&named).lines, vec![2], "{named:?}");
+    let quoted = ["- name: say \"hi\"", "- { uses: actions/checkout@v4 }"];
+    assert_eq!(action_uses_lines(&quoted).lines, vec![2], "{quoted:?}");
+}

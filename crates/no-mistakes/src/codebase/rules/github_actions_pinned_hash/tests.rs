@@ -573,3 +573,16 @@ fn same_column_and_bare_dash_steps_are_checked() {
     assert!(bare[0].message.contains("actions/checkout@v4"));
     assert!(bare[1].message.contains("actions/setup-node@v4"));
 }
+
+#[test]
+fn anchor_only_and_plain_apostrophe_steps_are_checked() {
+    let anchored = check_yaml_shape("anchor-step-fail.yml");
+    assert_eq!(lines_of(&anchored), vec![6, 7], "{anchored:?}");
+    assert!(anchored[0].message.contains("actions/checkout@v4"));
+    assert!(anchored[1].message.contains("actions/setup-node@v4"));
+
+    // The apostrophe stays inside the plain name, so the next flow step fails.
+    let named = check_yaml_shape("plain-apostrophe-fail.yml");
+    assert_eq!(lines_of(&named), vec![3], "{named:?}");
+    assert!(named[0].message.contains("actions/checkout@v4"));
+}

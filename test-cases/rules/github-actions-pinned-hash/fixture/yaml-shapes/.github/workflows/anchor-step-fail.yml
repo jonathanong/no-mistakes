@@ -1,0 +1,7 @@
+# An anchor-only dash still opens the step. A flow anchor on the same line does too.
+jobs:
+  build:
+    steps:
+      - &checkout
+        uses: actions/checkout@v4
+      - &same { uses: actions/setup-node@v4 }
