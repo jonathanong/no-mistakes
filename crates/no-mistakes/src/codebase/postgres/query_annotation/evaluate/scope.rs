@@ -11,6 +11,7 @@ struct Bindings {
     builders: OnceLock<FxHashSet<u64>>,
     contains_reference: OnceLock<bool>,
     references: OnceLock<Edges>,
+    reference_binding_names: OnceLock<Vec<String>>,
 }
 impl Clone for Bindings {
     fn clone(&self) -> Self {
@@ -19,6 +20,7 @@ impl Clone for Bindings {
             builders: OnceLock::new(),
             contains_reference: OnceLock::new(),
             references: OnceLock::new(),
+            reference_binding_names: OnceLock::new(),
         }
     }
 }
@@ -34,7 +36,29 @@ impl Eq for Bindings {}
 #[derive(Clone, Default, Eq, PartialEq)]
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
 
+#[cfg(not(test))]
+mod binding_scan_count;
+#[cfg(test)]
+#[path = "scope/binding_scan_count/tests.rs"]
+mod binding_scan_count;
+
 impl Scope {
+    /// Preserve map iteration order while scanning each immutable snapshot once.
+    /// Writes invalidate names; values stay borrowed from the same snapshot.
+    pub(super) fn reference_bindings(&self) -> impl Iterator<Item = (&String, &Value)> {
+        self.0
+            .reference_binding_names
+            .get_or_init(|| {
+                binding_scan_count::record(self.len());
+                self.iter()
+                    .filter(|(_, value)| value.contains_reference())
+                    .map(|(name, _)| name.clone())
+                    .collect()
+            })
+            .iter()
+            .map(|name| (name, &self.0.values[name]))
+    }
+
     /// Argument/array identities remain references even when their current arena is empty.
     pub(super) fn contains_reference(&self) -> bool {
         *self
@@ -106,6 +130,7 @@ impl From<FxHashMap<String, Value>> for Scope {
             builders: OnceLock::new(),
             contains_reference: OnceLock::new(),
             references: OnceLock::new(),
+            reference_binding_names: OnceLock::new(),
         }))
     }
 }
@@ -121,6 +146,7 @@ impl DerefMut for Scope {
         bindings.builders.take();
         bindings.contains_reference.take();
         bindings.references.take();
+        bindings.reference_binding_names.take();
         &mut bindings.values
     }
 }
@@ -144,3 +170,9 @@ mod tests;
 
 #[cfg(test)]
 mod reference_tests;
+
+#[cfg(test)]
+mod reference_binding_tests;
+
+#[cfg(test)]
+mod precise_binding_tests;

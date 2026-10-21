@@ -113,3 +113,7 @@ mod demand_roots;
 mod profile_merges;
 #[path = "tests/target_reuse.rs"]
 mod target_reuse;
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "tests/reference_binding_index.rs"]
+mod reference_binding_index;
