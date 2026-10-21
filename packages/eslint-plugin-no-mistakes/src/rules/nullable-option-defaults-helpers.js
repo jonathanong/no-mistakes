@@ -88,7 +88,9 @@ function propsFromTypes(types, facts) {
 const isIdentifier = (node) => node?.type === "Identifier";
 function staticKey(node) {
   if (!node) return null;
-  if (node.type === "Identifier") return node.name;
+  if (typeof node.name === "string" && node.type !== "Literal" && node.type !== "TemplateLiteral") {
+    return node.name;
+  }
   if (node.type === "Literal") return String(node.value);
   if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
     return node.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
