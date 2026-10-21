@@ -68,3 +68,10 @@ this single traversal. Cold summaries now retain only empty/single-prefix
 results inline; larger maps require actual reuse within the walk. This case
 retains one inline prefix entry. This work-count regression establishes an algorithmic
 bound, not a measured full-consumer speedup.
+
+`prefix-semantics/nested_full_summary_replay.json` preserves nested cache
+propagation: a child map is both completed and replayed while a parent map is
+being collected. The final parent replay must restore a prefix overwritten
+between occurrences. Dropping either child-to-parent forwarding step loses it.
+The standalone node 1 occurrence retains its sharing but follows the second
+node 2 occurrence so it cannot warm the child summary prematurely.

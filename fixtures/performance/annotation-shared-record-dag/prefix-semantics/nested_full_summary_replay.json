@@ -1,0 +1,9 @@
+{
+  "nodes": [
+    [["prefix", 1, "first", true], ["prefix", 2, "second", true]],
+    [["node", 0], ["node", 0]],
+    [["node", 1]]
+  ],
+  "root": ["record", [["node", 2], ["node", 2], ["node", 1], ["prefix", 1, "overwrite", false], ["node", 2]]],
+  "expected": {"1": ["first", true], "2": ["second", true]}
+}

@@ -2,6 +2,7 @@ use super::*;
 use crate::diagnostics::{with_observer, InvocationObserver};
 mod fixture;
 mod legacy;
+mod nested;
 
 #[test]
 fn memoized_maps_match_saved_last_write_argument_cycle_and_sparse_cases() {
